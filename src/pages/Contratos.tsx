@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   FileText,
@@ -107,6 +108,7 @@ function getEffectiveEndDate(contract: {
 }
 
 export default function Contratos() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -116,6 +118,20 @@ export default function Contratos() {
 
   const { currentCompanyId } = useAuth();
   const { data: contracts, isLoading } = useContracts();
+
+  // Handle deep link from dashboard alerts
+  useEffect(() => {
+    const detailId = searchParams.get('detail');
+    if (detailId && contracts) {
+      const contractExists = contracts.some(c => c.id === detailId);
+      if (contractExists) {
+        setSelectedContractId(detailId);
+        setIsDetailOpen(true);
+        // Clear the query param after opening
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, contracts, setSearchParams]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-CO', {
