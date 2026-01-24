@@ -61,14 +61,18 @@ export function ExtensionFormDialog({
   });
 
   const handleSubmit = (data: ExtensionFormData) => {
-    console.log('Extension data:', data);
-    onSubmit?.({ ...data, contractId, extensionNumber });
-    
-    toast({
-      title: 'Prórroga registrada',
-      description: `La prórroga #${extensionNumber} de ${employeeName} ha sido registrada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
-    });
-    onOpenChange(false);
+    if (onSubmit) {
+      // Parent handles the submission and toast
+      onSubmit({ ...data, contractId, extensionNumber });
+    } else {
+      // Fallback if no parent handler (shouldn't happen in practice)
+      console.log('Extension data:', data);
+      toast({
+        title: 'Prórroga registrada',
+        description: `La prórroga #${extensionNumber} de ${employeeName} ha sido registrada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
+      });
+      onOpenChange(false);
+    }
     form.reset();
   };
 

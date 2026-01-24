@@ -25,15 +25,18 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 
 import { ExtensionFormDialog } from './ExtensionFormDialog';
 import { DocumentSection } from '@/components/documents/DocumentSection';
+import { useCreateContractExtension } from '@/hooks/useContracts';
 import {
   Contract,
   ContractExtension,
   contractTypeLabels,
   getContractStatus,
   calculateDaysRemaining,
+  ExtensionFormData,
 } from '@/types/contract';
 
 interface ContractDetailDialogProps {
@@ -51,8 +54,35 @@ const statusConfig = {
 
 export function ContractDetailDialog({ open, onOpenChange, contract }: ContractDetailDialogProps) {
   const [showExtensionForm, setShowExtensionForm] = useState(false);
+  const createExtension = useCreateContractExtension();
 
   if (!contract) return null;
+
+  const handleCreateExtension = async (data: ExtensionFormData & { contractId: string; extensionNumber: number }) => {
+    try {
+      await createExtension.mutateAsync({
+        contract_id: data.contractId,
+        extension_number: data.extensionNumber,
+        start_date: format(data.startDate, 'yyyy-MM-dd'),
+        end_date: format(data.endDate, 'yyyy-MM-dd'),
+        reason: data.notes || null,
+      });
+      
+      toast({
+        title: 'Prórroga registrada',
+        description: `La prórroga #${data.extensionNumber} ha sido guardada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
+      });
+      
+      setShowExtensionForm(false);
+    } catch (error) {
+      console.error('Error creating extension:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo registrar la prórroga. Intente nuevamente.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const status = getContractStatus(contract);
   const daysRemaining = calculateDaysRemaining(contract.currentEndDate);
@@ -320,6 +350,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
           employeeName={contract.employeeName}
           currentEndDate={contract.currentEndDate}
           extensionNumber={contract.extensions.length + 1}
+          onSubmit={handleCreateExtension}
         />
       )}
     </>
