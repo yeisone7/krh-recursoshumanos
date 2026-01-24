@@ -1,0 +1,388 @@
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { format, addMonths } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { CalendarIcon, Stethoscope, FileText, Building2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  medicalExamFormSchema,
+  MedicalExamFormData,
+  examTypeLabels,
+  examResultLabels,
+  PERIODIC_EXAM_VALIDITY_MONTHS,
+} from '@/types/medicalExam';
+
+interface ExamFormDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit?: (data: MedicalExamFormData) => void;
+}
+
+// Mock employees for demo
+const mockEmployees = [
+  { id: '1', name: 'María García López', document: '1234567890' },
+  { id: '2', name: 'Carlos Rodríguez Pérez', document: '0987654321' },
+  { id: '3', name: 'Ana Martínez Silva', document: '1122334455' },
+  { id: '4', name: 'Pedro López Hernández', document: '5544332211' },
+];
+
+export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogProps) {
+  const [activeTab, setActiveTab] = useState('general');
+
+  const form = useForm<MedicalExamFormData>({
+    resolver: zodResolver(medicalExamFormSchema),
+    defaultValues: {
+      employeeId: '',
+      examType: undefined,
+      examDate: undefined,
+      result: 'pendiente',
+      concept: '',
+      restrictions: '',
+      provider: '',
+      doctorName: '',
+      observations: '',
+    },
+  });
+
+  const watchExamType = form.watch('examType');
+  const watchExamDate = form.watch('examDate');
+
+  const calculatedExpiration = watchExamDate && watchExamType !== 'egreso'
+    ? addMonths(watchExamDate, PERIODIC_EXAM_VALIDITY_MONTHS)
+    : null;
+
+  const handleSubmit = (data: MedicalExamFormData) => {
+    onSubmit?.(data);
+    form.reset();
+    onOpenChange(false);
+  };
+
+  const handleClose = () => {
+    form.reset();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 font-display text-xl">
+            <Stethoscope className="w-5 h-5 text-primary" />
+            Registrar Examen Médico
+          </DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="general" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  General
+                </TabsTrigger>
+                <TabsTrigger value="resultado" className="flex items-center gap-2">
+                  <Stethoscope className="w-4 h-4" />
+                  Resultado
+                </TabsTrigger>
+                <TabsTrigger value="proveedor" className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
+                  Proveedor
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="general" className="space-y-4 mt-4">
+                <FormField
+                  control={form.control}
+                  name="employeeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Empleado</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione un empleado" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {mockEmployees.map((emp) => (
+                            <SelectItem key={emp.id} value={emp.id}>
+                              {emp.name} - {emp.document}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="examType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Examen</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione el tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {(Object.keys(examTypeLabels) as Array<keyof typeof examTypeLabels>).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {examTypeLabels[type]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        {watchExamType === 'ingreso' && 'Examen previo al inicio del contrato laboral'}
+                        {watchExamType === 'periodico' && 'Examen de seguimiento durante la vigencia del contrato'}
+                        {watchExamType === 'egreso' && 'Examen al finalizar el contrato laboral'}
+                        {watchExamType === 'reintegro' && 'Examen posterior a una incapacidad prolongada'}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="examDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Fecha del Examen</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                'w-full pl-3 text-left font-normal',
+                                !field.value && 'text-muted-foreground'
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, 'PPP', { locale: es })
+                              ) : (
+                                <span>Seleccione una fecha</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date > new Date()}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {calculatedExpiration && (
+                  <div className="p-4 bg-info-light rounded-lg border border-info/20">
+                    <p className="text-sm font-medium text-info">
+                      Fecha de Vencimiento Calculada
+                    </p>
+                    <p className="text-lg font-semibold text-foreground">
+                      {format(calculatedExpiration, 'PPP', { locale: es })}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vigencia de {PERIODIC_EXAM_VALIDITY_MONTHS} meses según normativa colombiana
+                    </p>
+                  </div>
+                )}
+
+                {watchExamType === 'egreso' && (
+                  <div className="p-4 bg-muted rounded-lg border border-border">
+                    <p className="text-sm text-muted-foreground">
+                      Los exámenes de egreso no tienen fecha de vencimiento
+                    </p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="resultado" className="space-y-4 mt-4">
+                <FormField
+                  control={form.control}
+                  name="result"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Resultado</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione el resultado" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {(Object.keys(examResultLabels) as Array<keyof typeof examResultLabels>).map((result) => (
+                            <SelectItem key={result} value={result}>
+                              {examResultLabels[result]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="concept"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Concepto Médico</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describa el concepto médico emitido..."
+                          className="min-h-[100px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="restrictions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Restricciones (Opcional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Indique restricciones laborales si aplica..."
+                          className="min-h-[80px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Solo aplica si el resultado es "Apto con Restricciones"
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="observations"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Observaciones (Opcional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Observaciones adicionales..."
+                          className="min-h-[80px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              <TabsContent value="proveedor" className="space-y-4 mt-4">
+                <FormField
+                  control={form.control}
+                  name="provider"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Proveedor / IPS</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nombre de la IPS o proveedor" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Institución Prestadora de Servicios de Salud
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="doctorName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Médico Evaluador</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nombre del médico" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="p-4 bg-muted rounded-lg border border-border">
+                  <p className="text-sm font-medium text-foreground mb-2">
+                    Documento de Soporte
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    La carga de documentos estará disponible próximamente.
+                    Los documentos serán versionados y nunca eliminados según la política de auditoría.
+                  </p>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={handleClose}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-primary hover:bg-primary-hover">
+                Registrar Examen
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
