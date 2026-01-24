@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { 
   Package, Plus, Search, Filter, Eye, 
-  AlertTriangle, CheckCircle, Clock, Calendar
+  AlertTriangle, CheckCircle, Clock, Calendar,
+  Loader2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -29,176 +29,150 @@ import { cn } from '@/lib/utils';
 import { DotationFormDialog } from '@/components/dotation/DotationFormDialog';
 import { DotationDetailDialog } from '@/components/dotation/DotationDetailDialog';
 import { DotationAlertsCard } from '@/components/dotation/DotationAlertsCard';
+import { useDotationDeliveries, getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
+import { useAuth } from '@/contexts/AuthContext';
+import type { Database } from '@/integrations/supabase/types';
 
-import {
-  DotationDelivery,
-  DotationAlert,
-  DotationStatus,
-  dotationItemTypeLabels,
-  dotationStatusLabels,
-  calculateDaysRemaining,
-  getDotationStatus,
-  getAlertLevel,
-} from '@/types/dotation';
+type DotationItemType = Database['public']['Enums']['dotation_item_type'];
 
-// Mock data
-const mockDeliveries: DotationDelivery[] = [
-  {
-    id: 'dot-001',
-    employeeId: 'emp-001',
-    employeeName: 'María García',
-    employeeDocument: '1234567890',
-    operationCenter: 'Centro Norte',
-    itemType: 'uniform_set',
-    itemName: 'Uniforme corporativo completo',
-    quantity: 2,
-    size: 'M',
-    deliveryDate: new Date('2024-01-15'),
-    expirationDate: new Date('2024-05-15'),
-    status: 'expiring',
-    deliveredBy: 'Juan Pérez',
-    notes: 'Incluye 2 camisas y 2 pantalones',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: 'dot-002',
-    employeeId: 'emp-002',
-    employeeName: 'Carlos Rodríguez',
-    employeeDocument: '0987654321',
-    operationCenter: 'Centro Sur',
-    itemType: 'boots',
-    itemName: 'Botas de seguridad punta de acero',
-    quantity: 1,
-    size: '42',
-    deliveryDate: new Date('2024-01-20'),
-    expirationDate: new Date('2024-02-05'),
-    status: 'expired',
-    deliveredBy: 'Ana López',
-    createdAt: new Date('2024-01-20'),
-    updatedAt: new Date('2024-01-20'),
-  },
-  {
-    id: 'dot-003',
-    employeeId: 'emp-003',
-    employeeName: 'Ana Martínez',
-    employeeDocument: '1122334455',
-    operationCenter: 'Centro Este',
-    itemType: 'helmet',
-    itemName: 'Casco de seguridad industrial',
-    quantity: 1,
-    deliveryDate: new Date('2024-02-01'),
-    expirationDate: new Date('2024-06-01'),
-    status: 'delivered',
-    deliveredBy: 'Pedro Gómez',
-    createdAt: new Date('2024-02-01'),
-    updatedAt: new Date('2024-02-01'),
-  },
-  {
-    id: 'dot-004',
-    employeeId: 'emp-004',
-    employeeName: 'Pedro López',
-    employeeDocument: '5566778899',
-    operationCenter: 'Centro Oeste',
-    itemType: 'gloves',
-    itemName: 'Guantes de trabajo reforzados',
-    quantity: 3,
-    size: 'L',
-    deliveryDate: new Date('2024-02-10'),
-    expirationDate: new Date('2024-06-10'),
-    status: 'delivered',
-    deliveredBy: 'María Torres',
-    createdAt: new Date('2024-02-10'),
-    updatedAt: new Date('2024-02-10'),
-  },
-  {
-    id: 'dot-005',
-    employeeId: 'emp-001',
-    employeeName: 'María García',
-    employeeDocument: '1234567890',
-    operationCenter: 'Centro Norte',
-    itemType: 'shoes',
-    itemName: 'Zapatos de dotación',
-    quantity: 1,
-    size: '38',
-    deliveryDate: new Date('2024-01-28'),
-    expirationDate: new Date('2024-02-10'),
-    status: 'expired',
-    deliveredBy: 'Juan Pérez',
-    createdAt: new Date('2024-01-28'),
-    updatedAt: new Date('2024-01-28'),
-  },
-];
-
-// Generate alerts from deliveries
-const generateAlerts = (deliveries: DotationDelivery[]): DotationAlert[] => {
-  return deliveries
-    .filter(d => d.status === 'expiring' || d.status === 'expired' || getDotationStatus(d) === 'expiring')
-    .map(d => {
-      const daysRemaining = calculateDaysRemaining(d.expirationDate);
-      return {
-        id: `alert-${d.id}`,
-        deliveryId: d.id,
-        employeeId: d.employeeId,
-        employeeName: d.employeeName,
-        itemName: d.itemName,
-        expirationDate: d.expirationDate,
-        daysRemaining,
-        level: getAlertLevel(daysRemaining),
-      };
-    })
-    .sort((a, b) => a.daysRemaining - b.daysRemaining);
+const dotationItemTypeLabels: Record<DotationItemType, string> = {
+  uniforme_camisa: 'Camisa',
+  uniforme_pantalon: 'Pantalón',
+  uniforme_conjunto: 'Conjunto',
+  calzado_seguridad: 'Calzado Seguridad',
+  calzado_dielectrico: 'Calzado Dieléctrico',
+  casco: 'Casco',
+  guantes: 'Guantes',
+  gafas_seguridad: 'Gafas Seguridad',
+  protector_auditivo: 'Protector Auditivo',
+  arnes: 'Arnés',
+  overol: 'Overol',
+  chaleco_reflectivo: 'Chaleco Reflectivo',
+  impermeable: 'Impermeable',
+  otros: 'Otros',
 };
 
-const statusStyles: Record<DotationStatus, { bg: string; text: string; icon: typeof CheckCircle }> = {
-  pending: {
-    bg: 'bg-muted',
-    text: 'text-muted-foreground',
-    icon: Clock,
-  },
-  delivered: {
+type DotationStatus = 'vigente' | 'por_vencer' | 'vencida';
+
+const statusStyles: Record<DotationStatus, { bg: string; text: string; icon: typeof CheckCircle; label: string }> = {
+  vigente: {
     bg: 'bg-success-light',
     text: 'text-success',
     icon: CheckCircle,
+    label: 'Vigente',
   },
-  expiring: {
+  por_vencer: {
     bg: 'bg-warning-light',
     text: 'text-warning',
     icon: AlertTriangle,
+    label: 'Por Vencer',
   },
-  expired: {
+  vencida: {
     bg: 'bg-destructive-light',
     text: 'text-destructive',
     icon: AlertTriangle,
+    label: 'Vencida',
   },
 };
+
+function getAlertLevel(daysRemaining: number): 'info' | 'warning' | 'critical' {
+  if (daysRemaining <= 7) return 'critical';
+  if (daysRemaining <= 15) return 'warning';
+  return 'info';
+}
 
 export default function Dotacion() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedDelivery, setSelectedDelivery] = useState<DotationDelivery | null>(null);
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [itemTypeFilter, setItemTypeFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const alerts = generateAlerts(mockDeliveries);
-  
+  const { currentCompanyId } = useAuth();
+  const { data: deliveries, isLoading } = useDotationDeliveries();
+
+  // Generate alerts from deliveries
+  const alerts = useMemo(() => {
+    if (!deliveries) return [];
+    
+    return deliveries
+      .filter(d => {
+        const status = getDotationStatus(d);
+        return status === 'por_vencer' || status === 'vencida';
+      })
+      .map(d => {
+        const daysRemaining = getDaysRemaining(d.expiration_date);
+        return {
+          id: `alert-${d.id}`,
+          deliveryId: d.id,
+          employeeId: d.employee_id,
+          employeeName: `${d.employees?.first_name} ${d.employees?.last_name}`,
+          itemName: d.item_name,
+          expirationDate: d.expiration_date,
+          daysRemaining: Math.max(0, daysRemaining),
+          level: getAlertLevel(daysRemaining),
+        };
+      })
+      .sort((a, b) => a.daysRemaining - b.daysRemaining);
+  }, [deliveries]);
+
   // Stats
-  const totalDeliveries = mockDeliveries.length;
-  const deliveredCount = mockDeliveries.filter(d => d.status === 'delivered').length;
-  const expiringCount = mockDeliveries.filter(d => d.status === 'expiring').length;
-  const expiredCount = mockDeliveries.filter(d => d.status === 'expired').length;
+  const stats = useMemo(() => {
+    if (!deliveries) return { total: 0, vigentes: 0, porVencer: 0, vencidas: 0 };
+    
+    return {
+      total: deliveries.length,
+      vigentes: deliveries.filter(d => getDotationStatus(d) === 'vigente').length,
+      porVencer: deliveries.filter(d => getDotationStatus(d) === 'por_vencer').length,
+      vencidas: deliveries.filter(d => getDotationStatus(d) === 'vencida').length,
+    };
+  }, [deliveries]);
 
   // Filter deliveries
-  const filteredDeliveries = mockDeliveries.filter(d => {
-    if (statusFilter !== 'all' && d.status !== statusFilter) return false;
-    if (itemTypeFilter !== 'all' && d.itemType !== itemTypeFilter) return false;
-    return true;
-  });
+  const filteredDeliveries = useMemo(() => {
+    if (!deliveries) return [];
+    
+    return deliveries.filter(d => {
+      const employeeName = `${d.employees?.first_name} ${d.employees?.last_name}`.toLowerCase();
+      const matchesSearch = 
+        employeeName.includes(searchQuery.toLowerCase()) ||
+        d.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const status = getDotationStatus(d);
+      const matchesStatus = statusFilter === 'all' || status === statusFilter;
+      const matchesType = itemTypeFilter === 'all' || d.item_type === itemTypeFilter;
+      
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [deliveries, searchQuery, statusFilter, itemTypeFilter]);
 
-  const handleViewDelivery = (delivery: DotationDelivery) => {
-    setSelectedDelivery(delivery);
+  const handleViewDelivery = (deliveryId: string) => {
+    setSelectedDeliveryId(deliveryId);
     setIsDetailOpen(true);
   };
+
+  const selectedDelivery = deliveries?.find(d => d.id === selectedDeliveryId);
+
+  if (!currentCompanyId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+        <Package className="w-16 h-16 text-muted-foreground mb-4" />
+        <h2 className="text-xl font-semibold mb-2">Sin empresa asignada</h2>
+        <p className="text-muted-foreground">
+          Contacta al administrador para que te asigne a una empresa.
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -233,7 +207,7 @@ export default function Dotacion() {
             <Package className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">{totalDeliveries}</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.total}</p>
             <p className="text-sm text-muted-foreground">Total Entregas</p>
           </div>
         </motion.div>
@@ -248,7 +222,7 @@ export default function Dotacion() {
             <CheckCircle className="w-5 h-5 text-success" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">{deliveredCount}</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.vigentes}</p>
             <p className="text-sm text-muted-foreground">Vigentes</p>
           </div>
         </motion.div>
@@ -263,7 +237,7 @@ export default function Dotacion() {
             <AlertTriangle className="w-5 h-5 text-warning" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">{expiringCount}</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.porVencer}</p>
             <p className="text-sm text-muted-foreground">Por Vencer</p>
           </div>
         </motion.div>
@@ -278,7 +252,7 @@ export default function Dotacion() {
             <AlertTriangle className="w-5 h-5 text-destructive" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">{expiredCount}</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.vencidas}</p>
             <p className="text-sm text-muted-foreground">Vencidas</p>
           </div>
         </motion.div>
@@ -295,10 +269,7 @@ export default function Dotacion() {
         >
           <DotationAlertsCard 
             alerts={alerts} 
-            onAlertClick={(alert) => {
-              const delivery = mockDeliveries.find(d => d.id === alert.deliveryId);
-              if (delivery) handleViewDelivery(delivery);
-            }}
+            onAlertClick={(alert) => handleViewDelivery(alert.deliveryId)}
           />
         </motion.div>
 
@@ -317,6 +288,8 @@ export default function Dotacion() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Buscar por empleado, artículo..."
                     className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
                   />
@@ -328,9 +301,9 @@ export default function Dotacion() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="delivered">Vigentes</SelectItem>
-                      <SelectItem value="expiring">Por Vencer</SelectItem>
-                      <SelectItem value="expired">Vencidas</SelectItem>
+                      <SelectItem value="vigente">Vigentes</SelectItem>
+                      <SelectItem value="por_vencer">Por Vencer</SelectItem>
+                      <SelectItem value="vencida">Vencidas</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={itemTypeFilter} onValueChange={setItemTypeFilter}>
@@ -352,85 +325,100 @@ export default function Dotacion() {
             </div>
 
             {/* Table */}
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Empleado</TableHead>
-                  <TableHead>Artículo</TableHead>
-                  <TableHead>Entrega</TableHead>
-                  <TableHead>Vencimiento</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredDeliveries.map((delivery) => {
-                  const statusConfig = statusStyles[delivery.status];
-                  const StatusIcon = statusConfig.icon;
-                  const daysRemaining = calculateDaysRemaining(delivery.expirationDate);
-
-                  return (
-                    <TableRow key={delivery.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{delivery.employeeName}</p>
-                          <p className="text-sm text-muted-foreground">{delivery.operationCenter}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{delivery.itemName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {dotationItemTypeLabels[delivery.itemType]}
-                            {delivery.size && ` • Talla: ${delivery.size}`}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          {format(delivery.deliveryDate, 'dd/MM/yyyy')}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
-                          {format(delivery.expirationDate, 'dd/MM/yyyy')}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant="outline" 
-                          className={cn("gap-1", statusConfig.bg, statusConfig.text)}
-                        >
-                          <StatusIcon className="w-3 h-3" />
-                          {dotationStatusLabels[delivery.status]}
-                          {delivery.status === 'expiring' && daysRemaining > 0 && (
-                            <span className="ml-1">({daysRemaining}d)</span>
-                          )}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDelivery(delivery)}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          Ver
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-
-            {filteredDeliveries.length === 0 && (
+            {filteredDeliveries.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>No se encontraron entregas con los filtros seleccionados</p>
+                <p>
+                  {searchQuery || statusFilter !== 'all' || itemTypeFilter !== 'all'
+                    ? 'No se encontraron entregas con los filtros seleccionados'
+                    : 'No hay entregas de dotación registradas'}
+                </p>
+                {!searchQuery && statusFilter === 'all' && itemTypeFilter === 'all' && (
+                  <Button onClick={() => setIsFormOpen(true)} className="mt-4">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nueva Entrega
+                  </Button>
+                )}
               </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Empleado</TableHead>
+                    <TableHead>Artículo</TableHead>
+                    <TableHead>Entrega</TableHead>
+                    <TableHead>Vencimiento</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredDeliveries.map((delivery) => {
+                    const status = getDotationStatus(delivery) as DotationStatus;
+                    const statusConfig = statusStyles[status];
+                    const StatusIcon = statusConfig.icon;
+                    const daysRemaining = getDaysRemaining(delivery.expiration_date);
+
+                    return (
+                      <TableRow key={delivery.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">
+                              {delivery.employees?.first_name} {delivery.employees?.last_name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {delivery.employees?.operation_centers?.name || 'Sin centro'}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{delivery.item_name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {dotationItemTypeLabels[delivery.item_type]}
+                              {delivery.size && ` • Talla: ${delivery.size}`}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            {format(new Date(delivery.delivery_date), 'dd/MM/yyyy')}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Clock className="w-4 h-4 text-muted-foreground" />
+                            {format(new Date(delivery.expiration_date), 'dd/MM/yyyy')}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className={cn("gap-1", statusConfig.bg, statusConfig.text)}
+                          >
+                            <StatusIcon className="w-3 h-3" />
+                            {statusConfig.label}
+                            {status === 'por_vencer' && daysRemaining > 0 && (
+                              <span className="ml-1">({daysRemaining}d)</span>
+                            )}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewDelivery(delivery.id)}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Ver
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             )}
           </div>
         </motion.div>
@@ -441,11 +429,32 @@ export default function Dotacion() {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
       />
-      <DotationDetailDialog
-        open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
-        delivery={selectedDelivery}
-      />
+      
+      {selectedDelivery && (
+        <DotationDetailDialog
+          open={isDetailOpen}
+          onOpenChange={setIsDetailOpen}
+          delivery={{
+            id: selectedDelivery.id,
+            employeeId: selectedDelivery.employee_id,
+            employeeName: `${selectedDelivery.employees?.first_name} ${selectedDelivery.employees?.last_name}`,
+            employeeDocument: selectedDelivery.employees?.document_number || '',
+            operationCenter: selectedDelivery.employees?.operation_centers?.name || '',
+            itemType: selectedDelivery.item_type.replace('uniforme_', 'uniform_').replace('calzado_seguridad', 'boots').replace('casco', 'helmet').replace('guantes', 'gloves') as any,
+            itemName: selectedDelivery.item_name,
+            quantity: selectedDelivery.quantity,
+            size: selectedDelivery.size || undefined,
+            deliveryDate: new Date(selectedDelivery.delivery_date),
+            expirationDate: new Date(selectedDelivery.expiration_date),
+            status: getDotationStatus(selectedDelivery) === 'vigente' ? 'delivered' : 
+                   getDotationStatus(selectedDelivery) === 'por_vencer' ? 'expiring' : 'expired',
+            deliveredBy: selectedDelivery.delivered_by || undefined,
+            notes: selectedDelivery.observations || undefined,
+            createdAt: new Date(selectedDelivery.created_at),
+            updatedAt: new Date(selectedDelivery.updated_at),
+          }}
+        />
+      )}
     </div>
   );
 }
