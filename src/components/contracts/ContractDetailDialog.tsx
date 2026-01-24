@@ -27,6 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 import { ExtensionFormDialog } from './ExtensionFormDialog';
+import { DocumentSection } from '@/components/documents/DocumentSection';
 import {
   Contract,
   ContractExtension,
@@ -287,6 +288,15 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                   </div>
                 </>
               )}
+
+              {/* Document Section */}
+              <Separator />
+              <DocumentSection
+                entityType="contract"
+                entityId={contract.id}
+                title="Documento del Contrato"
+                showVersionHistory
+              />
             </div>
           </ScrollArea>
 
