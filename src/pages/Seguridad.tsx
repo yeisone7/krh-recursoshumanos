@@ -12,12 +12,14 @@ import {
   Key,
   AlertTriangle,
   CheckCircle2,
-  Info
+  Info,
+  History,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { UsersTable } from '@/components/admin/UsersTable';
 import { InviteUserDialog } from '@/components/admin/InviteUserDialog';
+import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
 
 export default function Seguridad() {
   const { isAdmin, roles, companies } = useAuth();
@@ -168,6 +170,10 @@ export default function Seguridad() {
               <Shield className="w-4 h-4" />
               Roles
             </TabsTrigger>
+            <TabsTrigger value="audit" className="gap-2">
+              <History className="w-4 h-4" />
+              Auditoría
+            </TabsTrigger>
             <TabsTrigger value="info" className="gap-2">
               <Info className="w-4 h-4" />
               Información
@@ -176,6 +182,10 @@ export default function Seguridad() {
 
           <TabsContent value="users" className="space-y-4">
             <UsersTable users={users} isLoading={isLoading} />
+          </TabsContent>
+
+          <TabsContent value="audit" className="space-y-4">
+            <AuditLogViewer />
           </TabsContent>
 
           <TabsContent value="roles" className="space-y-4">
