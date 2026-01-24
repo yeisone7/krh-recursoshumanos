@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Employee Status
-export type EmployeeStatus = 'active' | 'suspended' | 'retired';
+export type EmployeeStatus = 'active' | 'suspended' | 'retired' | 'en_retiro';
 
 // Document Type
 export type DocumentType = 'CC' | 'CE' | 'TI' | 'PA' | 'PEP';
@@ -97,7 +97,7 @@ export const employeeFormSchema = z.object({
   shoeSize: z.string().max(10).optional(),
   
   // === Estado ===
-  status: z.enum(['active', 'suspended', 'retired']).default('active'),
+  status: z.enum(['active', 'suspended', 'retired', 'en_retiro']).default('active'),
   
   // === Observaciones ===
   observations: z.string().max(1000).optional(),
@@ -117,6 +117,7 @@ export interface Employee extends EmployeeFormData {
 export const statusConfig = {
   active: { label: 'Activo', class: 'bg-success-light text-success border-success/20' },
   suspended: { label: 'Suspendido', class: 'bg-warning-light text-warning-foreground border-warning/20' },
+  en_retiro: { label: 'En Retiro', class: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' },
   retired: { label: 'Retirado', class: 'bg-muted text-muted-foreground border-border' },
 };
 
