@@ -1,0 +1,441 @@
+import { useState } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  AlertTriangle,
+  FileText,
+  CheckCircle2,
+  Circle,
+  Download,
+  Loader2,
+  CalendarIcon,
+  ClipboardList,
+} from 'lucide-react';
+import { toast } from 'sonner';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+
+import {
+  TerminationType,
+  TerminationDocumentType,
+  terminationTypeLabels,
+  terminationDocumentLabels,
+  terminationDocumentDescriptions,
+  initiateTerminationSchema,
+  InitiateTerminationFormData,
+  calculateChecklistStatus,
+} from '@/types/termination';
+import {
+  useContractTerminationProcess,
+  useInitiateTermination,
+  useMarkDocumentGenerated,
+  useCompleteTermination,
+} from '@/hooks/useTerminations';
+import { downloadTerminationDocument, TerminationDocumentData } from '@/lib/terminationPdfGenerator';
+import { Contract, contractTypeLabels } from '@/types/contract';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+
+interface TerminationProcessDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  contract: Contract;
+}
+
+export function TerminationProcessDialog({
+  open,
+  onOpenChange,
+  contract,
+}: TerminationProcessDialogProps) {
+  const { currentCompanyId } = useAuth();
+  const [step, setStep] = useState<'initiate' | 'checklist'>('initiate');
+  const [companyData, setCompanyData] = useState<any>(null);
+
+  const { data: termination, isLoading } = useContractTerminationProcess(contract.id);
+  const initiateTermination = useInitiateTermination();
+  const markDocumentGenerated = useMarkDocumentGenerated();
+  const completeTermination = useCompleteTermination();
+
+  const form = useForm<InitiateTerminationFormData>({
+    resolver: zodResolver(initiateTerminationSchema),
+    defaultValues: {
+      terminationDate: new Date(),
+      effectiveDate: new Date(),
+      reason: '',
+    },
+  });
+
+  // Fetch company data for PDF generation
+  const fetchCompanyData = async () => {
+    if (!currentCompanyId) return null;
+    const { data } = await supabase
+      .from('companies')
+      .select('*')
+      .eq('id', currentCompanyId)
+      .single();
+    setCompanyData(data);
+    return data;
+  };
+
+  // Handle initiation
+  const handleInitiate = async (data: InitiateTerminationFormData) => {
+    try {
+      await initiateTermination.mutateAsync({
+        contractId: contract.id,
+        employeeId: contract.employeeId,
+        terminationType: data.terminationType,
+        terminationDate: data.terminationDate,
+        effectiveDate: data.effectiveDate,
+        reason: data.reason,
+        resignationDate: data.resignationDate,
+      });
+      await fetchCompanyData();
+      setStep('checklist');
+    } catch (error) {
+      console.error('Error initiating termination:', error);
+    }
+  };
+
+  // Generate and download PDF
+  const handleGenerateDocument = async (docType: TerminationDocumentType, docId: string) => {
+    if (!termination || !companyData) {
+      await fetchCompanyData();
+    }
+
+    const company = companyData || await fetchCompanyData();
+    if (!company || !termination) return;
+
+    const documentData: TerminationDocumentData = {
+      companyName: company.name,
+      companyNit: company.nit,
+      companyAddress: company.address,
+      companyCity: 'Bucaramanga',
+      companyPhone: company.phone,
+      employeeFullName: contract.employeeName,
+      employeeDocumentType: 'C.C.',
+      employeeDocumentNumber: '---', // Would come from employee data
+      employeePosition: contract.position,
+      employeeArea: contract.area,
+      employeeOperationCenter: contract.operationCenter,
+      contractType: contractTypeLabels[contract.contractType],
+      contractStartDate: contract.startDate,
+      contractEndDate: contract.originalEndDate || undefined,
+      salary: contract.salary,
+      terminationType: termination.terminationType,
+      terminationDate: termination.terminationDate,
+      effectiveDate: termination.effectiveDate,
+      reason: termination.reason,
+      resignationDate: termination.resignationDate,
+      hrManagerName: 'Director(a) de Talento Humano',
+      hrManagerPosition: 'Director(a) Jurídico / RRHH',
+      documentDate: new Date(),
+      documentCity: 'Bucaramanga',
+    };
+
+    try {
+      downloadTerminationDocument(docType, documentData);
+      
+      await markDocumentGenerated.mutateAsync({
+        documentId: docId,
+        documentData,
+        contractId: contract.id,
+      });
+
+      toast.success('Documento generado', {
+        description: `${terminationDocumentLabels[docType]} descargado correctamente.`,
+      });
+    } catch (error) {
+      console.error('Error generating document:', error);
+      toast.error('Error al generar el documento');
+    }
+  };
+
+  // Complete termination
+  const handleComplete = async () => {
+    if (!termination) return;
+    
+    await completeTermination.mutateAsync({
+      terminationId: termination.id,
+      contractId: contract.id,
+      employeeId: contract.employeeId,
+    });
+    
+    onOpenChange(false);
+  };
+
+  // Calculate checklist if termination exists
+  const checklist = termination
+    ? calculateChecklistStatus(termination.terminationType, termination.documents)
+    : null;
+
+  // Determine initial step based on existing termination
+  if (termination && step === 'initiate') {
+    setStep('checklist');
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-primary" />
+            Proceso de Retiro - {contract.employeeName}
+          </DialogTitle>
+          <DialogDescription>
+            {step === 'initiate'
+              ? 'Configure los detalles de la terminación del contrato.'
+              : 'Complete el checklist de documentos requeridos.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <ScrollArea className="max-h-[60vh] pr-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : step === 'initiate' && !termination ? (
+            // Step 1: Initiate termination
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleInitiate)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="terminationType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Terminación</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione el tipo de terminación" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(terminationTypeLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="terminationDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Fecha de Notificación</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
+                                {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 bg-background" align="start">
+                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="effectiveDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Fecha Efectiva</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
+                                {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 bg-background" align="start">
+                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {form.watch('terminationType') === 'renuncia' && (
+                  <FormField
+                    control={form.control}
+                    name="resignationDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Fecha de Carta de Renuncia</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
+                                {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 bg-background" align="start">
+                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="reason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Motivo (opcional)</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Describa el motivo de la terminación..." className="min-h-[80px]" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={initiateTermination.isPending}>
+                    {initiateTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Iniciar Proceso
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          ) : checklist ? (
+            // Step 2: Checklist
+            <div className="space-y-6">
+              {/* Progress */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Progreso del checklist</span>
+                  <span className="font-medium">{checklist.completedDocuments}/{checklist.totalDocuments} documentos</span>
+                </div>
+                <Progress value={(checklist.completedDocuments / checklist.totalDocuments) * 100} className="h-2" />
+              </div>
+
+              {/* Document list */}
+              <div className="space-y-3">
+                {checklist.documents.map((doc) => {
+                  const terminationDoc = termination?.documents.find((d) => d.documentType === doc.type);
+                  
+                  return (
+                    <div
+                      key={doc.type}
+                      className={cn(
+                        'flex items-center justify-between p-4 rounded-lg border',
+                        doc.isGenerated ? 'bg-success-light border-success/20' : 'bg-muted/30 border-border'
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        {doc.isGenerated ? (
+                          <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-muted-foreground mt-0.5" />
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{doc.label}</span>
+                            {doc.isRequired && (
+                              <Badge variant="secondary" className="text-xs">Requerido</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
+                        </div>
+                      </div>
+
+                      <Button
+                        variant={doc.isGenerated ? 'outline' : 'default'}
+                        size="sm"
+                        onClick={() => terminationDoc && handleGenerateDocument(doc.type, terminationDoc.id)}
+                        disabled={markDocumentGenerated.isPending}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        {doc.isGenerated ? 'Descargar' : 'Generar PDF'}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-between pt-4 border-t">
+                <Button variant="outline" onClick={() => onOpenChange(false)}>
+                  Cerrar
+                </Button>
+                <Button
+                  onClick={handleComplete}
+                  disabled={!checklist.canFinalize || completeTermination.isPending}
+                  className={cn(!checklist.canFinalize && 'opacity-50')}
+                >
+                  {completeTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Finalizar Proceso
+                </Button>
+              </div>
+
+              {!checklist.canFinalize && (
+                <p className="text-sm text-center text-warning-foreground">
+                  <AlertTriangle className="w-4 h-4 inline mr-1" />
+                  Debe generar todos los documentos requeridos para finalizar el proceso.
+                </p>
+              )}
+            </div>
+          ) : null}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
