@@ -2,12 +2,29 @@ import { motion } from 'framer-motion';
 import { Stethoscope, AlertTriangle, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { MedicalExamAlert, examTypeLabels } from '@/types/medicalExam';
+
+export interface ExamAlert {
+  id: string;
+  examId: string;
+  employeeId: string;
+  employeeName: string;
+  examType: string;
+  expirationDate: string | Date;
+  daysRemaining: number;
+  level: 'info' | 'warning' | 'critical';
+}
+
+const examTypeLabels: Record<string, string> = {
+  ingreso: 'Ingreso',
+  periodico: 'Periódico',
+  egreso: 'Egreso',
+  reintegro: 'Reintegro',
+};
 
 interface ExamAlertsCardProps {
-  alerts: MedicalExamAlert[];
+  alerts: ExamAlert[];
   onViewAll?: () => void;
-  onAlertClick?: (alert: MedicalExamAlert) => void;
+  onAlertClick?: (alert: ExamAlert) => void;
 }
 
 const levelStyles = {
@@ -108,7 +125,7 @@ export function ExamAlertsCard({ alerts, onViewAll, onAlertClick }: ExamAlertsCa
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {examTypeLabels[alert.examType]} por vencer
+                  {examTypeLabels[alert.examType] || alert.examType} por vencer
                 </p>
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />

@@ -1,4 +1,4 @@
-import { Bell, Search, Building2 } from 'lucide-react';
+import { Bell, Search, Building2, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -7,8 +7,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Header() {
+  const { user, companies, currentCompanyId, setCurrentCompanyId, roles, signOut } = useAuth();
+
+  const currentCompany = companies.find(c => c.id === currentCompanyId);
+  const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'U';
+
+  const roleLabels: Record<string, string> = {
+    admin: 'Administrador',
+    rrhh: 'RRHH',
+    psicologo: 'Psicólogo',
+    jefe_area: 'Jefe de Área',
+    auditor: 'Auditor',
+  };
+
   return (
     <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
       {/* Search */}
@@ -26,19 +50,34 @@ export function Header() {
       {/* Right section */}
       <div className="flex items-center gap-4">
         {/* Company selector */}
-        <div className="flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-muted-foreground" />
-          <Select defaultValue="acme">
-            <SelectTrigger className="w-[200px] h-9 text-sm border-0 bg-muted/50 hover:bg-muted focus:ring-1 focus:ring-primary/20">
-              <SelectValue placeholder="Seleccionar empresa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="acme">ACME Corporation</SelectItem>
-              <SelectItem value="tech">TechCorp S.A.S</SelectItem>
-              <SelectItem value="global">Global Services</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {companies.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-muted-foreground" />
+            <Select 
+              value={currentCompanyId || undefined} 
+              onValueChange={setCurrentCompanyId}
+            >
+              <SelectTrigger className="w-[200px] h-9 text-sm border-0 bg-muted/50 hover:bg-muted focus:ring-1 focus:ring-primary/20">
+                <SelectValue placeholder="Seleccionar empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                {companies.map((company) => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* No company message */}
+        {companies.length === 0 && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Building2 className="w-4 h-4" />
+            <span>Sin empresa asignada</span>
+          </div>
+        )}
 
         {/* Notifications */}
         <Button
@@ -51,6 +90,41 @@ export function Header() {
             5
           </span>
         </Button>
+
+        {/* User menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+              <Avatar className="h-9 w-9">
+                <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-64" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm font-medium leading-none">{user?.email}</p>
+                <div className="flex flex-wrap gap-1">
+                  {roles.map((role) => (
+                    <Badge key={role} variant="secondary" className="text-xs">
+                      {roleLabels[role] || role}
+                    </Badge>
+                  ))}
+                  {roles.length === 0 && (
+                    <span className="text-xs text-muted-foreground">Sin rol asignado</span>
+                  )}
+                </div>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Cerrar sesión</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
