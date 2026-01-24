@@ -1,0 +1,164 @@
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+export interface DashboardAlert {
+  id: string;
+  type: 'contract' | 'extension' | 'medical' | 'dotation';
+  level: 'info' | 'warning' | 'critical';
+  title: string;
+  description: string;
+  daysRemaining: number;
+  entityName: string;
+  entityId: string;
+}
+
+function calculateDaysRemaining(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const targetDate = new Date(dateStr);
+  targetDate.setHours(0, 0, 0, 0);
+  const diffTime = targetDate.getTime() - today.getTime();
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+function getAlertLevel(daysRemaining: number): 'info' | 'warning' | 'critical' {
+  if (daysRemaining <= 7) return 'critical';
+  if (daysRemaining <= 15) return 'warning';
+  return 'info';
+}
+
+export function useDashboardAlerts() {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['dashboard-alerts', currentCompanyId],
+    queryFn: async () => {
+      const alerts: DashboardAlert[] = [];
+
+      // 1. Fetch expiring contracts (term-based only, not indefinite)
+      const { data: contracts } = await supabase
+        .from('contracts')
+        .select(`
+          id,
+          end_date,
+          contract_type,
+          is_terminated,
+          employees!inner(id, first_name, last_name, company_id),
+          contract_extensions(id, end_date, extension_number)
+        `)
+        .eq('employees.company_id', currentCompanyId!)
+        .eq('is_terminated', false)
+        .neq('contract_type', 'indefinido');
+
+      if (contracts) {
+        for (const contract of contracts) {
+          // Calculate current end date considering extensions
+          let currentEndDate = contract.end_date;
+          if (contract.contract_extensions && contract.contract_extensions.length > 0) {
+            const latestExtension = contract.contract_extensions.reduce(
+              (latest: any, current: any) =>
+                current.extension_number > latest.extension_number ? current : latest
+            );
+            currentEndDate = latestExtension.end_date;
+          }
+
+          const daysRemaining = calculateDaysRemaining(currentEndDate);
+          if (daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 30) {
+            const employee = contract.employees as any;
+            const hasExtensions = contract.contract_extensions && contract.contract_extensions.length > 0;
+            
+            alerts.push({
+              id: `contract-${contract.id}`,
+              type: hasExtensions ? 'extension' : 'contract',
+              level: getAlertLevel(daysRemaining),
+              title: hasExtensions ? 'Prórroga por vencer' : 'Contrato por vencer',
+              description: hasExtensions 
+                ? `Prórroga #${contract.contract_extensions!.length} vence en ${daysRemaining} días`
+                : `Contrato a término fijo vence en ${daysRemaining} días`,
+              daysRemaining,
+              entityName: `${employee.first_name} ${employee.last_name}`,
+              entityId: contract.id,
+            });
+          }
+        }
+      }
+
+      // 2. Fetch expiring medical exams (periodic and entry exams only)
+      const { data: exams } = await supabase
+        .from('medical_exams')
+        .select(`
+          id,
+          exam_type,
+          expiration_date,
+          employees!inner(id, first_name, last_name, company_id)
+        `)
+        .eq('employees.company_id', currentCompanyId!)
+        .not('expiration_date', 'is', null)
+        .neq('exam_type', 'egreso');
+
+      if (exams) {
+        for (const exam of exams) {
+          const daysRemaining = calculateDaysRemaining(exam.expiration_date);
+          if (daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 30) {
+            const employee = exam.employees as any;
+            const examTypeLabels: Record<string, string> = {
+              ingreso: 'Examen de ingreso',
+              periodico: 'Examen periódico',
+              reintegro: 'Examen de reintegro',
+            };
+            
+            alerts.push({
+              id: `exam-${exam.id}`,
+              type: 'medical',
+              level: getAlertLevel(daysRemaining),
+              title: 'Examen médico por vencer',
+              description: `${examTypeLabels[exam.exam_type] || exam.exam_type} vence en ${daysRemaining} días`,
+              daysRemaining,
+              entityName: `${employee.first_name} ${employee.last_name}`,
+              entityId: exam.id,
+            });
+          }
+        }
+      }
+
+      // 3. Fetch expiring dotation deliveries
+      const { data: dotations } = await supabase
+        .from('dotation_deliveries')
+        .select(`
+          id,
+          item_name,
+          expiration_date,
+          employees!inner(id, first_name, last_name, company_id)
+        `)
+        .eq('employees.company_id', currentCompanyId!);
+
+      if (dotations) {
+        for (const dotation of dotations) {
+          const daysRemaining = calculateDaysRemaining(dotation.expiration_date);
+          if (daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 30) {
+            const employee = dotation.employees as any;
+            
+            alerts.push({
+              id: `dotation-${dotation.id}`,
+              type: 'dotation',
+              level: getAlertLevel(daysRemaining),
+              title: 'Dotación por vencer',
+              description: `${dotation.item_name} vence en ${daysRemaining} días`,
+              daysRemaining,
+              entityName: `${employee.first_name} ${employee.last_name}`,
+              entityId: dotation.id,
+            });
+          }
+        }
+      }
+
+      // Sort by days remaining (most urgent first)
+      alerts.sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+      return alerts;
+    },
+    enabled: !!currentCompanyId,
+  });
+}
