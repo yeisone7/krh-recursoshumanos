@@ -55,6 +55,7 @@ import {
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateEmployee } from '@/hooks/useEmployees';
 import { useAuth } from '@/contexts/AuthContext';
+import { CitySelect, CityDepartmentSelect } from '@/components/ui/city-department-select';
 
 interface EmployeeFormDialogProps {
   open: boolean;
@@ -62,14 +63,7 @@ interface EmployeeFormDialogProps {
   onSuccess?: () => void;
 }
 
-const colombianDepartments = [
-  'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bogotá D.C.', 'Bolívar',
-  'Boyacá', 'Caldas', 'Caquetá', 'Casanare', 'Cauca', 'Cesar', 'Chocó',
-  'Córdoba', 'Cundinamarca', 'Guainía', 'Guaviare', 'Huila', 'La Guajira',
-  'Magdalena', 'Meta', 'Nariño', 'Norte de Santander', 'Putumayo', 'Quindío',
-  'Risaralda', 'San Andrés y Providencia', 'Santander', 'Sucre', 'Tolima',
-  'Valle del Cauca', 'Vaupés', 'Vichada',
-];
+// Colombian departments imported from central location data
 
 export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFormDialogProps) {
   const [activeTab, setActiveTab] = useState('personal');
@@ -340,7 +334,11 @@ export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFo
                           <FormItem>
                             <FormLabel>Lugar de Nacimiento *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Bogotá" {...field} />
+                              <CitySelect 
+                                value={field.value} 
+                                onValueChange={(city) => field.onChange(city)}
+                                placeholder="Buscar ciudad..."
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -505,41 +503,16 @@ export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFo
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="city"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Ciudad *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Bogotá" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="department"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Departamento *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background max-h-[200px]">
-                                {colombianDepartments.map((dept) => (
-                                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="md:col-span-2">
+                        <CityDepartmentSelect
+                          cityValue={form.watch('city')}
+                          departmentValue={form.watch('department')}
+                          onCityChange={(city) => form.setValue('city', city)}
+                          onDepartmentChange={(dept) => form.setValue('department', dept)}
+                          cityLabel="Ciudad *"
+                          departmentLabel="Departamento *"
+                        />
+                      </div>
                       <FormField
                         control={form.control}
                         name="neighborhood"

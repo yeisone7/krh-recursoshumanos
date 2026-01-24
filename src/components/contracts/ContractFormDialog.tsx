@@ -52,6 +52,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateContract } from '@/hooks/useContracts';
 import type { Database } from '@/integrations/supabase/types';
+import { CitySelect } from '@/components/ui/city-department-select';
 
 type ContractType = Database['public']['Enums']['contract_type'];
 
@@ -446,7 +447,11 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
                           <FormItem>
                             <FormLabel>Ciudad de Trabajo</FormLabel>
                             <FormControl>
-                              <Input placeholder="Bogotá" {...field} />
+                              <CitySelect 
+                                value={field.value} 
+                                onValueChange={(city) => field.onChange(city)}
+                                placeholder="Buscar ciudad..."
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
