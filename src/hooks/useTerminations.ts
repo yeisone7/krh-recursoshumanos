@@ -133,17 +133,9 @@ export function useInitiateTermination() {
 
       if (docsError) throw docsError;
 
-      // Update contract to mark as terminated
-      const { error: contractError } = await supabase
-        .from('contracts')
-        .update({
-          is_terminated: true,
-          termination_date: effectiveDate.toISOString().split('T')[0],
-          termination_reason: reason,
-        })
-        .eq('id', contractId);
-
-      if (contractError) throw contractError;
+      // NOTE: Do NOT mark contract as terminated here
+      // The contract will be marked as terminated only when the process is completed
+      // This allows users to resume the process if they close the dialog
 
       // Log audit event
       await supabase.from('audit_logs').insert({
@@ -259,10 +251,14 @@ export function useCompleteTermination() {
       terminationId,
       contractId,
       employeeId,
+      effectiveDate,
+      reason,
     }: {
       terminationId: string;
       contractId: string;
       employeeId: string;
+      effectiveDate: Date;
+      reason?: string;
     }) => {
       // Update termination as completed
       const { error: terminationError } = await supabase
@@ -275,6 +271,18 @@ export function useCompleteTermination() {
         .eq('id', terminationId);
 
       if (terminationError) throw terminationError;
+
+      // NOW mark contract as terminated (moved from initiation)
+      const { error: contractError } = await supabase
+        .from('contracts')
+        .update({
+          is_terminated: true,
+          termination_date: effectiveDate.toISOString().split('T')[0],
+          termination_reason: reason,
+        })
+        .eq('id', contractId);
+
+      if (contractError) throw contractError;
 
       // Update employee status to retired
       const { error: employeeError } = await supabase
@@ -295,6 +303,7 @@ export function useCompleteTermination() {
           entity_id: terminationId,
           new_values: {
             is_completed: true,
+            is_terminated: true,
             employee_status: 'retired',
           },
           user_agent: navigator.userAgent,
