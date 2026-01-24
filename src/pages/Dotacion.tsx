@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { 
@@ -82,6 +83,7 @@ function getAlertLevel(daysRemaining: number): 'info' | 'warning' | 'critical' {
 }
 
 export default function Dotacion() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
@@ -91,6 +93,20 @@ export default function Dotacion() {
 
   const { currentCompanyId } = useAuth();
   const { data: deliveries, isLoading } = useDotationDeliveries();
+
+  // Handle deep link from dashboard alerts
+  useEffect(() => {
+    const detailId = searchParams.get('detail');
+    if (detailId && deliveries) {
+      const deliveryExists = deliveries.some(d => d.id === detailId);
+      if (deliveryExists) {
+        setSelectedDeliveryId(detailId);
+        setIsDetailOpen(true);
+        // Clear the query param after opening
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, deliveries, setSearchParams]);
 
   // Generate alerts from deliveries
   const alerts = useMemo(() => {

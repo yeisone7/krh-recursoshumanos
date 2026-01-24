@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -114,6 +115,7 @@ const resultIcons = {
 };
 
 export default function Examenes() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showFormDialog, setShowFormDialog] = useState(false);
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
@@ -123,6 +125,20 @@ export default function Examenes() {
 
   const { currentCompanyId } = useAuth();
   const { data: exams, isLoading } = useMedicalExams();
+
+  // Handle deep link from dashboard alerts
+  useEffect(() => {
+    const detailId = searchParams.get('detail');
+    if (detailId && exams) {
+      const examExists = exams.some(e => e.id === detailId);
+      if (examExists) {
+        setSelectedExamId(detailId);
+        setShowDetailDialog(true);
+        // Clear the query param after opening
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, exams, setSearchParams]);
 
   // Calculate stats
   const stats = useMemo(() => {
