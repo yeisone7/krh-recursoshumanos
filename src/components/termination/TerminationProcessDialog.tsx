@@ -62,7 +62,8 @@ import {
   useMarkDocumentGenerated,
   useCompleteTermination,
 } from '@/hooks/useTerminations';
-import { downloadTerminationDocument, TerminationDocumentData } from '@/lib/terminationPdfGenerator';
+import { downloadTerminationDocument } from '@/lib/terminationPdfGenerator';
+import type { TerminationDocumentData } from '@/types/termination';
 import { Contract, contractTypeLabels } from '@/types/contract';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
