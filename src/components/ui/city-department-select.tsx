@@ -76,60 +76,7 @@ export function CityDepartmentSelect({
 
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-2 gap-4', className)}>
-      {/* City Select */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-          {cityLabel}
-        </label>
-        <Popover open={cityOpen} onOpenChange={setCityOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={cityOpen}
-              className="w-full justify-between font-normal"
-              disabled={disabled}
-            >
-              {cityValue || cityPlaceholder}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[300px] p-0 bg-background z-50" align="start">
-            <Command>
-              <CommandInput
-                placeholder="Buscar municipio..."
-                value={searchQuery}
-                onValueChange={setSearchQuery}
-              />
-              <CommandList>
-                <CommandEmpty>No se encontraron municipios.</CommandEmpty>
-                <CommandGroup>
-                  {municipalities.map((m) => (
-                    <CommandItem
-                      key={`${m.name}-${m.department}`}
-                      value={`${m.name} ${m.department}`}
-                      onSelect={() => handleCitySelect(m.name, m.department)}
-                    >
-                      <Check
-                        className={cn(
-                          'mr-2 h-4 w-4',
-                          cityValue?.toUpperCase() === m.name ? 'opacity-100' : 'opacity-0'
-                        )}
-                      />
-                      <div className="flex flex-col">
-                        <span>{formatCityName(m.name)}</span>
-                        <span className="text-xs text-muted-foreground">{m.department}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* Department Select */}
+      {/* Department Select - First */}
       <div className="space-y-2">
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           {departmentLabel}
@@ -166,6 +113,59 @@ export function CityDepartmentSelect({
                         )}
                       />
                       {dept}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* City Select - Second */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          {cityLabel}
+        </label>
+        <Popover open={cityOpen} onOpenChange={setCityOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={cityOpen}
+              className="w-full justify-between font-normal"
+              disabled={disabled || !departmentValue}
+            >
+              {cityValue || (departmentValue ? cityPlaceholder : 'Seleccione departamento primero')}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-0 bg-background z-50" align="start">
+            <Command>
+              <CommandInput
+                placeholder="Buscar municipio..."
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+              />
+              <CommandList>
+                <CommandEmpty>No se encontraron municipios.</CommandEmpty>
+                <CommandGroup>
+                  {municipalities.map((m) => (
+                    <CommandItem
+                      key={`${m.name}-${m.department}`}
+                      value={`${m.name} ${m.department}`}
+                      onSelect={() => handleCitySelect(m.name, m.department)}
+                    >
+                      <Check
+                        className={cn(
+                          'mr-2 h-4 w-4',
+                          cityValue?.toUpperCase() === m.name ? 'opacity-100' : 'opacity-0'
+                        )}
+                      />
+                      <div className="flex flex-col">
+                        <span>{formatCityName(m.name)}</span>
+                        <span className="text-xs text-muted-foreground">{m.department}</span>
+                      </div>
                     </CommandItem>
                   ))}
                 </CommandGroup>
