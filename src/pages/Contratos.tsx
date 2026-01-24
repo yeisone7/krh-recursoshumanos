@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   FileText,
@@ -22,86 +23,152 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-interface Contract {
-  id: string;
-  employeeName: string;
-  type: 'indefinite' | 'fixed' | 'work_labor' | 'apprenticeship' | 'services';
-  startDate: string;
-  endDate: string | null;
-  currentEndDate: string | null;
-  salary: number;
-  status: 'active' | 'expiring' | 'expired' | 'terminated';
-  extensions: number;
-  daysRemaining?: number;
-}
+import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
+import { ContractDetailDialog } from '@/components/contracts/ContractDetailDialog';
+import {
+  Contract,
+  ContractExtension,
+  ContractType,
+  contractTypeLabels,
+  getContractStatus,
+  calculateDaysRemaining,
+  getCurrentEndDate,
+} from '@/types/contract';
 
+// Mock data with full Contract structure
 const mockContracts: Contract[] = [
   {
     id: '1',
+    employeeId: '1',
     employeeName: 'María García López',
-    type: 'indefinite',
-    startDate: '2022-03-15',
-    endDate: null,
+    contractType: 'indefinite',
+    startDate: new Date('2022-03-15'),
+    originalEndDate: null,
     currentEndDate: null,
     salary: 4500000,
+    salaryType: 'monthly',
+    transportAllowance: false,
+    operationCenter: 'Bogotá Centro',
+    position: 'Analista de Sistemas',
+    area: 'Tecnología',
+    hasNonCompeteClause: false,
+    hasConfidentialityClause: true,
+    extensions: [],
     status: 'active',
-    extensions: 0,
+    createdAt: new Date('2022-03-15'),
+    updatedAt: new Date('2022-03-15'),
   },
   {
     id: '2',
+    employeeId: '2',
     employeeName: 'Carlos Rodríguez Mejía',
-    type: 'fixed',
-    startDate: '2023-06-01',
-    endDate: '2024-02-01',
-    currentEndDate: '2024-02-01',
+    contractType: 'fixed',
+    startDate: new Date('2023-06-01'),
+    originalEndDate: new Date('2023-12-01'),
+    currentEndDate: new Date('2024-02-15'),
     salary: 3800000,
+    salaryType: 'monthly',
+    transportAllowance: true,
+    operationCenter: 'Medellín Norte',
+    position: 'Contador Senior',
+    area: 'Finanzas',
+    hasNonCompeteClause: false,
+    hasConfidentialityClause: true,
+    extensions: [
+      {
+        id: 'ext-1',
+        extensionNumber: 1,
+        startDate: new Date('2023-12-01'),
+        endDate: new Date('2024-02-15'),
+        createdAt: new Date('2023-11-25'),
+        notes: 'Primera prórroga por evaluación de desempeño',
+      },
+    ],
     status: 'expiring',
-    extensions: 2,
-    daysRemaining: 15,
+    createdAt: new Date('2023-06-01'),
+    updatedAt: new Date('2023-11-25'),
   },
   {
     id: '3',
+    employeeId: '3',
     employeeName: 'Ana Martínez Suárez',
-    type: 'fixed',
-    startDate: '2023-01-10',
-    endDate: '2024-01-10',
-    currentEndDate: '2024-03-10',
+    contractType: 'fixed',
+    startDate: new Date('2023-01-10'),
+    originalEndDate: new Date('2023-07-10'),
+    currentEndDate: new Date('2024-07-10'),
     salary: 5200000,
+    salaryType: 'monthly',
+    transportAllowance: false,
+    operationCenter: 'Bogotá Centro',
+    position: 'Coordinadora RRHH',
+    area: 'Recursos Humanos',
+    hasNonCompeteClause: true,
+    hasConfidentialityClause: true,
+    extensions: [
+      {
+        id: 'ext-2',
+        extensionNumber: 1,
+        startDate: new Date('2023-07-10'),
+        endDate: new Date('2024-01-10'),
+        createdAt: new Date('2023-07-05'),
+        notes: 'Prórroga por proyecto de reestructuración',
+      },
+      {
+        id: 'ext-3',
+        extensionNumber: 2,
+        startDate: new Date('2024-01-10'),
+        endDate: new Date('2024-07-10'),
+        createdAt: new Date('2024-01-05'),
+        notes: 'Segunda prórroga - continuidad del proyecto',
+      },
+    ],
     status: 'active',
-    extensions: 1,
+    createdAt: new Date('2023-01-10'),
+    updatedAt: new Date('2024-01-05'),
   },
   {
     id: '4',
+    employeeId: '4',
     employeeName: 'Pedro López Hernández',
-    type: 'work_labor',
-    startDate: '2023-06-20',
-    endDate: '2024-01-20',
-    currentEndDate: '2024-01-20',
+    contractType: 'work_labor',
+    startDate: new Date('2023-06-20'),
+    originalEndDate: new Date('2024-01-20'),
+    currentEndDate: new Date('2024-01-20'),
     salary: 2800000,
+    salaryType: 'monthly',
+    transportAllowance: true,
+    operationCenter: 'Cali Sur',
+    position: 'Operador de Planta',
+    area: 'Operaciones',
+    hasNonCompeteClause: false,
+    hasConfidentialityClause: false,
+    extensions: [],
     status: 'expired',
-    extensions: 0,
-    daysRemaining: -5,
+    createdAt: new Date('2023-06-20'),
+    updatedAt: new Date('2023-06-20'),
   },
   {
     id: '5',
+    employeeId: '5',
     employeeName: 'Laura Sánchez Torres',
-    type: 'indefinite',
-    startDate: '2022-11-05',
-    endDate: null,
+    contractType: 'indefinite',
+    startDate: new Date('2022-11-05'),
+    originalEndDate: null,
     currentEndDate: null,
     salary: 6000000,
+    salaryType: 'integral',
+    transportAllowance: false,
+    operationCenter: 'Bogotá Centro',
+    position: 'Diseñadora UX Senior',
+    area: 'Tecnología',
+    hasNonCompeteClause: true,
+    hasConfidentialityClause: true,
+    extensions: [],
     status: 'active',
-    extensions: 0,
+    createdAt: new Date('2022-11-05'),
+    updatedAt: new Date('2022-11-05'),
   },
 ];
-
-const typeLabels = {
-  indefinite: 'Indefinido',
-  fixed: 'Término Fijo',
-  work_labor: 'Obra Labor',
-  apprenticeship: 'Aprendizaje',
-  services: 'Servicios',
-};
 
 const statusConfig = {
   active: { label: 'Vigente', class: 'bg-success-light text-success border-success/20', icon: CheckCircle },
@@ -111,12 +178,43 @@ const statusConfig = {
 };
 
 export default function Contratos() {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0,
     }).format(value);
+  };
+
+  // Filter contracts
+  const filteredContracts = mockContracts.filter((contract) => {
+    const matchesSearch = contract.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          contract.position.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = typeFilter === 'all' || contract.contractType === typeFilter;
+    const status = getContractStatus(contract);
+    const matchesStatus = statusFilter === 'all' || status === statusFilter;
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  // Calculate stats
+  const stats = {
+    total: mockContracts.length,
+    active: mockContracts.filter(c => getContractStatus(c) === 'active').length,
+    expiring: mockContracts.filter(c => getContractStatus(c) === 'expiring').length,
+    expired: mockContracts.filter(c => getContractStatus(c) === 'expired').length,
+    withExtensions: mockContracts.filter(c => c.extensions.length > 0).length,
+  };
+
+  const handleContractClick = (contract: Contract) => {
+    setSelectedContract(contract);
+    setIsDetailOpen(true);
   };
 
   return (
@@ -132,11 +230,27 @@ export default function Contratos() {
           <h1 className="font-display text-2xl font-bold text-foreground">Contratos</h1>
           <p className="text-muted-foreground mt-1">Administra contratos y prórrogas de empleados</p>
         </div>
-        <Button className="gradient-primary text-primary-foreground hover:opacity-90 gap-2">
+        <Button 
+          onClick={() => setIsFormOpen(true)}
+          className="gradient-primary text-primary-foreground hover:opacity-90 gap-2"
+        >
           <Plus className="w-4 h-4" />
           Nuevo Contrato
         </Button>
       </motion.div>
+
+      {/* Contract Form Dialog */}
+      <ContractFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+      />
+
+      {/* Contract Detail Dialog */}
+      <ContractDetailDialog
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        contract={selectedContract}
+      />
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -150,7 +264,7 @@ export default function Contratos() {
             <FileText className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">247</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.active}</p>
             <p className="text-sm text-muted-foreground">Contratos activos</p>
           </div>
         </motion.div>
@@ -164,7 +278,7 @@ export default function Contratos() {
             <Clock className="w-5 h-5 text-warning" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">8</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.expiring}</p>
             <p className="text-sm text-muted-foreground">Por vencer (30 días)</p>
           </div>
         </motion.div>
@@ -178,7 +292,7 @@ export default function Contratos() {
             <AlertTriangle className="w-5 h-5 text-destructive" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">2</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.expired}</p>
             <p className="text-sm text-muted-foreground">Vencidos</p>
           </div>
         </motion.div>
@@ -192,7 +306,7 @@ export default function Contratos() {
             <FileText className="w-5 h-5 text-accent" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">45</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.withExtensions}</p>
             <p className="text-sm text-muted-foreground">Con prórrogas</p>
           </div>
         </motion.div>
@@ -210,28 +324,31 @@ export default function Contratos() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Buscar por empleado o tipo de contrato..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar por empleado o cargo..."
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
             />
           </div>
           <div className="flex gap-3">
-            <Select defaultValue="all">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[150px] h-10 text-sm border-border">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background">
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="indefinite">Indefinido</SelectItem>
                 <SelectItem value="fixed">Término Fijo</SelectItem>
                 <SelectItem value="work_labor">Obra Labor</SelectItem>
                 <SelectItem value="apprenticeship">Aprendizaje</SelectItem>
+                <SelectItem value="services">Servicios</SelectItem>
               </SelectContent>
             </Select>
-            <Select defaultValue="all">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[150px] h-10 text-sm border-border">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background">
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="active">Vigentes</SelectItem>
                 <SelectItem value="expiring">Por vencer</SelectItem>
@@ -267,14 +384,18 @@ export default function Contratos() {
               </tr>
             </thead>
             <tbody>
-              {mockContracts.map((contract, index) => {
-                const StatusIcon = statusConfig[contract.status].icon;
+              {filteredContracts.map((contract, index) => {
+                const status = getContractStatus(contract);
+                const daysRemaining = calculateDaysRemaining(contract.currentEndDate);
+                const StatusIcon = statusConfig[status].icon;
+                
                 return (
                   <motion.tr
                     key={contract.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.2, delay: index * 0.05 }}
+                    onClick={() => handleContractClick(contract)}
                     className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer group"
                   >
                     <td className="p-4">
@@ -282,43 +403,49 @@ export default function Contratos() {
                         <div className="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center">
                           <User className="w-4 h-4 text-primary" />
                         </div>
-                        <span className="font-medium text-foreground">{contract.employeeName}</span>
+                        <div>
+                          <span className="font-medium text-foreground">{contract.employeeName}</span>
+                          <p className="text-xs text-muted-foreground">{contract.position}</p>
+                        </div>
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className="text-sm text-foreground">{typeLabels[contract.type]}</span>
+                      <span className="text-sm text-foreground">{contractTypeLabels[contract.contractType]}</span>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="w-4 h-4" />
-                        {new Date(contract.startDate).toLocaleDateString('es-CO')}
+                        {contract.startDate.toLocaleDateString('es-CO')}
                       </div>
                     </td>
                     <td className="p-4">
                       <span className="text-sm text-foreground">
                         {contract.currentEndDate
-                          ? new Date(contract.currentEndDate).toLocaleDateString('es-CO')
+                          ? contract.currentEndDate.toLocaleDateString('es-CO')
                           : 'Sin fecha fin'}
                       </span>
+                      {contract.extensions.length > 0 && (
+                        <p className="text-xs text-accent">Extendido</p>
+                      )}
                     </td>
                     <td className="p-4">
                       <span className="text-sm font-medium text-foreground">{formatCurrency(contract.salary)}</span>
                     </td>
                     <td className="p-4">
-                      {contract.extensions > 0 ? (
+                      {contract.extensions.length > 0 ? (
                         <Badge variant="outline" className="bg-accent-light text-accent border-accent/20">
-                          {contract.extensions} prórroga{contract.extensions > 1 ? 's' : ''}
+                          {contract.extensions.length} prórroga{contract.extensions.length > 1 ? 's' : ''}
                         </Badge>
                       ) : (
                         <span className="text-sm text-muted-foreground">-</span>
                       )}
                     </td>
                     <td className="p-4">
-                      <Badge variant="outline" className={cn("gap-1", statusConfig[contract.status].class)}>
+                      <Badge variant="outline" className={cn("gap-1", statusConfig[status].class)}>
                         <StatusIcon className="w-3 h-3" />
-                        {statusConfig[contract.status].label}
-                        {contract.daysRemaining !== undefined && contract.daysRemaining > 0 && (
-                          <span className="ml-1">({contract.daysRemaining}d)</span>
+                        {statusConfig[status].label}
+                        {daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30 && (
+                          <span className="ml-1">({daysRemaining}d)</span>
                         )}
                       </Badge>
                     </td>
