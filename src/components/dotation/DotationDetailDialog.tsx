@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { DocumentSection } from '@/components/documents/DocumentSection';
 import { cn } from '@/lib/utils';
 
 import { 
@@ -186,6 +187,16 @@ export function DotationDetailDialog({ open, onOpenChange, delivery }: DotationD
               )}
             </div>
           </div>
+
+          <Separator />
+
+          {/* Document Section */}
+          <DocumentSection
+            entityType="dotation"
+            entityId={delivery.id}
+            title="Documento de Entrega"
+            showVersionHistory
+          />
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
