@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      areas: {
+        Row: {
+          code: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          manager_id: string | null
+          name: string
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          manager_id?: string | null
+          name: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          manager_id?: string | null
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "areas_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "areas_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -294,6 +351,56 @@ export type Database = {
           },
         ]
       }
+      contract_type_config: {
+        Row: {
+          company_id: string
+          contract_type: string
+          created_at: string
+          default_trial_days: number | null
+          display_name: string
+          id: string
+          is_active: boolean | null
+          max_duration_months: number | null
+          max_extensions: number | null
+          requires_end_date: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          contract_type: string
+          created_at?: string
+          default_trial_days?: number | null
+          display_name: string
+          id?: string
+          is_active?: boolean | null
+          max_duration_months?: number | null
+          max_extensions?: number | null
+          requires_end_date?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          contract_type?: string
+          created_at?: string
+          default_trial_days?: number | null
+          display_name?: string
+          id?: string
+          is_active?: boolean | null
+          max_duration_months?: number | null
+          max_extensions?: number | null
+          requires_end_date?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_type_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           contract_number: string | null
@@ -498,6 +605,113 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dotation_item_types: {
+        Row: {
+          category: string
+          code: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          default_validity_months: number | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          requires_size: boolean | null
+          sizes_available: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          code?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          default_validity_months?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          requires_size?: boolean | null
+          sizes_available?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          default_validity_months?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          requires_size?: boolean | null
+          sizes_available?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dotation_item_types_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_shifts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          employee_id: string
+          id: string
+          notes: string | null
+          shift_type_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_from: string
+          effective_to?: string | null
+          employee_id: string
+          id?: string
+          notes?: string | null
+          shift_type_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          shift_type_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_shifts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_shifts_shift_type_id_fkey"
+            columns: ["shift_type_id"]
+            isOneToOne: false
+            referencedRelation: "shift_types"
             referencedColumns: ["id"]
           },
         ]
@@ -752,6 +966,72 @@ export type Database = {
           },
         ]
       }
+      positions: {
+        Row: {
+          area_id: string | null
+          code: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          level: number | null
+          max_salary: number | null
+          min_salary: number | null
+          name: string
+          requirements: string | null
+          updated_at: string
+        }
+        Insert: {
+          area_id?: string | null
+          code?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          level?: number | null
+          max_salary?: number | null
+          min_salary?: number | null
+          name: string
+          requirements?: string | null
+          updated_at?: string
+        }
+        Update: {
+          area_id?: string | null
+          code?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          level?: number | null
+          max_salary?: number | null
+          min_salary?: number | null
+          name?: string
+          requirements?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "positions_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "positions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       selection_steps: {
         Row: {
           candidate_id: string
@@ -813,6 +1093,109 @@ export type Database = {
             columns: ["candidate_id"]
             isOneToOne: false
             referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_types: {
+        Row: {
+          break_duration_minutes: number | null
+          code: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_time: string
+          id: string
+          is_active: boolean | null
+          is_night_shift: boolean | null
+          is_rotating: boolean | null
+          name: string
+          rotation_days: number | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          break_duration_minutes?: number | null
+          code: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          is_night_shift?: boolean | null
+          is_rotating?: boolean | null
+          name: string
+          rotation_days?: number | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          break_duration_minutes?: number | null
+          code?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          is_night_shift?: boolean | null
+          is_rotating?: boolean | null
+          name?: string
+          rotation_days?: number | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_types_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_config: {
+        Row: {
+          company_id: string
+          config_key: string
+          config_value: Json
+          created_at: string
+          description: string | null
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          company_id: string
+          config_key: string
+          config_value?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          config_key?: string
+          config_value?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
