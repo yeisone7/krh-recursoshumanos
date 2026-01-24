@@ -12,6 +12,7 @@ import {
   CheckCircle,
   AlertTriangle,
   ArrowRight,
+  UserX,
 } from 'lucide-react';
 
 import {
@@ -29,6 +30,7 @@ import { toast } from '@/hooks/use-toast';
 
 import { ExtensionFormDialog } from './ExtensionFormDialog';
 import { DocumentSection } from '@/components/documents/DocumentSection';
+import { TerminationProcessDialog } from '@/components/termination/TerminationProcessDialog';
 import { useCreateContractExtension } from '@/hooks/useContracts';
 import {
   Contract,
@@ -54,6 +56,7 @@ const statusConfig = {
 
 export function ContractDetailDialog({ open, onOpenChange, contract }: ContractDetailDialogProps) {
   const [showExtensionForm, setShowExtensionForm] = useState(false);
+  const [showTerminationDialog, setShowTerminationDialog] = useState(false);
   const createExtension = useCreateContractExtension();
 
   if (!contract) return null;
@@ -88,6 +91,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   const daysRemaining = calculateDaysRemaining(contract.currentEndDate);
   const StatusIcon = statusConfig[status].icon;
   const canAddExtension = contract.contractType !== 'indefinite' && status !== 'terminated';
+  const canTerminate = status !== 'terminated';
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -330,13 +334,27 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
             </div>
           </ScrollArea>
 
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cerrar
-            </Button>
-            <Button className="gradient-primary text-primary-foreground">
-              Editar Contrato
-            </Button>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-between">
+            <div>
+              {canTerminate && (
+                <Button
+                  variant="outline"
+                  className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  onClick={() => setShowTerminationDialog(true)}
+                >
+                  <UserX className="w-4 h-4 mr-2" />
+                  Iniciar Retiro
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cerrar
+              </Button>
+              <Button className="gradient-primary text-primary-foreground">
+                Editar Contrato
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -353,6 +371,13 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
           onSubmit={handleCreateExtension}
         />
       )}
+
+      {/* Termination Process Dialog */}
+      <TerminationProcessDialog
+        open={showTerminationDialog}
+        onOpenChange={setShowTerminationDialog}
+        contract={contract}
+      />
     </>
   );
 }
