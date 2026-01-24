@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Select,
@@ -315,16 +316,16 @@ export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFo
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-background" align="start">
-                                <Calendar
-                                  mode="single"
+              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                                <DatePickerWithDropdowns
                                   selected={field.value}
                                   onSelect={field.onChange}
                                   disabled={(date) =>
                                     date > new Date() || date < new Date('1940-01-01')
                                   }
+                                  fromYear={1940}
+                                  toYear={new Date().getFullYear() - 18}
                                   initialFocus
-                                  className="pointer-events-auto"
                                 />
                               </PopoverContent>
                             </Popover>
