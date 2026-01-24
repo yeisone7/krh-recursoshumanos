@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   ArrowRight,
   UserX,
+  PlayCircle,
 } from 'lucide-react';
 
 import {
@@ -32,6 +33,7 @@ import { ExtensionFormDialog } from './ExtensionFormDialog';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { TerminationProcessDialog } from '@/components/termination/TerminationProcessDialog';
 import { useCreateContractExtension } from '@/hooks/useContracts';
+import { useContractTerminationProcess } from '@/hooks/useTerminations';
 import {
   Contract,
   ContractExtension,
@@ -58,6 +60,9 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   const [showExtensionForm, setShowExtensionForm] = useState(false);
   const [showTerminationDialog, setShowTerminationDialog] = useState(false);
   const createExtension = useCreateContractExtension();
+  
+  // Fetch termination process status
+  const { data: terminationProcess } = useContractTerminationProcess(contract?.id);
 
   if (!contract) return null;
 
@@ -91,7 +96,11 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   const daysRemaining = calculateDaysRemaining(contract.currentEndDate);
   const StatusIcon = statusConfig[status].icon;
   const canAddExtension = contract.contractType !== 'indefinite' && status !== 'terminated';
-  const canTerminate = status !== 'terminated';
+  
+  // Check if there's a pending termination process (initiated but not completed)
+  const hasPendingTermination = terminationProcess && !terminationProcess.isCompleted;
+  // Show termination button if contract is not fully terminated OR if there's a pending process
+  const canTerminate = status !== 'terminated' || hasPendingTermination;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -116,13 +125,21 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                   <p className="text-sm text-muted-foreground">{contract.position}</p>
                 </div>
               </div>
-              <Badge variant="outline" className={cn("gap-1", statusConfig[status].class)}>
-                <StatusIcon className="w-3 h-3" />
-                {statusConfig[status].label}
-                {daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30 && (
-                  <span className="ml-1">({daysRemaining}d)</span>
+              <div className="flex flex-col items-end gap-2">
+                <Badge variant="outline" className={cn("gap-1", statusConfig[status].class)}>
+                  <StatusIcon className="w-3 h-3" />
+                  {statusConfig[status].label}
+                  {daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30 && (
+                    <span className="ml-1">({daysRemaining}d)</span>
+                  )}
+                </Badge>
+                {hasPendingTermination && (
+                  <Badge variant="outline" className="bg-warning-light text-warning-foreground border-warning/20 gap-1">
+                    <Clock className="w-3 h-3" />
+                    Retiro en progreso
+                  </Badge>
                 )}
-              </Badge>
+              </div>
             </div>
           </DialogHeader>
 
@@ -339,11 +356,24 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
               {canTerminate && (
                 <Button
                   variant="outline"
-                  className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  className={cn(
+                    hasPendingTermination 
+                      ? "border-warning/50 text-warning-foreground hover:bg-warning hover:text-warning-foreground"
+                      : "border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  )}
                   onClick={() => setShowTerminationDialog(true)}
                 >
-                  <UserX className="w-4 h-4 mr-2" />
-                  Iniciar Retiro
+                  {hasPendingTermination ? (
+                    <>
+                      <PlayCircle className="w-4 h-4 mr-2" />
+                      Continuar Retiro
+                    </>
+                  ) : (
+                    <>
+                      <UserX className="w-4 h-4 mr-2" />
+                      Iniciar Retiro
+                    </>
+                  )}
                 </Button>
               )}
             </div>
