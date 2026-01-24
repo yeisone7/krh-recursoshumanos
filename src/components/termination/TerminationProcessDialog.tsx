@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useForm } from 'react-hook-form';
@@ -12,6 +12,7 @@ import {
   Loader2,
   CalendarIcon,
   ClipboardList,
+  Save,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,6 +23,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -82,6 +93,7 @@ export function TerminationProcessDialog({
   const { currentCompanyId } = useAuth();
   const [step, setStep] = useState<'initiate' | 'checklist'>('initiate');
   const [companyData, setCompanyData] = useState<any>(null);
+  const [showExitConfirmation, setShowExitConfirmation] = useState(false);
 
   const { data: termination, isLoading } = useContractTerminationProcess(contract.id);
   const initiateTermination = useInitiateTermination();
@@ -97,6 +109,21 @@ export function TerminationProcessDialog({
     },
   });
 
+  // Determine initial step based on existing termination
+  useEffect(() => {
+    if (termination && !termination.isCompleted) {
+      setStep('checklist');
+    }
+  }, [termination]);
+
+  // Calculate checklist if termination exists
+  const checklist = termination
+    ? calculateChecklistStatus(termination.terminationType, termination.documents)
+    : null;
+
+  // Check if there are pending documents
+  const hasPendingDocuments = checklist && !checklist.canFinalize;
+
   // Fetch company data for PDF generation
   const fetchCompanyData = async () => {
     if (!currentCompanyId) return null;
@@ -107,6 +134,24 @@ export function TerminationProcessDialog({
       .single();
     setCompanyData(data);
     return data;
+  };
+
+  // Handle dialog close attempt
+  const handleCloseAttempt = () => {
+    if (step === 'checklist' && hasPendingDocuments) {
+      setShowExitConfirmation(true);
+    } else {
+      onOpenChange(false);
+    }
+  };
+
+  // Handle confirmed close
+  const handleConfirmedClose = () => {
+    setShowExitConfirmation(false);
+    onOpenChange(false);
+    toast.info('Proceso guardado', {
+      description: 'Puede continuar el proceso de retiro en cualquier momento.',
+    });
   };
 
   // Handle initiation
@@ -190,253 +235,270 @@ export function TerminationProcessDialog({
       terminationId: termination.id,
       contractId: contract.id,
       employeeId: contract.employeeId,
+      effectiveDate: termination.effectiveDate,
+      reason: termination.reason,
     });
     
     onOpenChange(false);
   };
 
-  // Calculate checklist if termination exists
-  const checklist = termination
-    ? calculateChecklistStatus(termination.terminationType, termination.documents)
-    : null;
-
-  // Determine initial step based on existing termination
-  if (termination && step === 'initiate') {
-    setStep('checklist');
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-primary" />
-            Proceso de Retiro - {contract.employeeName}
-          </DialogTitle>
-          <DialogDescription>
-            {step === 'initiate'
-              ? 'Configure los detalles de la terminación del contrato.'
-              : 'Complete el checklist de documentos requeridos.'}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={handleCloseAttempt}>
+        <DialogContent className="max-w-2xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-primary" />
+              Proceso de Retiro - {contract.employeeName}
+            </DialogTitle>
+            <DialogDescription>
+              {step === 'initiate'
+                ? 'Configure los detalles de la terminación del contrato.'
+                : 'Complete el checklist de documentos requeridos.'}
+            </DialogDescription>
+          </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh] pr-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : step === 'initiate' && !termination ? (
-            // Step 1: Initiate termination
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleInitiate)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="terminationType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Terminación</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccione el tipo de terminación" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.entries(terminationTypeLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="terminationDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Fecha de Notificación</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
-                                {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-background" align="start">
-                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="effectiveDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Fecha Efectiva</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
-                                {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-background" align="start">
-                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {form.watch('terminationType') === 'renuncia' && (
-                  <FormField
-                    control={form.control}
-                    name="resignationDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Fecha de Carta de Renuncia</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
-                                {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-background" align="start">
-                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                <FormField
-                  control={form.control}
-                  name="reason"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Motivo (opcional)</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Describa el motivo de la terminación..." className="min-h-[80px]" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit" disabled={initiateTermination.isPending}>
-                    {initiateTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Iniciar Proceso
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          ) : checklist ? (
-            // Step 2: Checklist
-            <div className="space-y-6">
-              {/* Progress */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Progreso del checklist</span>
-                  <span className="font-medium">{checklist.completedDocuments}/{checklist.totalDocuments} documentos</span>
-                </div>
-                <Progress value={(checklist.completedDocuments / checklist.totalDocuments) * 100} className="h-2" />
+          <ScrollArea className="max-h-[60vh] pr-4">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
+            ) : step === 'initiate' && !termination ? (
+              // Step 1: Initiate termination
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleInitiate)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="terminationType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tipo de Terminación</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccione el tipo de terminación" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(terminationTypeLabels).map(([value, label]) => (
+                              <SelectItem key={value} value={value}>
+                                {label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Document list */}
-              <div className="space-y-3">
-                {checklist.documents.map((doc) => {
-                  const terminationDoc = termination?.documents.find((d) => d.documentType === doc.type);
-                  
-                  return (
-                    <div
-                      key={doc.type}
-                      className={cn(
-                        'flex items-center justify-between p-4 rounded-lg border',
-                        doc.isGenerated ? 'bg-success-light border-success/20' : 'bg-muted/30 border-border'
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="terminationDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Fecha de Notificación</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
+                                  {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                    >
-                      <div className="flex items-start gap-3">
-                        {doc.isGenerated ? (
-                          <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
-                        ) : (
-                          <Circle className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="effectiveDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Fecha Efectiva</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
+                                  {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {form.watch('terminationType') === 'renuncia' && (
+                    <FormField
+                      control={form.control}
+                      name="resignationDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Fecha de Carta de Renuncia</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
+                                  {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  <FormField
+                    control={form.control}
+                    name="reason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Motivo (opcional)</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Describa el motivo de la terminación..." className="min-h-[80px]" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-end gap-3 pt-4">
+                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit" disabled={initiateTermination.isPending}>
+                      {initiateTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Iniciar Proceso
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            ) : checklist ? (
+              // Step 2: Checklist
+              <div className="space-y-6">
+                {/* Progress */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Progreso del checklist</span>
+                    <span className="font-medium">{checklist.completedDocuments}/{checklist.totalDocuments} documentos</span>
+                  </div>
+                  <Progress value={(checklist.completedDocuments / checklist.totalDocuments) * 100} className="h-2" />
+                </div>
+
+                {/* Document list */}
+                <div className="space-y-3">
+                  {checklist.documents.map((doc) => {
+                    const terminationDoc = termination?.documents.find((d) => d.documentType === doc.type);
+                    
+                    return (
+                      <div
+                        key={doc.type}
+                        className={cn(
+                          'flex items-center justify-between p-4 rounded-lg border',
+                          doc.isGenerated ? 'bg-success-light border-success/20' : 'bg-muted/30 border-border'
                         )}
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{doc.label}</span>
-                            {doc.isRequired && (
-                              <Badge variant="secondary" className="text-xs">Requerido</Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
-                        </div>
-                      </div>
-
-                      <Button
-                        variant={doc.isGenerated ? 'outline' : 'default'}
-                        size="sm"
-                        onClick={() => terminationDoc && handleGenerateDocument(doc.type, terminationDoc.id)}
-                        disabled={markDocumentGenerated.isPending}
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        {doc.isGenerated ? 'Descargar' : 'Generar PDF'}
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
+                        <div className="flex items-start gap-3">
+                          {doc.isGenerated ? (
+                            <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
+                          ) : (
+                            <Circle className="w-5 h-5 text-muted-foreground mt-0.5" />
+                          )}
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{doc.label}</span>
+                              {doc.isRequired && (
+                                <Badge variant="secondary" className="text-xs">Requerido</Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
+                          </div>
+                        </div>
 
-              {/* Actions */}
-              <div className="flex justify-between pt-4 border-t">
-                <Button variant="outline" onClick={() => onOpenChange(false)}>
-                  Cerrar
-                </Button>
-                <Button
-                  onClick={handleComplete}
-                  disabled={!checklist.canFinalize || completeTermination.isPending}
-                  className={cn(!checklist.canFinalize && 'opacity-50')}
-                >
-                  {completeTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Finalizar Proceso
-                </Button>
-              </div>
+                        <Button
+                          variant={doc.isGenerated ? 'outline' : 'default'}
+                          size="sm"
+                          onClick={() => terminationDoc && handleGenerateDocument(doc.type, terminationDoc.id)}
+                          disabled={markDocumentGenerated.isPending}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          {doc.isGenerated ? 'Descargar' : 'Generar PDF'}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
 
-              {!checklist.canFinalize && (
-                <p className="text-sm text-center text-warning-foreground">
-                  <AlertTriangle className="w-4 h-4 inline mr-1" />
-                  Debe generar todos los documentos requeridos para finalizar el proceso.
-                </p>
-              )}
-            </div>
-          ) : null}
-        </ScrollArea>
-      </DialogContent>
-    </Dialog>
+                {/* Actions */}
+                <div className="flex justify-between pt-4 border-t">
+                  <Button variant="outline" onClick={handleCloseAttempt}>
+                    <Save className="w-4 h-4 mr-2" />
+                    Guardar y Continuar Después
+                  </Button>
+                  <Button
+                    onClick={handleComplete}
+                    disabled={!checklist.canFinalize || completeTermination.isPending}
+                    className={cn(!checklist.canFinalize && 'opacity-50')}
+                  >
+                    {completeTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Finalizar Proceso
+                  </Button>
+                </div>
+
+                {!checklist.canFinalize && (
+                  <p className="text-sm text-center text-warning-foreground">
+                    <AlertTriangle className="w-4 h-4 inline mr-1" />
+                    Debe generar todos los documentos requeridos para finalizar el proceso.
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Exit confirmation dialog */}
+      <AlertDialog open={showExitConfirmation} onOpenChange={setShowExitConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              Proceso Incompleto
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Aún tiene documentos pendientes por generar. El proceso de retiro quedará guardado 
+              y podrá continuarlo en cualquier momento desde el detalle del contrato.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar Editando</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmedClose}>
+              Guardar y Salir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
