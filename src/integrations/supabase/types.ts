@@ -1588,7 +1588,7 @@ export type Database = {
         | "chaleco_reflectivo"
         | "impermeable"
         | "otros"
-      employee_status: "active" | "suspended" | "retired"
+      employee_status: "active" | "suspended" | "retired" | "en_retiro"
       exam_result: "apto" | "apto_restricciones" | "no_apto" | "pendiente"
       exam_type: "ingreso" | "periodico" | "egreso" | "reintegro"
       selection_step_status:
@@ -1797,7 +1797,7 @@ export const Constants = {
         "impermeable",
         "otros",
       ],
-      employee_status: ["active", "suspended", "retired"],
+      employee_status: ["active", "suspended", "retired", "en_retiro"],
       exam_result: ["apto", "apto_restricciones", "no_apto", "pendiente"],
       exam_type: ["ingreso", "periodico", "egreso", "reintegro"],
       selection_step_status: [
