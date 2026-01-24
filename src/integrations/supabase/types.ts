@@ -245,6 +245,57 @@ export type Database = {
           },
         ]
       }
+      document_versions: {
+        Row: {
+          company_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          is_current: boolean
+          mime_type: string
+          notes: string | null
+          uploaded_at: string
+          uploaded_by: string
+          version: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          is_current?: boolean
+          mime_type: string
+          notes?: string | null
+          uploaded_at?: string
+          uploaded_by: string
+          version?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          is_current?: boolean
+          mime_type?: string
+          notes?: string | null
+          uploaded_at?: string
+          uploaded_by?: string
+          version?: number
+        }
+        Relationships: []
+      }
       dotation_deliveries: {
         Row: {
           created_at: string
