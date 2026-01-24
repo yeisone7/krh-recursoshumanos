@@ -5,7 +5,7 @@ import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { VacanciesOverview } from '@/components/dashboard/VacanciesOverview';
 import { ContractsChart } from '@/components/dashboard/ContractsChart';
-
+import { ActiveTerminationsPanel } from '@/components/dashboard/ActiveTerminationsPanel';
 export default function Dashboard() {
   return (
     <div className="space-y-6">
@@ -102,11 +102,14 @@ export default function Dashboard() {
       {/* Charts Row */}
       <ContractsChart />
 
-      {/* Alerts and Vacancies Row */}
+      {/* Active Terminations and Alerts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ActiveTerminationsPanel />
         <AlertsPanel />
-        <VacanciesOverview />
       </div>
+
+      {/* Vacancies Row */}
+      <VacanciesOverview />
 
       {/* Activity */}
       <RecentActivity />
