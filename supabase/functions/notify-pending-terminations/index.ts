@@ -62,9 +62,28 @@ async function sendEmail(to: string, subject: string, html: string): Promise<{ s
   }
 }
 
-async function getPendingTerminations(supabase: any, minDays: number = 7): Promise<PendingTermination[]> {
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - minDays);
+async function getCompanyConfigs(supabase: any): Promise<Map<string, number>> {
+  const { data, error } = await supabase
+    .from('system_config')
+    .select('company_id, config_value')
+    .eq('config_key', 'alert_termination_pending_days');
+
+  if (error) {
+    console.error('Error fetching company configs:', error);
+    return new Map();
+  }
+
+  const configMap = new Map<string, number>();
+  for (const item of data || []) {
+    const minDays = item.config_value?.min_days || 7;
+    configMap.set(item.company_id, minDays);
+  }
+  return configMap;
+}
+
+async function getPendingTerminations(supabase: any, defaultMinDays: number = 7): Promise<PendingTermination[]> {
+  // Get company-specific configs
+  const companyConfigs = await getCompanyConfigs(supabase);
 
   const { data, error } = await supabase
     .from('employee_terminations')
@@ -73,38 +92,49 @@ async function getPendingTerminations(supabase: any, minDays: number = 7): Promi
       termination_type,
       effective_date,
       created_at,
+      company_id,
       employees!inner(first_name, last_name, position),
       companies!inner(name, email),
       termination_documents(is_generated)
     `)
-    .eq('is_completed', false)
-    .lte('created_at', cutoffDate.toISOString());
+    .eq('is_completed', false);
 
   if (error) {
     console.error('Error fetching pending terminations:', error);
     throw error;
   }
 
-  return (data || []).map((item: any) => {
-    const documents = item.termination_documents || [];
-    const totalDocs = documents.length;
-    const completedDocs = documents.filter((d: any) => d.is_generated).length;
+  const results: PendingTermination[] = [];
+  
+  for (const item of data || []) {
     const daysPending = Math.floor((Date.now() - new Date(item.created_at).getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Use company-specific config or default
+    const minDays = companyConfigs.get(item.company_id) ?? defaultMinDays;
+    
+    // Only include if pending for at least minDays
+    if (daysPending >= minDays) {
+      const documents = item.termination_documents || [];
+      const totalDocs = documents.length;
+      const completedDocs = documents.filter((d: any) => d.is_generated).length;
 
-    return {
-      id: item.id,
-      employee_name: `${item.employees.first_name} ${item.employees.last_name}`,
-      employee_position: item.employees.position,
-      termination_type: item.termination_type,
-      effective_date: item.effective_date,
-      created_at: item.created_at,
-      days_pending: daysPending,
-      pending_documents: totalDocs - completedDocs,
-      total_documents: totalDocs,
-      company_name: item.companies.name,
-      company_email: item.companies.email,
-    };
-  });
+      results.push({
+        id: item.id,
+        employee_name: `${item.employees.first_name} ${item.employees.last_name}`,
+        employee_position: item.employees.position,
+        termination_type: item.termination_type,
+        effective_date: item.effective_date,
+        created_at: item.created_at,
+        days_pending: daysPending,
+        pending_documents: totalDocs - completedDocs,
+        total_documents: totalDocs,
+        company_name: item.companies.name,
+        company_email: item.companies.email,
+      });
+    }
+  }
+
+  return results;
 }
 
 function generateEmailHtml(terminations: PendingTermination[]): string {
