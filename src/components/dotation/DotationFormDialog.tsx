@@ -80,16 +80,13 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
   const selectedEmployeeId = form.watch('employeeId');
   const selectedEmployee = employees.find(e => e.id === selectedEmployeeId);
   const selectedItemType = form.watch('itemType');
-  const isFootwear = selectedItemType === 'shoes' || selectedItemType === 'boots';
+  const isFootwear = selectedItemType === 'calzado_seguridad' || selectedItemType === 'calzado_dielectrico';
 
   const handleSubmit = async (data: DotationDeliveryFormData) => {
     try {
-      // Map item type from form to database enum
-      const dbItemType = formToDbItemType[data.itemType] || 'otro';
-
       await createDelivery.mutateAsync({
         employee_id: data.employeeId,
-        item_type: dbItemType,
+        item_type: data.itemType,
         item_name: data.itemName,
         quantity: data.quantity,
         size: data.size,
