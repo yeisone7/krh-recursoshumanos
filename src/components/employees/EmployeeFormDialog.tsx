@@ -40,7 +40,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 import {
   employeeFormSchema,
@@ -51,22 +51,15 @@ import {
   educationLevelLabels,
   maritalStatusLabels,
 } from '@/types/employee';
+import { useOperationCenters } from '@/hooks/useCompanies';
+import { useCreateEmployee } from '@/hooks/useEmployees';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface EmployeeFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: EmployeeFormData) => void;
+  onSuccess?: () => void;
 }
-
-const operationCenters = [
-  { value: 'bogota-centro', label: 'Bogotá Centro' },
-  { value: 'bogota-norte', label: 'Bogotá Norte' },
-  { value: 'medellin-norte', label: 'Medellín Norte' },
-  { value: 'medellin-sur', label: 'Medellín Sur' },
-  { value: 'cali-sur', label: 'Cali Sur' },
-  { value: 'barranquilla', label: 'Barranquilla' },
-  { value: 'cartagena', label: 'Cartagena' },
-];
 
 const colombianDepartments = [
   'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bogotá D.C.', 'Bolívar',
@@ -77,8 +70,11 @@ const colombianDepartments = [
   'Valle del Cauca', 'Vaupés', 'Vichada',
 ];
 
-export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFormDialogProps) {
+export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFormDialogProps) {
   const [activeTab, setActiveTab] = useState('personal');
+  const { currentCompanyId } = useAuth();
+  const { data: operationCenters = [] } = useOperationCenters();
+  const createEmployee = useCreateEmployee();
 
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeFormSchema),
@@ -94,15 +90,60 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
   const hasChildren = form.watch('hasChildren');
   const hasVehicle = form.watch('hasVehicle');
 
-  const handleSubmit = (data: EmployeeFormData) => {
-    console.log('Employee data:', data);
-    onSubmit?.(data);
-    toast({
-      title: 'Empleado creado',
-      description: `${data.firstName} ${data.lastName} ha sido registrado exitosamente.`,
-    });
-    onOpenChange(false);
-    form.reset();
+  const handleSubmit = async (data: EmployeeFormData) => {
+    if (!currentCompanyId) {
+      toast.error('Error: No hay empresa seleccionada');
+      return;
+    }
+
+    try {
+      // Parse salary to number
+      const salaryNumber = parseFloat(data.salary.replace(/[^0-9.-]+/g, ''));
+      
+      await createEmployee.mutateAsync({
+        company_id: currentCompanyId,
+        operation_center_id: data.operationCenter,
+        document_type: data.documentType,
+        document_number: data.documentNumber,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        birth_date: format(data.birthDate, 'yyyy-MM-dd'),
+        gender: data.gender,
+        blood_type: data.bloodType,
+        marital_status: data.maritalStatus,
+        email: data.email,
+        phone: data.phone,
+        mobile: data.mobilePhone,
+        address: data.address,
+        city: data.city,
+        department: data.department,
+        emergency_contact_name: data.emergencyContactName,
+        emergency_contact_phone: data.emergencyContactPhone,
+        emergency_contact_relationship: data.emergencyContactRelationship,
+        position: data.position,
+        department_area: data.area,
+        contract_type: data.contractType,
+        shift_type: data.shiftType,
+        hire_date: format(data.startDate, 'yyyy-MM-dd'),
+        salary: salaryNumber,
+        education_level: data.educationLevel,
+        profession: data.profession,
+        status: data.status,
+      });
+
+      toast.success('Empleado creado', {
+        description: `${data.firstName} ${data.lastName} ha sido registrado exitosamente.`,
+      });
+      
+      onOpenChange(false);
+      form.reset();
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Error creating employee:', error);
+      toast.error('Error al crear empleado', {
+        description: error.message || 'Por favor intenta de nuevo',
+      });
+    }
   };
 
   const tabItems = [
@@ -412,7 +453,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                           <FormItem>
                             <FormLabel>Correo Personal</FormLabel>
                             <FormControl>
-                              <Input type="email" placeholder="juan.garcia@gmail.com" {...field} />
+                              <Input type="email" placeholder="juan@gmail.com" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -423,9 +464,9 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Teléfono Fijo</FormLabel>
+                            <FormLabel>Teléfono Fijo *</FormLabel>
                             <FormControl>
-                              <Input placeholder="+57 1 234 5678" {...field} />
+                              <Input placeholder="6012345678" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -438,7 +479,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                           <FormItem>
                             <FormLabel>Celular *</FormLabel>
                             <FormControl>
-                              <Input placeholder="+57 310 123 4567" {...field} />
+                              <Input placeholder="3001234567" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -448,7 +489,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Dirección de Residencia</h3>
+                    <h3 className="font-semibold text-foreground border-b pb-2">Dirección</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -457,20 +498,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                           <FormItem className="md:col-span-2">
                             <FormLabel>Dirección *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Calle 123 # 45-67, Apto 101" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="neighborhood"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Barrio</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Chapinero" {...field} />
+                              <Input placeholder="Calle 100 # 15-20 Apto 501" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -513,6 +541,19 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                       />
                       <FormField
                         control={form.control}
+                        name="neighborhood"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Barrio</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Usaquén" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
                         name="postalCode"
                         render={({ field }) => (
                           <FormItem>
@@ -537,7 +578,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                           <FormItem>
                             <FormLabel>Nombre Completo *</FormLabel>
                             <FormControl>
-                              <Input placeholder="María García" {...field} />
+                              <Input placeholder="María López" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -550,7 +591,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                           <FormItem>
                             <FormLabel>Teléfono *</FormLabel>
                             <FormControl>
-                              <Input placeholder="+57 310 987 6543" {...field} />
+                              <Input placeholder="3009876543" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -573,7 +614,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                   </div>
                 </TabsContent>
 
-                {/* Labor Data Tab */}
+                {/* Labor Tab */}
                 <TabsContent value="labor" className="mt-0 space-y-6">
                   <div className="space-y-4">
                     <h3 className="font-semibold text-foreground border-b pb-2">Centro de Operación y Cargo</h3>
@@ -584,7 +625,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Centro de Operación *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Seleccionar centro" />
@@ -592,8 +633,8 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                               </FormControl>
                               <SelectContent className="bg-background">
                                 {operationCenters.map((center) => (
-                                  <SelectItem key={center.value} value={center.value}>
-                                    {center.label}
+                                  <SelectItem key={center.id} value={center.id}>
+                                    {center.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -622,7 +663,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                           <FormItem>
                             <FormLabel>Cargo *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Analista de Sistemas" {...field} />
+                              <Input placeholder="Desarrollador Senior" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -633,9 +674,9 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                         name="directSupervisor"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Jefe Directo</FormLabel>
+                            <FormLabel>Supervisor Directo</FormLabel>
                             <FormControl>
-                              <Input placeholder="Carlos Pérez" {...field} />
+                              <Input placeholder="Nombre del supervisor" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -710,7 +751,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                                     {field.value ? (
                                       format(field.value, 'PPP', { locale: es })
                                     ) : (
-                                      <span>Seleccionar fecha</span>
+                                      <span>Seleccionar</span>
                                     )}
                                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                   </Button>
@@ -734,8 +775,8 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Información Salarial y Bancaria</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Salario y Banco</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
                         name="salary"
@@ -787,10 +828,10 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                         control={form.control}
                         name="bankAccountNumber"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="md:col-span-2">
                             <FormLabel>Número de Cuenta</FormLabel>
                             <FormControl>
-                              <Input placeholder="1234567890" {...field} />
+                              <Input placeholder="123456789012" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -800,7 +841,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                   </div>
                 </TabsContent>
 
-                {/* Additional Info Tab */}
+                {/* Additional Tab */}
                 <TabsContent value="additional" className="mt-0 space-y-6">
                   <div className="space-y-4">
                     <h3 className="font-semibold text-foreground border-b pb-2">Educación</h3>
@@ -844,13 +885,13 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Información Familiar</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Familia</h3>
+                    <div className="space-y-4">
                       <FormField
                         control={form.control}
                         name="hasChildren"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -868,7 +909,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                           control={form.control}
                           name="numberOfChildren"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="max-w-[200px]">
                               <FormLabel>Número de Hijos</FormLabel>
                               <FormControl>
                                 <Input
@@ -889,12 +930,12 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
 
                   <div className="space-y-4">
                     <h3 className="font-semibold text-foreground border-b pb-2">Vehículo</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       <FormField
                         control={form.control}
                         name="hasVehicle"
                         render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
                               <Checkbox
                                 checked={field.value}
@@ -912,10 +953,10 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                           control={form.control}
                           name="vehiclePlate"
                           render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="max-w-[200px]">
                               <FormLabel>Placa del Vehículo</FormLabel>
                               <FormControl>
-                                <Input placeholder="ABC-123" {...field} />
+                                <Input placeholder="ABC123" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -926,7 +967,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Tallas (para dotación)</h3>
+                    <h3 className="font-semibold text-foreground border-b pb-2">Tallas para Dotación</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
@@ -956,9 +997,18 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Talla de Pantalón</FormLabel>
-                            <FormControl>
-                              <Input placeholder="32" {...field} />
-                            </FormControl>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleccionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {['28', '30', '32', '34', '36', '38', '40', '42'].map((size) => (
+                                  <SelectItem key={size} value={size}>{size}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -968,17 +1018,29 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                         name="shoeSize"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Talla de Calzado</FormLabel>
-                            <FormControl>
-                              <Input placeholder="42" {...field} />
-                            </FormControl>
+                            <FormLabel>Talla de Zapatos</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleccionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {Array.from({ length: 13 }, (_, i) => (35 + i).toString()).map((size) => (
+                                  <SelectItem key={size} value={size}>{size}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
                   </div>
+                </TabsContent>
 
+                {/* Documents Tab */}
+                <TabsContent value="documents" className="mt-0 space-y-6">
                   <div className="space-y-4">
                     <h3 className="font-semibold text-foreground border-b pb-2">Observaciones</h3>
                     <FormField
@@ -986,11 +1048,11 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                       name="observations"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Notas Adicionales</FormLabel>
+                          <FormLabel>Observaciones Adicionales</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="Información adicional relevante sobre el empleado..."
-                              className="min-h-[100px]"
+                              placeholder="Escriba cualquier observación adicional sobre el empleado..."
+                              className="min-h-[120px] resize-none"
                               {...field}
                             />
                           </FormControl>
@@ -999,64 +1061,25 @@ export function EmployeeFormDialog({ open, onOpenChange, onSubmit }: EmployeeFor
                       )}
                     />
                   </div>
-                </TabsContent>
 
-                {/* Documents Tab */}
-                <TabsContent value="documents" className="mt-0 space-y-6">
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                      <FileText className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="font-semibold text-foreground mb-2">Gestión de Documentos</h3>
-                    <p className="text-muted-foreground max-w-md mb-4">
-                      Una vez creado el empleado, podrás adjuntar documentos como contratos firmados, 
-                      exámenes médicos, certificados y otros documentos importantes.
-                    </p>
+                  <div className="bg-muted/50 p-4 rounded-lg">
                     <p className="text-sm text-muted-foreground">
-                      Los documentos se gestionan desde la ficha del empleado.
+                      La gestión de documentos adjuntos estará disponible próximamente.
                     </p>
                   </div>
                 </TabsContent>
               </ScrollArea>
-            </Tabs>
 
-            <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/30">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <div className="flex gap-2">
-                {activeTab !== 'personal' && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      const tabs = ['personal', 'contact', 'labor', 'additional', 'documents'];
-                      const currentIndex = tabs.indexOf(activeTab);
-                      if (currentIndex > 0) setActiveTab(tabs[currentIndex - 1]);
-                    }}
-                  >
-                    Anterior
-                  </Button>
-                )}
-                {activeTab !== 'documents' ? (
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      const tabs = ['personal', 'contact', 'labor', 'additional', 'documents'];
-                      const currentIndex = tabs.indexOf(activeTab);
-                      if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1]);
-                    }}
-                    className="gradient-primary text-primary-foreground"
-                  >
-                    Siguiente
-                  </Button>
-                ) : (
-                  <Button type="submit" className="gradient-primary text-primary-foreground">
-                    Guardar Empleado
-                  </Button>
-                )}
+              {/* Footer with submit button */}
+              <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={createEmployee.isPending}>
+                  {createEmployee.isPending ? 'Guardando...' : 'Guardar Empleado'}
+                </Button>
               </div>
-            </div>
+            </Tabs>
           </form>
         </Form>
       </DialogContent>

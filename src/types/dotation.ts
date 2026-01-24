@@ -1,19 +1,21 @@
 import { z } from 'zod';
 
-// Dotation Item Type (what is being delivered)
+// Dotation Item Type (what is being delivered) - matching database enum
 export type DotationItemType = 
-  | 'shirt' 
-  | 'pants' 
-  | 'shoes' 
-  | 'jacket' 
-  | 'vest' 
-  | 'helmet' 
-  | 'gloves' 
-  | 'glasses' 
-  | 'boots' 
-  | 'uniform_set'
-  | 'safety_equipment'
-  | 'other';
+  | 'uniforme_camisa' 
+  | 'uniforme_pantalon' 
+  | 'uniforme_conjunto'
+  | 'calzado_seguridad' 
+  | 'calzado_dielectrico'
+  | 'casco' 
+  | 'guantes' 
+  | 'gafas_seguridad' 
+  | 'chaleco_reflectivo'
+  | 'protector_auditivo'
+  | 'arnes'
+  | 'overol'
+  | 'impermeable'
+  | 'otros';
 
 // Dotation Status
 export type DotationStatus = 'pending' | 'delivered' | 'expiring' | 'expired';
@@ -58,9 +60,10 @@ export const dotationDeliverySchema = z.object({
     required_error: 'Seleccione el empleado',
   }),
   itemType: z.enum([
-    'shirt', 'pants', 'shoes', 'jacket', 'vest', 
-    'helmet', 'gloves', 'glasses', 'boots', 'uniform_set',
-    'safety_equipment', 'other'
+    'uniforme_camisa', 'uniforme_pantalon', 'uniforme_conjunto',
+    'calzado_seguridad', 'calzado_dielectrico', 'casco', 'guantes',
+    'gafas_seguridad', 'chaleco_reflectivo', 'protector_auditivo',
+    'arnes', 'overol', 'impermeable', 'otros'
   ], {
     required_error: 'Seleccione el tipo de artículo',
   }),
@@ -84,18 +87,20 @@ export type DotationDeliveryFormData = z.infer<typeof dotationDeliverySchema>;
 
 // Labels for item types
 export const dotationItemTypeLabels: Record<DotationItemType, string> = {
-  shirt: 'Camisa',
-  pants: 'Pantalón',
-  shoes: 'Zapatos',
-  jacket: 'Chaqueta',
-  vest: 'Chaleco',
-  helmet: 'Casco',
-  gloves: 'Guantes',
-  glasses: 'Gafas de Seguridad',
-  boots: 'Botas',
-  uniform_set: 'Uniforme Completo',
-  safety_equipment: 'Equipo de Seguridad',
-  other: 'Otro',
+  uniforme_camisa: 'Camisa Uniforme',
+  uniforme_pantalon: 'Pantalón Uniforme',
+  uniforme_conjunto: 'Uniforme Completo',
+  calzado_seguridad: 'Calzado de Seguridad',
+  calzado_dielectrico: 'Calzado Dieléctrico',
+  casco: 'Casco',
+  guantes: 'Guantes',
+  gafas_seguridad: 'Gafas de Seguridad',
+  chaleco_reflectivo: 'Chaleco Reflectivo',
+  protector_auditivo: 'Protector Auditivo',
+  arnes: 'Arnés',
+  overol: 'Overol',
+  impermeable: 'Impermeable',
+  otros: 'Otros',
 };
 
 export const dotationStatusLabels: Record<DotationStatus, string> = {
