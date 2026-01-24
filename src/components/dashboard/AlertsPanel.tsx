@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { AlertTriangle, Clock, FileText, Stethoscope, Package, ChevronRight, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useDashboardAlerts, type DashboardAlert } from '@/hooks/useDashboardAlerts';
@@ -34,7 +35,27 @@ const levelStyles = {
 };
 
 export function AlertsPanel() {
+  const navigate = useNavigate();
   const { data: alerts = [], isLoading } = useDashboardAlerts();
+
+  const handleAlertClick = (alert: DashboardAlert) => {
+    switch (alert.type) {
+      case 'contract':
+      case 'extension':
+        navigate(`/contratos?detail=${alert.entityId}`);
+        break;
+      case 'medical':
+        navigate(`/examenes?detail=${alert.entityId}`);
+        break;
+      case 'dotation':
+        navigate(`/dotacion?detail=${alert.entityId}`);
+        break;
+    }
+  };
+
+  const handleViewAll = () => {
+    navigate('/alertas');
+  };
 
   if (isLoading) {
     return (
@@ -88,7 +109,12 @@ export function AlertsPanel() {
             <p className="text-sm text-muted-foreground">{alerts.length} alertas pendientes</p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" className="text-primary hover:text-primary-hover">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-primary hover:text-primary-hover"
+          onClick={handleViewAll}
+        >
           Ver todas
           <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
@@ -110,6 +136,7 @@ export function AlertsPanel() {
                 styles.bg,
                 styles.border
               )}
+              onClick={() => handleAlertClick(alert)}
             >
               <div className={cn("w-10 h-10 rounded-lg bg-card flex items-center justify-center", styles.icon)}>
                 <Icon className="w-5 h-5" />
