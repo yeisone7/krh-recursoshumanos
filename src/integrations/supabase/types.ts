@@ -716,6 +716,82 @@ export type Database = {
           },
         ]
       }
+      employee_terminations: {
+        Row: {
+          company_id: string
+          completed_at: string | null
+          completed_by: string | null
+          contract_id: string
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          employee_id: string
+          id: string
+          is_completed: boolean
+          reason: string | null
+          resignation_date: string | null
+          termination_date: string
+          termination_type: Database["public"]["Enums"]["termination_type"]
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          contract_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_date: string
+          employee_id: string
+          id?: string
+          is_completed?: boolean
+          reason?: string | null
+          resignation_date?: string | null
+          termination_date: string
+          termination_type: Database["public"]["Enums"]["termination_type"]
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          contract_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          employee_id?: string
+          id?: string
+          is_completed?: boolean
+          reason?: string | null
+          resignation_date?: string | null
+          termination_date?: string
+          termination_type?: Database["public"]["Enums"]["termination_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_terminations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_terminations_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_terminations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           address: string | null
@@ -1200,6 +1276,65 @@ export type Database = {
           },
         ]
       }
+      termination_documents: {
+        Row: {
+          created_at: string
+          document_data: Json | null
+          document_type: Database["public"]["Enums"]["termination_document_type"]
+          document_url: string | null
+          generated_at: string | null
+          generated_by: string | null
+          id: string
+          is_generated: boolean
+          is_required: boolean
+          is_signed: boolean
+          signed_at: string | null
+          signed_by: string | null
+          termination_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          document_data?: Json | null
+          document_type: Database["public"]["Enums"]["termination_document_type"]
+          document_url?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          is_generated?: boolean
+          is_required?: boolean
+          is_signed?: boolean
+          signed_at?: string | null
+          signed_by?: string | null
+          termination_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          document_data?: Json | null
+          document_type?: Database["public"]["Enums"]["termination_document_type"]
+          document_url?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          is_generated?: boolean
+          is_required?: boolean
+          is_signed?: boolean
+          signed_at?: string | null
+          signed_by?: string | null
+          termination_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "termination_documents_termination_id_fkey"
+            columns: ["termination_id"]
+            isOneToOne: false
+            referencedRelation: "employee_terminations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_center_assignments: {
         Row: {
           created_at: string
@@ -1474,6 +1609,22 @@ export type Database = {
         | "medical_exam"
         | "final_interview"
         | "offer"
+      termination_document_type:
+        | "acta_terminacion"
+        | "preaviso"
+        | "notificacion_aportes"
+        | "aceptacion_renuncia"
+        | "certificado_laboral"
+        | "paz_y_salvo"
+        | "examen_egreso"
+        | "retiro_cesantias"
+      termination_type:
+        | "mutuo_acuerdo"
+        | "preaviso"
+        | "periodo_prueba"
+        | "obra_labor"
+        | "sin_justa_causa"
+        | "renuncia"
       vacancy_reason:
         | "new_position"
         | "replacement"
@@ -1668,6 +1819,24 @@ export const Constants = {
         "medical_exam",
         "final_interview",
         "offer",
+      ],
+      termination_document_type: [
+        "acta_terminacion",
+        "preaviso",
+        "notificacion_aportes",
+        "aceptacion_renuncia",
+        "certificado_laboral",
+        "paz_y_salvo",
+        "examen_egreso",
+        "retiro_cesantias",
+      ],
+      termination_type: [
+        "mutuo_acuerdo",
+        "preaviso",
+        "periodo_prueba",
+        "obra_labor",
+        "sin_justa_causa",
+        "renuncia",
       ],
       vacancy_reason: [
         "new_position",
