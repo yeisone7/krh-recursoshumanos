@@ -70,6 +70,144 @@ export type Database = {
           },
         ]
       }
+      candidates: {
+        Row: {
+          address: string | null
+          application_date: string
+          birth_date: string | null
+          city: string | null
+          created_at: string
+          created_by: string | null
+          current_company: string | null
+          current_position: string | null
+          current_step:
+            | Database["public"]["Enums"]["selection_step_type"]
+            | null
+          cv_url: string | null
+          department: string | null
+          document_number: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          education_level: string | null
+          email: string | null
+          employee_id: string | null
+          experience_years: number | null
+          final_concept: string | null
+          final_score: number | null
+          first_name: string
+          gender: string | null
+          general_notes: string | null
+          id: string
+          is_selected: boolean | null
+          last_name: string
+          mobile: string | null
+          phone: string | null
+          profession: string | null
+          rejection_reason: string | null
+          salary_expectation: number | null
+          source: string | null
+          status: Database["public"]["Enums"]["candidate_status"]
+          strengths: string | null
+          updated_at: string
+          vacancy_id: string
+          weaknesses: string | null
+        }
+        Insert: {
+          address?: string | null
+          application_date?: string
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_company?: string | null
+          current_position?: string | null
+          current_step?:
+            | Database["public"]["Enums"]["selection_step_type"]
+            | null
+          cv_url?: string | null
+          department?: string | null
+          document_number: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          education_level?: string | null
+          email?: string | null
+          employee_id?: string | null
+          experience_years?: number | null
+          final_concept?: string | null
+          final_score?: number | null
+          first_name: string
+          gender?: string | null
+          general_notes?: string | null
+          id?: string
+          is_selected?: boolean | null
+          last_name: string
+          mobile?: string | null
+          phone?: string | null
+          profession?: string | null
+          rejection_reason?: string | null
+          salary_expectation?: number | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["candidate_status"]
+          strengths?: string | null
+          updated_at?: string
+          vacancy_id: string
+          weaknesses?: string | null
+        }
+        Update: {
+          address?: string | null
+          application_date?: string
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_company?: string | null
+          current_position?: string | null
+          current_step?:
+            | Database["public"]["Enums"]["selection_step_type"]
+            | null
+          cv_url?: string | null
+          department?: string | null
+          document_number?: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          education_level?: string | null
+          email?: string | null
+          employee_id?: string | null
+          experience_years?: number | null
+          final_concept?: string | null
+          final_score?: number | null
+          first_name?: string
+          gender?: string | null
+          general_notes?: string | null
+          id?: string
+          is_selected?: boolean | null
+          last_name?: string
+          mobile?: string | null
+          phone?: string | null
+          profession?: string | null
+          rejection_reason?: string | null
+          salary_expectation?: number | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["candidate_status"]
+          strengths?: string | null
+          updated_at?: string
+          vacancy_id?: string
+          weaknesses?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidates_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidates_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -614,6 +752,71 @@ export type Database = {
           },
         ]
       }
+      selection_steps: {
+        Row: {
+          candidate_id: string
+          completed_date: string | null
+          created_at: string
+          created_by: string | null
+          document_url: string | null
+          evaluator_id: string | null
+          evaluator_name: string | null
+          id: string
+          notes: string | null
+          result: string | null
+          scheduled_date: string | null
+          score: number | null
+          status: Database["public"]["Enums"]["selection_step_status"]
+          step_order: number
+          step_type: Database["public"]["Enums"]["selection_step_type"]
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          completed_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          evaluator_id?: string | null
+          evaluator_name?: string | null
+          id?: string
+          notes?: string | null
+          result?: string | null
+          scheduled_date?: string | null
+          score?: number | null
+          status?: Database["public"]["Enums"]["selection_step_status"]
+          step_order?: number
+          step_type: Database["public"]["Enums"]["selection_step_type"]
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          completed_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          evaluator_id?: string | null
+          evaluator_name?: string | null
+          id?: string
+          notes?: string | null
+          result?: string | null
+          scheduled_date?: string | null
+          score?: number | null
+          status?: Database["public"]["Enums"]["selection_step_status"]
+          step_order?: number
+          step_type?: Database["public"]["Enums"]["selection_step_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_steps_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_center_assignments: {
         Row: {
           created_at: string
@@ -693,6 +896,123 @@ export type Database = {
         }
         Relationships: []
       }
+      vacancies: {
+        Row: {
+          actual_close_date: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          department_area: string | null
+          education_level: string | null
+          experience_years: number | null
+          hiring_manager_id: string | null
+          id: string
+          includes_transport: boolean | null
+          job_description: string | null
+          observations: string | null
+          open_date: string
+          operation_center_id: string | null
+          other_benefits: string | null
+          position_title: string
+          positions_count: number
+          priority: string | null
+          psychologist_id: string | null
+          publication_platforms: string[] | null
+          reason_details: string | null
+          requirements: string | null
+          salary_range_max: number | null
+          salary_range_min: number | null
+          salary_type: string | null
+          shift_type: string | null
+          status: Database["public"]["Enums"]["vacancy_status"]
+          target_close_date: string | null
+          updated_at: string
+          vacancy_reason: Database["public"]["Enums"]["vacancy_reason"]
+          vacancy_type: Database["public"]["Enums"]["vacancy_type"]
+        }
+        Insert: {
+          actual_close_date?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          department_area?: string | null
+          education_level?: string | null
+          experience_years?: number | null
+          hiring_manager_id?: string | null
+          id?: string
+          includes_transport?: boolean | null
+          job_description?: string | null
+          observations?: string | null
+          open_date?: string
+          operation_center_id?: string | null
+          other_benefits?: string | null
+          position_title: string
+          positions_count?: number
+          priority?: string | null
+          psychologist_id?: string | null
+          publication_platforms?: string[] | null
+          reason_details?: string | null
+          requirements?: string | null
+          salary_range_max?: number | null
+          salary_range_min?: number | null
+          salary_type?: string | null
+          shift_type?: string | null
+          status?: Database["public"]["Enums"]["vacancy_status"]
+          target_close_date?: string | null
+          updated_at?: string
+          vacancy_reason?: Database["public"]["Enums"]["vacancy_reason"]
+          vacancy_type?: Database["public"]["Enums"]["vacancy_type"]
+        }
+        Update: {
+          actual_close_date?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          department_area?: string | null
+          education_level?: string | null
+          experience_years?: number | null
+          hiring_manager_id?: string | null
+          id?: string
+          includes_transport?: boolean | null
+          job_description?: string | null
+          observations?: string | null
+          open_date?: string
+          operation_center_id?: string | null
+          other_benefits?: string | null
+          position_title?: string
+          positions_count?: number
+          priority?: string | null
+          psychologist_id?: string | null
+          publication_platforms?: string[] | null
+          reason_details?: string | null
+          requirements?: string | null
+          salary_range_max?: number | null
+          salary_range_min?: number | null
+          salary_type?: string | null
+          shift_type?: string | null
+          status?: Database["public"]["Enums"]["vacancy_status"]
+          target_close_date?: string | null
+          updated_at?: string
+          vacancy_reason?: Database["public"]["Enums"]["vacancy_reason"]
+          vacancy_type?: Database["public"]["Enums"]["vacancy_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacancies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vacancies_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -717,6 +1037,17 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "rrhh" | "psicologo" | "jefe_area" | "auditor"
+      candidate_status:
+        | "applied"
+        | "in_interview"
+        | "in_psycho_test"
+        | "in_technical_test"
+        | "in_validation"
+        | "in_medical"
+        | "selected"
+        | "not_selected"
+        | "withdrawn"
+        | "hired"
       contract_type:
         | "indefinido"
         | "fijo"
@@ -742,6 +1073,32 @@ export type Database = {
       employee_status: "active" | "suspended" | "retired"
       exam_result: "apto" | "apto_restricciones" | "no_apto" | "pendiente"
       exam_type: "ingreso" | "periodico" | "egreso" | "reintegro"
+      selection_step_status:
+        | "pending"
+        | "scheduled"
+        | "completed"
+        | "passed"
+        | "failed"
+        | "skipped"
+      selection_step_type:
+        | "initial_interview"
+        | "psycho_test"
+        | "technical_test"
+        | "background_check"
+        | "academic_validation"
+        | "reference_check"
+        | "financial_check"
+        | "medical_exam"
+        | "final_interview"
+        | "offer"
+      vacancy_reason:
+        | "new_position"
+        | "replacement"
+        | "growth"
+        | "temporary"
+        | "other"
+      vacancy_status: "open" | "in_process" | "closed" | "cancelled"
+      vacancy_type: "internal" | "external" | "both"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -870,6 +1227,18 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "rrhh", "psicologo", "jefe_area", "auditor"],
+      candidate_status: [
+        "applied",
+        "in_interview",
+        "in_psycho_test",
+        "in_technical_test",
+        "in_validation",
+        "in_medical",
+        "selected",
+        "not_selected",
+        "withdrawn",
+        "hired",
+      ],
       contract_type: [
         "indefinido",
         "fijo",
@@ -897,6 +1266,35 @@ export const Constants = {
       employee_status: ["active", "suspended", "retired"],
       exam_result: ["apto", "apto_restricciones", "no_apto", "pendiente"],
       exam_type: ["ingreso", "periodico", "egreso", "reintegro"],
+      selection_step_status: [
+        "pending",
+        "scheduled",
+        "completed",
+        "passed",
+        "failed",
+        "skipped",
+      ],
+      selection_step_type: [
+        "initial_interview",
+        "psycho_test",
+        "technical_test",
+        "background_check",
+        "academic_validation",
+        "reference_check",
+        "financial_check",
+        "medical_exam",
+        "final_interview",
+        "offer",
+      ],
+      vacancy_reason: [
+        "new_position",
+        "replacement",
+        "growth",
+        "temporary",
+        "other",
+      ],
+      vacancy_status: ["open", "in_process", "closed", "cancelled"],
+      vacancy_type: ["internal", "external", "both"],
     },
   },
 } as const
