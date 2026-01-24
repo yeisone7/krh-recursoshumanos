@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Users,
   Search,
@@ -12,7 +12,8 @@ import {
   Briefcase,
   Calendar,
   Mail,
-  Phone
+  Phone,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,107 +32,71 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { EmployeeFormDialog } from '@/components/employees/EmployeeFormDialog';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useOperationCenters } from '@/hooks/useCompanies';
+import { useAuth } from '@/contexts/AuthContext';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Employee {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  position: string;
-  department: string;
-  operationCenter: string;
-  contractType: string;
-  status: 'active' | 'suspended' | 'retired';
-  startDate: string;
-  avatar?: string;
-}
+type EmployeeStatus = Database['public']['Enums']['employee_status'];
 
-const mockEmployees: Employee[] = [
-  {
-    id: '1',
-    firstName: 'María',
-    lastName: 'García López',
-    email: 'maria.garcia@empresa.com',
-    phone: '+57 310 123 4567',
-    position: 'Analista de Sistemas',
-    department: 'Tecnología',
-    operationCenter: 'Bogotá Centro',
-    contractType: 'Indefinido',
-    status: 'active',
-    startDate: '2022-03-15',
-  },
-  {
-    id: '2',
-    firstName: 'Carlos',
-    lastName: 'Rodríguez Mejía',
-    email: 'carlos.rodriguez@empresa.com',
-    phone: '+57 315 234 5678',
-    position: 'Contador Senior',
-    department: 'Finanzas',
-    operationCenter: 'Medellín Norte',
-    contractType: 'Indefinido',
-    status: 'active',
-    startDate: '2021-08-01',
-  },
-  {
-    id: '3',
-    firstName: 'Ana',
-    lastName: 'Martínez Suárez',
-    email: 'ana.martinez@empresa.com',
-    phone: '+57 320 345 6789',
-    position: 'Coordinadora RRHH',
-    department: 'Recursos Humanos',
-    operationCenter: 'Bogotá Centro',
-    contractType: 'Fijo',
-    status: 'active',
-    startDate: '2023-01-10',
-  },
-  {
-    id: '4',
-    firstName: 'Pedro',
-    lastName: 'López Hernández',
-    email: 'pedro.lopez@empresa.com',
-    phone: '+57 318 456 7890',
-    position: 'Operador de Planta',
-    department: 'Operaciones',
-    operationCenter: 'Cali Sur',
-    contractType: 'Obra Labor',
-    status: 'suspended',
-    startDate: '2023-06-20',
-  },
-  {
-    id: '5',
-    firstName: 'Laura',
-    lastName: 'Sánchez Torres',
-    email: 'laura.sanchez@empresa.com',
-    phone: '+57 312 567 8901',
-    position: 'Diseñadora UX',
-    department: 'Tecnología',
-    operationCenter: 'Bogotá Centro',
-    contractType: 'Indefinido',
-    status: 'active',
-    startDate: '2022-11-05',
-  },
-];
-
-const statusConfig = {
+const statusConfig: Record<EmployeeStatus, { label: string; class: string }> = {
   active: { label: 'Activo', class: 'bg-success-light text-success border-success/20' },
   suspended: { label: 'Suspendido', class: 'bg-warning-light text-warning-foreground border-warning/20' },
   retired: { label: 'Retirado', class: 'bg-muted text-muted-foreground border-border' },
 };
 
 export default function Empleados() {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [centerFilter, setCenterFilter] = useState<string>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const filteredEmployees = mockEmployees.filter(
-    (emp) =>
-      emp.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      emp.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      emp.position.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const { currentCompanyId } = useAuth();
+  const { data: employees, isLoading } = useEmployees();
+  const { data: operationCenters } = useOperationCenters();
+
+  const filteredEmployees = useMemo(() => {
+    if (!employees) return [];
+    return employees.filter((emp) => {
+      const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
+      const matchesSearch = 
+        fullName.includes(searchQuery.toLowerCase()) ||
+        emp.position.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || emp.status === statusFilter;
+      const matchesCenter = centerFilter === 'all' || emp.operation_center_id === centerFilter;
+      return matchesSearch && matchesStatus && matchesCenter;
+    });
+  }, [employees, searchQuery, statusFilter, centerFilter]);
+
+  const stats = useMemo(() => {
+    if (!employees) return { total: 0, active: 0, suspended: 0, retired: 0 };
+    return {
+      total: employees.length,
+      active: employees.filter(e => e.status === 'active').length,
+      suspended: employees.filter(e => e.status === 'suspended').length,
+      retired: employees.filter(e => e.status === 'retired').length,
+    };
+  }, [employees]);
+
+  if (!currentCompanyId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+        <Users className="w-16 h-16 text-muted-foreground mb-4" />
+        <h2 className="text-xl font-semibold mb-2">Sin empresa asignada</h2>
+        <p className="text-muted-foreground">
+          Contacta al administrador para que te asigne a una empresa.
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -183,7 +148,7 @@ export default function Empleados() {
 
           {/* Filters */}
           <div className="flex gap-3">
-            <Select defaultValue="all">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[160px] h-10 text-sm border-border">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
@@ -195,15 +160,17 @@ export default function Empleados() {
               </SelectContent>
             </Select>
 
-            <Select defaultValue="all">
+            <Select value={centerFilter} onValueChange={setCenterFilter}>
               <SelectTrigger className="w-[180px] h-10 text-sm border-border">
                 <SelectValue placeholder="Centro de operación" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los centros</SelectItem>
-                <SelectItem value="bogota">Bogotá Centro</SelectItem>
-                <SelectItem value="medellin">Medellín Norte</SelectItem>
-                <SelectItem value="cali">Cali Sur</SelectItem>
+                {operationCenters?.map((center) => (
+                  <SelectItem key={center.id} value={center.id}>
+                    {center.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -230,7 +197,7 @@ export default function Empleados() {
             <Users className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">247</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.total}</p>
             <p className="text-sm text-muted-foreground">Total empleados</p>
           </div>
         </motion.div>
@@ -244,7 +211,7 @@ export default function Empleados() {
             <Users className="w-5 h-5 text-success" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">238</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.active}</p>
             <p className="text-sm text-muted-foreground">Activos</p>
           </div>
         </motion.div>
@@ -258,7 +225,7 @@ export default function Empleados() {
             <Users className="w-5 h-5 text-warning" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">6</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.suspended}</p>
             <p className="text-sm text-muted-foreground">Suspendidos</p>
           </div>
         </motion.div>
@@ -272,83 +239,109 @@ export default function Empleados() {
             <Users className="w-5 h-5 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">3</p>
-            <p className="text-sm text-muted-foreground">Retirados este mes</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.retired}</p>
+            <p className="text-sm text-muted-foreground">Retirados</p>
           </div>
         </motion.div>
       </div>
 
       {/* Employee Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredEmployees.map((employee, index) => (
-          <motion.div
-            key={employee.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.05 }}
-            className="card-elevated p-5 group cursor-pointer hover:border-primary/30"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center">
-                  <span className="text-lg font-semibold text-primary">
-                    {employee.firstName[0]}{employee.lastName[0]}
-                  </span>
+      {filteredEmployees.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="card-elevated p-12 text-center"
+        >
+          <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No hay empleados</h3>
+          <p className="text-muted-foreground mb-4">
+            {searchQuery || statusFilter !== 'all' || centerFilter !== 'all'
+              ? 'No se encontraron empleados con los filtros seleccionados'
+              : 'Comienza agregando tu primer empleado'}
+          </p>
+          {!searchQuery && statusFilter === 'all' && centerFilter === 'all' && (
+            <Button onClick={() => setIsFormOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Agregar Empleado
+            </Button>
+          )}
+        </motion.div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredEmployees.map((employee, index) => (
+            <motion.div
+              key={employee.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+              className="card-elevated p-5 group cursor-pointer hover:border-primary/30"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center">
+                    <span className="text-lg font-semibold text-primary">
+                      {employee.first_name[0]}{employee.last_name[0]}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                      {employee.first_name} {employee.last_name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">{employee.position}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                    {employee.firstName} {employee.lastName}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{employee.position}</p>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>Ver perfil</DropdownMenuItem>
+                    <DropdownMenuItem>Editar</DropdownMenuItem>
+                    <DropdownMenuItem>Ver contrato</DropdownMenuItem>
+                    <DropdownMenuItem>Documentos</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Briefcase className="w-4 h-4" />
+                  <span>{employee.department_area || 'Sin departamento'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="w-4 h-4" />
+                  <span>{employee.operation_centers?.name || 'Sin centro asignado'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="w-4 h-4" />
+                  <span>Desde {new Date(employee.hire_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'short' })}</span>
                 </div>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Ver perfil</DropdownMenuItem>
-                  <DropdownMenuItem>Editar</DropdownMenuItem>
-                  <DropdownMenuItem>Ver contrato</DropdownMenuItem>
-                  <DropdownMenuItem>Documentos</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
 
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Briefcase className="w-4 h-4" />
-                <span>{employee.department}</span>
+              <div className="flex items-center justify-between pt-4 border-t border-border">
+                <Badge variant="outline" className={cn(statusConfig[employee.status].class)}>
+                  {statusConfig[employee.status].label}
+                </Badge>
+                <div className="flex items-center gap-2">
+                  {employee.email && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                      <Mail className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {employee.phone && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                      <Phone className="w-4 h-4" />
+                    </Button>
+                  )}
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4" />
-                <span>{employee.operationCenter}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4" />
-                <span>Desde {new Date(employee.startDate).toLocaleDateString('es-CO', { year: 'numeric', month: 'short' })}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-border">
-              <Badge variant="outline" className={cn(statusConfig[employee.status].class)}>
-                {statusConfig[employee.status].label}
-              </Badge>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                  <Mail className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                  <Phone className="w-4 h-4" />
-                </Button>
-                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

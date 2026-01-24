@@ -6,7 +6,16 @@ import { es } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-import { DotationAlert, getAlertLevel } from '@/types/dotation';
+export interface DotationAlert {
+  id: string;
+  deliveryId: string;
+  employeeId: string;
+  employeeName: string;
+  itemName: string;
+  expirationDate: string | Date;
+  daysRemaining: number;
+  level: 'info' | 'warning' | 'critical';
+}
 
 interface DotationAlertsCardProps {
   alerts: DotationAlert[];
@@ -75,6 +84,9 @@ export function DotationAlertsCard({ alerts, onViewAll, onAlertClick }: Dotation
         <div className="space-y-3">
           {alerts.slice(0, 5).map((alert, index) => {
             const styles = levelStyles[alert.level];
+            const expirationDate = typeof alert.expirationDate === 'string' 
+              ? new Date(alert.expirationDate) 
+              : alert.expirationDate;
 
             return (
               <motion.div
@@ -109,7 +121,7 @@ export function DotationAlertsCard({ alerts, onViewAll, onAlertClick }: Dotation
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground truncate">
-                    {alert.itemName} • Vence {format(alert.expirationDate, 'PPP', { locale: es })}
+                    {alert.itemName} • Vence {format(expirationDate, 'PPP', { locale: es })}
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
