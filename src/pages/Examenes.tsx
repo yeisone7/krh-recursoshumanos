@@ -13,6 +13,7 @@ import {
   Clock,
   Eye,
   Calendar,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -36,115 +37,74 @@ import {
 import { ExamFormDialog } from '@/components/examenes/ExamFormDialog';
 import { ExamDetailDialog } from '@/components/examenes/ExamDetailDialog';
 import { ExamAlertsCard } from '@/components/examenes/ExamAlertsCard';
-import {
-  MedicalExam,
-  MedicalExamAlert,
-  ExamType,
-  ExamStatus,
-  examTypeLabels,
-  examResultLabels,
-  examResultConfig,
-  examStatusConfig,
-  getExamStatus,
-  calculateDaysRemaining,
-  getAlertLevel,
-} from '@/types/medicalExam';
+import { useMedicalExams, getExamStatus, getDaysRemaining, getAlertLevel } from '@/hooks/useMedicalExams';
+import { useAuth } from '@/contexts/AuthContext';
+import type { Database } from '@/integrations/supabase/types';
 
-// Mock data for demo
-const mockExams: MedicalExam[] = [
-  {
-    id: '1',
-    employeeId: '1',
-    employeeName: 'María García López',
-    employeeDocument: '1234567890',
-    examType: 'periodico',
-    examDate: new Date('2024-02-15'),
-    expirationDate: new Date('2025-02-15'),
-    result: 'apto',
-    concept: 'El trabajador se encuentra en óptimas condiciones de salud para desempeñar sus funciones.',
-    provider: 'IPS Salud Ocupacional S.A.',
-    doctorName: 'Dr. Juan Pérez',
-    createdAt: new Date('2024-02-15'),
-    updatedAt: new Date('2024-02-15'),
+type ExamType = Database['public']['Enums']['exam_type'];
+type ExamResult = Database['public']['Enums']['exam_result'];
+
+type ExamStatus = 'vigente' | 'por_vencer' | 'vencido' | 'no_aplica';
+
+const examTypeLabels: Record<ExamType, string> = {
+  ingreso: 'Ingreso',
+  periodico: 'Periódico',
+  egreso: 'Egreso',
+  reintegro: 'Reintegro',
+};
+
+const examResultLabels: Record<ExamResult, string> = {
+  apto: 'Apto',
+  apto_restricciones: 'Apto con Restricciones',
+  no_apto: 'No Apto',
+  pendiente: 'Pendiente',
+};
+
+const examResultConfig: Record<ExamResult, { bg: string; text: string; border: string }> = {
+  apto: {
+    bg: 'bg-success-light',
+    text: 'text-success',
+    border: 'border-success/20',
   },
-  {
-    id: '2',
-    employeeId: '2',
-    employeeName: 'Carlos Rodríguez Pérez',
-    employeeDocument: '0987654321',
-    examType: 'periodico',
-    examDate: new Date('2024-01-20'),
-    expirationDate: new Date('2025-01-20'),
-    result: 'apto_restricciones',
-    concept: 'Apto para labores con restricción de carga.',
-    restrictions: 'No realizar levantamiento de cargas superiores a 10 kg.',
-    provider: 'Centro Médico Laboral',
-    doctorName: 'Dra. Ana Martínez',
-    createdAt: new Date('2024-01-20'),
-    updatedAt: new Date('2024-01-20'),
+  apto_restricciones: {
+    bg: 'bg-warning-light',
+    text: 'text-warning-foreground',
+    border: 'border-warning/20',
   },
-  {
-    id: '3',
-    employeeId: '3',
-    employeeName: 'Ana Martínez Silva',
-    employeeDocument: '1122334455',
-    examType: 'ingreso',
-    examDate: new Date('2024-12-01'),
-    expirationDate: new Date('2025-12-01'),
-    result: 'apto',
-    concept: 'Apto para el cargo de Asistente Administrativo.',
-    provider: 'IPS Ocupacional Plus',
-    doctorName: 'Dr. Roberto Gómez',
-    createdAt: new Date('2024-12-01'),
-    updatedAt: new Date('2024-12-01'),
+  no_apto: {
+    bg: 'bg-destructive-light',
+    text: 'text-destructive',
+    border: 'border-destructive/20',
   },
-  {
-    id: '4',
-    employeeId: '4',
-    employeeName: 'Pedro López Hernández',
-    employeeDocument: '5544332211',
-    examType: 'periodico',
-    examDate: new Date('2024-01-10'),
-    expirationDate: new Date('2025-01-10'),
-    result: 'apto',
-    concept: 'Continúa apto para sus funciones habituales.',
-    provider: 'Centro Médico Laboral',
-    doctorName: 'Dra. Carolina Ruiz',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-10'),
+  pendiente: {
+    bg: 'bg-muted',
+    text: 'text-muted-foreground',
+    border: 'border-border',
   },
-  {
-    id: '5',
-    employeeId: '5',
-    employeeName: 'Laura Sánchez Mejía',
-    employeeDocument: '6677889900',
-    examType: 'egreso',
-    examDate: new Date('2024-11-30'),
-    expirationDate: null,
-    result: 'apto',
-    concept: 'Examen de retiro sin hallazgos patológicos relacionados con el trabajo.',
-    provider: 'IPS Salud Ocupacional S.A.',
-    doctorName: 'Dr. Juan Pérez',
-    createdAt: new Date('2024-11-30'),
-    updatedAt: new Date('2024-11-30'),
+};
+
+const examStatusConfig: Record<ExamStatus, { label: string; bg: string; text: string }> = {
+  vigente: {
+    label: 'Vigente',
+    bg: 'bg-success-light',
+    text: 'text-success',
   },
-  {
-    id: '6',
-    employeeId: '6',
-    employeeName: 'Diego Ramírez Torres',
-    employeeDocument: '1122445566',
-    examType: 'reintegro',
-    examDate: new Date('2024-12-15'),
-    expirationDate: new Date('2025-12-15'),
-    result: 'apto_restricciones',
-    concept: 'Apto para reintegro laboral posterior a cirugía de rodilla.',
-    restrictions: 'Evitar bipedestación prolongada y escaleras durante 3 meses.',
-    provider: 'IPS Ocupacional Plus',
-    doctorName: 'Dr. Miguel Vargas',
-    createdAt: new Date('2024-12-15'),
-    updatedAt: new Date('2024-12-15'),
+  por_vencer: {
+    label: 'Por Vencer',
+    bg: 'bg-warning-light',
+    text: 'text-warning-foreground',
   },
-];
+  vencido: {
+    label: 'Vencido',
+    bg: 'bg-destructive-light',
+    text: 'text-destructive',
+  },
+  no_aplica: {
+    label: 'N/A',
+    bg: 'bg-muted',
+    text: 'text-muted-foreground',
+  },
+};
 
 const resultIcons = {
   apto: CheckCircle,
@@ -155,61 +115,95 @@ const resultIcons = {
 
 export default function Examenes() {
   const [showFormDialog, setShowFormDialog] = useState(false);
-  const [selectedExam, setSelectedExam] = useState<MedicalExam | null>(null);
+  const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<ExamType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<ExamStatus | 'all'>('all');
 
+  const { currentCompanyId } = useAuth();
+  const { data: exams, isLoading } = useMedicalExams();
+
   // Calculate stats
   const stats = useMemo(() => {
-    const total = mockExams.length;
-    const vigentes = mockExams.filter(e => getExamStatus(e) === 'vigente').length;
-    const porVencer = mockExams.filter(e => getExamStatus(e) === 'por_vencer').length;
-    const vencidos = mockExams.filter(e => getExamStatus(e) === 'vencido').length;
-    const conRestricciones = mockExams.filter(e => e.result === 'apto_restricciones').length;
+    if (!exams) return { total: 0, vigentes: 0, porVencer: 0, vencidos: 0, conRestricciones: 0 };
+    
+    const total = exams.length;
+    const vigentes = exams.filter(e => getExamStatus(e) === 'vigente').length;
+    const porVencer = exams.filter(e => getExamStatus(e) === 'por_vencer').length;
+    const vencidos = exams.filter(e => getExamStatus(e) === 'vencido').length;
+    const conRestricciones = exams.filter(e => e.result === 'apto_restricciones').length;
     return { total, vigentes, porVencer, vencidos, conRestricciones };
-  }, []);
+  }, [exams]);
 
   // Generate alerts
-  const alerts: MedicalExamAlert[] = useMemo(() => {
-    return mockExams
+  const alerts = useMemo(() => {
+    if (!exams) return [];
+    
+    return exams
       .filter(exam => {
         const status = getExamStatus(exam);
         return status === 'por_vencer' || status === 'vencido';
       })
       .map(exam => {
-        const daysRemaining = calculateDaysRemaining(exam.expirationDate) ?? 0;
+        const daysRemaining = getDaysRemaining(exam.expiration_date) ?? 0;
         return {
           id: `alert-${exam.id}`,
           examId: exam.id,
-          employeeId: exam.employeeId,
-          employeeName: exam.employeeName,
-          examType: exam.examType,
-          expirationDate: exam.expirationDate!,
+          employeeId: exam.employee_id,
+          employeeName: `${exam.employees?.first_name} ${exam.employees?.last_name}`,
+          examType: exam.exam_type,
+          expirationDate: exam.expiration_date!,
           daysRemaining: Math.max(0, daysRemaining),
           level: getAlertLevel(daysRemaining),
         };
       })
       .sort((a, b) => a.daysRemaining - b.daysRemaining);
-  }, []);
+  }, [exams]);
 
   // Filter exams
   const filteredExams = useMemo(() => {
-    return mockExams.filter(exam => {
+    if (!exams) return [];
+    
+    return exams.filter(exam => {
+      const employeeName = `${exam.employees?.first_name} ${exam.employees?.last_name}`.toLowerCase();
+      const documentNumber = exam.employees?.document_number || '';
+      
       const matchesSearch = 
-        exam.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        exam.employeeDocument.includes(searchTerm);
-      const matchesType = filterType === 'all' || exam.examType === filterType;
+        employeeName.includes(searchTerm.toLowerCase()) ||
+        documentNumber.includes(searchTerm);
+      const matchesType = filterType === 'all' || exam.exam_type === filterType;
       const matchesStatus = filterStatus === 'all' || getExamStatus(exam) === filterStatus;
       return matchesSearch && matchesType && matchesStatus;
     });
-  }, [searchTerm, filterType, filterStatus]);
+  }, [exams, searchTerm, filterType, filterStatus]);
 
-  const handleViewExam = (exam: MedicalExam) => {
-    setSelectedExam(exam);
+  const handleViewExam = (examId: string) => {
+    setSelectedExamId(examId);
     setShowDetailDialog(true);
   };
+
+  const selectedExam = exams?.find(e => e.id === selectedExamId);
+
+  if (!currentCompanyId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+        <Stethoscope className="w-16 h-16 text-muted-foreground mb-4" />
+        <h2 className="text-xl font-semibold mb-2">Sin empresa asignada</h2>
+        <p className="text-muted-foreground">
+          Contacta al administrador para que te asigne a una empresa.
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -310,10 +304,7 @@ export default function Examenes() {
         >
           <ExamAlertsCard
             alerts={alerts}
-            onAlertClick={(alert) => {
-              const exam = mockExams.find(e => e.id === alert.examId);
-              if (exam) handleViewExam(exam);
-            }}
+            onAlertClick={(alert) => handleViewExam(alert.examId)}
           />
         </motion.div>
       )}
@@ -390,30 +381,32 @@ export default function Examenes() {
           </TableHeader>
           <TableBody>
             {filteredExams.map((exam) => {
-              const status = getExamStatus(exam);
+              const status = getExamStatus(exam) as ExamStatus;
               const statusStyle = examStatusConfig[status];
               const resultStyle = examResultConfig[exam.result];
               const ResultIcon = resultIcons[exam.result];
-              const daysRemaining = calculateDaysRemaining(exam.expirationDate);
+              const daysRemaining = getDaysRemaining(exam.expiration_date);
 
               return (
                 <TableRow key={exam.id}>
                   <TableCell>
                     <div>
-                      <p className="font-medium text-foreground">{exam.employeeName}</p>
-                      <p className="text-xs text-muted-foreground">{exam.employeeDocument}</p>
+                      <p className="font-medium text-foreground">
+                        {exam.employees?.first_name} {exam.employees?.last_name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{exam.employees?.document_number}</p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{examTypeLabels[exam.examType]}</Badge>
+                    <Badge variant="outline">{examTypeLabels[exam.exam_type]}</Badge>
                   </TableCell>
                   <TableCell>
-                    {format(new Date(exam.examDate), 'dd/MM/yyyy', { locale: es })}
+                    {format(new Date(exam.exam_date), 'dd/MM/yyyy', { locale: es })}
                   </TableCell>
                   <TableCell>
-                    {exam.expirationDate ? (
+                    {exam.expiration_date ? (
                       <div>
-                        <p>{format(new Date(exam.expirationDate), 'dd/MM/yyyy', { locale: es })}</p>
+                        <p>{format(new Date(exam.expiration_date), 'dd/MM/yyyy', { locale: es })}</p>
                         {daysRemaining !== null && daysRemaining <= 30 && daysRemaining >= 0 && (
                           <p className="text-xs text-warning">{daysRemaining} días restantes</p>
                         )}
@@ -437,7 +430,7 @@ export default function Examenes() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleViewExam(exam)}
+                      onClick={() => handleViewExam(exam.id)}
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Ver
@@ -463,11 +456,30 @@ export default function Examenes() {
         onOpenChange={setShowFormDialog}
       />
 
-      <ExamDetailDialog
-        exam={selectedExam}
-        open={showDetailDialog}
-        onOpenChange={setShowDetailDialog}
-      />
+      {selectedExam && (
+        <ExamDetailDialog
+          exam={{
+            id: selectedExam.id,
+            employeeId: selectedExam.employee_id,
+            employeeName: `${selectedExam.employees?.first_name} ${selectedExam.employees?.last_name}`,
+            employeeDocument: selectedExam.employees?.document_number || '',
+            examType: selectedExam.exam_type,
+            examDate: new Date(selectedExam.exam_date),
+            expirationDate: selectedExam.expiration_date ? new Date(selectedExam.expiration_date) : null,
+            result: selectedExam.result,
+            concept: selectedExam.concept,
+            restrictions: selectedExam.restrictions || undefined,
+            provider: selectedExam.provider,
+            doctorName: selectedExam.doctor_name,
+            documentUrl: selectedExam.document_url || undefined,
+            observations: selectedExam.observations || undefined,
+            createdAt: new Date(selectedExam.created_at),
+            updatedAt: new Date(selectedExam.updated_at),
+          }}
+          open={showDetailDialog}
+          onOpenChange={setShowDetailDialog}
+        />
+      )}
     </div>
   );
 }
