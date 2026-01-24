@@ -1,56 +1,9 @@
 import { motion } from 'framer-motion';
-import { AlertTriangle, Clock, FileText, Stethoscope, Package, ChevronRight } from 'lucide-react';
+import { AlertTriangle, Clock, FileText, Stethoscope, Package, ChevronRight, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-
-interface Alert {
-  id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation';
-  level: 'info' | 'warning' | 'critical';
-  title: string;
-  description: string;
-  daysRemaining: number;
-  entityName: string;
-}
-
-const mockAlerts: Alert[] = [
-  {
-    id: '1',
-    type: 'contract',
-    level: 'critical',
-    title: 'Contrato por vencer',
-    description: 'Contrato a término fijo vence en 3 días',
-    daysRemaining: 3,
-    entityName: 'María García',
-  },
-  {
-    id: '2',
-    type: 'medical',
-    level: 'warning',
-    title: 'Examen médico pendiente',
-    description: 'Examen periódico vence en 15 días',
-    daysRemaining: 15,
-    entityName: 'Carlos Rodríguez',
-  },
-  {
-    id: '3',
-    type: 'extension',
-    level: 'critical',
-    title: 'Prórroga por vencer',
-    description: 'Prórroga #2 vence en 5 días',
-    daysRemaining: 5,
-    entityName: 'Ana Martínez',
-  },
-  {
-    id: '4',
-    type: 'dotation',
-    level: 'info',
-    title: 'Dotación por entregar',
-    description: 'Entrega programada en 30 días',
-    daysRemaining: 30,
-    entityName: 'Pedro López',
-  },
-];
+import { useDashboardAlerts, type DashboardAlert } from '@/hooks/useDashboardAlerts';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const typeIcons = {
   contract: FileText,
@@ -81,6 +34,48 @@ const levelStyles = {
 };
 
 export function AlertsPanel() {
+  const { data: alerts = [], isLoading } = useDashboardAlerts();
+
+  if (isLoading) {
+    return (
+      <div className="card-elevated p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <Skeleton className="w-10 h-10 rounded-lg" />
+          <div>
+            <Skeleton className="h-5 w-32 mb-1" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-20 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (alerts.length === 0) {
+    return (
+      <div className="card-elevated p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-success-light flex items-center justify-center">
+            <CheckCircle className="w-5 h-5 text-success" />
+          </div>
+          <div>
+            <h2 className="font-display font-semibold text-lg text-foreground">Alertas Activas</h2>
+            <p className="text-sm text-muted-foreground">Sin alertas pendientes</p>
+          </div>
+        </div>
+        <div className="p-6 bg-success-light rounded-xl text-center">
+          <p className="text-success font-medium">
+            ¡Todo al día! No hay vencimientos próximos.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="card-elevated p-6">
       <div className="flex items-center justify-between mb-6">
@@ -90,7 +85,7 @@ export function AlertsPanel() {
           </div>
           <div>
             <h2 className="font-display font-semibold text-lg text-foreground">Alertas Activas</h2>
-            <p className="text-sm text-muted-foreground">{mockAlerts.length} alertas pendientes</p>
+            <p className="text-sm text-muted-foreground">{alerts.length} alertas pendientes</p>
           </div>
         </div>
         <Button variant="ghost" size="sm" className="text-primary hover:text-primary-hover">
@@ -100,7 +95,7 @@ export function AlertsPanel() {
       </div>
 
       <div className="space-y-3">
-        {mockAlerts.map((alert, index) => {
+        {alerts.slice(0, 5).map((alert, index) => {
           const Icon = typeIcons[alert.type];
           const styles = levelStyles[alert.level];
 
