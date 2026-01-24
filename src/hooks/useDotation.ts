@@ -6,6 +6,36 @@ import type { Database } from '@/integrations/supabase/types';
 type DotationDelivery = Database['public']['Tables']['dotation_deliveries']['Row'];
 type DotationDeliveryInsert = Database['public']['Tables']['dotation_deliveries']['Insert'];
 
+// Helper function to log audit events
+async function logAuditEvent(
+  userId: string,
+  userEmail: string | undefined,
+  companyId: string | null,
+  action: string,
+  entityType: string,
+  entityId?: string,
+  entityName?: string,
+  oldValues?: Record<string, any>,
+  newValues?: Record<string, any>
+) {
+  try {
+    await supabase.from('audit_logs').insert({
+      user_id: userId,
+      user_email: userEmail,
+      company_id: companyId,
+      action,
+      entity_type: entityType,
+      entity_id: entityId,
+      entity_name: entityName,
+      old_values: oldValues,
+      new_values: newValues,
+      user_agent: navigator.userAgent,
+    });
+  } catch (error) {
+    console.error('Failed to log audit event:', error);
+  }
+}
+
 export function useDotationDeliveries() {
   const { currentCompanyId } = useAuth();
 
@@ -54,17 +84,36 @@ export function useDotationDelivery(id: string | undefined) {
 
 export function useCreateDotationDelivery() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (delivery: Omit<DotationDeliveryInsert, 'created_by'>) => {
       const { data, error } = await supabase
         .from('dotation_deliveries')
         .insert({ ...delivery, created_by: user?.id })
-        .select()
+        .select(`*, employees(first_name, last_name)`)
         .single();
 
       if (error) throw error;
+
+      // Log audit event
+      if (user) {
+        const employeeName = data.employees 
+          ? `${(data.employees as any).first_name} ${(data.employees as any).last_name}`
+          : 'Empleado';
+        await logAuditEvent(
+          user.id,
+          user.email,
+          currentCompanyId,
+          'deliver_dotation',
+          'dotation',
+          data.id,
+          `${data.item_name} - ${employeeName}`,
+          undefined,
+          { item_type: data.item_type, item_name: data.item_name, quantity: data.quantity }
+        );
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -75,9 +124,17 @@ export function useCreateDotationDelivery() {
 
 export function useUpdateDotationDelivery() {
   const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<DotationDelivery> & { id: string }) => {
+      // Get old values first
+      const { data: oldData } = await supabase
+        .from('dotation_deliveries')
+        .select('*, employees(first_name, last_name)')
+        .eq('id', id)
+        .single();
+
       const { data, error } = await supabase
         .from('dotation_deliveries')
         .update(updates)
@@ -86,6 +143,25 @@ export function useUpdateDotationDelivery() {
         .single();
 
       if (error) throw error;
+
+      // Log audit event
+      if (user && oldData) {
+        const employeeName = oldData.employees 
+          ? `${(oldData.employees as any).first_name} ${(oldData.employees as any).last_name}`
+          : 'Empleado';
+        await logAuditEvent(
+          user.id,
+          user.email,
+          currentCompanyId,
+          'update',
+          'dotation',
+          data.id,
+          `${oldData.item_name} - ${employeeName}`,
+          oldData,
+          updates
+        );
+      }
+
       return data;
     },
     onSuccess: (data) => {
@@ -97,15 +173,41 @@ export function useUpdateDotationDelivery() {
 
 export function useDeleteDotationDelivery() {
   const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Get delivery data before delete
+      const { data: delivery } = await supabase
+        .from('dotation_deliveries')
+        .select('*, employees(first_name, last_name)')
+        .eq('id', id)
+        .single();
+
       const { error } = await supabase
         .from('dotation_deliveries')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+
+      // Log audit event
+      if (user && delivery) {
+        const employeeName = delivery.employees 
+          ? `${(delivery.employees as any).first_name} ${(delivery.employees as any).last_name}`
+          : 'Empleado';
+        await logAuditEvent(
+          user.id,
+          user.email,
+          currentCompanyId,
+          'delete',
+          'dotation',
+          id,
+          `${delivery.item_name} - ${employeeName}`,
+          delivery,
+          undefined
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dotation_deliveries'] });
