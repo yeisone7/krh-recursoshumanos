@@ -67,6 +67,7 @@ export default function Configuracion() {
   const [alertExamCritical, setAlertExamCritical] = useState(7);
   const [alertDotationWarning, setAlertDotationWarning] = useState(30);
   const [alertDotationCritical, setAlertDotationCritical] = useState(7);
+  const [alertTerminationPendingDays, setAlertTerminationPendingDays] = useState(7);
 
   const { currentCompanyId } = useAuth();
   const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
@@ -88,6 +89,7 @@ export default function Configuracion() {
       const contractDays = systemConfig.alert_contract_days;
       const examDays = systemConfig.alert_exam_days;
       const dotationDays = systemConfig.alert_dotation_days;
+      const terminationPendingDays = systemConfig.alert_termination_pending_days;
       
       if (contractDays) {
         setAlertContractWarning(contractDays.warning || 30);
@@ -100,6 +102,9 @@ export default function Configuracion() {
       if (dotationDays) {
         setAlertDotationWarning(dotationDays.warning || 30);
         setAlertDotationCritical(dotationDays.critical || 7);
+      }
+      if (terminationPendingDays) {
+        setAlertTerminationPendingDays(terminationPendingDays.min_days || 7);
       }
     }
   }, [systemConfig]);
@@ -118,6 +123,11 @@ export default function Configuracion() {
         updateConfig.mutateAsync({
           key: 'alert_dotation_days',
           value: { warning: alertDotationWarning, critical: alertDotationCritical },
+        }),
+        updateConfig.mutateAsync({
+          key: 'alert_termination_pending_days',
+          value: { min_days: alertTerminationPendingDays },
+          description: 'Días mínimos de espera antes de notificar retiros pendientes',
         }),
       ]);
       toast.success('Configuración de alertas guardada');
@@ -295,7 +305,7 @@ export default function Configuracion() {
               <CardDescription>Define los días de anticipación para las alertas de vencimiento</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-3 p-4 border rounded-lg">
                   <h4 className="font-medium flex items-center gap-2"><FileText className="w-4 h-4" />Contratos</h4>
                   <div><Label>Advertencia (días)</Label><Input type="number" value={alertContractWarning} onChange={(e) => setAlertContractWarning(parseInt(e.target.value) || 30)} /></div>
@@ -310,6 +320,19 @@ export default function Configuracion() {
                   <h4 className="font-medium flex items-center gap-2"><Shirt className="w-4 h-4" />Dotación</h4>
                   <div><Label>Advertencia (días)</Label><Input type="number" value={alertDotationWarning} onChange={(e) => setAlertDotationWarning(parseInt(e.target.value) || 30)} /></div>
                   <div><Label>Crítico (días)</Label><Input type="number" value={alertDotationCritical} onChange={(e) => setAlertDotationCritical(parseInt(e.target.value) || 7)} /></div>
+                </div>
+                <div className="space-y-3 p-4 border rounded-lg bg-warning/5 border-warning/20">
+                  <h4 className="font-medium flex items-center gap-2"><Bell className="w-4 h-4 text-warning" />Notificación Retiros</h4>
+                  <div>
+                    <Label>Días pendientes mínimos</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertTerminationPendingDays} 
+                      onChange={(e) => setAlertTerminationPendingDays(parseInt(e.target.value) || 7)} 
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Envía email si el proceso de retiro lleva más de estos días sin completar</p>
                 </div>
               </div>
               <Button onClick={handleSaveAlertConfig} disabled={updateConfig.isPending}>
