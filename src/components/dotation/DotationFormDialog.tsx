@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 import { 
   dotationDeliverySchema, 
@@ -46,26 +46,26 @@ import {
   dotationItemTypeLabels,
   DOTATION_PERIOD_MONTHS,
 } from '@/types/dotation';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useCreateDotationDelivery } from '@/hooks/useDotation';
+import type { Database } from '@/integrations/supabase/types';
+
+type DotationItemType = Database['public']['Enums']['dotation_item_type'];
 
 interface DotationFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: DotationDeliveryFormData) => void;
+  onSuccess?: () => void;
 }
-
-// Mock employees for selection
-const mockEmployees = [
-  { id: 'emp-001', name: 'María García', document: '1234567890', center: 'Centro Norte' },
-  { id: 'emp-002', name: 'Carlos Rodríguez', document: '0987654321', center: 'Centro Sur' },
-  { id: 'emp-003', name: 'Ana Martínez', document: '1122334455', center: 'Centro Este' },
-  { id: 'emp-004', name: 'Pedro López', document: '5566778899', center: 'Centro Oeste' },
-];
 
 // Size options
 const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 const shoeSizeOptions = Array.from({ length: 13 }, (_, i) => (35 + i).toString());
 
-export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFormDialogProps) {
+export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFormDialogProps) {
+  const { data: employees = [] } = useEmployees();
+  const createDelivery = useCreateDotationDelivery();
+
   const form = useForm<DotationDeliveryFormData>({
     resolver: zodResolver(dotationDeliverySchema),
     defaultValues: {
@@ -77,20 +77,51 @@ export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFor
     },
   });
 
-  const selectedEmployee = mockEmployees.find(e => e.id === form.watch('employeeId'));
+  const selectedEmployeeId = form.watch('employeeId');
+  const selectedEmployee = employees.find(e => e.id === selectedEmployeeId);
   const selectedItemType = form.watch('itemType');
   const isFootwear = selectedItemType === 'shoes' || selectedItemType === 'boots';
 
-  const handleSubmit = (data: DotationDeliveryFormData) => {
-    console.log('Dotation delivery data:', data);
-    onSubmit?.(data);
-    
-    toast({
-      title: 'Entrega registrada',
-      description: `Se ha registrado la entrega de ${data.itemName} para ${selectedEmployee?.name || 'el empleado'}.`,
-    });
-    onOpenChange(false);
-    form.reset();
+  const handleSubmit = async (data: DotationDeliveryFormData) => {
+    try {
+      // Map item type from form to database enum
+      const dbItemType = formToDbItemType[data.itemType] || 'otro';
+
+      await createDelivery.mutateAsync({
+        employee_id: data.employeeId,
+        item_type: dbItemType,
+        item_name: data.itemName,
+        quantity: data.quantity,
+        size: data.size,
+        delivery_date: format(data.deliveryDate, 'yyyy-MM-dd'),
+        expiration_date: format(data.expirationDate, 'yyyy-MM-dd'),
+        delivered_by: data.deliveredBy,
+        observations: data.notes,
+      });
+
+      const employeeName = selectedEmployee 
+        ? `${selectedEmployee.first_name} ${selectedEmployee.last_name}` 
+        : 'el empleado';
+      
+      toast.success('Entrega registrada', {
+        description: `Se ha registrado la entrega de ${data.itemName} para ${employeeName}.`,
+      });
+      
+      onOpenChange(false);
+      form.reset({
+        quantity: 1,
+        deliveryDate: new Date(),
+        expirationDate: addMonths(new Date(), DOTATION_PERIOD_MONTHS),
+        deliveredBy: '',
+        notes: '',
+      });
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Error creating dotation delivery:', error);
+      toast.error('Error al registrar entrega', {
+        description: error.message || 'Por favor intenta de nuevo',
+      });
+    }
   };
 
   return (
@@ -139,10 +170,10 @@ export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFor
                               <SelectValue placeholder="Seleccionar empleado" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            {mockEmployees.map((emp) => (
+                          <SelectContent className="bg-background max-h-[200px]">
+                            {employees.map((emp) => (
                               <SelectItem key={emp.id} value={emp.id}>
-                                {emp.name} - {emp.document}
+                                {emp.first_name} {emp.last_name} - {emp.document_number}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -156,11 +187,17 @@ export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFor
                     <div className="bg-muted/50 p-4 rounded-lg space-y-2">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Documento:</span>
-                        <span className="font-medium">{selectedEmployee.document}</span>
+                        <span className="font-medium">{selectedEmployee.document_number}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Centro de Operación:</span>
-                        <span className="font-medium">{selectedEmployee.center}</span>
+                        <span className="font-medium">
+                          {(selectedEmployee as any).operation_centers?.name || 'No asignado'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Cargo:</span>
+                        <span className="font-medium">{selectedEmployee.position}</span>
                       </div>
                     </div>
                   )}
@@ -180,7 +217,7 @@ export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFor
                               <SelectValue placeholder="Seleccionar tipo" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="bg-background">
                             {Object.entries(dotationItemTypeLabels).map(([value, label]) => (
                               <SelectItem key={value} value={value}>
                                 {label}
@@ -239,7 +276,7 @@ export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFor
                                 <SelectValue placeholder="Seleccionar" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent className="bg-background">
                               {(isFootwear ? shoeSizeOptions : sizeOptions).map((size) => (
                                 <SelectItem key={size} value={size}>
                                   {size}
@@ -282,7 +319,7 @@ export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFor
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-auto p-0 bg-background" align="start">
                               <Calendar
                                 mode="single"
                                 selected={field.value}
@@ -295,6 +332,7 @@ export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFor
                                 }}
                                 locale={es}
                                 initialFocus
+                                className="pointer-events-auto"
                               />
                             </PopoverContent>
                           </Popover>
@@ -328,7 +366,7 @@ export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFor
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-auto p-0 bg-background" align="start">
                               <Calendar
                                 mode="single"
                                 selected={field.value}
@@ -336,6 +374,7 @@ export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFor
                                 disabled={(date) => date <= form.getValues('deliveryDate')}
                                 locale={es}
                                 initialFocus
+                                className="pointer-events-auto"
                               />
                             </PopoverContent>
                           </Popover>
@@ -388,9 +427,9 @@ export function DotationFormDialog({ open, onOpenChange, onSubmit }: DotationFor
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="gap-2">
+              <Button type="submit" className="gap-2" disabled={createDelivery.isPending}>
                 <Package className="w-4 h-4" />
-                Registrar Entrega
+                {createDelivery.isPending ? 'Registrando...' : 'Registrar Entrega'}
               </Button>
             </div>
           </form>

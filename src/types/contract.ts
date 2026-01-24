@@ -43,12 +43,12 @@ export const contractFormSchema = z.object({
   transportAllowance: z.boolean().default(true),
   
   // Work details
-  operationCenter: z.string({
-    required_error: 'Seleccione el centro de operación',
-  }),
-  position: z.string().min(2, 'El cargo es requerido'),
-  area: z.string().min(2, 'El área es requerida'),
+  operationCenter: z.string().optional(),
+  position: z.string().optional(),
+  area: z.string().optional(),
   workSchedule: z.string().optional(),
+  workCity: z.string().optional(),
+  workAddress: z.string().optional(),
   
   // Trial period
   trialPeriodDays: z.number().min(0).max(60).optional(),
@@ -56,6 +56,7 @@ export const contractFormSchema = z.object({
   // Additional clauses
   hasNonCompeteClause: z.boolean().default(false),
   hasConfidentialityClause: z.boolean().default(true),
+  specialClauses: z.string().optional(),
   
   // Document
   documentUrl: z.string().optional(),
