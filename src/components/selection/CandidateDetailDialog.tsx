@@ -123,11 +123,14 @@ export function CandidateDetailDialog({
 
   const handleConvert = async () => {
     try {
-      await convertToEmployee.mutateAsync({
+      const result = await convertToEmployee.mutateAsync({
         candidateId: candidate.id,
         operationCenterId: vacancy?.operation_center_id,
+        createEntryExam: true,
       });
-      toast.success('Candidato contratado y registrado como empleado');
+      toast.success('Candidato contratado exitosamente', {
+        description: `Se creó el empleado, contrato y examen de ingreso para ${result.employee.first_name} ${result.employee.last_name}.`,
+      });
       onOpenChange(false);
     } catch (error) {
       toast.error('Error al contratar candidato');

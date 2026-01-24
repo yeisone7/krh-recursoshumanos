@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
 type Candidate = Database['public']['Tables']['candidates']['Row'];
+type ContractType = Database['public']['Enums']['contract_type'];
 type CandidateInsert = Database['public']['Tables']['candidates']['Insert'];
 type SelectionStep = Database['public']['Tables']['selection_steps']['Row'];
 type SelectionStepInsert = Database['public']['Tables']['selection_steps']['Insert'];
@@ -173,28 +175,68 @@ export function useUpdateSelectionStep() {
   });
 }
 
-// Convert candidate to employee
+// Convert candidate to employee with automatic contract and entry medical exam
+export interface ConvertToEmployeeParams {
+  candidateId: string;
+  operationCenterId?: string;
+  // Contract data
+  contractType?: ContractType;
+  startDate?: string;
+  endDate?: string;
+  salary?: number;
+  transportAllowance?: number;
+  trialPeriodDays?: number;
+  // Entry exam data
+  createEntryExam?: boolean;
+}
+
 export function useConvertToEmployee() {
   const queryClient = useQueryClient();
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ candidateId, operationCenterId }: { candidateId: string; operationCenterId?: string }) => {
-      // Get candidate data
+    mutationFn: async ({
+      candidateId,
+      operationCenterId,
+      contractType,
+      startDate,
+      endDate,
+      salary,
+      transportAllowance,
+      trialPeriodDays,
+      createEntryExam = true,
+    }: ConvertToEmployeeParams) => {
+      // Get candidate data with full vacancy info
       const { data: candidate, error: fetchError } = await supabase
         .from('candidates')
-        .select('*, vacancies(operation_center_id, position_title)')
+        .select(`
+          *,
+          vacancies(
+            id,
+            operation_center_id,
+            position_title,
+            department_area,
+            shift_type,
+            vacancy_type,
+            salary_range_min,
+            salary_range_max,
+            includes_transport
+          )
+        `)
         .eq('id', candidateId)
         .single();
 
       if (fetchError) throw fetchError;
 
-      // Create employee from candidate
+      const vacancy = candidate.vacancies as any;
+      const hireDate = startDate || new Date().toISOString().split('T')[0];
+
+      // Step 1: Create employee from candidate
       const { data: employee, error: createError } = await supabase
         .from('employees')
         .insert({
           company_id: currentCompanyId!,
-          operation_center_id: operationCenterId || (candidate.vacancies as any)?.operation_center_id,
+          operation_center_id: operationCenterId || vacancy?.operation_center_id,
           first_name: candidate.first_name,
           last_name: candidate.last_name,
           document_type: candidate.document_type,
@@ -209,8 +251,10 @@ export function useConvertToEmployee() {
           gender: candidate.gender,
           education_level: candidate.education_level,
           profession: candidate.profession,
-          position: (candidate.vacancies as any)?.position_title || 'Por definir',
-          hire_date: new Date().toISOString().split('T')[0],
+          position: vacancy?.position_title || 'Por definir',
+          department_area: vacancy?.department_area,
+          shift_type: vacancy?.shift_type,
+          hire_date: hireDate,
           status: 'active',
           created_by: user?.id,
         })
@@ -219,7 +263,74 @@ export function useConvertToEmployee() {
 
       if (createError) throw createError;
 
-      // Update candidate status and link to employee
+      // Step 2: Create contract using vacancy data or provided values
+      const contractSalary = salary || candidate.salary_expectation || vacancy?.salary_range_min || 0;
+      const contractTransport = transportAllowance !== undefined
+        ? transportAllowance
+        : (vacancy?.includes_transport ? 200000 : 0); // Default Colombian transport allowance
+
+      const contractData: any = {
+        employee_id: employee.id,
+        contract_type: contractType || 'indefinido',
+        start_date: hireDate,
+        salary: contractSalary,
+        transport_allowance: contractTransport,
+        trial_period_days: trialPeriodDays ?? 60,
+        created_by: user?.id,
+      };
+
+      // Add end_date only for fixed-term contracts
+      if (contractType && contractType !== 'indefinido' && endDate) {
+        contractData.end_date = endDate;
+      }
+
+      // Calculate trial_end_date
+      if (contractData.trial_period_days > 0) {
+        const trialEnd = new Date(hireDate);
+        trialEnd.setDate(trialEnd.getDate() + contractData.trial_period_days);
+        contractData.trial_end_date = trialEnd.toISOString().split('T')[0];
+      }
+
+      const { data: contract, error: contractError } = await supabase
+        .from('contracts')
+        .insert(contractData)
+        .select()
+        .single();
+
+      if (contractError) throw contractError;
+
+      // Step 3: Create entry medical exam (required by Colombian law)
+      let entryExam = null;
+      if (createEntryExam) {
+        const { data: exam, error: examError } = await supabase
+          .from('medical_exams')
+          .insert({
+            employee_id: employee.id,
+            exam_type: 'ingreso',
+            exam_date: hireDate,
+            result: 'pendiente',
+            concept: 'Examen de ingreso - Generado automáticamente al contratar',
+            provider: 'Por definir',
+            doctor_name: 'Por definir',
+            created_by: user?.id,
+          })
+          .select()
+          .single();
+
+        if (examError) {
+          console.error('Error creating entry exam:', examError);
+          toast.warning('Examen de ingreso', {
+            description: 'No se pudo crear el examen de ingreso automáticamente. Créelo manualmente.',
+          });
+        } else {
+          entryExam = exam;
+          toast.success('Examen de ingreso creado', {
+            description: 'Se generó un examen de ingreso pendiente para el nuevo empleado.',
+          });
+        }
+      }
+
+      // Step 4: Update candidate status and link to employee
       const { error: updateError } = await supabase
         .from('candidates')
         .update({
@@ -231,12 +342,40 @@ export function useConvertToEmployee() {
 
       if (updateError) throw updateError;
 
-      return employee;
+      // Step 5: Log audit event
+      if (user) {
+        await supabase.from('audit_logs').insert({
+          user_id: user.id,
+          user_email: user.email,
+          company_id: currentCompanyId,
+          action: 'convert_candidate_to_employee',
+          entity_type: 'employee',
+          entity_id: employee.id,
+          entity_name: `${employee.first_name} ${employee.last_name}`,
+          new_values: {
+            candidate_id: candidateId,
+            vacancy_id: vacancy?.id,
+            contract_id: contract.id,
+            entry_exam_id: entryExam?.id,
+            contract_type: contractData.contract_type,
+            salary: contractSalary,
+          },
+          user_agent: navigator.userAgent,
+        });
+      }
+
+      return {
+        employee,
+        contract,
+        entryExam,
+      };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['candidates'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
     },
   });
 }
