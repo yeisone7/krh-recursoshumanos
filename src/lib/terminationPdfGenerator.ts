@@ -2,11 +2,14 @@ import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
-  TerminationDocumentData, 
   TerminationType,
   TerminationDocumentType,
   terminationTypeLabels,
+  TerminationDocumentData,
 } from '@/types/termination';
+
+// Re-export TerminationDocumentData for use in other modules
+export type { TerminationDocumentData } from '@/types/termination';
 
 // Helper to format currency
 function formatCurrency(amount: number): string {
