@@ -41,40 +41,40 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 import {
   contractFormSchema,
   ContractFormData,
   contractTypeLabels,
 } from '@/types/contract';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useOperationCenters } from '@/hooks/useCompanies';
+import { useCreateContract } from '@/hooks/useContracts';
+import type { Database } from '@/integrations/supabase/types';
+
+type ContractType = Database['public']['Enums']['contract_type'];
+
+// Map form contract type to database enum
+const formToDbContractType: Record<string, ContractType> = {
+  indefinite: 'indefinido',
+  fixed_term: 'fijo',
+  project: 'obra_labor',
+  apprenticeship: 'aprendizaje',
+  service: 'servicios',
+};
 
 interface ContractFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit?: (data: ContractFormData) => void;
+  onSuccess?: () => void;
 }
 
-// Mock employees for select
-const mockEmployees = [
-  { id: '1', name: 'María García López' },
-  { id: '2', name: 'Carlos Rodríguez Mejía' },
-  { id: '3', name: 'Ana Martínez Suárez' },
-  { id: '4', name: 'Pedro López Hernández' },
-  { id: '5', name: 'Laura Sánchez Torres' },
-];
-
-const operationCenters = [
-  { value: 'bogota-centro', label: 'Bogotá Centro' },
-  { value: 'bogota-norte', label: 'Bogotá Norte' },
-  { value: 'medellin-norte', label: 'Medellín Norte' },
-  { value: 'medellin-sur', label: 'Medellín Sur' },
-  { value: 'cali-sur', label: 'Cali Sur' },
-  { value: 'barranquilla', label: 'Barranquilla' },
-];
-
-export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFormDialogProps) {
+export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFormDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
+  const { data: employees = [] } = useEmployees();
+  const { data: operationCenters = [] } = useOperationCenters();
+  const createContract = useCreateContract();
 
   const form = useForm<ContractFormData>({
     resolver: zodResolver(contractFormSchema),
@@ -90,17 +90,46 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
   const contractType = form.watch('contractType');
   const needsEndDate = contractType && contractType !== 'indefinite';
 
-  const handleSubmit = (data: ContractFormData) => {
-    console.log('Contract data:', data);
-    onSubmit?.(data);
-    
-    const employeeName = mockEmployees.find(e => e.id === data.employeeId)?.name || '';
-    toast({
-      title: 'Contrato creado',
-      description: `El contrato de ${employeeName} ha sido registrado exitosamente.`,
-    });
-    onOpenChange(false);
-    form.reset();
+  const handleSubmit = async (data: ContractFormData) => {
+    try {
+      // Parse salary to number
+      const salaryNumber = parseFloat(data.salary.replace(/[^0-9.-]+/g, ''));
+      
+      // Map contract type from form to database enum
+      const dbContractType = formToDbContractType[data.contractType] || 'indefinido';
+
+      await createContract.mutateAsync({
+        employee_id: data.employeeId,
+        contract_type: dbContractType,
+        start_date: format(data.startDate, 'yyyy-MM-dd'),
+        end_date: data.endDate ? format(data.endDate, 'yyyy-MM-dd') : null,
+        salary: salaryNumber,
+        salary_type: data.salaryType === 'monthly' ? 'mensual' : 'integral',
+        transport_allowance: data.transportAllowance ? 140606 : 0, // 2024 Colombian value
+        trial_period_days: data.trialPeriodDays,
+        work_city: data.workCity,
+        work_address: data.workAddress,
+        has_non_compete_clause: data.hasNonCompeteClause,
+        has_confidentiality_clause: data.hasConfidentialityClause,
+        special_clauses: data.specialClauses,
+      });
+
+      const employee = employees.find(e => e.id === data.employeeId);
+      const employeeName = employee ? `${employee.first_name} ${employee.last_name}` : 'el empleado';
+      
+      toast.success('Contrato creado', {
+        description: `El contrato de ${employeeName} ha sido registrado exitosamente.`,
+      });
+      
+      onOpenChange(false);
+      form.reset();
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Error creating contract:', error);
+      toast.error('Error al crear contrato', {
+        description: error.message || 'Por favor intenta de nuevo',
+      });
+    }
   };
 
   const tabItems = [
@@ -153,15 +182,17 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Empleado *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Seleccionar empleado" />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="bg-background">
-                                {mockEmployees.map((emp) => (
-                                  <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
+                              <SelectContent className="bg-background max-h-[200px]">
+                                {employees.map((emp) => (
+                                  <SelectItem key={emp.id} value={emp.id}>
+                                    {emp.first_name} {emp.last_name} - {emp.document_number}
+                                  </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -175,7 +206,7 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Tipo de Contrato *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Seleccionar tipo" />
@@ -340,7 +371,7 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Tipo de Salario *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Seleccionar" />
@@ -382,15 +413,15 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                 {/* Workplace Tab */}
                 <TabsContent value="workplace" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Lugar y Cargo</h3>
+                    <h3 className="font-semibold text-foreground border-b pb-2">Lugar de Trabajo</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="operationCenter"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Centro de Operación *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormLabel>Centro de Operación</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Seleccionar centro" />
@@ -398,8 +429,8 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                               </FormControl>
                               <SelectContent className="bg-background">
                                 {operationCenters.map((center) => (
-                                  <SelectItem key={center.value} value={center.value}>
-                                    {center.label}
+                                  <SelectItem key={center.id} value={center.id}>
+                                    {center.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -410,12 +441,12 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                       />
                       <FormField
                         control={form.control}
-                        name="area"
+                        name="workCity"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Área *</FormLabel>
+                            <FormLabel>Ciudad de Trabajo</FormLabel>
                             <FormControl>
-                              <Input placeholder="Tecnología" {...field} />
+                              <Input placeholder="Bogotá" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -423,25 +454,12 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                       />
                       <FormField
                         control={form.control}
-                        name="position"
+                        name="workAddress"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Cargo *</FormLabel>
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Dirección de Trabajo</FormLabel>
                             <FormControl>
-                              <Input placeholder="Analista de Sistemas" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="workSchedule"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Horario de Trabajo</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Lunes a Viernes 8:00 - 17:00" {...field} />
+                              <Input placeholder="Calle 100 # 15-20" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -454,7 +472,7 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                 {/* Clauses Tab */}
                 <TabsContent value="clauses" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Cláusulas Adicionales</h3>
+                    <h3 className="font-semibold text-foreground border-b pb-2">Cláusulas Especiales</h3>
                     <div className="space-y-4">
                       <FormField
                         control={form.control}
@@ -470,7 +488,7 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                             <div className="space-y-1 leading-none">
                               <FormLabel>Cláusula de Confidencialidad</FormLabel>
                               <FormDescription className="text-xs">
-                                El empleado se compromete a mantener la confidencialidad de la información de la empresa
+                                El empleado se compromete a mantener la confidencialidad de la información de la empresa.
                               </FormDescription>
                             </div>
                           </FormItem>
@@ -490,7 +508,7 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                             <div className="space-y-1 leading-none">
                               <FormLabel>Cláusula de No Competencia</FormLabel>
                               <FormDescription className="text-xs">
-                                Restricción de trabajar con la competencia durante un período después de terminar el contrato
+                                El empleado se compromete a no trabajar con la competencia durante un período determinado.
                               </FormDescription>
                             </div>
                           </FormItem>
@@ -500,20 +518,23 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Notas</h3>
+                    <h3 className="font-semibold text-foreground border-b pb-2">Cláusulas Adicionales</h3>
                     <FormField
                       control={form.control}
-                      name="notes"
+                      name="specialClauses"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Observaciones del Contrato</FormLabel>
+                          <FormLabel>Cláusulas Especiales</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="Notas adicionales sobre el contrato..."
-                              className="min-h-[100px]"
+                              placeholder="Escriba cualquier cláusula adicional que aplique al contrato..."
+                              className="min-h-[120px] resize-none"
                               {...field}
                             />
                           </FormControl>
+                          <FormDescription className="text-xs">
+                            Estas cláusulas se agregarán al contrato laboral.
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -521,45 +542,17 @@ export function ContractFormDialog({ open, onOpenChange, onSubmit }: ContractFor
                   </div>
                 </TabsContent>
               </ScrollArea>
-            </Tabs>
 
-            <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/30">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <div className="flex gap-2">
-                {activeTab !== 'general' && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      const tabs = ['general', 'salary', 'workplace', 'clauses'];
-                      const currentIndex = tabs.indexOf(activeTab);
-                      if (currentIndex > 0) setActiveTab(tabs[currentIndex - 1]);
-                    }}
-                  >
-                    Anterior
-                  </Button>
-                )}
-                {activeTab !== 'clauses' ? (
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      const tabs = ['general', 'salary', 'workplace', 'clauses'];
-                      const currentIndex = tabs.indexOf(activeTab);
-                      if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1]);
-                    }}
-                    className="gradient-primary text-primary-foreground"
-                  >
-                    Siguiente
-                  </Button>
-                ) : (
-                  <Button type="submit" className="gradient-primary text-primary-foreground">
-                    Guardar Contrato
-                  </Button>
-                )}
+              {/* Footer with submit button */}
+              <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={createContract.isPending}>
+                  {createContract.isPending ? 'Guardando...' : 'Crear Contrato'}
+                </Button>
               </div>
-            </div>
+            </Tabs>
           </form>
         </Form>
       </DialogContent>
