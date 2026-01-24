@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Users,
   Search,
@@ -32,6 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { EmployeeFormDialog } from '@/components/employees/EmployeeFormDialog';
+import { EmployeeDetailDialog } from '@/components/employees/EmployeeDetailDialog';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,14 +49,46 @@ const statusConfig: Record<EmployeeStatus, { label: string; class: string }> = {
 };
 
 export default function Empleados() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [centerFilter, setCenterFilter] = useState<string>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const { currentCompanyId } = useAuth();
   const { data: employees, isLoading } = useEmployees();
   const { data: operationCenters } = useOperationCenters();
+
+  // Handle deep linking from dashboard
+  useEffect(() => {
+    const detailId = searchParams.get('detail');
+    const statusParam = searchParams.get('status');
+    
+    if (detailId && employees) {
+      const employee = employees.find(e => e.id === detailId);
+      if (employee) {
+        setSelectedEmployeeId(detailId);
+        setIsDetailOpen(true);
+        // Clear the query param
+        setSearchParams({}, { replace: true });
+      }
+    }
+    
+    if (statusParam) {
+      setStatusFilter(statusParam);
+      // Clear the query param
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('status');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams, employees, setSearchParams]);
+
+  const handleOpenDetail = (employeeId: string) => {
+    setSelectedEmployeeId(employeeId);
+    setIsDetailOpen(true);
+  };
 
   const filteredEmployees = useMemo(() => {
     if (!employees) return [];
@@ -125,6 +159,13 @@ export default function Empleados() {
       <EmployeeFormDialog 
         open={isFormOpen} 
         onOpenChange={setIsFormOpen}
+      />
+
+      {/* Employee Detail Dialog */}
+      <EmployeeDetailDialog
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        employeeId={selectedEmployeeId}
       />
 
       {/* Filters and Search */}
@@ -276,6 +317,7 @@ export default function Empleados() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
               className="card-elevated p-5 group cursor-pointer hover:border-primary/30"
+              onClick={() => handleOpenDetail(employee.id)}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -298,10 +340,12 @@ export default function Empleados() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Ver perfil</DropdownMenuItem>
-                    <DropdownMenuItem>Editar</DropdownMenuItem>
-                    <DropdownMenuItem>Ver contrato</DropdownMenuItem>
-                    <DropdownMenuItem>Documentos</DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleOpenDetail(employee.id); }}>
+                      Ver perfil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Editar</DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Ver contrato</DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Documentos</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

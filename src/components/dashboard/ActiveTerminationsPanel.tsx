@@ -110,7 +110,7 @@ export function ActiveTerminationsPanel() {
                   styles.bg,
                   styles.border
                 )}
-                onClick={() => navigate(`/contratos?employee=${termination.employeeId}`)}
+                onClick={() => navigate(`/empleados?detail=${termination.employeeId}`)}
               >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
