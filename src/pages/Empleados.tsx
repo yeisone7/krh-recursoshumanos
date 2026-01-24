@@ -42,6 +42,7 @@ type EmployeeStatus = Database['public']['Enums']['employee_status'];
 const statusConfig: Record<EmployeeStatus, { label: string; class: string }> = {
   active: { label: 'Activo', class: 'bg-success-light text-success border-success/20' },
   suspended: { label: 'Suspendido', class: 'bg-warning-light text-warning-foreground border-warning/20' },
+  en_retiro: { label: 'En Retiro', class: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' },
   retired: { label: 'Retirado', class: 'bg-muted text-muted-foreground border-border' },
 };
 

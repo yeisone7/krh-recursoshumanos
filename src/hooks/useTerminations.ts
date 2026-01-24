@@ -137,6 +137,14 @@ export function useInitiateTermination() {
       // The contract will be marked as terminated only when the process is completed
       // This allows users to resume the process if they close the dialog
 
+      // Update employee status to 'en_retiro' (in retirement process)
+      const { error: employeeError } = await supabase
+        .from('employees')
+        .update({ status: 'en_retiro' })
+        .eq('id', employeeId);
+
+      if (employeeError) throw employeeError;
+
       // Log audit event
       await supabase.from('audit_logs').insert({
         user_id: user.id,
