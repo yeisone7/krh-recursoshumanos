@@ -131,15 +131,35 @@ export function useTerminateContract() {
           termination_reason: terminationReason,
         })
         .eq('id', contractId)
-        .select('*, employees(first_name, last_name)')
+        .select('*, employees(id, first_name, last_name)')
         .single();
 
       if (error) throw error;
 
-      // Step 4: Log audit event
+      // Step 4: Update employee status to 'retired' (Retirado)
+      const employeeData = data.employees as any;
+      if (employeeData?.id) {
+        const { error: employeeUpdateError } = await supabase
+          .from('employees')
+          .update({ status: 'retired' })
+          .eq('id', employeeData.id);
+
+        if (employeeUpdateError) {
+          console.error('Error updating employee status:', employeeUpdateError);
+          toast.warning('Advertencia', {
+            description: 'El contrato fue terminado pero no se pudo actualizar el estado del empleado a Retirado.',
+          });
+        } else {
+          toast.info('Estado actualizado', {
+            description: 'El empleado ha sido marcado como Retirado.',
+          });
+        }
+      }
+
+      // Step 5: Log audit event
       if (user) {
-        const employeeName = data.employees 
-          ? `${(data.employees as any).first_name} ${(data.employees as any).last_name}`
+        const employeeName = employeeData 
+          ? `${employeeData.first_name} ${employeeData.last_name}`
           : 'Empleado';
         
         await supabase.from('audit_logs').insert({
@@ -155,6 +175,7 @@ export function useTerminateContract() {
             termination_reason: terminationReason,
             exit_exam_id: exitExamId,
             exit_exam_auto_created: !hasExitExam && autoCreateExitExam,
+            employee_status_changed_to: 'retired',
           },
           user_agent: navigator.userAgent,
         });
@@ -164,11 +185,13 @@ export function useTerminateContract() {
         contract: data,
         exitExamId,
         exitExamAutoCreated: !hasExitExam && autoCreateExitExam,
+        employeeRetired: true,
       };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
     },
   });
 }
