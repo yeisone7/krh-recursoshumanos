@@ -16,6 +16,8 @@ import {
   Calendar,
   Building2,
   UserPlus,
+  LayoutGrid,
+  LayoutList,
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -39,6 +41,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 
 import { useVacancies } from '@/hooks/useVacancies';
@@ -48,6 +51,7 @@ import { VacancyFormDialog } from '@/components/vacancies/VacancyFormDialog';
 import { VacancyDetailDialog } from '@/components/vacancies/VacancyDetailDialog';
 import { CandidateFormDialog } from '@/components/vacancies/CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
+import { CandidateKanban } from '@/components/selection/CandidateKanban';
 import {
   VacancyStatus,
   vacancyStatusLabels,
@@ -59,6 +63,7 @@ import {
 
 export default function Seleccion() {
   const [activeView, setActiveView] = useState<'vacancies' | 'candidates'>('vacancies');
+  const [candidateViewMode, setCandidateViewMode] = useState<'table' | 'kanban'>('kanban');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [centerFilter, setCenterFilter] = useState<string>('all');
@@ -436,6 +441,25 @@ export default function Seleccion() {
 
               {/* Candidates Tab */}
               <TabsContent value="candidates" className="mt-4">
+                {/* View Mode Toggle */}
+                <div className="flex justify-end mb-4">
+                  <ToggleGroup
+                    type="single"
+                    value={candidateViewMode}
+                    onValueChange={(v) => v && setCandidateViewMode(v as 'table' | 'kanban')}
+                    className="border rounded-lg p-1"
+                  >
+                    <ToggleGroupItem value="kanban" aria-label="Vista Kanban" className="gap-2">
+                      <LayoutGrid className="w-4 h-4" />
+                      Kanban
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="table" aria-label="Vista Tabla" className="gap-2">
+                      <LayoutList className="w-4 h-4" />
+                      Tabla
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+
                 {loadingCandidates ? (
                   <div className="space-y-3">
                     {[1, 2, 3].map((i) => (
@@ -456,6 +480,11 @@ export default function Seleccion() {
                       Nuevo Candidato
                     </Button>
                   </div>
+                ) : candidateViewMode === 'kanban' ? (
+                  <CandidateKanban
+                    candidates={filteredCandidates as any}
+                    onCandidateClick={openCandidateDetail}
+                  />
                 ) : (
                   <div className="rounded-md border">
                     <Table>
