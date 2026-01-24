@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
@@ -14,7 +15,8 @@ import {
   Package,
   AlertCircle,
   CheckCircle,
-  Loader2
+  Loader2,
+  Pencil
 } from 'lucide-react';
 
 import {
@@ -29,6 +31,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useEmployee } from '@/hooks/useEmployees';
+import { EmployeeFormDialog } from './EmployeeFormDialog';
 import type { Database } from '@/integrations/supabase/types';
 
 type EmployeeStatus = Database['public']['Enums']['employee_status'];
@@ -64,10 +67,15 @@ interface EmployeeDetailDialogProps {
 
 export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: EmployeeDetailDialogProps) {
   const { data: employee, isLoading } = useEmployee(employeeId || undefined);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   if (!employeeId) return null;
 
   const activeContract = employee?.contracts?.find(c => !c.is_terminated);
+
+  const handleEditSuccess = () => {
+    setIsEditOpen(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -428,7 +436,19 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cerrar
               </Button>
+              <Button onClick={() => setIsEditOpen(true)} className="gap-2">
+                <Pencil className="w-4 h-4" />
+                Editar
+              </Button>
             </div>
+
+            {/* Edit Form Dialog */}
+            <EmployeeFormDialog
+              open={isEditOpen}
+              onOpenChange={setIsEditOpen}
+              employee={employee}
+              onSuccess={handleEditSuccess}
+            />
           </div>
         )}
       </DialogContent>
