@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -53,23 +53,30 @@ import {
   maritalStatusLabels,
 } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
-import { useCreateEmployee } from '@/hooks/useEmployees';
+import { useCreateEmployee, useUpdateEmployee } from '@/hooks/useEmployees';
 import { useAuth } from '@/contexts/AuthContext';
 import { CitySelect, CityDepartmentSelect } from '@/components/ui/city-department-select';
+import type { Database } from '@/integrations/supabase/types';
+
+type Employee = Database['public']['Tables']['employees']['Row'];
 
 interface EmployeeFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  employee?: Employee | null;
   onSuccess?: () => void;
 }
 
 // Colombian departments imported from central location data
 
-export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFormDialogProps) {
+export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: EmployeeFormDialogProps) {
   const [activeTab, setActiveTab] = useState('personal');
   const { currentCompanyId } = useAuth();
   const { data: operationCenters = [] } = useOperationCenters();
   const createEmployee = useCreateEmployee();
+  const updateEmployee = useUpdateEmployee();
+  
+  const isEditMode = !!employee;
 
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeFormSchema),
@@ -82,11 +89,58 @@ export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFo
     },
   });
 
+  // Reset form with employee data when editing
+  useEffect(() => {
+    if (employee && open) {
+      form.reset({
+        documentType: employee.document_type as any,
+        documentNumber: employee.document_number,
+        firstName: employee.first_name,
+        lastName: employee.last_name,
+        birthDate: employee.birth_date ? new Date(employee.birth_date) : undefined,
+        gender: employee.gender as any,
+        bloodType: employee.blood_type as any,
+        maritalStatus: employee.marital_status as any,
+        nationality: 'Colombiana',
+        email: employee.email || '',
+        phone: employee.phone || '',
+        mobilePhone: employee.mobile || '',
+        address: employee.address || '',
+        city: employee.city || '',
+        department: employee.department || '',
+        emergencyContactName: employee.emergency_contact_name || '',
+        emergencyContactPhone: employee.emergency_contact_phone || '',
+        emergencyContactRelationship: employee.emergency_contact_relationship || '',
+        operationCenter: employee.operation_center_id || '',
+        position: employee.position,
+        area: employee.department_area || '',
+        contractType: employee.contract_type as any,
+        shiftType: employee.shift_type as any,
+        startDate: new Date(employee.hire_date),
+        salary: employee.salary?.toString() || '',
+        educationLevel: employee.education_level as any,
+        profession: employee.profession || '',
+        status: employee.status as any,
+        hasChildren: false,
+        numberOfChildren: 0,
+        hasVehicle: false,
+      });
+    } else if (!employee && open) {
+      form.reset({
+        nationality: 'Colombiana',
+        status: 'active',
+        hasChildren: false,
+        numberOfChildren: 0,
+        hasVehicle: false,
+      });
+    }
+  }, [employee, open, form]);
+
   const hasChildren = form.watch('hasChildren');
   const hasVehicle = form.watch('hasVehicle');
 
   const handleSubmit = async (data: EmployeeFormData) => {
-    if (!currentCompanyId) {
+    if (!currentCompanyId && !isEditMode) {
       toast.error('Error: No hay empresa seleccionada');
       return;
     }
@@ -95,8 +149,7 @@ export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFo
       // Parse salary to number
       const salaryNumber = parseFloat(data.salary.replace(/[^0-9.-]+/g, ''));
       
-      await createEmployee.mutateAsync({
-        company_id: currentCompanyId,
+      const employeeData = {
         operation_center_id: data.operationCenter,
         document_type: data.documentType,
         document_number: data.documentNumber,
@@ -124,18 +177,34 @@ export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFo
         education_level: data.educationLevel,
         profession: data.profession,
         status: data.status,
-      });
+      };
 
-      toast.success('Empleado creado', {
-        description: `${data.firstName} ${data.lastName} ha sido registrado exitosamente.`,
-      });
+      if (isEditMode && employee) {
+        await updateEmployee.mutateAsync({
+          id: employee.id,
+          ...employeeData,
+        });
+
+        toast.success('Empleado actualizado', {
+          description: `${data.firstName} ${data.lastName} ha sido actualizado exitosamente.`,
+        });
+      } else {
+        await createEmployee.mutateAsync({
+          company_id: currentCompanyId!,
+          ...employeeData,
+        });
+
+        toast.success('Empleado creado', {
+          description: `${data.firstName} ${data.lastName} ha sido registrado exitosamente.`,
+        });
+      }
       
       onOpenChange(false);
       form.reset();
       onSuccess?.();
     } catch (error: any) {
-      console.error('Error creating employee:', error);
-      toast.error('Error al crear empleado', {
+      console.error('Error saving employee:', error);
+      toast.error(isEditMode ? 'Error al actualizar empleado' : 'Error al crear empleado', {
         description: error.message || 'Por favor intenta de nuevo',
       });
     }
@@ -155,10 +224,13 @@ export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFo
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             <Building className="w-5 h-5 text-primary" />
-            Nuevo Empleado
+            {isEditMode ? 'Editar Empleado' : 'Nuevo Empleado'}
           </DialogTitle>
           <DialogDescription>
-            Complete la información del empleado en cada una de las secciones.
+            {isEditMode 
+              ? 'Modifique la información del empleado según sea necesario.'
+              : 'Complete la información del empleado en cada una de las secciones.'
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -1049,8 +1121,11 @@ export function EmployeeFormDialog({ open, onOpenChange, onSuccess }: EmployeeFo
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={createEmployee.isPending}>
-                  {createEmployee.isPending ? 'Guardando...' : 'Guardar Empleado'}
+                <Button type="submit" disabled={createEmployee.isPending || updateEmployee.isPending}>
+                  {(createEmployee.isPending || updateEmployee.isPending) 
+                    ? 'Guardando...' 
+                    : isEditMode ? 'Actualizar Empleado' : 'Guardar Empleado'
+                  }
                 </Button>
               </div>
             </Tabs>
