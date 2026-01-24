@@ -50,14 +50,8 @@ interface OperationCenterFormDialogProps {
   onSuccess?: () => void;
 }
 
-const colombianDepartments = [
-  'Amazonas', 'Antioquia', 'Arauca', 'Atlántico', 'Bogotá D.C.', 'Bolívar',
-  'Boyacá', 'Caldas', 'Caquetá', 'Casanare', 'Cauca', 'Cesar', 'Chocó',
-  'Córdoba', 'Cundinamarca', 'Guainía', 'Guaviare', 'Huila', 'La Guajira',
-  'Magdalena', 'Meta', 'Nariño', 'Norte de Santander', 'Putumayo', 'Quindío',
-  'Risaralda', 'San Andrés y Providencia', 'Santander', 'Sucre', 'Tolima',
-  'Valle del Cauca', 'Vaupés', 'Vichada',
-];
+// Import city/department selector
+import { CityDepartmentSelect } from '@/components/ui/city-department-select';
 
 export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: OperationCenterFormDialogProps) {
   const { currentCompanyId } = useAuth();
@@ -188,44 +182,12 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: Ope
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ciudad</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Bogotá" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="department"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Departamento</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background max-h-[200px]">
-                        {colombianDepartments.map((dept) => (
-                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <CityDepartmentSelect
+              cityValue={form.watch('city')}
+              departmentValue={form.watch('department')}
+              onCityChange={(city) => form.setValue('city', city)}
+              onDepartmentChange={(dept) => form.setValue('department', dept)}
+            />
 
             <FormField
               control={form.control}
