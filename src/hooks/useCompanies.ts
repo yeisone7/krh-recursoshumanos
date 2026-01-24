@@ -53,6 +53,25 @@ export function useCompanies() {
   });
 }
 
+export function useCompany(companyId: string | undefined) {
+  return useQuery({
+    queryKey: ['company', companyId],
+    queryFn: async () => {
+      if (!companyId) return null;
+      
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('id', companyId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!companyId,
+  });
+}
+
 export function useOperationCenters() {
   const { currentCompanyId } = useAuth();
 
