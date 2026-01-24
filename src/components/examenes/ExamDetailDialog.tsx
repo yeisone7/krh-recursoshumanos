@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { DocumentSection } from '@/components/documents/DocumentSection';
 import {
   MedicalExam,
   examTypeLabels,
@@ -183,6 +184,16 @@ export function ExamDetailDialog({ exam, open, onOpenChange }: ExamDetailDialogP
               </div>
             </div>
           </div>
+
+          <Separator />
+
+          {/* Document Section */}
+          <DocumentSection
+            entityType="medical_exam"
+            entityId={exam.id}
+            title="Documento del Examen"
+            showVersionHistory
+          />
 
           {/* Metadata */}
           <div className="text-xs text-muted-foreground pt-4 border-t">
