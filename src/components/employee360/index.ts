@@ -1,0 +1,15 @@
+export { Employee360Header } from './Employee360Header';
+export { Employee360KPIs } from './Employee360KPIs';
+export { Tab360Profile } from './Tab360Profile';
+export { Tab360Labor } from './Tab360Labor';
+export { Tab360Contracts } from './Tab360Contracts';
+export { Tab360TimeOff } from './Tab360TimeOff';
+export { Tab360Incapacities } from './Tab360Incapacities';
+export { Tab360Training } from './Tab360Training';
+export { Tab360Evaluations } from './Tab360Evaluations';
+export { Tab360Health } from './Tab360Health';
+export { Tab360Dotation } from './Tab360Dotation';
+export { Tab360Overtime } from './Tab360Overtime';
+export { Tab360Disciplinary } from './Tab360Disciplinary';
+export { Tab360Documents } from './Tab360Documents';
+export { Tab360Audit } from './Tab360Audit';
