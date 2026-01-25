@@ -16,7 +16,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { useOperationCenters } from '@/hooks/useCompanies';
-import { useEmployeesV2 } from '@/hooks/useEmployeesV2';
+import { useEmployees } from '@/hooks/useEmployees';
 import { useAuth } from '@/contexts/AuthContext';
 import { OperationCenterFormDialog } from '@/components/centers/OperationCenterFormDialog';
 
@@ -26,7 +26,7 @@ export default function Centros() {
   
   const { currentCompanyId } = useAuth();
   const { data: centers = [], isLoading: loadingCenters } = useOperationCenters();
-  const { data: employees = [] } = useEmployeesV2();
+  const { data: employees = [] } = useEmployees();
 
   // Calculate employee count per center
   const centerStats = useMemo(() => {

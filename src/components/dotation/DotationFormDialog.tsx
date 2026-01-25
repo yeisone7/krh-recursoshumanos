@@ -46,8 +46,8 @@ import {
   dotationItemTypeLabels,
   DOTATION_PERIOD_MONTHS,
 } from '@/types/dotation';
-import { useEmployeesV2 } from '@/hooks/useEmployeesV2';
-import { getEmployeeFullName } from '@/types/employeeV2';
+import { useEmployees } from '@/hooks/useEmployees';
+import { getEmployeeFullName } from '@/types/employee';
 import { useCreateDotationDelivery } from '@/hooks/useDotation';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -64,7 +64,7 @@ const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 const shoeSizeOptions = Array.from({ length: 13 }, (_, i) => (35 + i).toString());
 
 export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFormDialogProps) {
-  const { data: employees = [] } = useEmployeesV2();
+  const { data: employees = [] } = useEmployees();
   const createDelivery = useCreateDotationDelivery();
 
   const form = useForm<DotationDeliveryFormData>({

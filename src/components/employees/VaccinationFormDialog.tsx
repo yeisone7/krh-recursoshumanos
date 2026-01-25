@@ -38,7 +38,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateVaccination } from '@/hooks/useEmployeeHealth';
-import { vaccineTypeLabels, type VaccineType } from '@/types/employeeV2';
+import { vaccineTypeLabels, type VaccineType } from '@/types/employee';
 
 const formSchema = z.object({
   vaccineType: z.enum([
