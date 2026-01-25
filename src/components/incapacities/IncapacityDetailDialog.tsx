@@ -482,16 +482,14 @@ export function IncapacityDetailDialog({
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {incapacity.clinical_history_url ? (
-                      <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                        <FileText className="h-4 w-4 text-primary" />
-                        <span className="text-sm">{incapacity.clinical_history_url.split('/').pop()}</span>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        No se ha adjuntado historia clínica
-                      </p>
-                    )}
+                    <DocumentSection
+                      entityType="incapacity_clinical_history"
+                      entityId={incapacityId}
+                      title="Historia Clínica"
+                      allowUpload={true}
+                      showVersionHistory={true}
+                      compact
+                    />
                   </CardContent>
                 </Card>
               </TabsContent>
