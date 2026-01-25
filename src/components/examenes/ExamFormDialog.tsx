@@ -5,6 +5,7 @@ import { format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, Stethoscope, FileText, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -44,6 +45,9 @@ import {
   examResultLabels,
   PERIODIC_EXAM_VALIDITY_MONTHS,
 } from '@/types/medicalExam';
+import { useEmployees } from '@/hooks/useEmployees';
+import { getEmployeeFullName } from '@/types/employee';
+import { useCreateMedicalExam } from '@/hooks/useMedicalExams';
 
 interface ExamFormDialogProps {
   open: boolean;
@@ -51,16 +55,10 @@ interface ExamFormDialogProps {
   onSubmit?: (data: MedicalExamFormData) => void;
 }
 
-// Mock employees for demo
-const mockEmployees = [
-  { id: '1', name: 'María García López', document: '1234567890' },
-  { id: '2', name: 'Carlos Rodríguez Pérez', document: '0987654321' },
-  { id: '3', name: 'Ana Martínez Silva', document: '1122334455' },
-  { id: '4', name: 'Pedro López Hernández', document: '5544332211' },
-];
-
 export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
+  const { data: employees = [] } = useEmployees();
+  const createExam = useCreateMedicalExam();
 
   const form = useForm<MedicalExamFormData>({
     resolver: zodResolver(medicalExamFormSchema),
@@ -84,16 +82,40 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
     ? addMonths(watchExamDate, PERIODIC_EXAM_VALIDITY_MONTHS)
     : null;
 
-  const handleSubmit = (data: MedicalExamFormData) => {
-    onSubmit?.(data);
-    form.reset();
-    onOpenChange(false);
+  const handleSubmit = async (data: MedicalExamFormData) => {
+    try {
+      await createExam.mutateAsync({
+        employee_id: data.employeeId,
+        exam_type: data.examType,
+        exam_date: format(data.examDate, 'yyyy-MM-dd'),
+        expiration_date: calculatedExpiration 
+          ? format(calculatedExpiration, 'yyyy-MM-dd') 
+          : null,
+        result: data.result,
+        concept: data.concept,
+        restrictions: data.restrictions || null,
+        provider: data.provider,
+        doctor_name: data.doctorName,
+        observations: data.observations || null,
+      });
+      
+      toast.success('Examen registrado exitosamente');
+      onSubmit?.(data);
+      form.reset();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating exam:', error);
+      toast.error('Error al registrar el examen');
+    }
   };
 
   const handleClose = () => {
     form.reset();
     onOpenChange(false);
   };
+
+  // Filter only active employees
+  const activeEmployees = employees.filter(emp => emp.is_active);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -137,9 +159,9 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {mockEmployees.map((emp) => (
+                          {activeEmployees.map((emp) => (
                             <SelectItem key={emp.id} value={emp.id}>
-                              {emp.name} - {emp.document}
+                              {getEmployeeFullName(emp)} - {emp.document_number}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -376,8 +398,12 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-primary hover:bg-primary-hover">
-                Registrar Examen
+              <Button 
+                type="submit" 
+                className="bg-primary hover:bg-primary-hover"
+                disabled={createExam.isPending}
+              >
+                {createExam.isPending ? 'Registrando...' : 'Registrar Examen'}
               </Button>
             </div>
           </form>
