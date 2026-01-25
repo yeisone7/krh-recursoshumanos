@@ -29,6 +29,7 @@ import Organigrama from "./pages/Organigrama";
 import Cesantias from "./pages/Cesantias";
 import Calendario from "./pages/Calendario";
 import Portal from "./pages/Portal";
+import Reportes from "./pages/Reportes";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
@@ -80,6 +81,7 @@ const App = () => (
                         <Route path="/organigrama" element={<Organigrama />} />
                         <Route path="/cesantias" element={<Cesantias />} />
                         <Route path="/calendario" element={<Calendario />} />
+                        <Route path="/reportes" element={<Reportes />} />
                         <Route path="/seguridad" element={<Seguridad />} />
                         <Route path="/configuracion" element={<Configuracion />} />
                         <Route path="*" element={<NotFound />} />
