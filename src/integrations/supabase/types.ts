@@ -2389,6 +2389,161 @@ export type Database = {
           },
         ]
       }
+      overtime_export_batches: {
+        Row: {
+          batch_number: string
+          company_id: string
+          created_at: string
+          end_date: string
+          exported_at: string
+          exported_by: string | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          payroll_period: string
+          start_date: string
+          total_hours: number
+          total_records: number
+          total_value: number
+        }
+        Insert: {
+          batch_number: string
+          company_id: string
+          created_at?: string
+          end_date: string
+          exported_at?: string
+          exported_by?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          payroll_period: string
+          start_date: string
+          total_hours?: number
+          total_records?: number
+          total_value?: number
+        }
+        Update: {
+          batch_number?: string
+          company_id?: string
+          created_at?: string
+          end_date?: string
+          exported_at?: string
+          exported_by?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          payroll_period?: string
+          start_date?: string
+          total_hours?: number
+          total_records?: number
+          total_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overtime_export_batches_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      overtime_records: {
+        Row: {
+          approval_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          end_time: string
+          export_batch_id: string | null
+          exported_at: string | null
+          hourly_rate: number | null
+          id: string
+          is_exported: boolean
+          overtime_type: Database["public"]["Enums"]["overtime_type"]
+          payroll_period: string | null
+          reason: string | null
+          rejected_reason: string | null
+          start_time: string
+          status: Database["public"]["Enums"]["overtime_status"]
+          surcharge_percentage: number
+          total_hours: number
+          total_value: number | null
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          approval_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          end_time: string
+          export_batch_id?: string | null
+          exported_at?: string | null
+          hourly_rate?: number | null
+          id?: string
+          is_exported?: boolean
+          overtime_type: Database["public"]["Enums"]["overtime_type"]
+          payroll_period?: string | null
+          reason?: string | null
+          rejected_reason?: string | null
+          start_time: string
+          status?: Database["public"]["Enums"]["overtime_status"]
+          surcharge_percentage: number
+          total_hours: number
+          total_value?: number | null
+          updated_at?: string
+          work_date: string
+        }
+        Update: {
+          approval_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          end_time?: string
+          export_batch_id?: string | null
+          exported_at?: string | null
+          hourly_rate?: number | null
+          id?: string
+          is_exported?: boolean
+          overtime_type?: Database["public"]["Enums"]["overtime_type"]
+          payroll_period?: string | null
+          reason?: string | null
+          rejected_reason?: string | null
+          start_time?: string
+          status?: Database["public"]["Enums"]["overtime_status"]
+          surcharge_percentage?: number
+          total_hours?: number
+          total_value?: number | null
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overtime_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "overtime_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       positions: {
         Row: {
           area_id: string | null
@@ -3208,6 +3363,15 @@ export type Database = {
         | "union_libre"
         | "divorciado"
         | "viudo"
+      overtime_status: "pendiente" | "aprobado" | "rechazado" | "pagado"
+      overtime_type:
+        | "extra_diurna"
+        | "extra_nocturna"
+        | "recargo_nocturno"
+        | "dominical_diurna"
+        | "dominical_nocturna"
+        | "festivo_diurna"
+        | "festivo_nocturna"
       payroll_type: "quincenal" | "mensual"
       recovery_status:
         | "pendiente"
@@ -3518,6 +3682,16 @@ export const Constants = {
         "union_libre",
         "divorciado",
         "viudo",
+      ],
+      overtime_status: ["pendiente", "aprobado", "rechazado", "pagado"],
+      overtime_type: [
+        "extra_diurna",
+        "extra_nocturna",
+        "recargo_nocturno",
+        "dominical_diurna",
+        "dominical_nocturna",
+        "festivo_diurna",
+        "festivo_nocturna",
       ],
       payroll_type: ["quincenal", "mensual"],
       recovery_status: [
