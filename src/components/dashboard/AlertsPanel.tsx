@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertTriangle, Clock, FileText, Stethoscope, Package, ChevronRight, CheckCircle, Award, HeartPulse } from 'lucide-react';
+import { AlertTriangle, Clock, FileText, Stethoscope, Package, ChevronRight, CheckCircle, Award, HeartPulse, Palmtree } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ const typeIcons: Record<DashboardAlert['type'], typeof FileText> = {
   dotation: Package,
   certification: Award,
   incapacity: HeartPulse,
+  vacation: Palmtree,
 };
 
 const levelStyles = {
