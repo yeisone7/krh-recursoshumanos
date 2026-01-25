@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, differenceInDays, addDays, isBefore, isAfter } from 'date-fns';
+import { toast } from 'sonner';
 import type { 
   EmployeeIncapacity, 
   IncapacityWithEmployee, 
@@ -11,6 +12,7 @@ import type {
   RecoveryStatus 
 } from '@/types/incapacity';
 import { calculatePaymentDistribution, getAccumulatedDays, requiresReintegrationExam } from '@/types/incapacity';
+import { calculateExpirationDate, PERIODIC_EXAM_VALIDITY_MONTHS } from '@/types/medicalExam';
 
 // =====================================================
 // FETCH HOOKS
@@ -209,12 +211,58 @@ export function useCreateIncapacity() {
         .single();
       
       if (error) throw error;
+      
+      // Auto-create reintegration exam if incapacity exceeds 30 days
+      const totalChainDays = totalDays + accumulatedDays;
+      if (totalChainDays > 30) {
+        try {
+          // Calculate expected return date (end_date + 1)
+          const returnDate = new Date(formData.end_date);
+          returnDate.setDate(returnDate.getDate() + 1);
+          
+          const examData = {
+            employee_id: formData.employee_id,
+            exam_type: 'reintegro' as const,
+            exam_date: format(returnDate, 'yyyy-MM-dd'),
+            expiration_date: null, // Reintegration exams don't have an expiration
+            result: 'pendiente' as const,
+            concept: `Examen de reintegro por incapacidad > 30 días (${totalChainDays} días totales)`,
+            provider: '',
+            doctor_name: '',
+            restrictions: null,
+            observations: `Creado automáticamente por incapacidad ID: ${data.id}. Diagnóstico: ${formData.diagnosis}`,
+            created_by: user?.id,
+          };
+          
+          const { data: examResult, error: examError } = await supabase
+            .from('medical_exams')
+            .insert(examData)
+            .select()
+            .single();
+          
+          if (!examError && examResult) {
+            // Link exam to incapacity
+            await supabase
+              .from('employee_incapacities')
+              .update({ reintegration_exam_id: examResult.id })
+              .eq('id', data.id);
+            
+            toast.success('Examen de reintegro creado automáticamente', {
+              description: 'La incapacidad supera 30 días. Se creó un examen pendiente.',
+            });
+          }
+        } catch (examCreationError) {
+          console.warn('Could not auto-create reintegration exam:', examCreationError);
+        }
+      }
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['employee_incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
     },
   });
 }
@@ -305,6 +353,78 @@ export function useUpdateRecoveryStatus() {
       queryClient.invalidateQueries({ queryKey: ['incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
+    },
+  });
+}
+
+export function useLinkReintegrationExam() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ incapacityId, examId }: { incapacityId: string; examId: string }) => {
+      const { data, error } = await supabase
+        .from('employee_incapacities')
+        .update({ reintegration_exam_id: examId })
+        .eq('id', incapacityId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['incapacities'] });
+      queryClient.invalidateQueries({ queryKey: ['incapacity', variables.incapacityId] });
+      queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
+    },
+  });
+}
+
+export function useCreateReintegrationExam() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  return useMutation({
+    mutationFn: async ({ incapacity }: { incapacity: IncapacityWithEmployee }) => {
+      // Calculate expected return date (end_date + 1)
+      const returnDate = new Date(incapacity.end_date);
+      returnDate.setDate(returnDate.getDate() + 1);
+      
+      const examData = {
+        employee_id: incapacity.employee_id,
+        exam_type: 'reintegro' as const,
+        exam_date: format(returnDate, 'yyyy-MM-dd'),
+        expiration_date: null,
+        result: 'pendiente' as const,
+        concept: `Examen de reintegro por incapacidad > 30 días`,
+        provider: '',
+        doctor_name: '',
+        restrictions: null,
+        observations: `Creado para incapacidad ID: ${incapacity.id}. Diagnóstico: ${incapacity.diagnosis}`,
+        created_by: user?.id,
+      };
+      
+      const { data: examResult, error: examError } = await supabase
+        .from('medical_exams')
+        .insert(examData)
+        .select()
+        .single();
+      
+      if (examError) throw examError;
+      
+      // Link exam to incapacity
+      await supabase
+        .from('employee_incapacities')
+        .update({ reintegration_exam_id: examResult.id })
+        .eq('id', incapacity.id);
+      
+      return examResult;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['incapacities'] });
+      queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
     },
   });
 }
