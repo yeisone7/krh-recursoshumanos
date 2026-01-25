@@ -22,7 +22,10 @@ import {
   Clock,
   Syringe,
   Award,
-  Users as UsersIcon
+  Users as UsersIcon,
+  Plus,
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 
 import {
@@ -37,7 +40,12 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useEmployeeV2 } from '@/hooks/useEmployeesV2';
+import { useDeleteCertification, useDeleteVaccination, useDeleteDocument } from '@/hooks/useEmployeeHealth';
 import { EmployeeFormDialogV2 } from './EmployeeFormDialogV2';
+import { CertificationFormDialog } from './CertificationFormDialog';
+import { VaccinationFormDialog } from './VaccinationFormDialog';
+import { DocumentFormDialog } from './DocumentFormDialog';
+import { useToast } from '@/hooks/use-toast';
 import {
   documentTypeLabels,
   genderLabels,
@@ -48,6 +56,7 @@ import {
   payrollTypeLabels,
   certificationTypeLabels,
   vaccineTypeLabels,
+  employeeDocumentTypeLabels,
   getEmployeeFullName,
 } from '@/types/employeeV2';
 
@@ -60,12 +69,49 @@ interface EmployeeDetailDialogV2Props {
 export function EmployeeDetailDialogV2({ open, onOpenChange, employeeId }: EmployeeDetailDialogV2Props) {
   const { data: employee, isLoading } = useEmployeeV2(employeeId || undefined);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isCertFormOpen, setIsCertFormOpen] = useState(false);
+  const [isVacFormOpen, setIsVacFormOpen] = useState(false);
+  const [isDocFormOpen, setIsDocFormOpen] = useState(false);
+  
+  const { toast } = useToast();
+  const deleteCertification = useDeleteCertification();
+  const deleteVaccination = useDeleteVaccination();
+  const deleteDocument = useDeleteDocument();
 
   if (!employeeId) return null;
 
   const handleEditSuccess = () => {
     setIsEditOpen(false);
   };
+
+  const handleDeleteCertification = async (certId: string) => {
+    try {
+      await deleteCertification.mutateAsync({ id: certId, employeeId });
+      toast({ title: 'Certificación eliminada' });
+    } catch {
+      toast({ title: 'Error al eliminar', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteVaccination = async (vacId: string) => {
+    try {
+      await deleteVaccination.mutateAsync({ id: vacId, employeeId });
+      toast({ title: 'Vacuna eliminada' });
+    } catch {
+      toast({ title: 'Error al eliminar', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    try {
+      await deleteDocument.mutateAsync({ id: docId, employeeId });
+      toast({ title: 'Documento eliminado' });
+    } catch {
+      toast({ title: 'Error al eliminar', variant: 'destructive' });
+    }
+  };
+
+  const employeeFullName = employee ? getEmployeeFullName(employee) : '';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -123,7 +169,7 @@ export function EmployeeDetailDialogV2({ open, onOpenChange, employeeId }: Emplo
             </div>
 
             <Tabs defaultValue="identity" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="identity" className="text-xs sm:text-sm">
                   <User className="w-4 h-4 mr-1 hidden sm:inline" />
                   Identidad
@@ -139,6 +185,10 @@ export function EmployeeDetailDialogV2({ open, onOpenChange, employeeId }: Emplo
                 <TabsTrigger value="health" className="text-xs sm:text-sm">
                   <Stethoscope className="w-4 h-4 mr-1 hidden sm:inline" />
                   Salud
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="text-xs sm:text-sm">
+                  <FileText className="w-4 h-4 mr-1 hidden sm:inline" />
+                  Docs
                 </TabsTrigger>
                 <TabsTrigger value="family" className="text-xs sm:text-sm">
                   <Heart className="w-4 h-4 mr-1 hidden sm:inline" />
@@ -456,14 +506,24 @@ export function EmployeeDetailDialogV2({ open, onOpenChange, employeeId }: Emplo
               <TabsContent value="health" className="space-y-4 mt-4">
                 {/* Certifications */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Award className="w-4 h-4" />
-                    Certificaciones y Licencias
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <Award className="w-4 h-4" />
+                      Certificaciones y Licencias
+                    </h3>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setIsCertFormOpen(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Agregar
+                    </Button>
+                  </div>
                   {employee.certifications && employee.certifications.length > 0 ? (
                     <div className="space-y-2">
                       {employee.certifications.map((cert) => (
-                        <div key={cert.id} className="bg-muted/50 p-3 rounded-lg flex items-center justify-between">
+                        <div key={cert.id} className="bg-muted/50 p-3 rounded-lg flex items-center justify-between group">
                           <div>
                             <span className="font-medium text-sm">
                               {certificationTypeLabels[cert.certification_type]}
@@ -475,11 +535,21 @@ export function EmployeeDetailDialogV2({ open, onOpenChange, employeeId }: Emplo
                               </span>
                             )}
                           </div>
-                          {cert.expiry_date && (
-                            <Badge variant={new Date(cert.expiry_date) < new Date() ? 'destructive' : 'outline'}>
-                              Vence: {format(new Date(cert.expiry_date), 'PP', { locale: es })}
-                            </Badge>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {cert.expiry_date && (
+                              <Badge variant={new Date(cert.expiry_date) < new Date() ? 'destructive' : 'outline'}>
+                                Vence: {format(new Date(cert.expiry_date), 'PP', { locale: es })}
+                              </Badge>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleDeleteCertification(cert.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -492,14 +562,24 @@ export function EmployeeDetailDialogV2({ open, onOpenChange, employeeId }: Emplo
 
                 {/* Vaccinations */}
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Syringe className="w-4 h-4" />
-                    Historial de Vacunación
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <Syringe className="w-4 h-4" />
+                      Historial de Vacunación
+                    </h3>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setIsVacFormOpen(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Agregar
+                    </Button>
+                  </div>
                   {employee.vaccinations && employee.vaccinations.length > 0 ? (
                     <div className="space-y-2">
                       {employee.vaccinations.map((vac) => (
-                        <div key={vac.id} className="bg-muted/50 p-3 rounded-lg flex items-center justify-between">
+                        <div key={vac.id} className="bg-muted/50 p-3 rounded-lg flex items-center justify-between group">
                           <div>
                             <span className="font-medium text-sm">
                               {vaccineTypeLabels[vac.vaccine_type]} - Dosis {vac.dose_number}
@@ -509,16 +589,91 @@ export function EmployeeDetailDialogV2({ open, onOpenChange, employeeId }: Emplo
                               {vac.provider && ` • ${vac.provider}`}
                             </span>
                           </div>
-                          {vac.next_dose_date && (
-                            <Badge variant="outline">
-                              Próxima: {format(new Date(vac.next_dose_date), 'PP', { locale: es })}
-                            </Badge>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {vac.next_dose_date && (
+                              <Badge variant="outline">
+                                Próxima: {format(new Date(vac.next_dose_date), 'PP', { locale: es })}
+                              </Badge>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleDeleteVaccination(vac.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">Sin vacunas registradas</p>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* DOCUMENTS TAB */}
+              <TabsContent value="documents" className="space-y-4 mt-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Documentos del Empleado
+                    </h3>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setIsDocFormOpen(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Cargar
+                    </Button>
+                  </div>
+                  {employee.documents && employee.documents.length > 0 ? (
+                    <div className="space-y-2">
+                      {employee.documents.map((doc) => (
+                        <div key={doc.id} className="bg-muted/50 p-3 rounded-lg flex items-center justify-between group">
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium text-sm">
+                              {doc.document_name || employeeDocumentTypeLabels[doc.document_type]}
+                            </span>
+                            <span className="text-xs text-muted-foreground block truncate">
+                              {doc.file_name} • {format(new Date(doc.upload_date), 'PP', { locale: es })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {doc.expiry_date && (
+                              <Badge variant={new Date(doc.expiry_date) < new Date() ? 'destructive' : 'outline'}>
+                                Vence: {format(new Date(doc.expiry_date), 'PP', { locale: es })}
+                              </Badge>
+                            )}
+                            <a 
+                              href={doc.file_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleDeleteDocument(doc.id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No hay documentos cargados</p>
+                      <p className="text-xs">Haz clic en "Cargar" para agregar documentos</p>
+                    </div>
                   )}
                 </div>
               </TabsContent>
@@ -592,6 +747,37 @@ export function EmployeeDetailDialogV2({ open, onOpenChange, employeeId }: Emplo
           onOpenChange={setIsEditOpen}
           employee={employee}
           onSuccess={handleEditSuccess}
+        />
+      )}
+
+      {/* Certification Form Dialog */}
+      {employee && (
+        <CertificationFormDialog
+          open={isCertFormOpen}
+          onOpenChange={setIsCertFormOpen}
+          employeeId={employee.id}
+          employeeName={employeeFullName}
+        />
+      )}
+
+      {/* Vaccination Form Dialog */}
+      {employee && (
+        <VaccinationFormDialog
+          open={isVacFormOpen}
+          onOpenChange={setIsVacFormOpen}
+          employeeId={employee.id}
+          employeeName={employeeFullName}
+        />
+      )}
+
+      {/* Document Form Dialog */}
+      {employee && (
+        <DocumentFormDialog
+          open={isDocFormOpen}
+          onOpenChange={setIsDocFormOpen}
+          employeeId={employee.id}
+          companyId={employee.company_id}
+          employeeName={employeeFullName}
         />
       )}
     </Dialog>
