@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -59,16 +59,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
 
   const form = useForm<PositionFormData>({
     resolver: zodResolver(positionSchema),
-    defaultValues: position ? {
-      name: position.name,
-      code: position.code || '',
-      area_id: position.area_id || '',
-      level: position.level,
-      min_salary: position.min_salary?.toString() || '',
-      max_salary: position.max_salary?.toString() || '',
-      description: position.description || '',
-      requirements: position.requirements || '',
-    } : {
+    defaultValues: {
       name: '',
       code: '',
       area_id: '',
@@ -79,6 +70,35 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
       requirements: '',
     },
   });
+
+  // Reset form when dialog opens or position changes
+  useEffect(() => {
+    if (open) {
+      if (position) {
+        form.reset({
+          name: position.name,
+          code: position.code || '',
+          area_id: position.area_id || '',
+          level: position.level ?? 1,
+          min_salary: position.min_salary?.toString() || '',
+          max_salary: position.max_salary?.toString() || '',
+          description: position.description || '',
+          requirements: position.requirements || '',
+        });
+      } else {
+        form.reset({
+          name: '',
+          code: '',
+          area_id: '',
+          level: 1,
+          min_salary: '',
+          max_salary: '',
+          description: '',
+          requirements: '',
+        });
+      }
+    }
+  }, [open, position, form]);
 
   const onSubmit = async (data: PositionFormData) => {
     try {

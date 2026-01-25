@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -56,18 +56,34 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
 
   const form = useForm<AreaFormData>({
     resolver: zodResolver(areaSchema),
-    defaultValues: area ? {
-      name: area.name,
-      code: area.code || '',
-      parent_id: area.parent_id || '',
-      description: area.description || '',
-    } : {
+    defaultValues: {
       name: '',
       code: '',
       parent_id: '',
       description: '',
     },
   });
+
+  // Reset form when dialog opens or area changes
+  useEffect(() => {
+    if (open) {
+      if (area) {
+        form.reset({
+          name: area.name,
+          code: area.code || '',
+          parent_id: area.parent_id || '',
+          description: area.description || '',
+        });
+      } else {
+        form.reset({
+          name: '',
+          code: '',
+          parent_id: '',
+          description: '',
+        });
+      }
+    }
+  }, [open, area, form]);
 
   const onSubmit = async (data: AreaFormData) => {
     try {
