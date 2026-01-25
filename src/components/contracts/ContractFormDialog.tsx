@@ -48,8 +48,8 @@ import {
   ContractFormData,
   contractTypeLabels,
 } from '@/types/contract';
-import { useEmployeesV2 } from '@/hooks/useEmployeesV2';
-import { getEmployeeFullName } from '@/types/employeeV2';
+import { useEmployees } from '@/hooks/useEmployees';
+import { getEmployeeFullName } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateContract } from '@/hooks/useContracts';
 import type { Database } from '@/integrations/supabase/types';
@@ -74,7 +74,7 @@ interface ContractFormDialogProps {
 
 export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFormDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
-  const { data: employees = [] } = useEmployeesV2();
+  const { data: employees = [] } = useEmployees();
   const { data: operationCenters = [] } = useOperationCenters();
   const createContract = useCreateContract();
 

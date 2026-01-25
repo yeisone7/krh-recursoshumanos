@@ -40,7 +40,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateCertification } from '@/hooks/useEmployeeHealth';
-import { certificationTypeLabels, type CertificationType } from '@/types/employeeV2';
+import { certificationTypeLabels, type CertificationType } from '@/types/employee';
 
 const formSchema = z.object({
   certificationType: z.enum([

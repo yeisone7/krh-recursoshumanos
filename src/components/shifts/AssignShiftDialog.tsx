@@ -33,8 +33,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { useEmployeesV2 } from '@/hooks/useEmployeesV2';
-import { getEmployeeFullName } from '@/types/employeeV2';
+import { useEmployees } from '@/hooks/useEmployees';
+import { getEmployeeFullName } from '@/types/employee';
 import { useShiftTypes, useCreateEmployeeShift } from '@/hooks/useShifts';
 
 const assignShiftSchema = z.object({
@@ -58,7 +58,7 @@ export function AssignShiftDialog({
   onOpenChange,
   preselectedEmployeeId,
 }: AssignShiftDialogProps) {
-  const { data: employees = [] } = useEmployeesV2();
+  const { data: employees = [] } = useEmployees();
   const { data: shiftTypes = [] } = useShiftTypes();
   const createEmployeeShift = useCreateEmployeeShift();
 
