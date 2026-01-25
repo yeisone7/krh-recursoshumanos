@@ -50,8 +50,7 @@ const mainNavItems: NavItem[] = [
   { label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion' },
   { label: 'Cesantías', icon: <Landmark className="w-5 h-5" />, href: '/cesantias' },
   { label: 'Exámenes Médicos', icon: <Stethoscope className="w-5 h-5" />, href: '/examenes' },
-  { label: 'Selección', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' },
-  { label: 'Vacantes', icon: <Briefcase className="w-5 h-5" />, href: '/vacantes' },
+  { label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' },
 ];
 
 const secondaryNavItems: NavItem[] = [
