@@ -1,4 +1,5 @@
-import { Search, Building2, LogOut } from 'lucide-react';
+import { Search, Building2, LogOut, User, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -15,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { NotificationsPanel } from '@/components/notifications/NotificationsPanel';
@@ -88,6 +89,7 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
+                <AvatarImage src={user?.user_metadata?.avatar_url} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                   {userInitials}
                 </AvatarFallback>
@@ -110,6 +112,19 @@ export function Header() {
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link to="/perfil" className="cursor-pointer">
+                <User className="mr-2 h-4 w-4" />
+                <span>Mi Perfil</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/configuracion" className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Configuración</span>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
