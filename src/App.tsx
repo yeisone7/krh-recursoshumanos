@@ -28,6 +28,7 @@ import Capacitaciones from "./pages/Capacitaciones";
 import Evaluaciones from "./pages/Evaluaciones";
 import Organigrama from "./pages/Organigrama";
 import Cesantias from "./pages/Cesantias";
+import Portal from "./pages/Portal";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
@@ -43,6 +44,11 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/portal" element={
+              <ProtectedRoute>
+                <Portal />
+              </ProtectedRoute>
+            } />
             <Route path="/onboarding" element={
               <ProtectedRoute>
                 <Onboarding />
