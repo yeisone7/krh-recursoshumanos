@@ -1803,6 +1803,57 @@ export type Database = {
           },
         ]
       }
+      employee_shift_assignments: {
+        Row: {
+          assignment_date: string
+          created_at: string | null
+          created_by: string | null
+          employee_id: string
+          id: string
+          notes: string | null
+          shift_id: string
+          source: Database["public"]["Enums"]["shift_assignment_source"]
+          updated_at: string | null
+        }
+        Insert: {
+          assignment_date: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          notes?: string | null
+          shift_id: string
+          source?: Database["public"]["Enums"]["shift_assignment_source"]
+          updated_at?: string | null
+        }
+        Update: {
+          assignment_date?: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          shift_id?: string
+          source?: Database["public"]["Enums"]["shift_assignment_source"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_shift_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_shift_assignments_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_shifts: {
         Row: {
           created_at: string
@@ -1985,6 +2036,76 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_time_config: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          cycle_start_date: string | null
+          employee_id: string
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          mode: Database["public"]["Enums"]["employee_time_mode"]
+          notes: string | null
+          shift_cycle_id: string | null
+          start_date: string
+          updated_at: string | null
+          work_schedule_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          cycle_start_date?: string | null
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          mode: Database["public"]["Enums"]["employee_time_mode"]
+          notes?: string | null
+          shift_cycle_id?: string | null
+          start_date: string
+          updated_at?: string | null
+          work_schedule_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          cycle_start_date?: string | null
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          mode?: Database["public"]["Enums"]["employee_time_mode"]
+          notes?: string | null
+          shift_cycle_id?: string | null
+          start_date?: string
+          updated_at?: string | null
+          work_schedule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_time_config_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_time_config_shift_cycle_id_fkey"
+            columns: ["shift_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "shift_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_time_config_work_schedule_id_fkey"
+            columns: ["work_schedule_id"]
+            isOneToOne: false
+            referencedRelation: "work_schedules"
             referencedColumns: ["id"]
           },
         ]
@@ -3424,6 +3545,92 @@ export type Database = {
           },
         ]
       }
+      shift_cycle_days: {
+        Row: {
+          created_at: string | null
+          day_number: number
+          id: string
+          shift_cycle_id: string
+          shift_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_number: number
+          id?: string
+          shift_cycle_id: string
+          shift_id: string
+        }
+        Update: {
+          created_at?: string | null
+          day_number?: number
+          id?: string
+          shift_cycle_id?: string
+          shift_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_cycle_days_shift_cycle_id_fkey"
+            columns: ["shift_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "shift_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_cycle_days_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_cycles: {
+        Row: {
+          code: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          total_days: number
+          updated_at: string | null
+        }
+        Insert: {
+          code?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          total_days: number
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          total_days?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_cycles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shift_types: {
         Row: {
           break_duration_minutes: number | null
@@ -3479,6 +3686,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "shift_types_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shifts: {
+        Row: {
+          break_minutes: number | null
+          code: string | null
+          color: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          crosses_midnight: boolean | null
+          description: string | null
+          end_time: string
+          id: string
+          is_active: boolean | null
+          is_rest_day: boolean | null
+          name: string
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          break_minutes?: number | null
+          code?: string | null
+          color?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          crosses_midnight?: boolean | null
+          description?: string | null
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          is_rest_day?: boolean | null
+          name: string
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          break_minutes?: number | null
+          code?: string | null
+          color?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          crosses_midnight?: boolean | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          is_rest_day?: boolean | null
+          name?: string
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shifts_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -4491,6 +4760,59 @@ export type Database = {
           },
         ]
       }
+      work_schedules: {
+        Row: {
+          break_minutes: number | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          days_of_week: number[]
+          description: string | null
+          end_time: string
+          id: string
+          is_active: boolean | null
+          name: string
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          break_minutes?: number | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          days_of_week?: number[]
+          description?: string | null
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          break_minutes?: number | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          days_of_week?: number[]
+          description?: string | null
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_schedules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -4595,6 +4917,7 @@ export type Database = {
         | "carta_banco"
         | "otro"
       employee_status: "active" | "suspended" | "retired" | "en_retiro"
+      employee_time_mode: "administrative" | "shift"
       evaluation_cycle_status: "draft" | "active" | "completed" | "cancelled"
       evaluation_status:
         | "pending"
@@ -4677,6 +5000,7 @@ export type Database = {
         | "medical_exam"
         | "final_interview"
         | "offer"
+      shift_assignment_source: "cycle" | "manual"
       termination_document_type:
         | "acta_terminacion"
         | "preaviso"
@@ -4935,6 +5259,7 @@ export const Constants = {
         "otro",
       ],
       employee_status: ["active", "suspended", "retired", "en_retiro"],
+      employee_time_mode: ["administrative", "shift"],
       evaluation_cycle_status: ["draft", "active", "completed", "cancelled"],
       evaluation_status: [
         "pending",
@@ -5026,6 +5351,7 @@ export const Constants = {
         "final_interview",
         "offer",
       ],
+      shift_assignment_source: ["cycle", "manual"],
       termination_document_type: [
         "acta_terminacion",
         "preaviso",
