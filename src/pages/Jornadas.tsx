@@ -1,23 +1,19 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import {
   Clock,
   Plus,
   Search,
   Edit2,
   Trash2,
-  Sun,
-  Moon,
+  Briefcase,
   RotateCcw,
   Users,
   Calendar,
   Loader2,
-  AlertCircle,
 } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -45,74 +41,70 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useShiftTypes, useEmployeeShifts, useDeleteShiftType } from '@/hooks/useShifts';
-import { ShiftTypeFormDialog, AssignShiftDialog } from '@/components/shifts';
-import type { ShiftType } from '@/types/config';
+import { 
+  useWorkSchedules, 
+  useShifts, 
+  useShiftCycles,
+  useDeleteWorkSchedule,
+  useDeleteShift,
+  useDeleteShiftCycle,
+} from '@/hooks/useSchedules';
+import { 
+  WorkScheduleFormDialog, 
+  ShiftFormDialog, 
+  ShiftCycleFormDialog,
+  EmployeeTimeConfigDialog,
+  ShiftCalendar,
+} from '@/components/schedules';
+import { DAY_NAMES_SHORT } from '@/types/schedule';
+import type { WorkSchedule, Shift, ShiftCycle } from '@/types/schedule';
 
 export default function Jornadas() {
-  const [activeTab, setActiveTab] = useState<'types' | 'assignments'>('types');
+  const [activeTab, setActiveTab] = useState<'schedules' | 'shifts' | 'cycles' | 'calendar'>('schedules');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showShiftTypeForm, setShowShiftTypeForm] = useState(false);
-  const [showAssignDialog, setShowAssignDialog] = useState(false);
-  const [selectedShiftType, setSelectedShiftType] = useState<ShiftType | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [showShiftForm, setShowShiftForm] = useState(false);
+  const [showCycleForm, setShowCycleForm] = useState(false);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<WorkSchedule | null>(null);
+  const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
+  const [selectedCycle, setSelectedCycle] = useState<ShiftCycle | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; id: string } | null>(null);
 
   const { currentCompanyId } = useAuth();
-  const { data: shiftTypes = [], isLoading: loadingTypes } = useShiftTypes();
-  const { data: employeeShifts = [], isLoading: loadingAssignments } = useEmployeeShifts();
-  const deleteShiftType = useDeleteShiftType();
-
-  // Filter shift types
-  const filteredShiftTypes = useMemo(() => {
-    return shiftTypes.filter((shift) =>
-      shift.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      shift.code.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [shiftTypes, searchQuery]);
-
-  // Filter employee shifts
-  const filteredAssignments = useMemo(() => {
-    return employeeShifts.filter((assignment: any) => {
-      const employeeName = `${assignment.employees?.first_name} ${assignment.employees?.last_name}`.toLowerCase();
-      const shiftName = assignment.shift_types?.name?.toLowerCase() || '';
-      return employeeName.includes(searchQuery.toLowerCase()) ||
-             shiftName.includes(searchQuery.toLowerCase());
-    });
-  }, [employeeShifts, searchQuery]);
+  const { data: workSchedules = [], isLoading: loadingSchedules } = useWorkSchedules();
+  const { data: shifts = [], isLoading: loadingShifts } = useShifts();
+  const { data: shiftCycles = [], isLoading: loadingCycles } = useShiftCycles();
+  
+  const deleteSchedule = useDeleteWorkSchedule();
+  const deleteShift = useDeleteShift();
+  const deleteCycle = useDeleteShiftCycle();
 
   // Stats
   const stats = useMemo(() => ({
-    totalTypes: shiftTypes.length,
-    activeTypes: shiftTypes.filter(s => s.is_active).length,
-    nightShifts: shiftTypes.filter(s => s.is_night_shift).length,
-    totalAssignments: employeeShifts.length,
-  }), [shiftTypes, employeeShifts]);
+    schedules: workSchedules.filter(s => s.is_active).length,
+    shifts: shifts.filter(s => s.is_active).length,
+    cycles: shiftCycles.filter(c => c.is_active).length,
+  }), [workSchedules, shifts, shiftCycles]);
 
-  const handleEditShiftType = (shift: ShiftType) => {
-    setSelectedShiftType(shift);
-    setShowShiftTypeForm(true);
-  };
+  const formatTime = (time: string) => time?.slice(0, 5) || '';
 
-  const handleDeleteShiftType = async () => {
-    if (!deleteConfirmId) return;
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
     
     try {
-      await deleteShiftType.mutateAsync(deleteConfirmId);
-      toast.success('Jornada eliminada');
+      if (deleteConfirm.type === 'schedule') {
+        await deleteSchedule.mutateAsync(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'shift') {
+        await deleteShift.mutateAsync(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'cycle') {
+        await deleteCycle.mutateAsync(deleteConfirm.id);
+      }
+      toast.success('Eliminado correctamente');
     } catch (error: any) {
-      toast.error('Error', {
-        description: error.message || 'No se pudo eliminar la jornada',
-      });
+      toast.error('Error', { description: error.message });
     }
-    setDeleteConfirmId(null);
-  };
-
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
+    setDeleteConfirm(null);
   };
 
   if (!currentCompanyId) {
@@ -120,9 +112,7 @@ export default function Jornadas() {
       <div className="flex flex-col items-center justify-center h-[50vh] text-center">
         <Clock className="w-16 h-16 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Sin empresa asignada</h2>
-        <p className="text-muted-foreground">
-          Contacta al administrador para que te asigne a una empresa.
-        </p>
+        <p className="text-muted-foreground">Contacta al administrador.</p>
       </div>
     );
   }
@@ -136,20 +126,13 @@ export default function Jornadas() {
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
       >
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Jornadas y Turnos</h1>
-          <p className="text-muted-foreground mt-1">Configura tipos de jornada y asígnales a empleados</p>
+          <h1 className="font-display text-2xl font-bold text-foreground">Horarios y Turnos</h1>
+          <p className="text-muted-foreground mt-1">Gestiona horarios administrativos, turnos operativos y ciclos de rotación</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowAssignDialog(true)}>
+          <Button variant="outline" onClick={() => setShowConfigDialog(true)}>
             <Users className="w-4 h-4 mr-2" />
-            Asignar Jornada
-          </Button>
-          <Button onClick={() => {
-            setSelectedShiftType(null);
-            setShowShiftTypeForm(true);
-          }}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva Jornada
+            Asignar Empleado
           </Button>
         </div>
       </motion.div>
@@ -159,49 +142,38 @@ export default function Jornadas() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        className="grid grid-cols-3 gap-4"
       >
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
-              <Clock className="w-5 h-5 text-primary" />
+              <Briefcase className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats.totalTypes}</p>
-              <p className="text-xs text-muted-foreground">Tipos de Jornada</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-success/10">
-              <Sun className="w-5 h-5 text-success" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.activeTypes}</p>
-              <p className="text-xs text-muted-foreground">Jornadas Activas</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-100">
-              <Moon className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.nightShifts}</p>
-              <p className="text-xs text-muted-foreground">Jornadas Nocturnas</p>
+              <p className="text-2xl font-bold">{stats.schedules}</p>
+              <p className="text-xs text-muted-foreground">Horarios Activos</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-info/10">
-              <Users className="w-5 h-5 text-info" />
+              <Clock className="w-5 h-5 text-info" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats.totalAssignments}</p>
-              <p className="text-xs text-muted-foreground">Asignaciones</p>
+              <p className="text-2xl font-bold">{stats.shifts}</p>
+              <p className="text-xs text-muted-foreground">Turnos Activos</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-purple-100">
+              <RotateCcw className="w-5 h-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.cycles}</p>
+              <p className="text-xs text-muted-foreground">Ciclos Activos</p>
             </div>
           </CardContent>
         </Card>
@@ -214,266 +186,225 @@ export default function Jornadas() {
         transition={{ delay: 0.2 }}
       >
         <Card>
-          <CardHeader className="pb-3">
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'types' | 'assignments')}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <TabsList>
-                  <TabsTrigger value="types" className="gap-2">
-                    <Clock className="w-4 h-4" />
-                    Tipos de Jornada
-                  </TabsTrigger>
-                  <TabsTrigger value="assignments" className="gap-2">
-                    <Users className="w-4 h-4" />
-                    Asignaciones
-                  </TabsTrigger>
-                </TabsList>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <TabsList>
+                <TabsTrigger value="schedules" className="gap-2">
+                  <Briefcase className="w-4 h-4" />
+                  Horarios
+                </TabsTrigger>
+                <TabsTrigger value="shifts" className="gap-2">
+                  <Clock className="w-4 h-4" />
+                  Turnos
+                </TabsTrigger>
+                <TabsTrigger value="cycles" className="gap-2">
+                  <RotateCcw className="w-4 h-4" />
+                  Ciclos
+                </TabsTrigger>
+                <TabsTrigger value="calendar" className="gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Calendario
+                </TabsTrigger>
+              </TabsList>
 
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar..."
-                    className="pl-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+              {activeTab !== 'calendar' && (
+                <div className="flex gap-2">
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar..."
+                      className="pl-9"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={() => {
+                    if (activeTab === 'schedules') { setSelectedSchedule(null); setShowScheduleForm(true); }
+                    else if (activeTab === 'shifts') { setSelectedShift(null); setShowShiftForm(true); }
+                    else if (activeTab === 'cycles') { setSelectedCycle(null); setShowCycleForm(true); }
+                  }}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nuevo
+                  </Button>
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Types Tab */}
-              <TabsContent value="types" className="mt-4">
-                {loadingTypes ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-16 w-full" />
-                    ))}
-                  </div>
-                ) : filteredShiftTypes.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Clock className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">No hay jornadas configuradas</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Crea tu primera jornada para comenzar.
-                    </p>
-                    <Button onClick={() => setShowShiftTypeForm(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Nueva Jornada
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Jornada</TableHead>
-                          <TableHead>Horario</TableHead>
-                          <TableHead>Descanso</TableHead>
-                          <TableHead>Características</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead className="text-right">Acciones</TableHead>
+            {/* Horarios Administrativos */}
+            <TabsContent value="schedules">
+              {loadingSchedules ? (
+                <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead>Días</TableHead>
+                        <TableHead>Horario</TableHead>
+                        <TableHead>Descanso</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {workSchedules.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).map((schedule) => (
+                        <TableRow key={schedule.id}>
+                          <TableCell className="font-medium">{schedule.name}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              {schedule.days_of_week.map(d => (
+                                <Badge key={d} variant="outline" className="text-xs px-1">{DAY_NAMES_SHORT[d]}</Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell>{formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}</TableCell>
+                          <TableCell>{schedule.break_minutes} min</TableCell>
+                          <TableCell>
+                            <Badge variant={schedule.is_active ? 'default' : 'secondary'}>
+                              {schedule.is_active ? 'Activo' : 'Inactivo'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button size="sm" variant="ghost" onClick={() => { setSelectedSchedule(schedule); setShowScheduleForm(true); }}>
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteConfirm({ type: 'schedule', id: schedule.id })}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredShiftTypes.map((shift) => (
-                          <TableRow key={shift.id}>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">{shift.name}</p>
-                                <p className="text-xs text-muted-foreground">Código: {shift.code}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-muted-foreground" />
-                                <span>{formatTime(shift.start_time)} - {formatTime(shift.end_time)}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {shift.break_duration_minutes} min
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                {shift.is_night_shift && (
-                                  <Badge variant="outline" className="bg-purple-50 text-purple-600 border-purple-200">
-                                    <Moon className="w-3 h-3 mr-1" />
-                                    Nocturna
-                                  </Badge>
-                                )}
-                                {shift.is_rotating && (
-                                  <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">
-                                    <RotateCcw className="w-3 h-3 mr-1" />
-                                    Rotativa
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  shift.is_active
-                                    ? 'bg-success-light text-success border-success/20'
-                                    : 'bg-muted text-muted-foreground'
-                                )}
-                              >
-                                {shift.is_active ? 'Activa' : 'Inactiva'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleEditShiftType(shift as ShiftType)}
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="text-destructive hover:text-destructive"
-                                  onClick={() => setDeleteConfirmId(shift.id)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </TabsContent>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
 
-              {/* Assignments Tab */}
-              <TabsContent value="assignments" className="mt-4">
-                {loadingAssignments ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-16 w-full" />
-                    ))}
-                  </div>
-                ) : filteredAssignments.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">No hay asignaciones</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Asigna jornadas a los empleados.
-                    </p>
-                    <Button onClick={() => setShowAssignDialog(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Asignar Jornada
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Empleado</TableHead>
-                          <TableHead>Jornada</TableHead>
-                          <TableHead>Horario</TableHead>
-                          <TableHead>Vigencia</TableHead>
-                          <TableHead>Notas</TableHead>
+            {/* Turnos */}
+            <TabsContent value="shifts">
+              {loadingShifts ? (
+                <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Turno</TableHead>
+                        <TableHead>Horario</TableHead>
+                        <TableHead>Características</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {shifts.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).map((shift) => (
+                        <TableRow key={shift.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: shift.color }} />
+                              <span className="font-medium">{shift.name}</span>
+                              {shift.code && <span className="text-muted-foreground">({shift.code})</span>}
+                            </div>
+                          </TableCell>
+                          <TableCell>{formatTime(shift.start_time)} - {formatTime(shift.end_time)}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              {shift.crosses_midnight && <Badge variant="outline">Nocturno</Badge>}
+                              {shift.is_rest_day && <Badge variant="secondary">Descanso</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={shift.is_active ? 'default' : 'secondary'}>
+                              {shift.is_active ? 'Activo' : 'Inactivo'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button size="sm" variant="ghost" onClick={() => { setSelectedShift(shift); setShowShiftForm(true); }}>
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteConfirm({ type: 'shift', id: shift.id })}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredAssignments.map((assignment: any) => (
-                          <TableRow key={assignment.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <span className="text-xs font-medium text-primary">
-                                    {assignment.employees?.first_name?.[0]}
-                                    {assignment.employees?.last_name?.[0]}
-                                  </span>
-                                </div>
-                                <span className="font-medium">
-                                  {assignment.employees?.first_name} {assignment.employees?.last_name}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {assignment.shift_types?.is_night_shift && (
-                                  <Moon className="w-4 h-4 text-purple-500" />
-                                )}
-                                <span>{assignment.shift_types?.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className="text-sm">
-                                {formatTime(assignment.shift_types?.start_time || '')} - {formatTime(assignment.shift_types?.end_time || '')}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1 text-sm">
-                                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                                <span>
-                                  {format(new Date(assignment.effective_from), 'dd MMM yyyy', { locale: es })}
-                                </span>
-                                {assignment.effective_to && (
-                                  <>
-                                    <span className="text-muted-foreground">-</span>
-                                    <span>
-                                      {format(new Date(assignment.effective_to), 'dd MMM yyyy', { locale: es })}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className="text-sm text-muted-foreground">
-                                {assignment.notes || '-'}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </CardHeader>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Ciclos */}
+            <TabsContent value="cycles">
+              {loadingCycles ? (
+                <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Ciclo</TableHead>
+                        <TableHead>Duración</TableHead>
+                        <TableHead>Descripción</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {shiftCycles.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((cycle) => (
+                        <TableRow key={cycle.id}>
+                          <TableCell>
+                            <span className="font-medium">{cycle.name}</span>
+                            {cycle.code && <span className="text-muted-foreground ml-2">({cycle.code})</span>}
+                          </TableCell>
+                          <TableCell>{cycle.total_days} días</TableCell>
+                          <TableCell className="text-muted-foreground max-w-[200px] truncate">{cycle.description || '-'}</TableCell>
+                          <TableCell>
+                            <Badge variant={cycle.is_active ? 'default' : 'secondary'}>
+                              {cycle.is_active ? 'Activo' : 'Inactivo'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button size="sm" variant="ghost" onClick={() => { setSelectedCycle(cycle); setShowCycleForm(true); }}>
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteConfirm({ type: 'cycle', id: cycle.id })}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Calendario */}
+            <TabsContent value="calendar">
+              <ShiftCalendar />
+            </TabsContent>
+          </Tabs>
         </Card>
       </motion.div>
 
       {/* Dialogs */}
-      <ShiftTypeFormDialog
-        open={showShiftTypeForm}
-        onOpenChange={(open) => {
-          setShowShiftTypeForm(open);
-          if (!open) setSelectedShiftType(null);
-        }}
-        shiftType={selectedShiftType}
-      />
+      <WorkScheduleFormDialog open={showScheduleForm} onOpenChange={setShowScheduleForm} schedule={selectedSchedule} />
+      <ShiftFormDialog open={showShiftForm} onOpenChange={setShowShiftForm} shift={selectedShift} />
+      <ShiftCycleFormDialog open={showCycleForm} onOpenChange={setShowCycleForm} cycle={selectedCycle} />
+      <EmployeeTimeConfigDialog open={showConfigDialog} onOpenChange={setShowConfigDialog} />
 
-      <AssignShiftDialog
-        open={showAssignDialog}
-        onOpenChange={setShowAssignDialog}
-      />
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
+      {/* Delete Confirm */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-destructive" />
-              Eliminar Jornada
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de que deseas eliminar esta jornada? Esta acción no se puede deshacer.
-              Los empleados asignados a esta jornada perderán su asignación.
-            </AlertDialogDescription>
+            <AlertDialogTitle>¿Eliminar?</AlertDialogTitle>
+            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteShiftType}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteShiftType.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
