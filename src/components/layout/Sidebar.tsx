@@ -19,7 +19,8 @@ import {
   LogOut,
   HeartPulse,
   Gavel,
-  Palmtree
+  Palmtree,
+  ClipboardList
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,7 @@ const mainNavItems: NavItem[] = [
   { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados' },
   { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' },
   { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones' },
+  { label: 'Permisos', icon: <ClipboardList className="w-5 h-5" />, href: '/permisos' },
   { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' },
   { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' },
   { label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion' },
