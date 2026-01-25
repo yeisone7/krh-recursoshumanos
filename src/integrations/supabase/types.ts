@@ -265,6 +265,261 @@ export type Database = {
           },
         ]
       }
+      cesantias_deposits: {
+        Row: {
+          average_salary: number | null
+          base_salary: number
+          calculation_end_date: string
+          calculation_start_date: string
+          cesantias_amount: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          days_worked: number
+          deposit_date: string | null
+          deposit_document_url: string | null
+          due_date: string
+          employee_id: string
+          fund_account: string | null
+          fund_name: string
+          id: string
+          is_late: boolean | null
+          late_days: number | null
+          observations: string | null
+          status: Database["public"]["Enums"]["cesantias_status"]
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          average_salary?: number | null
+          base_salary: number
+          calculation_end_date: string
+          calculation_start_date: string
+          cesantias_amount: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          days_worked?: number
+          deposit_date?: string | null
+          deposit_document_url?: string | null
+          due_date: string
+          employee_id: string
+          fund_account?: string | null
+          fund_name: string
+          id?: string
+          is_late?: boolean | null
+          late_days?: number | null
+          observations?: string | null
+          status?: Database["public"]["Enums"]["cesantias_status"]
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          average_salary?: number | null
+          base_salary?: number
+          calculation_end_date?: string
+          calculation_start_date?: string
+          cesantias_amount?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          days_worked?: number
+          deposit_date?: string | null
+          deposit_document_url?: string | null
+          due_date?: string
+          employee_id?: string
+          fund_account?: string | null
+          fund_name?: string
+          id?: string
+          is_late?: boolean | null
+          late_days?: number | null
+          observations?: string | null
+          status?: Database["public"]["Enums"]["cesantias_status"]
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cesantias_deposits_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cesantias_deposits_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cesantias_interest_payments: {
+        Row: {
+          cesantias_balance: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          days_accrued: number
+          due_date: string
+          employee_id: string
+          id: string
+          interest_amount: number
+          interest_rate: number
+          is_late: boolean | null
+          is_paid: boolean | null
+          late_days: number | null
+          observations: string | null
+          payment_date: string | null
+          payment_document_url: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          cesantias_balance: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          days_accrued?: number
+          due_date: string
+          employee_id: string
+          id?: string
+          interest_amount: number
+          interest_rate?: number
+          is_late?: boolean | null
+          is_paid?: boolean | null
+          late_days?: number | null
+          observations?: string | null
+          payment_date?: string | null
+          payment_document_url?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          cesantias_balance?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          days_accrued?: number
+          due_date?: string
+          employee_id?: string
+          id?: string
+          interest_amount?: number
+          interest_rate?: number
+          is_late?: boolean | null
+          is_paid?: boolean | null
+          late_days?: number | null
+          observations?: string | null
+          payment_date?: string | null
+          payment_document_url?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cesantias_interest_payments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cesantias_interest_payments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cesantias_withdrawals: {
+        Row: {
+          amount_approved: number | null
+          amount_requested: number
+          authorization_date: string | null
+          authorization_document_url: string | null
+          beneficiary_document: string | null
+          beneficiary_name: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          destination_description: string | null
+          disbursement_date: string | null
+          employee_id: string
+          fund_name: string
+          id: string
+          observations: string | null
+          rejection_reason: string | null
+          request_date: string
+          request_document_url: string | null
+          status: string
+          updated_at: string
+          withdrawal_reason: Database["public"]["Enums"]["cesantias_withdrawal_reason"]
+        }
+        Insert: {
+          amount_approved?: number | null
+          amount_requested: number
+          authorization_date?: string | null
+          authorization_document_url?: string | null
+          beneficiary_document?: string | null
+          beneficiary_name?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          destination_description?: string | null
+          disbursement_date?: string | null
+          employee_id: string
+          fund_name: string
+          id?: string
+          observations?: string | null
+          rejection_reason?: string | null
+          request_date?: string
+          request_document_url?: string | null
+          status?: string
+          updated_at?: string
+          withdrawal_reason: Database["public"]["Enums"]["cesantias_withdrawal_reason"]
+        }
+        Update: {
+          amount_approved?: number | null
+          amount_requested?: number
+          authorization_date?: string | null
+          authorization_document_url?: string | null
+          beneficiary_document?: string | null
+          beneficiary_name?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          destination_description?: string | null
+          disbursement_date?: string | null
+          employee_id?: string
+          fund_name?: string
+          id?: string
+          observations?: string | null
+          rejection_reason?: string | null
+          request_date?: string
+          request_document_url?: string | null
+          status?: string
+          updated_at?: string
+          withdrawal_reason?: Database["public"]["Enums"]["cesantias_withdrawal_reason"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cesantias_withdrawals_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cesantias_withdrawals_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -4047,6 +4302,15 @@ export type Database = {
         | "trabajo_alturas"
         | "primeros_auxilios"
         | "otro"
+      cesantias_status:
+        | "pendiente"
+        | "calculado"
+        | "depositado"
+        | "extemporaneo"
+      cesantias_withdrawal_reason:
+        | "vivienda"
+        | "educacion"
+        | "terminacion_contrato"
       contract_type:
         | "indefinido"
         | "fijo"
@@ -4371,6 +4635,17 @@ export const Constants = {
         "trabajo_alturas",
         "primeros_auxilios",
         "otro",
+      ],
+      cesantias_status: [
+        "pendiente",
+        "calculado",
+        "depositado",
+        "extemporaneo",
+      ],
+      cesantias_withdrawal_reason: [
+        "vivienda",
+        "educacion",
+        "terminacion_contrato",
       ],
       contract_type: [
         "indefinido",
