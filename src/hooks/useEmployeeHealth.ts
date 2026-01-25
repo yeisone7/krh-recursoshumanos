@@ -9,7 +9,7 @@ import type {
   CertificationType,
   VaccineType,
   EmployeeDocumentType 
-} from '@/types/employeeV2';
+} from '@/types/employee';
 
 // =====================================================
 // CERTIFICATIONS HOOKS

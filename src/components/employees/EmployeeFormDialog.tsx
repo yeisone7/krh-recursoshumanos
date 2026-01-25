@@ -3,7 +3,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, User, Briefcase, MapPin, FileText, Heart, Building } from 'lucide-react';
+import { 
+  CalendarIcon, User, Briefcase, MapPin, Heart, Building, 
+  CreditCard, Shield, Clock, Users as UsersIcon 
+} from 'lucide-react';
 
 import {
   Dialog,
@@ -44,48 +47,52 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 import {
-  employeeFormSchema,
-  EmployeeFormData,
+  employeeFullFormSchema,
+  type EmployeeFullFormData,
+  type EmployeeV2WithRelations,
   documentTypeLabels,
-  contractTypeLabels,
-  shiftTypeLabels,
-  educationLevelLabels,
+  genderLabels,
+  bloodTypeLabels,
   maritalStatusLabels,
+  linkTypeLabels,
+  riskLevelLabels,
+  accountTypeLabels,
+  payrollTypeLabels,
 } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateEmployee, useUpdateEmployee } from '@/hooks/useEmployees';
+import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { CitySelect, CityDepartmentSelect } from '@/components/ui/city-department-select';
-import type { Database } from '@/integrations/supabase/types';
-
-type Employee = Database['public']['Tables']['employees']['Row'];
 
 interface EmployeeFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employee?: Employee | null;
+  employee?: EmployeeV2WithRelations | null;
   onSuccess?: () => void;
 }
 
-// Colombian departments imported from central location data
-
 export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: EmployeeFormDialogProps) {
-  const [activeTab, setActiveTab] = useState('personal');
+  const [activeTab, setActiveTab] = useState('identity');
   const { currentCompanyId } = useAuth();
   const { data: operationCenters = [] } = useOperationCenters();
+  const { data: areas = [] } = useAreas();
+  const { data: positions = [] } = usePositions();
   const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
   
   const isEditMode = !!employee;
 
-  const form = useForm<EmployeeFormData>({
-    resolver: zodResolver(employeeFormSchema),
+  const form = useForm<EmployeeFullFormData>({
+    resolver: zodResolver(employeeFullFormSchema),
     defaultValues: {
-      nationality: 'Colombiana',
-      status: 'active',
-      hasChildren: false,
-      numberOfChildren: 0,
-      hasVehicle: false,
+      birthCountry: 'Colombia',
+      linkType: 'indefinido',
+      payrollType: 'quincenal',
+      isOfficeSchedule: true,
+      spouseWorks: false,
+      childrenCount: 0,
+      accountRegistered: false,
     },
   });
 
@@ -93,107 +100,102 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   useEffect(() => {
     if (employee && open) {
       form.reset({
+        // A. Core Identity
         documentType: employee.document_type as any,
         documentNumber: employee.document_number,
+        documentIssueCity: employee.document_issue_city || undefined,
+        documentIssueDate: employee.document_issue_date ? new Date(employee.document_issue_date) : undefined,
         firstName: employee.first_name,
+        middleName: employee.middle_name || undefined,
         lastName: employee.last_name,
+        secondLastName: employee.second_last_name || undefined,
+        birthCountry: employee.birth_country || 'Colombia',
+        birthDepartment: employee.birth_department || undefined,
+        birthCity: employee.birth_city || undefined,
         birthDate: employee.birth_date ? new Date(employee.birth_date) : undefined,
         gender: employee.gender as any,
         bloodType: employee.blood_type as any,
         maritalStatus: employee.marital_status as any,
-        nationality: 'Colombiana',
-        email: employee.email || '',
-        phone: employee.phone || '',
-        mobilePhone: employee.mobile || '',
-        address: employee.address || '',
-        city: employee.city || '',
-        department: employee.department || '',
-        emergencyContactName: employee.emergency_contact_name || '',
-        emergencyContactPhone: employee.emergency_contact_phone || '',
-        emergencyContactRelationship: employee.emergency_contact_relationship || '',
-        operationCenter: employee.operation_center_id || '',
-        position: employee.position,
-        area: employee.department_area || '',
-        contractType: employee.contract_type as any,
-        shiftType: employee.shift_type as any,
-        startDate: new Date(employee.hire_date),
-        salary: employee.salary?.toString() || '',
-        educationLevel: employee.education_level as any,
-        profession: employee.profession || '',
-        status: employee.status as any,
-        hasChildren: false,
-        numberOfChildren: 0,
-        hasVehicle: false,
+        
+        // B. Contact
+        residenceDepartment: employee.contact?.residence_department || undefined,
+        residenceCity: employee.contact?.residence_city || undefined,
+        residenceAddress: employee.contact?.residence_address || undefined,
+        residenceNeighborhood: employee.contact?.residence_neighborhood || undefined,
+        email: employee.contact?.email || undefined,
+        personalEmail: employee.contact?.personal_email || undefined,
+        phone: employee.contact?.phone || undefined,
+        mobile: employee.contact?.mobile || undefined,
+        emergencyContactName: employee.contact?.emergency_contact_name || undefined,
+        emergencyContactPhone: employee.contact?.emergency_contact_phone || undefined,
+        emergencyContactRelationship: employee.contact?.emergency_contact_relationship || undefined,
+        
+        // C. Family
+        spouseName: employee.family?.spouse_name || undefined,
+        spouseGender: employee.family?.spouse_gender as any,
+        spouseBirthDate: employee.family?.spouse_birth_date ? new Date(employee.family.spouse_birth_date) : undefined,
+        spouseWorks: employee.family?.spouse_works || false,
+        childrenCount: employee.family?.children_count || 0,
+        
+        // D. Work Info
+        operationCenterId: employee.work_info?.operation_center_id || undefined,
+        costCenter: employee.work_info?.cost_center || undefined,
+        areaId: employee.work_info?.area_id || undefined,
+        positionId: employee.work_info?.position_id || undefined,
+        positionName: employee.work_info?.position_name || '',
+        workCity: employee.work_info?.work_city || undefined,
+        hireDate: employee.work_info?.hire_date ? new Date(employee.work_info.hire_date) : new Date(),
+        linkType: employee.work_info?.link_type as any || 'indefinido',
+        observations: employee.work_info?.observations || undefined,
+        
+        // E. Social Security
+        riskLevel: employee.social_security?.risk_level as any,
+        arl: employee.social_security?.arl || undefined,
+        eps: employee.social_security?.eps || undefined,
+        afp: employee.social_security?.afp || undefined,
+        ccf: employee.social_security?.ccf || undefined,
+        afc: employee.social_security?.afc || undefined,
+        ips: employee.social_security?.ips || undefined,
+        
+        // F. Bank Info
+        bankName: employee.bank_info?.bank_name || undefined,
+        accountType: employee.bank_info?.account_type as any,
+        accountNumber: employee.bank_info?.account_number || undefined,
+        accountRegistered: employee.bank_info?.account_registered || false,
+        
+        // J. Schedule
+        payrollType: employee.schedule?.payroll_type as any || 'quincenal',
+        shiftTypeId: employee.schedule?.shift_type_id || undefined,
+        isOfficeSchedule: employee.schedule?.is_office_schedule ?? true,
+        restDay: employee.schedule?.rest_day || undefined,
       });
     } else if (!employee && open) {
       form.reset({
-        nationality: 'Colombiana',
-        status: 'active',
-        hasChildren: false,
-        numberOfChildren: 0,
-        hasVehicle: false,
+        birthCountry: 'Colombia',
+        linkType: 'indefinido',
+        payrollType: 'quincenal',
+        isOfficeSchedule: true,
+        spouseWorks: false,
+        childrenCount: 0,
+        accountRegistered: false,
       });
     }
   }, [employee, open, form]);
 
-  const hasChildren = form.watch('hasChildren');
-  const hasVehicle = form.watch('hasVehicle');
-
-  const handleSubmit = async (data: EmployeeFormData) => {
+  const handleSubmit = async (data: EmployeeFullFormData) => {
     if (!currentCompanyId && !isEditMode) {
       toast.error('Error: No hay empresa seleccionada');
       return;
     }
 
     try {
-      // Parse salary to number
-      const salaryNumber = parseFloat(data.salary.replace(/[^0-9.-]+/g, ''));
-      
-      const employeeData = {
-        operation_center_id: data.operationCenter,
-        document_type: data.documentType,
-        document_number: data.documentNumber,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        birth_date: format(data.birthDate, 'yyyy-MM-dd'),
-        gender: data.gender,
-        blood_type: data.bloodType,
-        marital_status: data.maritalStatus,
-        email: data.email,
-        phone: data.phone,
-        mobile: data.mobilePhone,
-        address: data.address,
-        city: data.city,
-        department: data.department,
-        emergency_contact_name: data.emergencyContactName,
-        emergency_contact_phone: data.emergencyContactPhone,
-        emergency_contact_relationship: data.emergencyContactRelationship,
-        position: data.position,
-        department_area: data.area,
-        contract_type: data.contractType,
-        shift_type: data.shiftType,
-        hire_date: format(data.startDate, 'yyyy-MM-dd'),
-        salary: salaryNumber,
-        education_level: data.educationLevel,
-        profession: data.profession,
-        status: data.status,
-      };
-
       if (isEditMode && employee) {
-        await updateEmployee.mutateAsync({
-          id: employee.id,
-          ...employeeData,
-        });
-
+        await updateEmployee.mutateAsync({ id: employee.id, ...data });
         toast.success('Empleado actualizado', {
           description: `${data.firstName} ${data.lastName} ha sido actualizado exitosamente.`,
         });
       } else {
-        await createEmployee.mutateAsync({
-          company_id: currentCompanyId!,
-          ...employeeData,
-        });
-
+        await createEmployee.mutateAsync(data);
         toast.success('Empleado creado', {
           description: `${data.firstName} ${data.lastName} ha sido registrado exitosamente.`,
         });
@@ -211,11 +213,13 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   };
 
   const tabItems = [
-    { value: 'personal', label: 'Datos Personales', icon: User },
+    { value: 'identity', label: 'Identidad', icon: User },
     { value: 'contact', label: 'Contacto', icon: MapPin },
-    { value: 'labor', label: 'Datos Laborales', icon: Briefcase },
-    { value: 'additional', label: 'Información Adicional', icon: Heart },
-    { value: 'documents', label: 'Documentos', icon: FileText },
+    { value: 'family', label: 'Familia', icon: Heart },
+    { value: 'labor', label: 'Laboral', icon: Briefcase },
+    { value: 'security', label: 'Seguridad Social', icon: Shield },
+    { value: 'bank', label: 'Banco', icon: CreditCard },
+    { value: 'schedule', label: 'Jornada', icon: Clock },
   ];
 
   return (
@@ -243,9 +247,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="flex-1 min-w-[120px] gap-2 data-[state=active]:bg-background"
+                      className="flex-1 min-w-[90px] gap-1.5 text-xs data-[state=active]:bg-background"
                     >
-                      <tab.icon className="w-4 h-4" />
+                      <tab.icon className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">{tab.label}</span>
                     </TabsTrigger>
                   ))}
@@ -253,22 +257,21 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
               </div>
 
               <ScrollArea className="h-[calc(90vh-220px)] px-6 py-4">
-                {/* Personal Data Tab */}
-                <TabsContent value="personal" className="mt-0 space-y-6">
+                {/* A. IDENTITY TAB */}
+                <TabsContent value="identity" className="mt-0 space-y-6">
+                  {/* Document Section */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Identificación</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Documento de Identidad</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <FormField
                         control={form.control}
                         name="documentType"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Tipo de Documento *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormLabel>Tipo *</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
                                 {Object.entries(documentTypeLabels).map(([value, label]) => (
@@ -285,9 +288,26 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         name="documentNumber"
                         render={({ field }) => (
                           <FormItem className="md:col-span-2">
-                            <FormLabel>Número de Documento *</FormLabel>
+                            <FormLabel>Número *</FormLabel>
                             <FormControl>
                               <Input placeholder="1234567890" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="documentIssueCity"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Ciudad Expedición</FormLabel>
+                            <FormControl>
+                              <CitySelect 
+                                value={field.value || ''} 
+                                onValueChange={field.onChange}
+                                placeholder="Ciudad..."
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -296,6 +316,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     </div>
                   </div>
 
+                  {/* Names Section */}
                   <div className="space-y-4">
                     <h3 className="font-semibold text-foreground border-b pb-2">Nombres y Apellidos</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -305,9 +326,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Primer Nombre *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Juan" {...field} />
-                            </FormControl>
+                            <FormControl><Input placeholder="Juan" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -318,9 +337,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Segundo Nombre</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Carlos" {...field} />
-                            </FormControl>
+                            <FormControl><Input placeholder="Carlos" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -331,9 +348,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Primer Apellido *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="García" {...field} />
-                            </FormControl>
+                            <FormControl><Input placeholder="García" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -344,9 +359,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Segundo Apellido</FormLabel>
-                            <FormControl>
-                              <Input placeholder="López" {...field} />
-                            </FormControl>
+                            <FormControl><Input placeholder="López" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -354,41 +367,33 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     </div>
                   </div>
 
+                  {/* Birth & Personal Section */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Información Personal</h3>
+                    <h3 className="font-semibold text-foreground border-b pb-2">Nacimiento y Datos Personales</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
                         name="birthDate"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
-                            <FormLabel>Fecha de Nacimiento *</FormLabel>
+                            <FormLabel>Fecha de Nacimiento</FormLabel>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
                                   <Button
                                     variant="outline"
-                                    className={cn(
-                                      'w-full pl-3 text-left font-normal',
-                                      !field.value && 'text-muted-foreground'
-                                    )}
+                                    className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                                   >
-                                    {field.value ? (
-                                      format(field.value, 'PPP', { locale: es })
-                                    ) : (
-                                      <span>Seleccionar fecha</span>
-                                    )}
+                                    {field.value ? format(field.value, 'PPP', { locale: es }) : <span>Seleccionar</span>}
                                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <PopoverContent className="w-auto p-0 bg-background" align="start">
                                 <DatePickerWithDropdowns
                                   selected={field.value}
                                   onSelect={field.onChange}
-                                  disabled={(date) =>
-                                    date > new Date() || date < new Date('1940-01-01')
-                                  }
+                                  disabled={(date) => date > new Date() || date < new Date('1940-01-01')}
                                   fromYear={1940}
                                   toYear={new Date().getFullYear() - 18}
                                   initialFocus
@@ -401,15 +406,18 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                       />
                       <FormField
                         control={form.control}
-                        name="birthPlace"
+                        name="birthCity"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Lugar de Nacimiento *</FormLabel>
+                            <FormLabel>Ciudad de Nacimiento</FormLabel>
                             <FormControl>
                               <CitySelect 
-                                value={field.value} 
-                                onValueChange={(city) => field.onChange(city)}
-                                placeholder="Buscar ciudad..."
+                                value={field.value || ''} 
+                                onValueChange={(city, dept) => {
+                                  field.onChange(city);
+                                  form.setValue('birthDepartment', dept || '');
+                                }}
+                                placeholder="Ciudad..."
                               />
                             </FormControl>
                             <FormMessage />
@@ -418,13 +426,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                       />
                       <FormField
                         control={form.control}
-                        name="nationality"
+                        name="birthCountry"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nacionalidad *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Colombiana" {...field} />
-                            </FormControl>
+                            <FormLabel>País de Nacimiento</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -434,17 +440,15 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         name="gender"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Género *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormLabel>Género</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                <SelectItem value="M">Masculino</SelectItem>
-                                <SelectItem value="F">Femenino</SelectItem>
-                                <SelectItem value="O">Otro</SelectItem>
+                                {Object.entries(genderLabels).map(([value, label]) => (
+                                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -457,15 +461,13 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Tipo de Sangre</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((type) => (
-                                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                                {Object.entries(bloodTypeLabels).map(([value, label]) => (
+                                  <SelectItem key={value} value={value}>{label}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -478,12 +480,10 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         name="maritalStatus"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Estado Civil *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormLabel>Estado Civil</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
                                 {Object.entries(maritalStatusLabels).map(([value, label]) => (
@@ -499,8 +499,45 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   </div>
                 </TabsContent>
 
-                {/* Contact Tab */}
+                {/* B. CONTACT TAB */}
                 <TabsContent value="contact" className="mt-0 space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Dirección de Residencia</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <CityDepartmentSelect
+                        departmentValue={form.watch('residenceDepartment') || ''}
+                        cityValue={form.watch('residenceCity') || ''}
+                        onDepartmentChange={(dept) => {
+                          form.setValue('residenceDepartment', dept);
+                          form.setValue('residenceCity', '');
+                        }}
+                        onCityChange={(city) => form.setValue('residenceCity', city)}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="residenceAddress"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Dirección</FormLabel>
+                            <FormControl><Input placeholder="Calle 123 # 45-67" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="residenceNeighborhood"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Barrio</FormLabel>
+                            <FormControl><Input placeholder="Nombre del barrio" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-4">
                     <h3 className="font-semibold text-foreground border-b pb-2">Datos de Contacto</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -509,10 +546,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Correo Corporativo *</FormLabel>
-                            <FormControl>
-                              <Input type="email" placeholder="juan.garcia@empresa.com" {...field} />
-                            </FormControl>
+                            <FormLabel>Correo Corporativo</FormLabel>
+                            <FormControl><Input type="email" placeholder="empleado@empresa.com" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -523,9 +558,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Correo Personal</FormLabel>
-                            <FormControl>
-                              <Input type="email" placeholder="juan@gmail.com" {...field} />
-                            </FormControl>
+                            <FormControl><Input type="email" placeholder="personal@email.com" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -535,78 +568,19 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Teléfono Fijo *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="6012345678" {...field} />
-                            </FormControl>
+                            <FormLabel>Teléfono Fijo</FormLabel>
+                            <FormControl><Input placeholder="6011234567" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       <FormField
                         control={form.control}
-                        name="mobilePhone"
+                        name="mobile"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Celular *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="3001234567" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Dirección</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel>Dirección *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Calle 100 # 15-20 Apto 501" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <div className="md:col-span-2">
-                        <CityDepartmentSelect
-                          cityValue={form.watch('city')}
-                          departmentValue={form.watch('department')}
-                          onCityChange={(city) => form.setValue('city', city)}
-                          onDepartmentChange={(dept) => form.setValue('department', dept)}
-                          cityLabel="Ciudad *"
-                          departmentLabel="Departamento *"
-                        />
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="neighborhood"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Barrio</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Usaquén" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="postalCode"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Código Postal</FormLabel>
-                            <FormControl>
-                              <Input placeholder="110111" {...field} />
-                            </FormControl>
+                            <FormLabel>Celular</FormLabel>
+                            <FormControl><Input placeholder="3001234567" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -622,10 +596,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         name="emergencyContactName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nombre Completo *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="María López" {...field} />
-                            </FormControl>
+                            <FormLabel>Nombre</FormLabel>
+                            <FormControl><Input placeholder="Nombre completo" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -635,10 +607,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         name="emergencyContactPhone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Teléfono *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="3009876543" {...field} />
-                            </FormControl>
+                            <FormLabel>Teléfono</FormLabel>
+                            <FormControl><Input placeholder="3001234567" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -648,9 +618,116 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         name="emergencyContactRelationship"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Parentesco *</FormLabel>
+                            <FormLabel>Parentesco</FormLabel>
+                            <FormControl><Input placeholder="Esposo(a), Padre, Madre..." {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* C. FAMILY TAB */}
+                <TabsContent value="family" className="mt-0 space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Cónyuge / Pareja</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="spouseName"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Nombre del Cónyuge</FormLabel>
+                            <FormControl><Input placeholder="Nombre completo" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="spouseGender"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Género</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {Object.entries(genderLabels).map(([value, label]) => (
+                                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="spouseBirthDate"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Fecha de Nacimiento</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
+                                  >
+                                    {field.value ? format(field.value, 'PPP', { locale: es }) : <span>Seleccionar</span>}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) => date > new Date()}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="spouseWorks"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
                             <FormControl>
-                              <Input placeholder="Esposa" {...field} />
+                              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                            <FormLabel className="font-normal">¿El cónyuge trabaja?</FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Hijos</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="childrenCount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Número de Hijos</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min={0} 
+                                max={20}
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -660,28 +737,24 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   </div>
                 </TabsContent>
 
-                {/* Labor Tab */}
+                {/* D. LABOR TAB */}
                 <TabsContent value="labor" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Centro de Operación y Cargo</h3>
+                    <h3 className="font-semibold text-foreground border-b pb-2">Ubicación Organizacional</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
-                        name="operationCenter"
+                        name="operationCenterId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Centro de Operación *</FormLabel>
+                            <FormLabel>Centro de Operación</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar centro" />
-                                </SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar centro" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
                                 {operationCenters.map((center) => (
-                                  <SelectItem key={center.id} value={center.id}>
-                                    {center.name}
-                                  </SelectItem>
+                                  <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -691,38 +764,58 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                       />
                       <FormField
                         control={form.control}
-                        name="area"
+                        name="costCenter"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Área *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Tecnología" {...field} />
-                            </FormControl>
+                            <FormLabel>Centro de Costos</FormLabel>
+                            <FormControl><Input placeholder="Código del centro de costos" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       <FormField
                         control={form.control}
-                        name="position"
+                        name="areaId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Área</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar área" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {areas.map((area: any) => (
+                                  <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="positionName"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Cargo *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Desarrollador Senior" {...field} />
-                            </FormControl>
+                            <FormControl><Input placeholder="Nombre del cargo" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       <FormField
                         control={form.control}
-                        name="directSupervisor"
+                        name="workCity"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Supervisor Directo</FormLabel>
+                            <FormLabel>Ciudad donde Labora</FormLabel>
                             <FormControl>
-                              <Input placeholder="Nombre del supervisor" {...field} />
+                              <CitySelect 
+                                value={field.value || ''} 
+                                onValueChange={field.onChange}
+                                placeholder="Ciudad..."
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -732,55 +825,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Contrato y Jornada</h3>
+                    <h3 className="font-semibold text-foreground border-b pb-2">Vinculación</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
-                        name="contractType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tipo de Contrato *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                {Object.entries(contractTypeLabels).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="shiftType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tipo de Jornada *</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                {Object.entries(shiftTypeLabels).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="startDate"
+                        name="hireDate"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
                             <FormLabel>Fecha de Ingreso *</FormLabel>
@@ -789,16 +838,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <FormControl>
                                   <Button
                                     variant="outline"
-                                    className={cn(
-                                      'w-full pl-3 text-left font-normal',
-                                      !field.value && 'text-muted-foreground'
-                                    )}
+                                    className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                                   >
-                                    {field.value ? (
-                                      format(field.value, 'PPP', { locale: es })
-                                    ) : (
-                                      <span>Seleccionar</span>
-                                    )}
+                                    {field.value ? format(field.value, 'PPP', { locale: es }) : <span>Seleccionar</span>}
                                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                   </Button>
                                 </FormControl>
@@ -809,7 +851,6 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                   selected={field.value}
                                   onSelect={field.onChange}
                                   initialFocus
-                                  className="pointer-events-auto"
                                 />
                               </PopoverContent>
                             </Popover>
@@ -817,95 +858,60 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                           </FormItem>
                         )}
                       />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Salario y Banco</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
-                        name="salary"
+                        name="linkType"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Salario Mensual *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="$3.500.000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="bankName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Banco</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Bancolombia" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="bankAccountType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tipo de Cuenta</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormLabel>Tipo de Vinculación *</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                <SelectItem value="ahorros">Ahorros</SelectItem>
-                                <SelectItem value="corriente">Corriente</SelectItem>
+                                {Object.entries(linkTypeLabels).map(([value, label]) => (
+                                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <FormField
-                        control={form.control}
-                        name="bankAccountNumber"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel>Número de Cuenta</FormLabel>
-                            <FormControl>
-                              <Input placeholder="123456789012" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
+                    <FormField
+                      control={form.control}
+                      name="observations"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Observaciones</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Notas adicionales sobre el empleado..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </TabsContent>
 
-                {/* Additional Tab */}
-                <TabsContent value="additional" className="mt-0 space-y-6">
+                {/* E. SOCIAL SECURITY TAB */}
+                <TabsContent value="security" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Educación</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Seguridad Social y Riesgo</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
-                        name="educationLevel"
+                        name="riskLevel"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Nivel de Educación</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormLabel>Nivel de Riesgo ARL</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {Object.entries(educationLevelLabels).map(([value, label]) => (
+                                {Object.entries(riskLevelLabels).map(([value, label]) => (
                                   <SelectItem key={value} value={value}>{label}</SelectItem>
                                 ))}
                               </SelectContent>
@@ -916,167 +922,66 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                       />
                       <FormField
                         control={form.control}
-                        name="profession"
+                        name="arl"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Profesión</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Ingeniero de Sistemas" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Familia</h3>
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="hasChildren"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>¿Tiene hijos?</FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                      {hasChildren && (
-                        <FormField
-                          control={form.control}
-                          name="numberOfChildren"
-                          render={({ field }) => (
-                            <FormItem className="max-w-[200px]">
-                              <FormLabel>Número de Hijos</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  max="20"
-                                  {...field}
-                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Vehículo</h3>
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="hasVehicle"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>¿Tiene vehículo?</FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                      {hasVehicle && (
-                        <FormField
-                          control={form.control}
-                          name="vehiclePlate"
-                          render={({ field }) => (
-                            <FormItem className="max-w-[200px]">
-                              <FormLabel>Placa del Vehículo</FormLabel>
-                              <FormControl>
-                                <Input placeholder="ABC123" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Tallas para Dotación</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="shirtSize"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Talla de Camisa</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((size) => (
-                                  <SelectItem key={size} value={size}>{size}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <FormLabel>ARL</FormLabel>
+                            <FormControl><Input placeholder="Nombre de la ARL" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       <FormField
                         control={form.control}
-                        name="pantsSize"
+                        name="eps"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Talla de Pantalón</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                {['28', '30', '32', '34', '36', '38', '40', '42'].map((size) => (
-                                  <SelectItem key={size} value={size}>{size}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <FormLabel>EPS</FormLabel>
+                            <FormControl><Input placeholder="Nombre de la EPS" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       <FormField
                         control={form.control}
-                        name="shoeSize"
+                        name="afp"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Talla de Zapatos</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                {Array.from({ length: 13 }, (_, i) => (35 + i).toString()).map((size) => (
-                                  <SelectItem key={size} value={size}>{size}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <FormLabel>AFP (Pensión)</FormLabel>
+                            <FormControl><Input placeholder="Fondo de Pensiones" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="ccf"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Caja de Compensación</FormLabel>
+                            <FormControl><Input placeholder="Nombre de la CCF" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="afc"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>AFC (Ahorro)</FormLabel>
+                            <FormControl><Input placeholder="Cuenta AFC" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="ips"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>IPS Preferida</FormLabel>
+                            <FormControl><Input placeholder="IPS de preferencia" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -1085,47 +990,143 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   </div>
                 </TabsContent>
 
-                {/* Documents Tab */}
-                <TabsContent value="documents" className="mt-0 space-y-6">
+                {/* F. BANK TAB */}
+                <TabsContent value="bank" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Observaciones</h3>
+                    <h3 className="font-semibold text-foreground border-b pb-2">Información Bancaria</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="bankName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Banco</FormLabel>
+                            <FormControl><Input placeholder="Nombre del banco" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="accountType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tipo de Cuenta</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {Object.entries(accountTypeLabels).map(([value, label]) => (
+                                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="accountNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Número de Cuenta</FormLabel>
+                            <FormControl><Input placeholder="1234567890" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     <FormField
                       control={form.control}
-                      name="observations"
+                      name="accountRegistered"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Observaciones Adicionales</FormLabel>
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
                           <FormControl>
-                            <Textarea
-                              placeholder="Escriba cualquier observación adicional sobre el empleado..."
-                              className="min-h-[120px] resize-none"
-                              {...field}
-                            />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
-                          <FormMessage />
+                          <FormLabel className="font-normal">Cuenta inscrita y verificada</FormLabel>
                         </FormItem>
                       )}
                     />
                   </div>
+                </TabsContent>
 
-                  <div className="bg-muted/50 p-4 rounded-lg">
-                    <p className="text-sm text-muted-foreground">
-                      La gestión de documentos adjuntos estará disponible próximamente.
-                    </p>
+                {/* J. SCHEDULE TAB */}
+                <TabsContent value="schedule" className="mt-0 space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Jornada y Nómina</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="payrollType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tipo de Nómina</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {Object.entries(payrollTypeLabels).map(([value, label]) => (
+                                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="restDay"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Día de Descanso</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="domingo">Domingo</SelectItem>
+                                <SelectItem value="sabado">Sábado</SelectItem>
+                                <SelectItem value="lunes">Lunes</SelectItem>
+                                <SelectItem value="rotativo">Rotativo</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="isOfficeSchedule"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                          <FormLabel className="font-normal">Horario de oficina (no trabaja por turnos)</FormLabel>
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </TabsContent>
               </ScrollArea>
 
-              {/* Footer with submit button */}
-              <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
+              {/* Footer */}
+              <div className="flex justify-end gap-3 p-6 border-t border-border">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={createEmployee.isPending || updateEmployee.isPending}>
-                  {(createEmployee.isPending || updateEmployee.isPending) 
-                    ? 'Guardando...' 
-                    : isEditMode ? 'Actualizar Empleado' : 'Guardar Empleado'
-                  }
+                <Button 
+                  type="submit" 
+                  disabled={createEmployee.isPending || updateEmployee.isPending}
+                  className="gradient-primary text-primary-foreground"
+                >
+                  {createEmployee.isPending || updateEmployee.isPending ? 'Guardando...' : (isEditMode ? 'Guardar Cambios' : 'Crear Empleado')}
                 </Button>
               </div>
             </Tabs>
