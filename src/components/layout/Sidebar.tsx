@@ -65,6 +65,7 @@ const catalogosItem: NavItem = {
   icon: <FolderOpen className="w-5 h-5" />,
   href: '/catalogos',
   children: [
+    { label: 'Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros' },
     { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
     { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
     { label: 'Tipos de Dotación', icon: <Shirt className="w-4 h-4" />, href: '/catalogos/tipos-dotacion' },
@@ -76,7 +77,6 @@ const secondaryNavItems: NavItem[] = [
   { label: 'Reportes', icon: <FileBarChart className="w-5 h-5" />, href: '/reportes' },
   { label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama' },
   { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', badge: 5 },
-  { label: 'Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros' },
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas' },
   { label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad' },
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion' },
@@ -87,8 +87,8 @@ export function Sidebar() {
   const [catalogosOpen, setCatalogosOpen] = useState(false);
   const location = useLocation();
 
-  // Auto-open catalogos menu if on a catalogos route
-  const isCatalogosRoute = location.pathname.startsWith('/catalogos');
+  // Auto-open catalogos menu if on a catalogos route or centros
+  const isCatalogosRoute = location.pathname.startsWith('/catalogos') || location.pathname === '/centros';
   if (isCatalogosRoute && !catalogosOpen) {
     setCatalogosOpen(true);
   }
