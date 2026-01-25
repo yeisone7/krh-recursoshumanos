@@ -34,6 +34,7 @@ import Analitica from "./pages/Analitica";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Empleado360 from "./pages/Empleado360";
+import { CatalogosAreas, CatalogosCargos, CatalogosTiposDotacion } from "./pages/catalogos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -86,6 +87,9 @@ const App = () => (
                         <Route path="/calendario" element={<Calendario />} />
                         <Route path="/reportes" element={<Reportes />} />
                         <Route path="/analitica" element={<Analitica />} />
+                        <Route path="/catalogos/areas" element={<CatalogosAreas />} />
+                        <Route path="/catalogos/cargos" element={<CatalogosCargos />} />
+                        <Route path="/catalogos/tipos-dotacion" element={<CatalogosTiposDotacion />} />
                         <Route path="/seguridad" element={<Seguridad />} />
                         <Route path="/configuracion" element={<Configuracion />} />
                         <Route path="*" element={<NotFound />} />
