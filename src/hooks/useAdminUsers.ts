@@ -233,3 +233,80 @@ export function useRemoveCenterAssignment() {
     },
   });
 }
+
+export function useLinkEmployeeToUser() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ employeeId, userId }: { employeeId: string; userId: string }) => {
+      // First check if already linked
+      const { data: existing } = await supabase
+        .from('employee_user_links')
+        .select('id')
+        .eq('employee_id', employeeId)
+        .maybeSingle();
+
+      if (existing) {
+        throw new Error('Este empleado ya está vinculado a un usuario');
+      }
+
+      // Create the link
+      const { data, error } = await supabase
+        .from('employee_user_links')
+        .insert({
+          employee_id: employeeId,
+          user_id: userId,
+          linked_by: user?.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-links'] });
+    },
+  });
+}
+
+export function useUnlinkEmployee() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (employeeId: string) => {
+      const { error } = await supabase
+        .from('employee_user_links')
+        .delete()
+        .eq('employee_id', employeeId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-links'] });
+    },
+  });
+}
+
+export function useEmployeeLinks(companyId: string | null) {
+  return useQuery({
+    queryKey: ['employee-links', companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employee_user_links')
+        .select(`
+          *,
+          employees_v2!employee_user_links_employee_id_fkey(
+            id, first_name, last_name, document_number, company_id
+          )
+        `);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!companyId,
+  });
+}
