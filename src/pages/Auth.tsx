@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2 } from 'lucide-react';
 import petrocasinosLogo from '@/assets/petrocasinos-logo-white.png';
+import petrocasinosIcon from '@/assets/petrocasinos-icon.png';
 
 const authSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
@@ -144,10 +145,12 @@ export default function Auth() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="flex justify-center mb-4 lg:hidden">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-                <Users className="h-7 w-7 text-primary-foreground" />
-              </div>
+            <div className="flex justify-center mb-4">
+              <img 
+                src={petrocasinosIcon} 
+                alt="Petrocasinos" 
+                className="h-12 w-12 rounded-lg object-cover"
+              />
             </div>
             <CardTitle className="text-2xl">
               {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
