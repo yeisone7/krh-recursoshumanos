@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2 } from 'lucide-react';
+import petrocasinosLogo from '@/assets/petrocasinos-logo-white.png';
 
 const authSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
@@ -104,10 +105,11 @@ export default function Auth() {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 p-12 flex-col justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
-              <Users className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-white">KRH</span>
+            <img 
+              src={petrocasinosLogo} 
+              alt="Petrocasinos Logo" 
+              className="h-10 object-contain"
+            />
           </div>
         </div>
         
