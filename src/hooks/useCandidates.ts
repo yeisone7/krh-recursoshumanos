@@ -6,6 +6,7 @@ import type { Database } from '@/integrations/supabase/types';
 
 type Candidate = Database['public']['Tables']['candidates']['Row'];
 type ContractType = Database['public']['Enums']['contract_type'];
+type LinkType = Database['public']['Enums']['link_type'];
 type CandidateInsert = Database['public']['Tables']['candidates']['Insert'];
 type SelectionStep = Database['public']['Tables']['selection_steps']['Row'];
 type SelectionStepInsert = Database['public']['Tables']['selection_steps']['Insert'];
@@ -231,37 +232,56 @@ export function useConvertToEmployee() {
       const vacancy = candidate.vacancies as any;
       const hireDate = startDate || new Date().toISOString().split('T')[0];
 
-      // Step 1: Create employee from candidate
+      // Step 1: Create employee in new normalized model (employees_v2)
       const { data: employee, error: createError } = await supabase
-        .from('employees')
+        .from('employees_v2')
         .insert({
           company_id: currentCompanyId!,
-          operation_center_id: operationCenterId || vacancy?.operation_center_id,
           first_name: candidate.first_name,
           last_name: candidate.last_name,
           document_type: candidate.document_type,
           document_number: candidate.document_number,
-          email: candidate.email,
-          phone: candidate.phone,
-          mobile: candidate.mobile,
-          address: candidate.address,
-          city: candidate.city,
-          department: candidate.department,
           birth_date: candidate.birth_date,
-          gender: candidate.gender,
-          education_level: candidate.education_level,
-          profession: candidate.profession,
-          position: vacancy?.position_title || 'Por definir',
-          department_area: vacancy?.department_area,
-          shift_type: vacancy?.shift_type,
-          hire_date: hireDate,
-          status: 'active',
+          gender: candidate.gender as any,
+          is_active: true,
           created_by: user?.id,
         })
         .select()
         .single();
 
       if (createError) throw createError;
+
+      // Step 1b: Create contact record
+      await supabase.from('employee_contact').insert({
+        employee_id: employee.id,
+        email: candidate.email,
+        phone: candidate.phone,
+        mobile: candidate.mobile,
+        residence_address: candidate.address,
+        residence_city: candidate.city,
+        residence_department: candidate.department,
+        is_current: true,
+      });
+
+      // Step 1c: Create work info record
+      const centerId = operationCenterId || vacancy?.operation_center_id;
+      const linkTypeMap: Record<string, LinkType> = {
+        'indefinido': 'indefinido',
+        'fijo': 'fijo',
+        'obra_labor': 'obra_labor',
+        'aprendizaje': 'aprendizaje',
+        'servicios': 'servicios',
+      };
+      
+      await supabase.from('employee_work_info').insert({
+        employee_id: employee.id,
+        company_id: currentCompanyId!,
+        operation_center_id: centerId,
+        position_name: vacancy?.position_title || 'Por definir',
+        hire_date: hireDate,
+        link_type: linkTypeMap[contractType || 'indefinido'] || 'indefinido',
+        is_current: true,
+      });
 
       // Step 2: Create contract using vacancy data or provided values
       const contractSalary = salary || candidate.salary_expectation || vacancy?.salary_range_min || 0;
@@ -373,6 +393,7 @@ export function useConvertToEmployee() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['candidates'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['medical_exams'] });

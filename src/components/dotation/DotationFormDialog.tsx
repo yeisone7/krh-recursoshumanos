@@ -46,7 +46,8 @@ import {
   dotationItemTypeLabels,
   DOTATION_PERIOD_MONTHS,
 } from '@/types/dotation';
-import { useEmployees } from '@/hooks/useEmployees';
+import { useEmployeesV2 } from '@/hooks/useEmployeesV2';
+import { getEmployeeFullName } from '@/types/employeeV2';
 import { useCreateDotationDelivery } from '@/hooks/useDotation';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -63,7 +64,7 @@ const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 const shoeSizeOptions = Array.from({ length: 13 }, (_, i) => (35 + i).toString());
 
 export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFormDialogProps) {
-  const { data: employees = [] } = useEmployees();
+  const { data: employees = [] } = useEmployeesV2();
   const createDelivery = useCreateDotationDelivery();
 
   const form = useForm<DotationDeliveryFormData>({
@@ -97,7 +98,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
       });
 
       const employeeName = selectedEmployee 
-        ? `${selectedEmployee.first_name} ${selectedEmployee.last_name}` 
+        ? getEmployeeFullName(selectedEmployee) 
         : 'el empleado';
       
       toast.success('Entrega registrada', {
@@ -168,9 +169,9 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-background max-h-[200px]">
-                            {employees.map((emp) => (
+                            {employees.filter(e => e.is_active).map((emp) => (
                               <SelectItem key={emp.id} value={emp.id}>
-                                {emp.first_name} {emp.last_name} - {emp.document_number}
+                                {getEmployeeFullName(emp)} - {emp.document_number}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -189,12 +190,12 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Centro de Operación:</span>
                         <span className="font-medium">
-                          {(selectedEmployee as any).operation_centers?.name || 'No asignado'}
+                          {selectedEmployee.operation_centers?.name || 'No asignado'}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Cargo:</span>
-                        <span className="font-medium">{selectedEmployee.position}</span>
+                        <span className="font-medium">{selectedEmployee.work_info?.position_name || 'Sin cargo'}</span>
                       </div>
                     </div>
                   )}
