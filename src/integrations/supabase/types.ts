@@ -490,6 +490,291 @@ export type Database = {
           },
         ]
       }
+      disciplinary_defenses: {
+        Row: {
+          content: string
+          created_at: string
+          defense_date: string
+          defense_type: string
+          document_url: string | null
+          id: string
+          process_id: string
+          received_by: string | null
+          received_by_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          defense_date: string
+          defense_type: string
+          document_url?: string | null
+          id?: string
+          process_id: string
+          received_by?: string | null
+          received_by_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          defense_date?: string
+          defense_type?: string
+          document_url?: string | null
+          id?: string
+          process_id?: string
+          received_by?: string | null
+          received_by_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disciplinary_defenses_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "disciplinary_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disciplinary_evidence: {
+        Row: {
+          collected_by: string | null
+          collected_date: string
+          created_at: string
+          description: string
+          evidence_type: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          process_id: string
+          updated_at: string
+        }
+        Insert: {
+          collected_by?: string | null
+          collected_date?: string
+          created_at?: string
+          description: string
+          evidence_type: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          process_id: string
+          updated_at?: string
+        }
+        Update: {
+          collected_by?: string | null
+          collected_date?: string
+          created_at?: string
+          description?: string
+          evidence_type?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          process_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disciplinary_evidence_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "disciplinary_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disciplinary_processes: {
+        Row: {
+          appeal_date: string | null
+          appeal_decision_date: string | null
+          appeal_document_url: string | null
+          appeal_resolution: string | null
+          article_violated: string | null
+          case_number: string
+          closing_date: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          decision_date: string | null
+          decision_document_url: string | null
+          decision_maker_id: string | null
+          decision_maker_name: string | null
+          decision_summary: string | null
+          employee_id: string
+          facts_description: string
+          fault_date: string
+          fault_type: Database["public"]["Enums"]["fault_type"]
+          has_appeal: boolean | null
+          hearing_date: string | null
+          hearing_document_url: string | null
+          id: string
+          investigator_id: string | null
+          investigator_name: string | null
+          notification_date: string | null
+          notification_document_url: string | null
+          observations: string | null
+          opening_date: string
+          opening_document_url: string | null
+          sanction_days: number | null
+          sanction_end_date: string | null
+          sanction_start_date: string | null
+          sanction_type: Database["public"]["Enums"]["sanction_type"] | null
+          status: Database["public"]["Enums"]["disciplinary_status"]
+          updated_at: string
+          witnesses: string | null
+        }
+        Insert: {
+          appeal_date?: string | null
+          appeal_decision_date?: string | null
+          appeal_document_url?: string | null
+          appeal_resolution?: string | null
+          article_violated?: string | null
+          case_number: string
+          closing_date?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          decision_date?: string | null
+          decision_document_url?: string | null
+          decision_maker_id?: string | null
+          decision_maker_name?: string | null
+          decision_summary?: string | null
+          employee_id: string
+          facts_description: string
+          fault_date: string
+          fault_type: Database["public"]["Enums"]["fault_type"]
+          has_appeal?: boolean | null
+          hearing_date?: string | null
+          hearing_document_url?: string | null
+          id?: string
+          investigator_id?: string | null
+          investigator_name?: string | null
+          notification_date?: string | null
+          notification_document_url?: string | null
+          observations?: string | null
+          opening_date?: string
+          opening_document_url?: string | null
+          sanction_days?: number | null
+          sanction_end_date?: string | null
+          sanction_start_date?: string | null
+          sanction_type?: Database["public"]["Enums"]["sanction_type"] | null
+          status?: Database["public"]["Enums"]["disciplinary_status"]
+          updated_at?: string
+          witnesses?: string | null
+        }
+        Update: {
+          appeal_date?: string | null
+          appeal_decision_date?: string | null
+          appeal_document_url?: string | null
+          appeal_resolution?: string | null
+          article_violated?: string | null
+          case_number?: string
+          closing_date?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          decision_date?: string | null
+          decision_document_url?: string | null
+          decision_maker_id?: string | null
+          decision_maker_name?: string | null
+          decision_summary?: string | null
+          employee_id?: string
+          facts_description?: string
+          fault_date?: string
+          fault_type?: Database["public"]["Enums"]["fault_type"]
+          has_appeal?: boolean | null
+          hearing_date?: string | null
+          hearing_document_url?: string | null
+          id?: string
+          investigator_id?: string | null
+          investigator_name?: string | null
+          notification_date?: string | null
+          notification_document_url?: string | null
+          observations?: string | null
+          opening_date?: string
+          opening_document_url?: string | null
+          sanction_days?: number | null
+          sanction_end_date?: string | null
+          sanction_start_date?: string | null
+          sanction_type?: Database["public"]["Enums"]["sanction_type"] | null
+          status?: Database["public"]["Enums"]["disciplinary_status"]
+          updated_at?: string
+          witnesses?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disciplinary_processes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disciplinary_processes_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disciplinary_timeline: {
+        Row: {
+          action_date: string
+          action_type: string
+          created_at: string
+          description: string
+          document_url: string | null
+          id: string
+          new_status: Database["public"]["Enums"]["disciplinary_status"] | null
+          performed_by: string | null
+          performed_by_name: string | null
+          previous_status:
+            | Database["public"]["Enums"]["disciplinary_status"]
+            | null
+          process_id: string
+        }
+        Insert: {
+          action_date?: string
+          action_type: string
+          created_at?: string
+          description: string
+          document_url?: string | null
+          id?: string
+          new_status?: Database["public"]["Enums"]["disciplinary_status"] | null
+          performed_by?: string | null
+          performed_by_name?: string | null
+          previous_status?:
+            | Database["public"]["Enums"]["disciplinary_status"]
+            | null
+          process_id: string
+        }
+        Update: {
+          action_date?: string
+          action_type?: string
+          created_at?: string
+          description?: string
+          document_url?: string | null
+          id?: string
+          new_status?: Database["public"]["Enums"]["disciplinary_status"] | null
+          performed_by?: string | null
+          performed_by_name?: string | null
+          previous_status?:
+            | Database["public"]["Enums"]["disciplinary_status"]
+            | null
+          process_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disciplinary_timeline_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "disciplinary_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_versions: {
         Row: {
           company_id: string
@@ -2419,6 +2704,15 @@ export type Database = {
         | "obra_labor"
         | "aprendizaje"
         | "servicios"
+      disciplinary_status:
+        | "apertura"
+        | "investigacion"
+        | "citacion_descargos"
+        | "descargos"
+        | "analisis"
+        | "decision"
+        | "apelacion"
+        | "cerrado"
       document_type: "CC" | "CE" | "TI" | "PA" | "PEP"
       dotation_item_type:
         | "uniforme_camisa"
@@ -2448,6 +2742,7 @@ export type Database = {
       employee_status: "active" | "suspended" | "retired" | "en_retiro"
       exam_result: "apto" | "apto_restricciones" | "no_apto" | "pendiente"
       exam_type: "ingreso" | "periodico" | "egreso" | "reintegro"
+      fault_type: "leve" | "grave" | "gravisima"
       gender_type: "M" | "F" | "O"
       incapacity_origin: "comun" | "laboral"
       link_type:
@@ -2472,6 +2767,13 @@ export type Database = {
         | "rechazado"
         | "pagado"
       risk_level: "I" | "II" | "III" | "IV" | "V"
+      sanction_type:
+        | "amonestacion_verbal"
+        | "amonestacion_escrita"
+        | "suspension_1_3_dias"
+        | "suspension_4_8_dias"
+        | "terminacion_justa_causa"
+        | "sin_sancion"
       selection_step_status:
         | "pending"
         | "scheduled"
@@ -2682,6 +2984,16 @@ export const Constants = {
         "aprendizaje",
         "servicios",
       ],
+      disciplinary_status: [
+        "apertura",
+        "investigacion",
+        "citacion_descargos",
+        "descargos",
+        "analisis",
+        "decision",
+        "apelacion",
+        "cerrado",
+      ],
       document_type: ["CC", "CE", "TI", "PA", "PEP"],
       dotation_item_type: [
         "uniforme_camisa",
@@ -2713,6 +3025,7 @@ export const Constants = {
       employee_status: ["active", "suspended", "retired", "en_retiro"],
       exam_result: ["apto", "apto_restricciones", "no_apto", "pendiente"],
       exam_type: ["ingreso", "periodico", "egreso", "reintegro"],
+      fault_type: ["leve", "grave", "gravisima"],
       gender_type: ["M", "F", "O"],
       incapacity_origin: ["comun", "laboral"],
       link_type: [
@@ -2740,6 +3053,14 @@ export const Constants = {
         "pagado",
       ],
       risk_level: ["I", "II", "III", "IV", "V"],
+      sanction_type: [
+        "amonestacion_verbal",
+        "amonestacion_escrita",
+        "suspension_1_3_dias",
+        "suspension_4_8_dias",
+        "terminacion_justa_causa",
+        "sin_sancion",
+      ],
       selection_step_status: [
         "pending",
         "scheduled",
