@@ -2837,6 +2837,424 @@ export type Database = {
           },
         ]
       }
+      training_attendance: {
+        Row: {
+          attendance_date: string | null
+          attendance_status: Database["public"]["Enums"]["attendance_status"]
+          created_at: string
+          employee_id: string
+          enrolled_by: string | null
+          enrollment_date: string
+          id: string
+          observations: string | null
+          passed: boolean | null
+          score: number | null
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          attendance_date?: string | null
+          attendance_status?: Database["public"]["Enums"]["attendance_status"]
+          created_at?: string
+          employee_id: string
+          enrolled_by?: string | null
+          enrollment_date?: string
+          id?: string
+          observations?: string | null
+          passed?: boolean | null
+          score?: number | null
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          attendance_date?: string | null
+          attendance_status?: Database["public"]["Enums"]["attendance_status"]
+          created_at?: string
+          employee_id?: string
+          enrolled_by?: string | null
+          enrollment_date?: string
+          id?: string
+          observations?: string | null
+          passed?: boolean | null
+          score?: number | null
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_certificates: {
+        Row: {
+          certificate_number: string
+          certificate_url: string | null
+          company_id: string
+          course_id: string
+          created_at: string
+          employee_id: string
+          expiry_date: string | null
+          id: string
+          issue_date: string
+          issued_by: string | null
+          observations: string | null
+          session_id: string | null
+          status: Database["public"]["Enums"]["certificate_status"]
+          updated_at: string
+        }
+        Insert: {
+          certificate_number: string
+          certificate_url?: string | null
+          company_id: string
+          course_id: string
+          created_at?: string
+          employee_id: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          issued_by?: string | null
+          observations?: string | null
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["certificate_status"]
+          updated_at?: string
+        }
+        Update: {
+          certificate_number?: string
+          certificate_url?: string | null
+          company_id?: string
+          course_id?: string
+          created_at?: string
+          employee_id?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string
+          issued_by?: string | null
+          observations?: string | null
+          session_id?: string | null
+          status?: Database["public"]["Enums"]["certificate_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_certificates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certificates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certificates_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_certificates_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_courses: {
+        Row: {
+          category: string
+          code: string | null
+          company_id: string
+          content: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_hours: number
+          id: string
+          is_active: boolean
+          is_mandatory: boolean
+          modality: Database["public"]["Enums"]["training_modality"]
+          name: string
+          objectives: string | null
+          prerequisites: string | null
+          provider: string | null
+          requires_certification: boolean
+          target_audience: string | null
+          updated_at: string
+          validity_months: number | null
+        }
+        Insert: {
+          category?: string
+          code?: string | null
+          company_id: string
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_hours?: number
+          id?: string
+          is_active?: boolean
+          is_mandatory?: boolean
+          modality?: Database["public"]["Enums"]["training_modality"]
+          name: string
+          objectives?: string | null
+          prerequisites?: string | null
+          provider?: string | null
+          requires_certification?: boolean
+          target_audience?: string | null
+          updated_at?: string
+          validity_months?: number | null
+        }
+        Update: {
+          category?: string
+          code?: string | null
+          company_id?: string
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_hours?: number
+          id?: string
+          is_active?: boolean
+          is_mandatory?: boolean
+          modality?: Database["public"]["Enums"]["training_modality"]
+          name?: string
+          objectives?: string | null
+          prerequisites?: string | null
+          provider?: string | null
+          requires_certification?: boolean
+          target_audience?: string | null
+          updated_at?: string
+          validity_months?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_courses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_plan_items: {
+        Row: {
+          course_id: string
+          created_at: string
+          estimated_cost: number | null
+          id: string
+          is_completed: boolean
+          observations: string | null
+          plan_id: string
+          priority: string | null
+          scheduled_month: number | null
+          session_id: string | null
+          target_areas: string[] | null
+          target_participants: number | null
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          estimated_cost?: number | null
+          id?: string
+          is_completed?: boolean
+          observations?: string | null
+          plan_id: string
+          priority?: string | null
+          scheduled_month?: number | null
+          session_id?: string | null
+          target_areas?: string[] | null
+          target_participants?: number | null
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          estimated_cost?: number | null
+          id?: string
+          is_completed?: boolean
+          observations?: string | null
+          plan_id?: string
+          priority?: string | null
+          scheduled_month?: number | null
+          session_id?: string | null
+          target_areas?: string[] | null
+          target_participants?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_plan_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_plan_items_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "training_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_plan_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_plans: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          budget: number | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          status: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          budget?: number | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          budget?: number | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_plans_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_sessions: {
+        Row: {
+          company_id: string
+          course_id: string
+          created_at: string
+          created_by: string | null
+          end_date: string
+          end_time: string | null
+          id: string
+          instructor_id: string | null
+          instructor_name: string | null
+          location: string | null
+          materials_url: string | null
+          max_participants: number | null
+          observations: string | null
+          session_code: string | null
+          start_date: string
+          start_time: string | null
+          status: Database["public"]["Enums"]["training_status"]
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          course_id: string
+          created_at?: string
+          created_by?: string | null
+          end_date: string
+          end_time?: string | null
+          id?: string
+          instructor_id?: string | null
+          instructor_name?: string | null
+          location?: string | null
+          materials_url?: string | null
+          max_participants?: number | null
+          observations?: string | null
+          session_code?: string | null
+          start_date: string
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["training_status"]
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          course_id?: string
+          created_at?: string
+          created_by?: string | null
+          end_date?: string
+          end_time?: string | null
+          id?: string
+          instructor_id?: string | null
+          instructor_name?: string | null
+          location?: string | null
+          materials_url?: string | null
+          max_participants?: number | null
+          observations?: string | null
+          session_code?: string | null
+          start_date?: string
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["training_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_sessions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_center_assignments: {
         Row: {
           created_at: string
@@ -3269,6 +3687,7 @@ export type Database = {
     Enums: {
       account_type: "ahorros" | "corriente"
       app_role: "admin" | "rrhh" | "psicologo" | "jefe_area" | "auditor"
+      attendance_status: "inscrito" | "asistio" | "no_asistio" | "justificado"
       blood_type: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
       candidate_status:
         | "applied"
@@ -3281,6 +3700,7 @@ export type Database = {
         | "not_selected"
         | "withdrawn"
         | "hired"
+      certificate_status: "pendiente" | "emitido" | "vencido"
       certification_type:
         | "licencia_conduccion"
         | "manejo_defensivo"
@@ -3422,6 +3842,8 @@ export type Database = {
         | "obra_labor"
         | "sin_justa_causa"
         | "renuncia"
+      training_modality: "presencial" | "virtual" | "mixto"
+      training_status: "programado" | "en_curso" | "completado" | "cancelado"
       vacancy_reason:
         | "new_position"
         | "replacement"
@@ -3580,6 +4002,7 @@ export const Constants = {
     Enums: {
       account_type: ["ahorros", "corriente"],
       app_role: ["admin", "rrhh", "psicologo", "jefe_area", "auditor"],
+      attendance_status: ["inscrito", "asistio", "no_asistio", "justificado"],
       blood_type: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
       candidate_status: [
         "applied",
@@ -3593,6 +4016,7 @@ export const Constants = {
         "withdrawn",
         "hired",
       ],
+      certificate_status: ["pendiente", "emitido", "vencido"],
       certification_type: [
         "licencia_conduccion",
         "manejo_defensivo",
@@ -3749,6 +4173,8 @@ export const Constants = {
         "sin_justa_causa",
         "renuncia",
       ],
+      training_modality: ["presencial", "virtual", "mixto"],
+      training_status: ["programado", "en_curso", "completado", "cancelado"],
       vacancy_reason: [
         "new_position",
         "replacement",
