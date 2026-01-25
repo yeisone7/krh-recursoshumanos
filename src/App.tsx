@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OnboardingGuard } from "@/components/auth/OnboardingGuard";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
-import Empleados from "./pages/Empleados";
+import Empleados from "./pages/EmpleadosV2";
 import Contratos from "./pages/Contratos";
 import Alertas from "./pages/Alertas";
 import Dotacion from "./pages/Dotacion";

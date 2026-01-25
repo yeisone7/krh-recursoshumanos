@@ -665,6 +665,371 @@ export type Database = {
           },
         ]
       }
+      employee_bank_info: {
+        Row: {
+          account_number: string | null
+          account_registered: boolean | null
+          account_type: Database["public"]["Enums"]["account_type"] | null
+          bank_letter_url: string | null
+          bank_name: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          is_current: boolean
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          account_number?: string | null
+          account_registered?: boolean | null
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          bank_letter_url?: string | null
+          bank_name?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          is_current?: boolean
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          account_number?: string | null
+          account_registered?: boolean | null
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          bank_letter_url?: string | null
+          bank_name?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          is_current?: boolean
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_bank_info_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_certifications: {
+        Row: {
+          applies_to_position: boolean | null
+          certification_name: string | null
+          certification_type: Database["public"]["Enums"]["certification_type"]
+          created_at: string
+          document_url: string | null
+          employee_id: string
+          expiry_date: string | null
+          id: string
+          is_valid: boolean
+          issue_date: string | null
+          license_category: string | null
+          updated_at: string
+        }
+        Insert: {
+          applies_to_position?: boolean | null
+          certification_name?: string | null
+          certification_type: Database["public"]["Enums"]["certification_type"]
+          created_at?: string
+          document_url?: string | null
+          employee_id: string
+          expiry_date?: string | null
+          id?: string
+          is_valid?: boolean
+          issue_date?: string | null
+          license_category?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applies_to_position?: boolean | null
+          certification_name?: string | null
+          certification_type?: Database["public"]["Enums"]["certification_type"]
+          created_at?: string
+          document_url?: string | null
+          employee_id?: string
+          expiry_date?: string | null
+          id?: string
+          is_valid?: boolean
+          issue_date?: string | null
+          license_category?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_certifications_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_contact: {
+        Row: {
+          created_at: string
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
+          employee_id: string
+          id: string
+          is_current: boolean
+          mobile: string | null
+          personal_email: string | null
+          phone: string | null
+          residence_address: string | null
+          residence_city: string | null
+          residence_department: string | null
+          residence_letter_expiry: string | null
+          residence_letter_url: string | null
+          residence_neighborhood: string | null
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          employee_id: string
+          id?: string
+          is_current?: boolean
+          mobile?: string | null
+          personal_email?: string | null
+          phone?: string | null
+          residence_address?: string | null
+          residence_city?: string | null
+          residence_department?: string | null
+          residence_letter_expiry?: string | null
+          residence_letter_url?: string | null
+          residence_neighborhood?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          employee_id?: string
+          id?: string
+          is_current?: boolean
+          mobile?: string | null
+          personal_email?: string | null
+          phone?: string | null
+          residence_address?: string | null
+          residence_city?: string | null
+          residence_department?: string | null
+          residence_letter_expiry?: string | null
+          residence_letter_url?: string | null
+          residence_neighborhood?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_contact_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_documents: {
+        Row: {
+          company_id: string
+          created_at: string
+          document_name: string | null
+          document_type: Database["public"]["Enums"]["employee_document_type"]
+          employee_id: string
+          expiry_date: string | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          is_valid: boolean
+          mime_type: string | null
+          observations: string | null
+          updated_at: string
+          upload_date: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          document_name?: string | null
+          document_type: Database["public"]["Enums"]["employee_document_type"]
+          employee_id: string
+          expiry_date?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          is_valid?: boolean
+          mime_type?: string | null
+          observations?: string | null
+          updated_at?: string
+          upload_date?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          document_name?: string | null
+          document_type?: Database["public"]["Enums"]["employee_document_type"]
+          employee_id?: string
+          expiry_date?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          is_valid?: boolean
+          mime_type?: string | null
+          observations?: string | null
+          updated_at?: string
+          upload_date?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_family: {
+        Row: {
+          children_count: number | null
+          created_at: string
+          employee_id: string
+          id: string
+          is_current: boolean
+          spouse_birth_date: string | null
+          spouse_gender: Database["public"]["Enums"]["gender_type"] | null
+          spouse_name: string | null
+          spouse_works: boolean | null
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          children_count?: number | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          is_current?: boolean
+          spouse_birth_date?: string | null
+          spouse_gender?: Database["public"]["Enums"]["gender_type"] | null
+          spouse_name?: string | null
+          spouse_works?: boolean | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          children_count?: number | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          is_current?: boolean
+          spouse_birth_date?: string | null
+          spouse_gender?: Database["public"]["Enums"]["gender_type"] | null
+          spouse_name?: string | null
+          spouse_works?: boolean | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_family_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_schedule: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          is_current: boolean
+          is_office_schedule: boolean | null
+          payroll_type: Database["public"]["Enums"]["payroll_type"]
+          rest_day: string | null
+          shift_type_id: string | null
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          is_current?: boolean
+          is_office_schedule?: boolean | null
+          payroll_type?: Database["public"]["Enums"]["payroll_type"]
+          rest_day?: string | null
+          shift_type_id?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          is_current?: boolean
+          is_office_schedule?: boolean | null
+          payroll_type?: Database["public"]["Enums"]["payroll_type"]
+          rest_day?: string | null
+          shift_type_id?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_schedule_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_schedule_shift_type_id_fkey"
+            columns: ["shift_type_id"]
+            isOneToOne: false
+            referencedRelation: "shift_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_shifts: {
         Row: {
           created_at: string
@@ -712,6 +1077,65 @@ export type Database = {
             columns: ["shift_type_id"]
             isOneToOne: false
             referencedRelation: "shift_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_social_security: {
+        Row: {
+          afc: string | null
+          afp: string | null
+          arl: string | null
+          ccf: string | null
+          created_at: string
+          employee_id: string
+          eps: string | null
+          id: string
+          ips: string | null
+          is_current: boolean
+          risk_level: Database["public"]["Enums"]["risk_level"] | null
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+        }
+        Insert: {
+          afc?: string | null
+          afp?: string | null
+          arl?: string | null
+          ccf?: string | null
+          created_at?: string
+          employee_id: string
+          eps?: string | null
+          id?: string
+          ips?: string | null
+          is_current?: boolean
+          risk_level?: Database["public"]["Enums"]["risk_level"] | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Update: {
+          afc?: string | null
+          afp?: string | null
+          arl?: string | null
+          ccf?: string | null
+          created_at?: string
+          employee_id?: string
+          eps?: string | null
+          id?: string
+          ips?: string | null
+          is_current?: boolean
+          risk_level?: Database["public"]["Enums"]["risk_level"] | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_social_security_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
             referencedColumns: ["id"]
           },
         ]
@@ -788,6 +1212,158 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_vaccinations: {
+        Row: {
+          application_date: string
+          created_at: string
+          document_url: string | null
+          dose_number: number
+          employee_id: string
+          id: string
+          next_dose_date: string | null
+          provider: string | null
+          updated_at: string
+          vaccine_name: string | null
+          vaccine_type: Database["public"]["Enums"]["vaccine_type"]
+        }
+        Insert: {
+          application_date: string
+          created_at?: string
+          document_url?: string | null
+          dose_number?: number
+          employee_id: string
+          id?: string
+          next_dose_date?: string | null
+          provider?: string | null
+          updated_at?: string
+          vaccine_name?: string | null
+          vaccine_type: Database["public"]["Enums"]["vaccine_type"]
+        }
+        Update: {
+          application_date?: string
+          created_at?: string
+          document_url?: string | null
+          dose_number?: number
+          employee_id?: string
+          id?: string
+          next_dose_date?: string | null
+          provider?: string | null
+          updated_at?: string
+          vaccine_name?: string | null
+          vaccine_type?: Database["public"]["Enums"]["vaccine_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_vaccinations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_work_info: {
+        Row: {
+          area_id: string | null
+          company_id: string
+          cost_center: string | null
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          hire_date: string
+          id: string
+          is_current: boolean
+          link_type: Database["public"]["Enums"]["link_type"]
+          observations: string | null
+          operation_center_id: string | null
+          position_id: string | null
+          position_name: string
+          termination_date: string | null
+          updated_at: string
+          valid_from: string
+          valid_to: string | null
+          work_city: string | null
+        }
+        Insert: {
+          area_id?: string | null
+          company_id: string
+          cost_center?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          hire_date: string
+          id?: string
+          is_current?: boolean
+          link_type?: Database["public"]["Enums"]["link_type"]
+          observations?: string | null
+          operation_center_id?: string | null
+          position_id?: string | null
+          position_name: string
+          termination_date?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+          work_city?: string | null
+        }
+        Update: {
+          area_id?: string | null
+          company_id?: string
+          cost_center?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          hire_date?: string
+          id?: string
+          is_current?: boolean
+          link_type?: Database["public"]["Enums"]["link_type"]
+          observations?: string | null
+          operation_center_id?: string | null
+          position_id?: string | null
+          position_name?: string
+          termination_date?: string | null
+          updated_at?: string
+          valid_from?: string
+          valid_to?: string | null
+          work_city?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_work_info_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_work_info_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_work_info_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_work_info_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_work_info_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
             referencedColumns: ["id"]
           },
         ]
@@ -923,6 +1499,95 @@ export type Database = {
             columns: ["operation_center_id"]
             isOneToOne: false
             referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees_v2: {
+        Row: {
+          avatar_url: string | null
+          birth_city: string | null
+          birth_country: string | null
+          birth_date: string | null
+          birth_department: string | null
+          blood_type: Database["public"]["Enums"]["blood_type"] | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          document_issue_city: string | null
+          document_issue_date: string | null
+          document_number: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          first_name: string
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          id: string
+          is_active: boolean
+          last_name: string
+          marital_status:
+            | Database["public"]["Enums"]["marital_status_type"]
+            | null
+          middle_name: string | null
+          second_last_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          birth_city?: string | null
+          birth_country?: string | null
+          birth_date?: string | null
+          birth_department?: string | null
+          blood_type?: Database["public"]["Enums"]["blood_type"] | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          document_issue_city?: string | null
+          document_issue_date?: string | null
+          document_number: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          first_name: string
+          gender?: Database["public"]["Enums"]["gender_type"] | null
+          id?: string
+          is_active?: boolean
+          last_name: string
+          marital_status?:
+            | Database["public"]["Enums"]["marital_status_type"]
+            | null
+          middle_name?: string | null
+          second_last_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          birth_city?: string | null
+          birth_country?: string | null
+          birth_date?: string | null
+          birth_department?: string | null
+          blood_type?: Database["public"]["Enums"]["blood_type"] | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          document_issue_city?: string | null
+          document_issue_date?: string | null
+          document_number?: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          first_name?: string
+          gender?: Database["public"]["Enums"]["gender_type"] | null
+          id?: string
+          is_active?: boolean
+          last_name?: string
+          marital_status?:
+            | Database["public"]["Enums"]["marital_status_type"]
+            | null
+          middle_name?: string | null
+          second_last_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_v2_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -1540,6 +2205,10 @@ export type Database = {
       get_user_company_ids: { Args: never; Returns: string[] }
       has_center_access: { Args: { _center_id: string }; Returns: boolean }
       has_employee_access: { Args: { _employee_id: string }; Returns: boolean }
+      has_employee_v2_access: {
+        Args: { _employee_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1554,7 +2223,9 @@ export type Database = {
       is_psicologo: { Args: never; Returns: boolean }
     }
     Enums: {
+      account_type: "ahorros" | "corriente"
       app_role: "admin" | "rrhh" | "psicologo" | "jefe_area" | "auditor"
+      blood_type: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
       candidate_status:
         | "applied"
         | "in_interview"
@@ -1566,6 +2237,15 @@ export type Database = {
         | "not_selected"
         | "withdrawn"
         | "hired"
+      certification_type:
+        | "licencia_conduccion"
+        | "manejo_defensivo"
+        | "manipulacion_alimentos"
+        | "psicosensometrico"
+        | "bpm"
+        | "trabajo_alturas"
+        | "primeros_auxilios"
+        | "otro"
       contract_type:
         | "indefinido"
         | "fijo"
@@ -1588,9 +2268,35 @@ export type Database = {
         | "chaleco_reflectivo"
         | "impermeable"
         | "otros"
+      employee_document_type:
+        | "contrato"
+        | "hoja_vida"
+        | "cedula"
+        | "certificado_laboral"
+        | "certificado_estudio"
+        | "antecedentes"
+        | "carta_residencia"
+        | "carta_banco"
+        | "otro"
       employee_status: "active" | "suspended" | "retired" | "en_retiro"
       exam_result: "apto" | "apto_restricciones" | "no_apto" | "pendiente"
       exam_type: "ingreso" | "periodico" | "egreso" | "reintegro"
+      gender_type: "M" | "F" | "O"
+      link_type:
+        | "indefinido"
+        | "fijo"
+        | "obra_labor"
+        | "aprendizaje"
+        | "servicios"
+        | "temporal"
+      marital_status_type:
+        | "soltero"
+        | "casado"
+        | "union_libre"
+        | "divorciado"
+        | "viudo"
+      payroll_type: "quincenal" | "mensual"
+      risk_level: "I" | "II" | "III" | "IV" | "V"
       selection_step_status:
         | "pending"
         | "scheduled"
@@ -1633,6 +2339,15 @@ export type Database = {
         | "other"
       vacancy_status: "open" | "in_process" | "closed" | "cancelled"
       vacancy_type: "internal" | "external" | "both"
+      vaccine_type:
+        | "TT"
+        | "HA"
+        | "HB"
+        | "FA"
+        | "TIFO"
+        | "COVID"
+        | "INFLUENZA"
+        | "otro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1760,7 +2475,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_type: ["ahorros", "corriente"],
       app_role: ["admin", "rrhh", "psicologo", "jefe_area", "auditor"],
+      blood_type: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
       candidate_status: [
         "applied",
         "in_interview",
@@ -1772,6 +2489,16 @@ export const Constants = {
         "not_selected",
         "withdrawn",
         "hired",
+      ],
+      certification_type: [
+        "licencia_conduccion",
+        "manejo_defensivo",
+        "manipulacion_alimentos",
+        "psicosensometrico",
+        "bpm",
+        "trabajo_alturas",
+        "primeros_auxilios",
+        "otro",
       ],
       contract_type: [
         "indefinido",
@@ -1797,9 +2524,38 @@ export const Constants = {
         "impermeable",
         "otros",
       ],
+      employee_document_type: [
+        "contrato",
+        "hoja_vida",
+        "cedula",
+        "certificado_laboral",
+        "certificado_estudio",
+        "antecedentes",
+        "carta_residencia",
+        "carta_banco",
+        "otro",
+      ],
       employee_status: ["active", "suspended", "retired", "en_retiro"],
       exam_result: ["apto", "apto_restricciones", "no_apto", "pendiente"],
       exam_type: ["ingreso", "periodico", "egreso", "reintegro"],
+      gender_type: ["M", "F", "O"],
+      link_type: [
+        "indefinido",
+        "fijo",
+        "obra_labor",
+        "aprendizaje",
+        "servicios",
+        "temporal",
+      ],
+      marital_status_type: [
+        "soltero",
+        "casado",
+        "union_libre",
+        "divorciado",
+        "viudo",
+      ],
+      payroll_type: ["quincenal", "mensual"],
+      risk_level: ["I", "II", "III", "IV", "V"],
       selection_step_status: [
         "pending",
         "scheduled",
@@ -1847,6 +2603,16 @@ export const Constants = {
       ],
       vacancy_status: ["open", "in_process", "closed", "cancelled"],
       vacancy_type: ["internal", "external", "both"],
+      vaccine_type: [
+        "TT",
+        "HA",
+        "HB",
+        "FA",
+        "TIFO",
+        "COVID",
+        "INFLUENZA",
+        "otro",
+      ],
     },
   },
 } as const
