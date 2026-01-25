@@ -194,14 +194,17 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Área</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} 
+                    value={field.value || "__none__"}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccione área" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-background">
-                      <SelectItem value="">Sin área asignada</SelectItem>
+                      <SelectItem value="__none__">Sin área asignada</SelectItem>
                       {areas.map((area) => (
                         <SelectItem key={area.id} value={area.id}>
                           {area.name}
