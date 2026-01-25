@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { 
   UserPlus, 
   FileText, 
-  Calendar, 
-  ClipboardList, 
   Award, 
   Clock, 
   HeartPulse,
@@ -17,7 +15,7 @@ const quickActions = [
     description: 'Registrar empleado',
     icon: UserPlus,
     path: '/empleados',
-    color: 'bg-primary/10 text-primary',
+    color: 'bg-[#2b8e66] text-white',
   },
   {
     label: 'Nuevo Contrato',
@@ -25,13 +23,6 @@ const quickActions = [
     icon: FileText,
     path: '/contratos',
     color: 'bg-info/10 text-info',
-  },
-  {
-    label: 'Vacaciones',
-    description: 'Gestionar solicitudes',
-    icon: Calendar,
-    path: '/vacaciones',
-    color: 'bg-success/10 text-success',
   },
   {
     label: 'Incapacidades',
@@ -60,13 +51,6 @@ const quickActions = [
     icon: Package,
     path: '/dotacion',
     color: 'bg-info/10 text-info',
-  },
-  {
-    label: 'Reportes',
-    description: 'Generar informes',
-    icon: ClipboardList,
-    path: '/reportes',
-    color: 'bg-muted text-muted-foreground',
   },
 ];
 
