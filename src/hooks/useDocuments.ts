@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export type EntityType = 'contract' | 'contract_extension' | 'medical_exam' | 'dotation';
+export type EntityType = 'contract' | 'contract_extension' | 'medical_exam' | 'dotation' | 'incapacity';
 
 export interface DocumentVersion {
   id: string;
@@ -150,6 +150,8 @@ export function useUploadDocument() {
           await supabase.from('medical_exams').update({ document_url: filePath }).eq('id', entityId);
         } else if (entityType === 'dotation') {
           await supabase.from('dotation_deliveries').update({ document_url: filePath }).eq('id', entityId);
+        } else if (entityType === 'incapacity') {
+          await supabase.from('employee_incapacities').update({ certificate_url: filePath }).eq('id', entityId);
         }
       } catch (updateError) {
         console.warn('Could not update entity document_url:', updateError);
@@ -164,6 +166,8 @@ export function useUploadDocument() {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
       queryClient.invalidateQueries({ queryKey: ['dotation_deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['incapacities'] });
+      queryClient.invalidateQueries({ queryKey: ['incapacity'] });
     },
   });
 }
