@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Users,
   AlertTriangle,
+  Download,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,8 @@ import { useIncapacities, useIncapacityStats } from '@/hooks/useIncapacities';
 import { 
   IncapacityFormDialog, 
   IncapacityDetailDialog,
-  IncapacityAlertsPanel 
+  IncapacityAlertsPanel,
+  IncapacityExportDialog,
 } from '@/components/incapacities';
 import {
   incapacityOriginLabels,
@@ -56,6 +58,7 @@ export default function Incapacidades() {
   const [originFilter, setOriginFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showFormDialog, setShowFormDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
   const [selectedIncapacityId, setSelectedIncapacityId] = useState<string | null>(null);
   
   const { data: incapacities, isLoading } = useIncapacities();
@@ -109,10 +112,16 @@ export default function Incapacidades() {
             Gestión de incapacidades médicas y recobros
           </p>
         </div>
-        <Button onClick={() => setShowFormDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Incapacidad
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowExportDialog(true)}>
+            <Download className="h-4 w-4 mr-2" />
+            Exportar
+          </Button>
+          <Button onClick={() => setShowFormDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Incapacidad
+          </Button>
+        </div>
       </div>
       
       {/* Stats Cards */}
@@ -379,6 +388,11 @@ export default function Incapacidades() {
         open={!!selectedIncapacityId}
         onOpenChange={(open) => !open && setSelectedIncapacityId(null)}
         incapacityId={selectedIncapacityId}
+      />
+
+      <IncapacityExportDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
       />
     </div>
   );
