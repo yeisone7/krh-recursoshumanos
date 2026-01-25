@@ -26,7 +26,8 @@ import {
   Target,
   Network,
   Landmark,
-  FileBarChart
+  FileBarChart,
+  BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,6 +40,7 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
+  { label: 'Analítica RRHH', icon: <BarChart3 className="w-5 h-5" />, href: '/analitica' },
   { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados' },
   { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' },
   { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones' },
