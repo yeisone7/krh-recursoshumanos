@@ -54,10 +54,11 @@ const mainNavItems: NavItem[] = [
 ];
 
 const secondaryNavItems: NavItem[] = [
+  { label: 'Calendario', icon: <Calendar className="w-5 h-5" />, href: '/calendario' },
   { label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama' },
   { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', badge: 5 },
   { label: 'Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros' },
-  { label: 'Jornadas', icon: <Calendar className="w-5 h-5" />, href: '/jornadas' },
+  { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas' },
   { label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad' },
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion' },
 ];
