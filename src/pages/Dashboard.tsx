@@ -84,20 +84,6 @@ export default function Dashboard() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-              className="card-elevated p-5 flex items-center gap-4"
-            >
-              <div className="w-12 h-12 rounded-xl bg-success-light flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-success" />
-              </div>
-              <div>
-                <p className="text-2xl font-display font-bold text-foreground">{kpis?.retentionRate || 0}%</p>
-                <p className="text-sm text-muted-foreground">Tasa de retención</p>
-              </div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.15 }}
               className="card-elevated p-5 flex items-center gap-4"
             >
