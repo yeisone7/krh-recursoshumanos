@@ -37,23 +37,38 @@ export function useDashboardAlerts() {
     queryFn: async () => {
       const alerts: DashboardAlert[] = [];
 
+      // Fetch employees from employees_v2 for the current company
+      const { data: employees } = await supabase
+        .from('employees_v2')
+        .select('id, first_name, last_name, company_id')
+        .eq('company_id', currentCompanyId!)
+        .eq('is_active', true);
+
+      if (!employees || employees.length === 0) return alerts;
+
+      const employeeIds = employees.map(e => e.id);
+      const employeeMap = new Map(employees.map(e => [e.id, e]));
+
       // 1. Fetch expiring contracts (term-based only, not indefinite)
       const { data: contracts } = await supabase
         .from('contracts')
         .select(`
           id,
+          employee_id,
           end_date,
           contract_type,
           is_terminated,
-          employees!inner(id, first_name, last_name, company_id),
           contract_extensions(id, end_date, extension_number)
         `)
-        .eq('employees.company_id', currentCompanyId!)
+        .in('employee_id', employeeIds)
         .eq('is_terminated', false)
         .neq('contract_type', 'indefinido');
 
       if (contracts) {
         for (const contract of contracts) {
+          const employee = employeeMap.get(contract.employee_id);
+          if (!employee) continue;
+
           // Calculate current end date considering extensions
           let currentEndDate = contract.end_date;
           if (contract.contract_extensions && contract.contract_extensions.length > 0) {
@@ -66,7 +81,6 @@ export function useDashboardAlerts() {
 
           const daysRemaining = calculateDaysRemaining(currentEndDate);
           if (daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 30) {
-            const employee = contract.employees as any;
             const hasExtensions = contract.contract_extensions && contract.contract_extensions.length > 0;
             
             alerts.push({
@@ -88,21 +102,18 @@ export function useDashboardAlerts() {
       // 2. Fetch expiring medical exams (periodic and entry exams only)
       const { data: exams } = await supabase
         .from('medical_exams')
-        .select(`
-          id,
-          exam_type,
-          expiration_date,
-          employees!inner(id, first_name, last_name, company_id)
-        `)
-        .eq('employees.company_id', currentCompanyId!)
+        .select('id, employee_id, exam_type, expiration_date')
+        .in('employee_id', employeeIds)
         .not('expiration_date', 'is', null)
         .neq('exam_type', 'egreso');
 
       if (exams) {
         for (const exam of exams) {
+          const employee = employeeMap.get(exam.employee_id);
+          if (!employee) continue;
+
           const daysRemaining = calculateDaysRemaining(exam.expiration_date);
           if (daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 30) {
-            const employee = exam.employees as any;
             const examTypeLabels: Record<string, string> = {
               ingreso: 'Examen de ingreso',
               periodico: 'Examen periódico',
@@ -126,20 +137,16 @@ export function useDashboardAlerts() {
       // 3. Fetch expiring dotation deliveries
       const { data: dotations } = await supabase
         .from('dotation_deliveries')
-        .select(`
-          id,
-          item_name,
-          expiration_date,
-          employees!inner(id, first_name, last_name, company_id)
-        `)
-        .eq('employees.company_id', currentCompanyId!);
+        .select('id, employee_id, item_name, expiration_date')
+        .in('employee_id', employeeIds);
 
       if (dotations) {
         for (const dotation of dotations) {
+          const employee = employeeMap.get(dotation.employee_id);
+          if (!employee) continue;
+
           const daysRemaining = calculateDaysRemaining(dotation.expiration_date);
           if (daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 30) {
-            const employee = dotation.employees as any;
-            
             alerts.push({
               id: `dotation-${dotation.id}`,
               type: 'dotation',
