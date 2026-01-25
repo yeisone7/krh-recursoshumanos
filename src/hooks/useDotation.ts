@@ -36,26 +36,98 @@ async function logAuditEvent(
   }
 }
 
+// Helper to get employee info from employees_v2
+async function getEmployeeV2Info(employeeId: string) {
+  const { data } = await supabase
+    .from('employees_v2')
+    .select(`
+      id, 
+      first_name, 
+      middle_name,
+      last_name, 
+      second_last_name,
+      document_number,
+      company_id,
+      employee_work_info(
+        id,
+        position_name,
+        operation_center_id,
+        is_current,
+        operation_centers(id, name)
+      )
+    `)
+    .eq('id', employeeId)
+    .maybeSingle();
+  
+  return data;
+}
+
 export function useDotationDeliveries() {
   const { currentCompanyId } = useAuth();
 
   return useQuery({
     queryKey: ['dotation_deliveries', currentCompanyId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get all dotation deliveries
+      const { data: deliveries, error } = await supabase
         .from('dotation_deliveries')
-        .select(`
-          *,
-          employees!inner(
-            id, first_name, last_name, document_number, company_id,
-            operation_centers(id, name)
-          )
-        `)
-        .eq('employees.company_id', currentCompanyId!)
+        .select('*')
         .order('delivery_date', { ascending: false });
 
       if (error) throw error;
-      return data;
+      if (!deliveries) return [];
+
+      // Get unique employee IDs
+      const employeeIds = [...new Set(deliveries.map(d => d.employee_id))];
+      
+      // Fetch employees from employees_v2 with work info
+      const { data: employees } = await supabase
+        .from('employees_v2')
+        .select(`
+          id, 
+          first_name, 
+          middle_name,
+          last_name, 
+          second_last_name,
+          document_number,
+          company_id,
+          employee_work_info(
+            id,
+            position_name,
+            operation_center_id,
+            is_current,
+            operation_centers(id, name)
+          )
+        `)
+        .in('id', employeeIds)
+        .eq('company_id', currentCompanyId!);
+
+      // Create a map for quick lookup
+      const employeeMap = new Map(employees?.map(e => [e.id, e]) || []);
+
+      // Combine deliveries with employee data
+      return deliveries
+        .map(delivery => {
+          const employee = employeeMap.get(delivery.employee_id);
+          if (!employee) return null; // Filter out deliveries without matching employee in company
+          
+          const currentWorkInfo = employee.employee_work_info?.find((w: any) => w.is_current);
+          
+          return {
+            ...delivery,
+            employees: {
+              id: employee.id,
+              first_name: employee.first_name,
+              middle_name: employee.middle_name,
+              last_name: employee.last_name,
+              second_last_name: employee.second_last_name,
+              document_number: employee.document_number,
+              company_id: employee.company_id,
+              operation_centers: currentWorkInfo?.operation_centers || null
+            }
+          };
+        })
+        .filter(Boolean);
     },
     enabled: !!currentCompanyId,
   });
@@ -66,17 +138,28 @@ export function useDotationDelivery(id: string | undefined) {
     queryKey: ['dotation_delivery', id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase
+      const { data: delivery, error } = await supabase
         .from('dotation_deliveries')
-        .select(`
-          *,
-          employees(id, first_name, last_name, document_number)
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
       if (error) throw error;
-      return data;
+
+      // Fetch employee info from employees_v2
+      const employee = await getEmployeeV2Info(delivery.employee_id);
+
+      return {
+        ...delivery,
+        employees: employee ? {
+          id: employee.id,
+          first_name: employee.first_name,
+          middle_name: employee.middle_name,
+          last_name: employee.last_name,
+          second_last_name: employee.second_last_name,
+          document_number: employee.document_number
+        } : null
+      };
     },
     enabled: !!id,
   });
@@ -91,15 +174,18 @@ export function useCreateDotationDelivery() {
       const { data, error } = await supabase
         .from('dotation_deliveries')
         .insert({ ...delivery, created_by: user?.id })
-        .select(`*, employees(first_name, last_name)`)
+        .select()
         .single();
 
       if (error) throw error;
 
+      // Get employee info for audit log
+      const employee = await getEmployeeV2Info(data.employee_id);
+
       // Log audit event
       if (user) {
-        const employeeName = data.employees 
-          ? `${(data.employees as any).first_name} ${(data.employees as any).last_name}`
+        const employeeName = employee 
+          ? `${employee.first_name} ${employee.last_name}`
           : 'Empleado';
         await logAuditEvent(
           user.id,
@@ -131,7 +217,7 @@ export function useUpdateDotationDelivery() {
       // Get old values first
       const { data: oldData } = await supabase
         .from('dotation_deliveries')
-        .select('*, employees(first_name, last_name)')
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -144,10 +230,13 @@ export function useUpdateDotationDelivery() {
 
       if (error) throw error;
 
+      // Get employee info for audit log
+      const employee = oldData ? await getEmployeeV2Info(oldData.employee_id) : null;
+
       // Log audit event
       if (user && oldData) {
-        const employeeName = oldData.employees 
-          ? `${(oldData.employees as any).first_name} ${(oldData.employees as any).last_name}`
+        const employeeName = employee 
+          ? `${employee.first_name} ${employee.last_name}`
           : 'Empleado';
         await logAuditEvent(
           user.id,
@@ -180,7 +269,7 @@ export function useDeleteDotationDelivery() {
       // Get delivery data before delete
       const { data: delivery } = await supabase
         .from('dotation_deliveries')
-        .select('*, employees(first_name, last_name)')
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -191,10 +280,13 @@ export function useDeleteDotationDelivery() {
 
       if (error) throw error;
 
+      // Get employee info for audit log
+      const employee = delivery ? await getEmployeeV2Info(delivery.employee_id) : null;
+
       // Log audit event
       if (user && delivery) {
-        const employeeName = delivery.employees 
-          ? `${(delivery.employees as any).first_name} ${(delivery.employees as any).last_name}`
+        const employeeName = employee 
+          ? `${employee.first_name} ${employee.last_name}`
           : 'Empleado';
         await logAuditEvent(
           user.id,
