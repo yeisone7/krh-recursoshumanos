@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export interface DashboardAlert {
   id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation';
+  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
@@ -28,6 +28,17 @@ function getAlertLevel(daysRemaining: number): 'info' | 'warning' | 'critical' {
   if (daysRemaining <= 15) return 'warning';
   return 'info';
 }
+
+const certificationTypeLabels: Record<string, string> = {
+  licencia_conduccion: 'Licencia de conducción',
+  trabajo_alturas: 'Trabajo en alturas',
+  manipulacion_alimentos: 'Manipulación de alimentos',
+  primeros_auxilios: 'Primeros auxilios',
+  montacargas: 'Operación de montacargas',
+  soldadura: 'Certificación de soldadura',
+  electricidad: 'Certificación eléctrica',
+  otro: 'Certificación',
+};
 
 export function useDashboardAlerts() {
   const { currentCompanyId } = useAuth();
@@ -161,7 +172,47 @@ export function useDashboardAlerts() {
         }
       }
 
-      // Sort by days remaining (most urgent first)
+      // 4. Fetch expiring certifications and licenses
+      const { data: certifications } = await supabase
+        .from('employee_certifications')
+        .select('id, employee_id, certification_type, certification_name, license_category, expiry_date')
+        .in('employee_id', employeeIds)
+        .eq('is_valid', true)
+        .not('expiry_date', 'is', null);
+
+      if (certifications) {
+        for (const cert of certifications) {
+          const employee = employeeMap.get(cert.employee_id);
+          if (!employee) continue;
+
+          const daysRemaining = calculateDaysRemaining(cert.expiry_date);
+          
+          // Include expired (negative days) and expiring (0-30 days)
+          if (daysRemaining !== null && daysRemaining <= 30) {
+            const typeName = certificationTypeLabels[cert.certification_type] || cert.certification_type;
+            const displayName = cert.certification_name || typeName;
+            const licenseInfo = cert.license_category ? ` (${cert.license_category})` : '';
+            
+            const isExpired = daysRemaining < 0;
+            const level = isExpired ? 'critical' : getAlertLevel(daysRemaining);
+            
+            alerts.push({
+              id: `cert-${cert.id}`,
+              type: 'certification',
+              level,
+              title: isExpired ? 'Certificación vencida' : 'Certificación por vencer',
+              description: isExpired 
+                ? `${displayName}${licenseInfo} venció hace ${Math.abs(daysRemaining)} días`
+                : `${displayName}${licenseInfo} vence en ${daysRemaining} días`,
+              daysRemaining,
+              entityName: `${employee.first_name} ${employee.last_name}`,
+              entityId: cert.employee_id, // Navigate to employee detail
+            });
+          }
+        }
+      }
+
+      // Sort by days remaining (most urgent first, expired items at top)
       alerts.sort((a, b) => a.daysRemaining - b.daysRemaining);
 
       return alerts;
