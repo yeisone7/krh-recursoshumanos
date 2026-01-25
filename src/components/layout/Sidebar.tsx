@@ -20,7 +20,8 @@ import {
   HeartPulse,
   Gavel,
   Palmtree,
-  ClipboardList
+  ClipboardList,
+  Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -37,6 +38,7 @@ const mainNavItems: NavItem[] = [
   { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' },
   { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones' },
   { label: 'Permisos', icon: <ClipboardList className="w-5 h-5" />, href: '/permisos' },
+  { label: 'Horas Extra', icon: <Clock className="w-5 h-5" />, href: '/horas-extra' },
   { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' },
   { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' },
   { label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion' },
