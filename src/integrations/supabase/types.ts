@@ -1311,6 +1311,72 @@ export type Database = {
           },
         ]
       }
+      employee_change_requests: {
+        Row: {
+          company_id: string
+          created_at: string
+          current_value: string | null
+          employee_id: string
+          field_name: string
+          id: string
+          request_type: string
+          requested_by: string
+          requested_value: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          current_value?: string | null
+          employee_id: string
+          field_name: string
+          id?: string
+          request_type: string
+          requested_by: string
+          requested_value: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          current_value?: string | null
+          employee_id?: string
+          field_name?: string
+          id?: string
+          request_type?: string
+          requested_by?: string
+          requested_value?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_change_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_change_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_contact: {
         Row: {
           created_at: string
@@ -1919,6 +1985,41 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_user_links: {
+        Row: {
+          employee_id: string
+          id: string
+          is_active: boolean
+          linked_at: string
+          linked_by: string | null
+          user_id: string
+        }
+        Insert: {
+          employee_id: string
+          id?: string
+          is_active?: boolean
+          linked_at?: string
+          linked_by?: string | null
+          user_id: string
+        }
+        Update: {
+          employee_id?: string
+          id?: string
+          is_active?: boolean
+          linked_at?: string
+          linked_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_user_links_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "employees_v2"
             referencedColumns: ["id"]
           },
         ]
@@ -4255,6 +4356,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_my_employee_id: { Args: never; Returns: string }
       get_user_center_ids: { Args: never; Returns: string[] }
       get_user_company_ids: { Args: never; Returns: string[] }
       has_center_access: { Args: { _center_id: string }; Returns: boolean }
