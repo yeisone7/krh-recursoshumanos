@@ -1,7 +1,14 @@
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bell, Search, Filter, AlertTriangle, Clock, FileText, Stethoscope, Package, CheckCircle, XCircle } from 'lucide-react';
+import { 
+  Bell, Search, Filter, AlertTriangle, Clock, FileText, 
+  Stethoscope, Package, CheckCircle, Award, Palmtree, 
+  HeartPulse, Landmark, ExternalLink, Loader2
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -16,134 +23,154 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { useUnifiedAlerts, useAlertStats, UnifiedAlert } from '@/hooks/useUnifiedAlerts';
 
-interface Alert {
-  id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation';
-  level: 'info' | 'warning' | 'critical';
-  title: string;
-  description: string;
-  entityName: string;
-  entityId: string;
-  eventDate: string;
-  daysRemaining: number;
-  status: 'pending' | 'notified' | 'closed';
-  createdAt: string;
-}
-
-const mockAlerts: Alert[] = [
-  {
-    id: '1',
-    type: 'contract',
-    level: 'critical',
-    title: 'Contrato por vencer',
-    description: 'Contrato a término fijo vence en 3 días',
-    entityName: 'María García',
-    entityId: 'emp-001',
-    eventDate: '2024-02-01',
-    daysRemaining: 3,
-    status: 'pending',
-    createdAt: '2024-01-28',
-  },
-  {
-    id: '2',
-    type: 'extension',
-    level: 'critical',
-    title: 'Prórroga por vencer',
-    description: 'Prórroga #2 vence en 5 días',
-    entityName: 'Ana Martínez',
-    entityId: 'emp-003',
-    eventDate: '2024-02-05',
-    daysRemaining: 5,
-    status: 'pending',
-    createdAt: '2024-01-30',
-  },
-  {
-    id: '3',
-    type: 'medical',
-    level: 'warning',
-    title: 'Examen médico pendiente',
-    description: 'Examen periódico vence en 15 días',
-    entityName: 'Carlos Rodríguez',
-    entityId: 'emp-002',
-    eventDate: '2024-02-14',
-    daysRemaining: 15,
-    status: 'notified',
-    createdAt: '2024-01-25',
-  },
-  {
-    id: '4',
-    type: 'dotation',
-    level: 'info',
-    title: 'Dotación por entregar',
-    description: 'Entrega programada en 30 días',
-    entityName: 'Pedro López',
-    entityId: 'emp-004',
-    eventDate: '2024-03-01',
-    daysRemaining: 30,
-    status: 'pending',
-    createdAt: '2024-01-28',
-  },
-  {
-    id: '5',
-    type: 'medical',
-    level: 'critical',
-    title: 'Examen de egreso requerido',
-    description: 'Pendiente examen de egreso',
-    entityName: 'Luis Ramírez',
-    entityId: 'emp-010',
-    eventDate: '2024-01-28',
-    daysRemaining: 0,
-    status: 'pending',
-    createdAt: '2024-01-28',
-  },
-];
-
-const typeIcons = {
+const typeIcons: Record<UnifiedAlert['type'], React.ElementType> = {
   contract: FileText,
   extension: Clock,
   medical: Stethoscope,
   dotation: Package,
+  certification: Award,
+  incapacity: HeartPulse,
+  vacation: Palmtree,
+  cesantias: Landmark,
 };
 
-const typeLabels = {
+const typeLabels: Record<UnifiedAlert['type'], string> = {
   contract: 'Contrato',
   extension: 'Prórroga',
   medical: 'Examen Médico',
   dotation: 'Dotación',
+  certification: 'Certificación',
+  incapacity: 'Incapacidad',
+  vacation: 'Vacaciones',
+  cesantias: 'Cesantías',
 };
 
 const levelStyles = {
   info: {
-    bg: 'bg-info-light',
+    bg: 'bg-info/10',
     border: 'border-info/20',
     icon: 'text-info',
     badge: 'bg-info/10 text-info',
   },
   warning: {
-    bg: 'bg-warning-light',
+    bg: 'bg-warning/10',
     border: 'border-warning/20',
     icon: 'text-warning',
     badge: 'bg-warning/10 text-warning-foreground',
   },
   critical: {
-    bg: 'bg-destructive-light',
+    bg: 'bg-destructive/10',
     border: 'border-destructive/20',
     icon: 'text-destructive',
     badge: 'bg-destructive/10 text-destructive',
   },
 };
 
-const statusConfig = {
-  pending: { label: 'Pendiente', class: 'bg-warning-light text-warning-foreground' },
-  notified: { label: 'Notificada', class: 'bg-info-light text-info' },
-  closed: { label: 'Cerrada', class: 'bg-muted text-muted-foreground' },
-};
+function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (path: string) => void }) {
+  const Icon = typeIcons[alert.type];
+  const styles = levelStyles[alert.level];
+  const isExpired = alert.daysRemaining < 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className={cn(
+        "flex items-center gap-4 p-5 rounded-xl border transition-all duration-200 hover:shadow-md card-elevated",
+        styles.border
+      )}
+    >
+      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0", styles.bg)}>
+        <Icon className={cn("w-6 h-6", styles.icon)} />
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <p className="font-semibold text-foreground">{alert.title}</p>
+          <Badge variant="outline" className={cn("text-xs", styles.badge)}>
+            {isExpired ? `Vencido hace ${Math.abs(alert.daysRemaining)} días` : `${alert.daysRemaining} días`}
+          </Badge>
+          <Badge variant="outline" className="text-xs bg-muted">
+            {typeLabels[alert.type]}
+          </Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{alert.entityName}</span>
+          {' • '}
+          {alert.description}
+        </p>
+        {alert.eventDate && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Fecha evento: {new Date(alert.eventDate).toLocaleDateString('es-CO')}
+          </p>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-1.5"
+          onClick={() => onNavigate(alert.navigateTo || '/')}
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          Gestionar
+        </Button>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Alertas() {
-  const criticalCount = mockAlerts.filter(a => a.level === 'critical' && a.status !== 'closed').length;
-  const warningCount = mockAlerts.filter(a => a.level === 'warning' && a.status !== 'closed').length;
-  const infoCount = mockAlerts.filter(a => a.level === 'info' && a.status !== 'closed').length;
+  const navigate = useNavigate();
+  const { data: alerts, isLoading, error } = useUnifiedAlerts();
+  const stats = useAlertStats(alerts);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState('all');
+
+  const filteredAlerts = useMemo(() => {
+    if (!alerts) return [];
+    
+    let filtered = [...alerts];
+    
+    // Filter by search term
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(a => 
+        a.entityName.toLowerCase().includes(term) ||
+        a.title.toLowerCase().includes(term) ||
+        a.description.toLowerCase().includes(term)
+      );
+    }
+    
+    // Filter by type
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(a => a.type === typeFilter);
+    }
+    
+    // Filter by level (tab)
+    if (activeTab !== 'all') {
+      filtered = filtered.filter(a => a.level === activeTab);
+    }
+    
+    return filtered;
+  }, [alerts, searchTerm, typeFilter, activeTab]);
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-destructive">Error al cargar alertas: {error.message}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -158,16 +185,6 @@ export default function Alertas() {
           <h1 className="font-display text-2xl font-bold text-foreground">Centro de Alertas</h1>
           <p className="text-muted-foreground mt-1">Monitoreo centralizado de vencimientos y eventos críticos</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
-            <CheckCircle className="w-4 h-4" />
-            Marcar leídas
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <XCircle className="w-4 h-4" />
-            Cerrar resueltas
-          </Button>
-        </div>
       </motion.div>
 
       {/* Stats */}
@@ -178,54 +195,65 @@ export default function Alertas() {
           transition={{ duration: 0.3, delay: 0.1 }}
           className="card-elevated p-4 flex items-center gap-3"
         >
-          <div className="w-10 h-10 rounded-lg bg-destructive-light flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
             <AlertTriangle className="w-5 h-5 text-destructive" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">{criticalCount}</p>
+            <p className="text-2xl font-display font-bold text-foreground">
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : stats.criticalCount}
+            </p>
             <p className="text-sm text-muted-foreground">Críticas</p>
           </div>
         </motion.div>
+        
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.15 }}
           className="card-elevated p-4 flex items-center gap-3"
         >
-          <div className="w-10 h-10 rounded-lg bg-warning-light flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
             <Clock className="w-5 h-5 text-warning" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">{warningCount}</p>
+            <p className="text-2xl font-display font-bold text-foreground">
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : stats.warningCount}
+            </p>
             <p className="text-sm text-muted-foreground">Advertencias</p>
           </div>
         </motion.div>
+        
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
           className="card-elevated p-4 flex items-center gap-3"
         >
-          <div className="w-10 h-10 rounded-lg bg-info-light flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center">
             <Bell className="w-5 h-5 text-info" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">{infoCount}</p>
+            <p className="text-2xl font-display font-bold text-foreground">
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : stats.infoCount}
+            </p>
             <p className="text-sm text-muted-foreground">Informativas</p>
           </div>
         </motion.div>
+        
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.25 }}
           className="card-elevated p-4 flex items-center gap-3"
         >
-          <div className="w-10 h-10 rounded-lg bg-success-light flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
             <CheckCircle className="w-5 h-5 text-success" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">12</p>
-            <p className="text-sm text-muted-foreground">Resueltas hoy</p>
+            <p className="text-2xl font-display font-bold text-foreground">
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : stats.totalActive}
+            </p>
+            <p className="text-sm text-muted-foreground">Total Activas</p>
           </div>
         </motion.div>
       </div>
@@ -240,52 +268,44 @@ export default function Alertas() {
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
+            <Input
               type="text"
               placeholder="Buscar alertas por empleado, tipo..."
-              className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
             />
           </div>
           <div className="flex gap-3">
-            <Select defaultValue="all">
-              <SelectTrigger className="w-[150px] h-10 text-sm border-border">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="all">Todos los tipos</SelectItem>
                 <SelectItem value="contract">Contratos</SelectItem>
                 <SelectItem value="extension">Prórrogas</SelectItem>
-                <SelectItem value="medical">Exámenes</SelectItem>
+                <SelectItem value="medical">Exámenes Médicos</SelectItem>
                 <SelectItem value="dotation">Dotación</SelectItem>
+                <SelectItem value="certification">Certificaciones</SelectItem>
+                <SelectItem value="incapacity">Incapacidades</SelectItem>
+                <SelectItem value="vacation">Vacaciones</SelectItem>
+                <SelectItem value="cesantias">Cesantías</SelectItem>
               </SelectContent>
             </Select>
-            <Select defaultValue="pending">
-              <SelectTrigger className="w-[150px] h-10 text-sm border-border">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="pending">Pendientes</SelectItem>
-                <SelectItem value="notified">Notificadas</SelectItem>
-                <SelectItem value="closed">Cerradas</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <Filter className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </motion.div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="all" className="space-y-4">
+      {/* Tabs and Alerts List */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-muted/50">
           <TabsTrigger value="all">Todas</TabsTrigger>
           <TabsTrigger value="critical" className="gap-1">
             Críticas
-            {criticalCount > 0 && (
+            {stats.criticalCount > 0 && (
               <span className="ml-1 bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
-                {criticalCount}
+                {stats.criticalCount}
               </span>
             )}
           </TabsTrigger>
@@ -293,113 +313,32 @@ export default function Alertas() {
           <TabsTrigger value="info">Informativas</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="space-y-3">
-          {mockAlerts.map((alert, index) => {
-            const Icon = typeIcons[alert.type];
-            const styles = levelStyles[alert.level];
-
-            return (
+        <TabsContent value={activeTab} className="space-y-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : filteredAlerts.length === 0 ? (
+            <div className="text-center py-12">
+              <CheckCircle className="w-12 h-12 text-success mx-auto mb-3" />
+              <p className="text-muted-foreground">
+                {searchTerm || typeFilter !== 'all' 
+                  ? 'No se encontraron alertas con los filtros seleccionados'
+                  : 'No hay alertas pendientes'}
+              </p>
+            </div>
+          ) : (
+            filteredAlerts.map((alert, index) => (
               <motion.div
                 key={alert.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className={cn(
-                  "flex items-center gap-4 p-5 rounded-xl border transition-all duration-200 cursor-pointer hover:shadow-md card-elevated",
-                  styles.border
-                )}
+                transition={{ duration: 0.3, delay: index * 0.03 }}
               >
-                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", styles.bg)}>
-                  <Icon className={cn("w-6 h-6", styles.icon)} />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-foreground">{alert.title}</p>
-                    <Badge variant="outline" className={cn("text-xs", styles.badge)}>
-                      {alert.daysRemaining > 0 ? `${alert.daysRemaining} días` : 'Vencido'}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs bg-muted">
-                      {typeLabels[alert.type]}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{alert.entityName}</span>
-                    {' • '}
-                    {alert.description}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Evento: {new Date(alert.eventDate).toLocaleDateString('es-CO')}
-                    {' • '}
-                    Creada: {new Date(alert.createdAt).toLocaleDateString('es-CO')}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Badge variant="outline" className={statusConfig[alert.status].class}>
-                    {statusConfig[alert.status].label}
-                  </Badge>
-                  <Button variant="outline" size="sm">
-                    Gestionar
-                  </Button>
-                </div>
+                <AlertCard alert={alert} onNavigate={handleNavigate} />
               </motion.div>
-            );
-          })}
-        </TabsContent>
-
-        <TabsContent value="critical" className="space-y-3">
-          {mockAlerts.filter(a => a.level === 'critical').map((alert, index) => {
-            const Icon = typeIcons[alert.type];
-            const styles = levelStyles[alert.level];
-
-            return (
-              <motion.div
-                key={alert.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className={cn(
-                  "flex items-center gap-4 p-5 rounded-xl border transition-all duration-200 cursor-pointer hover:shadow-md card-elevated",
-                  styles.border
-                )}
-              >
-                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", styles.bg)}>
-                  <Icon className={cn("w-6 h-6", styles.icon)} />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-semibold text-foreground">{alert.title}</p>
-                    <Badge variant="outline" className={cn("text-xs", styles.badge)}>
-                      {alert.daysRemaining > 0 ? `${alert.daysRemaining} días` : 'Vencido'}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">{alert.entityName}</span>
-                    {' • '}
-                    {alert.description}
-                  </p>
-                </div>
-
-                <Button variant="outline" size="sm">
-                  Gestionar
-                </Button>
-              </motion.div>
-            );
-          })}
-        </TabsContent>
-
-        <TabsContent value="warning" className="space-y-3">
-          <p className="text-muted-foreground text-center py-8">
-            {mockAlerts.filter(a => a.level === 'warning').length} alertas de advertencia
-          </p>
-        </TabsContent>
-
-        <TabsContent value="info" className="space-y-3">
-          <p className="text-muted-foreground text-center py-8">
-            {mockAlerts.filter(a => a.level === 'info').length} alertas informativas
-          </p>
+            ))
+          )}
         </TabsContent>
       </Tabs>
     </div>
