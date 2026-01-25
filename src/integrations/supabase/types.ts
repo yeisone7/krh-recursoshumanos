@@ -2648,6 +2648,213 @@ export type Database = {
           },
         ]
       }
+      vacation_balances: {
+        Row: {
+          accumulation_expires: string | null
+          company_id: string
+          created_at: string
+          days_accrued: number
+          days_compensated: number
+          days_pending: number | null
+          days_taken: number
+          employee_id: string
+          id: string
+          is_accumulated: boolean
+          notes: string | null
+          period_end: string
+          period_start: string
+          updated_at: string
+        }
+        Insert: {
+          accumulation_expires?: string | null
+          company_id: string
+          created_at?: string
+          days_accrued?: number
+          days_compensated?: number
+          days_pending?: number | null
+          days_taken?: number
+          employee_id: string
+          id?: string
+          is_accumulated?: boolean
+          notes?: string | null
+          period_end: string
+          period_start: string
+          updated_at?: string
+        }
+        Update: {
+          accumulation_expires?: string | null
+          company_id?: string
+          created_at?: string
+          days_accrued?: number
+          days_compensated?: number
+          days_pending?: number | null
+          days_taken?: number
+          employee_id?: string
+          id?: string
+          is_accumulated?: boolean
+          notes?: string | null
+          period_end?: string
+          period_start?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacation_balances_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vacation_balances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vacation_config: {
+        Row: {
+          alert_threshold_days: number
+          company_id: string
+          created_at: string
+          days_per_year: number
+          id: string
+          max_accumulation_years: number
+          max_compensation_percentage: number
+          updated_at: string
+        }
+        Insert: {
+          alert_threshold_days?: number
+          company_id: string
+          created_at?: string
+          days_per_year?: number
+          id?: string
+          max_accumulation_years?: number
+          max_compensation_percentage?: number
+          updated_at?: string
+        }
+        Update: {
+          alert_threshold_days?: number
+          company_id?: string
+          created_at?: string
+          days_per_year?: number
+          id?: string
+          max_accumulation_years?: number
+          max_compensation_percentage?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacation_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vacation_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          balance_id: string | null
+          business_days: number
+          calendar_days: number | null
+          company_id: string
+          compensation_amount: number | null
+          created_at: string
+          created_by: string | null
+          document_url: string | null
+          employee_id: string
+          end_date: string
+          id: string
+          interruption_date: string | null
+          interruption_reason: string | null
+          notes: string | null
+          remaining_days: number | null
+          request_type: Database["public"]["Enums"]["vacation_request_type"]
+          resume_end_date: string | null
+          resume_start_date: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["vacation_status"]
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          balance_id?: string | null
+          business_days: number
+          calendar_days?: number | null
+          company_id: string
+          compensation_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          employee_id: string
+          end_date: string
+          id?: string
+          interruption_date?: string | null
+          interruption_reason?: string | null
+          notes?: string | null
+          remaining_days?: number | null
+          request_type?: Database["public"]["Enums"]["vacation_request_type"]
+          resume_end_date?: string | null
+          resume_start_date?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["vacation_status"]
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          balance_id?: string | null
+          business_days?: number
+          calendar_days?: number | null
+          company_id?: string
+          compensation_amount?: number | null
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          employee_id?: string
+          end_date?: string
+          id?: string
+          interruption_date?: string | null
+          interruption_reason?: string | null
+          notes?: string | null
+          remaining_days?: number | null
+          request_type?: Database["public"]["Enums"]["vacation_request_type"]
+          resume_end_date?: string | null
+          resume_start_date?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["vacation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacation_requests_balance_id_fkey"
+            columns: ["balance_id"]
+            isOneToOne: false
+            referencedRelation: "vacation_balances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vacation_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vacation_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -2816,6 +3023,18 @@ export type Database = {
         | "other"
       vacancy_status: "open" | "in_process" | "closed" | "cancelled"
       vacancy_type: "internal" | "external" | "both"
+      vacation_request_type:
+        | "disfrute"
+        | "compensacion"
+        | "acumulacion"
+        | "interrupcion"
+      vacation_status:
+        | "borrador"
+        | "aprobado"
+        | "en_curso"
+        | "completado"
+        | "cancelado"
+        | "interrumpido"
       vaccine_type:
         | "TT"
         | "HA"
@@ -3108,6 +3327,20 @@ export const Constants = {
       ],
       vacancy_status: ["open", "in_process", "closed", "cancelled"],
       vacancy_type: ["internal", "external", "both"],
+      vacation_request_type: [
+        "disfrute",
+        "compensacion",
+        "acumulacion",
+        "interrupcion",
+      ],
+      vacation_status: [
+        "borrador",
+        "aprobado",
+        "en_curso",
+        "completado",
+        "cancelado",
+        "interrumpido",
+      ],
       vaccine_type: [
         "TT",
         "HA",
