@@ -4062,6 +4062,57 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          created_at: string
+          email_notifications: boolean
+          id: string
+          language: string | null
+          notify_contract_expiry: boolean
+          notify_disciplinary_updates: boolean
+          notify_dotation_expiry: boolean
+          notify_leave_requests: boolean
+          notify_medical_exam_expiry: boolean
+          notify_system_announcements: boolean
+          notify_vacation_requests: boolean
+          theme: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          language?: string | null
+          notify_contract_expiry?: boolean
+          notify_disciplinary_updates?: boolean
+          notify_dotation_expiry?: boolean
+          notify_leave_requests?: boolean
+          notify_medical_exam_expiry?: boolean
+          notify_system_announcements?: boolean
+          notify_vacation_requests?: boolean
+          theme?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          language?: string | null
+          notify_contract_expiry?: boolean
+          notify_disciplinary_updates?: boolean
+          notify_dotation_expiry?: boolean
+          notify_leave_requests?: boolean
+          notify_medical_exam_expiry?: boolean
+          notify_system_announcements?: boolean
+          notify_vacation_requests?: boolean
+          theme?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -4079,6 +4130,39 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_info: string | null
+          id: string
+          ip_address: string | null
+          is_current: boolean
+          last_active: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          is_current?: boolean
+          last_active?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          is_current?: boolean
+          last_active?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
