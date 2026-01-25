@@ -23,6 +23,7 @@ import Configuracion from "./pages/Configuracion";
 import Disciplinarios from "./pages/Disciplinarios";
 import Vacaciones from "./pages/Vacaciones";
 import Permisos from "./pages/Permisos";
+import HorasExtra from "./pages/HorasExtra";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
@@ -64,6 +65,7 @@ const App = () => (
                         <Route path="/disciplinarios" element={<Disciplinarios />} />
                         <Route path="/vacaciones" element={<Vacaciones />} />
                         <Route path="/permisos" element={<Permisos />} />
+                        <Route path="/horas-extra" element={<HorasExtra />} />
                         <Route path="/seguridad" element={<Seguridad />} />
                         <Route path="/configuracion" element={<Configuracion />} />
                         <Route path="*" element={<NotFound />} />
