@@ -48,7 +48,8 @@ import {
   ContractFormData,
   contractTypeLabels,
 } from '@/types/contract';
-import { useEmployees } from '@/hooks/useEmployees';
+import { useEmployeesV2 } from '@/hooks/useEmployeesV2';
+import { getEmployeeFullName } from '@/types/employeeV2';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateContract } from '@/hooks/useContracts';
 import type { Database } from '@/integrations/supabase/types';
@@ -73,7 +74,7 @@ interface ContractFormDialogProps {
 
 export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFormDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
-  const { data: employees = [] } = useEmployees();
+  const { data: employees = [] } = useEmployeesV2();
   const { data: operationCenters = [] } = useOperationCenters();
   const createContract = useCreateContract();
 
@@ -116,7 +117,7 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
       });
 
       const employee = employees.find(e => e.id === data.employeeId);
-      const employeeName = employee ? `${employee.first_name} ${employee.last_name}` : 'el empleado';
+      const employeeName = employee ? getEmployeeFullName(employee) : 'el empleado';
       
       toast.success('Contrato creado', {
         description: `El contrato de ${employeeName} ha sido registrado exitosamente.`,
@@ -190,9 +191,9 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background max-h-[200px]">
-                                {employees.map((emp) => (
+                                {employees.filter(e => e.is_active).map((emp) => (
                                   <SelectItem key={emp.id} value={emp.id}>
-                                    {emp.first_name} {emp.last_name} - {emp.document_number}
+                                    {getEmployeeFullName(emp)} - {emp.document_number}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
