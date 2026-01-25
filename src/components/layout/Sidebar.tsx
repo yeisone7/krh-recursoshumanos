@@ -18,7 +18,8 @@ import {
   Package,
   LogOut,
   HeartPulse,
-  Gavel
+  Gavel,
+  Palmtree
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +34,7 @@ const mainNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
   { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados' },
   { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' },
+  { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones' },
   { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' },
   { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' },
   { label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion' },
