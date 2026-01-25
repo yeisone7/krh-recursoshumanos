@@ -149,7 +149,7 @@ export default function Auth() {
               <img 
                 src={petrocasinosIcon} 
                 alt="Petrocasinos" 
-                className="h-12 w-12 rounded-lg object-cover"
+                className="h-10 object-contain"
               />
             </div>
             <CardTitle className="text-2xl">
