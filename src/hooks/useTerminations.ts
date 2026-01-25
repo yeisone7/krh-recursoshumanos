@@ -7,7 +7,6 @@ import {
   TerminationDocumentType, 
   requiredDocumentsByType,
   EmployeeTermination,
-  TerminationDocument,
 } from '@/types/termination';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -133,17 +132,19 @@ export function useInitiateTermination() {
 
       if (docsError) throw docsError;
 
-      // NOTE: Do NOT mark contract as terminated here
-      // The contract will be marked as terminated only when the process is completed
-      // This allows users to resume the process if they close the dialog
+      // Update employee status in employees_v2 - set is_active to false during termination process
+      // Note: We don't change is_active here, only when process completes
+      // For employees_v2, we track termination via employee_work_info
+      const { error: workInfoError } = await supabase
+        .from('employee_work_info')
+        .update({ termination_date: effectiveDate.toISOString().split('T')[0] })
+        .eq('employee_id', employeeId)
+        .eq('is_current', true);
 
-      // Update employee status to 'en_retiro' (in retirement process)
-      const { error: employeeError } = await supabase
-        .from('employees')
-        .update({ status: 'en_retiro' })
-        .eq('id', employeeId);
-
-      if (employeeError) throw employeeError;
+      if (workInfoError) {
+        console.error('Error updating work info:', workInfoError);
+        // Don't fail the whole process for this
+      }
 
       // Log audit event
       await supabase.from('audit_logs').insert({
@@ -166,6 +167,7 @@ export function useInitiateTermination() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['termination-process', variables.contractId] });
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
       toast.success('Proceso de retiro iniciado');
     },
     onError: (error) => {
@@ -280,7 +282,7 @@ export function useCompleteTermination() {
 
       if (terminationError) throw terminationError;
 
-      // NOW mark contract as terminated (moved from initiation)
+      // Mark contract as terminated
       const { error: contractError } = await supabase
         .from('contracts')
         .update({
@@ -292,13 +294,28 @@ export function useCompleteTermination() {
 
       if (contractError) throw contractError;
 
-      // Update employee status to retired
+      // Update employee status in employees_v2 - set is_active to false
       const { error: employeeError } = await supabase
-        .from('employees')
-        .update({ status: 'retired' })
+        .from('employees_v2')
+        .update({ is_active: false })
         .eq('id', employeeId);
 
       if (employeeError) throw employeeError;
+
+      // Update work info to mark as not current
+      const { error: workInfoError } = await supabase
+        .from('employee_work_info')
+        .update({ 
+          is_current: false,
+          valid_to: effectiveDate.toISOString().split('T')[0],
+          termination_date: effectiveDate.toISOString().split('T')[0]
+        })
+        .eq('employee_id', employeeId)
+        .eq('is_current', true);
+
+      if (workInfoError) {
+        console.error('Error updating work info:', workInfoError);
+      }
 
       // Log audit event
       if (user) {
@@ -312,7 +329,7 @@ export function useCompleteTermination() {
           new_values: {
             is_completed: true,
             is_terminated: true,
-            employee_status: 'retired',
+            employee_is_active: false,
           },
           user_agent: navigator.userAgent,
         });
