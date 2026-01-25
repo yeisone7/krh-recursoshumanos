@@ -84,7 +84,7 @@ export function QuickActionsPanel() {
         Acciones Rápidas
       </h3>
       
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {quickActions.map((action, index) => (
           <motion.button
             key={action.label}
