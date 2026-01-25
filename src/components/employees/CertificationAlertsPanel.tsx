@@ -1,0 +1,169 @@
+import { AlertTriangle, Clock, FileWarning, ChevronRight, ShieldAlert } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+import { useDashboardAlerts, DashboardAlert } from '@/hooks/useDashboardAlerts';
+
+interface CertificationAlertsPanelProps {
+  onEmployeeClick: (employeeId: string) => void;
+}
+
+export function CertificationAlertsPanel({ onEmployeeClick }: CertificationAlertsPanelProps) {
+  const { data: allAlerts, isLoading } = useDashboardAlerts();
+
+  // Filter only certification alerts
+  const certificationAlerts = allAlerts?.filter(alert => alert.type === 'certification') || [];
+
+  const getLevelStyles = (level: DashboardAlert['level']) => {
+    switch (level) {
+      case 'critical':
+        return {
+          badge: 'bg-destructive/10 text-destructive border-destructive/20',
+          icon: 'text-destructive',
+          border: 'border-l-destructive',
+        };
+      case 'warning':
+        return {
+          badge: 'bg-warning/10 text-warning border-warning/20',
+          icon: 'text-warning',
+          border: 'border-l-warning',
+        };
+      default:
+        return {
+          badge: 'bg-primary/10 text-primary border-primary/20',
+          icon: 'text-primary',
+          border: 'border-l-primary',
+        };
+    }
+  };
+
+  const getLevelLabel = (level: DashboardAlert['level']) => {
+    switch (level) {
+      case 'critical':
+        return 'Crítico';
+      case 'warning':
+        return 'Advertencia';
+      default:
+        return 'Info';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="card-elevated p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <ShieldAlert className="w-5 h-5 text-primary" />
+          <h3 className="font-semibold text-foreground">Alertas de Certificaciones</h3>
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-16 bg-muted/50 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (certificationAlerts.length === 0) {
+    return (
+      <div className="card-elevated p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <ShieldAlert className="w-5 h-5 text-primary" />
+          <h3 className="font-semibold text-foreground">Alertas de Certificaciones</h3>
+        </div>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <div className="w-12 h-12 rounded-full bg-success-light flex items-center justify-center mb-3">
+            <FileWarning className="w-6 h-6 text-success" />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            No hay certificaciones vencidas o por vencer
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Group alerts by level for summary
+  const expiredCount = certificationAlerts.filter(a => a.daysRemaining < 0).length;
+  const criticalCount = certificationAlerts.filter(a => a.level === 'critical' && a.daysRemaining >= 0).length;
+  const warningCount = certificationAlerts.filter(a => a.level === 'warning').length;
+
+  return (
+    <div className="card-elevated p-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="w-5 h-5 text-primary" />
+          <h3 className="font-semibold text-foreground">Alertas de Certificaciones</h3>
+        </div>
+        <Badge variant="outline" className="text-xs">
+          {certificationAlerts.length} {certificationAlerts.length === 1 ? 'alerta' : 'alertas'}
+        </Badge>
+      </div>
+
+      {/* Summary badges */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {expiredCount > 0 && (
+          <Badge className="bg-destructive/10 text-destructive border-destructive/20">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            {expiredCount} vencidas
+          </Badge>
+        )}
+        {criticalCount > 0 && (
+          <Badge className="bg-destructive/10 text-destructive border-destructive/20">
+            <Clock className="w-3 h-3 mr-1" />
+            {criticalCount} críticas
+          </Badge>
+        )}
+        {warningCount > 0 && (
+          <Badge className="bg-warning/10 text-warning border-warning/20">
+            <Clock className="w-3 h-3 mr-1" />
+            {warningCount} advertencias
+          </Badge>
+        )}
+      </div>
+
+      <ScrollArea className="h-[280px] pr-2">
+        <div className="space-y-2">
+          {certificationAlerts.map((alert) => {
+            const styles = getLevelStyles(alert.level);
+            const isExpired = alert.daysRemaining < 0;
+
+            return (
+              <div
+                key={alert.id}
+                className={cn(
+                  'p-3 rounded-lg border-l-4 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors group',
+                  styles.border
+                )}
+                onClick={() => onEmployeeClick(alert.entityId)}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {isExpired ? (
+                        <AlertTriangle className={cn('w-4 h-4 flex-shrink-0', styles.icon)} />
+                      ) : (
+                        <Clock className={cn('w-4 h-4 flex-shrink-0', styles.icon)} />
+                      )}
+                      <span className="font-medium text-sm text-foreground truncate">
+                        {alert.entityName}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground ml-6">{alert.description}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={cn('text-xs whitespace-nowrap', styles.badge)}>
+                      {getLevelLabel(alert.level)}
+                    </Badge>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
