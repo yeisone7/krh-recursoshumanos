@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export type EntityType = 'contract' | 'contract_extension' | 'medical_exam' | 'dotation' | 'incapacity';
+export type EntityType = 'contract' | 'contract_extension' | 'medical_exam' | 'dotation' | 'incapacity' | 'incapacity_clinical_history';
 
 export interface DocumentVersion {
   id: string;
@@ -152,6 +152,8 @@ export function useUploadDocument() {
           await supabase.from('dotation_deliveries').update({ document_url: filePath }).eq('id', entityId);
         } else if (entityType === 'incapacity') {
           await supabase.from('employee_incapacities').update({ certificate_url: filePath }).eq('id', entityId);
+        } else if (entityType === 'incapacity_clinical_history') {
+          await supabase.from('employee_incapacities').update({ clinical_history_url: filePath }).eq('id', entityId);
         }
       } catch (updateError) {
         console.warn('Could not update entity document_url:', updateError);
