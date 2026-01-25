@@ -23,6 +23,11 @@ export interface EmployeeKPIs {
   expiringCertificationsCount: number;
   expiredCertificationsCount: number;
   
+  // Incapacities
+  activeIncapacitiesCount: number;
+  pendingRecoveryCount: number;
+  incapacityDaysThisMonth: number;
+  
   // Candidates
   activeCandidatesCount: number;
   candidatesInFinalStage: number;
@@ -282,6 +287,43 @@ export function useEmployeeKPIs() {
       });
       const averageTenureMonths = tenureCount > 0 ? Math.round(totalTenureMonths / tenureCount) : 0;
 
+      // 11. Get incapacity stats
+      const { data: incapacities } = await supabase
+        .from('employee_incapacities')
+        .select('id, employee_id, start_date, end_date, total_days, recovery_status')
+        .eq('company_id', currentCompanyId!);
+
+      let activeIncapacitiesCount = 0;
+      let pendingRecoveryCount = 0;
+      let incapacityDaysThisMonth = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (incapacities) {
+        for (const inc of incapacities) {
+          const startDate = new Date(inc.start_date);
+          const endDate = new Date(inc.end_date);
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          
+          // Active incapacities
+          if (startDate <= today && endDate >= today) {
+            activeIncapacitiesCount++;
+          }
+          
+          // Pending recovery
+          if (inc.recovery_status === 'pendiente' && endDate < today) {
+            pendingRecoveryCount++;
+            criticalCount++; // Add to critical alerts
+          }
+          
+          // Days this month
+          if (startDate >= startOfCurrentMonth || endDate >= startOfCurrentMonth) {
+            incapacityDaysThisMonth += inc.total_days;
+          }
+        }
+      }
+
       return {
         totalActiveEmployees: activeEmployees.length,
         totalInactiveEmployees: inactiveEmployees.length,
@@ -292,6 +334,9 @@ export function useEmployeeKPIs() {
         expiringContractsCount,
         expiringCertificationsCount,
         expiredCertificationsCount,
+        activeIncapacitiesCount,
+        pendingRecoveryCount,
+        incapacityDaysThisMonth,
         activeCandidatesCount,
         candidatesInFinalStage,
         criticalAlertsCount: criticalCount,

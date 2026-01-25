@@ -973,6 +973,173 @@ export type Database = {
           },
         ]
       }
+      employee_incapacities: {
+        Row: {
+          actual_payment_date: string | null
+          afp_amount: number | null
+          afp_days: number
+          afp_name: string | null
+          arl_amount: number | null
+          arl_days: number
+          arl_name: string | null
+          certificate_number: string | null
+          certificate_url: string | null
+          cie10_code: string | null
+          clinical_history_url: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          daily_base_salary: number | null
+          diagnosis: string
+          employee_id: string
+          employer_amount: number | null
+          employer_days: number
+          end_date: string
+          eps_amount: number | null
+          eps_days: number
+          eps_name: string | null
+          expected_payment_date: string | null
+          extension_number: number | null
+          filing_date: string | null
+          filing_number: string | null
+          id: string
+          is_extension: boolean
+          medical_entity: string | null
+          observations: string | null
+          origin: Database["public"]["Enums"]["incapacity_origin"]
+          parent_incapacity_id: string | null
+          recovered_amount: number | null
+          recovery_notes: string | null
+          recovery_status: Database["public"]["Enums"]["recovery_status"]
+          reintegration_exam_id: string | null
+          requires_reintegration_exam: boolean
+          start_date: string
+          total_amount: number | null
+          total_days: number
+          treating_doctor: string | null
+          updated_at: string
+        }
+        Insert: {
+          actual_payment_date?: string | null
+          afp_amount?: number | null
+          afp_days?: number
+          afp_name?: string | null
+          arl_amount?: number | null
+          arl_days?: number
+          arl_name?: string | null
+          certificate_number?: string | null
+          certificate_url?: string | null
+          cie10_code?: string | null
+          clinical_history_url?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          daily_base_salary?: number | null
+          diagnosis: string
+          employee_id: string
+          employer_amount?: number | null
+          employer_days?: number
+          end_date: string
+          eps_amount?: number | null
+          eps_days?: number
+          eps_name?: string | null
+          expected_payment_date?: string | null
+          extension_number?: number | null
+          filing_date?: string | null
+          filing_number?: string | null
+          id?: string
+          is_extension?: boolean
+          medical_entity?: string | null
+          observations?: string | null
+          origin?: Database["public"]["Enums"]["incapacity_origin"]
+          parent_incapacity_id?: string | null
+          recovered_amount?: number | null
+          recovery_notes?: string | null
+          recovery_status?: Database["public"]["Enums"]["recovery_status"]
+          reintegration_exam_id?: string | null
+          requires_reintegration_exam?: boolean
+          start_date: string
+          total_amount?: number | null
+          total_days?: number
+          treating_doctor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actual_payment_date?: string | null
+          afp_amount?: number | null
+          afp_days?: number
+          afp_name?: string | null
+          arl_amount?: number | null
+          arl_days?: number
+          arl_name?: string | null
+          certificate_number?: string | null
+          certificate_url?: string | null
+          cie10_code?: string | null
+          clinical_history_url?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          daily_base_salary?: number | null
+          diagnosis?: string
+          employee_id?: string
+          employer_amount?: number | null
+          employer_days?: number
+          end_date?: string
+          eps_amount?: number | null
+          eps_days?: number
+          eps_name?: string | null
+          expected_payment_date?: string | null
+          extension_number?: number | null
+          filing_date?: string | null
+          filing_number?: string | null
+          id?: string
+          is_extension?: boolean
+          medical_entity?: string | null
+          observations?: string | null
+          origin?: Database["public"]["Enums"]["incapacity_origin"]
+          parent_incapacity_id?: string | null
+          recovered_amount?: number | null
+          recovery_notes?: string | null
+          recovery_status?: Database["public"]["Enums"]["recovery_status"]
+          reintegration_exam_id?: string | null
+          requires_reintegration_exam?: boolean
+          start_date?: string
+          total_amount?: number | null
+          total_days?: number
+          treating_doctor?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_incapacities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_incapacities_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_incapacities_parent_incapacity_id_fkey"
+            columns: ["parent_incapacity_id"]
+            isOneToOne: false
+            referencedRelation: "employee_incapacities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_incapacities_reintegration_exam_id_fkey"
+            columns: ["reintegration_exam_id"]
+            isOneToOne: false
+            referencedRelation: "medical_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_schedule: {
         Row: {
           created_at: string
@@ -2282,6 +2449,7 @@ export type Database = {
       exam_result: "apto" | "apto_restricciones" | "no_apto" | "pendiente"
       exam_type: "ingreso" | "periodico" | "egreso" | "reintegro"
       gender_type: "M" | "F" | "O"
+      incapacity_origin: "comun" | "laboral"
       link_type:
         | "indefinido"
         | "fijo"
@@ -2296,6 +2464,13 @@ export type Database = {
         | "divorciado"
         | "viudo"
       payroll_type: "quincenal" | "mensual"
+      recovery_status:
+        | "pendiente"
+        | "radicado"
+        | "en_tramite"
+        | "aprobado"
+        | "rechazado"
+        | "pagado"
       risk_level: "I" | "II" | "III" | "IV" | "V"
       selection_step_status:
         | "pending"
@@ -2539,6 +2714,7 @@ export const Constants = {
       exam_result: ["apto", "apto_restricciones", "no_apto", "pendiente"],
       exam_type: ["ingreso", "periodico", "egreso", "reintegro"],
       gender_type: ["M", "F", "O"],
+      incapacity_origin: ["comun", "laboral"],
       link_type: [
         "indefinido",
         "fijo",
@@ -2555,6 +2731,14 @@ export const Constants = {
         "viudo",
       ],
       payroll_type: ["quincenal", "mensual"],
+      recovery_status: [
+        "pendiente",
+        "radicado",
+        "en_tramite",
+        "aprobado",
+        "rechazado",
+        "pagado",
+      ],
       risk_level: ["I", "II", "III", "IV", "V"],
       selection_step_status: [
         "pending",

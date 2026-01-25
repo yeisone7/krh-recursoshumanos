@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertTriangle, Clock, FileText, Stethoscope, Package, ChevronRight, CheckCircle, Award } from 'lucide-react';
+import { AlertTriangle, Clock, FileText, Stethoscope, Package, ChevronRight, CheckCircle, Award, HeartPulse } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ const typeIcons: Record<DashboardAlert['type'], typeof FileText> = {
   medical: Stethoscope,
   dotation: Package,
   certification: Award,
+  incapacity: HeartPulse,
 };
 
 const levelStyles = {
@@ -53,6 +54,9 @@ export function AlertsPanel() {
         break;
       case 'certification':
         navigate(`/empleados?detail=${alert.entityId}`);
+        break;
+      case 'incapacity':
+        navigate(`/incapacidades?incapacidad=${alert.entityId}`);
         break;
     }
   };
