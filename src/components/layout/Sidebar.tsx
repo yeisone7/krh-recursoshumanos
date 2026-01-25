@@ -14,6 +14,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Stethoscope,
   Package,
   LogOut,
@@ -27,7 +28,9 @@ import {
   Network,
   Landmark,
   FileBarChart,
-  BarChart3
+  BarChart3,
+  FolderOpen,
+  Shirt,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +39,7 @@ interface NavItem {
   icon: React.ReactNode;
   href: string;
   badge?: number;
+  children?: NavItem[];
 }
 
 const mainNavItems: NavItem[] = [
@@ -56,6 +60,17 @@ const mainNavItems: NavItem[] = [
   { label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' },
 ];
 
+const catalogosItem: NavItem = {
+  label: 'Catálogos',
+  icon: <FolderOpen className="w-5 h-5" />,
+  href: '/catalogos',
+  children: [
+    { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
+    { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
+    { label: 'Tipos de Dotación', icon: <Shirt className="w-4 h-4" />, href: '/catalogos/tipos-dotacion' },
+  ],
+};
+
 const secondaryNavItems: NavItem[] = [
   { label: 'Calendario', icon: <Calendar className="w-5 h-5" />, href: '/calendario' },
   { label: 'Reportes', icon: <FileBarChart className="w-5 h-5" />, href: '/reportes' },
@@ -69,7 +84,14 @@ const secondaryNavItems: NavItem[] = [
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [catalogosOpen, setCatalogosOpen] = useState(false);
   const location = useLocation();
+
+  // Auto-open catalogos menu if on a catalogos route
+  const isCatalogosRoute = location.pathname.startsWith('/catalogos');
+  if (isCatalogosRoute && !catalogosOpen) {
+    setCatalogosOpen(true);
+  }
 
   const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = location.pathname === item.href;
@@ -116,6 +138,88 @@ export function Sidebar() {
           )}
         </motion.div>
       </Link>
+    );
+  };
+
+  const CatalogosMenu = () => {
+    const isAnyChildActive = catalogosItem.children?.some(child => location.pathname === child.href);
+    
+    return (
+      <div>
+        <motion.div
+          whileHover={{ x: 4 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => !collapsed && setCatalogosOpen(!catalogosOpen)}
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative cursor-pointer",
+            isAnyChildActive
+              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+          )}
+        >
+          <span className={cn(
+            "transition-colors",
+            isAnyChildActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+          )}>
+            {catalogosItem.icon}
+          </span>
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.span
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1"
+              >
+                {catalogosItem.label}
+              </motion.span>
+            )}
+          </AnimatePresence>
+          {!collapsed && (
+            <ChevronDown className={cn(
+              "w-4 h-4 transition-transform",
+              catalogosOpen && "rotate-180"
+            )} />
+          )}
+        </motion.div>
+        
+        <AnimatePresence>
+          {catalogosOpen && !collapsed && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="ml-4 pl-3 border-l border-sidebar-border space-y-1 mt-1"
+            >
+              {catalogosItem.children?.map((child) => {
+                const isActive = location.pathname === child.href;
+                return (
+                  <Link key={child.href} to={child.href}>
+                    <motion.div
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group",
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      )}
+                    >
+                      <span className={cn(
+                        "transition-colors",
+                        isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+                      )}>
+                        {child.icon}
+                      </span>
+                      <span className="font-medium text-sm">{child.label}</span>
+                    </motion.div>
+                  </Link>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   };
 
@@ -186,6 +290,7 @@ export function Sidebar() {
         <div className="my-4 mx-3 border-t border-sidebar-border" />
 
         <div className="space-y-1">
+          <CatalogosMenu />
           {secondaryNavItems.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
