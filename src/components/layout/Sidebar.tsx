@@ -274,8 +274,8 @@ export function Sidebar() {
               exit={{ opacity: 0 }}
               className="flex items-center gap-2"
             >
-              <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-white/10">
-                <img src={krhLogo} alt="KRH Logo" className="w-8 h-8 object-contain" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center">
+                <img src={krhLogo} alt="KRH Logo" className="w-10 h-10 object-cover rounded-xl" />
               </div>
               <span className="font-display font-bold text-xl text-sidebar-primary">KRH</span>
             </motion.div>
@@ -285,9 +285,9 @@ export function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-white/10 mx-auto"
+              className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center mx-auto"
             >
-              <img src={krhLogo} alt="KRH Logo" className="w-8 h-8 object-contain" />
+              <img src={krhLogo} alt="KRH Logo" className="w-10 h-10 object-cover rounded-xl" />
             </motion.div>
           )}
         </AnimatePresence>
