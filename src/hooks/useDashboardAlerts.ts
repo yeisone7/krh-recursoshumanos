@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export interface DashboardAlert {
   id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification';
+  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
@@ -207,6 +207,55 @@ export function useDashboardAlerts() {
               daysRemaining,
               entityName: `${employee.first_name} ${employee.last_name}`,
               entityId: cert.employee_id, // Navigate to employee detail
+            });
+          }
+        }
+      }
+
+      // 5. Fetch incapacity alerts (pending recovery and ending soon)
+      const { data: incapacities } = await supabase
+        .from('employee_incapacities')
+        .select('id, employee_id, end_date, recovery_status, total_days, diagnosis')
+        .eq('company_id', currentCompanyId!);
+
+      if (incapacities) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        for (const inc of incapacities) {
+          const employee = employeeMap.get(inc.employee_id);
+          if (!employee) continue;
+
+          const endDate = new Date(inc.end_date);
+          endDate.setHours(0, 0, 0, 0);
+          const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+          // Alert for incapacities ending soon (may need extension)
+          if (daysRemaining >= 0 && daysRemaining <= 5) {
+            alerts.push({
+              id: `inc-ending-${inc.id}`,
+              type: 'incapacity',
+              level: daysRemaining <= 2 ? 'critical' : 'warning',
+              title: 'Incapacidad por vencer',
+              description: `Finaliza en ${daysRemaining} día(s) - ${inc.diagnosis?.substring(0, 30)}...`,
+              daysRemaining,
+              entityName: `${employee.first_name} ${employee.last_name}`,
+              entityId: inc.id,
+            });
+          }
+
+          // Alert for pending recovery (incapacity ended but not filed)
+          if (inc.recovery_status === 'pendiente' && daysRemaining < 0) {
+            const daysSinceEnd = Math.abs(daysRemaining);
+            alerts.push({
+              id: `inc-recovery-${inc.id}`,
+              type: 'incapacity',
+              level: daysSinceEnd > 15 ? 'critical' : daysSinceEnd > 7 ? 'warning' : 'info',
+              title: 'Recobro de incapacidad pendiente',
+              description: `Finalizó hace ${daysSinceEnd} días sin radicar recobro`,
+              daysRemaining: -daysSinceEnd,
+              entityName: `${employee.first_name} ${employee.last_name}`,
+              entityId: inc.id,
             });
           }
         }
