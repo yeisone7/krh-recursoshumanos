@@ -41,7 +41,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateDocument } from '@/hooks/useEmployeeHealth';
 import { supabase } from '@/integrations/supabase/client';
-import { employeeDocumentTypeLabels, type EmployeeDocumentType } from '@/types/employeeV2';
+import { employeeDocumentTypeLabels, type EmployeeDocumentType } from '@/types/employee';
 
 const formSchema = z.object({
   documentType: z.enum([

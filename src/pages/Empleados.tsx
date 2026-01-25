@@ -37,16 +37,7 @@ import { EmployeeDetailDialog } from '@/components/employees/EmployeeDetailDialo
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Database } from '@/integrations/supabase/types';
-
-type EmployeeStatus = Database['public']['Enums']['employee_status'];
-
-const statusConfig: Record<EmployeeStatus, { label: string; class: string }> = {
-  active: { label: 'Activo', class: 'bg-success-light text-success border-success/20' },
-  suspended: { label: 'Suspendido', class: 'bg-warning-light text-warning-foreground border-warning/20' },
-  en_retiro: { label: 'En Retiro', class: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' },
-  retired: { label: 'Retirado', class: 'bg-muted text-muted-foreground border-border' },
-};
+import { getEmployeeFullName } from '@/types/employee';
 
 export default function Empleados() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -71,14 +62,12 @@ export default function Empleados() {
       if (employee) {
         setSelectedEmployeeId(detailId);
         setIsDetailOpen(true);
-        // Clear the query param
         setSearchParams({}, { replace: true });
       }
     }
     
     if (statusParam) {
       setStatusFilter(statusParam);
-      // Clear the query param
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('status');
       setSearchParams(newParams, { replace: true });
@@ -93,23 +82,26 @@ export default function Empleados() {
   const filteredEmployees = useMemo(() => {
     if (!employees) return [];
     return employees.filter((emp) => {
-      const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
+      const fullName = getEmployeeFullName(emp).toLowerCase();
+      const position = emp.work_info?.position_name?.toLowerCase() || '';
       const matchesSearch = 
         fullName.includes(searchQuery.toLowerCase()) ||
-        emp.position.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || emp.status === statusFilter;
-      const matchesCenter = centerFilter === 'all' || emp.operation_center_id === centerFilter;
+        position.includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'active' && emp.is_active) ||
+        (statusFilter === 'inactive' && !emp.is_active);
+      const matchesCenter = centerFilter === 'all' || 
+        emp.work_info?.operation_center_id === centerFilter;
       return matchesSearch && matchesStatus && matchesCenter;
     });
   }, [employees, searchQuery, statusFilter, centerFilter]);
 
   const stats = useMemo(() => {
-    if (!employees) return { total: 0, active: 0, suspended: 0, retired: 0 };
+    if (!employees) return { total: 0, active: 0, inactive: 0 };
     return {
       total: employees.length,
-      active: employees.filter(e => e.status === 'active').length,
-      suspended: employees.filter(e => e.status === 'suspended').length,
-      retired: employees.filter(e => e.status === 'retired').length,
+      active: employees.filter(e => e.is_active).length,
+      inactive: employees.filter(e => !e.is_active).length,
     };
   }, [employees]);
 
@@ -183,7 +175,7 @@ export default function Empleados() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por nombre, cargo, departamento..."
+              placeholder="Buscar por nombre, cargo..."
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
             />
           </div>
@@ -191,14 +183,13 @@ export default function Empleados() {
           {/* Filters */}
           <div className="flex gap-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[160px] h-10 text-sm border-border">
+              <SelectTrigger className="w-[140px] h-10 text-sm border-border">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="active">Activos</SelectItem>
-                <SelectItem value="suspended">Suspendidos</SelectItem>
-                <SelectItem value="retired">Retirados</SelectItem>
+                <SelectItem value="inactive">Inactivos</SelectItem>
               </SelectContent>
             </Select>
 
@@ -228,7 +219,7 @@ export default function Empleados() {
       </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -263,26 +254,12 @@ export default function Empleados() {
           transition={{ duration: 0.3, delay: 0.25 }}
           className="card-elevated p-4 flex items-center gap-3"
         >
-          <div className="w-10 h-10 rounded-lg bg-warning-light flex items-center justify-center">
-            <Users className="w-5 h-5 text-warning" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.suspended}</p>
-            <p className="text-sm text-muted-foreground">Suspendidos</p>
-          </div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
           <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
             <Users className="w-5 h-5 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.retired}</p>
-            <p className="text-sm text-muted-foreground">Retirados</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.inactive}</p>
+            <p className="text-sm text-muted-foreground">Inactivos</p>
           </div>
         </motion.div>
       </div>
@@ -328,9 +305,9 @@ export default function Empleados() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {employee.first_name} {employee.last_name}
+                      {getEmployeeFullName(employee)}
                     </h3>
-                    <p className="text-sm text-muted-foreground">{employee.position}</p>
+                    <p className="text-sm text-muted-foreground">{employee.work_info?.position_name || 'Sin cargo'}</p>
                   </div>
                 </div>
                 <DropdownMenu>
@@ -353,29 +330,35 @@ export default function Empleados() {
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Briefcase className="w-4 h-4" />
-                  <span>{employee.department_area || 'Sin departamento'}</span>
+                  <span>{employee.areas?.name || 'Sin área'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="w-4 h-4" />
                   <span>{employee.operation_centers?.name || 'Sin centro asignado'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  <span>Desde {new Date(employee.hire_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'short' })}</span>
-                </div>
+                {employee.work_info?.hire_date && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    <span>Desde {new Date(employee.work_info.hire_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'short' })}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between pt-4 border-t border-border">
-                <Badge variant="outline" className={cn(statusConfig[employee.status].class)}>
-                  {statusConfig[employee.status].label}
+                <Badge variant="outline" className={cn(
+                  employee.is_active 
+                    ? 'bg-success-light text-success border-success/20'
+                    : 'bg-muted text-muted-foreground border-border'
+                )}>
+                  {employee.is_active ? 'Activo' : 'Inactivo'}
                 </Badge>
                 <div className="flex items-center gap-2">
-                  {employee.email && (
+                  {employee.contact?.email && (
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Mail className="w-4 h-4" />
                     </Button>
                   )}
-                  {employee.phone && (
+                  {employee.contact?.phone && (
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <Phone className="w-4 h-4" />
                     </Button>
