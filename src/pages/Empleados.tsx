@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Users,
   Search,
@@ -14,7 +14,8 @@ import {
   Calendar,
   Mail,
   Phone,
-  Loader2
+  Loader2,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +42,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getEmployeeFullName } from '@/types/employee';
 
 export default function Empleados() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -333,6 +335,10 @@ export default function Empleados() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleOpenDetail(employee.id); }}>
                       Ver perfil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/empleados/${employee.id}/360`); }}>
+                      <Eye className="w-4 h-4 mr-2" />
+                      Vista 360
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Editar</DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Ver contrato</DropdownMenuItem>

@@ -32,6 +32,7 @@ import Portal from "./pages/Portal";
 import Reportes from "./pages/Reportes";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
+import Empleado360 from "./pages/Empleado360";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const App = () => (
                     <AppLayout>
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
+                        <Route path="/empleados/:id/360" element={<Empleado360 />} />
                         <Route path="/empleados" element={<Empleados />} />
                         <Route path="/contratos" element={<Contratos />} />
                         <Route path="/incapacidades" element={<Incapacidades />} />
