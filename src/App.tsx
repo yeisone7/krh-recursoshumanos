@@ -30,6 +30,7 @@ import Cesantias from "./pages/Cesantias";
 import Calendario from "./pages/Calendario";
 import Portal from "./pages/Portal";
 import Reportes from "./pages/Reportes";
+import Analitica from "./pages/Analitica";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Empleado360 from "./pages/Empleado360";
@@ -84,6 +85,7 @@ const App = () => (
                         <Route path="/cesantias" element={<Cesantias />} />
                         <Route path="/calendario" element={<Calendario />} />
                         <Route path="/reportes" element={<Reportes />} />
+                        <Route path="/analitica" element={<Analitica />} />
                         <Route path="/seguridad" element={<Seguridad />} />
                         <Route path="/configuracion" element={<Configuracion />} />
                         <Route path="*" element={<NotFound />} />
