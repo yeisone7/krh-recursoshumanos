@@ -7,6 +7,7 @@ import { useEmployee360 } from '@/hooks/useEmployee360';
 import {
   Employee360Header,
   Employee360KPIs,
+  Employee360Alerts,
   Tab360Profile,
   Tab360Labor,
   Tab360Contracts,
@@ -48,7 +49,15 @@ export default function Empleado360() {
     <div className="space-y-6">
       <Employee360Header employee={data.employee} />
       
-      <Employee360KPIs kpis={data.kpis} isLoading={data.isLoadingEmployee} />
+      {/* KPIs and Alerts side by side on large screens */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Employee360KPIs kpis={data.kpis} isLoading={data.isLoadingEmployee} />
+        </div>
+        <div className="lg:col-span-1">
+          <Employee360Alerts employeeId={id} />
+        </div>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <ScrollArea className="w-full whitespace-nowrap">

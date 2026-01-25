@@ -1,5 +1,6 @@
 export { Employee360Header } from './Employee360Header';
 export { Employee360KPIs } from './Employee360KPIs';
+export { Employee360Alerts } from './Employee360Alerts';
 export { Tab360Profile } from './Tab360Profile';
 export { Tab360Labor } from './Tab360Labor';
 export { Tab360Contracts } from './Tab360Contracts';
