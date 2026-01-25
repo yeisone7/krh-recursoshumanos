@@ -58,7 +58,9 @@ export default function Configuracion() {
   const [showAreaForm, setShowAreaForm] = useState(false);
   const [showPositionForm, setShowPositionForm] = useState(false);
   const [showDotationForm, setShowDotationForm] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedArea, setSelectedArea] = useState<any>(null);
+  const [selectedPosition, setSelectedPosition] = useState<any>(null);
+  const [selectedDotationItem, setSelectedDotationItem] = useState<any>(null);
 
   // Alert config state
   const [alertContractWarning, setAlertContractWarning] = useState(30);
@@ -215,7 +217,7 @@ export default function Configuracion() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div><CardTitle>Áreas / Departamentos</CardTitle></div>
-              <Button onClick={() => { setSelectedItem(null); setShowAreaForm(true); }}><Plus className="w-4 h-4 mr-2" />Nueva Área</Button>
+              <Button onClick={() => { setSelectedArea(null); setShowAreaForm(true); }}><Plus className="w-4 h-4 mr-2" />Nueva Área</Button>
             </CardHeader>
             <CardContent>
               {loadingAreas ? <Skeleton className="h-32 w-full" /> : (
@@ -228,7 +230,7 @@ export default function Configuracion() {
                         <TableCell>{area.code || '-'}</TableCell>
                         <TableCell><Badge variant="outline" className={area.is_active ? 'bg-success-light text-success' : ''}>{area.is_active ? 'Activa' : 'Inactiva'}</Badge></TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" onClick={() => { setSelectedItem(area); setShowAreaForm(true); }}><Edit2 className="w-4 h-4" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => { setSelectedArea(area); setShowAreaForm(true); }}><Edit2 className="w-4 h-4" /></Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -244,7 +246,7 @@ export default function Configuracion() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div><CardTitle>Cargos</CardTitle></div>
-              <Button onClick={() => { setSelectedItem(null); setShowPositionForm(true); }}><Plus className="w-4 h-4 mr-2" />Nuevo Cargo</Button>
+              <Button onClick={() => { setSelectedPosition(null); setShowPositionForm(true); }}><Plus className="w-4 h-4 mr-2" />Nuevo Cargo</Button>
             </CardHeader>
             <CardContent>
               {loadingPositions ? <Skeleton className="h-32 w-full" /> : (
@@ -257,7 +259,7 @@ export default function Configuracion() {
                         <TableCell>{pos.areas?.name || '-'}</TableCell>
                         <TableCell>{pos.level}</TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" onClick={() => { setSelectedItem(pos); setShowPositionForm(true); }}><Edit2 className="w-4 h-4" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => { setSelectedPosition(pos); setShowPositionForm(true); }}><Edit2 className="w-4 h-4" /></Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -273,7 +275,7 @@ export default function Configuracion() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div><CardTitle>Tipos de Dotación</CardTitle></div>
-              <Button onClick={() => { setSelectedItem(null); setShowDotationForm(true); }}><Plus className="w-4 h-4 mr-2" />Nuevo Tipo</Button>
+              <Button onClick={() => { setSelectedDotationItem(null); setShowDotationForm(true); }}><Plus className="w-4 h-4 mr-2" />Nuevo Tipo</Button>
             </CardHeader>
             <CardContent>
               {loadingDotation ? <Skeleton className="h-32 w-full" /> : (
@@ -286,7 +288,7 @@ export default function Configuracion() {
                         <TableCell>{DOTATION_CATEGORIES.find(c => c.value === item.category)?.label || item.category}</TableCell>
                         <TableCell>{item.default_validity_months} meses</TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="ghost" onClick={() => { setSelectedItem(item); setShowDotationForm(true); }}><Edit2 className="w-4 h-4" /></Button>
+                          <Button size="sm" variant="ghost" onClick={() => { setSelectedDotationItem(item); setShowDotationForm(true); }}><Edit2 className="w-4 h-4" /></Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -346,9 +348,9 @@ export default function Configuracion() {
 
       {/* Dialogs */}
       <OperationCenterFormDialog open={showCenterForm} onOpenChange={setShowCenterForm} />
-      <AreaFormDialog open={showAreaForm} onOpenChange={setShowAreaForm} area={selectedItem} />
-      <PositionFormDialog open={showPositionForm} onOpenChange={setShowPositionForm} position={selectedItem} />
-      <DotationItemTypeFormDialog open={showDotationForm} onOpenChange={setShowDotationForm} itemType={selectedItem} />
+      <AreaFormDialog open={showAreaForm} onOpenChange={setShowAreaForm} area={selectedArea} />
+      <PositionFormDialog open={showPositionForm} onOpenChange={setShowPositionForm} position={selectedPosition} />
+      <DotationItemTypeFormDialog open={showDotationForm} onOpenChange={setShowDotationForm} itemType={selectedDotationItem} />
     </div>
   );
 }
