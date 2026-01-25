@@ -17,9 +17,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Shield, Building2, MapPin, UserX } from 'lucide-react';
+import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link } from 'lucide-react';
 import { UserRoleDialog } from './UserRoleDialog';
 import { UserCenterDialog } from './UserCenterDialog';
+import { LinkEmployeeDialog } from './LinkEmployeeDialog';
 import { useRemoveCompanyAssignment, type AdminUser } from '@/hooks/useAdminUsers';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -27,12 +28,13 @@ import type { Database } from '@/integrations/supabase/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
-const ROLE_LABELS: Record<AppRole, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+const ROLE_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
   admin: { label: 'Admin', variant: 'default' },
   rrhh: { label: 'RRHH', variant: 'secondary' },
   psicologo: { label: 'Psicólogo', variant: 'outline' },
   jefe_area: { label: 'Jefe Área', variant: 'outline' },
   auditor: { label: 'Auditor', variant: 'outline' },
+  empleado: { label: 'Empleado', variant: 'outline' },
 };
 
 interface UsersTableProps {
@@ -45,6 +47,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [centerDialogOpen, setCenterDialogOpen] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const removeCompany = useRemoveCompanyAssignment();
 
   const handleManageRoles = (user: AdminUser) => {
@@ -55,6 +58,11 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const handleManageCenters = (user: AdminUser) => {
     setSelectedUser(user);
     setCenterDialogOpen(true);
+  };
+
+  const handleLinkEmployee = (user: AdminUser) => {
+    setSelectedUser(user);
+    setLinkDialogOpen(true);
   };
 
   const handleRemoveFromCompany = async (user: AdminUser) => {
@@ -218,6 +226,10 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                         <MapPin className="w-4 h-4 mr-2" />
                         Asignar Centros
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleLinkEmployee(user)}>
+                        <Link className="w-4 h-4 mr-2" />
+                        Vincular Empleado
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
                         className="text-destructive"
@@ -246,6 +258,12 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         user={selectedUser}
         open={centerDialogOpen}
         onOpenChange={setCenterDialogOpen}
+      />
+
+      <LinkEmployeeDialog
+        open={linkDialogOpen}
+        onOpenChange={setLinkDialogOpen}
+        userId={selectedUser?.id || ''}
       />
     </>
   );
