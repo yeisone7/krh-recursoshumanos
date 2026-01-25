@@ -14,7 +14,9 @@ import {
   Trash2,
   CheckCircle2,
   XCircle,
-  Loader2
+  Loader2,
+  Upload,
+  File
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -42,7 +44,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-import { useIncapacity, useDeleteIncapacity } from '@/hooks/useIncapacities';
+import { useIncapacity, useDeleteIncapacity, useCreateReintegrationExam } from '@/hooks/useIncapacities';
 import { 
   incapacityOriginLabels, 
   recoveryStatusLabels, 
@@ -51,6 +53,7 @@ import {
 } from '@/types/incapacity';
 import { IncapacityFormDialog } from './IncapacityFormDialog';
 import { RecoveryFormDialog } from './RecoveryFormDialog';
+import { DocumentSection } from '@/components/documents/DocumentSection';
 
 interface IncapacityDetailDialogProps {
   open: boolean;
@@ -70,6 +73,7 @@ export function IncapacityDetailDialog({
   
   const { data: incapacity, isLoading } = useIncapacity(incapacityId || undefined);
   const deleteMutation = useDeleteIncapacity();
+  const createReintegrationExamMutation = useCreateReintegrationExam();
   
   if (!incapacityId) return null;
   
@@ -140,10 +144,11 @@ export function IncapacityDetailDialog({
           
           <ScrollArea className="flex-1">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="payment">Pagos</TabsTrigger>
                 <TabsTrigger value="recovery">Recobro</TabsTrigger>
+                <TabsTrigger value="documents">Documentos</TabsTrigger>
                 <TabsTrigger value="history">Historial</TabsTrigger>
               </TabsList>
               
@@ -246,21 +251,45 @@ export function IncapacityDetailDialog({
                         Examen de Reintegro Requerido
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-3">
                       <p className="text-sm text-muted-foreground">
                         Esta incapacidad supera los 30 días. Se requiere examen médico de reintegro antes de que el empleado retorne a sus labores.
                       </p>
-                      {incapacity.reintegration_exam_id ? (
-                        <Badge variant="outline" className="mt-2">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Examen Programado
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive" className="mt-2">
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Pendiente
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {incapacity.reintegration_exam_id ? (
+                          <Badge variant="outline" className="bg-success/10 text-success border-success/30">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Examen Creado
+                          </Badge>
+                        ) : (
+                          <>
+                            <Badge variant="destructive">
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Pendiente
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={async () => {
+                                try {
+                                  await createReintegrationExamMutation.mutateAsync({ incapacity });
+                                  toast.success('Examen de reintegro creado exitosamente');
+                                } catch (error) {
+                                  toast.error('Error al crear el examen de reintegro');
+                                }
+                              }}
+                              disabled={createReintegrationExamMutation.isPending}
+                            >
+                              {createReintegrationExamMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <Plus className="h-4 w-4 mr-1" />
+                              )}
+                              Crear Examen
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -406,6 +435,62 @@ export function IncapacityDetailDialog({
                         <p className="text-sm text-muted-foreground">Notas del Recobro</p>
                         <p className="text-sm">{incapacity.recovery_notes}</p>
                       </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Documents Tab */}
+              <TabsContent value="documents" className="space-y-4 mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <File className="h-4 w-4" />
+                      Certificado Médico
+                    </CardTitle>
+                    <CardDescription>
+                      Documento oficial de la incapacidad emitido por la entidad médica
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DocumentSection
+                      entityType="incapacity"
+                      entityId={incapacityId}
+                      title="Certificado de Incapacidad"
+                      allowUpload={true}
+                      showVersionHistory={true}
+                      compact
+                    />
+                  </CardContent>
+                </Card>
+                
+                {incapacity.certificate_url && (
+                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span className="text-sm">Documento actual: {incapacity.certificate_url.split('/').pop()}</span>
+                  </div>
+                )}
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Stethoscope className="h-4 w-4" />
+                      Historia Clínica (Opcional)
+                    </CardTitle>
+                    <CardDescription>
+                      Documentos adicionales de soporte clínico
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {incapacity.clinical_history_url ? (
+                      <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <span className="text-sm">{incapacity.clinical_history_url.split('/').pop()}</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        No se ha adjuntado historia clínica
+                      </p>
                     )}
                   </CardContent>
                 </Card>
