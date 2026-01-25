@@ -2044,6 +2044,196 @@ export type Database = {
           },
         ]
       }
+      evaluation_criteria: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          max_score: number | null
+          name: string
+          sort_order: number | null
+          template_id: string
+          weight: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_score?: number | null
+          name: string
+          sort_order?: number | null
+          template_id: string
+          weight?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          max_score?: number | null
+          name?: string
+          sort_order?: number | null
+          template_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_criteria_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_cycles: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string
+          id: string
+          manager_evaluation_deadline: string | null
+          name: string
+          self_evaluation_deadline: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["evaluation_cycle_status"]
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          manager_evaluation_deadline?: string | null
+          name: string
+          self_evaluation_deadline?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["evaluation_cycle_status"]
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          manager_evaluation_deadline?: string | null
+          name?: string
+          self_evaluation_deadline?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["evaluation_cycle_status"]
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_cycles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_cycles_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_scores: {
+        Row: {
+          comments: string | null
+          created_at: string
+          criteria_id: string
+          evaluation_id: string
+          id: string
+          score: number
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          criteria_id: string
+          evaluation_id: string
+          id?: string
+          score: number
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          criteria_id?: string
+          evaluation_id?: string
+          id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_scores_criteria_id_fkey"
+            columns: ["criteria_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_scores_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "performance_evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_templates: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_balances: {
         Row: {
           available_days: number | null
@@ -2537,6 +2727,153 @@ export type Database = {
           },
           {
             foreignKeyName: "overtime_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_evaluations: {
+        Row: {
+          areas_to_improve: string | null
+          created_at: string
+          cycle_id: string
+          development_plan: string | null
+          employee_comments: string | null
+          employee_id: string
+          evaluation_type: Database["public"]["Enums"]["evaluation_type"]
+          evaluator_id: string | null
+          general_comments: string | null
+          id: string
+          overall_rating: string | null
+          overall_score: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["evaluation_status"]
+          strengths: string | null
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          areas_to_improve?: string | null
+          created_at?: string
+          cycle_id: string
+          development_plan?: string | null
+          employee_comments?: string | null
+          employee_id: string
+          evaluation_type?: Database["public"]["Enums"]["evaluation_type"]
+          evaluator_id?: string | null
+          general_comments?: string | null
+          id?: string
+          overall_rating?: string | null
+          overall_score?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["evaluation_status"]
+          strengths?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          areas_to_improve?: string | null
+          created_at?: string
+          cycle_id?: string
+          development_plan?: string | null
+          employee_comments?: string | null
+          employee_id?: string
+          evaluation_type?: Database["public"]["Enums"]["evaluation_type"]
+          evaluator_id?: string | null
+          general_comments?: string | null
+          id?: string
+          overall_rating?: string | null
+          overall_score?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["evaluation_status"]
+          strengths?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_evaluations_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_evaluations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_goals: {
+        Row: {
+          achieved_value: string | null
+          created_at: string
+          created_by: string | null
+          cycle_id: string | null
+          description: string | null
+          due_date: string | null
+          employee_id: string
+          id: string
+          manager_feedback: string | null
+          progress_percentage: number | null
+          status: string | null
+          target_value: string | null
+          title: string
+          updated_at: string
+          weight: number | null
+        }
+        Insert: {
+          achieved_value?: string | null
+          created_at?: string
+          created_by?: string | null
+          cycle_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          employee_id: string
+          id?: string
+          manager_feedback?: string | null
+          progress_percentage?: number | null
+          status?: string | null
+          target_value?: string | null
+          title: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Update: {
+          achieved_value?: string | null
+          created_at?: string
+          created_by?: string | null
+          cycle_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          employee_id?: string
+          id?: string
+          manager_feedback?: string | null
+          progress_percentage?: number | null
+          status?: string | null
+          target_value?: string | null
+          title?: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_goals_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_goals_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees_v2"
@@ -3752,6 +4089,14 @@ export type Database = {
         | "carta_banco"
         | "otro"
       employee_status: "active" | "suspended" | "retired" | "en_retiro"
+      evaluation_cycle_status: "draft" | "active" | "completed" | "cancelled"
+      evaluation_status:
+        | "pending"
+        | "in_progress"
+        | "submitted"
+        | "reviewed"
+        | "approved"
+      evaluation_type: "self" | "manager" | "peer" | "360"
       exam_result: "apto" | "apto_restricciones" | "no_apto" | "pendiente"
       exam_type: "ingreso" | "periodico" | "egreso" | "reintegro"
       fault_type: "leve" | "grave" | "gravisima"
@@ -4073,6 +4418,15 @@ export const Constants = {
         "otro",
       ],
       employee_status: ["active", "suspended", "retired", "en_retiro"],
+      evaluation_cycle_status: ["draft", "active", "completed", "cancelled"],
+      evaluation_status: [
+        "pending",
+        "in_progress",
+        "submitted",
+        "reviewed",
+        "approved",
+      ],
+      evaluation_type: ["self", "manager", "peer", "360"],
       exam_result: ["apto", "apto_restricciones", "no_apto", "pendiente"],
       exam_type: ["ingreso", "periodico", "egreso", "reintegro"],
       fault_type: ["leve", "grave", "gravisima"],
