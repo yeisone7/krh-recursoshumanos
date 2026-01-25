@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export interface DashboardAlert {
   id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity';
+  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
@@ -257,6 +257,52 @@ export function useDashboardAlerts() {
               entityName: `${employee.first_name} ${employee.last_name}`,
               entityId: inc.id,
             });
+          }
+        }
+      }
+
+      // 6. Fetch vacation alerts (excessive accumulation)
+      const { data: vacationBalances } = await supabase
+        .from('vacation_balances')
+        .select('id, employee_id, days_pending, accumulation_expires')
+        .eq('company_id', currentCompanyId!);
+
+      if (vacationBalances) {
+        for (const balance of vacationBalances) {
+          const employee = employeeMap.get(balance.employee_id);
+          if (!employee) continue;
+
+          const pendingDays = Number(balance.days_pending);
+
+          // Alert for excessive accumulation (>30 days)
+          if (pendingDays > 30) {
+            alerts.push({
+              id: `vacation-${balance.id}`,
+              type: 'vacation',
+              level: pendingDays > 45 ? 'critical' : 'warning',
+              title: 'Acumulación excesiva de vacaciones',
+              description: `Tiene ${pendingDays} días de vacaciones pendientes`,
+              daysRemaining: pendingDays,
+              entityName: `${employee.first_name} ${employee.last_name}`,
+              entityId: balance.employee_id,
+            });
+          }
+
+          // Alert for expiring accumulation
+          if (balance.accumulation_expires) {
+            const expiryDays = calculateDaysRemaining(balance.accumulation_expires);
+            if (expiryDays !== null && expiryDays >= 0 && expiryDays <= 30) {
+              alerts.push({
+                id: `vacation-expiry-${balance.id}`,
+                type: 'vacation',
+                level: getAlertLevel(expiryDays),
+                title: 'Vacaciones por vencer',
+                description: `Período de acumulación vence en ${expiryDays} días`,
+                daysRemaining: expiryDays,
+                entityName: `${employee.first_name} ${employee.last_name}`,
+                entityId: balance.employee_id,
+              });
+            }
           }
         }
       }

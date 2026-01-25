@@ -13,7 +13,8 @@ export type EntityType =
   | 'disciplinary_notification'
   | 'disciplinary_hearing'
   | 'disciplinary_decision'
-  | 'disciplinary_appeal';
+  | 'disciplinary_appeal'
+  | 'vacation_request';
 
 export interface DocumentVersion {
   id: string;

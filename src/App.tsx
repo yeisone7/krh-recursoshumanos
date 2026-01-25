@@ -21,6 +21,7 @@ import Jornadas from "./pages/Jornadas";
 import Seguridad from "./pages/Seguridad";
 import Configuracion from "./pages/Configuracion";
 import Disciplinarios from "./pages/Disciplinarios";
+import Vacaciones from "./pages/Vacaciones";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
@@ -60,6 +61,7 @@ const App = () => (
                         <Route path="/centros" element={<Centros />} />
                         <Route path="/jornadas" element={<Jornadas />} />
                         <Route path="/disciplinarios" element={<Disciplinarios />} />
+                        <Route path="/vacaciones" element={<Vacaciones />} />
                         <Route path="/seguridad" element={<Seguridad />} />
                         <Route path="/configuracion" element={<Configuracion />} />
                         <Route path="*" element={<NotFound />} />
