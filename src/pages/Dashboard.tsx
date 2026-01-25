@@ -4,9 +4,8 @@ import { KPICard } from '@/components/dashboard/KPICard';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { VacanciesOverview } from '@/components/dashboard/VacanciesOverview';
-import { ContractsChart } from '@/components/dashboard/ContractsChart';
 import { ActiveTerminationsPanel } from '@/components/dashboard/ActiveTerminationsPanel';
-import { EmployeeDistributionChart } from '@/components/dashboard/EmployeeDistributionChart';
+import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
 import { useEmployeeKPIs } from '@/hooks/useEmployeeKPIs';
 import { useDashboardAlerts } from '@/hooks/useDashboardAlerts';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -156,11 +155,8 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ContractsChart />
-        <EmployeeDistributionChart kpis={kpis} isLoading={kpisLoading} />
-      </div>
+      {/* Quick Actions */}
+      <QuickActionsPanel />
 
       {/* Active Terminations and Alerts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
