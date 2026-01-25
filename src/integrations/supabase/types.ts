@@ -2044,6 +2044,236 @@ export type Database = {
           },
         ]
       }
+      leave_balances: {
+        Row: {
+          available_days: number | null
+          company_id: string
+          created_at: string
+          employee_id: string
+          entitled_days: number
+          id: string
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          pending_days: number
+          updated_at: string
+          used_days: number
+          year: number
+        }
+        Insert: {
+          available_days?: number | null
+          company_id: string
+          created_at?: string
+          employee_id: string
+          entitled_days?: number
+          id?: string
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          pending_days?: number
+          updated_at?: string
+          used_days?: number
+          year: number
+        }
+        Update: {
+          available_days?: number | null
+          company_id?: string
+          created_at?: string
+          employee_id?: string
+          entitled_days?: number
+          id?: string
+          leave_type?: Database["public"]["Enums"]["leave_type"]
+          pending_days?: number
+          updated_at?: string
+          used_days?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_balances_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_balances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_requests: {
+        Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          document_name: string | null
+          document_url: string | null
+          duration_type: Database["public"]["Enums"]["leave_duration_type"]
+          employee_id: string
+          end_date: string
+          end_time: string | null
+          id: string
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          reason: string
+          rejection_reason: string | null
+          requested_at: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_name: string | null
+          start_date: string
+          start_time: string | null
+          status: Database["public"]["Enums"]["leave_request_status"]
+          total_days: number
+          total_hours: number | null
+          updated_at: string
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          document_name?: string | null
+          document_url?: string | null
+          duration_type?: Database["public"]["Enums"]["leave_duration_type"]
+          employee_id: string
+          end_date: string
+          end_time?: string | null
+          id?: string
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          reason: string
+          rejection_reason?: string | null
+          requested_at?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_name?: string | null
+          start_date: string
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["leave_request_status"]
+          total_days: number
+          total_hours?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          document_name?: string | null
+          document_url?: string | null
+          duration_type?: Database["public"]["Enums"]["leave_duration_type"]
+          employee_id?: string
+          end_date?: string
+          end_time?: string | null
+          id?: string
+          leave_type?: Database["public"]["Enums"]["leave_type"]
+          reason?: string
+          rejection_reason?: string | null
+          requested_at?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_name?: string | null
+          start_date?: string
+          start_time?: string | null
+          status?: Database["public"]["Enums"]["leave_request_status"]
+          total_days?: number
+          total_hours?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_type_config: {
+        Row: {
+          allows_half_day: boolean | null
+          allows_hours: boolean | null
+          color: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          display_name: string
+          document_description: string | null
+          id: string
+          is_active: boolean | null
+          is_paid: boolean
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          max_days_per_year: number | null
+          min_days_advance: number | null
+          requires_document: boolean
+          updated_at: string
+        }
+        Insert: {
+          allows_half_day?: boolean | null
+          allows_hours?: boolean | null
+          color?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_name: string
+          document_description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_paid?: boolean
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          max_days_per_year?: number | null
+          min_days_advance?: number | null
+          requires_document?: boolean
+          updated_at?: string
+        }
+        Update: {
+          allows_half_day?: boolean | null
+          allows_hours?: boolean | null
+          color?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_name?: string
+          document_description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_paid?: boolean
+          leave_type?: Database["public"]["Enums"]["leave_type"]
+          max_days_per_year?: number | null
+          min_days_advance?: number | null
+          requires_document?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_type_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medical_exams: {
         Row: {
           concept: string
@@ -2952,6 +3182,19 @@ export type Database = {
       fault_type: "leve" | "grave" | "gravisima"
       gender_type: "M" | "F" | "O"
       incapacity_origin: "comun" | "laboral"
+      leave_duration_type: "dias_completos" | "medio_dia" | "horas"
+      leave_request_status: "pendiente" | "aprobado" | "rechazado" | "cancelado"
+      leave_type:
+        | "calamidad_domestica"
+        | "cita_medica"
+        | "licencia_maternidad"
+        | "licencia_paternidad"
+        | "licencia_luto"
+        | "permiso_sindical"
+        | "permiso_estudio"
+        | "permiso_personal"
+        | "licencia_no_remunerada"
+        | "otro"
       link_type:
         | "indefinido"
         | "fijo"
@@ -3247,6 +3490,20 @@ export const Constants = {
       fault_type: ["leve", "grave", "gravisima"],
       gender_type: ["M", "F", "O"],
       incapacity_origin: ["comun", "laboral"],
+      leave_duration_type: ["dias_completos", "medio_dia", "horas"],
+      leave_request_status: ["pendiente", "aprobado", "rechazado", "cancelado"],
+      leave_type: [
+        "calamidad_domestica",
+        "cita_medica",
+        "licencia_maternidad",
+        "licencia_paternidad",
+        "licencia_luto",
+        "permiso_sindical",
+        "permiso_estudio",
+        "permiso_personal",
+        "licencia_no_remunerada",
+        "otro",
+      ],
       link_type: [
         "indefinido",
         "fijo",
