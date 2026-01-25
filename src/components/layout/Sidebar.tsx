@@ -17,7 +17,8 @@ import {
   Stethoscope,
   Package,
   LogOut,
-  HeartPulse
+  HeartPulse,
+  Gavel
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +34,7 @@ const mainNavItems: NavItem[] = [
   { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados' },
   { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' },
   { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' },
+  { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' },
   { label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion' },
   { label: 'Exámenes Médicos', icon: <Stethoscope className="w-5 h-5" />, href: '/examenes' },
   { label: 'Selección', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' },

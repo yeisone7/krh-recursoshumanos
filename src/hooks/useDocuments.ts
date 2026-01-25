@@ -2,7 +2,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-export type EntityType = 'contract' | 'contract_extension' | 'medical_exam' | 'dotation' | 'incapacity' | 'incapacity_clinical_history';
+export type EntityType = 
+  | 'contract' 
+  | 'contract_extension' 
+  | 'medical_exam' 
+  | 'dotation' 
+  | 'incapacity' 
+  | 'incapacity_clinical_history'
+  | 'disciplinary_opening'
+  | 'disciplinary_notification'
+  | 'disciplinary_hearing'
+  | 'disciplinary_decision'
+  | 'disciplinary_appeal';
 
 export interface DocumentVersion {
   id: string;
@@ -154,6 +165,16 @@ export function useUploadDocument() {
           await supabase.from('employee_incapacities').update({ certificate_url: filePath }).eq('id', entityId);
         } else if (entityType === 'incapacity_clinical_history') {
           await supabase.from('employee_incapacities').update({ clinical_history_url: filePath }).eq('id', entityId);
+        } else if (entityType === 'disciplinary_opening') {
+          await supabase.from('disciplinary_processes').update({ opening_document_url: filePath }).eq('id', entityId);
+        } else if (entityType === 'disciplinary_notification') {
+          await supabase.from('disciplinary_processes').update({ notification_document_url: filePath }).eq('id', entityId);
+        } else if (entityType === 'disciplinary_hearing') {
+          await supabase.from('disciplinary_processes').update({ hearing_document_url: filePath }).eq('id', entityId);
+        } else if (entityType === 'disciplinary_decision') {
+          await supabase.from('disciplinary_processes').update({ decision_document_url: filePath }).eq('id', entityId);
+        } else if (entityType === 'disciplinary_appeal') {
+          await supabase.from('disciplinary_processes').update({ appeal_document_url: filePath }).eq('id', entityId);
         }
       } catch (updateError) {
         console.warn('Could not update entity document_url:', updateError);
@@ -170,6 +191,8 @@ export function useUploadDocument() {
       queryClient.invalidateQueries({ queryKey: ['dotation_deliveries'] });
       queryClient.invalidateQueries({ queryKey: ['incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity'] });
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_processes'] });
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_process'] });
     },
   });
 }
