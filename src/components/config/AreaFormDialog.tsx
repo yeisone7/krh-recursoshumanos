@@ -158,14 +158,17 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Área Superior (opcional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} 
+                    value={field.value || "__none__"}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sin área superior" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-background">
-                      <SelectItem value="">Sin área superior</SelectItem>
+                      <SelectItem value="__none__">Sin área superior</SelectItem>
                       {parentOptions.map((a) => (
                         <SelectItem key={a.id} value={a.id}>
                           {a.name}
