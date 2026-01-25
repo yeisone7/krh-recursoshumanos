@@ -22,7 +22,8 @@ import {
   Palmtree,
   ClipboardList,
   Clock,
-  GraduationCap
+  GraduationCap,
+  Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -43,6 +44,7 @@ const mainNavItems: NavItem[] = [
   { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' },
   { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' },
   { label: 'Capacitaciones', icon: <GraduationCap className="w-5 h-5" />, href: '/capacitaciones' },
+  { label: 'Evaluación Desempeño', icon: <Target className="w-5 h-5" />, href: '/evaluaciones' },
   { label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion' },
   { label: 'Exámenes Médicos', icon: <Stethoscope className="w-5 h-5" />, href: '/examenes' },
   { label: 'Selección', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' },
