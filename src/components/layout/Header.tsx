@@ -1,4 +1,4 @@
-import { Bell, Search, Building2, LogOut, User } from 'lucide-react';
+import { Search, Building2, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -18,6 +18,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
+import { NotificationsPanel } from '@/components/notifications/NotificationsPanel';
 
 export function Header() {
   const { user, companies, currentCompanyId, setCurrentCompanyId, roles, signOut } = useAuth();
@@ -80,16 +81,7 @@ export function Header() {
         )}
 
         {/* Notifications */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative hover:bg-muted"
-        >
-          <Bell className="w-5 h-5 text-muted-foreground" />
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-semibold rounded-full flex items-center justify-center">
-            5
-          </span>
-        </Button>
+        <NotificationsPanel />
 
         {/* User menu */}
         <DropdownMenu>
