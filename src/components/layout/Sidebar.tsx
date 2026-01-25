@@ -23,7 +23,8 @@ import {
   ClipboardList,
   Clock,
   GraduationCap,
-  Target
+  Target,
+  Network
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -52,6 +53,7 @@ const mainNavItems: NavItem[] = [
 ];
 
 const secondaryNavItems: NavItem[] = [
+  { label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama' },
   { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', badge: 5 },
   { label: 'Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros' },
   { label: 'Jornadas', icon: <Calendar className="w-5 h-5" />, href: '/jornadas' },
