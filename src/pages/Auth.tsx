@@ -103,14 +103,12 @@ export default function Auth() {
     <div className="min-h-screen flex">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-primary/80 p-12 flex-col justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <img 
-              src={petrocasinosLogo} 
-              alt="Petrocasinos Logo" 
-              className="h-10 object-contain"
-            />
-          </div>
+        <div className="flex justify-center">
+          <img 
+            src={petrocasinosLogo} 
+            alt="Petrocasinos Logo" 
+            className="h-20 object-contain"
+          />
         </div>
         
         <div className="space-y-6">
