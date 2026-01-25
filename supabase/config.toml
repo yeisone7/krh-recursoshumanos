@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.notify-pending-terminations]
 verify_jwt = false
+
+[functions.notify-incapacity-alerts]
+verify_jwt = false
