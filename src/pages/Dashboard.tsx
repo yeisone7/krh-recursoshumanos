@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Users, FileText, Bell, Briefcase, TrendingUp, Clock, Award, UserMinus } from 'lucide-react';
+import { Users, FileText, Bell, Briefcase, TrendingUp, Clock, Award, UserMinus, HeartPulse } from 'lucide-react';
 import { KPICard } from '@/components/dashboard/KPICard';
 import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
@@ -116,7 +116,21 @@ export default function Dashboard() {
               transition={{ duration: 0.3, delay: 0.2 }}
               className="card-elevated p-5 flex items-center gap-4"
             >
-              <div className="w-12 h-12 rounded-xl bg-warning-light flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <HeartPulse className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-display font-bold text-foreground">{kpis?.activeIncapacitiesCount || 0}</p>
+                <p className="text-sm text-muted-foreground">Incapacidades activas</p>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.25 }}
+              className="card-elevated p-5 flex items-center gap-4"
+            >
+              <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
                 <Award className="w-6 h-6 text-warning" />
               </div>
               <div>
@@ -127,10 +141,10 @@ export default function Dashboard() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.25 }}
+              transition={{ duration: 0.3, delay: 0.3 }}
               className="card-elevated p-5 flex items-center gap-4"
             >
-              <div className="w-12 h-12 rounded-xl bg-destructive-light flex items-center justify-center">
+              <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center">
                 <UserMinus className="w-6 h-6 text-destructive" />
               </div>
               <div>
