@@ -34,6 +34,7 @@ import {
   Shirt,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import krhLogo from '@/assets/krh-logo.png';
 
 interface NavItem {
   label: string;
@@ -43,22 +44,35 @@ interface NavItem {
   children?: NavItem[];
 }
 
-const mainNavItems: NavItem[] = [
+// Reorganized: Grouped by workflow logic
+const coreNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
   { label: 'Analítica RRHH', icon: <BarChart3 className="w-5 h-5" />, href: '/analitica' },
+];
+
+const personnelNavItems: NavItem[] = [
   { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados' },
   { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' },
+  { label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' },
+];
+
+const timeManagementNavItems: NavItem[] = [
   { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones' },
   { label: 'Permisos', icon: <ClipboardList className="w-5 h-5" />, href: '/permisos' },
   { label: 'Horas Extra', icon: <Clock className="w-5 h-5" />, href: '/horas-extra' },
   { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' },
-  { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' },
+];
+
+const developmentNavItems: NavItem[] = [
   { label: 'Capacitaciones', icon: <GraduationCap className="w-5 h-5" />, href: '/capacitaciones' },
   { label: 'Evaluación Desempeño', icon: <Target className="w-5 h-5" />, href: '/evaluaciones' },
+  { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' },
+];
+
+const benefitsNavItems: NavItem[] = [
   { label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion' },
   { label: 'Cesantías', icon: <Landmark className="w-5 h-5" />, href: '/cesantias' },
   { label: 'Exámenes Médicos', icon: <Stethoscope className="w-5 h-5" />, href: '/examenes' },
-  { label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' },
 ];
 
 const catalogosItem: NavItem = {
@@ -73,11 +87,14 @@ const catalogosItem: NavItem = {
   ],
 };
 
-const secondaryNavItems: NavItem[] = [
+const toolsNavItems: NavItem[] = [
   { label: 'Calendario', icon: <Calendar className="w-5 h-5" />, href: '/calendario' },
   { label: 'Reportes', icon: <FileBarChart className="w-5 h-5" />, href: '/reportes' },
   { label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama' },
   { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', badge: 5 },
+];
+
+const adminNavItems: NavItem[] = [
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas' },
   { label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad' },
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion' },
@@ -103,7 +120,7 @@ export function Sidebar() {
           whileHover={{ x: 4 }}
           whileTap={{ scale: 0.98 }}
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
+            "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
             isActive
               ? "bg-sidebar-accent text-sidebar-accent-foreground"
               : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -142,6 +159,21 @@ export function Sidebar() {
     );
   };
 
+  const SectionLabel = ({ label }: { label: string }) => (
+    <AnimatePresence>
+      {!collapsed && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-3 pt-4 pb-1"
+        >
+          {label}
+        </motion.p>
+      )}
+    </AnimatePresence>
+  );
+
   const CatalogosMenu = () => {
     const isAnyChildActive = catalogosItem.children?.some(child => location.pathname === child.href);
     
@@ -152,7 +184,7 @@ export function Sidebar() {
           whileTap={{ scale: 0.98 }}
           onClick={() => !collapsed && setCatalogosOpen(!catalogosOpen)}
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative cursor-pointer",
+            "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
             isAnyChildActive
               ? "bg-sidebar-accent text-sidebar-accent-foreground"
               : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -200,7 +232,7 @@ export function Sidebar() {
                       whileHover={{ x: 4 }}
                       whileTap={{ scale: 0.98 }}
                       className={cn(
-                        "flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group",
+                        "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group",
                         isActive
                           ? "bg-sidebar-accent text-sidebar-accent-foreground"
                           : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -242,8 +274,8 @@ export function Sidebar() {
               exit={{ opacity: 0 }}
               className="flex items-center gap-2"
             >
-              <div className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center">
-                <span className="text-lg font-bold text-primary-foreground">K</span>
+              <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-white/10">
+                <img src={krhLogo} alt="KRH Logo" className="w-8 h-8 object-contain" />
               </div>
               <span className="font-display font-bold text-xl text-sidebar-primary">KRH</span>
             </motion.div>
@@ -253,9 +285,9 @@ export function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="w-9 h-9 rounded-lg gradient-primary flex items-center justify-center mx-auto"
+              className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-white/10 mx-auto"
             >
-              <span className="text-lg font-bold text-primary-foreground">K</span>
+              <img src={krhLogo} alt="KRH Logo" className="w-8 h-8 object-contain" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -280,19 +312,60 @@ export function Sidebar() {
         </button>
       )}
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3">
-        <div className="space-y-1">
-          {mainNavItems.map((item) => (
+      {/* Navigation - Hidden scrollbar */}
+      <nav className="flex-1 overflow-y-auto py-2 px-3 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {/* Core */}
+        <div className="space-y-0.5">
+          {coreNavItems.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
         </div>
 
-        <div className="my-4 mx-3 border-t border-sidebar-border" />
+        {/* Personnel */}
+        <SectionLabel label="Personal" />
+        <div className="space-y-0.5">
+          {personnelNavItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
 
-        <div className="space-y-1">
+        {/* Time Management */}
+        <SectionLabel label="Tiempo" />
+        <div className="space-y-0.5">
+          {timeManagementNavItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
+
+        {/* Development */}
+        <SectionLabel label="Desarrollo" />
+        <div className="space-y-0.5">
+          {developmentNavItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
+
+        {/* Benefits */}
+        <SectionLabel label="Beneficios" />
+        <div className="space-y-0.5">
+          {benefitsNavItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
+
+        {/* Tools */}
+        <SectionLabel label="Herramientas" />
+        <div className="space-y-0.5">
+          {toolsNavItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
+
+        {/* Admin */}
+        <SectionLabel label="Administración" />
+        <div className="space-y-0.5">
           <CatalogosMenu />
-          {secondaryNavItems.map((item) => (
+          {adminNavItems.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
         </div>
