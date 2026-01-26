@@ -72,6 +72,7 @@ import {
   useAFCCatalog, 
   useIPSCatalog 
 } from '@/hooks/useSocialSecurityCatalogs';
+import { useBanksCatalog } from '@/hooks/useBanksCatalog';
 
 interface EmployeeFormDialogProps {
   open: boolean;
@@ -92,6 +93,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   const { data: ccfOptions = [] } = useCCFCatalog();
   const { data: afcOptions = [] } = useAFCCatalog();
   const { data: ipsOptions = [] } = useIPSCatalog();
+  const { data: bankOptions = [] } = useBanksCatalog();
   const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
   
@@ -1090,7 +1092,16 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Banco</FormLabel>
-                            <FormControl><Input placeholder="Nombre del banco" {...field} /></FormControl>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar banco" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {bankOptions.filter(b => b.is_active).map((bank) => (
+                                  <SelectItem key={bank.id} value={bank.name}>{bank.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
