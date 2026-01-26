@@ -11,6 +11,8 @@ import {
   Users,
   Calendar,
   Loader2,
+  Zap,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -55,6 +57,9 @@ import {
   ShiftCycleFormDialog,
   EmployeeTimeConfigDialog,
   ShiftCalendar,
+  CycleGeneratorDialog,
+  ShiftReportExport,
+  MissingConfigAlert,
 } from '@/components/schedules';
 import { DAY_NAMES_SHORT } from '@/types/schedule';
 import type { WorkSchedule, Shift, ShiftCycle } from '@/types/schedule';
@@ -66,6 +71,8 @@ export default function Jornadas() {
   const [showShiftForm, setShowShiftForm] = useState(false);
   const [showCycleForm, setShowCycleForm] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [showGeneratorDialog, setShowGeneratorDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<WorkSchedule | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [selectedCycle, setSelectedCycle] = useState<ShiftCycle | null>(null);
@@ -129,10 +136,18 @@ export default function Jornadas() {
           <h1 className="font-display text-2xl font-bold text-foreground">Horarios y Turnos</h1>
           <p className="text-muted-foreground mt-1">Gestiona horarios administrativos, turnos operativos y ciclos de rotación</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setShowConfigDialog(true)}>
             <Users className="w-4 h-4 mr-2" />
             Asignar Empleado
+          </Button>
+          <Button variant="outline" onClick={() => setShowGeneratorDialog(true)}>
+            <Zap className="w-4 h-4 mr-2" />
+            Generar Ciclo
+          </Button>
+          <Button variant="outline" onClick={() => setShowExportDialog(true)}>
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            Exportar
           </Button>
         </div>
       </motion.div>
@@ -382,7 +397,8 @@ export default function Jornadas() {
             </TabsContent>
 
             {/* Calendario */}
-            <TabsContent value="calendar">
+            <TabsContent value="calendar" className="space-y-4">
+              <MissingConfigAlert onAssignClick={() => setShowConfigDialog(true)} />
               <ShiftCalendar />
             </TabsContent>
           </Tabs>
@@ -393,6 +409,9 @@ export default function Jornadas() {
       <WorkScheduleFormDialog open={showScheduleForm} onOpenChange={setShowScheduleForm} schedule={selectedSchedule} />
       <ShiftFormDialog open={showShiftForm} onOpenChange={setShowShiftForm} shift={selectedShift} />
       <ShiftCycleFormDialog open={showCycleForm} onOpenChange={setShowCycleForm} cycle={selectedCycle} />
+      <EmployeeTimeConfigDialog open={showConfigDialog} onOpenChange={setShowConfigDialog} />
+      <CycleGeneratorDialog open={showGeneratorDialog} onOpenChange={setShowGeneratorDialog} />
+      <ShiftReportExport open={showExportDialog} onOpenChange={setShowExportDialog} />
       <EmployeeTimeConfigDialog open={showConfigDialog} onOpenChange={setShowConfigDialog} />
 
       {/* Delete Confirm */}
