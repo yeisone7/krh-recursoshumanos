@@ -84,6 +84,12 @@ const catalogosItem: NavItem = {
     { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
     { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
     { label: 'Tipos de Dotación', icon: <Shirt className="w-4 h-4" />, href: '/catalogos/tipos-dotacion' },
+    { label: 'ARL', icon: <ShieldCheck className="w-4 h-4" />, href: '/catalogos/arl' },
+    { label: 'EPS', icon: <HeartPulse className="w-4 h-4" />, href: '/catalogos/eps' },
+    { label: 'AFP', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afp' },
+    { label: 'Caja Compensación', icon: <Users className="w-4 h-4" />, href: '/catalogos/ccf' },
+    { label: 'AFC', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afc' },
+    { label: 'IPS', icon: <Stethoscope className="w-4 h-4" />, href: '/catalogos/ips' },
   ],
 };
 
