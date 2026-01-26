@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSunday, parseISO, isWithinInterval } from 'date-fns';
+import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSunday, parseISO, isWithinInterval, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -28,16 +28,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useOperationCenters } from '@/hooks/useCompanies';
+import { useAreas } from '@/hooks/useSystemConfig';
 import { useShifts, useShiftAssignments, useCreateBulkShiftAssignments } from '@/hooks/useSchedules';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { getEmployeeFullName } from '@/types/employee';
 import type { Shift, EmployeeShiftAssignment, EmployeeAbsence } from '@/types/schedule';
 
-// Festivos de Colombia 2024-2026 (simplificado)
+// Festivos de Colombia 2024-2026
 const COLOMBIAN_HOLIDAYS: Record<string, string> = {
   '2024-01-01': 'Año Nuevo',
   '2024-01-08': 'Reyes Magos',
@@ -94,12 +97,28 @@ const COLOMBIAN_HOLIDAYS: Record<string, string> = {
   '2026-12-25': 'Navidad',
 };
 
+type ViewMode = 'quincenal' | 'mensual';
+
+interface GroupedEmployee {
+  centerId: string;
+  centerName: string;
+  areas: {
+    areaId: string;
+    areaName: string;
+    employees: ReturnType<typeof useEmployees>['data'];
+  }[];
+}
+
 interface ShiftCalendarProps {
   centerId?: string;
 }
 
-export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
+export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [viewMode, setViewMode] = useState<ViewMode>('quincenal');
+  const [selectedCenterId, setSelectedCenterId] = useState<string>(propCenterId || 'all');
+  const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set());
+  const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
   const [selectedCells, setSelectedCells] = useState<{ employeeId: string; dates: string[] }[]>([]);
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState<string>('');
@@ -109,34 +128,47 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
   const { currentCompanyId } = useAuth();
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
   const { data: shifts = [] } = useShifts();
+  const { data: centers = [] } = useOperationCenters();
+  const { data: areas = [] } = useAreas();
   
-  const startDate = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
-  const endDate = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
+  // Calculate date range based on view mode
+  const { startDate, endDate, daysInPeriod } = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    
+    if (viewMode === 'quincenal') {
+      const isFirstHalf = currentMonth.getDate() <= 15;
+      const start = isFirstHalf ? monthStart : addDays(monthStart, 15);
+      const end = isFirstHalf ? addDays(monthStart, 14) : monthEnd;
+      return {
+        startDate: format(start, 'yyyy-MM-dd'),
+        endDate: format(end, 'yyyy-MM-dd'),
+        daysInPeriod: eachDayOfInterval({ start, end }),
+      };
+    }
+    
+    return {
+      startDate: format(monthStart, 'yyyy-MM-dd'),
+      endDate: format(monthEnd, 'yyyy-MM-dd'),
+      daysInPeriod: eachDayOfInterval({ start: monthStart, end: monthEnd }),
+    };
+  }, [currentMonth, viewMode]);
   
   const { data: assignments = [], isLoading: loadingAssignments } = useShiftAssignments({
     startDate,
     endDate,
-    centerId,
+    centerId: selectedCenterId !== 'all' ? selectedCenterId : undefined,
   });
   
   const createBulkAssignments = useCreateBulkShiftAssignments();
 
-  // Fetch absences (vacations, leaves, incapacities) for all employees in the date range
-  // Get days of the month first (needed for absences map)
-  const daysInMonth = useMemo(() => {
-    return eachDayOfInterval({
-      start: startOfMonth(currentMonth),
-      end: endOfMonth(currentMonth),
-    });
-  }, [currentMonth]);
-
+  // Fetch absences
   const { data: absences = [] } = useQuery({
     queryKey: ['employee_absences', currentCompanyId, startDate, endDate],
     queryFn: async () => {
       const employeeIds = employees.map(e => e.id);
       if (employeeIds.length === 0) return [];
 
-      // Fetch vacations (use Spanish status values)
       const { data: vacations } = await supabase
         .from('vacation_requests')
         .select('employee_id, start_date, end_date, status')
@@ -145,7 +177,6 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
         .gte('end_date', startDate)
         .lte('start_date', endDate);
 
-      // Fetch leaves (use Spanish status values)
       const { data: leaves } = await supabase
         .from('leave_requests')
         .select('employee_id, start_date, end_date, status')
@@ -154,7 +185,6 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
         .gte('end_date', startDate)
         .lte('start_date', endDate);
 
-      // Fetch incapacities
       const { data: incapacities } = await supabase
         .from('employee_incapacities')
         .select('employee_id, start_date, end_date')
@@ -199,17 +229,16 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
     enabled: employees.length > 0,
   });
 
-  // Build absences map: employeeId -> date -> absence info
+  // Build absences map
   const absencesMap = useMemo(() => {
     const map: Record<string, Record<string, EmployeeAbsence>> = {};
     absences.forEach((a: any) => {
       if (!map[a.employee_id]) {
         map[a.employee_id] = {};
       }
-      // Mark each day in the range
       const start = parseISO(a.start_date);
       const end = parseISO(a.end_date);
-      daysInMonth.forEach(day => {
+      daysInPeriod.forEach(day => {
         const dateStr = format(day, 'yyyy-MM-dd');
         if (isWithinInterval(day, { start, end })) {
           map[a.employee_id][dateStr] = {
@@ -222,14 +251,69 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
       });
     });
     return map;
-  }, [absences, daysInMonth]);
+  }, [absences, daysInPeriod]);
 
-  // Filter active employees with shift mode (for now, show all active)
-  const filteredEmployees = useMemo(() => {
-    return employees.filter(e => e.is_active);
-  }, [employees]);
+  // Group employees by Center -> Area with filtering
+  const groupedEmployees = useMemo((): GroupedEmployee[] => {
+    const filtered = employees.filter(e => {
+      if (!e.is_active) return false;
+      if (selectedCenterId !== 'all') {
+        return e.work_info?.operation_center_id === selectedCenterId;
+      }
+      return true;
+    });
 
-  // Build assignments map: employeeId -> date -> assignment
+    const centerMap = new Map<string, Map<string, typeof filtered>>();
+
+    filtered.forEach(emp => {
+      const centerId = emp.work_info?.operation_center_id || 'sin-centro';
+      const areaId = emp.work_info?.area_id || 'sin-area';
+
+      if (!centerMap.has(centerId)) {
+        centerMap.set(centerId, new Map());
+      }
+      const areaMap = centerMap.get(centerId)!;
+      if (!areaMap.has(areaId)) {
+        areaMap.set(areaId, []);
+      }
+      areaMap.get(areaId)!.push(emp);
+    });
+
+    const result: GroupedEmployee[] = [];
+    centerMap.forEach((areaMap, centerId) => {
+      const center = centers.find(c => c.id === centerId);
+      const areasArr: GroupedEmployee['areas'] = [];
+      
+      areaMap.forEach((emps, areaId) => {
+        const area = areas.find(a => a.id === areaId);
+        areasArr.push({
+          areaId,
+          areaName: area?.name || 'Sin área',
+          employees: emps,
+        });
+      });
+
+      areasArr.sort((a, b) => a.areaName.localeCompare(b.areaName));
+
+      result.push({
+        centerId,
+        centerName: center?.name || 'Sin centro',
+        areas: areasArr,
+      });
+    });
+
+    result.sort((a, b) => a.centerName.localeCompare(b.centerName));
+    return result;
+  }, [employees, selectedCenterId, centers, areas]);
+
+  // Flatten for total count
+  const totalEmployees = useMemo(() => {
+    return groupedEmployees.reduce((acc, g) => 
+      acc + g.areas.reduce((a, area) => a + (area.employees?.length || 0), 0), 0
+    );
+  }, [groupedEmployees]);
+
+  // Build assignments map
   const assignmentsMap = useMemo(() => {
     const map: Record<string, Record<string, EmployeeShiftAssignment>> = {};
     assignments.forEach((a: any) => {
@@ -241,21 +325,52 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
     return map;
   }, [assignments]);
 
-  const getShiftById = (id: string): Shift | undefined => {
-    return shifts.find(s => s.id === id);
+  const getShiftById = (id: string): Shift | undefined => shifts.find(s => s.id === id);
+  const isHoliday = (date: Date): string | null => COLOMBIAN_HOLIDAYS[format(date, 'yyyy-MM-dd')] || null;
+
+  const navigatePeriod = (direction: 'prev' | 'next') => {
+    if (viewMode === 'quincenal') {
+      const isFirstHalf = currentMonth.getDate() <= 15;
+      if (direction === 'next') {
+        if (isFirstHalf) {
+          setCurrentMonth(addDays(currentMonth, 15));
+        } else {
+          setCurrentMonth(addDays(startOfMonth(addMonths(currentMonth, 1)), 0));
+        }
+      } else {
+        if (isFirstHalf) {
+          setCurrentMonth(addDays(endOfMonth(addMonths(currentMonth, -1)), 0));
+        } else {
+          setCurrentMonth(startOfMonth(currentMonth));
+        }
+      }
+    } else {
+      setCurrentMonth(addMonths(currentMonth, direction === 'next' ? 1 : -1));
+    }
   };
 
-  const isHoliday = (date: Date): string | null => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return COLOMBIAN_HOLIDAYS[dateStr] || null;
+  const toggleCenter = (centerId: string) => {
+    setExpandedCenters(prev => {
+      const next = new Set(prev);
+      if (next.has(centerId)) {
+        next.delete(centerId);
+      } else {
+        next.add(centerId);
+      }
+      return next;
+    });
   };
 
-  const prevMonth = () => {
-    setCurrentMonth(prev => addDays(startOfMonth(prev), -1));
-  };
-
-  const nextMonth = () => {
-    setCurrentMonth(prev => addDays(endOfMonth(prev), 1));
+  const toggleArea = (areaKey: string) => {
+    setExpandedAreas(prev => {
+      const next = new Set(prev);
+      if (next.has(areaKey)) {
+        next.delete(areaKey);
+      } else {
+        next.add(areaKey);
+      }
+      return next;
+    });
   };
 
   // Selection handling
@@ -267,17 +382,15 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
 
   const handleCellMouseEnter = (employeeId: string, date: string) => {
     if (!isSelecting || !selectionStart) return;
-    
-    // Only allow selection for the same employee
     if (employeeId !== selectionStart.employeeId) return;
 
-    const startIdx = daysInMonth.findIndex(d => format(d, 'yyyy-MM-dd') === selectionStart.date);
-    const endIdx = daysInMonth.findIndex(d => format(d, 'yyyy-MM-dd') === date);
+    const startIdx = daysInPeriod.findIndex(d => format(d, 'yyyy-MM-dd') === selectionStart.date);
+    const endIdx = daysInPeriod.findIndex(d => format(d, 'yyyy-MM-dd') === date);
     
     const minIdx = Math.min(startIdx, endIdx);
     const maxIdx = Math.max(startIdx, endIdx);
     
-    const selectedDates = daysInMonth
+    const selectedDates = daysInPeriod
       .slice(minIdx, maxIdx + 1)
       .map(d => format(d, 'yyyy-MM-dd'));
 
@@ -300,7 +413,6 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
   const handleAssign = async () => {
     if (!selectedShiftId || selectedCells.length === 0) return;
 
-    // Validate no absences in selected dates
     const selectedShift = getShiftById(selectedShiftId);
     const isWorkShift = selectedShift && !selectedShift.is_rest_day;
 
@@ -339,20 +451,26 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
       clearSelection();
       setSelectedShiftId('');
     } catch (error: any) {
-      toast.error('Error', {
-        description: error.message || 'No se pudieron guardar las asignaciones',
-      });
+      toast.error('Error', { description: error.message || 'No se pudieron guardar las asignaciones' });
     }
   };
 
   const isCellSelected = (employeeId: string, date: string): boolean => {
-    return selectedCells.some(
-      cell => cell.employeeId === employeeId && cell.dates.includes(date)
-    );
+    return selectedCells.some(cell => cell.employeeId === employeeId && cell.dates.includes(date));
   };
 
   const activeShifts = shifts.filter(s => s.is_active);
   const isLoading = loadingEmployees || loadingAssignments;
+
+  // Expand all by default on load
+  useMemo(() => {
+    if (groupedEmployees.length > 0 && expandedCenters.size === 0) {
+      const allCenters = new Set(groupedEmployees.map(g => g.centerId));
+      setExpandedCenters(allCenters);
+      const allAreas = new Set(groupedEmployees.flatMap(g => g.areas.map(a => `${g.centerId}-${a.areaId}`)));
+      setExpandedAreas(allAreas);
+    }
+  }, [groupedEmployees]);
 
   if (isLoading) {
     return (
@@ -363,49 +481,84 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
     );
   }
 
+  const periodLabel = viewMode === 'quincenal'
+    ? `${format(parseISO(startDate), 'd')} - ${format(parseISO(endDate), 'd MMM yyyy', { locale: es })}`
+    : format(currentMonth, 'MMMM yyyy', { locale: es });
+
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={prevMonth}>
+          <Button variant="outline" size="icon" onClick={() => navigatePeriod('prev')}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-lg font-semibold min-w-[180px] text-center">
-            {format(currentMonth, 'MMMM yyyy', { locale: es })}
+          <h2 className="text-lg font-semibold min-w-[200px] text-center capitalize">
+            {periodLabel}
           </h2>
-          <Button variant="outline" size="icon" onClick={nextMonth}>
+          <Button variant="outline" size="icon" onClick={() => navigatePeriod('next')}>
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
 
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-red-100 border border-red-300 rounded" />
-            <span>Domingo</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-amber-100 border border-amber-300 rounded" />
-            <span>Festivo</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-purple-200 border border-purple-400 rounded" />
-            <span>Novedad</span>
-          </div>
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle */}
+          <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as ViewMode)}>
+            <ToggleGroupItem value="quincenal" aria-label="Vista quincenal" className="text-xs">
+              15 días
+            </ToggleGroupItem>
+            <ToggleGroupItem value="mensual" aria-label="Vista mensual" className="text-xs">
+              Mes
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          {/* Center Filter */}
+          <Select value={selectedCenterId} onValueChange={setSelectedCenterId}>
+            <SelectTrigger className="w-48">
+              <Building2 className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Centro" />
+            </SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="all">Todos los centros</SelectItem>
+              {centers.map((center) => (
+                <SelectItem key={center.id} value={center.id}>
+                  {center.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-red-100 border border-red-300 rounded" />
+          <span>Domingo</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-amber-100 border border-amber-300 rounded" />
+          <span>Festivo</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-purple-200 border border-purple-400 rounded" />
+          <span>Novedad</span>
+        </div>
+        <span className="text-xs">|</span>
+        <span className="text-xs">{totalEmployees} empleados</span>
       </div>
 
       {/* Calendar Grid */}
       <div className="border rounded-lg overflow-hidden">
-        <ScrollArea className="max-h-[calc(100vh-300px)]">
+        <ScrollArea className="max-h-[calc(100vh-350px)]">
           <div className="min-w-[900px]">
             {/* Days Header */}
             <div className="flex bg-muted sticky top-0 z-10">
-              <div className="w-48 p-2 border-r font-medium flex items-center gap-2 shrink-0">
+              <div className="w-56 p-2 border-r font-medium flex items-center gap-2 shrink-0">
                 <Users className="w-4 h-4" />
-                Empleado
+                Centro / Área / Empleado
               </div>
-              {daysInMonth.map((day) => {
+              {daysInPeriod.map((day) => {
                 const dateStr = format(day, 'yyyy-MM-dd');
                 const holiday = isHoliday(day);
                 const sunday = isSunday(day);
@@ -423,10 +576,7 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
                     title={holiday || undefined}
                   >
                     <div className="font-medium">{format(day, 'EEE', { locale: es })}</div>
-                    <div className={cn(
-                      'text-muted-foreground',
-                      today && 'text-primary font-bold'
-                    )}>
+                    <div className={cn('text-muted-foreground', today && 'text-primary font-bold')}>
                       {format(day, 'd')}
                     </div>
                   </div>
@@ -434,77 +584,134 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
               })}
             </div>
 
-            {/* Employee Rows */}
-            {filteredEmployees.length === 0 ? (
+            {/* Grouped Rows */}
+            {groupedEmployees.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                No hay empleados activos
+                No hay empleados activos en el centro seleccionado
               </div>
             ) : (
-              filteredEmployees.map((employee) => (
-                <div key={employee.id} className="flex border-t hover:bg-muted/30">
-                  <div className="w-48 p-2 border-r font-medium shrink-0 flex items-center">
-                    <span className="truncate">{getEmployeeFullName(employee)}</span>
-                  </div>
-                  {daysInMonth.map((day) => {
-                    const dateStr = format(day, 'yyyy-MM-dd');
-                    const assignment = assignmentsMap[employee.id]?.[dateStr];
-                    const shift = assignment ? getShiftById(assignment.shift_id) : null;
-                    const holiday = isHoliday(day);
-                    const sunday = isSunday(day);
-                    const selected = isCellSelected(employee.id, dateStr);
-                    const absence = absencesMap[employee.id]?.[dateStr];
+              groupedEmployees.map((group) => {
+                const isCenterExpanded = expandedCenters.has(group.centerId);
+                
+                return (
+                  <div key={group.centerId}>
+                    {/* Center Header */}
+                    <div 
+                      className="flex border-t bg-slate-100 cursor-pointer hover:bg-slate-200"
+                      onClick={() => toggleCenter(group.centerId)}
+                    >
+                      <div className="w-56 p-2 border-r font-semibold flex items-center gap-2 shrink-0 text-sm">
+                        {isCenterExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                        <Building2 className="w-4 h-4 text-primary" />
+                        {group.centerName}
+                        <Badge variant="secondary" className="ml-auto text-xs">
+                          {group.areas.reduce((acc, a) => acc + (a.employees?.length || 0), 0)}
+                        </Badge>
+                      </div>
+                      {daysInPeriod.map((day) => (
+                        <div key={format(day, 'yyyy-MM-dd')} className="w-10 border-r shrink-0" />
+                      ))}
+                    </div>
 
-                    return (
-                      <TooltipProvider key={dateStr}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div
-                              className={cn(
-                                'w-10 p-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
-                                sunday && !absence && 'bg-red-50',
-                                holiday && !absence && 'bg-amber-50',
-                                absence && 'bg-purple-100',
-                                selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
-                              )}
-                              onMouseDown={() => handleCellMouseDown(employee.id, dateStr)}
-                              onMouseEnter={() => handleCellMouseEnter(employee.id, dateStr)}
-                              onMouseUp={handleCellMouseUp}
-                            >
-                              {absence && !shift && (
-                                <div className="h-6 rounded text-[10px] font-medium text-purple-700 flex items-center justify-center bg-purple-200">
-                                  <AlertTriangle className="w-3 h-3" />
-                                </div>
-                              )}
-                              {shift && (
-                                <div
-                                  className="h-6 rounded text-[10px] font-medium text-white flex items-center justify-center"
-                                  style={{ backgroundColor: shift.color }}
-                                >
-                                  {shift.code || shift.name.slice(0, 2).toUpperCase()}
-                                </div>
-                              )}
-                              {!shift && !absence && <div className="h-6" />}
+                    {/* Areas & Employees */}
+                    {isCenterExpanded && group.areas.map((area) => {
+                      const areaKey = `${group.centerId}-${area.areaId}`;
+                      const isAreaExpanded = expandedAreas.has(areaKey);
+
+                      return (
+                        <div key={area.areaId}>
+                          {/* Area Header */}
+                          <div 
+                            className="flex border-t bg-slate-50 cursor-pointer hover:bg-slate-100"
+                            onClick={() => toggleArea(areaKey)}
+                          >
+                            <div className="w-56 p-2 pl-6 border-r font-medium flex items-center gap-2 shrink-0 text-sm">
+                              {isAreaExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+                              {area.areaName}
+                              <Badge variant="outline" className="ml-auto text-xs">
+                                {area.employees?.length || 0}
+                              </Badge>
                             </div>
-                          </TooltipTrigger>
-                          {absence && (
-                            <TooltipContent>
-                              <p className="font-medium">{absence.description}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {absence.start_date} - {absence.end_date}
-                              </p>
-                            </TooltipContent>
-                          )}
-                          {shift && !absence && (
-                            <TooltipContent>
-                              <p>{shift.name}</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
-                    );
-                  })}
-                </div>
-              ))
+                            {daysInPeriod.map((day) => (
+                              <div key={format(day, 'yyyy-MM-dd')} className="w-10 border-r shrink-0" />
+                            ))}
+                          </div>
+
+                          {/* Employees */}
+                          {isAreaExpanded && area.employees?.map((employee) => (
+                            <div key={employee.id} className="flex border-t hover:bg-muted/30">
+                              <div className="w-56 p-2 pl-10 border-r shrink-0 flex items-center">
+                                <span className="truncate text-sm">{getEmployeeFullName(employee)}</span>
+                              </div>
+                              {daysInPeriod.map((day) => {
+                                const dateStr = format(day, 'yyyy-MM-dd');
+                                const assignment = assignmentsMap[employee.id]?.[dateStr];
+                                const shift = assignment ? getShiftById(assignment.shift_id) : null;
+                                const holiday = isHoliday(day);
+                                const sunday = isSunday(day);
+                                const selected = isCellSelected(employee.id, dateStr);
+                                const absence = absencesMap[employee.id]?.[dateStr];
+
+                                return (
+                                  <TooltipProvider key={dateStr}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div
+                                          className={cn(
+                                            'w-10 p-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
+                                            sunday && !absence && 'bg-red-50',
+                                            holiday && !absence && 'bg-amber-50',
+                                            absence && 'bg-purple-100',
+                                            selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
+                                          )}
+                                          onMouseDown={() => handleCellMouseDown(employee.id, dateStr)}
+                                          onMouseEnter={() => handleCellMouseEnter(employee.id, dateStr)}
+                                          onMouseUp={handleCellMouseUp}
+                                        >
+                                          {absence && !shift && (
+                                            <div className="h-6 rounded text-[10px] font-medium text-purple-700 flex items-center justify-center bg-purple-200">
+                                              <AlertTriangle className="w-3 h-3" />
+                                            </div>
+                                          )}
+                                          {shift && (
+                                            <div
+                                              className="h-6 rounded text-[10px] font-medium text-white flex items-center justify-center"
+                                              style={{ backgroundColor: shift.color }}
+                                            >
+                                              {shift.code || shift.name.slice(0, 2).toUpperCase()}
+                                            </div>
+                                          )}
+                                          {!shift && !absence && <div className="h-6" />}
+                                        </div>
+                                      </TooltipTrigger>
+                                      {absence && (
+                                        <TooltipContent>
+                                          <p className="font-medium">{absence.description}</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {absence.start_date} - {absence.end_date}
+                                          </p>
+                                        </TooltipContent>
+                                      )}
+                                      {shift && !absence && (
+                                        <TooltipContent>
+                                          <p>{shift.name}</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}
+                                          </p>
+                                        </TooltipContent>
+                                      )}
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                );
+                              })}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })
             )}
           </div>
         </ScrollArea>
@@ -512,7 +719,7 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
 
       {/* Instructions */}
       <p className="text-sm text-muted-foreground">
-        💡 Seleccione celdas arrastrando para asignar turnos a múltiples días.
+        💡 Seleccione celdas arrastrando para asignar turnos a múltiples días. Use los controles para filtrar por centro y cambiar el periodo.
       </p>
 
       {/* Assign Dialog */}
@@ -528,8 +735,7 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground mb-2">
-                Se asignará el turno a{' '}
-                <strong>{selectedCells[0]?.dates.length || 0}</strong> día(s).
+                Se asignará el turno a <strong>{selectedCells[0]?.dates.length || 0}</strong> día(s).
               </p>
             </div>
 
@@ -543,16 +749,9 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
                   {activeShifts.map((shift) => (
                     <SelectItem key={shift.id} value={shift.id}>
                       <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: shift.color }}
-                        />
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: shift.color }} />
                         <span>{shift.name}</span>
-                        {shift.is_rest_day && (
-                          <Badge variant="secondary" className="text-xs">
-                            Descanso
-                          </Badge>
-                        )}
+                        {shift.is_rest_day && <Badge variant="secondary" className="text-xs">Descanso</Badge>}
                       </div>
                     </SelectItem>
                   ))}
@@ -562,19 +761,11 @@ export function ShiftCalendar({ centerId }: ShiftCalendarProps) {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setShowAssignDialog(false);
-              clearSelection();
-            }}>
+            <Button variant="outline" onClick={() => { setShowAssignDialog(false); clearSelection(); }}>
               Cancelar
             </Button>
-            <Button 
-              onClick={handleAssign} 
-              disabled={!selectedShiftId || createBulkAssignments.isPending}
-            >
-              {createBulkAssignments.isPending && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
+            <Button onClick={handleAssign} disabled={!selectedShiftId || createBulkAssignments.isPending}>
+              {createBulkAssignments.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Asignar
             </Button>
           </DialogFooter>
