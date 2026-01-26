@@ -1066,7 +1066,7 @@ export type Database = {
             foreignKeyName: "contracts_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: "employees"
+            referencedRelation: "employees_v2"
             referencedColumns: ["id"]
           },
         ]
