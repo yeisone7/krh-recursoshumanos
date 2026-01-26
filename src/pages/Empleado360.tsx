@@ -50,15 +50,11 @@ export default function Empleado360() {
     <div className="space-y-6">
       <Employee360Header employee={data.employee} />
       
-      {/* KPIs and Alerts side by side on large screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Employee360KPIs kpis={data.kpis} isLoading={data.isLoadingEmployee} />
-        </div>
-        <div className="lg:col-span-1">
-          <Employee360Alerts employeeId={id} />
-        </div>
-      </div>
+      {/* KPIs - Full width row */}
+      <Employee360KPIs kpis={data.kpis} isLoading={data.isLoadingEmployee} />
+      
+      {/* Alerts - Separate row below KPIs */}
+      <Employee360Alerts employeeId={id} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <ScrollArea className="w-full whitespace-nowrap">
