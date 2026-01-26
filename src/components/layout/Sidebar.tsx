@@ -332,6 +332,14 @@ export function Sidebar() {
           ))}
         </div>
 
+        {/* Payroll */}
+        <SectionLabel label="Nómina" />
+        <div className="space-y-0.5">
+          {payrollNavItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
+
         {/* Time Management */}
         <SectionLabel label="Tiempo" />
         <div className="space-y-0.5">
@@ -360,14 +368,6 @@ export function Sidebar() {
         <SectionLabel label="Herramientas" />
         <div className="space-y-0.5">
           {toolsNavItems.map((item) => (
-            <NavLink key={item.href} item={item} />
-          ))}
-        </div>
-
-        {/* Payroll */}
-        <SectionLabel label="Nómina" />
-        <div className="space-y-0.5">
-          {payrollNavItems.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
         </div>
