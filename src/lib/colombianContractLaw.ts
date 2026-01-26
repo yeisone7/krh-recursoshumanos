@@ -26,9 +26,11 @@ export interface ContractData {
 export const COLOMBIAN_LABOR_LAW = {
   // Días de preaviso requeridos para no renovar automáticamente
   PREAVISO_DAYS: 30,
-  // Duración máxima total de contrato a término fijo en años
-  MAX_FIXED_TERM_YEARS: 4, // Se elimina el límite para cumplir con normativa actualizada
-  // Número de prórrogas después del cual la duración mínima debe ser 1 año
+  // Duración máxima total de contrato a término fijo en años (informativo, no bloquea)
+  MAX_FIXED_TERM_YEARS: 4,
+  // Número de prórroga a partir de la cual la duración mínima debe ser 1 año
+  // (Art. 46 CST: después de 3 prórrogas, la 4ª y siguientes deben ser de mínimo 1 año
+  // para contratos originalmente inferiores a 1 año)
   MIN_YEAR_AFTER_EXTENSION: 4,
   // Meses en un año
   MONTHS_IN_YEAR: 12,
@@ -95,14 +97,15 @@ export function validateExtension(
   const extensionDurationMonths = differenceInMonths(proposedEndDate, currentEndDate);
 
   // Validación: A partir de la 4ta prórroga, duración mínima de 1 año (para contratos < 1 año originalmente)
+  // Art. 46 CST: Después de 3 prórrogas, las siguientes deben ser de mínimo 1 año
   if (isUnderOneYear && extensionNumber >= COLOMBIAN_LABOR_LAW.MIN_YEAR_AFTER_EXTENSION) {
     if (extensionDurationMonths < 12) {
       errors.push(
-        `Según el Art. 46 del CST, a partir de la ${COLOMBIAN_LABOR_LAW.MIN_YEAR_AFTER_EXTENSION}ª prórroga de un contrato inferior a un año, la duración mínima debe ser de un (1) año.`
+        `Según el Art. 46 del CST, a partir de la ${COLOMBIAN_LABOR_LAW.MIN_YEAR_AFTER_EXTENSION}ª prórroga de un contrato inferior a un año, la duración mínima debe ser de un (1) año. Esta es la prórroga #${extensionNumber}.`
       );
     }
     info.push(
-      `Esta es la prórroga #${extensionNumber}. Por tratarse de un contrato originalmente inferior a un año, la duración mínima debe ser de 1 año.`
+      `Art. 46 CST: Esta es la prórroga #${extensionNumber}. Por tratarse de un contrato originalmente inferior a un año, la duración mínima debe ser de 1 año.`
     );
   }
 
@@ -117,10 +120,10 @@ export function validateExtension(
     );
   }
 
-  // Info sobre próxima prórroga
+  // Info sobre próxima prórroga (advertencia anticipada)
   if (isUnderOneYear && extensionNumber === COLOMBIAN_LABOR_LAW.MIN_YEAR_AFTER_EXTENSION - 1) {
     info.push(
-      `Atención: La próxima prórroga (#${extensionNumber + 1}) deberá tener una duración mínima de un año según la ley colombiana.`
+      `Atención: Esta es la prórroga #${extensionNumber} (última prórroga corta permitida). La próxima prórroga (#${extensionNumber + 1}) deberá tener una duración mínima de un año según el Art. 46 del CST.`
     );
   }
 
