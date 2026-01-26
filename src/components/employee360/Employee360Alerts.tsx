@@ -179,19 +179,17 @@ export function Employee360Alerts({ employeeId }: Employee360AlertsProps) {
         )}
       </div>
 
-      <ScrollArea className="h-[320px] pr-2">
-        <AnimatePresence mode="popLayout">
-          <div className="space-y-2">
-            {alerts.map((alert, index) => (
-              <AlertCard
-                key={alert.id}
-                alert={alert}
-                onNavigate={handleNavigate}
-              />
-            ))}
-          </div>
-        </AnimatePresence>
-      </ScrollArea>
+      <AnimatePresence mode="popLayout">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {alerts.map((alert) => (
+            <AlertCard
+              key={alert.id}
+              alert={alert}
+              onNavigate={handleNavigate}
+            />
+          ))}
+        </div>
+      </AnimatePresence>
     </div>
   );
 }
