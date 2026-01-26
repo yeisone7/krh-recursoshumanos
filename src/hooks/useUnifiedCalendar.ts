@@ -182,26 +182,35 @@ export function useUnifiedCalendar(
           .from('contracts')
           .select(`
             id, start_date, end_date, contract_type, is_terminated,
-            employee:employees(id, first_name, last_name)
+            employee_id
           `)
           .eq('is_terminated', false)
           .not('end_date', 'is', null)
           .gte('end_date', queryStart)
           .lte('end_date', queryEnd);
 
-        if (contracts) {
+        if (contracts && contracts.length > 0) {
+          // Fetch employee names from employees_v2
+          const employeeIds = [...new Set(contracts.map(c => c.employee_id))];
+          const { data: employees } = await supabase
+            .from('employees_v2')
+            .select('id, first_name, last_name')
+            .in('id', employeeIds);
+
+          const employeeMap = new Map(employees?.map(e => [e.id, e]) || []);
+
           const contractTypeLabels: Record<string, string> = {
-            termino_fijo: 'Término fijo',
-            termino_indefinido: 'Indefinido',
+            fijo: 'Término fijo',
+            indefinido: 'Indefinido',
             obra_labor: 'Obra/Labor',
             aprendizaje: 'Aprendizaje',
-            practicas: 'Prácticas',
+            servicios: 'Servicios',
           };
           
           for (const c of contracts) {
             if (!c.end_date) continue;
             const style = EVENT_STYLES.contract;
-            const employee = c.employee as { id: string; first_name: string; last_name: string } | null;
+            const employee = employeeMap.get(c.employee_id);
             // Contract expiration is a single-day event
             events.push({
               id: `contract-${c.id}`,
