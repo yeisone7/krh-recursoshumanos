@@ -24,8 +24,8 @@ export const contractFormSchema = z.object({
     required_error: 'Seleccione el empleado',
   }),
   
-  // Contract type
-  contractType: z.enum(['indefinido', 'fijo', 'obra_labor', 'aprendizaje', 'servicios'], {
+  // Contract type - dynamic from catalog
+  contractType: z.string({
     required_error: 'Seleccione el tipo de contrato',
   }),
   
