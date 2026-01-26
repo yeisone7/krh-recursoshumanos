@@ -147,7 +147,10 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
               <Edit className="w-4 h-4 mr-2" />
               Editar
             </Button>
-            <Button variant="outline">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate(`/empleados/${employee.id}/360?tab=documents`)}
+            >
               <FileText className="w-4 h-4 mr-2" />
               Documentos
             </Button>

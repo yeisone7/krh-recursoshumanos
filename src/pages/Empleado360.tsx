@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, Navigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -26,7 +26,16 @@ import {
 
 export default function Empleado360() {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState('profile');
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'profile');
+
+  // Sync tab with URL parameter
+  useEffect(() => {
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
 
   const data = useEmployee360(id, activeTab);
 
