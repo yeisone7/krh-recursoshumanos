@@ -26,7 +26,8 @@ type CatalogTableName =
   | 'catalog_afp' 
   | 'catalog_ccf' 
   | 'catalog_afc' 
-  | 'catalog_ips';
+  | 'catalog_ips'
+  | 'catalog_banks';
 
 export function useCatalogARL() {
   return useCatalogGeneric('catalog_arl');
