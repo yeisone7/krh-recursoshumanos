@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
   CalendarIcon, User, Briefcase, MapPin, Heart, Building, 
-  CreditCard, Shield, Clock, Users as UsersIcon 
+  CreditCard, Shield, Clock, Users as UsersIcon, Camera 
 } from 'lucide-react';
 
 import {
@@ -73,6 +73,7 @@ import {
   useIPSCatalog 
 } from '@/hooks/useSocialSecurityCatalogs';
 import { useBanksCatalog } from '@/hooks/useBanksCatalog';
+import { AvatarUpload } from './AvatarUpload';
 
 interface EmployeeFormDialogProps {
   open: boolean;
@@ -83,6 +84,7 @@ interface EmployeeFormDialogProps {
 
 export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: EmployeeFormDialogProps) {
   const [activeTab, setActiveTab] = useState('identity');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { currentCompanyId } = useAuth();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: areas = [] } = useAreas();
@@ -98,6 +100,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   const updateEmployee = useUpdateEmployee();
   
   const isEditMode = !!employee;
+
+  // Sync avatar URL when employee changes
+  useEffect(() => {
+    setAvatarUrl(employee?.avatar_url || null);
+  }, [employee]);
 
   const form = useForm<EmployeeFullFormData>({
     resolver: zodResolver(employeeFullFormSchema),
@@ -206,12 +213,12 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
     try {
       if (isEditMode && employee) {
-        await updateEmployee.mutateAsync({ id: employee.id, ...data });
+        await updateEmployee.mutateAsync({ id: employee.id, avatarUrl, ...data });
         toast.success('Empleado actualizado', {
           description: `${data.firstName} ${data.lastName} ha sido actualizado exitosamente.`,
         });
       } else {
-        await createEmployee.mutateAsync(data);
+        await createEmployee.mutateAsync({ ...data, avatarUrl });
         toast.success('Empleado creado', {
           description: `${data.firstName} ${data.lastName} ha sido registrado exitosamente.`,
         });
@@ -275,6 +282,20 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
               <ScrollArea className="h-[calc(90vh-220px)] px-6 py-4">
                 {/* A. IDENTITY TAB */}
                 <TabsContent value="identity" className="mt-0 space-y-6">
+                  {/* Photo Section */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Foto del Empleado</h3>
+                    <div className="flex justify-center">
+                      <AvatarUpload
+                        currentAvatarUrl={avatarUrl}
+                        employeeId={employee?.id}
+                        employeeName={`${form.watch('firstName') || ''} ${form.watch('lastName') || ''}`}
+                        onAvatarChange={(url) => setAvatarUrl(url)}
+                        size="lg"
+                      />
+                    </div>
+                  </div>
+
                   {/* Document Section */}
                   <div className="space-y-4">
                     <h3 className="font-semibold text-foreground border-b pb-2">Documento de Identidad</h3>
