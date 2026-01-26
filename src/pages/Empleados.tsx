@@ -17,6 +17,7 @@ import {
   Loader2,
   Eye
 } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -314,11 +315,12 @@ export default function Empleados() {
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center">
-                    <span className="text-lg font-semibold text-primary">
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={employee.avatar_url || undefined} alt={getEmployeeFullName(employee)} />
+                    <AvatarFallback className="bg-primary-light text-primary text-lg font-semibold">
                       {employee.first_name[0]}{employee.last_name[0]}
-                    </span>
-                  </div>
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                       {getEmployeeFullName(employee)}
