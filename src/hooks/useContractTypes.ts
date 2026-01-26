@@ -136,22 +136,29 @@ export function useContractTypes() {
   });
 
   const uploadTemplate = async (file: File, contractTypeId: string): Promise<string | null> => {
-    if (!currentCompanyId) return null;
+    if (!currentCompanyId) {
+      console.error('Upload failed: No company ID');
+      toast.error('Error: No hay empresa seleccionada');
+      return null;
+    }
 
     const fileExt = file.name.split('.').pop();
     const fileName = `${contractTypeId}.${fileExt}`;
     const filePath = `${currentCompanyId}/contract-templates/${fileName}`;
+    
+    console.log('Uploading template to:', filePath);
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError, data } = await supabase.storage
       .from('documents')
       .upload(filePath, file, { upsert: true });
 
     if (uploadError) {
-      console.error('Upload error:', uploadError);
-      toast.error('Error al subir la plantilla');
+      console.error('Upload error details:', uploadError);
+      toast.error(`Error al subir la plantilla: ${uploadError.message}`);
       return null;
     }
 
+    console.log('Upload success:', data);
     toast.success('Plantilla subida exitosamente');
     return filePath;
   };
