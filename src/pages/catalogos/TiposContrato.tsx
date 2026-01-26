@@ -45,38 +45,44 @@ export default function TiposContrato() {
 
   const handleSubmit = async (formData: Partial<ContractTypeConfig>, file?: File) => {
     try {
+      let recordId: string;
+      let templateUrl: string | null = null;
+      let templateFileName: string | null = null;
+
       if (editItem) {
-        let templateUrl = editItem.template_url;
-        let templateFileName = editItem.template_file_name;
+        recordId = editItem.id;
+        templateUrl = editItem.template_url;
+        templateFileName = editItem.template_file_name;
+      } else {
+        // Create the record first
+        const newRecord = await create({
+          ...formData,
+          template_url: null,
+          template_file_name: null,
+        });
+        if (!newRecord) throw new Error('Failed to create record');
+        recordId = newRecord.id;
+      }
 
-        if (file) {
-          const uploadedPath = await uploadTemplate(file, editItem.id);
-          if (uploadedPath) {
-            templateUrl = uploadedPath;
-            templateFileName = file.name;
-          }
+      // Upload template if file provided
+      if (file) {
+        const uploadedPath = await uploadTemplate(file, recordId);
+        if (uploadedPath) {
+          templateUrl = uploadedPath;
+          templateFileName = file.name;
         }
+      }
 
+      // Update with template info (for both create and edit)
+      if (editItem || file) {
         await update({
           ...formData,
-          id: editItem.id,
+          id: recordId,
           template_url: templateUrl,
           template_file_name: templateFileName,
         });
-      } else {
-        const newRecord = await create(formData);
-        
-        if (file && newRecord) {
-          const uploadedPath = await uploadTemplate(file, newRecord.id);
-          if (uploadedPath) {
-            await update({
-              id: newRecord.id,
-              template_url: uploadedPath,
-              template_file_name: file.name,
-            });
-          }
-        }
       }
+
       setEditItem(null);
     } catch (error) {
       console.error('Submit error:', error);
