@@ -13,4 +13,5 @@ export { Tab360Dotation } from './Tab360Dotation';
 export { Tab360Overtime } from './Tab360Overtime';
 export { Tab360Disciplinary } from './Tab360Disciplinary';
 export { Tab360Documents } from './Tab360Documents';
+export { Tab360Schedules } from './Tab360Schedules';
 export { Tab360Audit } from './Tab360Audit';
