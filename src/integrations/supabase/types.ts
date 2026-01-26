@@ -884,6 +884,7 @@ export type Database = {
           document_url: string | null
           end_date: string
           extension_number: number
+          extension_type: string
           id: string
           new_salary: number | null
           reason: string | null
@@ -896,6 +897,7 @@ export type Database = {
           document_url?: string | null
           end_date: string
           extension_number: number
+          extension_type?: string
           id?: string
           new_salary?: number | null
           reason?: string | null
@@ -908,6 +910,7 @@ export type Database = {
           document_url?: string | null
           end_date?: string
           extension_number?: number
+          extension_type?: string
           id?: string
           new_salary?: number | null
           reason?: string | null

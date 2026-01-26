@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ExtensionType } from '@/lib/colombianContractLaw';
 
 // Contract Type
 export type ContractType = 'indefinite' | 'fixed' | 'work_labor' | 'apprenticeship' | 'services';
@@ -6,12 +7,13 @@ export type ContractType = 'indefinite' | 'fixed' | 'work_labor' | 'apprenticesh
 // Contract Status
 export type ContractStatus = 'active' | 'expiring' | 'expired' | 'terminated';
 
-// Extension (Prórroga) interface
+// Extension (Prórroga) interface - Updated for Colombian labor law
 export interface ContractExtension {
   id: string;
   extensionNumber: number;
   startDate: Date;
   endDate: Date;
+  extensionType: ExtensionType; // 'pactada' | 'automatica'
   documentUrl?: string;
   createdAt: Date;
   notes?: string;
@@ -67,7 +69,7 @@ export const contractFormSchema = z.object({
 
 export type ContractFormData = z.infer<typeof contractFormSchema>;
 
-// Extension Schema
+// Extension Schema - Updated for Colombian labor law (Art. 46 CST)
 export const extensionFormSchema = z.object({
   startDate: z.date({
     required_error: 'Seleccione la fecha de inicio',
@@ -75,6 +77,9 @@ export const extensionFormSchema = z.object({
   endDate: z.date({
     required_error: 'Seleccione la fecha de fin',
   }),
+  extensionType: z.enum(['pactada', 'automatica'], {
+    required_error: 'Seleccione el tipo de prórroga',
+  }).default('pactada'),
   notes: z.string().max(500).optional(),
 }).refine((data) => data.endDate > data.startDate, {
   message: 'La fecha de fin debe ser posterior a la fecha de inicio',

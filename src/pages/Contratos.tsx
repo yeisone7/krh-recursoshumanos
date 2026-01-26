@@ -247,11 +247,12 @@ export default function Contratos() {
             area: '',
             hasNonCompeteClause: selectedContract.has_non_compete_clause || false,
             hasConfidentialityClause: selectedContract.has_confidentiality_clause || false,
-            extensions: (selectedContract.contract_extensions || []).map((ext, idx) => ({
+            extensions: (selectedContract.contract_extensions || []).map((ext) => ({
               id: ext.id,
               extensionNumber: ext.extension_number,
               startDate: new Date(ext.start_date),
               endDate: new Date(ext.end_date),
+              extensionType: (ext as any).extension_type || 'pactada',
               createdAt: new Date(ext.created_at),
               notes: ext.reason || undefined,
             })),

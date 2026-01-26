@@ -165,21 +165,26 @@ export function Tab360Contracts({ contracts, isLoading }: Tab360ContractsProps) 
                       Prórrogas ({contract.contract_extensions.length})
                     </h4>
                     <div className="space-y-2">
-                      {contract.contract_extensions.map((ext: any, i: number) => (
-                        <div 
-                          key={ext.id}
-                          className="text-sm flex items-center justify-between p-2 rounded bg-muted/50"
-                        >
-                          <span>
-                            Prórroga #{ext.extension_number}: {format(new Date(ext.start_date), "d MMM yyyy", { locale: es })} 
-                            {' → '}
-                            {format(new Date(ext.end_date), "d MMM yyyy", { locale: es })}
-                          </span>
-                          {ext.new_salary && (
-                            <Badge variant="outline">{formatCurrency(ext.new_salary)}</Badge>
-                          )}
-                        </div>
-                      ))}
+                      {contract.contract_extensions.map((ext: any) => {
+                        const extensionTypeLabel = ext.extension_type === 'automatica' 
+                          ? 'Automática' 
+                          : 'Pactada';
+                        return (
+                          <div 
+                            key={ext.id}
+                            className="text-sm flex items-center justify-between p-2 rounded bg-muted/50"
+                          >
+                            <span>
+                              Prórroga #{ext.extension_number} ({extensionTypeLabel}): {format(new Date(ext.start_date), "d MMM yyyy", { locale: es })} 
+                              {' → '}
+                              {format(new Date(ext.end_date), "d MMM yyyy", { locale: es })}
+                            </span>
+                            {ext.new_salary && (
+                              <Badge variant="outline">{formatCurrency(ext.new_salary)}</Badge>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
