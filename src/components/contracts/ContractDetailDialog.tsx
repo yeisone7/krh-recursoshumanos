@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
 import { ExtensionFormDialog } from './ExtensionFormDialog';
+import { FourYearLimitGauge } from './FourYearLimitGauge';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { TerminationProcessDialog } from '@/components/termination/TerminationProcessDialog';
 import { GenerateContractDialog } from './GenerateContractDialog';
@@ -299,6 +300,20 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                   </div>
                 )}
               </div>
+
+              {/* Four Year Limit Gauge - Colombian Labor Law */}
+              {contract.contractType !== 'indefinite' && (
+                <>
+                  <Separator />
+                  <FourYearLimitGauge
+                    startDate={contract.startDate}
+                    currentEndDate={contract.currentEndDate}
+                    originalEndDate={contract.originalEndDate}
+                    extensionCount={contract.extensions.length}
+                    contractType={contract.contractType}
+                  />
+                </>
+              )}
 
               {/* Validity Calculation Info */}
               {contract.contractType !== 'indefinite' && (
