@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.notify-incapacity-alerts]
 verify_jwt = false
+
+[functions.notify-contract-preaviso]
+verify_jwt = false

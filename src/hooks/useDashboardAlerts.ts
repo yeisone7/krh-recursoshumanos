@@ -4,13 +4,14 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export interface DashboardAlert {
   id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation';
+  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'preaviso';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
   daysRemaining: number;
   entityName: string;
   entityId: string;
+  isPreaviso?: boolean;
 }
 
 function calculateDaysRemaining(dateStr: string | null): number | null {
@@ -91,9 +92,31 @@ export function useDashboardAlerts() {
           }
 
           const daysRemaining = calculateDaysRemaining(currentEndDate);
-          if (daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 30) {
-            const hasExtensions = contract.contract_extensions && contract.contract_extensions.length > 0;
-            
+          if (daysRemaining === null) continue;
+          
+          const hasExtensions = contract.contract_extensions && contract.contract_extensions.length > 0;
+          const employeeName = `${employee.first_name} ${employee.last_name}`;
+          
+          // Alerta de PREAVISO: 35-31 días antes del vencimiento
+          // Art. 46 CST: Se requiere preaviso de 30 días para no renovación
+          if (daysRemaining > 30 && daysRemaining <= 35) {
+            alerts.push({
+              id: `preaviso-${contract.id}`,
+              type: 'preaviso',
+              level: 'warning',
+              title: '⚖️ Período de Preaviso Activo',
+              description: hasExtensions 
+                ? `Prórroga #${contract.contract_extensions!.length}: Decide antes de ${daysRemaining - 30} día(s) si será pactada o automática`
+                : `Contrato: Decide antes de ${daysRemaining - 30} día(s) si será prórroga pactada o automática`,
+              daysRemaining,
+              entityName: employeeName,
+              entityId: contract.id,
+              isPreaviso: true,
+            });
+          }
+          
+          // Alerta normal de vencimiento: ≤30 días
+          if (daysRemaining >= 0 && daysRemaining <= 30) {
             alerts.push({
               id: `contract-${contract.id}`,
               type: hasExtensions ? 'extension' : 'contract',
@@ -103,7 +126,7 @@ export function useDashboardAlerts() {
                 ? `Prórroga #${contract.contract_extensions!.length} vence en ${daysRemaining} días`
                 : `Contrato a término fijo vence en ${daysRemaining} días`,
               daysRemaining,
-              entityName: `${employee.first_name} ${employee.last_name}`,
+              entityName: employeeName,
               entityId: contract.id,
             });
           }
