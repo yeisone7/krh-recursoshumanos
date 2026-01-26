@@ -20,6 +20,7 @@ import {
   Tab360Overtime,
   Tab360Disciplinary,
   Tab360Documents,
+  Tab360Schedules,
   Tab360Audit,
 } from '@/components/employee360';
 
@@ -73,6 +74,7 @@ export default function Empleado360() {
             <TabsTrigger value="dotation">Dotación</TabsTrigger>
             <TabsTrigger value="overtime">Horas Extra</TabsTrigger>
             <TabsTrigger value="disciplinary">Disciplinarios</TabsTrigger>
+            <TabsTrigger value="schedules">Horarios</TabsTrigger>
             <TabsTrigger value="documents">Documentos</TabsTrigger>
             <TabsTrigger value="audit">Auditoría</TabsTrigger>
           </TabsList>
@@ -112,6 +114,9 @@ export default function Empleado360() {
           </TabsContent>
           <TabsContent value="disciplinary" className="m-0">
             <Tab360Disciplinary disciplinary={data.disciplinary} isLoading={data.isLoadingDisciplinary} />
+          </TabsContent>
+          <TabsContent value="schedules" className="m-0">
+            <Tab360Schedules timeConfigs={data.timeConfigs} isLoading={data.isLoadingTimeConfigs} />
           </TabsContent>
           <TabsContent value="documents" className="m-0">
             <Tab360Documents employee={data.employee} />
