@@ -35,7 +35,17 @@ import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Empleado360 from "./pages/Empleado360";
 import Perfil from "./pages/Perfil";
-import { CatalogosAreas, CatalogosCargos, CatalogosTiposDotacion } from "./pages/catalogos";
+import { 
+  CatalogosAreas, 
+  CatalogosCargos, 
+  CatalogosTiposDotacion,
+  CatalogosARL,
+  CatalogosEPS,
+  CatalogosAFP,
+  CatalogosCCF,
+  CatalogosAFC,
+  CatalogosIPS,
+} from "./pages/catalogos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +101,12 @@ const App = () => (
                         <Route path="/catalogos/areas" element={<CatalogosAreas />} />
                         <Route path="/catalogos/cargos" element={<CatalogosCargos />} />
                         <Route path="/catalogos/tipos-dotacion" element={<CatalogosTiposDotacion />} />
+                        <Route path="/catalogos/arl" element={<CatalogosARL />} />
+                        <Route path="/catalogos/eps" element={<CatalogosEPS />} />
+                        <Route path="/catalogos/afp" element={<CatalogosAFP />} />
+                        <Route path="/catalogos/ccf" element={<CatalogosCCF />} />
+                        <Route path="/catalogos/afc" element={<CatalogosAFC />} />
+                        <Route path="/catalogos/ips" element={<CatalogosIPS />} />
                         <Route path="/perfil" element={<Perfil />} />
                         <Route path="/seguridad" element={<Seguridad />} />
                         <Route path="/configuracion" element={<Configuracion />} />
