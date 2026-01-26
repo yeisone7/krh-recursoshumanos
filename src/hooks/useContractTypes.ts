@@ -152,6 +152,7 @@ export function useContractTypes() {
       return null;
     }
 
+    toast.success('Plantilla subida exitosamente');
     return filePath;
   };
 
