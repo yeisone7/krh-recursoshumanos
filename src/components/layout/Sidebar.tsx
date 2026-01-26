@@ -4,6 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompanies, useCompany } from '@/hooks/useCompanies';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   LayoutDashboard,
   Users,
   FileText,
@@ -129,7 +135,7 @@ export function Sidebar() {
   const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = location.pathname === item.href;
     
-    return (
+    const linkContent = (
       <Link to={item.href}>
         <motion.div
           whileHover={{ x: 4 }}
@@ -172,6 +178,32 @@ export function Sidebar() {
         </motion.div>
       </Link>
     );
+
+    if (collapsed) {
+      return (
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            {linkContent}
+          </TooltipTrigger>
+          <TooltipContent 
+            side="right" 
+            className="bg-sidebar border-sidebar-border text-sidebar-foreground font-medium px-3 py-2 shadow-lg"
+            sideOffset={8}
+          >
+            <div className="flex items-center gap-2">
+              <span>{item.label}</span>
+              {item.badge && (
+                <span className="bg-destructive text-destructive-foreground text-xs font-semibold px-1.5 py-0.5 rounded-full">
+                  {item.badge}
+                </span>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return linkContent;
   };
 
   const SectionLabel = ({ label }: { label: string }) => (
@@ -192,44 +224,83 @@ export function Sidebar() {
   const CatalogosMenu = () => {
     const isAnyChildActive = catalogosItem.children?.some(child => location.pathname === child.href);
     
+    const menuButton = (
+      <motion.div
+        whileHover={{ x: 4 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => !collapsed && setCatalogosOpen(!catalogosOpen)}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
+          isAnyChildActive
+            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+        )}
+      >
+        <span className={cn(
+          "transition-colors",
+          isAnyChildActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+        )}>
+          {catalogosItem.icon}
+        </span>
+        <AnimatePresence>
+          {!collapsed && (
+            <motion.span
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1"
+            >
+              {catalogosItem.label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+        {!collapsed && (
+          <ChevronDown className={cn(
+            "w-4 h-4 transition-transform",
+            catalogosOpen && "rotate-180"
+          )} />
+        )}
+      </motion.div>
+    );
+    
     return (
       <div>
-        <motion.div
-          whileHover={{ x: 4 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => !collapsed && setCatalogosOpen(!catalogosOpen)}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
-            isAnyChildActive
-              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-          )}
-        >
-          <span className={cn(
-            "transition-colors",
-            isAnyChildActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
-          )}>
-            {catalogosItem.icon}
-          </span>
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1"
-              >
-                {catalogosItem.label}
-              </motion.span>
-            )}
-          </AnimatePresence>
-          {!collapsed && (
-            <ChevronDown className={cn(
-              "w-4 h-4 transition-transform",
-              catalogosOpen && "rotate-180"
-            )} />
-          )}
-        </motion.div>
+        {collapsed ? (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              {menuButton}
+            </TooltipTrigger>
+            <TooltipContent 
+              side="right" 
+              className="bg-sidebar border-sidebar-border text-sidebar-foreground p-0 shadow-lg"
+              sideOffset={8}
+            >
+              <div className="py-2">
+                <p className="px-3 pb-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider border-b border-sidebar-border mb-1">
+                  {catalogosItem.label}
+                </p>
+                {catalogosItem.children?.map((child) => {
+                  const isActive = location.pathname === child.href;
+                  return (
+                    <Link key={child.href} to={child.href}>
+                      <div className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
+                        isActive
+                          ? "bg-sidebar-accent text-primary font-medium"
+                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                      )}>
+                        {child.icon}
+                        <span>{child.label}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          menuButton
+        )}
         
         <AnimatePresence>
           {catalogosOpen && !collapsed && (
@@ -272,12 +343,13 @@ export function Sidebar() {
   };
 
   return (
-    <motion.aside
-      initial={false}
-      animate={{ width: collapsed ? 80 : 260 }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative"
-    >
+    <TooltipProvider>
+      <motion.aside
+        initial={false}
+        animate={{ width: collapsed ? 80 : 260 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        className="h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative"
+      >
       {/* Collapse/Expand Toggle Button - Floating on edge near company selector */}
       <button
         onClick={() => setCollapsed(!collapsed)}
@@ -393,6 +465,7 @@ export function Sidebar() {
       {/* User section */}
       <UserSection collapsed={collapsed} />
     </motion.aside>
+    </TooltipProvider>
   );
 }
 
