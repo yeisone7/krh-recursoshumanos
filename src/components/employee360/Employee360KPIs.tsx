@@ -1,3 +1,4 @@
+import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   Calendar, 
@@ -48,20 +49,20 @@ function KPICard({ icon, label, value, sublabel, variant = 'default', delay = 0 
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
       className={cn(
-        'card-elevated p-4 flex items-center gap-3',
+        'card-elevated p-3 flex items-center gap-2',
         variantStyles[variant]
       )}
     >
       <div className={cn('shrink-0', iconStyles[variant])}>
-        {icon}
+        {React.cloneElement(icon as React.ReactElement, { className: 'w-5 h-5' })}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-2xl font-display font-bold text-foreground truncate">
+        <p className="text-lg font-display font-bold text-foreground truncate">
           {value}
         </p>
-        <p className="text-sm text-muted-foreground truncate">{label}</p>
+        <p className="text-xs text-muted-foreground truncate">{label}</p>
         {sublabel && (
-          <p className="text-xs text-muted-foreground truncate">{sublabel}</p>
+          <p className="text-[10px] text-muted-foreground truncate">{sublabel}</p>
         )}
       </div>
     </motion.div>
