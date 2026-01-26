@@ -90,42 +90,42 @@ export function CertificationAlertsPanel({ onEmployeeClick }: CertificationAlert
   const warningCount = certificationAlerts.filter(a => a.level === 'warning').length;
 
   return (
-    <div className="card-elevated p-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="card-elevated p-4 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <ShieldAlert className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-foreground">Alertas de Certificaciones</h3>
+          <ShieldAlert className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold text-sm text-foreground">Alertas de Certificaciones</h3>
         </div>
         <Badge variant="outline" className="text-xs">
-          {certificationAlerts.length} {certificationAlerts.length === 1 ? 'alerta' : 'alertas'}
+          {certificationAlerts.length}
         </Badge>
       </div>
 
-      {/* Summary badges */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      {/* Compact summary badges */}
+      <div className="flex flex-wrap gap-1 mb-3">
         {expiredCount > 0 && (
-          <Badge className="bg-destructive/10 text-destructive border-destructive/20">
+          <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-xs py-0">
             <AlertTriangle className="w-3 h-3 mr-1" />
             {expiredCount} vencidas
           </Badge>
         )}
         {criticalCount > 0 && (
-          <Badge className="bg-destructive/10 text-destructive border-destructive/20">
+          <Badge className="bg-destructive/10 text-destructive border-destructive/20 text-xs py-0">
             <Clock className="w-3 h-3 mr-1" />
             {criticalCount} críticas
           </Badge>
         )}
         {warningCount > 0 && (
-          <Badge className="bg-warning/10 text-warning border-warning/20">
+          <Badge className="bg-warning/10 text-warning border-warning/20 text-xs py-0">
             <Clock className="w-3 h-3 mr-1" />
             {warningCount} advertencias
           </Badge>
         )}
       </div>
 
-      <ScrollArea className="h-[280px] pr-2">
+      <ScrollArea className="flex-1 max-h-[180px] pr-2">
         <div className="space-y-2">
-          {certificationAlerts.map((alert) => {
+          {certificationAlerts.slice(0, 5).map((alert) => {
             const styles = getLevelStyles(alert.level);
             const isExpired = alert.daysRemaining < 0;
 
@@ -133,37 +133,46 @@ export function CertificationAlertsPanel({ onEmployeeClick }: CertificationAlert
               <div
                 key={alert.id}
                 className={cn(
-                  'p-3 rounded-lg border-l-4 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors group',
+                  'p-2 rounded-lg border-l-4 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors group',
                   styles.border
                 )}
                 onClick={() => onEmployeeClick(alert.entityId)}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-1.5 mb-0.5">
                       {isExpired ? (
-                        <AlertTriangle className={cn('w-4 h-4 flex-shrink-0', styles.icon)} />
+                        <AlertTriangle className={cn('w-3 h-3 flex-shrink-0', styles.icon)} />
                       ) : (
-                        <Clock className={cn('w-4 h-4 flex-shrink-0', styles.icon)} />
+                        <Clock className={cn('w-3 h-3 flex-shrink-0', styles.icon)} />
                       )}
-                      <span className="font-medium text-sm text-foreground truncate">
+                      <span className="font-medium text-xs text-foreground truncate">
                         {alert.entityName}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground ml-6">{alert.description}</p>
+                    <p className="text-xs text-muted-foreground ml-4.5 line-clamp-1">{alert.description}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={cn('text-xs whitespace-nowrap', styles.badge)}>
-                      {getLevelLabel(alert.level)}
-                    </Badge>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
+                  <Badge variant="outline" className={cn('text-xs whitespace-nowrap py-0 px-1.5', styles.badge)}>
+                    {getLevelLabel(alert.level)}
+                  </Badge>
                 </div>
               </div>
             );
           })}
         </div>
       </ScrollArea>
+      
+      {certificationAlerts.length > 5 && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="w-full mt-2 text-xs h-7"
+          onClick={() => onEmployeeClick(certificationAlerts[0].entityId)}
+        >
+          Ver todas ({certificationAlerts.length})
+          <ChevronRight className="w-3 h-3 ml-1" />
+        </Button>
+      )}
     </div>
   );
 }
