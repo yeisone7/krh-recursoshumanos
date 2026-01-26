@@ -156,8 +156,6 @@ export default function TiposContrato() {
                 <TableRow>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Código</TableHead>
-                  <TableHead>Duración Máx.</TableHead>
-                  <TableHead>Prórrogas</TableHead>
                   <TableHead>Plantilla</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="w-[70px]"></TableHead>
@@ -180,12 +178,6 @@ export default function TiposContrato() {
                       <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
                         {item.contract_type}
                       </code>
-                    </TableCell>
-                    <TableCell>
-                      {item.max_duration_months ? `${item.max_duration_months} meses` : '—'}
-                    </TableCell>
-                    <TableCell>
-                      {item.max_extensions ?? '—'}
                     </TableCell>
                     <TableCell>
                       {item.template_file_name ? (
