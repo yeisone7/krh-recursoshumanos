@@ -51,6 +51,7 @@ export default function Empleados() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<typeof employees extends (infer T)[] ? T : never | null>(null);
 
   const { currentCompanyId } = useAuth();
   const { data: employees, isLoading } = useEmployees();
@@ -81,6 +82,19 @@ export default function Empleados() {
   const handleOpenDetail = (employeeId: string) => {
     setSelectedEmployeeId(employeeId);
     setIsDetailOpen(true);
+  };
+
+  const handleEdit = (employee: typeof employees extends (infer T)[] ? T : never) => {
+    setEditingEmployee(employee);
+    setIsFormOpen(true);
+  };
+
+  const handleViewContract = (employeeId: string) => {
+    navigate(`/contratos?employee=${employeeId}`);
+  };
+
+  const handleViewDocuments = (employeeId: string) => {
+    navigate(`/empleados/${employeeId}/360?tab=documentos`);
   };
 
   const filteredEmployees = useMemo(() => {
@@ -154,7 +168,11 @@ export default function Empleados() {
       {/* Employee Form Dialog */}
       <EmployeeFormDialog 
         open={isFormOpen} 
-        onOpenChange={setIsFormOpen}
+        onOpenChange={(open) => {
+          setIsFormOpen(open);
+          if (!open) setEditingEmployee(null);
+        }}
+        employee={editingEmployee}
       />
 
       {/* Employee Detail Dialog */}
@@ -342,9 +360,15 @@ export default function Empleados() {
                       <Eye className="w-4 h-4 mr-2" />
                       Vista 360
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Editar</DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Ver contrato</DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Documentos</DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(employee); }}>
+                      Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewContract(employee.id); }}>
+                      Ver contrato
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewDocuments(employee.id); }}>
+                      Documentos
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
