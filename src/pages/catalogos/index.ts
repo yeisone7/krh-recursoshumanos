@@ -1,3 +1,9 @@
 export { default as CatalogosAreas } from './Areas';
 export { default as CatalogosCargos } from './Cargos';
 export { default as CatalogosTiposDotacion } from './TiposDotacion';
+export { default as CatalogosARL } from './ARL';
+export { default as CatalogosEPS } from './EPS';
+export { default as CatalogosAFP } from './AFP';
+export { default as CatalogosCCF } from './CCF';
+export { default as CatalogosAFC } from './AFC';
+export { default as CatalogosIPS } from './IPS';
