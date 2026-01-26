@@ -165,42 +165,6 @@ export function ContractTypeFormDialog({
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="maxDurationMonths">Duración Máx. (meses)</Label>
-              <Input
-                id="maxDurationMonths"
-                type="number"
-                min="0"
-                value={maxDurationMonths}
-                onChange={(e) => setMaxDurationMonths(e.target.value)}
-                placeholder="12"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="maxExtensions">Máx. Prórrogas</Label>
-              <Input
-                id="maxExtensions"
-                type="number"
-                min="0"
-                value={maxExtensions}
-                onChange={(e) => setMaxExtensions(e.target.value)}
-                placeholder="3"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="defaultTrialDays">Días Período Prueba</Label>
-              <Input
-                id="defaultTrialDays"
-                type="number"
-                min="0"
-                max="60"
-                value={defaultTrialDays}
-                onChange={(e) => setDefaultTrialDays(e.target.value)}
-                placeholder="60"
-              />
-            </div>
-          </div>
 
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
