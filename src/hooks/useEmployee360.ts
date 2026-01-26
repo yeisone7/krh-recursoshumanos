@@ -209,6 +209,25 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
     enabled: !!employeeId && ['disciplinary', 'kpis'].includes(activeTab),
   });
 
+  // Time configurations (schedules/shifts)
+  const timeConfigsQuery = useQuery({
+    queryKey: ['employee_360_time_configs', employeeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employee_time_config')
+        .select(`
+          *,
+          work_schedules(*),
+          shift_cycles(*)
+        `)
+        .eq('employee_id', employeeId!)
+        .order('start_date', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!employeeId && activeTab === 'schedules',
+  });
+
   // Audit logs for this employee
   const auditQuery = useQuery({
     queryKey: ['employee_360_audit', employeeId],
@@ -327,6 +346,8 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
     isLoadingOvertime: overtimeQuery.isLoading,
     disciplinary: disciplinaryQuery.data || [],
     isLoadingDisciplinary: disciplinaryQuery.isLoading,
+    timeConfigs: timeConfigsQuery.data || [],
+    isLoadingTimeConfigs: timeConfigsQuery.isLoading,
     auditLogs: auditQuery.data || [],
     isLoadingAudit: auditQuery.isLoading,
     kpis,
