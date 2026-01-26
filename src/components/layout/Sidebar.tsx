@@ -275,10 +275,22 @@ export function Sidebar() {
       initial={false}
       animate={{ width: collapsed ? 80 : 260 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="h-screen bg-sidebar flex flex-col border-r border-sidebar-border"
+      className="h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative"
     >
+      {/* Collapse/Expand Toggle Button - Floating on edge */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
+      >
+        {collapsed ? (
+          <ChevronRight className="w-3.5 h-3.5" />
+        ) : (
+          <ChevronLeft className="w-3.5 h-3.5" />
+        )}
+      </button>
+
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
+      <div className="h-16 flex items-center justify-center px-4 border-b border-sidebar-border">
         <AnimatePresence mode="wait">
           {!collapsed ? (
             <motion.div
@@ -305,29 +317,10 @@ export function Sidebar() {
             </motion.div>
           )}
         </AnimatePresence>
-        
-        {!collapsed && (
-          <button
-            onClick={() => setCollapsed(true)}
-            className="p-1.5 rounded-md text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-        )}
       </div>
 
       {/* Company Selector */}
       <CompanySelector collapsed={collapsed} />
-
-      {/* Expand button when collapsed */}
-      {collapsed && (
-        <button
-          onClick={() => setCollapsed(false)}
-          className="mx-auto mt-3 p-1.5 rounded-md text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      )}
 
       {/* Navigation - Hidden scrollbar */}
       <nav className="flex-1 overflow-y-auto py-2 px-3 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
