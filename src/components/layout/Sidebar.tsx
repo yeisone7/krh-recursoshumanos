@@ -290,7 +290,7 @@ export function Sidebar() {
       </button>
 
       {/* Logo */}
-      <div className="h-16 flex items-center justify-center px-4 border-b border-sidebar-border">
+      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
         <AnimatePresence mode="wait">
           {!collapsed ? (
             <motion.div
