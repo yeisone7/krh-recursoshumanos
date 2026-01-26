@@ -929,12 +929,15 @@ export type Database = {
           contract_type: string
           created_at: string
           default_trial_days: number | null
+          description: string | null
           display_name: string
           id: string
           is_active: boolean | null
           max_duration_months: number | null
           max_extensions: number | null
           requires_end_date: boolean | null
+          template_file_name: string | null
+          template_url: string | null
           updated_at: string
         }
         Insert: {
@@ -942,12 +945,15 @@ export type Database = {
           contract_type: string
           created_at?: string
           default_trial_days?: number | null
+          description?: string | null
           display_name: string
           id?: string
           is_active?: boolean | null
           max_duration_months?: number | null
           max_extensions?: number | null
           requires_end_date?: boolean | null
+          template_file_name?: string | null
+          template_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -955,12 +961,15 @@ export type Database = {
           contract_type?: string
           created_at?: string
           default_trial_days?: number | null
+          description?: string | null
           display_name?: string
           id?: string
           is_active?: boolean | null
           max_duration_months?: number | null
           max_extensions?: number | null
           requires_end_date?: boolean | null
+          template_file_name?: string | null
+          template_url?: string | null
           updated_at?: string
         }
         Relationships: [

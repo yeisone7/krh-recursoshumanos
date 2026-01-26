@@ -1,0 +1,271 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download } from 'lucide-react';
+import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
+import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
+
+export default function TiposContrato() {
+  const { data, isLoading, create, update, delete: deleteItem, uploadTemplate, downloadTemplate, isCreating, isUpdating } = useContractTypes();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editItem, setEditItem] = useState<ContractTypeConfig | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const filteredData = data.filter(item =>
+    item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.contract_type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSubmit = async (formData: Partial<ContractTypeConfig>, file?: File) => {
+    try {
+      if (editItem) {
+        let templateUrl = editItem.template_url;
+        let templateFileName = editItem.template_file_name;
+
+        if (file) {
+          const uploadedPath = await uploadTemplate(file, editItem.id);
+          if (uploadedPath) {
+            templateUrl = uploadedPath;
+            templateFileName = file.name;
+          }
+        }
+
+        await update({
+          ...formData,
+          id: editItem.id,
+          template_url: templateUrl,
+          template_file_name: templateFileName,
+        });
+      } else {
+        const newRecord = await create(formData);
+        
+        if (file && newRecord) {
+          const uploadedPath = await uploadTemplate(file, newRecord.id);
+          if (uploadedPath) {
+            await update({
+              id: newRecord.id,
+              template_url: uploadedPath,
+              template_file_name: file.name,
+            });
+          }
+        }
+      }
+      setEditItem(null);
+    } catch (error) {
+      console.error('Submit error:', error);
+    }
+  };
+
+  const handleEdit = (item: ContractTypeConfig) => {
+    setEditItem(item);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (deleteId) {
+      deleteItem(deleteId);
+      setDeleteId(null);
+    }
+  };
+
+  const handleNewClick = () => {
+    setEditItem(null);
+    setIsFormOpen(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Tipos de Contrato</h1>
+          <p className="text-muted-foreground">
+            Configure los tipos de contrato disponibles y sus plantillas
+          </p>
+        </div>
+        <Button onClick={handleNewClick}>
+          <Plus className="w-4 h-4 mr-2" />
+          Nuevo Tipo
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Catálogo de Tipos de Contrato</CardTitle>
+              <CardDescription>
+                {filteredData.length} tipo(s) configurado(s)
+              </CardDescription>
+            </div>
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Cargando...
+            </div>
+          ) : filteredData.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No se encontraron tipos de contrato
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Duración Máx.</TableHead>
+                  <TableHead>Prórrogas</TableHead>
+                  <TableHead>Plantilla</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="w-[70px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredData.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{item.display_name}</p>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground truncate max-w-xs">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                        {item.contract_type}
+                      </code>
+                    </TableCell>
+                    <TableCell>
+                      {item.max_duration_months ? `${item.max_duration_months} meses` : '—'}
+                    </TableCell>
+                    <TableCell>
+                      {item.max_extensions ?? '—'}
+                    </TableCell>
+                    <TableCell>
+                      {item.template_file_name ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto py-1 px-2 text-xs"
+                          onClick={() => item.template_url && downloadTemplate(item.template_url, item.template_file_name!)}
+                        >
+                          <FileText className="w-3 h-3 mr-1 text-primary" />
+                          <span className="text-primary truncate max-w-[100px]">
+                            {item.template_file_name}
+                          </span>
+                        </Button>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">Sin plantilla</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                        {item.is_active ? 'Activo' : 'Inactivo'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-background border shadow-lg">
+                          <DropdownMenuItem onClick={() => handleEdit(item)}>
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                          {item.template_url && (
+                            <DropdownMenuItem 
+                              onClick={() => downloadTemplate(item.template_url!, item.template_file_name!)}
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Descargar Plantilla
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => setDeleteId(item.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <ContractTypeFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleSubmit}
+        onDownloadTemplate={downloadTemplate}
+        isLoading={isCreating || isUpdating}
+        editItem={editItem}
+      />
+
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar tipo de contrato?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El tipo de contrato será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
