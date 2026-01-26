@@ -77,11 +77,13 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
         start_date: format(data.startDate, 'yyyy-MM-dd'),
         end_date: format(data.endDate, 'yyyy-MM-dd'),
         reason: data.notes || null,
+        extension_type: data.extensionType,
       });
       
+      const extensionLabel = data.extensionType === 'automatica' ? 'automática' : 'pactada';
       toast({
         title: 'Prórroga registrada',
-        description: `La prórroga #${data.extensionNumber} ha sido guardada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
+        description: `La prórroga ${extensionLabel} #${data.extensionNumber} ha sido guardada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
       });
       
       setShowExtensionForm(false);
@@ -401,7 +403,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
       </Dialog>
 
       {/* Extension Form Dialog */}
-      {contract.currentEndDate && (
+      {contract && contract.currentEndDate && (
         <ExtensionFormDialog
           open={showExtensionForm}
           onOpenChange={setShowExtensionForm}
@@ -409,6 +411,13 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
           employeeName={contract.employeeName}
           currentEndDate={contract.currentEndDate}
           extensionNumber={contract.extensions.length + 1}
+          contractStartDate={contract.startDate}
+          originalEndDate={contract.originalEndDate}
+          contractType={contract.contractType === 'fixed' ? 'fijo' : 
+                        contract.contractType === 'indefinite' ? 'indefinido' :
+                        contract.contractType === 'work_labor' ? 'obra_labor' :
+                        contract.contractType === 'apprenticeship' ? 'aprendizaje' : 'servicios'}
+          existingExtensions={contract.extensions}
           onSubmit={handleCreateExtension}
         />
       )}
