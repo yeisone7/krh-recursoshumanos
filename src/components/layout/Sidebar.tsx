@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import petroVerdeLogo from '@/assets/petro-verde-krh.png';
 
 interface NavItem {
@@ -416,35 +417,69 @@ function UserSection({ collapsed }: { collapsed: boolean }) {
 
   return (
     <div className="border-t border-sidebar-border p-3">
-      <div 
-        className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-sidebar-accent/50 transition-colors",
-          collapsed ? "justify-center" : ""
-        )}
-        onClick={() => navigate('/perfil')}
-      >
-        <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-sm font-semibold text-sidebar-accent-foreground">{userInitials}</span>
-          )}
-        </div>
-        {!collapsed && (
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{userEmail}</p>
-            <p className="text-xs text-sidebar-foreground/60 truncate">{primaryRole}</p>
-          </div>
-        )}
-        {!collapsed && (
-          <button 
-            className="p-1.5 rounded-md text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-            onClick={(e) => { e.stopPropagation(); signOut(); }}
+      <Popover>
+        <PopoverTrigger asChild>
+          <div 
+            className={cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-sidebar-accent/50 transition-colors",
+              collapsed ? "justify-center" : ""
+            )}
           >
-            <LogOut className="w-4 h-4" />
-          </button>
-        )}
-      </div>
+            <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-sm font-semibold text-sidebar-accent-foreground">{userInitials}</span>
+              )}
+            </div>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{userEmail}</p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">{primaryRole}</p>
+              </div>
+            )}
+            {!collapsed && (
+              <ChevronDown className="w-4 h-4 text-sidebar-foreground/50" />
+            )}
+          </div>
+        </PopoverTrigger>
+        <PopoverContent 
+          side="top" 
+          align="start" 
+          className="w-64 p-0 bg-popover border border-border shadow-lg"
+          sideOffset={8}
+        >
+          <div className="p-4 border-b border-border">
+            <p className="text-sm font-medium text-foreground">{userEmail}</p>
+            <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
+              {primaryRole}
+            </span>
+          </div>
+          <div className="p-2">
+            <button
+              onClick={() => navigate('/perfil')}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
+            >
+              <Users className="w-4 h-4" />
+              Mi Perfil
+            </button>
+            <button
+              onClick={() => navigate('/configuracion')}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              Configuración
+            </button>
+            <button
+              onClick={() => signOut()}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Cerrar sesión
+            </button>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
