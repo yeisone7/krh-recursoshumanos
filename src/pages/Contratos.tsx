@@ -96,12 +96,18 @@ function calculateDaysRemaining(endDate: string | null): number | null {
 
 function getEffectiveEndDate(contract: { 
   end_date: string | null; 
-  contract_extensions?: Array<{ end_date: string }>;
+  contract_extensions?: Array<{ end_date: string; extension_number?: number }>;
 }): string | null {
   if (contract.contract_extensions && contract.contract_extensions.length > 0) {
-    const sortedExtensions = [...contract.contract_extensions].sort(
-      (a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime()
-    );
+    // Sort by extension_number (preferred) or by end_date as fallback
+    const sortedExtensions = [...contract.contract_extensions].sort((a, b) => {
+      // If both have extension_number, sort by that (highest first)
+      if (a.extension_number !== undefined && b.extension_number !== undefined) {
+        return b.extension_number - a.extension_number;
+      }
+      // Fallback to date comparison
+      return new Date(b.end_date).getTime() - new Date(a.end_date).getTime();
+    });
     return sortedExtensions[0].end_date;
   }
   return contract.end_date;
@@ -236,9 +242,9 @@ export default function Contratos() {
                           selectedContract.contract_type === 'fijo' ? 'fixed' :
                           selectedContract.contract_type === 'obra_labor' ? 'work_labor' :
                           selectedContract.contract_type === 'aprendizaje' ? 'apprenticeship' : 'services',
-            startDate: new Date(selectedContract.start_date),
-            originalEndDate: selectedContract.end_date ? new Date(selectedContract.end_date) : null,
-            currentEndDate: getEffectiveEndDate(selectedContract) ? new Date(getEffectiveEndDate(selectedContract)!) : null,
+            startDate: new Date(selectedContract.start_date + 'T00:00:00'),
+            originalEndDate: selectedContract.end_date ? new Date(selectedContract.end_date + 'T00:00:00') : null,
+            currentEndDate: getEffectiveEndDate(selectedContract) ? new Date(getEffectiveEndDate(selectedContract)! + 'T00:00:00') : null,
             salary: Number(selectedContract.salary),
             salaryType: (selectedContract.salary_type === 'integral' ? 'integral' : 'monthly') as 'monthly' | 'integral',
             transportAllowance: Number(selectedContract.transport_allowance) > 0,
@@ -250,8 +256,8 @@ export default function Contratos() {
             extensions: (selectedContract.contract_extensions || []).map((ext) => ({
               id: ext.id,
               extensionNumber: ext.extension_number,
-              startDate: new Date(ext.start_date),
-              endDate: new Date(ext.end_date),
+              startDate: new Date(ext.start_date + 'T00:00:00'),
+              endDate: new Date(ext.end_date + 'T00:00:00'),
               extensionType: (ext as any).extension_type || 'pactada',
               createdAt: new Date(ext.created_at),
               notes: ext.reason || undefined,
