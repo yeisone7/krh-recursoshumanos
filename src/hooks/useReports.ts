@@ -72,6 +72,19 @@ export interface ContractExtensionReportRow {
   estado: string;
 }
 
+export interface ContractsExpiringSoonRow {
+  empleado: string;
+  documento: string;
+  cargo: string;
+  centro: string;
+  tipo_contrato: string;
+  fecha_inicio: string;
+  fecha_vencimiento: string;
+  dias_restantes: number;
+  prorroga_actual: number;
+  estado: string;
+}
+
 export function useEmployeeReport() {
   const { currentCompanyId } = useAuth();
   
@@ -430,6 +443,120 @@ export function useContractExtensionsReport() {
         if (nameCompare !== 0) return nameCompare;
         return a.numero_prorroga - b.numero_prorroga;
       });
+      
+      return rows;
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+export function useContractsExpiringSoonReport(daysRange: number = 30) {
+  const { currentCompanyId } = useAuth();
+  
+  return useQuery({
+    queryKey: ['report-contracts-expiring', currentCompanyId, daysRange],
+    queryFn: async (): Promise<ContractsExpiringSoonRow[]> => {
+      if (!currentCompanyId) return [];
+      
+      // Fetch employees from this company
+      const { data: employees } = await supabase
+        .from('employees_v2')
+        .select('id, first_name, last_name, document_number')
+        .eq('company_id', currentCompanyId)
+        .eq('is_active', true);
+      
+      if (!employees?.length) return [];
+      
+      const employeeIds = employees.map(e => e.id);
+      const employeesMap = new Map(employees.map(e => [e.id, e]));
+      
+      // Fetch work info
+      const { data: workInfos } = await supabase
+        .from('employee_work_info')
+        .select('employee_id, position_name, operation_center_id, operation_centers(name)')
+        .in('employee_id', employeeIds)
+        .eq('is_current', true);
+      
+      const workInfoMap = new Map(workInfos?.map(w => [w.employee_id, w]) || []);
+      
+      // Fetch contracts with extensions (excluding indefinite)
+      const { data: contracts, error } = await supabase
+        .from('contracts')
+        .select(`
+          id,
+          employee_id,
+          contract_type,
+          start_date,
+          end_date,
+          is_terminated,
+          contract_extensions(
+            id,
+            extension_number,
+            end_date
+          )
+        `)
+        .in('employee_id', employeeIds)
+        .neq('contract_type', 'indefinido')
+        .eq('is_terminated', false);
+      
+      if (error) throw error;
+      if (!contracts?.length) return [];
+      
+      const today = new Date();
+      const rows: ContractsExpiringSoonRow[] = [];
+      
+      for (const contract of contracts) {
+        const employee = employeesMap.get(contract.employee_id);
+        if (!employee) continue;
+        
+        const workInfo = workInfoMap.get(contract.employee_id);
+        
+        // Determine effective end date (last extension or contract end date)
+        let effectiveEndDate = contract.end_date ? new Date(contract.end_date) : null;
+        let currentExtensionNumber = 0;
+        
+        if (contract.contract_extensions?.length) {
+          const sortedExtensions = [...contract.contract_extensions].sort(
+            (a, b) => b.extension_number - a.extension_number
+          );
+          effectiveEndDate = new Date(sortedExtensions[0].end_date);
+          currentExtensionNumber = sortedExtensions[0].extension_number;
+        }
+        
+        if (!effectiveEndDate) continue;
+        
+        // Calculate days remaining
+        const daysRemaining = differenceInDays(effectiveEndDate, today);
+        
+        // Filter by range - only include if within the specified days range
+        if (daysRemaining > daysRange || daysRemaining < 0) continue;
+        
+        // Determine status
+        let estado = 'Vigente';
+        if (daysRemaining <= 7) {
+          estado = 'Crítico';
+        } else if (daysRemaining <= 15) {
+          estado = 'Urgente';
+        } else if (daysRemaining <= 30) {
+          estado = 'Por Vencer';
+        }
+        
+        rows.push({
+          empleado: `${employee.first_name} ${employee.last_name}`,
+          documento: employee.document_number,
+          cargo: workInfo?.position_name || '-',
+          centro: (workInfo?.operation_centers as any)?.name || '-',
+          tipo_contrato: contractTypeLabels[contract.contract_type] || contract.contract_type,
+          fecha_inicio: format(new Date(contract.start_date), 'dd/MM/yyyy'),
+          fecha_vencimiento: format(effectiveEndDate, 'dd/MM/yyyy'),
+          dias_restantes: daysRemaining,
+          prorroga_actual: currentExtensionNumber,
+          estado,
+        });
+      }
+      
+      // Sort by days remaining (ascending - most urgent first)
+      rows.sort((a, b) => a.dias_restantes - b.dias_restantes);
       
       return rows;
     },

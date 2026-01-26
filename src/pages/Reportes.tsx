@@ -5,6 +5,7 @@ import {
   CesantiasReport,
   DotationReport,
   ContractExtensionsReport,
+  ContractsExpiringSoonReport,
 } from '@/components/reports';
 
 export default function Reportes() {
@@ -26,6 +27,7 @@ export default function Reportes() {
       {/* Report Cards Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         <EmployeeReport />
+        <ContractsExpiringSoonReport />
         <ContractExtensionsReport />
         <IncapacityReport />
         <CesantiasReport />
