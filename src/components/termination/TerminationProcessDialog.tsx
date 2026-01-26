@@ -13,6 +13,7 @@ import {
   CalendarIcon,
   ClipboardList,
   Save,
+  FileType,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -74,6 +75,7 @@ import {
   useCompleteTermination,
 } from '@/hooks/useTerminations';
 import { downloadTerminationDocument } from '@/lib/terminationPdfGenerator';
+import { generateAndDownloadPreaviso } from '@/lib/preavisoDocumentGenerator';
 import type { TerminationDocumentData } from '@/types/termination';
 import { Contract, contractTypeLabels } from '@/types/contract';
 import { useAuth } from '@/contexts/AuthContext';
@@ -173,7 +175,7 @@ export function TerminationProcessDialog({
     }
   };
 
-  // Generate and download PDF
+  // Generate and download document (PDF or DOCX for preaviso)
   const handleGenerateDocument = async (docType: TerminationDocumentType, docId: string) => {
     if (!termination || !companyData) {
       await fetchCompanyData();
@@ -204,22 +206,29 @@ export function TerminationProcessDialog({
       reason: termination.reason,
       resignationDate: termination.resignationDate,
       hrManagerName: 'Director(a) de Talento Humano',
-      hrManagerPosition: 'Director(a) Jurídico / RRHH',
+      hrManagerPosition: 'Líder de Talento Humano',
       documentDate: new Date(),
       documentCity: 'Bucaramanga',
     };
 
     try {
-      downloadTerminationDocument(docType, documentData);
+      // Use DOCX template for preaviso, PDF for others
+      if (docType === 'preaviso') {
+        await generateAndDownloadPreaviso(documentData);
+        toast.success('Documento generado', {
+          description: 'Carta de Preaviso (DOCX) descargada correctamente.',
+        });
+      } else {
+        downloadTerminationDocument(docType, documentData);
+        toast.success('Documento generado', {
+          description: `${terminationDocumentLabels[docType]} descargado correctamente.`,
+        });
+      }
       
       await markDocumentGenerated.mutateAsync({
         documentId: docId,
         documentData,
         contractId: contract.id,
-      });
-
-      toast.success('Documento generado', {
-        description: `${terminationDocumentLabels[docType]} descargado correctamente.`,
       });
     } catch (error) {
       console.error('Error generating document:', error);
@@ -430,6 +439,12 @@ export function TerminationProcessDialog({
                               {doc.isRequired && (
                                 <Badge variant="secondary" className="text-xs">Requerido</Badge>
                               )}
+                              {doc.type === 'preaviso' && (
+                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                  <FileType className="w-3 h-3 mr-1" />
+                                  DOCX
+                                </Badge>
+                              )}
                             </div>
                             <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
                           </div>
@@ -441,8 +456,12 @@ export function TerminationProcessDialog({
                           onClick={() => terminationDoc && handleGenerateDocument(doc.type, terminationDoc.id)}
                           disabled={markDocumentGenerated.isPending}
                         >
-                          <Download className="w-4 h-4 mr-2" />
-                          {doc.isGenerated ? 'Descargar' : 'Generar PDF'}
+                          {doc.type === 'preaviso' ? (
+                            <FileType className="w-4 h-4 mr-2" />
+                          ) : (
+                            <Download className="w-4 h-4 mr-2" />
+                          )}
+                          {doc.isGenerated ? 'Descargar' : doc.type === 'preaviso' ? 'Generar DOCX' : 'Generar PDF'}
                         </Button>
                       </div>
                     );
