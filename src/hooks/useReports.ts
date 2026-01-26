@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { format } from 'date-fns';
+import { format, differenceInMonths, differenceInDays } from 'date-fns';
 
 export interface EmployeeReportRow {
   documento: string;
@@ -54,6 +54,21 @@ export interface DotationReportRow {
   talla: string;
   fecha_entrega: string;
   fecha_vencimiento: string;
+  estado: string;
+}
+
+export interface ContractExtensionReportRow {
+  empleado: string;
+  documento: string;
+  tipo_contrato: string;
+  inicio_contrato: string;
+  numero_prorroga: number;
+  tipo_prorroga: string;
+  inicio_prorroga: string;
+  fin_prorroga: string;
+  dias: number;
+  tiempo_acumulado: string;
+  limite_4_años: string;
   estado: string;
 }
 
@@ -290,6 +305,133 @@ export function useDotationReport(startDate?: Date, endDate?: Date) {
           estado,
         };
       });
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+const contractTypeLabels: Record<string, string> = {
+  fijo: 'Término Fijo',
+  indefinido: 'Indefinido',
+  obra_labor: 'Obra o Labor',
+  aprendizaje: 'Aprendizaje',
+  servicios: 'Prestación de Servicios',
+};
+
+export function useContractExtensionsReport() {
+  const { currentCompanyId } = useAuth();
+  
+  return useQuery({
+    queryKey: ['report-contract-extensions', currentCompanyId],
+    queryFn: async (): Promise<ContractExtensionReportRow[]> => {
+      if (!currentCompanyId) return [];
+      
+      // Fetch employees from this company
+      const { data: employees } = await supabase
+        .from('employees_v2')
+        .select('id, first_name, last_name, document_number')
+        .eq('company_id', currentCompanyId);
+      
+      if (!employees?.length) return [];
+      
+      const employeeIds = employees.map(e => e.id);
+      const employeesMap = new Map(employees.map(e => [e.id, e]));
+      
+      // Fetch contracts with extensions (excluding indefinite contracts)
+      const { data: contracts, error } = await supabase
+        .from('contracts')
+        .select(`
+          id,
+          employee_id,
+          contract_type,
+          start_date,
+          end_date,
+          is_terminated,
+          contract_extensions(
+            id,
+            extension_number,
+            extension_type,
+            start_date,
+            end_date,
+            created_at
+          )
+        `)
+        .in('employee_id', employeeIds)
+        .neq('contract_type', 'indefinido');
+      
+      if (error) throw error;
+      if (!contracts?.length) return [];
+      
+      const MAX_YEARS = 4;
+      const MAX_MONTHS = MAX_YEARS * 12;
+      const rows: ContractExtensionReportRow[] = [];
+      
+      for (const contract of contracts) {
+        if (!contract.contract_extensions?.length) continue;
+        
+        const employee = employeesMap.get(contract.employee_id);
+        if (!employee) continue;
+        
+        const contractStart = new Date(contract.start_date);
+        
+        // Sort extensions by number
+        const sortedExtensions = [...contract.contract_extensions].sort(
+          (a, b) => a.extension_number - b.extension_number
+        );
+        
+        for (const ext of sortedExtensions) {
+          const extStart = new Date(ext.start_date);
+          const extEnd = new Date(ext.end_date);
+          const days = differenceInDays(extEnd, extStart);
+          
+          // Calculate accumulated time from contract start to extension end
+          const totalMonths = differenceInMonths(extEnd, contractStart);
+          const years = Math.floor(totalMonths / 12);
+          const months = totalMonths % 12;
+          
+          // Calculate remaining time before 4-year limit
+          const remainingMonths = MAX_MONTHS - totalMonths;
+          const remainingYears = Math.floor(Math.max(0, remainingMonths) / 12);
+          const remainingMo = Math.max(0, remainingMonths) % 12;
+          
+          // Determine status
+          let estado = 'Vigente';
+          const today = new Date();
+          if (contract.is_terminated) {
+            estado = 'Terminado';
+          } else if (extEnd < today) {
+            estado = 'Vencido';
+          } else if (totalMonths >= MAX_MONTHS) {
+            estado = 'Límite alcanzado';
+          } else if (remainingMonths <= 6) {
+            estado = 'Próximo al límite';
+          }
+          
+          rows.push({
+            empleado: `${employee.first_name} ${employee.last_name}`,
+            documento: employee.document_number,
+            tipo_contrato: contractTypeLabels[contract.contract_type] || contract.contract_type,
+            inicio_contrato: format(contractStart, 'dd/MM/yyyy'),
+            numero_prorroga: ext.extension_number,
+            tipo_prorroga: ext.extension_type === 'automatica' ? 'Automática' : 'Pactada',
+            inicio_prorroga: format(extStart, 'dd/MM/yyyy'),
+            fin_prorroga: format(extEnd, 'dd/MM/yyyy'),
+            dias: days,
+            tiempo_acumulado: `${years}a ${months}m`,
+            limite_4_años: remainingMonths <= 0 ? 'Alcanzado' : `${remainingYears}a ${remainingMo}m restantes`,
+            estado,
+          });
+        }
+      }
+      
+      // Sort by employee name and extension number
+      rows.sort((a, b) => {
+        const nameCompare = a.empleado.localeCompare(b.empleado);
+        if (nameCompare !== 0) return nameCompare;
+        return a.numero_prorroga - b.numero_prorroga;
+      });
+      
+      return rows;
     },
     enabled: !!currentCompanyId,
   });
