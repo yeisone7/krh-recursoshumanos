@@ -158,7 +158,7 @@ export function useCreateEmployee() {
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async (data: EmployeeFullFormData) => {
+    mutationFn: async (data: EmployeeFullFormData & { avatarUrl?: string | null }) => {
       if (!currentCompanyId || !user) {
         throw new Error('No hay empresa o usuario activo');
       }
@@ -183,6 +183,7 @@ export function useCreateEmployee() {
           gender: data.gender || null,
           blood_type: data.bloodType || null,
           marital_status: data.maritalStatus || null,
+          avatar_url: data.avatarUrl || null,
           is_active: true,
           created_by: user.id,
         })
@@ -309,7 +310,7 @@ export function useUpdateEmployee() {
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ id, ...data }: EmployeeFullFormData & { id: string }) => {
+    mutationFn: async ({ id, avatarUrl, ...data }: EmployeeFullFormData & { id: string; avatarUrl?: string | null }) => {
       if (!user) throw new Error('No hay usuario activo');
 
       // 1. Update core employee
@@ -331,6 +332,7 @@ export function useUpdateEmployee() {
           gender: data.gender || null,
           blood_type: data.bloodType || null,
           marital_status: data.maritalStatus || null,
+          avatar_url: avatarUrl !== undefined ? avatarUrl : undefined,
         })
         .eq('id', id)
         .select()
@@ -476,6 +478,48 @@ export function useToggleEmployeeActive() {
         `${data.first_name} ${data.last_name}`,
         { is_active: !isActive },
         { is_active: isActive }
+      );
+
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
+      queryClient.invalidateQueries({ queryKey: ['employee_v2', data.id] });
+    },
+  });
+}
+
+// =====================================================
+// UPDATE EMPLOYEE AVATAR
+// =====================================================
+
+export function useUpdateEmployeeAvatar() {
+  const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, avatarUrl }: { id: string; avatarUrl: string | null }) => {
+      if (!user) throw new Error('No hay usuario activo');
+
+      const { data, error } = await supabase
+        .from('employees_v2')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await logAuditEvent(
+        user.id,
+        user.email,
+        currentCompanyId,
+        'update_avatar',
+        'employee_v2',
+        id,
+        `${data.first_name} ${data.last_name}`,
+        undefined,
+        { avatar_url: avatarUrl }
       );
 
       return data;
