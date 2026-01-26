@@ -277,10 +277,10 @@ export function Sidebar() {
       transition={{ duration: 0.3, ease: 'easeInOut' }}
       className="h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative"
     >
-      {/* Collapse/Expand Toggle Button - Floating on edge */}
+      {/* Collapse/Expand Toggle Button - Floating on edge near company selector */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute top-1/2 -translate-y-1/2 -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
+        className="absolute top-20 -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
       >
         {collapsed ? (
           <ChevronRight className="w-3.5 h-3.5" />
