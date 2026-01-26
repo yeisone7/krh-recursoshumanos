@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format, addMonths } from 'date-fns';
+import { format, addMonths, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, FileText, Plus, AlertTriangle, Info, Scale } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -104,10 +104,13 @@ export function ExtensionFormDialog({
   const legalStatus = getContractLegalStatus(contractData);
   const preavisoPassed = isPreavisoDeadlinePassed(currentEndDate);
 
+  // Start date is always the day after the current end date
+  const extensionStartDate = addDays(currentEndDate, 1);
+
   const form = useForm<ExtensionFormData>({
     resolver: zodResolver(extensionFormSchema),
     defaultValues: {
-      startDate: currentEndDate,
+      startDate: extensionStartDate,
       extensionType: preavisoPassed ? 'automatica' : 'pactada',
       notes: '',
     },
@@ -267,37 +270,24 @@ export function ExtensionFormDialog({
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Fecha de Inicio *</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              'w-full pl-3 text-left font-normal',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'PPP', { locale: es })
-                            ) : (
-                              <span>Seleccionar</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-background" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full pl-3 text-left font-normal cursor-not-allowed opacity-70'
+                        )}
+                        disabled
+                      >
+                        {field.value ? (
+                          format(field.value, 'PPP', { locale: es })
+                        ) : (
+                          <span>Seleccionar</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
                     <FormDescription className="text-xs">
-                      Generalmente el día siguiente a la vigencia actual
+                      Día siguiente a la vigencia actual (calculado automáticamente)
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
