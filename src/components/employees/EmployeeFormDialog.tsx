@@ -795,11 +795,32 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                       />
                       <FormField
                         control={form.control}
-                        name="positionName"
+                        name="positionId"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Cargo *</FormLabel>
-                            <FormControl><Input placeholder="Nombre del cargo" {...field} /></FormControl>
+                            <Select 
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                // Also update positionName with the selected position's name
+                                const selectedPosition = positions.find((p: any) => p.id === value);
+                                if (selectedPosition) {
+                                  form.setValue('positionName', selectedPosition.name);
+                                }
+                              }} 
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar cargo" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {positions.map((position: any) => (
+                                  <SelectItem key={position.id} value={position.id}>
+                                    {position.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
