@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCompanies, useCompany } from '@/hooks/useCompanies';
 import {
   LayoutDashboard,
   Users,
@@ -32,6 +33,7 @@ import {
   BarChart3,
   FolderOpen,
   Shirt,
+  Check,
 } from 'lucide-react';
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -314,6 +316,9 @@ export function Sidebar() {
         )}
       </div>
 
+      {/* Company Selector */}
+      <CompanySelector collapsed={collapsed} />
+
       {/* Expand button when collapsed */}
       {collapsed && (
         <button
@@ -394,6 +399,84 @@ export function Sidebar() {
       {/* User section */}
       <UserSection collapsed={collapsed} />
     </motion.aside>
+  );
+}
+
+function CompanySelector({ collapsed }: { collapsed: boolean }) {
+  const { currentCompanyId, setCurrentCompanyId, roles } = useAuth();
+  const { data: companies } = useCompanies();
+  const { data: currentCompany } = useCompany(currentCompanyId || undefined);
+  const [open, setOpen] = useState(false);
+  
+  // Only admins can switch companies
+  const canSwitchCompany = roles.includes('admin');
+  const hasMultipleCompanies = companies && companies.length > 1;
+  
+  if (collapsed) {
+    return (
+      <div className="px-3 py-2">
+        <div className="w-full flex justify-center">
+          <div className="w-8 h-8 rounded-lg bg-sidebar-accent flex items-center justify-center">
+            <Building2 className="w-4 h-4 text-sidebar-foreground" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3 py-2 border-b border-sidebar-border">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild disabled={!canSwitchCompany || !hasMultipleCompanies}>
+          <button 
+            className={cn(
+              "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left",
+              canSwitchCompany && hasMultipleCompanies 
+                ? "hover:bg-sidebar-accent/50 cursor-pointer" 
+                : "cursor-default"
+            )}
+          >
+            <Building2 className="w-4 h-4 text-sidebar-foreground/60 shrink-0" />
+            <span className="text-sm font-medium text-sidebar-foreground truncate flex-1">
+              {currentCompany?.name || 'Seleccionar empresa'}
+            </span>
+            {canSwitchCompany && hasMultipleCompanies && (
+              <ChevronDown className="w-4 h-4 text-sidebar-foreground/50 shrink-0" />
+            )}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent 
+          side="bottom" 
+          align="start" 
+          className="w-56 p-1 bg-popover border border-border shadow-lg"
+          sideOffset={4}
+        >
+          <div className="space-y-0.5">
+            {companies?.map((company) => (
+              <button
+                key={company.id}
+                onClick={() => {
+                  setCurrentCompanyId(company.id);
+                  setOpen(false);
+                }}
+                className={cn(
+                  "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
+                  currentCompanyId === company.id
+                    ? "bg-primary/10 text-primary"
+                    : "text-foreground hover:bg-accent"
+                )}
+              >
+                <Building2 className="w-4 h-4 shrink-0" />
+                <span className="truncate flex-1 text-left">{company.name}</span>
+                {currentCompanyId === company.id && (
+                  <Check className="w-4 h-4 shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
 
