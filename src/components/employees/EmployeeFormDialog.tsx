@@ -64,6 +64,14 @@ import { useCreateEmployee, useUpdateEmployee } from '@/hooks/useEmployees';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { CitySelect, CityDepartmentSelect } from '@/components/ui/city-department-select';
+import { 
+  useARLCatalog, 
+  useEPSCatalog, 
+  useAFPCatalog, 
+  useCCFCatalog, 
+  useAFCCatalog, 
+  useIPSCatalog 
+} from '@/hooks/useSocialSecurityCatalogs';
 
 interface EmployeeFormDialogProps {
   open: boolean;
@@ -78,6 +86,12 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: areas = [] } = useAreas();
   const { data: positions = [] } = usePositions();
+  const { data: arlOptions = [] } = useARLCatalog();
+  const { data: epsOptions = [] } = useEPSCatalog();
+  const { data: afpOptions = [] } = useAFPCatalog();
+  const { data: ccfOptions = [] } = useCCFCatalog();
+  const { data: afcOptions = [] } = useAFCCatalog();
+  const { data: ipsOptions = [] } = useIPSCatalog();
   const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
   
@@ -947,7 +961,16 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>ARL</FormLabel>
-                            <FormControl><Input placeholder="Nombre de la ARL" {...field} /></FormControl>
+                            <Select onValueChange={field.onChange} value={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar ARL" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {arlOptions.filter(a => a.is_active).map((arl) => (
+                                  <SelectItem key={arl.id} value={arl.name}>{arl.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -958,7 +981,16 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>EPS</FormLabel>
-                            <FormControl><Input placeholder="Nombre de la EPS" {...field} /></FormControl>
+                            <Select onValueChange={field.onChange} value={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar EPS" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {epsOptions.filter(e => e.is_active).map((eps) => (
+                                  <SelectItem key={eps.id} value={eps.name}>{eps.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -969,7 +1001,16 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>AFP (Pensión)</FormLabel>
-                            <FormControl><Input placeholder="Fondo de Pensiones" {...field} /></FormControl>
+                            <Select onValueChange={field.onChange} value={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar AFP" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {afpOptions.filter(a => a.is_active).map((afp) => (
+                                  <SelectItem key={afp.id} value={afp.name}>{afp.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -980,7 +1021,16 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Caja de Compensación</FormLabel>
-                            <FormControl><Input placeholder="Nombre de la CCF" {...field} /></FormControl>
+                            <Select onValueChange={field.onChange} value={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar CCF" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {ccfOptions.filter(c => c.is_active).map((ccf) => (
+                                  <SelectItem key={ccf.id} value={ccf.name}>{ccf.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -991,7 +1041,16 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>AFC (Ahorro)</FormLabel>
-                            <FormControl><Input placeholder="Cuenta AFC" {...field} /></FormControl>
+                            <Select onValueChange={field.onChange} value={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar AFC" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {afcOptions.filter(a => a.is_active).map((afc) => (
+                                  <SelectItem key={afc.id} value={afc.name}>{afc.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -1002,7 +1061,16 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>IPS Preferida</FormLabel>
-                            <FormControl><Input placeholder="IPS de preferencia" {...field} /></FormControl>
+                            <Select onValueChange={field.onChange} value={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar IPS" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {ipsOptions.filter(i => i.is_active).map((ips) => (
+                                  <SelectItem key={ips.id} value={ips.name}>{ips.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
