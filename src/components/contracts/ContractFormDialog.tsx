@@ -46,25 +46,17 @@ import { toast } from 'sonner';
 import {
   contractFormSchema,
   ContractFormData,
-  contractTypeLabels,
 } from '@/types/contract';
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateContract } from '@/hooks/useContracts';
+import { useContractTypes } from '@/hooks/useContractTypes';
 import type { Database } from '@/integrations/supabase/types';
 import { CitySelect } from '@/components/ui/city-department-select';
 
 type ContractType = Database['public']['Enums']['contract_type'];
 
-// Map form contract type to database enum
-const formToDbContractType: Record<string, ContractType> = {
-  indefinite: 'indefinido',
-  fixed_term: 'fijo',
-  project: 'obra_labor',
-  apprenticeship: 'aprendizaje',
-  service: 'servicios',
-};
 
 interface ContractFormDialogProps {
   open: boolean;
@@ -76,6 +68,7 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
   const [activeTab, setActiveTab] = useState('general');
   const { data: employees = [] } = useEmployees();
   const { data: operationCenters = [] } = useOperationCenters();
+  const { data: contractTypes = [] } = useContractTypes();
   const createContract = useCreateContract();
 
   const form = useForm<ContractFormData>({
@@ -89,16 +82,17 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
     },
   });
 
-  const contractType = form.watch('contractType');
-  const needsEndDate = contractType && contractType !== 'indefinite';
+  const selectedContractType = form.watch('contractType');
+  const contractTypeConfig = contractTypes.find(ct => ct.contract_type === selectedContractType);
+  const needsEndDate = contractTypeConfig?.requires_end_date ?? false;
 
   const handleSubmit = async (data: ContractFormData) => {
     try {
       // Parse salary to number
       const salaryNumber = parseFloat(data.salary.replace(/[^0-9.-]+/g, ''));
       
-      // Map contract type from form to database enum
-      const dbContractType = formToDbContractType[data.contractType] || 'indefinido';
+      // Use the contract_type code directly from catalog
+      const dbContractType = (data.contractType || 'indefinido') as ContractType;
 
       await createContract.mutateAsync({
         employee_id: data.employeeId,
@@ -215,8 +209,10 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {Object.entries(contractTypeLabels).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                                {contractTypes.filter(ct => ct.is_active).map((ct) => (
+                                  <SelectItem key={ct.id} value={ct.contract_type}>
+                                    {ct.display_name}
+                                  </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -314,9 +310,9 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
                         />
                       )}
                     </div>
-                    {!needsEndDate && contractType === 'indefinite' && (
+                    {!needsEndDate && selectedContractType && (
                       <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                        Los contratos indefinidos no tienen fecha de finalización.
+                        Este tipo de contrato no requiere fecha de finalización.
                       </p>
                     )}
                   </div>
