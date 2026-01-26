@@ -27,6 +27,7 @@ import {
   Trash2,
   ExternalLink
 } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 import {
   Dialog,
@@ -136,11 +137,12 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
           <div className="space-y-6">
             {/* Header with Avatar and Status */}
             <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
-              <div className="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
-                <span className="text-2xl font-semibold text-primary">
+              <Avatar className="w-16 h-16 flex-shrink-0">
+                <AvatarImage src={employee.avatar_url || undefined} alt={getEmployeeFullName(employee)} />
+                <AvatarFallback className="bg-primary-light text-primary text-2xl font-semibold">
                   {employee.first_name[0]}{employee.last_name[0]}
-                </span>
-              </div>
+                </AvatarFallback>
+              </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
                   <h2 className="text-xl font-semibold text-foreground">
