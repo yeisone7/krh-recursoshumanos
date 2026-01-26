@@ -325,6 +325,7 @@ export function ExtensionFormDialog({
                           selected={field.value}
                           onSelect={field.onChange}
                           disabled={(date) => date <= currentEndDate}
+                          defaultMonth={currentEndDate}
                           initialFocus
                           className="pointer-events-auto"
                         />
