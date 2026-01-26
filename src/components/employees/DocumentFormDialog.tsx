@@ -135,20 +135,21 @@ export function DocumentFormDialog({
     try {
       setUploading(true);
 
-      // Upload file to storage
+      // Upload file to storage - path must start with company_id for RLS policy
       const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${employeeId}/${data.documentType}_${Date.now()}.${fileExt}`;
+      const sanitizedFileName = selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = `${companyId}/employees/${employeeId}/${data.documentType}_${Date.now()}_${sanitizedFileName}`;
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
-        .upload(fileName, selectedFile);
+        .upload(filePath, selectedFile);
 
       if (uploadError) throw uploadError;
 
       // Get public URL
       const { data: urlData } = supabase.storage
         .from('documents')
-        .getPublicUrl(fileName);
+        .getPublicUrl(filePath);
 
       // Create document record
       await createDocument.mutateAsync({
