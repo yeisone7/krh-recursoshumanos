@@ -94,8 +94,11 @@ const toolsNavItems: NavItem[] = [
   { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', badge: 5 },
 ];
 
-const adminNavItems: NavItem[] = [
+const payrollNavItems: NavItem[] = [
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas' },
+];
+
+const adminNavItems: NavItem[] = [
   { label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad' },
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion' },
 ];
@@ -357,6 +360,14 @@ export function Sidebar() {
         <SectionLabel label="Herramientas" />
         <div className="space-y-0.5">
           {toolsNavItems.map((item) => (
+            <NavLink key={item.href} item={item} />
+          ))}
+        </div>
+
+        {/* Payroll */}
+        <SectionLabel label="Nómina" />
+        <div className="space-y-0.5">
+          {payrollNavItems.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
         </div>
