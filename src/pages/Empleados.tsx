@@ -225,57 +225,54 @@ export default function Empleados() {
       {/* Stats and Certification Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Stats Cards */}
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.15 }}
-            className="card-elevated p-4 flex items-center gap-3"
-          >
-            <div className="w-10 h-10 rounded-lg bg-primary-light flex items-center justify-center">
-              <Users className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-display font-bold text-foreground">{stats.total}</p>
-              <p className="text-sm text-muted-foreground">Total empleados</p>
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            className="card-elevated p-4 flex items-center gap-3"
-          >
-            <div className="w-10 h-10 rounded-lg bg-success-light flex items-center justify-center">
-              <Users className="w-5 h-5 text-success" />
-            </div>
-            <div>
-              <p className="text-2xl font-display font-bold text-foreground">{stats.active}</p>
-              <p className="text-sm text-muted-foreground">Activos</p>
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.25 }}
-            className="card-elevated p-4 flex items-center gap-3"
-          >
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-              <Users className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-display font-bold text-foreground">{stats.inactive}</p>
-              <p className="text-sm text-muted-foreground">Inactivos</p>
-            </div>
-          </motion.div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
+          className="card-elevated p-4 flex items-center gap-3"
+        >
+          <div className="w-10 h-10 rounded-lg bg-primary-light flex items-center justify-center flex-shrink-0">
+            <Users className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.total}</p>
+            <p className="text-sm text-muted-foreground">Total empleados</p>
+          </div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="card-elevated p-4 flex items-center gap-3"
+        >
+          <div className="w-10 h-10 rounded-lg bg-success-light flex items-center justify-center flex-shrink-0">
+            <Users className="w-5 h-5 text-success" />
+          </div>
+          <div>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.active}</p>
+            <p className="text-sm text-muted-foreground">Activos</p>
+          </div>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.25 }}
+          className="card-elevated p-4 flex items-center gap-3"
+        >
+          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+            <Users className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.inactive}</p>
+            <p className="text-sm text-muted-foreground">Inactivos</p>
+          </div>
+        </motion.div>
 
         {/* Certification Alerts Panel */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
-          className="lg:row-span-2"
         >
           <CertificationAlertsPanel onEmployeeClick={handleOpenDetail} />
         </motion.div>
