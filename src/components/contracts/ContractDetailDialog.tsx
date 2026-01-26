@@ -15,6 +15,8 @@ import {
   UserX,
   PlayCircle,
   Download,
+  Scale,
+  ShieldCheck,
 } from 'lucide-react';
 
 import {
@@ -200,15 +202,27 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
               {/* Extensions Section */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-foreground flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-primary" />
-                    Historial de Prórrogas
-                    {contract.extensions.length > 0 && (
-                      <Badge variant="outline" className="bg-accent-light text-accent border-accent/20">
-                        {contract.extensions.length}
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-semibold text-foreground flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      Historial de Prórrogas
+                      {contract.extensions.length > 0 && (
+                        <Badge variant="outline" className="bg-accent-light text-accent border-accent/20">
+                          {contract.extensions.length}
+                        </Badge>
+                      )}
+                    </h3>
+                    {/* Legal Compliance Badge - Art. 46 CST */}
+                    {contract.contractType !== 'indefinite' && (
+                      <Badge 
+                        variant="outline" 
+                        className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1.5 text-xs font-medium"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        Art. 46 CST
                       </Badge>
                     )}
-                  </h3>
+                  </div>
                   {canAddExtension && (
                     <Button
                       size="sm"
