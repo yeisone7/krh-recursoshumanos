@@ -14,6 +14,7 @@ import {
   ArrowRight,
   UserX,
   PlayCircle,
+  Download,
 } from 'lucide-react';
 
 import {
@@ -32,6 +33,7 @@ import { toast } from '@/hooks/use-toast';
 import { ExtensionFormDialog } from './ExtensionFormDialog';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { TerminationProcessDialog } from '@/components/termination/TerminationProcessDialog';
+import { GenerateContractDialog } from './GenerateContractDialog';
 import { useCreateContractExtension } from '@/hooks/useContracts';
 import { useContractTerminationProcess } from '@/hooks/useTerminations';
 import {
@@ -59,6 +61,7 @@ const statusConfig = {
 export function ContractDetailDialog({ open, onOpenChange, contract }: ContractDetailDialogProps) {
   const [showExtensionForm, setShowExtensionForm] = useState(false);
   const [showTerminationDialog, setShowTerminationDialog] = useState(false);
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const createExtension = useCreateContractExtension();
   
   // Fetch termination process status
@@ -381,6 +384,14 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cerrar
               </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setShowGenerateDialog(true)}
+                className="gap-1"
+              >
+                <Download className="w-4 h-4" />
+                Generar Documento
+              </Button>
               <Button className="gradient-primary text-primary-foreground">
                 Editar Contrato
               </Button>
@@ -407,6 +418,38 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
         open={showTerminationDialog}
         onOpenChange={setShowTerminationDialog}
         contract={contract}
+      />
+
+      {/* Generate Contract Document Dialog */}
+      <GenerateContractDialog
+        open={showGenerateDialog}
+        onOpenChange={setShowGenerateDialog}
+        contract={{
+          id: contract.id,
+          employee_id: contract.employeeId,
+          contract_type: contract.contractType === 'indefinite' ? 'indefinido' :
+                        contract.contractType === 'fixed' ? 'fijo' :
+                        contract.contractType === 'work_labor' ? 'obra_labor' :
+                        contract.contractType === 'apprenticeship' ? 'aprendizaje' : 'servicios',
+          start_date: contract.startDate.toISOString(),
+          end_date: contract.currentEndDate?.toISOString() || null,
+          salary: contract.salary,
+          salary_type: contract.salaryType,
+          transport_allowance: contract.transportAllowance ? 140606 : 0,
+          trial_period_days: contract.trialPeriodDays || null,
+          work_city: null,
+          work_address: null,
+          has_non_compete_clause: contract.hasNonCompeteClause,
+          has_confidentiality_clause: contract.hasConfidentialityClause,
+          special_clauses: null,
+          employees: {
+            id: contract.employeeId,
+            first_name: contract.employeeName.split(' ')[0] || '',
+            last_name: contract.employeeName.split(' ').slice(1).join(' ') || '',
+            document_number: '',
+            operation_centers: contract.operationCenter ? { name: contract.operationCenter } : null,
+          },
+        }}
       />
     </>
   );
