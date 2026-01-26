@@ -45,6 +45,7 @@ import {
   CatalogosCCF,
   CatalogosAFC,
   CatalogosIPS,
+  CatalogosBancos,
 } from "./pages/catalogos";
 import NotFound from "./pages/NotFound";
 
@@ -107,6 +108,7 @@ const App = () => (
                         <Route path="/catalogos/ccf" element={<CatalogosCCF />} />
                         <Route path="/catalogos/afc" element={<CatalogosAFC />} />
                         <Route path="/catalogos/ips" element={<CatalogosIPS />} />
+                        <Route path="/catalogos/bancos" element={<CatalogosBancos />} />
                         <Route path="/perfil" element={<Perfil />} />
                         <Route path="/seguridad" element={<Seguridad />} />
                         <Route path="/configuracion" element={<Configuracion />} />
