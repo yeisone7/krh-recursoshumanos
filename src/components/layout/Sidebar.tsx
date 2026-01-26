@@ -33,6 +33,7 @@ import {
   FolderOpen,
   Shirt,
 } from 'lucide-react';
+import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import petroVerdeLogo from '@/assets/petro-verde-krh.png';
 
@@ -90,6 +91,7 @@ const catalogosItem: NavItem = {
     { label: 'Caja Compensación', icon: <Users className="w-4 h-4" />, href: '/catalogos/ccf' },
     { label: 'AFC', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afc' },
     { label: 'IPS', icon: <Stethoscope className="w-4 h-4" />, href: '/catalogos/ips' },
+    { label: 'Bancos', icon: <BanknoteIcon className="w-4 h-4" />, href: '/catalogos/bancos' },
   ],
 };
 
