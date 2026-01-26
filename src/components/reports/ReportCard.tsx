@@ -13,6 +13,7 @@ interface ReportCardProps {
   onExportPDF: () => void;
   children?: React.ReactNode;
   className?: string;
+  headerExtra?: React.ReactNode;
 }
 
 export function ReportCard({
@@ -25,6 +26,7 @@ export function ReportCard({
   onExportPDF,
   children,
   className,
+  headerExtra,
 }: ReportCardProps) {
   return (
     <Card className={cn('', className)}>
@@ -39,12 +41,15 @@ export function ReportCard({
               <CardDescription>{description}</CardDescription>
             </div>
           </div>
-          {recordCount !== undefined && (
-            <div className="text-right">
-              <span className="text-2xl font-bold text-primary">{recordCount}</span>
-              <p className="text-xs text-muted-foreground">registros</p>
-            </div>
-          )}
+          <div className="flex flex-col items-end gap-2">
+            {headerExtra}
+            {recordCount !== undefined && (
+              <div className="text-right">
+                <span className="text-2xl font-bold text-primary">{recordCount}</span>
+                <p className="text-xs text-muted-foreground">registros</p>
+              </div>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
