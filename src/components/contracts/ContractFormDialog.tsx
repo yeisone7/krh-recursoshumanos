@@ -50,26 +50,39 @@ import {
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
-import { useCreateContract } from '@/hooks/useContracts';
+import { useCreateContract, useUpdateContract } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import type { Database } from '@/integrations/supabase/types';
 import { CitySelect } from '@/components/ui/city-department-select';
 
 type ContractType = Database['public']['Enums']['contract_type'];
-
+type DbContract = Database['public']['Tables']['contracts']['Row'];
 
 interface ContractFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  contractToEdit?: DbContract;
+  preselectedEmployeeId?: string;
+  preselectedEmployeeName?: string;
 }
 
-export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFormDialogProps) {
+export function ContractFormDialog({ 
+  open, 
+  onOpenChange, 
+  onSuccess,
+  contractToEdit,
+  preselectedEmployeeId,
+  preselectedEmployeeName,
+}: ContractFormDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
   const { data: employees = [] } = useEmployees();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: contractTypes = [] } = useContractTypes();
   const createContract = useCreateContract();
+  const updateContract = useUpdateContract();
+
+  const isEditMode = !!contractToEdit;
 
   const form = useForm<ContractFormData>({
     resolver: zodResolver(contractFormSchema),
@@ -80,6 +93,29 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
       hasConfidentialityClause: true,
       trialPeriodDays: 0,
     },
+  });
+
+  // Set form values when editing
+  useState(() => {
+    if (contractToEdit) {
+      form.reset({
+        employeeId: contractToEdit.employee_id,
+        contractType: contractToEdit.contract_type,
+        startDate: new Date(contractToEdit.start_date),
+        endDate: contractToEdit.end_date ? new Date(contractToEdit.end_date) : undefined,
+        salary: contractToEdit.salary.toString(),
+        salaryType: contractToEdit.salary_type === 'integral' ? 'integral' : 'monthly',
+        transportAllowance: (contractToEdit.transport_allowance || 0) > 0,
+        trialPeriodDays: contractToEdit.trial_period_days || 0,
+        workCity: contractToEdit.work_city || undefined,
+        workAddress: contractToEdit.work_address || undefined,
+        hasNonCompeteClause: contractToEdit.has_non_compete_clause || false,
+        hasConfidentialityClause: contractToEdit.has_confidentiality_clause || false,
+        specialClauses: contractToEdit.special_clauses || undefined,
+      });
+    } else if (preselectedEmployeeId) {
+      form.setValue('employeeId', preselectedEmployeeId);
+    }
   });
 
   const selectedContractType = form.watch('contractType');
@@ -94,7 +130,7 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
       // Use the contract_type code directly from catalog
       const dbContractType = (data.contractType || 'indefinido') as ContractType;
 
-      await createContract.mutateAsync({
+      const contractData = {
         employee_id: data.employeeId,
         contract_type: dbContractType,
         start_date: format(data.startDate, 'yyyy-MM-dd'),
@@ -108,21 +144,31 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
         has_non_compete_clause: data.hasNonCompeteClause,
         has_confidentiality_clause: data.hasConfidentialityClause,
         special_clauses: data.specialClauses,
-      });
+      };
 
-      const employee = employees.find(e => e.id === data.employeeId);
-      const employeeName = employee ? getEmployeeFullName(employee) : 'el empleado';
-      
-      toast.success('Contrato creado', {
-        description: `El contrato de ${employeeName} ha sido registrado exitosamente.`,
-      });
+      if (isEditMode && contractToEdit) {
+        await updateContract.mutateAsync({
+          id: contractToEdit.id,
+          ...contractData,
+        });
+        toast.success('Contrato actualizado', {
+          description: 'Los cambios han sido guardados exitosamente.',
+        });
+      } else {
+        await createContract.mutateAsync(contractData);
+        const employee = employees.find(e => e.id === data.employeeId);
+        const employeeName = employee ? getEmployeeFullName(employee) : 'el empleado';
+        toast.success('Contrato creado', {
+          description: `El contrato de ${employeeName} ha sido registrado exitosamente.`,
+        });
+      }
       
       onOpenChange(false);
       form.reset();
       onSuccess?.();
     } catch (error: any) {
-      console.error('Error creating contract:', error);
-      toast.error('Error al crear contrato', {
+      console.error('Error saving contract:', error);
+      toast.error(isEditMode ? 'Error al actualizar contrato' : 'Error al crear contrato', {
         description: error.message || 'Por favor intenta de nuevo',
       });
     }
@@ -141,10 +187,10 @@ export function ContractFormDialog({ open, onOpenChange, onSuccess }: ContractFo
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" />
-            Nuevo Contrato
+            {isEditMode ? 'Editar Contrato' : 'Nuevo Contrato'}
           </DialogTitle>
           <DialogDescription>
-            Complete la información del contrato laboral.
+            {isEditMode ? 'Modifique la información del contrato laboral.' : 'Complete la información del contrato laboral.'}
           </DialogDescription>
         </DialogHeader>
 
