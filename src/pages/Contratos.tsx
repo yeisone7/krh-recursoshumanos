@@ -238,6 +238,7 @@ export default function Contratos() {
             id: selectedContract.id,
             employeeId: selectedContract.employee_id,
             employeeName: `${selectedContract.employees?.first_name} ${selectedContract.employees?.last_name}`,
+            employeeDocument: selectedContract.employees?.document_number || '',
             contractType: selectedContract.contract_type === 'indefinido' ? 'indefinite' : 
                           selectedContract.contract_type === 'fijo' ? 'fixed' :
                           selectedContract.contract_type === 'obra_labor' ? 'work_labor' :
