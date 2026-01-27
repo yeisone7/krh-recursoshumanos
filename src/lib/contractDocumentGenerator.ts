@@ -40,6 +40,7 @@ export interface ContractDocumentData {
   trialPeriodDays?: number;
   workCity?: string;
   workAddress?: string;
+  contractDurationMonths?: number; // Término inicial en meses
   
   // Clauses
   hasNonCompeteClause: boolean;
@@ -49,6 +50,12 @@ export interface ContractDocumentData {
   // Generation info
   generationDate: Date;
   generationCity?: string;
+}
+
+// Helper to calculate months between two dates
+export function calculateMonthsDifference(startDate: Date, endDate: Date): number {
+  const months = (endDate.getFullYear() - startDate.getFullYear()) * 12;
+  return months + endDate.getMonth() - startDate.getMonth();
 }
 
 // Helper to format currency
@@ -162,6 +169,9 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     CONTRATO_PERIODO_PRUEBA: data.trialPeriodDays ? `${data.trialPeriodDays} días` : 'No aplica',
     CONTRATO_CIUDAD_TRABAJO: data.workCity || '',
     CONTRATO_DIRECCION_TRABAJO: data.workAddress || '',
+    CONTRATO_DURACION_MESES: data.contractDurationMonths 
+      ? `${data.contractDurationMonths} meses` 
+      : 'Indefinido',
     
     // Clauses
     CLAUSULA_NO_COMPETENCIA: data.hasNonCompeteClause ? 'Sí aplica' : 'No aplica',
