@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, UserMinus, AlertTriangle } from 'lucide-react';
 import { UserRoleDialog } from './UserRoleDialog';
 import { UserCenterDialog } from './UserCenterDialog';
@@ -38,6 +39,27 @@ import { useRemoveCompanyAssignment, useToggleUserStatus, type AdminUser } from 
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
+
+// Helper to get display name with fallbacks
+function getUserDisplayName(user: AdminUser): string {
+  if (user.full_name) return user.full_name;
+  if (user.display_name) return user.display_name;
+  if (user.email) return user.email.split('@')[0];
+  return user.id.slice(0, 8) + '...';
+}
+
+// Helper to get initials for avatar
+function getUserInitials(user: AdminUser): string {
+  if (user.full_name) {
+    const parts = user.full_name.split(' ');
+    return parts.length >= 2 
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : parts[0].slice(0, 2).toUpperCase();
+  }
+  if (user.display_name) return user.display_name.slice(0, 2).toUpperCase();
+  if (user.email) return user.email.slice(0, 2).toUpperCase();
+  return user.id.slice(0, 2).toUpperCase();
+}
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -203,16 +225,22 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
               <TableRow key={user.id} className={!user.is_active ? 'opacity-60' : ''}>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${user.is_active ? 'bg-primary/10' : 'bg-muted'}`}>
-                      <span className={`text-sm font-medium ${user.is_active ? 'text-primary' : 'text-muted-foreground'}`}>
-                        {user.id.slice(0, 2).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{user.id.slice(0, 8)}...</p>
-                      <p className="text-xs text-muted-foreground">
-                        {user.id === currentUser?.id && '(Tú)'}
+                    <Avatar className={`h-9 w-9 ${!user.is_active ? 'opacity-50' : ''}`}>
+                      <AvatarImage src={user.avatar_url} alt={getUserDisplayName(user)} />
+                      <AvatarFallback className={user.is_active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}>
+                        {getUserInitials(user)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {getUserDisplayName(user)}
+                        {user.id === currentUser?.id && (
+                          <span className="ml-1.5 text-xs text-muted-foreground">(Tú)</span>
+                        )}
                       </p>
+                      {user.email && (
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      )}
                     </div>
                   </div>
                 </TableCell>
