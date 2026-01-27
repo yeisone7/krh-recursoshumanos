@@ -112,9 +112,11 @@ export function Tab360Contracts({ contracts, isLoading }: Tab360ContractsProps) 
                           </Badge>
                         )}
                       </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        {contract.contract_number || 'Sin número de contrato'}
-                      </p>
+                      {contract.contract_number && (
+                        <p className="text-sm text-muted-foreground font-mono">
+                          {contract.contract_number}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
