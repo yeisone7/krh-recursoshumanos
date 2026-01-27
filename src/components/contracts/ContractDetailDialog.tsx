@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
 import { ExtensionFormDialog } from './ExtensionFormDialog';
+import { ContractFormDialog } from './ContractFormDialog';
 import { FourYearLimitGauge } from './FourYearLimitGauge';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { TerminationProcessDialog } from '@/components/termination/TerminationProcessDialog';
@@ -65,6 +66,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   const [showExtensionForm, setShowExtensionForm] = useState(false);
   const [showTerminationDialog, setShowTerminationDialog] = useState(false);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const createExtension = useCreateContractExtension();
   
   // Fetch termination process status
@@ -423,7 +425,11 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                 <Download className="w-4 h-4" />
                 Generar Documento
               </Button>
-              <Button className="gradient-primary text-primary-foreground">
+              <Button 
+                className="gradient-primary text-primary-foreground"
+                onClick={() => setShowEditDialog(true)}
+                disabled={status === 'terminated'}
+              >
                 Editar Contrato
               </Button>
             </div>
@@ -487,6 +493,45 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
             document_number: '',
             operation_centers: contract.operationCenter ? { name: contract.operationCenter } : null,
           },
+        }}
+      />
+
+      {/* Edit Contract Dialog */}
+      <ContractFormDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        preselectedEmployeeId={contract.employeeId}
+        preselectedEmployeeName={contract.employeeName}
+        contractToEdit={{
+          id: contract.id,
+          employee_id: contract.employeeId,
+          contract_type: contract.contractType as any,
+          start_date: contract.startDate.toISOString().split('T')[0],
+          end_date: contract.originalEndDate?.toISOString().split('T')[0] || null,
+          salary: contract.salary,
+          salary_type: contract.salaryType === 'integral' ? 'integral' : 'mensual',
+          transport_allowance: contract.transportAllowance ? 140606 : 0,
+          other_allowances: 0,
+          trial_period_days: contract.trialPeriodDays || null,
+          trial_end_date: null,
+          work_city: null,
+          work_address: null,
+          has_non_compete_clause: contract.hasNonCompeteClause || false,
+          has_confidentiality_clause: contract.hasConfidentialityClause || false,
+          special_clauses: null,
+          document_url: contract.documentUrl || null,
+          contract_number: null,
+          is_terminated: status === 'terminated',
+          termination_date: null,
+          termination_reason: null,
+          created_at: '',
+          updated_at: '',
+          created_by: null,
+        }}
+        onSuccess={() => {
+          // Close both dialogs and trigger refresh
+          setShowEditDialog(false);
+          onOpenChange(false);
         }}
       />
     </>
