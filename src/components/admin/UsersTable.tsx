@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,11 +18,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, UserMinus, AlertTriangle } from 'lucide-react';
 import { UserRoleDialog } from './UserRoleDialog';
 import { UserCenterDialog } from './UserCenterDialog';
 import { LinkEmployeeDialog } from './LinkEmployeeDialog';
-import { useRemoveCompanyAssignment, type AdminUser } from '@/hooks/useAdminUsers';
+import { useRemoveCompanyAssignment, useToggleUserStatus, type AdminUser } from '@/hooks/useAdminUsers';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
@@ -48,7 +61,11 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [centerDialogOpen, setCenterDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [deactivateReason, setDeactivateReason] = useState('');
+  const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
   const removeCompany = useRemoveCompanyAssignment();
+  const toggleStatus = useToggleUserStatus();
 
   const handleManageRoles = (user: AdminUser) => {
     setSelectedUser(user);
@@ -82,6 +99,38 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
     }
   };
 
+  const handleToggleStatus = (user: AdminUser) => {
+    if (user.id === currentUser?.id) {
+      toast.error('No puedes desactivarte a ti mismo');
+      return;
+    }
+
+    if (user.is_active) {
+      // Opening dialog to deactivate
+      setUserToToggle(user);
+      setDeactivateReason('');
+      setDeactivateDialogOpen(true);
+    } else {
+      // Activate directly
+      confirmToggleStatus(user, true);
+    }
+  };
+
+  const confirmToggleStatus = async (user: AdminUser, activate: boolean, reason?: string) => {
+    try {
+      await toggleStatus.mutateAsync({
+        userId: user.id,
+        isActive: activate,
+        reason: reason,
+      });
+      toast.success(activate ? 'Usuario activado' : 'Usuario desactivado');
+      setDeactivateDialogOpen(false);
+      setUserToToggle(null);
+    } catch (error) {
+      toast.error('Error al cambiar estado del usuario');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="rounded-lg border border-border">
@@ -89,6 +138,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Usuario</TableHead>
+              <TableHead>Estado</TableHead>
               <TableHead>Roles</TableHead>
               <TableHead>Empresas</TableHead>
               <TableHead>Centros</TableHead>
@@ -100,6 +150,9 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
               <TableRow key={i}>
                 <TableCell>
                   <div className="h-4 bg-muted rounded animate-pulse w-32" />
+                </TableCell>
+                <TableCell>
+                  <div className="h-4 bg-muted rounded animate-pulse w-16" />
                 </TableCell>
                 <TableCell>
                   <div className="h-4 bg-muted rounded animate-pulse w-20" />
@@ -138,6 +191,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead>Usuario</TableHead>
+              <TableHead className="w-[100px]">Estado</TableHead>
               <TableHead>Roles</TableHead>
               <TableHead>Empresas</TableHead>
               <TableHead>Centros</TableHead>
@@ -146,11 +200,11 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
           </TableHeader>
           <TableBody>
             {users.map(user => (
-              <TableRow key={user.id}>
+              <TableRow key={user.id} className={!user.is_active ? 'opacity-60' : ''}>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-medium text-primary">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${user.is_active ? 'bg-primary/10' : 'bg-muted'}`}>
+                      <span className={`text-sm font-medium ${user.is_active ? 'text-primary' : 'text-muted-foreground'}`}>
                         {user.id.slice(0, 2).toUpperCase()}
                       </span>
                     </div>
@@ -160,6 +214,22 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                         {user.id === currentUser?.id && '(Tú)'}
                       </p>
                     </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={user.is_active}
+                      onCheckedChange={() => handleToggleStatus(user)}
+                      disabled={user.id === currentUser?.id || toggleStatus.isPending}
+                      className="data-[state=checked]:bg-success"
+                    />
+                    <Badge 
+                      variant={user.is_active ? 'outline' : 'secondary'}
+                      className={user.is_active ? 'bg-success-light text-success border-success/20' : 'bg-muted text-muted-foreground'}
+                    >
+                      {user.is_active ? 'Activo' : 'Inactivo'}
+                    </Badge>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -232,6 +302,22 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
+                        onClick={() => handleToggleStatus(user)}
+                        disabled={user.id === currentUser?.id}
+                      >
+                        {user.is_active ? (
+                          <>
+                            <UserMinus className="w-4 h-4 mr-2" />
+                            Desactivar Usuario
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="w-4 h-4 mr-2" />
+                            Activar Usuario
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
                         className="text-destructive"
                         onClick={() => handleRemoveFromCompany(user)}
                         disabled={user.id === currentUser?.id}
@@ -265,6 +351,47 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         onOpenChange={setLinkDialogOpen}
         userId={selectedUser?.id || ''}
       />
+
+      {/* Deactivation Confirmation Dialog */}
+      <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              Desactivar Usuario
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              El usuario no podrá acceder al sistema mientras esté desactivado. 
+              Puedes reactivarlo en cualquier momento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reason">Motivo de desactivación (opcional)</Label>
+              <Textarea
+                id="reason"
+                placeholder="Ej: Licencia sin sueldo, Suspensión temporal..."
+                value={deactivateReason}
+                onChange={(e) => setDeactivateReason(e.target.value)}
+                className="resize-none"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => userToToggle && confirmToggleStatus(userToToggle, false, deactivateReason)}
+              className="bg-warning text-warning-foreground hover:bg-warning/90"
+            >
+              <UserMinus className="w-4 h-4 mr-2" />
+              Desactivar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
