@@ -178,9 +178,27 @@ export function useCreateContract() {
 
   return useMutation({
     mutationFn: async (contract: Omit<ContractInsert, 'created_by'>) => {
+      // Generate automatic contract number using the database function
+      let contractNumber: string | null = null;
+      if (currentCompanyId) {
+        const { data: numberResult, error: numberError } = await supabase
+          .rpc('get_next_contract_number', {
+            _company_id: currentCompanyId,
+            _prefix: 'PC'
+          });
+        
+        if (!numberError && numberResult) {
+          contractNumber = numberResult;
+        }
+      }
+
       const { data, error } = await supabase
         .from('contracts')
-        .insert({ ...contract, created_by: user?.id })
+        .insert({ 
+          ...contract, 
+          created_by: user?.id,
+          contract_number: contractNumber,
+        })
         .select()
         .single();
 
@@ -201,9 +219,9 @@ export function useCreateContract() {
           'create',
           'contract',
           data.id,
-          `Contrato ${data.contract_type} - ${employeeName}`,
+          `Contrato ${data.contract_number || data.contract_type} - ${employeeName}`,
           undefined,
-          { contract_type: data.contract_type, start_date: data.start_date, salary: data.salary }
+          { contract_number: data.contract_number, contract_type: data.contract_type, start_date: data.start_date, salary: data.salary }
         );
       }
 

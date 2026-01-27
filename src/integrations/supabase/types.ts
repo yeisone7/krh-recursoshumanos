@@ -926,6 +926,44 @@ export type Database = {
           },
         ]
       }
+      contract_sequences: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          last_number: number
+          prefix: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          last_number?: number
+          prefix?: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          last_number?: number
+          prefix?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_sequences_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_type_config: {
         Row: {
           company_id: string
@@ -5208,6 +5246,10 @@ export type Database = {
     }
     Functions: {
       get_my_employee_id: { Args: never; Returns: string }
+      get_next_contract_number: {
+        Args: { _company_id: string; _prefix?: string }
+        Returns: string
+      }
       get_user_center_ids: { Args: never; Returns: string[] }
       get_user_company_ids: { Args: never; Returns: string[] }
       has_center_access: { Args: { _center_id: string }; Returns: boolean }
