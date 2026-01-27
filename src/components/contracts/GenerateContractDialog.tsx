@@ -212,13 +212,18 @@ export function GenerateContractDialog({
     const docType = employee.document_type as keyof typeof documentTypeLabels;
 
     // Parse dates safely - handle potential null/undefined/empty values
+    // Note: start_date can come as ISO string (2026-01-25T00:00:00.000Z) or date string (2026-01-25)
     let startDate: Date;
     let endDate: Date | null = null;
     let durationMonths: number | undefined = undefined;
 
     // Validate and parse start date
     if (contract.start_date && contract.start_date.trim() !== '') {
-      startDate = new Date(contract.start_date + 'T00:00:00');
+      // Handle both ISO format and simple date format
+      const dateStr = contract.start_date.includes('T') 
+        ? contract.start_date 
+        : contract.start_date + 'T00:00:00';
+      startDate = new Date(dateStr);
       if (isNaN(startDate.getTime())) {
         throw new Error('Fecha de inicio inválida');
       }
@@ -228,7 +233,11 @@ export function GenerateContractDialog({
 
     // Validate and parse end date if present
     if (contract.end_date && contract.end_date.trim() !== '') {
-      endDate = new Date(contract.end_date + 'T00:00:00');
+      // Handle both ISO format and simple date format
+      const dateStr = contract.end_date.includes('T') 
+        ? contract.end_date 
+        : contract.end_date + 'T00:00:00';
+      endDate = new Date(dateStr);
       if (isNaN(endDate.getTime())) {
         endDate = null; // Invalid end date, treat as null
       } else {
