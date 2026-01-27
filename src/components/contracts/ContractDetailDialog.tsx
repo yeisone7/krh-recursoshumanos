@@ -385,7 +385,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
             </div>
           </ScrollArea>
 
-          <div className="px-6 pt-4 pb-8 border-t border-border bg-muted/30 flex justify-between">
+          <div className="px-6 py-6 border-t border-border bg-muted/30 flex justify-between">
             <div>
               {canTerminate && (
                 <Button
