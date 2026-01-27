@@ -4765,6 +4765,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_status: {
+        Row: {
+          created_at: string
+          deactivated_at: string | null
+          deactivated_by: string | null
+          deactivation_reason: string | null
+          id: string
+          is_active: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deactivated_at?: string | null
+          deactivated_by?: string | null
+          deactivation_reason?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deactivated_at?: string | null
+          deactivated_by?: string | null
+          deactivation_reason?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       vacancies: {
         Row: {
           actual_close_date: string | null
@@ -5168,6 +5201,7 @@ export type Database = {
       is_auditor: { Args: never; Returns: boolean }
       is_company_member: { Args: { _company_id: string }; Returns: boolean }
       is_psicologo: { Args: never; Returns: boolean }
+      is_user_active: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       account_type: "ahorros" | "corriente"
