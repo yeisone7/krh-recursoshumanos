@@ -239,7 +239,8 @@ export default function Contratos() {
             employeeId: selectedContract.employee_id,
             employeeName: `${selectedContract.employees?.first_name} ${selectedContract.employees?.last_name}`,
             employeeDocument: selectedContract.employees?.document_number || '',
-            contractType: selectedContract.contract_type === 'indefinido' ? 'indefinite' : 
+            contractNumber: selectedContract.contract_number || undefined,
+            contractType: selectedContract.contract_type === 'indefinido' ? 'indefinite' :
                           selectedContract.contract_type === 'fijo' ? 'fixed' :
                           selectedContract.contract_type === 'obra_labor' ? 'work_labor' :
                           selectedContract.contract_type === 'aprendizaje' ? 'apprenticeship' : 'services',
@@ -408,6 +409,7 @@ export default function Contratos() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Nº Contrato</th>
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Empleado</th>
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Tipo</th>
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Fecha Inicio</th>
@@ -435,6 +437,11 @@ export default function Contratos() {
                       onClick={() => handleContractClick(contract.id)}
                       className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer group"
                     >
+                      <td className="p-4">
+                        <span className="text-sm font-mono text-primary font-medium">
+                          {contract.contract_number || '-'}
+                        </span>
+                      </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center">
