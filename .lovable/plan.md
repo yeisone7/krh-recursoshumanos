@@ -1,157 +1,80 @@
 
-# Plan: Mostrar nombre de usuario en lugar del ID en Seguridad y Roles
+# Plan: Usar nombre dinámico del catálogo de tipos de contrato
 
-## Resumen
+## Problema identificado
 
-Actualmente la tabla de usuarios muestra solo el UUID truncado porque no existe una tabla que almacene el nombre del usuario. Se necesita crear una estructura que permita guardar y mostrar el nombre completo y email de cada usuario.
+El grid de contratos muestra "Término Fijo" porque usa un mapeo estático en el código, en lugar de obtener el `display_name` del catálogo `contract_type_config` que tiene el valor "Contrato a término fijo inferior a un año".
 
-## Arquitectura de la Solución
+## Solución propuesta
 
-```text
-+------------------+     +-------------------+     +---------------+
-|   auth.users     |---->|  user_profiles    |---->|  UsersTable   |
-|   (interno)      |     |  (nueva tabla)    |     |  (UI)         |
-+------------------+     +-------------------+     +---------------+
-        |                        |
-        |                        v
-        |               +-------------------+
-        +-------------->| employee_user_links|
-                        | (vinculo opcional)|
-                        +-------------------+
-                                |
-                                v
-                        +-------------------+
-                        |   employees_v2    |
-                        | (nombre completo) |
-                        +-------------------+
-```
+Modificar la página de Contratos para obtener los nombres de los tipos de contrato desde el catálogo de la base de datos en lugar de usar un mapeo estático.
 
-## Cambios Propuestos
+## Cambios a realizar
 
-### 1. Base de datos - Nueva tabla `user_profiles`
+### 1. Crear hook para obtener tipos de contrato
 
-Se creara una tabla publica para almacenar la informacion basica del usuario:
+Crear un nuevo hook `useContractTypeConfig` o agregar una funcion al archivo de hooks existente para obtener el catalogo de tipos de contrato:
 
-- `id`: UUID, clave primaria, referencia a `auth.users(id)`
-- `full_name`: Nombre completo del usuario
-- `display_name`: Nombre corto para mostrar
-- `avatar_url`: URL del avatar (redundante con metadata pero util)
-- `created_at`, `updated_at`: Timestamps
-
-**Politicas RLS:**
-- Los usuarios pueden leer todos los perfiles (necesario para mostrar nombres en la tabla de admin)
-- Los usuarios solo pueden actualizar su propio perfil
-- Admins pueden insertar perfiles para nuevos usuarios
-
-**Trigger automatico:**
-- Al crear un usuario via invitacion, se creara automaticamente un registro en `user_profiles`
-
-### 2. Hook `useAdminUsers.ts`
-
-Modificar la consulta para:
-1. Obtener datos de `user_profiles` (nombre, email)
-2. Como fallback, obtener datos de `employee_user_links` si el usuario esta vinculado a un empleado
-3. Mostrar el UUID solo si no hay ninguna informacion disponible
-
-**Interface actualizada:**
 ```typescript
-export interface AdminUser {
-  id: string;
-  email: string;
-  full_name: string;       // NUEVO
-  display_name: string;    // NUEVO  
-  avatar_url?: string;     // NUEVO
-  // ... resto de campos
+export function useContractTypeConfig() {
+  const { currentCompanyId } = useAuth();
+  
+  return useQuery({
+    queryKey: ['contract_type_config', currentCompanyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contract_type_config')
+        .select('*')
+        .eq('company_id', currentCompanyId!)
+        .eq('is_active', true);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!currentCompanyId,
+  });
 }
 ```
 
-### 3. Componente `UsersTable.tsx`
+### 2. Modificar pagina Contratos.tsx
 
-Actualizar la columna "Usuario" para mostrar:
-- Avatar del usuario (si existe)
-- Nombre completo o display_name
-- Email debajo del nombre
-- Badge "(Tu)" si es el usuario actual
+- Importar el nuevo hook
+- Crear una funcion que busque el `display_name` basado en el `contract_type`
+- Usar el nombre dinamico en la columna "Tipo" del grid
+- Actualizar el filtro de tipos para usar valores del catalogo
 
-**Antes:**
-```
-[41] 41f81714...
-     (Tu)
-```
+**Antes (estatico):**
+```typescript
+const contractTypeLabels = {
+  fijo: 'Término Fijo',
+  ...
+};
 
-**Despues:**
-```
-[Avatar] Yeison Escobar
-         yeisone7@gmail.com (Tu)
+// En el grid:
+<span>{contractTypeLabels[contract.contract_type]}</span>
 ```
 
-### 4. Edge Function `invite-user`
+**Despues (dinamico):**
+```typescript
+const { data: contractTypes } = useContractTypeConfig();
 
-Modificar para crear el perfil del usuario automaticamente al aceptar la invitacion, extrayendo el nombre del email o usando valores por defecto.
+const getContractTypeLabel = (type: string) => {
+  const config = contractTypes?.find(ct => ct.contract_type === type);
+  return config?.display_name || type;
+};
 
-## Detalles Tecnicos
-
-### Migracion SQL
-
-```sql
--- Crear tabla user_profiles
-CREATE TABLE IF NOT EXISTS public.user_profiles (
-  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name text,
-  display_name text,
-  avatar_url text,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
--- Indices
-CREATE INDEX idx_user_profiles_full_name ON public.user_profiles(full_name);
-
--- RLS
-ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
-
--- Politicas
-CREATE POLICY "Users can read all profiles"
-  ON public.user_profiles FOR SELECT
-  TO authenticated
-  USING (true);
-
-CREATE POLICY "Users can update own profile"
-  ON public.user_profiles FOR UPDATE
-  TO authenticated
-  USING (id = auth.uid())
-  WITH CHECK (id = auth.uid());
-
-CREATE POLICY "Admins can insert profiles"
-  ON public.user_profiles FOR INSERT
-  TO authenticated
-  WITH CHECK (public.is_admin());
-
--- Trigger para updated_at
-CREATE TRIGGER update_user_profiles_updated_at
-  BEFORE UPDATE ON public.user_profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION public.update_updated_at_column();
+// En el grid:
+<span>{getContractTypeLabel(contract.contract_type)}</span>
 ```
 
-### Logica de obtencion de nombre
+### 3. Actualizar filtros del Select
 
-La prioridad para mostrar el nombre sera:
-1. `user_profiles.full_name` si existe
-2. Nombre del empleado vinculado (first_name + last_name) via `employee_user_links`
-3. Parte del email antes del @ como fallback
-4. UUID truncado como ultimo recurso
+Cambiar los items del Select de tipos de contrato para que se generen dinamicamente desde el catalogo, en lugar de estar fijos en el codigo.
 
-### Archivos a modificar
+## Archivos a modificar
 
-1. **Nueva migracion SQL** - Crear tabla `user_profiles`
-2. **`src/hooks/useAdminUsers.ts`** - Agregar consulta a `user_profiles` y logica de fallback
-3. **`src/components/admin/UsersTable.tsx`** - Mostrar nombre, email y avatar
-4. **`supabase/functions/invite-user/index.ts`** - Crear perfil al invitar usuario (opcional)
+1. `src/hooks/useContractTypes.ts` - Agregar funcion `useContractTypeConfig` (o crear nuevo archivo)
+2. `src/pages/Contratos.tsx` - Usar el hook y mostrar nombres dinamicos
 
-## Beneficios
+## Resultado esperado
 
-- Los administradores podran identificar usuarios por nombre en lugar de UUID
-- Mejor experiencia de usuario en la gestion de roles
-- Base para futuras funcionalidades de perfil de usuario
-- Compatible con el sistema existente de vinculos empleado-usuario
+En lugar de "Término Fijo", se mostrara "Contrato a término fijo inferior a un año" (o el nombre que este configurado en el catalogo para cada tipo de contrato).
