@@ -8,6 +8,9 @@ type AppRole = Database['public']['Enums']['app_role'];
 export interface AdminUser {
   id: string;
   email: string;
+  full_name: string;
+  display_name: string;
+  avatar_url?: string;
   created_at: string;
   roles: AppRole[];
   is_active: boolean;
@@ -74,19 +77,64 @@ export function useAdminUsers() {
 
       if (statusError) throw statusError;
 
+      // Fetch user profiles for names and avatars
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, full_name, display_name, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Fetch employee links for fallback names
+      const { data: employeeLinks, error: linksError } = await supabase
+        .from('employee_user_links')
+        .select(`
+          user_id,
+          employee_id,
+          employees_v2!employee_user_links_employee_id_fkey(
+            first_name, last_name
+          )
+        `)
+        .in('user_id', userIds)
+        .eq('is_active', true);
+
+      if (linksError) throw linksError;
+
       // Build user objects - we'll use user_id as the identifier
       const usersMap = new Map<string, AdminUser>();
 
       userIds.forEach(userId => {
         usersMap.set(userId, {
           id: userId,
-          email: '', // Will be populated if we have access
+          email: '',
+          full_name: '',
+          display_name: '',
+          avatar_url: undefined,
           created_at: '',
           roles: [],
-          is_active: true, // Default to active
+          is_active: true,
           companies: [],
           centers: [],
         });
+      });
+
+      // Add profile data (primary source for names)
+      profilesData?.forEach(p => {
+        const user = usersMap.get(p.id);
+        if (user) {
+          user.full_name = p.full_name || '';
+          user.display_name = p.display_name || '';
+          user.avatar_url = p.avatar_url || undefined;
+        }
+      });
+
+      // Add employee link data as fallback for names
+      employeeLinks?.forEach(link => {
+        const user = usersMap.get(link.user_id);
+        if (user && !user.full_name && link.employees_v2) {
+          const emp = link.employees_v2 as { first_name: string; last_name: string };
+          user.full_name = `${emp.first_name} ${emp.last_name}`.trim();
+        }
       });
 
       // Add status
