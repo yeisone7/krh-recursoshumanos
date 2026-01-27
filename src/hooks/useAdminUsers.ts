@@ -10,6 +10,9 @@ export interface AdminUser {
   email: string;
   created_at: string;
   roles: AppRole[];
+  is_active: boolean;
+  deactivated_at?: string;
+  deactivation_reason?: string;
   companies: {
     id: string;
     name: string;
@@ -63,6 +66,14 @@ export function useAdminUsers() {
 
       if (centerError) throw centerError;
 
+      // Fetch user status (active/inactive)
+      const { data: statusData, error: statusError } = await supabase
+        .from('user_status')
+        .select('user_id, is_active, deactivated_at, deactivation_reason')
+        .in('user_id', userIds);
+
+      if (statusError) throw statusError;
+
       // Build user objects - we'll use user_id as the identifier
       const usersMap = new Map<string, AdminUser>();
 
@@ -72,9 +83,20 @@ export function useAdminUsers() {
           email: '', // Will be populated if we have access
           created_at: '',
           roles: [],
+          is_active: true, // Default to active
           companies: [],
           centers: [],
         });
+      });
+
+      // Add status
+      statusData?.forEach(s => {
+        const user = usersMap.get(s.user_id);
+        if (user) {
+          user.is_active = s.is_active;
+          user.deactivated_at = s.deactivated_at || undefined;
+          user.deactivation_reason = s.deactivation_reason || undefined;
+        }
       });
 
       // Add roles
@@ -308,5 +330,66 @@ export function useEmployeeLinks(companyId: string | null) {
       return data;
     },
     enabled: !!companyId,
+  });
+}
+
+export function useToggleUserStatus() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ 
+      userId, 
+      isActive, 
+      reason 
+    }: { 
+      userId: string; 
+      isActive: boolean; 
+      reason?: string 
+    }) => {
+      // Check if status record exists
+      const { data: existing } = await supabase
+        .from('user_status')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing record
+        const { data, error } = await supabase
+          .from('user_status')
+          .update({
+            is_active: isActive,
+            deactivated_at: isActive ? null : new Date().toISOString(),
+            deactivated_by: isActive ? null : user?.id,
+            deactivation_reason: isActive ? null : reason,
+          })
+          .eq('user_id', userId)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        // Insert new record
+        const { data, error } = await supabase
+          .from('user_status')
+          .insert({
+            user_id: userId,
+            is_active: isActive,
+            deactivated_at: isActive ? null : new Date().toISOString(),
+            deactivated_by: isActive ? null : user?.id,
+            deactivation_reason: isActive ? null : reason,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
   });
 }
