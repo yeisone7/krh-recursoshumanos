@@ -490,7 +490,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
             id: contract.employeeId,
             first_name: contract.employeeName.split(' ')[0] || '',
             last_name: contract.employeeName.split(' ').slice(1).join(' ') || '',
-            document_number: '',
+            document_number: contract.employeeDocument || '',
             operation_centers: contract.operationCenter ? { name: contract.operationCenter } : null,
           },
         }}
