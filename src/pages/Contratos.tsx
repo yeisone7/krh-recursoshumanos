@@ -27,18 +27,11 @@ import { cn } from '@/lib/utils';
 import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { ContractDetailDialog } from '@/components/contracts/ContractDetailDialog';
 import { useContracts } from '@/hooks/useContracts';
+import { useContractTypes } from '@/hooks/useContractTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
 type ContractType = Database['public']['Enums']['contract_type'];
-
-const contractTypeLabels: Record<ContractType, string> = {
-  indefinido: 'Indefinido',
-  fijo: 'Término Fijo',
-  obra_labor: 'Obra Labor',
-  aprendizaje: 'Aprendizaje',
-  servicios: 'Servicios',
-};
 
 type ContractStatus = 'active' | 'expiring' | 'expired' | 'terminated';
 
@@ -124,6 +117,13 @@ export default function Contratos() {
 
   const { currentCompanyId } = useAuth();
   const { data: contracts, isLoading } = useContracts();
+  const { data: contractTypesConfig } = useContractTypes();
+
+  // Helper to get contract type label from catalog
+  const getContractTypeLabel = (type: string) => {
+    const config = contractTypesConfig?.find(ct => ct.contract_type === type);
+    return config?.display_name || type;
+  };
 
   // Handle deep link from dashboard alerts
   useEffect(() => {
@@ -349,16 +349,16 @@ export default function Contratos() {
           </div>
           <div className="flex gap-3">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[150px] h-10 text-sm border-border">
+              <SelectTrigger className="w-[200px] h-10 text-sm border-border">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent className="bg-background">
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="indefinido">Indefinido</SelectItem>
-                <SelectItem value="fijo">Término Fijo</SelectItem>
-                <SelectItem value="obra_labor">Obra Labor</SelectItem>
-                <SelectItem value="aprendizaje">Aprendizaje</SelectItem>
-                <SelectItem value="servicios">Servicios</SelectItem>
+                <SelectItem value="all">Todos los tipos</SelectItem>
+                {contractTypesConfig?.filter(ct => ct.is_active).map((ct) => (
+                  <SelectItem key={ct.contract_type} value={ct.contract_type}>
+                    {ct.display_name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -448,7 +448,7 @@ export default function Contratos() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="text-sm text-foreground">{contractTypeLabels[contract.contract_type]}</span>
+                        <span className="text-sm text-foreground">{getContractTypeLabel(contract.contract_type)}</span>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
