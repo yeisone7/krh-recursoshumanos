@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FileText, Download, Loader2, FileDown, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 import {
   Dialog,
@@ -18,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 
+import { supabase } from '@/integrations/supabase/client';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useCompany } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,6 +30,7 @@ import {
   downloadDocument,
   downloadPDF,
   ContractDocumentData,
+  calculateMonthsDifference,
 } from '@/lib/contractDocumentGenerator';
 
 interface ContractData {
@@ -82,6 +85,44 @@ export function GenerateContractDialog({
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [generationCity, setGenerationCity] = useState('Bogotá D.C.');
+
+  // Fetch employee contact info
+  const { data: employeeContact } = useQuery({
+    queryKey: ['employee-contact', contract?.employee_id],
+    queryFn: async () => {
+      if (!contract?.employee_id) return null;
+      const { data, error } = await supabase
+        .from('employee_contact')
+        .select('email, phone, mobile, residence_address, residence_city, residence_department')
+        .eq('employee_id', contract.employee_id)
+        .eq('is_current', true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!contract?.employee_id,
+  });
+
+  // Fetch employee work info
+  const { data: employeeWorkInfo } = useQuery({
+    queryKey: ['employee-work-info', contract?.employee_id],
+    queryFn: async () => {
+      if (!contract?.employee_id) return null;
+      const { data, error } = await supabase
+        .from('employee_work_info')
+        .select(`
+          position_name,
+          operation_center_id,
+          operation_centers (name)
+        `)
+        .eq('employee_id', contract.employee_id)
+        .eq('is_current', true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!contract?.employee_id,
+  });
 
   if (!contract) return null;
 
@@ -170,6 +211,16 @@ export function GenerateContractDialog({
     const employee = contract.employees;
     const docType = employee.document_type as keyof typeof documentTypeLabels;
 
+    // Calculate contract duration in months
+    const startDate = new Date(contract.start_date + 'T00:00:00');
+    const endDate = contract.end_date ? new Date(contract.end_date + 'T00:00:00') : null;
+    const durationMonths = endDate ? calculateMonthsDifference(startDate, endDate) : undefined;
+
+    // Get position and operation center from work info
+    const position = employeeWorkInfo?.position_name || 'No especificado';
+    const operationCenter = employeeWorkInfo?.operation_centers?.name || 
+      contract.employees.operation_centers?.name || undefined;
+
     return {
       // Company
       companyName: company?.name || 'Empresa',
@@ -184,14 +235,18 @@ export function GenerateContractDialog({
       employeeLastName: employee.last_name,
       employeeDocumentType: docType ? documentTypeLabels[docType] || 'C.C.' : 'C.C.',
       employeeDocumentNumber: employee.document_number,
-      employeePosition: contract.employees.operation_centers?.name || 'No especificado',
-      employeeOperationCenter: contract.employees.operation_centers?.name,
+      employeeAddress: employeeContact?.residence_address || undefined,
+      employeeCity: employeeContact?.residence_city || undefined,
+      employeePhone: employeeContact?.phone || employeeContact?.mobile || undefined,
+      employeeEmail: employeeContact?.email || undefined,
+      employeePosition: position,
+      employeeOperationCenter: operationCenter,
 
       // Contract
       contractType: contract.contract_type,
       contractTypeDisplay: contractTypeConfig?.display_name || contract.contract_type,
-      startDate: new Date(contract.start_date),
-      endDate: contract.end_date ? new Date(contract.end_date) : null,
+      startDate: startDate,
+      endDate: endDate,
       salary: contract.salary,
       salaryType: contract.salary_type || 'mensual',
       transportAllowance: (contract.transport_allowance || 0) > 0,
@@ -199,6 +254,7 @@ export function GenerateContractDialog({
       trialPeriodDays: contract.trial_period_days || undefined,
       workCity: contract.work_city || undefined,
       workAddress: contract.work_address || undefined,
+      contractDurationMonths: durationMonths,
 
       // Clauses
       hasNonCompeteClause: contract.has_non_compete_clause || false,
