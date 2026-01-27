@@ -132,7 +132,15 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                 </div>
                 <div>
                   <DialogTitle className="font-display text-xl">{contract.employeeName}</DialogTitle>
-                  <p className="text-sm text-muted-foreground">{contract.position}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">{contract.position}</p>
+                    {contract.contractNumber && (
+                      <>
+                        <span className="text-muted-foreground">•</span>
+                        <p className="text-sm font-mono text-primary">{contract.contractNumber}</p>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">

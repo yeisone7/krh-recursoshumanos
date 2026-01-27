@@ -95,6 +95,7 @@ export interface Contract {
   employeeName: string;
   employeeDocument?: string;
   employeeDocumentType?: string;
+  contractNumber?: string;
   contractType: ContractType;
   startDate: Date;
   originalEndDate: Date | null;
