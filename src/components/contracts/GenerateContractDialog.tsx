@@ -211,10 +211,30 @@ export function GenerateContractDialog({
     const employee = contract.employees;
     const docType = employee.document_type as keyof typeof documentTypeLabels;
 
-    // Calculate contract duration in months
-    const startDate = new Date(contract.start_date + 'T00:00:00');
-    const endDate = contract.end_date ? new Date(contract.end_date + 'T00:00:00') : null;
-    const durationMonths = endDate ? calculateMonthsDifference(startDate, endDate) : undefined;
+    // Parse dates safely - handle potential null/undefined/empty values
+    let startDate: Date;
+    let endDate: Date | null = null;
+    let durationMonths: number | undefined = undefined;
+
+    // Validate and parse start date
+    if (contract.start_date && contract.start_date.trim() !== '') {
+      startDate = new Date(contract.start_date + 'T00:00:00');
+      if (isNaN(startDate.getTime())) {
+        throw new Error('Fecha de inicio inválida');
+      }
+    } else {
+      throw new Error('La fecha de inicio del contrato es requerida');
+    }
+
+    // Validate and parse end date if present
+    if (contract.end_date && contract.end_date.trim() !== '') {
+      endDate = new Date(contract.end_date + 'T00:00:00');
+      if (isNaN(endDate.getTime())) {
+        endDate = null; // Invalid end date, treat as null
+      } else {
+        durationMonths = calculateMonthsDifference(startDate, endDate);
+      }
+    }
 
     // Get position and operation center from work info
     const position = employeeWorkInfo?.position_name || 'No especificado';
