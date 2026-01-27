@@ -1,80 +1,116 @@
 
-# Plan: Usar nombre dinámico del catálogo de tipos de contrato
+# Plan: Completar datos dinámicos para generación de contratos
 
-## Problema identificado
+## Resumen
 
-El grid de contratos muestra "Término Fijo" porque usa un mapeo estático en el código, en lugar de obtener el `display_name` del catálogo `contract_type_config` que tiene el valor "Contrato a término fijo inferior a un año".
+Agregar los campos faltantes para que la plantilla DOCX pueda inyectar toda la información solicitada del empleado y contrato.
 
-## Solución propuesta
+## Cambios Necesarios
 
-Modificar la página de Contratos para obtener los nombres de los tipos de contrato desde el catálogo de la base de datos en lugar de usar un mapeo estático.
+### 1. Actualizar la interfaz ContractDocumentData
 
-## Cambios a realizar
-
-### 1. Crear hook para obtener tipos de contrato
-
-Crear un nuevo hook `useContractTypeConfig` o agregar una funcion al archivo de hooks existente para obtener el catalogo de tipos de contrato:
+Agregar el campo para el término inicial del contrato:
 
 ```typescript
-export function useContractTypeConfig() {
-  const { currentCompanyId } = useAuth();
+// En src/lib/contractDocumentGenerator.ts
+export interface ContractDocumentData {
+  // ... campos existentes ...
   
-  return useQuery({
-    queryKey: ['contract_type_config', currentCompanyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contract_type_config')
-        .select('*')
-        .eq('company_id', currentCompanyId!)
-        .eq('is_active', true);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!currentCompanyId,
-  });
+  // Nuevo campo
+  contractDurationMonths?: number; // Término inicial en meses
 }
 ```
 
-### 2. Modificar pagina Contratos.tsx
+### 2. Agregar nuevo placeholder en prepareTemplateData
 
-- Importar el nuevo hook
-- Crear una funcion que busque el `display_name` basado en el `contract_type`
-- Usar el nombre dinamico en la columna "Tipo" del grid
-- Actualizar el filtro de tipos para usar valores del catalogo
-
-**Antes (estatico):**
 ```typescript
-const contractTypeLabels = {
-  fijo: 'Término Fijo',
-  ...
-};
-
-// En el grid:
-<span>{contractTypeLabels[contract.contract_type]}</span>
+// Nuevo placeholder para término inicial
+CONTRATO_DURACION_MESES: data.contractDurationMonths 
+  ? `${data.contractDurationMonths} meses` 
+  : 'Indefinido',
 ```
 
-**Despues (dinamico):**
+### 3. Modificar GenerateContractDialog para obtener datos completos del empleado
+
+Actualmente el diálogo solo recibe datos básicos del empleado. Se debe:
+
+- Hacer una consulta adicional a `employee_contact` para obtener: email, telefono, direccion
+- Hacer una consulta adicional a `employee_work_info` para obtener: cargo (position_name), centro de operacion
+
+### 4. Calcular el término inicial automáticamente
+
+Agregar función para calcular meses entre fecha inicio y fecha fin:
+
 ```typescript
-const { data: contractTypes } = useContractTypeConfig();
-
-const getContractTypeLabel = (type: string) => {
-  const config = contractTypes?.find(ct => ct.contract_type === type);
-  return config?.display_name || type;
-};
-
-// En el grid:
-<span>{getContractTypeLabel(contract.contract_type)}</span>
+function calculateMonthsDifference(startDate: Date, endDate: Date): number {
+  const months = (endDate.getFullYear() - startDate.getFullYear()) * 12;
+  return months + endDate.getMonth() - startDate.getMonth();
+}
 ```
 
-### 3. Actualizar filtros del Select
+## Archivos a Modificar
 
-Cambiar los items del Select de tipos de contrato para que se generen dinamicamente desde el catalogo, en lugar de estar fijos en el codigo.
+1. **src/lib/contractDocumentGenerator.ts**
+   - Agregar `contractDurationMonths` a la interfaz
+   - Agregar placeholder `CONTRATO_DURACION_MESES`
+   - Agregar funcion `calculateMonthsDifference`
 
-## Archivos a modificar
+2. **src/components/contracts/GenerateContractDialog.tsx**
+   - Agregar consulta a `employee_contact` para obtener email, telefono, direccion
+   - Agregar consulta a `employee_work_info` para obtener cargo real
+   - Pasar los nuevos datos a `prepareDocumentData`
+   - Calcular duracion del contrato en meses
 
-1. `src/hooks/useContractTypes.ts` - Agregar funcion `useContractTypeConfig` (o crear nuevo archivo)
-2. `src/pages/Contratos.tsx` - Usar el hook y mostrar nombres dinamicos
+## Lista Final de Placeholders
 
-## Resultado esperado
+Despues de implementar, tu plantilla Word podra usar:
 
-En lugar de "Término Fijo", se mostrara "Contrato a término fijo inferior a un año" (o el nombre que este configurado en el catalogo para cada tipo de contrato).
+| Placeholder | Descripcion |
+|-------------|-------------|
+| `{{EMPRESA_NOMBRE}}` | Nombre de la empresa |
+| `{{EMPRESA_DIRECCION}}` | Domicilio del empleador |
+| `{{EMPRESA_NIT}}` | NIT de la empresa |
+| `{{EMPLEADO_NOMBRE_COMPLETO}}` | Nombre completo del trabajador |
+| `{{EMPLEADO_DOCUMENTO}}` | Numero de identificacion |
+| `{{EMPLEADO_TIPO_DOCUMENTO}}` | Tipo de documento (C.C., etc.) |
+| `{{EMPLEADO_EMAIL}}` | Correo electronico del trabajador |
+| `{{EMPLEADO_DIRECCION}}` | Direccion de residencia |
+| `{{EMPLEADO_TELEFONO}}` | Telefono del trabajador |
+| `{{EMPLEADO_CARGO}}` | Cargo del empleado |
+| `{{EMPLEADO_CENTRO_OPERACION}}` | Centro de operaciones |
+| `{{CONTRATO_SALARIO}}` | Salario formateado ($2.500.000) |
+| `{{CONTRATO_SALARIO_LETRAS}}` | Salario en letras |
+| `{{CONTRATO_FECHA_INICIO}}` | Fecha inicio (dd/mm/yyyy) |
+| `{{CONTRATO_FECHA_INICIO_LETRAS}}` | Fecha inicio en palabras |
+| `{{CONTRATO_DURACION_MESES}}` | Termino inicial (ej: "12 meses") |
+| `{{CONTRATO_FECHA_FIN}}` | Fecha fin del contrato |
+| `{{CONTRATO_FECHA_FIN_LETRAS}}` | Fecha fin en palabras |
+| `{{FECHA_GENERACION_LETRAS}}` | Fecha de generacion del documento |
+| `{{CIUDAD_GENERACION}}` | Ciudad donde se genera |
+
+## Ejemplo de Uso en Plantilla
+
+```text
+CONTRATO DE TRABAJO
+
+Entre {{EMPRESA_NOMBRE}}, con domicilio en {{EMPRESA_DIRECCION}}, 
+identificada con NIT {{EMPRESA_NIT}}, y {{EMPLEADO_NOMBRE_COMPLETO}}, 
+identificado con {{EMPLEADO_TIPO_DOCUMENTO}} No. {{EMPLEADO_DOCUMENTO}}, 
+residente en {{EMPLEADO_DIRECCION}}, telefono {{EMPLEADO_TELEFONO}}, 
+correo {{EMPLEADO_EMAIL}}.
+
+CARGO: {{EMPLEADO_CARGO}}
+CENTRO DE OPERACIONES: {{EMPLEADO_CENTRO_OPERACION}}
+SALARIO: {{CONTRATO_SALARIO}} ({{CONTRATO_SALARIO_LETRAS}})
+FECHA DE INICIO: {{CONTRATO_FECHA_INICIO_LETRAS}}
+DURACION: {{CONTRATO_DURACION_MESES}}
+
+Firmado en {{CIUDAD_GENERACION}}, {{FECHA_GENERACION_LETRAS}}.
+```
+
+## Como Subir la Plantilla
+
+1. Ir a Configuracion > Tipos de Contrato
+2. Editar el tipo de contrato deseado
+3. En la seccion "Plantilla de Contrato", subir el archivo .docx
+4. El sistema asociara automaticamente la plantilla al tipo de contrato
