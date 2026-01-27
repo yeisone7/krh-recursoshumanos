@@ -121,7 +121,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -151,7 +151,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
             </div>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[calc(90vh-180px)]">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="px-6 py-4 space-y-6">
               {/* Contract Info */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -385,7 +385,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
             </div>
           </ScrollArea>
 
-          <div className="px-6 py-6 border-t border-border bg-muted/30 flex justify-between">
+          <div className="px-6 py-5 border-t border-border bg-muted/30 flex justify-between flex-shrink-0">
             <div>
               {canTerminate && (
                 <Button
