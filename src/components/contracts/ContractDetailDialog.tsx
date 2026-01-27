@@ -151,7 +151,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
             </div>
           </DialogHeader>
 
-          <ScrollArea className="flex-1 min-h-0">
+          <ScrollArea className="flex-1 min-h-0 overflow-auto">
             <div className="px-6 py-4 space-y-6">
               {/* Contract Info */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
