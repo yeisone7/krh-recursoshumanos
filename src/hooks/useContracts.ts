@@ -339,3 +339,52 @@ export function useCreateContractExtension() {
     },
   });
 }
+
+export function useApproveContract() {
+  const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async (contractId: string) => {
+      const { data, error } = await supabase
+        .from('contracts')
+        .update({
+          is_approved: true,
+          approved_by: user?.id,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', contractId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Get employee info for audit log
+      const employee = await getEmployeeV2Info(data.employee_id);
+
+      // Log audit event
+      if (user) {
+        const employeeName = employee 
+          ? `${employee.first_name} ${employee.last_name}`
+          : 'Empleado';
+        await logAuditEvent(
+          user.id,
+          user.email,
+          currentCompanyId,
+          'approve_contract',
+          'contract',
+          data.id,
+          `Contrato aprobado - ${employeeName}`,
+          { is_approved: false },
+          { is_approved: true, approved_by: user.id, approved_at: data.approved_at }
+        );
+      }
+
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['contract', data.id] });
+    },
+  });
+}

@@ -17,6 +17,9 @@ import {
   Download,
   Scale,
   ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
 
 import {
@@ -38,8 +41,9 @@ import { FourYearLimitGauge } from './FourYearLimitGauge';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { TerminationProcessDialog } from '@/components/termination/TerminationProcessDialog';
 import { GenerateContractDialog } from './GenerateContractDialog';
-import { useCreateContractExtension } from '@/hooks/useContracts';
+import { useCreateContractExtension, useApproveContract } from '@/hooks/useContracts';
 import { useContractTerminationProcess } from '@/hooks/useTerminations';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Contract,
   ContractExtension,
@@ -68,6 +72,8 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const createExtension = useCreateContractExtension();
+  const approveContract = useApproveContract();
+  const { isAdmin } = useAuth();
   
   // Fetch termination process status
   const { data: terminationProcess } = useContractTerminationProcess(contract?.id);
@@ -111,6 +117,27 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   const hasPendingTermination = terminationProcess && !terminationProcess.isCompleted;
   // Show termination button if contract is not fully terminated OR if there's a pending process
   const canTerminate = status !== 'terminated' || hasPendingTermination;
+  
+  // Approval status
+  const isApproved = contract.isApproved;
+  const canApprove = isAdmin && !isApproved && status !== 'terminated';
+
+  const handleApproveContract = async () => {
+    try {
+      await approveContract.mutateAsync(contract.id);
+      toast({
+        title: 'Contrato aprobado',
+        description: 'El contrato ha sido aprobado exitosamente. Ahora puede generar el documento.',
+      });
+    } catch (error) {
+      console.error('Error approving contract:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo aprobar el contrato. Intente nuevamente.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-CO', {
@@ -149,6 +176,28 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                   {statusConfig[status].label}
                   {daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30 && (
                     <span className="ml-1">({daysRemaining}d)</span>
+                  )}
+                </Badge>
+                {/* Approval Status Badge */}
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    "gap-1",
+                    isApproved 
+                      ? "bg-success-light text-success border-success/20" 
+                      : "bg-warning-light text-warning-foreground border-warning/20"
+                  )}
+                >
+                  {isApproved ? (
+                    <>
+                      <CheckCircle2 className="w-3 h-3" />
+                      Aprobado
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-3 h-3" />
+                      Pendiente Aprobación
+                    </>
                   )}
                 </Badge>
                 {hasPendingTermination && (
@@ -396,7 +445,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
           </ScrollArea>
 
           <div className="px-6 py-5 border-t border-border bg-muted/30 flex justify-between flex-shrink-0">
-            <div>
+            <div className="flex gap-2">
               {canTerminate && (
                 <Button
                   variant="outline"
@@ -420,6 +469,21 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                   )}
                 </Button>
               )}
+              {canApprove && (
+                <Button
+                  variant="outline"
+                  className="border-success/50 text-success hover:bg-success hover:text-success-foreground"
+                  onClick={handleApproveContract}
+                  disabled={approveContract.isPending}
+                >
+                  {approveContract.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                  )}
+                  Aprobar Contrato
+                </Button>
+              )}
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -429,6 +493,8 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                 variant="outline"
                 onClick={() => setShowGenerateDialog(true)}
                 className="gap-1"
+                disabled={!isApproved}
+                title={!isApproved ? 'El contrato debe estar aprobado para generar el documento' : undefined}
               >
                 <Download className="w-4 h-4" />
                 Generar Documento
@@ -528,10 +594,13 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
           has_confidentiality_clause: contract.hasConfidentialityClause || false,
           special_clauses: null,
           document_url: contract.documentUrl || null,
-          contract_number: null,
+          contract_number: contract.contractNumber || null,
           is_terminated: status === 'terminated',
           termination_date: null,
           termination_reason: null,
+          is_approved: contract.isApproved || false,
+          approved_by: contract.approvedBy || null,
+          approved_at: contract.approvedAt?.toISOString() || null,
           created_at: '',
           updated_at: '',
           created_by: null,
