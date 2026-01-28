@@ -444,48 +444,9 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
             </div>
           </ScrollArea>
 
-          <div className="px-6 py-5 border-t border-border bg-muted/30 flex justify-between flex-shrink-0">
-            <div className="flex gap-2">
-              {canTerminate && (
-                <Button
-                  variant="outline"
-                  className={cn(
-                    hasPendingTermination 
-                      ? "border-warning/50 text-warning-foreground hover:bg-warning hover:text-warning-foreground"
-                      : "border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                  )}
-                  onClick={() => setShowTerminationDialog(true)}
-                >
-                  {hasPendingTermination ? (
-                    <>
-                      <PlayCircle className="w-4 h-4 mr-2" />
-                      Continuar Retiro
-                    </>
-                  ) : (
-                    <>
-                      <UserX className="w-4 h-4 mr-2" />
-                      Iniciar Retiro
-                    </>
-                  )}
-                </Button>
-              )}
-              {canApprove && (
-                <Button
-                  variant="outline"
-                  className="border-success/50 text-success hover:bg-success hover:text-success-foreground"
-                  onClick={handleApproveContract}
-                  disabled={approveContract.isPending}
-                >
-                  {approveContract.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                  )}
-                  Aprobar Contrato
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-3 flex-shrink-0">
+            {/* Primary actions row */}
+            <div className="flex flex-wrap gap-2 justify-end">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cerrar
               </Button>
@@ -506,6 +467,53 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
               >
                 Editar Contrato
               </Button>
+            </div>
+            {/* Secondary actions row */}
+            <div className="flex flex-wrap gap-2 justify-between items-center">
+              <div className="flex gap-2">
+                {canTerminate && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      hasPendingTermination 
+                        ? "border-warning/50 text-warning-foreground hover:bg-warning hover:text-warning-foreground"
+                        : "border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    )}
+                    onClick={() => setShowTerminationDialog(true)}
+                    disabled={!isApproved && !hasPendingTermination}
+                    title={!isApproved && !hasPendingTermination ? 'El contrato debe estar aprobado para iniciar el retiro' : undefined}
+                  >
+                    {hasPendingTermination ? (
+                      <>
+                        <PlayCircle className="w-4 h-4 mr-1.5" />
+                        Continuar Retiro
+                      </>
+                    ) : (
+                      <>
+                        <UserX className="w-4 h-4 mr-1.5" />
+                        Iniciar Retiro
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+              {canApprove && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-success/50 text-success hover:bg-success hover:text-success-foreground"
+                  onClick={handleApproveContract}
+                  disabled={approveContract.isPending}
+                >
+                  {approveContract.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                  )}
+                  Aprobar Contrato
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>
