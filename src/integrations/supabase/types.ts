@@ -1025,6 +1025,8 @@ export type Database = {
       }
       contracts: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           contract_number: string | null
           contract_type: Database["public"]["Enums"]["contract_type"]
           created_at: string
@@ -1035,6 +1037,7 @@ export type Database = {
           has_confidentiality_clause: boolean | null
           has_non_compete_clause: boolean | null
           id: string
+          is_approved: boolean | null
           is_terminated: boolean | null
           other_allowances: number | null
           salary: number
@@ -1051,6 +1054,8 @@ export type Database = {
           work_city: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           contract_number?: string | null
           contract_type: Database["public"]["Enums"]["contract_type"]
           created_at?: string
@@ -1061,6 +1066,7 @@ export type Database = {
           has_confidentiality_clause?: boolean | null
           has_non_compete_clause?: boolean | null
           id?: string
+          is_approved?: boolean | null
           is_terminated?: boolean | null
           other_allowances?: number | null
           salary: number
@@ -1077,6 +1083,8 @@ export type Database = {
           work_city?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           contract_number?: string | null
           contract_type?: Database["public"]["Enums"]["contract_type"]
           created_at?: string
@@ -1087,6 +1095,7 @@ export type Database = {
           has_confidentiality_clause?: boolean | null
           has_non_compete_clause?: boolean | null
           id?: string
+          is_approved?: boolean | null
           is_terminated?: boolean | null
           other_allowances?: number | null
           salary?: number
