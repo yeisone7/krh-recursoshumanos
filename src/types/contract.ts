@@ -114,6 +114,10 @@ export interface Contract {
   status: ContractStatus;
   documentUrl?: string;
   notes?: string;
+  // Approval fields
+  isApproved: boolean;
+  approvedBy?: string;
+  approvedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
