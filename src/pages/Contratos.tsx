@@ -12,7 +12,9 @@ import {
   ChevronRight,
   Calendar,
   User,
-  Loader2
+  Loader2,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -265,6 +267,9 @@ export default function Contratos() {
               notes: ext.reason || undefined,
             })),
             status: getContractStatus(selectedContract),
+            isApproved: selectedContract.is_approved || false,
+            approvedBy: selectedContract.approved_by || undefined,
+            approvedAt: selectedContract.approved_at ? new Date(selectedContract.approved_at) : undefined,
             createdAt: new Date(selectedContract.created_at),
             updatedAt: new Date(selectedContract.updated_at),
           }}
@@ -416,6 +421,7 @@ export default function Contratos() {
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Vigencia Actual</th>
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Salario</th>
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Prórrogas</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Aprobación</th>
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Estado</th>
                   <th className="text-right p-4 font-medium text-muted-foreground text-sm"></th>
                 </tr>
@@ -484,6 +490,19 @@ export default function Contratos() {
                           </Badge>
                         ) : (
                           <span className="text-sm text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {contract.is_approved ? (
+                          <Badge variant="outline" className="bg-success-light text-success border-success/20 gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Aprobado
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-warning-light text-warning-foreground border-warning/20 gap-1">
+                            <XCircle className="w-3 h-3" />
+                            Pendiente
+                          </Badge>
                         )}
                       </td>
                       <td className="p-4">
