@@ -33,8 +33,7 @@ import { useContractTypes } from '@/hooks/useContractTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
-type ContractType = Database['public']['Enums']['contract_type'];
-
+// Contract type is now dynamic (text in DB) - no longer using enum
 type ContractStatus = 'active' | 'expiring' | 'expired' | 'terminated';
 
 const statusConfig: Record<ContractStatus, { label: string; class: string; icon: typeof CheckCircle }> = {
@@ -45,7 +44,7 @@ const statusConfig: Record<ContractStatus, { label: string; class: string; icon:
 };
 
 function getContractStatus(contract: { 
-  contract_type: ContractType; 
+  contract_type: string; 
   end_date: string | null; 
   is_terminated: boolean | null;
   contract_extensions?: Array<{ end_date: string }>;
@@ -242,10 +241,8 @@ export default function Contratos() {
             employeeName: `${selectedContract.employees?.first_name} ${selectedContract.employees?.last_name}`,
             employeeDocument: selectedContract.employees?.document_number || '',
             contractNumber: selectedContract.contract_number || undefined,
-            contractType: selectedContract.contract_type === 'indefinido' ? 'indefinite' :
-                          selectedContract.contract_type === 'fijo' ? 'fixed' :
-                          selectedContract.contract_type === 'obra_labor' ? 'work_labor' :
-                          selectedContract.contract_type === 'aprendizaje' ? 'apprenticeship' : 'services',
+            // Keep the database value - no mapping needed since we now use dynamic types
+            contractType: selectedContract.contract_type as any,
             startDate: new Date(selectedContract.start_date + 'T00:00:00'),
             originalEndDate: selectedContract.end_date ? new Date(selectedContract.end_date + 'T00:00:00') : null,
             currentEndDate: getEffectiveEndDate(selectedContract) ? new Date(getEffectiveEndDate(selectedContract)! + 'T00:00:00') : null,
