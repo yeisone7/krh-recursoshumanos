@@ -561,10 +561,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
         contract={{
           id: contract.id,
           employee_id: contract.employeeId,
-          contract_type: contract.contractType === 'indefinite' ? 'indefinido' :
-                        contract.contractType === 'fixed' ? 'fijo' :
-                        contract.contractType === 'work_labor' ? 'obra_labor' :
-                        contract.contractType === 'apprenticeship' ? 'aprendizaje' : 'servicios',
+          contract_type: contract.contractType, // Pass directly - now using dynamic types from DB
           start_date: contract.startDate.toISOString(),
           end_date: contract.currentEndDate?.toISOString() || null,
           salary: contract.salary,
@@ -595,15 +592,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
         contractToEdit={{
           id: contract.id,
           employee_id: contract.employeeId,
-          // Map frontend type to database type for edit form
-          contract_type: (
-            contract.contractType === 'indefinite' ? 'indefinido' :
-            contract.contractType === 'fixed' ? 'fijo' :
-            contract.contractType === 'work_labor' ? 'obra_labor' :
-            contract.contractType === 'apprenticeship' ? 'aprendizaje' :
-            contract.contractType === 'services' ? 'servicios' :
-            contract.contractType // Already in db format
-          ) as any,
+          contract_type: contract.contractType, // Pass directly - now using dynamic types from DB
           start_date: contract.startDate.toISOString().split('T')[0],
           end_date: contract.originalEndDate?.toISOString().split('T')[0] || null,
           salary: contract.salary,
