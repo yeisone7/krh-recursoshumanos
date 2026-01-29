@@ -55,7 +55,7 @@ import { useContractTypes } from '@/hooks/useContractTypes';
 import type { Database } from '@/integrations/supabase/types';
 import { CitySelect } from '@/components/ui/city-department-select';
 
-type ContractType = Database['public']['Enums']['contract_type'];
+// Contract type is now dynamic (text in DB) - no longer using enum
 type DbContract = Database['public']['Tables']['contracts']['Row'];
 
 interface ContractFormDialogProps {
@@ -136,8 +136,8 @@ export function ContractFormDialog({
       // Parse salary to number
       const salaryNumber = parseFloat(data.salary.replace(/[^0-9.-]+/g, ''));
       
-      // Use the contract_type code directly from catalog
-      const dbContractType = (data.contractType || 'indefinido') as ContractType;
+      // Use the contract_type code directly from catalog (now text, not enum)
+      const dbContractType = data.contractType || 'indefinido';
 
       const contractData = {
         employee_id: data.employeeId,
