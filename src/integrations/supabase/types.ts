@@ -1028,7 +1028,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           contract_number: string | null
-          contract_type: Database["public"]["Enums"]["contract_type"]
+          contract_type: string
           created_at: string
           created_by: string | null
           document_url: string | null
@@ -1057,7 +1057,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           contract_number?: string | null
-          contract_type: Database["public"]["Enums"]["contract_type"]
+          contract_type: string
           created_at?: string
           created_by?: string | null
           document_url?: string | null
@@ -1086,7 +1086,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           contract_number?: string | null
-          contract_type?: Database["public"]["Enums"]["contract_type"]
+          contract_type?: string
           created_at?: string
           created_by?: string | null
           document_url?: string | null
