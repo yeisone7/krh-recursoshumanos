@@ -287,7 +287,7 @@ export function GenerateContractDialog({
       employeeEmail: employeeContact?.email || undefined,
       employeePosition: position,
       employeeOperationCenter: operationCenter,
-      employeePayrollType: employeeSchedule?.payroll_type || undefined,
+      employeePayrollType: employeeSchedule?.payroll_type || 'quincenal', // Default to quincenal if no schedule record
 
       // Contract
       contractType: contract.contract_type,
