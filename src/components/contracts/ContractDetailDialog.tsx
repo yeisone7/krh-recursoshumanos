@@ -80,19 +80,10 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   // Fetch termination process status
   const { data: terminationProcess } = useContractTerminationProcess(contract?.id);
   
-  // Get dynamic contract type label from catalog
+  // Get dynamic contract type label from catalog - now type is already in db format
   const getContractTypeLabel = (type: string): string => {
-    // Map frontend type to database type
-    const typeMapping: Record<string, string> = {
-      'indefinite': 'indefinido',
-      'fixed': 'fijo',
-      'work_labor': 'obra_labor',
-      'apprenticeship': 'aprendizaje',
-      'services': 'servicios',
-    };
-    const dbType = typeMapping[type] || type;
-    const config = contractTypes.find(ct => ct.contract_type === dbType);
-    return config?.display_name || contractTypeLabels[type as keyof typeof contractTypeLabels] || type;
+    const config = contractTypes.find(ct => ct.contract_type === type);
+    return config?.display_name || type;
   };
 
   if (!contract) return null;
@@ -604,7 +595,15 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
         contractToEdit={{
           id: contract.id,
           employee_id: contract.employeeId,
-          contract_type: contract.contractType as any,
+          // Map frontend type to database type for edit form
+          contract_type: (
+            contract.contractType === 'indefinite' ? 'indefinido' :
+            contract.contractType === 'fixed' ? 'fijo' :
+            contract.contractType === 'work_labor' ? 'obra_labor' :
+            contract.contractType === 'apprenticeship' ? 'aprendizaje' :
+            contract.contractType === 'services' ? 'servicios' :
+            contract.contractType // Already in db format
+          ) as any,
           start_date: contract.startDate.toISOString().split('T')[0],
           end_date: contract.originalEndDate?.toISOString().split('T')[0] || null,
           salary: contract.salary,
