@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -95,14 +95,14 @@ export function ContractFormDialog({
     },
   });
 
-  // Set form values when editing
-  useState(() => {
-    if (contractToEdit) {
+  // Set form values when editing or when dialog opens with contract to edit
+  useEffect(() => {
+    if (open && contractToEdit) {
       form.reset({
         employeeId: contractToEdit.employee_id,
         contractType: contractToEdit.contract_type,
-        startDate: new Date(contractToEdit.start_date),
-        endDate: contractToEdit.end_date ? new Date(contractToEdit.end_date) : undefined,
+        startDate: new Date(contractToEdit.start_date + 'T00:00:00'),
+        endDate: contractToEdit.end_date ? new Date(contractToEdit.end_date + 'T00:00:00') : undefined,
         salary: contractToEdit.salary.toString(),
         salaryType: contractToEdit.salary_type === 'integral' ? 'integral' : 'monthly',
         transportAllowance: (contractToEdit.transport_allowance || 0) > 0,
@@ -113,10 +113,19 @@ export function ContractFormDialog({
         hasConfidentialityClause: contractToEdit.has_confidentiality_clause || false,
         specialClauses: contractToEdit.special_clauses || undefined,
       });
-    } else if (preselectedEmployeeId) {
+    } else if (open && preselectedEmployeeId) {
       form.setValue('employeeId', preselectedEmployeeId);
+    } else if (!open) {
+      // Reset form when dialog closes
+      form.reset({
+        salaryType: 'monthly',
+        transportAllowance: true,
+        hasNonCompeteClause: false,
+        hasConfidentialityClause: true,
+        trialPeriodDays: 0,
+      });
     }
-  });
+  }, [open, contractToEdit, preselectedEmployeeId, form]);
 
   const selectedContractType = form.watch('contractType');
   const contractTypeConfig = contractTypes.find(ct => ct.contract_type === selectedContractType);
