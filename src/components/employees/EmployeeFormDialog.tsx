@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
   CalendarIcon, User, Briefcase, MapPin, Heart, Building, 
-  CreditCard, Shield, Clock, Users as UsersIcon, Camera 
+  CreditCard, Shield, Clock, Users as UsersIcon, Camera, AlertCircle
 } from 'lucide-react';
 
 import {
@@ -43,8 +43,75 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+// Field to tab mapping for navigation on errors
+const fieldToTabMap: Record<string, string> = {
+  // Identity tab
+  documentType: 'identity',
+  documentNumber: 'identity',
+  documentIssueCity: 'identity',
+  documentIssueDate: 'identity',
+  firstName: 'identity',
+  middleName: 'identity',
+  lastName: 'identity',
+  secondLastName: 'identity',
+  birthCountry: 'identity',
+  birthDepartment: 'identity',
+  birthCity: 'identity',
+  birthDate: 'identity',
+  gender: 'identity',
+  bloodType: 'identity',
+  maritalStatus: 'identity',
+  // Contact tab
+  residenceDepartment: 'contact',
+  residenceCity: 'contact',
+  residenceAddress: 'contact',
+  residenceNeighborhood: 'contact',
+  email: 'contact',
+  personalEmail: 'contact',
+  phone: 'contact',
+  mobile: 'contact',
+  emergencyContactName: 'contact',
+  emergencyContactPhone: 'contact',
+  emergencyContactRelationship: 'contact',
+  // Family tab
+  spouseName: 'family',
+  spouseGender: 'family',
+  spouseBirthDate: 'family',
+  spouseWorks: 'family',
+  childrenCount: 'family',
+  // Labor tab
+  operationCenterId: 'labor',
+  costCenter: 'labor',
+  areaId: 'labor',
+  positionId: 'labor',
+  positionName: 'labor',
+  workCity: 'labor',
+  hireDate: 'labor',
+  linkType: 'labor',
+  observations: 'labor',
+  // Security tab
+  riskLevel: 'security',
+  arl: 'security',
+  eps: 'security',
+  afp: 'security',
+  ccf: 'security',
+  afc: 'security',
+  ips: 'security',
+  // Bank tab
+  bankName: 'bank',
+  accountType: 'bank',
+  accountNumber: 'bank',
+  accountRegistered: 'bank',
+  // Schedule tab
+  payrollType: 'schedule',
+  shiftTypeId: 'schedule',
+  isOfficeSchedule: 'schedule',
+  restDay: 'schedule',
+};
 
 import {
   employeeFullFormSchema,
@@ -245,6 +312,63 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
     { value: 'schedule', label: 'Jornada', icon: Clock },
   ];
 
+  // Get errors per tab for visual indicators
+  const formErrors = form.formState.errors;
+  const tabsWithErrors = useMemo(() => {
+    const errorTabs = new Set<string>();
+    Object.keys(formErrors).forEach((fieldName) => {
+      const tab = fieldToTabMap[fieldName];
+      if (tab) {
+        errorTabs.add(tab);
+      }
+    });
+    return errorTabs;
+  }, [formErrors]);
+
+  // Get error count per tab
+  const getTabErrorCount = (tabValue: string): number => {
+    return Object.keys(formErrors).filter(
+      (fieldName) => fieldToTabMap[fieldName] === tabValue
+    ).length;
+  };
+
+  // Handle form validation and navigate to first tab with error
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Trigger validation
+    const isValid = await form.trigger();
+    
+    if (!isValid) {
+      // Find first tab with errors
+      const errors = form.formState.errors;
+      const errorFields = Object.keys(errors);
+      
+      if (errorFields.length > 0) {
+        const firstErrorField = errorFields[0];
+        const targetTab = fieldToTabMap[firstErrorField];
+        
+        if (targetTab && targetTab !== activeTab) {
+          setActiveTab(targetTab);
+          
+          // Show toast with navigation info
+          const tabLabel = tabItems.find(t => t.value === targetTab)?.label || targetTab;
+          toast.error('Hay campos obligatorios sin completar', {
+            description: `Se encontraron ${errorFields.length} error(es). Navegando a la pestaña "${tabLabel}".`,
+          });
+        } else {
+          toast.error('Hay campos obligatorios sin completar', {
+            description: `Por favor complete los ${errorFields.length} campo(s) marcados en rojo.`,
+          });
+        }
+      }
+      return;
+    }
+    
+    // If valid, proceed with submit
+    form.handleSubmit(handleSubmit)();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
@@ -262,20 +386,33 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
+          <form onSubmit={handleFormSubmit}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="px-6 pt-2">
                 <TabsList className="w-full h-auto flex-wrap gap-1 bg-muted/50 p-1">
-                  {tabItems.map((tab) => (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="flex-1 min-w-[90px] gap-1.5 text-xs data-[state=active]:bg-background"
-                    >
-                      <tab.icon className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">{tab.label}</span>
-                    </TabsTrigger>
-                  ))}
+                  {tabItems.map((tab) => {
+                    const errorCount = getTabErrorCount(tab.value);
+                    const hasErrors = tabsWithErrors.has(tab.value);
+                    
+                    return (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        className={cn(
+                          "flex-1 min-w-[90px] gap-1.5 text-xs data-[state=active]:bg-background relative",
+                          hasErrors && "text-destructive data-[state=active]:text-destructive"
+                        )}
+                      >
+                        <tab.icon className={cn("w-3.5 h-3.5", hasErrors && "text-destructive")} />
+                        <span className="hidden sm:inline">{tab.label}</span>
+                        {hasErrors && (
+                          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                            {errorCount}
+                          </span>
+                        )}
+                      </TabsTrigger>
+                    );
+                  })}
                 </TabsList>
               </div>
 
