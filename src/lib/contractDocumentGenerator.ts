@@ -27,6 +27,7 @@ export interface ContractDocumentData {
   employeeBirthDate?: string;
   employeePosition: string;
   employeeOperationCenter?: string;
+  employeePayrollType?: string; // Tipo de nómina (quincenal/mensual)
   
   // Contract info
   contractType: string;
@@ -150,6 +151,9 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     EMPLEADO_FECHA_NACIMIENTO: data.employeeBirthDate || '',
     EMPLEADO_CARGO: data.employeePosition,
     EMPLEADO_CENTRO_OPERACION: data.employeeOperationCenter || '',
+    EMPLEADO_TIPO_NOMINA: data.employeePayrollType === 'quincenal' ? 'Quincenal' : 
+                          data.employeePayrollType === 'mensual' ? 'Mensual' : 
+                          data.employeePayrollType || 'No especificado',
     
     // Contract
     CONTRATO_TIPO: data.contractType,
