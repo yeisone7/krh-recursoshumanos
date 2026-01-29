@@ -340,11 +340,50 @@ export function useUpdateEmployee() {
 
       if (empError) throw empError;
 
-      // 2. Update related records (upsert current records)
-      await Promise.all([
-        // Contact - update current
-        supabase.from('employee_contact')
-          .update({
+      // 2. Update or insert related records
+      // First, check which records exist
+      const [
+        { data: existingContact },
+        { data: existingFamily },
+        { data: existingWorkInfo },
+        { data: existingSocialSecurity },
+        { data: existingBankInfo },
+        { data: existingSchedule },
+      ] = await Promise.all([
+        supabase.from('employee_contact').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
+        supabase.from('employee_family').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
+        supabase.from('employee_work_info').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
+        supabase.from('employee_social_security').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
+        supabase.from('employee_bank_info').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
+        supabase.from('employee_schedule').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
+      ]);
+
+      // Prepare upsert operations
+      const upsertOperations = [];
+
+      // Contact
+      if (existingContact) {
+        upsertOperations.push(
+          supabase.from('employee_contact')
+            .update({
+              residence_department: data.residenceDepartment || null,
+              residence_city: data.residenceCity || null,
+              residence_address: data.residenceAddress || null,
+              residence_neighborhood: data.residenceNeighborhood || null,
+              email: data.email || null,
+              personal_email: data.personalEmail || null,
+              phone: data.phone || null,
+              mobile: data.mobile || null,
+              emergency_contact_name: data.emergencyContactName || null,
+              emergency_contact_phone: data.emergencyContactPhone || null,
+              emergency_contact_relationship: data.emergencyContactRelationship || null,
+            })
+            .eq('id', existingContact.id)
+        );
+      } else {
+        upsertOperations.push(
+          supabase.from('employee_contact').insert({
+            employee_id: id,
             residence_department: data.residenceDepartment || null,
             residence_city: data.residenceCity || null,
             residence_address: data.residenceAddress || null,
@@ -356,25 +395,60 @@ export function useUpdateEmployee() {
             emergency_contact_name: data.emergencyContactName || null,
             emergency_contact_phone: data.emergencyContactPhone || null,
             emergency_contact_relationship: data.emergencyContactRelationship || null,
+            is_current: true,
           })
-          .eq('employee_id', id)
-          .eq('is_current', true),
+        );
+      }
 
-        // Family - update current
-        supabase.from('employee_family')
-          .update({
+      // Family
+      if (existingFamily) {
+        upsertOperations.push(
+          supabase.from('employee_family')
+            .update({
+              spouse_name: data.spouseName || null,
+              spouse_gender: data.spouseGender || null,
+              spouse_birth_date: data.spouseBirthDate ? format(data.spouseBirthDate, 'yyyy-MM-dd') : null,
+              spouse_works: data.spouseWorks || false,
+              children_count: data.childrenCount || 0,
+            })
+            .eq('id', existingFamily.id)
+        );
+      } else {
+        upsertOperations.push(
+          supabase.from('employee_family').insert({
+            employee_id: id,
             spouse_name: data.spouseName || null,
             spouse_gender: data.spouseGender || null,
             spouse_birth_date: data.spouseBirthDate ? format(data.spouseBirthDate, 'yyyy-MM-dd') : null,
             spouse_works: data.spouseWorks || false,
             children_count: data.childrenCount || 0,
+            is_current: true,
           })
-          .eq('employee_id', id)
-          .eq('is_current', true),
+        );
+      }
 
-        // Work Info - update current
-        supabase.from('employee_work_info')
-          .update({
+      // Work Info
+      if (existingWorkInfo) {
+        upsertOperations.push(
+          supabase.from('employee_work_info')
+            .update({
+              operation_center_id: data.operationCenterId || null,
+              cost_center: data.costCenter || null,
+              area_id: data.areaId || null,
+              position_id: data.positionId || null,
+              position_name: data.positionName,
+              work_city: data.workCity || null,
+              hire_date: format(data.hireDate, 'yyyy-MM-dd'),
+              link_type: data.linkType || 'indefinido',
+              observations: data.observations || null,
+            })
+            .eq('id', existingWorkInfo.id)
+        );
+      } else {
+        upsertOperations.push(
+          supabase.from('employee_work_info').insert({
+            employee_id: id,
+            company_id: currentCompanyId,
             operation_center_id: data.operationCenterId || null,
             cost_center: data.costCenter || null,
             area_id: data.areaId || null,
@@ -384,13 +458,31 @@ export function useUpdateEmployee() {
             hire_date: format(data.hireDate, 'yyyy-MM-dd'),
             link_type: data.linkType || 'indefinido',
             observations: data.observations || null,
+            is_current: true,
+            created_by: user.id,
           })
-          .eq('employee_id', id)
-          .eq('is_current', true),
+        );
+      }
 
-        // Social Security - update current
-        supabase.from('employee_social_security')
-          .update({
+      // Social Security
+      if (existingSocialSecurity) {
+        upsertOperations.push(
+          supabase.from('employee_social_security')
+            .update({
+              risk_level: data.riskLevel || null,
+              arl: data.arl || null,
+              eps: data.eps || null,
+              afp: data.afp || null,
+              ccf: data.ccf || null,
+              afc: data.afc || null,
+              ips: data.ips || null,
+            })
+            .eq('id', existingSocialSecurity.id)
+        );
+      } else {
+        upsertOperations.push(
+          supabase.from('employee_social_security').insert({
+            employee_id: id,
             risk_level: data.riskLevel || null,
             arl: data.arl || null,
             eps: data.eps || null,
@@ -398,32 +490,62 @@ export function useUpdateEmployee() {
             ccf: data.ccf || null,
             afc: data.afc || null,
             ips: data.ips || null,
+            is_current: true,
           })
-          .eq('employee_id', id)
-          .eq('is_current', true),
+        );
+      }
 
-        // Bank Info - update current
-        supabase.from('employee_bank_info')
-          .update({
+      // Bank Info
+      if (existingBankInfo) {
+        upsertOperations.push(
+          supabase.from('employee_bank_info')
+            .update({
+              bank_name: data.bankName || null,
+              account_type: data.accountType || null,
+              account_number: data.accountNumber || null,
+              account_registered: data.accountRegistered || false,
+            })
+            .eq('id', existingBankInfo.id)
+        );
+      } else {
+        upsertOperations.push(
+          supabase.from('employee_bank_info').insert({
+            employee_id: id,
             bank_name: data.bankName || null,
             account_type: data.accountType || null,
             account_number: data.accountNumber || null,
             account_registered: data.accountRegistered || false,
+            is_current: true,
           })
-          .eq('employee_id', id)
-          .eq('is_current', true),
+        );
+      }
 
-        // Schedule - update current
-        supabase.from('employee_schedule')
-          .update({
+      // Schedule
+      if (existingSchedule) {
+        upsertOperations.push(
+          supabase.from('employee_schedule')
+            .update({
+              payroll_type: data.payrollType || 'quincenal',
+              shift_type_id: data.shiftTypeId || null,
+              is_office_schedule: data.isOfficeSchedule ?? true,
+              rest_day: data.restDay || null,
+            })
+            .eq('id', existingSchedule.id)
+        );
+      } else {
+        upsertOperations.push(
+          supabase.from('employee_schedule').insert({
+            employee_id: id,
             payroll_type: data.payrollType || 'quincenal',
             shift_type_id: data.shiftTypeId || null,
             is_office_schedule: data.isOfficeSchedule ?? true,
             rest_day: data.restDay || null,
+            is_current: true,
           })
-          .eq('employee_id', id)
-          .eq('is_current', true),
-      ]);
+        );
+      }
+
+      await Promise.all(upsertOperations);
 
       // Audit log
       await logAuditEvent(
