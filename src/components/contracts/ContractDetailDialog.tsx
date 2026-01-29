@@ -43,6 +43,7 @@ import { TerminationProcessDialog } from '@/components/termination/TerminationPr
 import { GenerateContractDialog } from './GenerateContractDialog';
 import { useCreateContractExtension, useApproveContract } from '@/hooks/useContracts';
 import { useContractTerminationProcess } from '@/hooks/useTerminations';
+import { useContractTypes } from '@/hooks/useContractTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Contract,
@@ -74,9 +75,25 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   const createExtension = useCreateContractExtension();
   const approveContract = useApproveContract();
   const { isAdmin } = useAuth();
+  const { data: contractTypes = [] } = useContractTypes();
   
   // Fetch termination process status
   const { data: terminationProcess } = useContractTerminationProcess(contract?.id);
+  
+  // Get dynamic contract type label from catalog
+  const getContractTypeLabel = (type: string): string => {
+    // Map frontend type to database type
+    const typeMapping: Record<string, string> = {
+      'indefinite': 'indefinido',
+      'fixed': 'fijo',
+      'work_labor': 'obra_labor',
+      'apprenticeship': 'aprendizaje',
+      'services': 'servicios',
+    };
+    const dbType = typeMapping[type] || type;
+    const config = contractTypes.find(ct => ct.contract_type === dbType);
+    return config?.display_name || contractTypeLabels[type as keyof typeof contractTypeLabels] || type;
+  };
 
   if (!contract) return null;
 
@@ -214,9 +231,9 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
             <div className="px-6 py-4 space-y-6">
               {/* Contract Info */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="space-y-1">
+              <div className="space-y-1">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Tipo de Contrato</p>
-                  <p className="font-medium">{contractTypeLabels[contract.contractType]}</p>
+                  <p className="font-medium">{getContractTypeLabel(contract.contractType)}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Inicio</p>
