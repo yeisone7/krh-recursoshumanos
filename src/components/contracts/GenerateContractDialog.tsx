@@ -124,6 +124,23 @@ export function GenerateContractDialog({
     enabled: open && !!contract?.employee_id,
   });
 
+  // Fetch employee schedule info (for payroll type)
+  const { data: employeeSchedule } = useQuery({
+    queryKey: ['employee-schedule', contract?.employee_id],
+    queryFn: async () => {
+      if (!contract?.employee_id) return null;
+      const { data, error } = await supabase
+        .from('employee_schedule')
+        .select('payroll_type')
+        .eq('employee_id', contract.employee_id)
+        .eq('is_current', true)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: open && !!contract?.employee_id,
+  });
+
   if (!contract) return null;
 
   const contractTypeConfig = contractTypes.find(
@@ -270,6 +287,7 @@ export function GenerateContractDialog({
       employeeEmail: employeeContact?.email || undefined,
       employeePosition: position,
       employeeOperationCenter: operationCenter,
+      employeePayrollType: employeeSchedule?.payroll_type || undefined,
 
       // Contract
       contractType: contract.contract_type,
