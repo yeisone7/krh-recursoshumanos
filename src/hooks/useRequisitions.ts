@@ -275,6 +275,23 @@ export function useApproveRequisitionStep() {
         .single();
 
       if (error) throw error;
+
+      // Notify the next approver if approved and there's a next step
+      if (approved && updates.estado_requisicion !== 'aprobada') {
+        try {
+          await supabase.functions.invoke('notify-requisition-approver', {
+            body: {
+              requisitionId: id,
+              currentStep: updates.estado_requisicion,
+              requisitionTitle: result.cargo_solicitado,
+            },
+          });
+        } catch (notifyError) {
+          console.error('Error notifying next approver:', notifyError);
+          // Don't fail the whole operation if notification fails
+        }
+      }
+
       return result;
     },
     onSuccess: (data) => {
