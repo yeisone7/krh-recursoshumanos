@@ -39,7 +39,7 @@ import {
 import { cn } from '@/lib/utils';
 
 import { useOperationCenters } from '@/hooks/useCompanies';
-import { useAreas } from '@/hooks/useSystemConfig';
+import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 import { useCreateRequisition, useUpdateRequisition, PersonnelRequisition } from '@/hooks/useRequisitions';
 import {
   requisitionFormSchema,
@@ -62,6 +62,7 @@ export function RequisitionFormDialog({
   requisition,
 }: RequisitionFormDialogProps) {
   const { data: areas = [] } = useAreas();
+  const { data: positions = [] } = usePositions();
   const { data: operationCenters = [] } = useOperationCenters();
   const createRequisition = useCreateRequisition();
   const updateRequisition = useUpdateRequisition();
@@ -237,9 +238,22 @@ export function RequisitionFormDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cargo Solicitado *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: Operador de Cocina" {...field} />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar cargo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background">
+                          {positions
+                            .filter((p) => p.is_active !== false)
+                            .map((position) => (
+                              <SelectItem key={position.id} value={position.name}>
+                                {position.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -324,9 +338,22 @@ export function RequisitionFormDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cargo a Reemplazar</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Si aplica..." {...field} />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Si aplica..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background">
+                          {positions
+                            .filter((p) => p.is_active !== false)
+                            .map((position) => (
+                              <SelectItem key={position.id} value={position.name}>
+                                {position.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
