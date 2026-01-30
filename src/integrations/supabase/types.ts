@@ -3793,6 +3793,220 @@ export type Database = {
           },
         ]
       }
+      personnel_requisitions: {
+        Row: {
+          area_id: string | null
+          cantidad_vacantes_requeridas: number
+          cargo_a_reemplazar: string | null
+          cargo_solicitado: string
+          cargo_solicitante: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          dia_descanso_obligatorio:
+            | Database["public"]["Enums"]["day_of_week"]
+            | null
+          estado_requisicion: Database["public"]["Enums"]["requisition_status"]
+          fecha_ingreso_estimada: string | null
+          fecha_requisicion: string
+          gerencia_aprobado: boolean | null
+          gerencia_aprobado_salario: boolean | null
+          gerencia_aprobador_id: string | null
+          gerencia_fecha_aprobacion: string | null
+          gerencia_observaciones: string | null
+          gerencia_quien_aprobo: string | null
+          horario_trabajo: string | null
+          id: string
+          juridico_aprobado: boolean | null
+          juridico_aprobador_id: string | null
+          juridico_duracion: string | null
+          juridico_fecha_aprobacion: string | null
+          juridico_observaciones: string | null
+          juridico_quien_aprobo: string | null
+          juridico_tipo_contrato: string | null
+          motivo_solicitud: Database["public"]["Enums"]["requisition_reason"]
+          observaciones_motivo_solicitud: string | null
+          operaciones_aprobado: boolean | null
+          operaciones_aprobado_salario: boolean | null
+          operaciones_aprobador_id: string | null
+          operaciones_fecha_aprobacion: string | null
+          operaciones_observaciones: string | null
+          operaciones_quien_aprobo: string | null
+          operation_center_id: string | null
+          persona_a_reemplazar: string | null
+          requiere_herramienta_trabajo: boolean | null
+          rrhh_aprobado: boolean | null
+          rrhh_aprobador_id: string | null
+          rrhh_asignacion_salarial: number | null
+          rrhh_condiciones_adicionales: string | null
+          rrhh_fecha_aprobacion: string | null
+          rrhh_fuente_asignacion_salarial: string | null
+          rrhh_nivel_politica_salarial: string | null
+          rrhh_observaciones: string | null
+          rrhh_quien_aprobo: string | null
+          rrhh_tipo_convocatoria:
+            | Database["public"]["Enums"]["recruitment_type"]
+            | null
+          seleccion_aprobado: boolean | null
+          seleccion_aprobador_id: string | null
+          seleccion_fecha_aprobacion: string | null
+          seleccion_fecha_inicio_proceso: string | null
+          seleccion_observaciones: string | null
+          seleccion_quien_aprobo: string | null
+          solicitante_id: string | null
+          solicitante_nombre: string
+          updated_at: string
+        }
+        Insert: {
+          area_id?: string | null
+          cantidad_vacantes_requeridas?: number
+          cargo_a_reemplazar?: string | null
+          cargo_solicitado: string
+          cargo_solicitante?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          dia_descanso_obligatorio?:
+            | Database["public"]["Enums"]["day_of_week"]
+            | null
+          estado_requisicion?: Database["public"]["Enums"]["requisition_status"]
+          fecha_ingreso_estimada?: string | null
+          fecha_requisicion?: string
+          gerencia_aprobado?: boolean | null
+          gerencia_aprobado_salario?: boolean | null
+          gerencia_aprobador_id?: string | null
+          gerencia_fecha_aprobacion?: string | null
+          gerencia_observaciones?: string | null
+          gerencia_quien_aprobo?: string | null
+          horario_trabajo?: string | null
+          id?: string
+          juridico_aprobado?: boolean | null
+          juridico_aprobador_id?: string | null
+          juridico_duracion?: string | null
+          juridico_fecha_aprobacion?: string | null
+          juridico_observaciones?: string | null
+          juridico_quien_aprobo?: string | null
+          juridico_tipo_contrato?: string | null
+          motivo_solicitud: Database["public"]["Enums"]["requisition_reason"]
+          observaciones_motivo_solicitud?: string | null
+          operaciones_aprobado?: boolean | null
+          operaciones_aprobado_salario?: boolean | null
+          operaciones_aprobador_id?: string | null
+          operaciones_fecha_aprobacion?: string | null
+          operaciones_observaciones?: string | null
+          operaciones_quien_aprobo?: string | null
+          operation_center_id?: string | null
+          persona_a_reemplazar?: string | null
+          requiere_herramienta_trabajo?: boolean | null
+          rrhh_aprobado?: boolean | null
+          rrhh_aprobador_id?: string | null
+          rrhh_asignacion_salarial?: number | null
+          rrhh_condiciones_adicionales?: string | null
+          rrhh_fecha_aprobacion?: string | null
+          rrhh_fuente_asignacion_salarial?: string | null
+          rrhh_nivel_politica_salarial?: string | null
+          rrhh_observaciones?: string | null
+          rrhh_quien_aprobo?: string | null
+          rrhh_tipo_convocatoria?:
+            | Database["public"]["Enums"]["recruitment_type"]
+            | null
+          seleccion_aprobado?: boolean | null
+          seleccion_aprobador_id?: string | null
+          seleccion_fecha_aprobacion?: string | null
+          seleccion_fecha_inicio_proceso?: string | null
+          seleccion_observaciones?: string | null
+          seleccion_quien_aprobo?: string | null
+          solicitante_id?: string | null
+          solicitante_nombre: string
+          updated_at?: string
+        }
+        Update: {
+          area_id?: string | null
+          cantidad_vacantes_requeridas?: number
+          cargo_a_reemplazar?: string | null
+          cargo_solicitado?: string
+          cargo_solicitante?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          dia_descanso_obligatorio?:
+            | Database["public"]["Enums"]["day_of_week"]
+            | null
+          estado_requisicion?: Database["public"]["Enums"]["requisition_status"]
+          fecha_ingreso_estimada?: string | null
+          fecha_requisicion?: string
+          gerencia_aprobado?: boolean | null
+          gerencia_aprobado_salario?: boolean | null
+          gerencia_aprobador_id?: string | null
+          gerencia_fecha_aprobacion?: string | null
+          gerencia_observaciones?: string | null
+          gerencia_quien_aprobo?: string | null
+          horario_trabajo?: string | null
+          id?: string
+          juridico_aprobado?: boolean | null
+          juridico_aprobador_id?: string | null
+          juridico_duracion?: string | null
+          juridico_fecha_aprobacion?: string | null
+          juridico_observaciones?: string | null
+          juridico_quien_aprobo?: string | null
+          juridico_tipo_contrato?: string | null
+          motivo_solicitud?: Database["public"]["Enums"]["requisition_reason"]
+          observaciones_motivo_solicitud?: string | null
+          operaciones_aprobado?: boolean | null
+          operaciones_aprobado_salario?: boolean | null
+          operaciones_aprobador_id?: string | null
+          operaciones_fecha_aprobacion?: string | null
+          operaciones_observaciones?: string | null
+          operaciones_quien_aprobo?: string | null
+          operation_center_id?: string | null
+          persona_a_reemplazar?: string | null
+          requiere_herramienta_trabajo?: boolean | null
+          rrhh_aprobado?: boolean | null
+          rrhh_aprobador_id?: string | null
+          rrhh_asignacion_salarial?: number | null
+          rrhh_condiciones_adicionales?: string | null
+          rrhh_fecha_aprobacion?: string | null
+          rrhh_fuente_asignacion_salarial?: string | null
+          rrhh_nivel_politica_salarial?: string | null
+          rrhh_observaciones?: string | null
+          rrhh_quien_aprobo?: string | null
+          rrhh_tipo_convocatoria?:
+            | Database["public"]["Enums"]["recruitment_type"]
+            | null
+          seleccion_aprobado?: boolean | null
+          seleccion_aprobador_id?: string | null
+          seleccion_fecha_aprobacion?: string | null
+          seleccion_fecha_inicio_proceso?: string | null
+          seleccion_observaciones?: string | null
+          seleccion_quien_aprobo?: string | null
+          solicitante_id?: string | null
+          solicitante_nombre?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personnel_requisitions_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personnel_requisitions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personnel_requisitions_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       positions: {
         Row: {
           area_id: string | null
@@ -3855,6 +4069,38 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requisition_vacancy_codes: {
+        Row: {
+          codigo_vacante_externa: string
+          created_at: string
+          entidad_origen: string | null
+          id: string
+          requisition_id: string
+        }
+        Insert: {
+          codigo_vacante_externa: string
+          created_at?: string
+          entidad_origen?: string | null
+          id?: string
+          requisition_id: string
+        }
+        Update: {
+          codigo_vacante_externa?: string
+          created_at?: string
+          entidad_origen?: string | null
+          id?: string
+          requisition_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_vacancy_codes_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "personnel_requisitions"
             referencedColumns: ["id"]
           },
         ]
@@ -4899,6 +5145,7 @@ export type Database = {
           publication_platforms: string[] | null
           reason_details: string | null
           requirements: string | null
+          requisition_id: string | null
           salary_range_max: number | null
           salary_range_min: number | null
           salary_type: string | null
@@ -4932,6 +5179,7 @@ export type Database = {
           publication_platforms?: string[] | null
           reason_details?: string | null
           requirements?: string | null
+          requisition_id?: string | null
           salary_range_max?: number | null
           salary_range_min?: number | null
           salary_type?: string | null
@@ -4965,6 +5213,7 @@ export type Database = {
           publication_platforms?: string[] | null
           reason_details?: string | null
           requirements?: string | null
+          requisition_id?: string | null
           salary_range_max?: number | null
           salary_range_min?: number | null
           salary_type?: string | null
@@ -4988,6 +5237,13 @@ export type Database = {
             columns: ["operation_center_id"]
             isOneToOne: false
             referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vacancies_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "personnel_requisitions"
             referencedColumns: ["id"]
           },
         ]
@@ -5325,6 +5581,14 @@ export type Database = {
         | "obra_labor"
         | "aprendizaje"
         | "servicios"
+      day_of_week:
+        | "lunes"
+        | "martes"
+        | "miercoles"
+        | "jueves"
+        | "viernes"
+        | "sabado"
+        | "domingo"
       disciplinary_status:
         | "apertura"
         | "investigacion"
@@ -5418,6 +5682,29 @@ export type Database = {
         | "aprobado"
         | "rechazado"
         | "pagado"
+      recruitment_type: "externa" | "interna" | "mixta"
+      requisition_reason:
+        | "renuncia"
+        | "vacaciones"
+        | "incapacidad"
+        | "rotacion"
+        | "movimiento_interno"
+        | "nuevo_cargo"
+        | "nuevo_puesto"
+        | "terminacion_contrato"
+        | "calamidad"
+        | "licencia"
+      requisition_status:
+        | "borrador"
+        | "enviada"
+        | "en_operaciones"
+        | "en_rrhh"
+        | "en_juridico"
+        | "en_seleccion"
+        | "en_gerencia"
+        | "aprobada"
+        | "rechazada"
+        | "cerrada"
       risk_level: "I" | "II" | "III" | "IV" | "V"
       sanction_type:
         | "amonestacion_verbal"
@@ -5664,6 +5951,15 @@ export const Constants = {
         "aprendizaje",
         "servicios",
       ],
+      day_of_week: [
+        "lunes",
+        "martes",
+        "miercoles",
+        "jueves",
+        "viernes",
+        "sabado",
+        "domingo",
+      ],
       disciplinary_status: [
         "apertura",
         "investigacion",
@@ -5765,6 +6061,31 @@ export const Constants = {
         "aprobado",
         "rechazado",
         "pagado",
+      ],
+      recruitment_type: ["externa", "interna", "mixta"],
+      requisition_reason: [
+        "renuncia",
+        "vacaciones",
+        "incapacidad",
+        "rotacion",
+        "movimiento_interno",
+        "nuevo_cargo",
+        "nuevo_puesto",
+        "terminacion_contrato",
+        "calamidad",
+        "licencia",
+      ],
+      requisition_status: [
+        "borrador",
+        "enviada",
+        "en_operaciones",
+        "en_rrhh",
+        "en_juridico",
+        "en_seleccion",
+        "en_gerencia",
+        "aprobada",
+        "rechazada",
+        "cerrada",
       ],
       risk_level: ["I", "II", "III", "IV", "V"],
       sanction_type: [
