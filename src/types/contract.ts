@@ -60,6 +60,9 @@ export const contractFormSchema = z.object({
   hasConfidentialityClause: z.boolean().default(true),
   specialClauses: z.string().optional(),
   
+  // Work/Labor contract specific
+  workLaborDescription: z.string().optional(),
+  
   // Document
   documentUrl: z.string().optional(),
   
