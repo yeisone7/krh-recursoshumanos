@@ -31,6 +31,23 @@ import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download } from
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
 
+const codeColors = [
+  'bg-primary/10 text-primary border-primary/20',
+  'bg-info/10 text-info border-info/20',
+  'bg-warning/10 text-warning-foreground border-warning/20',
+  'bg-accent/10 text-accent border-accent/20',
+  'bg-destructive/10 text-destructive border-destructive/20',
+  'bg-secondary text-secondary-foreground border-secondary',
+];
+
+const getCodeColor = (code: string): string => {
+  let hash = 0;
+  for (let i = 0; i < code.length; i++) {
+    hash = code.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return codeColors[Math.abs(hash) % codeColors.length];
+};
+
 export default function TiposContrato() {
   const { data, isLoading, create, update, delete: deleteItem, uploadTemplate, downloadTemplate, isCreating, isUpdating } = useContractTypes();
   const [searchTerm, setSearchTerm] = useState('');
@@ -175,7 +192,7 @@ export default function TiposContrato() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                      <code className={`text-xs px-2 py-1 rounded-md border font-medium ${getCodeColor(item.contract_type)}`}>
                         {item.contract_type}
                       </code>
                     </TableCell>
