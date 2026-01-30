@@ -4960,6 +4960,7 @@ export type Database = {
         Row: {
           created_at: string
           email_notifications: boolean
+          email_requisition_approvals: boolean | null
           id: string
           language: string | null
           notify_contract_expiry: boolean
@@ -4976,6 +4977,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email_notifications?: boolean
+          email_requisition_approvals?: boolean | null
           id?: string
           language?: string | null
           notify_contract_expiry?: boolean
@@ -4992,6 +4994,7 @@ export type Database = {
         Update: {
           created_at?: string
           email_notifications?: boolean
+          email_requisition_approvals?: boolean | null
           id?: string
           language?: string | null
           notify_contract_expiry?: boolean

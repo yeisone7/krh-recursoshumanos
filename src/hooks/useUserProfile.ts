@@ -13,6 +13,7 @@ export interface UserPreferences {
   notify_disciplinary_updates: boolean;
   notify_system_announcements: boolean;
   email_notifications: boolean;
+  email_requisition_approvals: boolean;
   theme: string;
   language: string;
   created_at: string;
