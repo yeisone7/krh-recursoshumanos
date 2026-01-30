@@ -30,6 +30,7 @@ export interface ContractDocumentData {
   employeePayrollType?: string; // Tipo de nómina (quincenal/mensual)
   
   // Contract info
+  contractNumber?: string; // Número consecutivo del contrato (ej: PC-2024-0001)
   contractType: string;
   contractTypeDisplay: string;
   startDate: Date;
@@ -154,6 +155,7 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     EMPLEADO_TIPO_NOMINA: data.employeePayrollType === 'mensual' ? 'Mensual' : 'Quincenal', // Default to Quincenal
     
     // Contract
+    CONTRATO_NUMERO: data.contractNumber || '', // Consecutivo (ej: PC-2024-0001)
     CONTRATO_TIPO: data.contractType,
     CONTRATO_TIPO_TEXTO: data.contractTypeDisplay,
     CONTRATO_FECHA_INICIO: format(data.startDate, 'dd/MM/yyyy'),
