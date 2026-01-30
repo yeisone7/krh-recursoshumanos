@@ -118,6 +118,7 @@ export const candidateStatusConfig: Record<CandidateStatus, { bg: string; text: 
 
 // Form schemas
 export const vacancyFormSchema = z.object({
+  requisitionId: z.string().min(1, 'Debe seleccionar una requisición aprobada'),
   operationCenterId: z.string().optional(),
   positionTitle: z.string().min(2, 'El título del cargo es requerido'),
   departmentArea: z.string().optional(),
