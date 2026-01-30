@@ -607,6 +607,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
           has_non_compete_clause: contract.hasNonCompeteClause || false,
           has_confidentiality_clause: contract.hasConfidentialityClause || false,
           special_clauses: null,
+          work_labor_description: null, // Objeto/labor para contratos obra_labor
           document_url: contract.documentUrl || null,
           contract_number: contract.contractNumber || null,
           is_terminated: status === 'terminated',
