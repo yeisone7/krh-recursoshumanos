@@ -30,6 +30,7 @@ import {
 import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download } from 'lucide-react';
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
+import { ContractPlaceholdersInfo } from '@/components/contracts/ContractPlaceholdersInfo';
 
 const codeColors = [
   'bg-primary/10 text-primary border-primary/20',
@@ -132,10 +133,13 @@ export default function TiposContrato() {
             Configure los tipos de contrato disponibles y sus plantillas
           </p>
         </div>
-        <Button onClick={handleNewClick}>
-          <Plus className="w-4 h-4 mr-2" />
-          Nuevo Tipo
-        </Button>
+        <div className="flex items-center gap-2">
+          <ContractPlaceholdersInfo />
+          <Button onClick={handleNewClick}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo Tipo
+          </Button>
+        </div>
       </div>
 
       <Card>
