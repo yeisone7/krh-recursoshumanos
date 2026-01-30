@@ -200,12 +200,22 @@ export default function Perfil() {
       icon: Megaphone,
       color: 'text-indigo-500',
     },
+  ];
+
+  const emailSettings = [
     {
       key: 'email_notifications',
       label: 'Notificaciones por Email',
-      description: 'Recibir notificaciones también por correo',
+      description: 'Recibir notificaciones generales por correo electrónico',
       icon: Mail,
       color: 'text-cyan-500',
+    },
+    {
+      key: 'email_requisition_approvals',
+      label: 'Aprobación de Requisiciones',
+      description: 'Recibir emails cuando tengas requisiciones pendientes de aprobación',
+      icon: ClipboardList,
+      color: 'text-emerald-500',
     },
   ];
 
@@ -318,11 +328,49 @@ export default function Perfil() {
               <Bell className="w-5 h-5 text-primary" />
               Preferencias de Notificaciones
             </CardTitle>
-            <CardDescription>Configura qué notificaciones deseas recibir</CardDescription>
+            <CardDescription>Configura qué notificaciones deseas recibir en la aplicación</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {notificationSettings.map((setting) => {
+                const Icon = setting.icon;
+                const isEnabled = preferences?.[setting.key as keyof typeof preferences] ?? true;
+                
+                return (
+                  <div key={setting.key} className="flex items-center justify-between py-2">
+                    <div className="flex items-start gap-3">
+                      <Icon className={`w-5 h-5 mt-0.5 ${setting.color}`} />
+                      <div>
+                        <p className="font-medium text-sm">{setting.label}</p>
+                        <p className="text-xs text-muted-foreground">{setting.description}</p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={isEnabled as boolean}
+                      onCheckedChange={(checked) => handlePreferenceToggle(setting.key, checked)}
+                      disabled={updatePreferences.isPending}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Email Preferences */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-primary" />
+              Preferencias de Email
+            </CardTitle>
+            <CardDescription>Configura qué notificaciones deseas recibir por correo electrónico</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {emailSettings.map((setting) => {
                 const Icon = setting.icon;
                 const isEnabled = preferences?.[setting.key as keyof typeof preferences] ?? true;
                 
