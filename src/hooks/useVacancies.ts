@@ -17,7 +17,8 @@ export function useVacancies() {
         .select(`
           *,
           operation_centers(id, name),
-          candidates(id, status)
+          candidates(id, status),
+          personnel_requisitions:requisition_id(id, cargo_solicitado, estado_requisicion)
         `)
         .eq('company_id', currentCompanyId!)
         .order('created_at', { ascending: false });

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Briefcase, DollarSign, FileText, Settings } from 'lucide-react';
+import { CalendarIcon, Briefcase, DollarSign, FileText, Settings, AlertCircle, FileCheck } from 'lucide-react';
 
 import {
   Dialog,
@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -51,11 +52,13 @@ import {
 } from '@/types/vacancy';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateVacancy } from '@/hooks/useVacancies';
+import { useApprovedRequisitions } from '@/hooks/useRequisitions';
 
 interface VacancyFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  preselectedRequisitionId?: string;
 }
 
 const publicationPlatformOptions = [
@@ -70,14 +73,16 @@ const publicationPlatformOptions = [
   'Redes sociales',
 ];
 
-export function VacancyFormDialog({ open, onOpenChange, onSuccess }: VacancyFormDialogProps) {
+export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRequisitionId }: VacancyFormDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
   const { data: operationCenters = [] } = useOperationCenters();
+  const { data: approvedRequisitions = [], isLoading: loadingRequisitions } = useApprovedRequisitions();
   const createVacancy = useCreateVacancy();
 
   const form = useForm<VacancyFormData>({
     resolver: zodResolver(vacancyFormSchema),
     defaultValues: {
+      requisitionId: preselectedRequisitionId || '',
       shiftType: 'oficina',
       positionsCount: 1,
       vacancyType: 'external',
@@ -90,9 +95,30 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess }: VacancyForm
     },
   });
 
+  // When selecting a requisition, auto-fill related fields
+  const selectedRequisitionId = form.watch('requisitionId');
+  
+  useEffect(() => {
+    if (selectedRequisitionId) {
+      const selectedReq = approvedRequisitions.find(r => r.id === selectedRequisitionId);
+      if (selectedReq) {
+        form.setValue('positionTitle', selectedReq.cargo_solicitado);
+        form.setValue('positionsCount', selectedReq.cantidad_vacantes_requeridas);
+        if (selectedReq.operation_centers?.name) {
+          // Find matching operation center
+          const center = operationCenters.find(c => c.name === selectedReq.operation_centers?.name);
+          if (center) {
+            form.setValue('operationCenterId', center.id);
+          }
+        }
+      }
+    }
+  }, [selectedRequisitionId, approvedRequisitions, operationCenters, form]);
+
   const handleSubmit = async (data: VacancyFormData) => {
     try {
       await createVacancy.mutateAsync({
+        requisition_id: data.requisitionId,
         operation_center_id: data.operationCenterId || null,
         position_title: data.positionTitle,
         department_area: data.departmentArea || null,
@@ -132,6 +158,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess }: VacancyForm
   };
 
   const tabItems = [
+    { value: 'requisition', label: 'Requisición', icon: FileCheck },
     { value: 'general', label: 'General', icon: Briefcase },
     { value: 'compensation', label: 'Compensación', icon: DollarSign },
     { value: 'description', label: 'Descripción', icon: FileText },
@@ -170,6 +197,56 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess }: VacancyForm
               </div>
 
               <ScrollArea className="h-[calc(90vh-260px)] px-6 py-4">
+                {/* Requisition Tab */}
+                <TabsContent value="requisition" className="mt-0 space-y-6">
+                  {approvedRequisitions.length === 0 && !loadingRequisitions ? (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        No hay requisiciones aprobadas disponibles. Debe crear y aprobar una requisición de personal antes de crear una vacante.
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <FormField
+                      control={form.control}
+                      name="requisitionId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Requisición de Personal *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={loadingRequisitions ? "Cargando..." : "Seleccionar requisición aprobada"} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              {approvedRequisitions.map((req) => (
+                                <SelectItem key={req.id} value={req.id}>
+                                  {req.cargo_solicitado} - {req.cantidad_vacantes_requeridas} vacante(s)
+                                  {req.operation_centers?.name && ` (${req.operation_centers.name})`}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            La vacante debe estar vinculada a una requisición de personal aprobada.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {selectedRequisitionId && (
+                    <Alert>
+                      <FileCheck className="h-4 w-4" />
+                      <AlertDescription>
+                        Los datos del cargo se han prellenado desde la requisición seleccionada. Puede modificarlos si es necesario.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </TabsContent>
+
                 {/* General Tab */}
                 <TabsContent value="general" className="mt-0 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
