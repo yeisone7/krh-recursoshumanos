@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.notify-contract-preaviso]
 verify_jwt = false
+
+[functions.notify-requisition-approver]
+verify_jwt = false
