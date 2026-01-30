@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,8 +30,10 @@ serve(async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const resend = resendApiKey ? new Resend(resendApiKey) : null;
     
     const { requisitionId, currentStep, requisitionTitle }: NotifyRequest = await req.json();
     
@@ -106,7 +109,7 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Create notifications for each user
+    // Create in-app notifications for each user
     const notifications = companyUsers.map(user => ({
       user_id: user.user_id,
       company_id: requisition.company_id,
@@ -129,12 +132,106 @@ serve(async (req: Request): Promise<Response> => {
       throw insertError;
     }
 
-    console.log(`Notified ${companyUsers.length} users for requisition ${requisitionId}`);
+    console.log(`Created ${companyUsers.length} in-app notifications for requisition ${requisitionId}`);
+
+    // Send email notifications if Resend is configured
+    let emailsSent = 0;
+    if (resend) {
+      // Get user emails
+      const { data: userProfiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, email, display_name')
+        .in('user_id', companyUsers.map(u => u.user_id));
+
+      if (!profilesError && userProfiles && userProfiles.length > 0) {
+        const validEmails = userProfiles.filter(p => p.email);
+        
+        for (const profile of validEmails) {
+          try {
+            await resend.emails.send({
+              from: 'KRH <notificaciones@lovable.app>',
+              to: [profile.email!],
+              subject: `🔔 Requisición pendiente de aprobación - ${requisition.cargo_solicitado}`,
+              html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset="utf-8">
+                  <style>
+                    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
+                    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; padding: 24px; text-align: center; }
+                    .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+                    .content { padding: 32px 24px; }
+                    .badge { display: inline-block; background: #f0fdf4; color: #059669; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
+                    .info-card { background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                    .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; }
+                    .info-label { color: #6b7280; font-size: 14px; }
+                    .info-value { color: #111827; font-weight: 500; font-size: 14px; }
+                    .cta-button { display: inline-block; background: #059669; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; margin-top: 20px; }
+                    .cta-button:hover { background: #047857; }
+                    .footer { background: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <div class="header">
+                      <h1>📋 Requisición Pendiente</h1>
+                    </div>
+                    <div class="content">
+                      <span class="badge">Etapa: ${nextApprover.stepLabel}</span>
+                      <p>Hola${profile.display_name ? ` ${profile.display_name}` : ''},</p>
+                      <p>Tienes una nueva requisición de personal pendiente de tu aprobación.</p>
+                      
+                      <div class="info-card">
+                        <div class="info-row">
+                          <span class="info-label">Cargo Solicitado:</span>
+                          <span class="info-value">${requisition.cargo_solicitado}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Solicitante:</span>
+                          <span class="info-value">${requisition.solicitante_nombre}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="info-label">Tu Etapa:</span>
+                          <span class="info-value">${nextApprover.stepLabel}</span>
+                        </div>
+                      </div>
+
+                      <p>Por favor revisa la requisición y registra tu decisión lo antes posible para continuar con el proceso de contratación.</p>
+                      
+                      <center>
+                        <a href="https://krh.lovable.app/requisiciones?id=${requisitionId}" class="cta-button">
+                          Revisar Requisición →
+                        </a>
+                      </center>
+                    </div>
+                    <div class="footer">
+                      <p>Este es un mensaje automático del sistema KRH de gestión de recursos humanos.</p>
+                      <p>© ${new Date().getFullYear()} KRH - Gestión de Recursos Humanos</p>
+                    </div>
+                  </div>
+                </body>
+                </html>
+              `,
+            });
+            emailsSent++;
+            console.log(`Email sent to ${profile.email}`);
+          } catch (emailError) {
+            console.error(`Error sending email to ${profile.email}:`, emailError);
+            // Continue with other emails even if one fails
+          }
+        }
+      }
+    } else {
+      console.log('Resend API key not configured, skipping email notifications');
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         notifiedUsers: companyUsers.length,
+        emailsSent,
         step: nextApprover.stepLabel 
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
