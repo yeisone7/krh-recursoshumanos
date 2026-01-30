@@ -32,6 +32,7 @@ export interface ContractDocumentData {
   // Contract info
   contractNumber?: string; // Número consecutivo del contrato (ej: PC-2024-0001)
   contractType: string;
+  workLaborDescription?: string; // Descripción del objeto/labor para contratos obra_labor
   contractTypeDisplay: string;
   startDate: Date;
   endDate?: Date | null;
@@ -158,6 +159,7 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     CONTRATO_NUMERO: data.contractNumber || '', // Consecutivo (ej: PC-2024-0001)
     CONTRATO_TIPO: data.contractType,
     CONTRATO_TIPO_TEXTO: data.contractTypeDisplay,
+    CONTRATO_OBJETO_LABOR: data.workLaborDescription || '', // Objeto/labor para contratos obra_labor
     CONTRATO_FECHA_INICIO: format(data.startDate, 'dd/MM/yyyy'),
     CONTRATO_FECHA_INICIO_LETRAS: formatDateInWords(data.startDate),
     CONTRATO_FECHA_FIN: data.endDate ? format(data.endDate, 'dd/MM/yyyy') : 'No aplica',

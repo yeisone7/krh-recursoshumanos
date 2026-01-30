@@ -49,6 +49,7 @@ interface ContractData {
   has_non_compete_clause: boolean | null;
   has_confidentiality_clause: boolean | null;
   special_clauses: string | null;
+  work_labor_description?: string | null; // Objeto/labor para contratos obra_labor
   employees: {
     id: string;
     first_name: string;
@@ -304,6 +305,7 @@ export function GenerateContractDialog({
       workCity: contract.work_city || undefined,
       workAddress: contract.work_address || undefined,
       contractDurationMonths: durationMonths,
+      workLaborDescription: contract.work_labor_description || undefined, // Objeto/labor para contratos obra_labor
 
       // Clauses
       hasNonCompeteClause: contract.has_non_compete_clause || false,

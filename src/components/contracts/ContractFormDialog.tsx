@@ -112,6 +112,7 @@ export function ContractFormDialog({
         hasNonCompeteClause: contractToEdit.has_non_compete_clause || false,
         hasConfidentialityClause: contractToEdit.has_confidentiality_clause || false,
         specialClauses: contractToEdit.special_clauses || undefined,
+        workLaborDescription: contractToEdit.work_labor_description || undefined,
       });
     } else if (open && preselectedEmployeeId) {
       form.setValue('employeeId', preselectedEmployeeId);
@@ -153,6 +154,7 @@ export function ContractFormDialog({
         has_non_compete_clause: data.hasNonCompeteClause,
         has_confidentiality_clause: data.hasConfidentialityClause,
         special_clauses: data.specialClauses,
+        work_labor_description: data.workLaborDescription || null,
       };
 
       if (isEditMode && contractToEdit) {
@@ -371,6 +373,34 @@ export function ContractFormDialog({
                       </p>
                     )}
                   </div>
+
+                  {/* Work/Labor Description - Only for obra_labor contracts */}
+                  {selectedContractType === 'obra_labor' && (
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-foreground border-b pb-2">Objeto o Labor Contratada</h3>
+                      <FormField
+                        control={form.control}
+                        name="workLaborDescription"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Descripción del Objeto o Labor *</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Describa detalladamente la obra o labor específica a realizar por el trabajador..."
+                                className="min-h-[150px] resize-y"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-xs">
+                              Especifique la obra, labor o proyecto para el cual se contrata al trabajador. 
+                              Este texto se incluirá en el contrato de trabajo.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
 
                   <div className="space-y-4">
                     <h3 className="font-semibold text-foreground border-b pb-2">Período de Prueba</h3>

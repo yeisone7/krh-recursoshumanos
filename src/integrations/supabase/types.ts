@@ -1052,6 +1052,7 @@ export type Database = {
           updated_at: string
           work_address: string | null
           work_city: string | null
+          work_labor_description: string | null
         }
         Insert: {
           approved_at?: string | null
@@ -1081,6 +1082,7 @@ export type Database = {
           updated_at?: string
           work_address?: string | null
           work_city?: string | null
+          work_labor_description?: string | null
         }
         Update: {
           approved_at?: string | null
@@ -1110,6 +1112,7 @@ export type Database = {
           updated_at?: string
           work_address?: string | null
           work_city?: string | null
+          work_labor_description?: string | null
         }
         Relationships: [
           {
