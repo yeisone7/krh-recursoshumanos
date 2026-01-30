@@ -34,6 +34,7 @@ import Analitica from "./pages/Analitica";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Empleado360 from "./pages/Empleado360";
+import Requisiciones from "./pages/Requisiciones";
 import Perfil from "./pages/Perfil";
 import { 
   CatalogosAreas, 
@@ -87,6 +88,7 @@ const App = () => (
                         <Route path="/dotacion" element={<Dotacion />} />
                         <Route path="/examenes" element={<Examenes />} />
                         <Route path="/seleccion" element={<Seleccion />} />
+                        <Route path="/requisiciones" element={<Requisiciones />} />
                         <Route path="/centros" element={<Centros />} />
                         <Route path="/jornadas" element={<Jornadas />} />
                         <Route path="/disciplinarios" element={<Disciplinarios />} />

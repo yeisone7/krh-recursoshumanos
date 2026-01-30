@@ -63,6 +63,7 @@ const coreNavItems: NavItem[] = [
 const personnelNavItems: NavItem[] = [
   { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados' },
   { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' },
+  { label: 'Requisiciones', icon: <ClipboardList className="w-5 h-5" />, href: '/requisiciones' },
   { label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' },
 ];
 
