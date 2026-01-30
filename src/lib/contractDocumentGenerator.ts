@@ -151,9 +151,7 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     EMPLEADO_FECHA_NACIMIENTO: data.employeeBirthDate || '',
     EMPLEADO_CARGO: data.employeePosition,
     EMPLEADO_CENTRO_OPERACION: data.employeeOperationCenter || '',
-    EMPLEADO_TIPO_NOMINA: data.employeePayrollType === 'quincenal' ? 'Quincenal' : 
-                          data.employeePayrollType === 'mensual' ? 'Mensual' : 
-                          data.employeePayrollType || 'No especificado',
+    EMPLEADO_TIPO_NOMINA: data.employeePayrollType === 'mensual' ? 'Mensual' : 'Quincenal', // Default to Quincenal
     
     // Contract
     CONTRATO_TIPO: data.contractType,
