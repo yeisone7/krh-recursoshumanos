@@ -37,6 +37,7 @@ interface ContractData {
   id: string;
   employee_id: string;
   contract_type: string;
+  contract_number: string | null; // Consecutivo del contrato
   start_date: string;
   end_date: string | null;
   salary: number;
@@ -290,6 +291,7 @@ export function GenerateContractDialog({
       employeePayrollType: employeeSchedule?.payroll_type || 'quincenal', // Default to quincenal if no schedule record
 
       // Contract
+      contractNumber: contract.contract_number || undefined, // Consecutivo (ej: PC-2024-0001)
       contractType: contract.contract_type,
       contractTypeDisplay: contractTypeConfig?.display_name || contract.contract_type,
       startDate: startDate,

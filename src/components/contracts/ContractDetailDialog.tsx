@@ -562,6 +562,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
           id: contract.id,
           employee_id: contract.employeeId,
           contract_type: contract.contractType, // Pass directly - now using dynamic types from DB
+          contract_number: contract.contractNumber || null, // Consecutivo del contrato
           start_date: contract.startDate.toISOString(),
           end_date: contract.currentEndDate?.toISOString() || null,
           salary: contract.salary,
