@@ -40,6 +40,10 @@ export function useVacancy(id: string | undefined) {
         .select(`
           *,
           operation_centers(id, name),
+          personnel_requisitions:requisition_id(
+            id, cargo_solicitado, estado_requisicion, fecha_requisicion, 
+            solicitante_nombre, motivo_solicitud, operation_centers(name)
+          ),
           candidates(
             id, first_name, last_name, document_number, status, application_date, email, mobile,
             selection_steps(*)

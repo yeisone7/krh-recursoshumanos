@@ -16,6 +16,10 @@ import {
   Pause,
   FileText,
   GraduationCap,
+  FileCheck,
+  Building2,
+  User,
+  ExternalLink,
 } from 'lucide-react';
 import {
   Dialog,
@@ -28,8 +32,10 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 import { useVacancy, useUpdateVacancy } from '@/hooks/useVacancies';
 import { useUpdateCandidate, useConvertToEmployee } from '@/hooks/useCandidates';
@@ -44,6 +50,7 @@ import {
   candidateStatusConfig,
   CandidateStatus,
 } from '@/types/vacancy';
+import { requisitionStatusLabels, requisitionStatusConfig } from '@/types/requisition';
 
 interface VacancyDetailDialogProps {
   open: boolean;
@@ -61,6 +68,7 @@ const statusIcons: Record<VacancyStatus, React.ElementType> = {
 export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDetailDialogProps) {
   const [activeTab, setActiveTab] = useState('info');
   const [showCandidateForm, setShowCandidateForm] = useState(false);
+  const navigate = useNavigate();
   
   const { data: vacancy, isLoading } = useVacancy(vacancyId);
   const updateVacancy = useUpdateVacancy();
@@ -83,6 +91,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const StatusIcon = statusIcons[status];
   const statusStyle = vacancyStatusConfig[status];
   const candidates = (vacancy as any).candidates || [];
+  const requisition = (vacancy as any).personnel_requisitions;
 
   const handleStatusChange = async (newStatus: VacancyStatus) => {
     try {
@@ -179,6 +188,67 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
             <ScrollArea className="h-[calc(90vh-220px)]">
               {/* Info Tab */}
               <TabsContent value="info" className="p-6 mt-0 space-y-6">
+                {/* Requisition Info Card */}
+                {requisition && (
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <FileCheck className="w-4 h-4 text-primary" />
+                        Requisición de Origen
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Cargo Solicitado</p>
+                          <p className="font-medium text-sm">{requisition.cargo_solicitado}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Solicitante</p>
+                          <div className="flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5 text-muted-foreground" />
+                            <p className="font-medium text-sm">{requisition.solicitante_nombre || 'No especificado'}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Estado Requisición</p>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'text-xs',
+                              requisitionStatusConfig[requisition.estado_requisicion as keyof typeof requisitionStatusConfig]?.bg,
+                              requisitionStatusConfig[requisition.estado_requisicion as keyof typeof requisitionStatusConfig]?.text
+                            )}
+                          >
+                            {requisitionStatusLabels[requisition.estado_requisicion as keyof typeof requisitionStatusLabels] || requisition.estado_requisicion}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Fecha Requisición</p>
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                            <p className="font-medium text-sm">
+                              {format(new Date(requisition.fecha_requisicion), 'dd MMM yyyy', { locale: es })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="mt-3 p-0 h-auto text-primary"
+                        onClick={() => {
+                          onOpenChange(false);
+                          navigate(`/requisiciones?id=${requisition.id}`);
+                        }}
+                      >
+                        Ver detalles de la requisición
+                        <ExternalLink className="w-3.5 h-3.5 ml-1" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Tipo de Convocatoria</p>
