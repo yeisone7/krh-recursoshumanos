@@ -545,7 +545,16 @@ export function useUpdateEmployee() {
         );
       }
 
-      await Promise.all(upsertOperations);
+      // Execute all upsert operations and check for errors
+      const upsertResults = await Promise.all(upsertOperations);
+      
+      // Check for errors in any of the upsert operations
+      for (const result of upsertResults) {
+        if (result.error) {
+          console.error('Error in upsert operation:', result.error);
+          throw new Error(`Error guardando datos relacionados: ${result.error.message}`);
+        }
+      }
 
       // Audit log
       await logAuditEvent(
