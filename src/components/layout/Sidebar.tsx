@@ -63,9 +63,17 @@ const coreNavItems: NavItem[] = [
 const personnelNavItems: NavItem[] = [
   { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados' },
   { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' },
-  { label: 'Requisiciones', icon: <ClipboardList className="w-5 h-5" />, href: '/requisiciones' },
-  { label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' },
 ];
+
+const seleccionItem: NavItem = {
+  label: 'Selección',
+  icon: <UserSearch className="w-5 h-5" />,
+  href: '/seleccion',
+  children: [
+    { label: 'Requisiciones', icon: <ClipboardList className="w-4 h-4" />, href: '/requisiciones' },
+    { label: 'Selección y Vacantes', icon: <UserSearch className="w-4 h-4" />, href: '/seleccion' },
+  ],
+};
 
 const timeManagementNavItems: NavItem[] = [
   { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones' },
@@ -125,12 +133,19 @@ const adminNavItems: NavItem[] = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [catalogosOpen, setCatalogosOpen] = useState(false);
+  const [seleccionOpen, setSeleccionOpen] = useState(false);
   const location = useLocation();
 
   // Auto-open catalogos menu if on a catalogos route or centros
   const isCatalogosRoute = location.pathname.startsWith('/catalogos') || location.pathname === '/centros';
   if (isCatalogosRoute && !catalogosOpen) {
     setCatalogosOpen(true);
+  }
+
+  // Auto-open seleccion menu if on a seleccion or requisiciones route
+  const isSeleccionRoute = location.pathname === '/seleccion' || location.pathname === '/requisiciones';
+  if (isSeleccionRoute && !seleccionOpen) {
+    setSeleccionOpen(true);
   }
 
   const NavLink = ({ item }: { item: NavItem }) => {
@@ -343,6 +358,127 @@ export function Sidebar() {
     );
   };
 
+  const SeleccionMenu = () => {
+    const isAnyChildActive = seleccionItem.children?.some(child => location.pathname === child.href);
+    
+    const menuButton = (
+      <motion.div
+        whileHover={{ x: 4 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => !collapsed && setSeleccionOpen(!seleccionOpen)}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
+          isAnyChildActive
+            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+        )}
+      >
+        <span className={cn(
+          "transition-colors",
+          isAnyChildActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+        )}>
+          {seleccionItem.icon}
+        </span>
+        <AnimatePresence>
+          {!collapsed && (
+            <motion.span
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1"
+            >
+              {seleccionItem.label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+        {!collapsed && (
+          <ChevronDown className={cn(
+            "w-4 h-4 transition-transform",
+            seleccionOpen && "rotate-180"
+          )} />
+        )}
+      </motion.div>
+    );
+    
+    return (
+      <div>
+        {collapsed ? (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              {menuButton}
+            </TooltipTrigger>
+            <TooltipContent 
+              side="right" 
+              className="bg-sidebar border-sidebar-border text-sidebar-foreground p-0 shadow-lg"
+              sideOffset={8}
+            >
+              <div className="py-2">
+                <p className="px-3 pb-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider border-b border-sidebar-border mb-1">
+                  {seleccionItem.label}
+                </p>
+                {seleccionItem.children?.map((child) => {
+                  const isActive = location.pathname === child.href;
+                  return (
+                    <Link key={child.href} to={child.href}>
+                      <div className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
+                        isActive
+                          ? "bg-sidebar-accent text-primary font-medium"
+                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                      )}>
+                        {child.icon}
+                        <span>{child.label}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          menuButton
+        )}
+        
+        <AnimatePresence>
+          {seleccionOpen && !collapsed && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="ml-4 pl-3 border-l border-sidebar-border space-y-1 mt-1"
+            >
+              {seleccionItem.children?.map((child) => {
+                const isActive = location.pathname === child.href;
+                return (
+                  <Link key={child.href} to={child.href}>
+                    <motion.div
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group",
+                        isActive
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      )}
+                    >
+                      <span className={cn(
+                        "transition-colors",
+                        isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+                      )}>
+                        {child.icon}
+                      </span>
+                      <span className="font-medium text-sm">{child.label}</span>
+                    </motion.div>
+                  </Link>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
   return (
     <TooltipProvider>
       <motion.aside
@@ -411,6 +547,7 @@ export function Sidebar() {
           {personnelNavItems.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
+          <SeleccionMenu />
         </div>
 
         {/* Payroll */}
