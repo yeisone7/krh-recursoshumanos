@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils';
 
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
+import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateRequisition, useUpdateRequisition, PersonnelRequisition } from '@/hooks/useRequisitions';
 import {
   requisitionFormSchema,
@@ -64,6 +65,9 @@ export function RequisitionFormDialog({
   const { data: areas = [] } = useAreas();
   const { data: positions = [] } = usePositions();
   const { data: operationCenters = [] } = useOperationCenters();
+  const { data: employees = [] } = useEmployees();
+  
+  const activeEmployees = employees.filter((e) => e.is_active);
   const createRequisition = useCreateRequisition();
   const updateRequisition = useUpdateRequisition();
 
@@ -365,9 +369,20 @@ export function RequisitionFormDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Persona a Reemplazar</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Si aplica..." {...field} />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Si aplica..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background">
+                          {activeEmployees.map((employee) => (
+                            <SelectItem key={employee.id} value={`${employee.first_name} ${employee.last_name}`}>
+                              {employee.first_name} {employee.last_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
