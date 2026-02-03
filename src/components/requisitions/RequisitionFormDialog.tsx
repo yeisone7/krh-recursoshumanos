@@ -530,7 +530,7 @@ export function RequisitionFormDialog({
                     <FormItem>
                       <FormLabel>Nombre del Solicitante *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nombre completo" {...field} />
+                        <Input {...field} readOnly className="bg-muted cursor-not-allowed" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
