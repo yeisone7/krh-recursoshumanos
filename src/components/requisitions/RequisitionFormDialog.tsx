@@ -38,6 +38,9 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -62,10 +65,29 @@ export function RequisitionFormDialog({
   onOpenChange,
   requisition,
 }: RequisitionFormDialogProps) {
+  const { user } = useAuth();
   const { data: areas = [] } = useAreas();
   const { data: positions = [] } = usePositions();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: employees = [] } = useEmployees();
+  
+  // Fetch user profile to get full name
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Get default requester name: profile full_name > email prefix
+  const defaultRequesterName = userProfile?.full_name || user?.email?.split('@')[0] || '';
   
   const activeEmployees = employees.filter((e) => e.is_active);
   const createRequisition = useCreateRequisition();
@@ -109,10 +131,10 @@ export function RequisitionFormDialog({
         cargo_solicitado: '',
         requiere_herramienta_trabajo: false,
         motivo_solicitud: 'nuevo_cargo',
-        solicitante_nombre: '',
+        solicitante_nombre: defaultRequesterName,
       });
     }
-  }, [requisition, form]);
+  }, [requisition, form, defaultRequesterName]);
 
   const onSubmit = async (data: RequisitionFormData) => {
     const payload = {
