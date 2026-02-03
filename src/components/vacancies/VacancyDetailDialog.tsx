@@ -146,7 +146,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
@@ -171,8 +171,8 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
             </div>
           </DialogHeader>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-            <div className="px-6 pt-2 border-b">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+            <div className="px-6 pt-2 border-b flex-shrink-0">
               <TabsList className="h-10">
                 <TabsTrigger value="info" className="gap-2">
                   <FileText className="w-4 h-4" />
@@ -185,7 +185,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsList>
             </div>
 
-            <ScrollArea className="h-[calc(90vh-220px)]">
+            <ScrollArea className="flex-1 min-h-0">
               {/* Info Tab */}
               <TabsContent value="info" className="p-6 mt-0 space-y-6">
                 {/* Requisition Info Card */}
@@ -473,8 +473,8 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           </Tabs>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-between">
-            <div className="flex gap-2">
+          <div className="flex-shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2">
               {status === 'open' && (
                 <Button variant="outline" onClick={() => handleStatusChange('in_process')}>
                   <Play className="w-4 h-4 mr-2" />
