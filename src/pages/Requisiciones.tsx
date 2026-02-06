@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   FileText, Plus, Search, Eye, Clock, CheckCircle, XCircle,
-  Building2, Users, Calendar, Send,
+  Building2, Users, Calendar, Send, ArrowRight,
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 import { useRequisitions, PersonnelRequisition } from '@/hooks/useRequisitions';
@@ -61,6 +62,18 @@ export default function Requisiciones() {
       en_gerencia: 'gerencia', en_seleccion: 'seleccion',
     };
     return statusMap[req.estado_requisicion] || null;
+  };
+
+  // Helper to get approval progress for timeline
+  const getApprovalProgress = (req: PersonnelRequisition) => {
+    const steps = [
+      { key: 'operaciones', label: 'OP', approved: req.operaciones_aprobado },
+      { key: 'rrhh', label: 'RH', approved: req.rrhh_aprobado },
+      { key: 'juridico', label: 'JU', approved: req.juridico_aprobado },
+      { key: 'gerencia', label: 'GE', approved: req.gerencia_aprobado },
+      { key: 'seleccion', label: 'SE', approved: req.seleccion_aprobado },
+    ];
+    return steps;
   };
 
   return (
@@ -127,6 +140,7 @@ export default function Requisiciones() {
                 <TableHead>Centro</TableHead>
                 <TableHead>Motivo</TableHead>
                 <TableHead>Fecha</TableHead>
+                <TableHead>Progreso</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -136,6 +150,7 @@ export default function Requisiciones() {
                 const status = req.estado_requisicion as RequisitionStatus;
                 const cfg = requisitionStatusConfig[status];
                 const step = getCurrentApprovalStep(req);
+                const progress = getApprovalProgress(req);
                 return (
                   <TableRow key={req.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(req.id)}>
                     <TableCell>
@@ -145,6 +160,29 @@ export default function Requisiciones() {
                     <TableCell><div className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-muted-foreground" />{req.operation_centers?.name || '-'}</div></TableCell>
                     <TableCell><Badge variant="outline">{requisitionReasonLabels[req.motivo_solicitud as RequisitionReason]}</Badge></TableCell>
                     <TableCell><div className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-muted-foreground" />{format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}</div></TableCell>
+                    <TableCell>
+                      <TooltipProvider>
+                        <div className="flex items-center gap-0.5">
+                          {progress.map((s, idx) => (
+                            <Tooltip key={s.key}>
+                              <TooltipTrigger asChild>
+                                <div className={cn(
+                                  'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium transition-colors',
+                                  s.approved === true && 'bg-success text-success-foreground',
+                                  s.approved === false && 'bg-destructive text-destructive-foreground',
+                                  s.approved === null && 'bg-muted text-muted-foreground'
+                                )}>
+                                  {s.label}
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{s.key.charAt(0).toUpperCase() + s.key.slice(1)}: {s.approved === true ? '✓ Aprobado' : s.approved === false ? '✗ Rechazado' : 'Pendiente'}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          ))}
+                        </div>
+                      </TooltipProvider>
+                    </TableCell>
                     <TableCell><Badge variant="outline" className={cn(cfg.bg, cfg.text, cfg.border)}>{requisitionStatusLabels[status]}</Badge></TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>

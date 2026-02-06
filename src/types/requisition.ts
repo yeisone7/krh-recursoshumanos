@@ -180,6 +180,9 @@ export const requisitionFormSchema = z.object({
   requiere_herramienta_trabajo: z.boolean().default(false),
   horario_trabajo: z.string().optional(),
   dia_descanso_obligatorio: z.enum(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']).optional(),
+  // New fields: salary and contract type
+  salario_propuesto: z.number().optional(),
+  tipo_contrato_solicitado: z.string().optional(),
   motivo_solicitud: z.enum([
     'renuncia', 'vacaciones', 'incapacidad', 'rotacion',
     'movimiento_interno', 'nuevo_cargo', 'nuevo_puesto',
