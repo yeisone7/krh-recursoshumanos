@@ -619,16 +619,17 @@ export default function Seleccion() {
         />
       )}
 
-      {candidateFormVacancyId && (
-        <CandidateFormDialog
-          open={showCandidateForm}
-          onOpenChange={(open) => {
-            setShowCandidateForm(open);
-            if (!open) setCandidateFormVacancyId(null);
-          }}
-          vacancyId={candidateFormVacancyId}
-        />
-      )}
+      <CandidateFormDialog
+        open={showCandidateForm}
+        onOpenChange={(open) => {
+          setShowCandidateForm(open);
+          if (!open) {
+            // Delay clearing vacancyId to avoid unmount during Dialog close animation
+            setTimeout(() => setCandidateFormVacancyId(null), 200);
+          }
+        }}
+        vacancyId={candidateFormVacancyId || undefined}
+      />
 
       {selectedCandidateId && (
         <CandidateDetailDialog
