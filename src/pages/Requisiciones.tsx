@@ -162,23 +162,66 @@ export default function Requisiciones() {
                     <TableCell><div className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-muted-foreground" />{format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}</div></TableCell>
                     <TableCell>
                       <TooltipProvider>
-                        <div className="flex items-center gap-0.5">
+                        <div 
+                          className="flex items-center gap-0.5"
+                          role="progressbar"
+                          aria-label={`Progreso de aprobación: ${progress.filter(s => s.approved === true).length} de ${progress.length} aprobados`}
+                          aria-valuenow={progress.filter(s => s.approved === true).length}
+                          aria-valuemax={progress.length}
+                        >
                           {progress.map((s, idx) => (
-                            <Tooltip key={s.key}>
-                              <TooltipTrigger asChild>
-                                <div className={cn(
-                                  'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium transition-colors',
-                                  s.approved === true && 'bg-success text-success-foreground',
-                                  s.approved === false && 'bg-destructive text-destructive-foreground',
-                                  s.approved === null && 'bg-muted text-muted-foreground'
-                                )}>
-                                  {s.label}
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{s.key.charAt(0).toUpperCase() + s.key.slice(1)}: {s.approved === true ? '✓ Aprobado' : s.approved === false ? '✗ Rechazado' : 'Pendiente'}</p>
-                              </TooltipContent>
-                            </Tooltip>
+                            <div key={s.key} className="flex items-center">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    data-testid={`approval-step-${s.key}-${req.id}`}
+                                    aria-label={`${s.key}: ${s.approved === true ? 'Aprobado' : s.approved === false ? 'Rechazado' : 'Pendiente'}`}
+                                    className={cn(
+                                      'w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold transition-all duration-200 border-2',
+                                      'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary',
+                                      s.approved === true && 'bg-success text-success-foreground border-success shadow-sm',
+                                      s.approved === false && 'bg-destructive text-destructive-foreground border-destructive shadow-sm',
+                                      s.approved === null && 'bg-muted text-muted-foreground border-border'
+                                    )}
+                                  >
+                                    {s.approved === true ? (
+                                      <CheckCircle className="w-3.5 h-3.5" />
+                                    ) : s.approved === false ? (
+                                      <XCircle className="w-3.5 h-3.5" />
+                                    ) : (
+                                      s.label
+                                    )}
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="text-xs">
+                                  <p className="font-medium">
+                                    {s.key === 'operaciones' && 'Operaciones'}
+                                    {s.key === 'rrhh' && 'Recursos Humanos'}
+                                    {s.key === 'juridico' && 'Jurídico'}
+                                    {s.key === 'gerencia' && 'Gerencia'}
+                                    {s.key === 'seleccion' && 'Selección'}
+                                  </p>
+                                  <p className={cn(
+                                    s.approved === true && 'text-success',
+                                    s.approved === false && 'text-destructive',
+                                    s.approved === null && 'text-muted-foreground'
+                                  )}>
+                                    {s.approved === true ? '✓ Aprobado' : s.approved === false ? '✗ Rechazado' : '○ Pendiente'}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                              {/* Connector line between steps */}
+                              {idx < progress.length - 1 && (
+                                <div 
+                                  className={cn(
+                                    'w-2 h-0.5 mx-0.5',
+                                    s.approved === true ? 'bg-success' : 'bg-border'
+                                  )}
+                                  aria-hidden="true"
+                                />
+                              )}
+                            </div>
                           ))}
                         </div>
                       </TooltipProvider>
@@ -186,8 +229,27 @@ export default function Requisiciones() {
                     <TableCell><Badge variant="outline" className={cn(cfg.bg, cfg.text, cfg.border)}>{requisitionStatusLabels[status]}</Badge></TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                        <Button size="sm" variant="ghost" onClick={() => openDetail(req.id)}><Eye className="w-4 h-4" /></Button>
-                        {step && <Button size="sm" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>Aprobar</Button>}
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => openDetail(req.id)}
+                          aria-label={`Ver detalle de requisición ${req.cargo_solicitado}`}
+                          data-testid={`view-requisition-${req.id}`}
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span className="sr-only">Ver detalle</span>
+                        </Button>
+                        {step && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}
+                            aria-label={`Aprobar requisición ${req.cargo_solicitado} en etapa ${step}`}
+                            data-testid={`approve-requisition-${req.id}`}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1.5" />
+                            Aprobar
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

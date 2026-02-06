@@ -347,27 +347,36 @@ export function CandidateDetailDialog({
 
           {/* Footer Actions */}
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-between">
-            <div className="flex gap-2">
+            <div className="flex gap-2" role="group" aria-label="Acciones del candidato">
               {status === 'selected' && (
-                <Button onClick={handleConvert} disabled={convertToEmployee.isPending}>
+                <Button 
+                  onClick={handleConvert} 
+                  disabled={convertToEmployee.isPending}
+                  aria-label={`Contratar a ${candidate.first_name} ${candidate.last_name}`}
+                  data-testid="hire-candidate-button"
+                >
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Contratar
+                  {convertToEmployee.isPending ? 'Procesando...' : 'Contratar'}
                 </Button>
               )}
               {status !== 'hired' && status !== 'selected' && status !== 'not_selected' && status !== 'withdrawn' && (
                 <>
                   <Button
                     variant="outline"
-                    className="text-success hover:text-success"
+                    className="text-success hover:text-success border-success/30 hover:border-success hover:bg-success/10"
                     onClick={() => handleStatusChange('selected')}
+                    aria-label={`Marcar a ${candidate.first_name} ${candidate.last_name} como seleccionado`}
+                    data-testid="select-candidate-button"
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Seleccionar
                   </Button>
                   <Button
                     variant="outline"
-                    className="text-destructive hover:text-destructive"
+                    className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive hover:bg-destructive/10"
                     onClick={() => handleStatusChange('not_selected')}
+                    aria-label={`Marcar a ${candidate.first_name} ${candidate.last_name} como no seleccionado`}
+                    data-testid="reject-candidate-button"
                   >
                     <XCircle className="w-4 h-4 mr-2" />
                     No Seleccionar
@@ -375,7 +384,12 @@ export function CandidateDetailDialog({
                 </>
               )}
             </div>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              aria-label="Cerrar diálogo de candidato"
+              data-testid="close-candidate-dialog"
+            >
               Cerrar
             </Button>
           </div>
