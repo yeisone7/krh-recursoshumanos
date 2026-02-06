@@ -74,7 +74,7 @@ const publicationPlatformOptions = [
 ];
 
 export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRequisitionId }: VacancyFormDialogProps) {
-  const [activeTab, setActiveTab] = useState('general');
+  const [activeTab, setActiveTab] = useState('requisition');
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: approvedRequisitions = [], isLoading: loadingRequisitions } = useApprovedRequisitions();
   const createVacancy = useCreateVacancy();

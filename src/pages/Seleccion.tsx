@@ -73,6 +73,7 @@ export default function Seleccion() {
   const [showVacancyDetail, setShowVacancyDetail] = useState(false);
   const [selectedVacancyId, setSelectedVacancyId] = useState<string | null>(null);
   const [showCandidateForm, setShowCandidateForm] = useState(false);
+  const [candidateFormVacancyId, setCandidateFormVacancyId] = useState<string | null>(null);
   const [showCandidateDetail, setShowCandidateDetail] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
 
@@ -155,10 +156,6 @@ export default function Seleccion() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowCandidateForm(true)}>
-            <UserPlus className="w-4 h-4 mr-2" />
-            Nuevo Candidato
-          </Button>
           <Button onClick={() => setShowVacancyForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Nueva Vacante
@@ -419,16 +416,31 @@ export default function Seleccion() {
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-right">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openVacancyDetail(vacancy.id);
-                                  }}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    title="Nuevo Candidato"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setCandidateFormVacancyId(vacancy.id);
+                                      setShowCandidateForm(true);
+                                    }}
+                                  >
+                                    <UserPlus className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    title="Ver Detalle"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openVacancyDetail(vacancy.id);
+                                    }}
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                </div>
                               </TableCell>
                             </TableRow>
                           );
@@ -605,10 +617,16 @@ export default function Seleccion() {
         />
       )}
 
-      <CandidateFormDialog
-        open={showCandidateForm}
-        onOpenChange={setShowCandidateForm}
-      />
+      {candidateFormVacancyId && (
+        <CandidateFormDialog
+          open={showCandidateForm}
+          onOpenChange={(open) => {
+            setShowCandidateForm(open);
+            if (!open) setCandidateFormVacancyId(null);
+          }}
+          vacancyId={candidateFormVacancyId}
+        />
+      )}
 
       {selectedCandidateId && (
         <CandidateDetailDialog
