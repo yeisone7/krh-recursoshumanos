@@ -3847,6 +3847,7 @@ export type Database = {
           rrhh_tipo_convocatoria:
             | Database["public"]["Enums"]["recruitment_type"]
             | null
+          salario_propuesto: number | null
           seleccion_aprobado: boolean | null
           seleccion_aprobador_id: string | null
           seleccion_fecha_aprobacion: string | null
@@ -3855,6 +3856,7 @@ export type Database = {
           seleccion_quien_aprobo: string | null
           solicitante_id: string | null
           solicitante_nombre: string
+          tipo_contrato_solicitado: string | null
           updated_at: string
         }
         Insert: {
@@ -3910,6 +3912,7 @@ export type Database = {
           rrhh_tipo_convocatoria?:
             | Database["public"]["Enums"]["recruitment_type"]
             | null
+          salario_propuesto?: number | null
           seleccion_aprobado?: boolean | null
           seleccion_aprobador_id?: string | null
           seleccion_fecha_aprobacion?: string | null
@@ -3918,6 +3921,7 @@ export type Database = {
           seleccion_quien_aprobo?: string | null
           solicitante_id?: string | null
           solicitante_nombre: string
+          tipo_contrato_solicitado?: string | null
           updated_at?: string
         }
         Update: {
@@ -3973,6 +3977,7 @@ export type Database = {
           rrhh_tipo_convocatoria?:
             | Database["public"]["Enums"]["recruitment_type"]
             | null
+          salario_propuesto?: number | null
           seleccion_aprobado?: boolean | null
           seleccion_aprobador_id?: string | null
           seleccion_fecha_aprobacion?: string | null
@@ -3981,6 +3986,7 @@ export type Database = {
           seleccion_quien_aprobo?: string | null
           solicitante_id?: string | null
           solicitante_nombre?: string
+          tipo_contrato_solicitado?: string | null
           updated_at?: string
         }
         Relationships: [
