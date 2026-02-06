@@ -421,6 +421,7 @@ export default function Seleccion() {
                                     size="sm"
                                     variant="ghost"
                                     title="Nuevo Candidato"
+                                    className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setCandidateFormVacancyId(vacancy.id);
@@ -433,6 +434,7 @@ export default function Seleccion() {
                                     size="sm"
                                     variant="ghost"
                                     title="Ver Detalle"
+                                    className="bg-primary/10 hover:bg-primary/20 text-primary"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       openVacancyDetail(vacancy.id);
