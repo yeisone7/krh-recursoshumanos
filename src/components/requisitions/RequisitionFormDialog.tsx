@@ -44,6 +44,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useContractTypes } from '@/hooks/useContractTypes';
 import { useCreateRequisition, useUpdateRequisition, PersonnelRequisition } from '@/hooks/useRequisitions';
 import {
   requisitionFormSchema,
@@ -70,6 +71,7 @@ export function RequisitionFormDialog({
   const { data: positions = [] } = usePositions();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: employees = [] } = useEmployees();
+  const { data: contractTypes = [] } = useContractTypes();
   
   // Fetch user profile to get full name
   const { data: userProfile } = useQuery({
@@ -119,6 +121,8 @@ export function RequisitionFormDialog({
         requiere_herramienta_trabajo: requisition.requiere_herramienta_trabajo || false,
         horario_trabajo: requisition.horario_trabajo || undefined,
         dia_descanso_obligatorio: requisition.dia_descanso_obligatorio as DayOfWeek | undefined,
+        salario_propuesto: requisition.salario_propuesto || undefined,
+        tipo_contrato_solicitado: requisition.tipo_contrato_solicitado || undefined,
         motivo_solicitud: requisition.motivo_solicitud as RequisitionReason,
         observaciones_motivo_solicitud: requisition.observaciones_motivo_solicitud || undefined,
         solicitante_nombre: requisition.solicitante_nombre,
@@ -149,6 +153,8 @@ export function RequisitionFormDialog({
       requiere_herramienta_trabajo: data.requiere_herramienta_trabajo,
       horario_trabajo: data.horario_trabajo || null,
       dia_descanso_obligatorio: data.dia_descanso_obligatorio || null,
+      salario_propuesto: data.salario_propuesto || null,
+      tipo_contrato_solicitado: data.tipo_contrato_solicitado || null,
       motivo_solicitud: data.motivo_solicitud,
       observaciones_motivo_solicitud: data.observaciones_motivo_solicitud || null,
       solicitante_nombre: data.solicitante_nombre,
@@ -469,6 +475,57 @@ export function RequisitionFormDialog({
                   </FormItem>
                 )}
               />
+
+              {/* Salary and Contract Type - New fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="salario_propuesto"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Salario Propuesto</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="Ej: 2000000"
+                          {...field}
+                          value={field.value || ''}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="tipo_contrato_solicitado"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Contrato Sugerido</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background">
+                          {contractTypes
+                            .filter((ct) => ct.is_active)
+                            .map((ct) => (
+                              <SelectItem key={ct.id} value={ct.display_name}>
+                                {ct.display_name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             {/* Motivo de la solicitud */}

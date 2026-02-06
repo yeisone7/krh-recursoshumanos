@@ -17,6 +17,9 @@ export interface PersonnelRequisition {
   requiere_herramienta_trabajo: boolean;
   horario_trabajo: string | null;
   dia_descanso_obligatorio: string | null;
+  // New fields for salary and contract type
+  salario_propuesto: number | null;
+  tipo_contrato_solicitado: string | null;
   motivo_solicitud: string;
   observaciones_motivo_solicitud: string | null;
   solicitante_id: string | null;
