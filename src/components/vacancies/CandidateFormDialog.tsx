@@ -287,7 +287,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                       control={form.control}
                       name="gender"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="flex flex-col">
                           <FormLabel>Género</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
