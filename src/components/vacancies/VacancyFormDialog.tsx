@@ -53,6 +53,7 @@ import {
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateVacancy } from '@/hooks/useVacancies';
 import { useApprovedRequisitions } from '@/hooks/useRequisitions';
+import { useAreas } from '@/hooks/useSystemConfig';
 
 interface VacancyFormDialogProps {
   open: boolean;
@@ -77,6 +78,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
   const [activeTab, setActiveTab] = useState('requisition');
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: approvedRequisitions = [], isLoading: loadingRequisitions } = useApprovedRequisitions();
+  const { data: areas = [] } = useAreas();
   const createVacancy = useCreateVacancy();
 
   const form = useForm<VacancyFormData>({
@@ -296,9 +298,20 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Área/Departamento</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ej: Recursos Humanos" {...field} />
-                          </FormControl>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar área" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              {areas.filter(a => a.is_active).map((area) => (
+                                <SelectItem key={area.id} value={area.name}>
+                                  {area.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
