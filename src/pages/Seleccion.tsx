@@ -416,31 +416,35 @@ export default function Seleccion() {
                                 </Badge>
                               </TableCell>
                               <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-1">
+                                <div className="flex items-center justify-end gap-1" role="group" aria-label="Acciones de vacante">
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    title="Nuevo Candidato"
-                                    className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600"
+                                    className="bg-success/10 hover:bg-success/20 text-success"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setCandidateFormVacancyId(vacancy.id);
                                       setShowCandidateForm(true);
                                     }}
+                                    aria-label={`Agregar candidato a vacante ${vacancy.position_title}`}
+                                    data-testid={`add-candidate-${vacancy.id}`}
                                   >
                                     <UserPlus className="w-4 h-4" />
+                                    <span className="sr-only">Nuevo Candidato</span>
                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    title="Ver Detalle"
                                     className="bg-primary/10 hover:bg-primary/20 text-primary"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       openVacancyDetail(vacancy.id);
                                     }}
+                                    aria-label={`Ver detalle de vacante ${vacancy.position_title}`}
+                                    data-testid={`view-vacancy-${vacancy.id}`}
                                   >
                                     <Eye className="w-4 h-4" />
+                                    <span className="sr-only">Ver Detalle</span>
                                   </Button>
                                 </div>
                               </TableCell>
