@@ -20,6 +20,8 @@ import {
   Building2,
   User,
   ExternalLink,
+  LayoutGrid,
+  LayoutList,
 } from 'lucide-react';
 import {
   Dialog,
@@ -33,6 +35,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +43,8 @@ import { useNavigate } from 'react-router-dom';
 import { useVacancy, useUpdateVacancy } from '@/hooks/useVacancies';
 import { useUpdateCandidate, useConvertToEmployee } from '@/hooks/useCandidates';
 import { CandidateFormDialog } from './CandidateFormDialog';
+import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
+import { CandidateKanban } from '@/components/selection/CandidateKanban';
 import {
   VacancyStatus,
   vacancyStatusLabels,
@@ -67,13 +72,21 @@ const statusIcons: Record<VacancyStatus, React.ElementType> = {
 
 export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDetailDialogProps) {
   const [activeTab, setActiveTab] = useState('info');
+  const [candidateViewMode, setCandidateViewMode] = useState<'table' | 'kanban'>('kanban');
   const [showCandidateForm, setShowCandidateForm] = useState(false);
+  const [showCandidateDetail, setShowCandidateDetail] = useState(false);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const navigate = useNavigate();
   
   const { data: vacancy, isLoading } = useVacancy(vacancyId);
   const updateVacancy = useUpdateVacancy();
   const updateCandidate = useUpdateCandidate();
   const convertToEmployee = useConvertToEmployee();
+  
+  const openCandidateDetail = (candidateId: string) => {
+    setSelectedCandidateId(candidateId);
+    setShowCandidateDetail(true);
+  };
 
   if (isLoading || !vacancy) {
     return (
@@ -366,14 +379,34 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
 
               {/* Candidates Tab */}
               <TabsContent value="candidates" className="p-6 mt-0 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-md bg-violet-light flex items-center justify-center">
+                      <Users className="w-4 h-4 text-violet" />
+                    </div>
                     {candidates.length} Candidato{candidates.length !== 1 && 's'}
                   </h3>
-                  <Button size="sm" onClick={() => setShowCandidateForm(true)}>
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Agregar Candidato
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    <ToggleGroup
+                      type="single"
+                      value={candidateViewMode}
+                      onValueChange={(v) => v && setCandidateViewMode(v as 'table' | 'kanban')}
+                      className="border rounded-lg p-1"
+                    >
+                      <ToggleGroupItem value="kanban" aria-label="Vista Kanban" className="gap-1.5 text-xs px-2 h-7">
+                        <LayoutGrid className="w-3.5 h-3.5" />
+                        Kanban
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="table" aria-label="Vista Lista" className="gap-1.5 text-xs px-2 h-7">
+                        <LayoutList className="w-3.5 h-3.5" />
+                        Lista
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                    <Button size="sm" onClick={() => setShowCandidateForm(true)}>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Agregar Candidato
+                    </Button>
+                  </div>
                 </div>
 
                 {candidates.length === 0 ? (
@@ -390,6 +423,14 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                       Agregar primer candidato
                     </Button>
                   </div>
+                ) : candidateViewMode === 'kanban' ? (
+                  <CandidateKanban
+                    candidates={candidates.map((c: any) => ({
+                      ...c,
+                      vacancies: { position_title: vacancy.position_title, operation_centers: (vacancy as any).operation_centers }
+                    }))}
+                    onCandidateClick={openCandidateDetail}
+                  />
                 ) : (
                   <div className="space-y-3">
                     {candidates.map((candidate: any) => {
@@ -399,11 +440,12 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                       return (
                         <div
                           key={candidate.id}
-                          className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                          className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => openCandidateDetail(candidate.id)}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <span className="font-medium text-primary">
+                            <div className="w-10 h-10 rounded-full bg-violet-light flex items-center justify-center">
+                              <span className="font-medium text-violet">
                                 {candidate.first_name[0]}{candidate.last_name[0]}
                               </span>
                             </div>
@@ -432,7 +474,10 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               <Button
                                 size="sm"
                                 variant="default"
-                                onClick={() => handleConvertToEmployee(candidate.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleConvertToEmployee(candidate.id);
+                                }}
                                 disabled={convertToEmployee.isPending}
                               >
                                 <CheckCircle className="w-4 h-4 mr-1" />
@@ -447,7 +492,10 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                     size="sm"
                                     variant="outline"
                                     className="text-success hover:text-success"
-                                    onClick={() => handleCandidateStatusChange(candidate.id, 'selected')}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCandidateStatusChange(candidate.id, 'selected');
+                                    }}
                                   >
                                     <CheckCircle className="w-4 h-4" />
                                   </Button>
@@ -456,7 +504,10 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                   size="sm"
                                   variant="outline"
                                   className="text-destructive hover:text-destructive"
-                                  onClick={() => handleCandidateStatusChange(candidate.id, 'not_selected')}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCandidateStatusChange(candidate.id, 'not_selected');
+                                  }}
                                 >
                                   <XCircle className="w-4 h-4" />
                                 </Button>
@@ -511,6 +562,20 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
         onOpenChange={setShowCandidateForm}
         vacancyId={vacancyId}
       />
+
+      {/* Candidate Detail Dialog */}
+      {selectedCandidateId && (
+        <CandidateDetailDialog
+          open={showCandidateDetail}
+          onOpenChange={(open) => {
+            setShowCandidateDetail(open);
+            if (!open) {
+              setTimeout(() => setSelectedCandidateId(null), 200);
+            }
+          }}
+          candidateId={selectedCandidateId}
+        />
+      )}
     </>
   );
 }
