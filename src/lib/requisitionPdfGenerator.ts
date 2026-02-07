@@ -326,14 +326,21 @@ export async function generateRequisitionPDF(
     doc.setFillColor(...circleColor);
     doc.circle(xCenter, y + 10, 5, 'F');
     
-    // Check/X icon
-    doc.setTextColor(...WHITE);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
+    // Check/X icon - draw manually since Unicode doesn't render well in PDF
+    doc.setDrawColor(...WHITE);
+    doc.setLineWidth(0.8);
     if (step.approved === true) {
-      doc.text('✓', xCenter, y + 12, { align: 'center' });
+      // Draw checkmark manually
+      const cx = xCenter;
+      const cy = y + 10;
+      doc.line(cx - 2.5, cy, cx - 0.5, cy + 2);
+      doc.line(cx - 0.5, cy + 2, cx + 2.5, cy - 2);
     } else if (step.approved === false) {
-      doc.text('✗', xCenter, y + 12, { align: 'center' });
+      // Draw X manually
+      const cx = xCenter;
+      const cy = y + 10;
+      doc.line(cx - 2, cy - 2, cx + 2, cy + 2);
+      doc.line(cx + 2, cy - 2, cx - 2, cy + 2);
     }
 
     // Title
@@ -381,6 +388,17 @@ export async function generateRequisitionPDF(
     ['Tipo de Contrato', requisition.juridico_tipo_contrato],
     ['Duración', requisition.juridico_duracion],
     ['Observaciones', requisition.juridico_observaciones],
+  ], y, margin, contentWidth, pageHeight);
+
+  // Operaciones Details
+  y = addApprovalDetailSection(doc, 'DEFINICIONES DE OPERACIONES', [
+    ['Salario Asignado', formatCurrency(requisition.rrhh_asignacion_salarial)],
+    ['Observaciones', requisition.operaciones_observaciones],
+  ], y, margin, contentWidth, pageHeight);
+
+  // Gerencia Details
+  y = addApprovalDetailSection(doc, 'DEFINICIONES DE GERENCIA', [
+    ['Observaciones', requisition.gerencia_observaciones],
   ], y, margin, contentWidth, pageHeight);
 
   // Selección Details
