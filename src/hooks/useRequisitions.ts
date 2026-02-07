@@ -336,6 +336,7 @@ export function useSubmitRequisition() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['requisitions'] });
       queryClient.invalidateQueries({ queryKey: ['requisition', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['requisition-vacancies', data.id] });
       toast({
         title: 'Requisición enviada',
         description: 'La requisición ha sido enviada para aprobación.',
