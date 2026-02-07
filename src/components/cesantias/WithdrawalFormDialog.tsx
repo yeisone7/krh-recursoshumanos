@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -131,6 +131,26 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
   const activeEmployees = employees.filter(e => e.is_active);
   const status = form.watch('status');
 
+  const employeeOptions = activeEmployees.map((emp) => ({
+    value: emp.id,
+    label: `${emp.first_name} ${emp.last_name}`,
+  }));
+
+  const reasonOptions = Object.entries(withdrawalReasonLabels).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
+  const fundOptions = FUNDS.map((fund) => ({
+    value: fund,
+    label: fund,
+  }));
+
+  const statusOptions = Object.entries(withdrawalStatusLabels).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -149,20 +169,16 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Empleado *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!!withdrawal}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar empleado" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        {activeEmployees.map((emp) => (
-                          <SelectItem key={emp.id} value={emp.id}>
-                            {emp.first_name} {emp.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        options={employeeOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Seleccionar empleado"
+                        searchPlaceholder="Buscar empleado..."
+                        disabled={!!withdrawal}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -190,18 +206,16 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Motivo del Retiro *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!!withdrawal}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        {Object.entries(withdrawalReasonLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        options={reasonOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Seleccionar motivo"
+                        searchPlaceholder="Buscar motivo..."
+                        disabled={!!withdrawal}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -213,18 +227,16 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Fondo de Cesantías *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!!withdrawal}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar fondo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        {FUNDS.map((fund) => (
-                          <SelectItem key={fund} value={fund}>{fund}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        options={fundOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Seleccionar fondo"
+                        searchPlaceholder="Buscar fondo..."
+                        disabled={!!withdrawal}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -312,18 +324,15 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estado *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        {Object.entries(withdrawalStatusLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        options={statusOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Seleccionar estado"
+                        searchPlaceholder="Buscar estado..."
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

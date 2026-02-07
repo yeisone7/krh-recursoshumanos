@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Edit3, Plus, Clock, CheckCircle, XCircle, FileEdit } from 'lucide-react';
@@ -91,6 +91,11 @@ export function PortalChangeRequests({ changeRequests, onSubmit, isSubmitting }:
   const pendingRequests = changeRequests.filter(r => r.status === 'pendiente');
   const processedRequests = changeRequests.filter(r => r.status !== 'pendiente');
 
+  const requestTypeOptions = Object.entries(requestTypeLabels).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
   return (
     <div className="space-y-6">
       {/* New Request Card */}
@@ -128,20 +133,18 @@ export function PortalChangeRequests({ changeRequests, onSubmit, isSubmitting }:
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Categoría</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleccione categoría" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {Object.entries(requestTypeLabels).map(([value, label]) => (
-                                <SelectItem key={value} value={value}>
-                                  {label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <SearchableSelect
+                              options={requestTypeOptions}
+                              value={field.value}
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                form.setValue('field_name', '');
+                              }}
+                              placeholder="Seleccione categoría"
+                              searchPlaceholder="Buscar categoría..."
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -153,24 +156,16 @@ export function PortalChangeRequests({ changeRequests, onSubmit, isSubmitting }:
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Campo a Modificar</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            value={field.value}
-                            disabled={!selectedType}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleccione campo" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {availableFields.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <SearchableSelect
+                              options={availableFields}
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              placeholder="Seleccione campo"
+                              searchPlaceholder="Buscar campo..."
+                              disabled={!selectedType}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}

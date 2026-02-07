@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
@@ -153,6 +153,11 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
 
   const activeEmployees = employees.filter(e => e.is_active);
 
+  const employeeOptions = activeEmployees.map((emp) => ({
+    value: emp.id,
+    label: `${emp.first_name} ${emp.last_name}`,
+  }));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -171,20 +176,16 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Empleado *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!!interest}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar empleado" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        {activeEmployees.map((emp) => (
-                          <SelectItem key={emp.id} value={emp.id}>
-                            {emp.first_name} {emp.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        options={employeeOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Seleccionar empleado"
+                        searchPlaceholder="Buscar empleado..."
+                        disabled={!!interest}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

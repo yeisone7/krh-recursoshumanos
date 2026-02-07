@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -45,6 +45,13 @@ const FUNDS = [
   'Colfondos',
   'Skandia',
   'FNA',
+];
+
+const STATUS_OPTIONS = [
+  { value: 'pendiente', label: 'Pendiente' },
+  { value: 'calculado', label: 'Calculado' },
+  { value: 'depositado', label: 'Depositado' },
+  { value: 'extemporaneo', label: 'Extemporáneo' },
 ];
 
 export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDialogProps) {
@@ -191,6 +198,16 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
 
   const activeEmployees = employees.filter(e => e.is_active);
 
+  const employeeOptions = activeEmployees.map((emp) => ({
+    value: emp.id,
+    label: `${emp.first_name} ${emp.last_name}`,
+  }));
+
+  const fundOptions = FUNDS.map((fund) => ({
+    value: fund,
+    label: fund,
+  }));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -209,20 +226,16 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Empleado *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={!!deposit}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar empleado" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        {activeEmployees.map((emp) => (
-                          <SelectItem key={emp.id} value={emp.id}>
-                            {emp.first_name} {emp.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        options={employeeOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Seleccionar empleado"
+                        searchPlaceholder="Buscar empleado..."
+                        disabled={!!deposit}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -324,18 +337,15 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Fondo de Cesantías *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar fondo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        {FUNDS.map((fund) => (
-                          <SelectItem key={fund} value={fund}>{fund}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        options={fundOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Seleccionar fondo"
+                        searchPlaceholder="Buscar fondo..."
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -391,19 +401,15 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estado *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        <SelectItem value="pendiente">Pendiente</SelectItem>
-                        <SelectItem value="calculado">Calculado</SelectItem>
-                        <SelectItem value="depositado">Depositado</SelectItem>
-                        <SelectItem value="extemporaneo">Extemporáneo</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <SearchableSelect
+                        options={STATUS_OPTIONS}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Seleccionar estado"
+                        searchPlaceholder="Buscar estado..."
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
