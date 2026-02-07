@@ -210,11 +210,11 @@ export function RequisitionApprovalDialog({
               <div className="space-y-0.5">
                 <Label className="text-base">Salario Aprobado</Label>
                 <p className="text-sm text-muted-foreground">
-                  ¿Se aprueba el salario propuesto?
+                  ¿Se aprueba el salario asignado por RRHH?
                 </p>
-                {requisition.salario_propuesto && (
+                {requisition.rrhh_asignacion_salarial && (
                   <p className="text-sm font-semibold text-primary mt-1">
-                    ${requisition.salario_propuesto.toLocaleString('es-CO')}
+                    ${requisition.rrhh_asignacion_salarial.toLocaleString('es-CO')}
                   </p>
                 )}
               </div>
