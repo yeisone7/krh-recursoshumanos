@@ -67,7 +67,7 @@ export default function Empleado360() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <ScrollArea className="w-full whitespace-nowrap rounded-lg border bg-card shadow-sm">
-          <TabsList className="inline-flex w-max gap-1 bg-transparent p-1.5">
+          <TabsList className="inline-flex w-max gap-1 bg-transparent p-1.5 pb-3">
             <TabsTrigger value="profile" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
               Perfil
             </TabsTrigger>
