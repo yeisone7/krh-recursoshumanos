@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -22,11 +23,16 @@ import {
   FileText,
   DollarSign,
   FileCheck,
+  FileDown,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import { useRequisitionWithVacancies, useSubmitRequisition } from '@/hooks/useRequisitions';
+import { useAuth } from '@/contexts/AuthContext';
 import { RequisitionTimeline } from './RequisitionTimeline';
+import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
+import { useToast } from '@/hooks/use-toast';
 import {
   requisitionStatusLabels,
   requisitionStatusConfig,
@@ -53,13 +59,39 @@ export function RequisitionDetailDialog({
   onCreateVacancy,
 }: RequisitionDetailDialogProps) {
   const { data: requisition, isLoading } = useRequisitionWithVacancies(requisitionId || undefined);
+  const { companies, currentCompanyId } = useAuth();
+  const currentCompany = companies.find(c => c.id === currentCompanyId);
   const submitRequisition = useSubmitRequisition();
+  const { toast } = useToast();
+  const [isExporting, setIsExporting] = useState(false);
 
   if (!requisitionId) return null;
 
   const handleSubmit = async () => {
     if (requisition) {
       await submitRequisition.mutateAsync(requisition.id);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!requisition) return;
+    
+    setIsExporting(true);
+    try {
+      await exportRequisitionToPDF(requisition, currentCompany?.name || 'Empresa');
+      toast({
+        title: 'PDF generado',
+        description: 'La requisición se ha exportado correctamente.',
+      });
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo generar el PDF.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -248,25 +280,40 @@ export function RequisitionDetailDialog({
 
         {/* Actions */}
         {requisition && (
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            {canEdit && onEdit && (
-              <Button variant="outline" onClick={onEdit}>
-                <Edit className="w-4 h-4 mr-2" />
-                Editar
-              </Button>
-            )}
-            {canSubmit && (
-              <Button onClick={handleSubmit} disabled={submitRequisition.isPending}>
-                <Send className="w-4 h-4 mr-2" />
-                Enviar para Aprobación
-              </Button>
-            )}
-            {canCreateVacancy && onCreateVacancy && (
-              <Button onClick={onCreateVacancy}>
-                <Plus className="w-4 h-4 mr-2" />
-                Crear Vacante
-              </Button>
-            )}
+          <div className="flex justify-between items-center gap-3 pt-4 border-t">
+            <Button 
+              variant="outline" 
+              onClick={handleExportPDF}
+              disabled={isExporting}
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4 mr-2" />
+              )}
+              Exportar PDF
+            </Button>
+            
+            <div className="flex gap-3">
+              {canEdit && onEdit && (
+                <Button variant="outline" onClick={onEdit}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar
+                </Button>
+              )}
+              {canSubmit && (
+                <Button onClick={handleSubmit} disabled={submitRequisition.isPending}>
+                  <Send className="w-4 h-4 mr-2" />
+                  Enviar para Aprobación
+                </Button>
+              )}
+              {canCreateVacancy && onCreateVacancy && (
+                <Button onClick={onCreateVacancy}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Crear Vacante
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </DialogContent>
