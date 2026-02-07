@@ -378,8 +378,8 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsContent>
 
               {/* Candidates Tab */}
-              <TabsContent value="candidates" className="mt-0">
-                <div className="sticky top-0 z-10 -mx-6 px-6 py-4 bg-background/95 backdrop-blur border-b border-border">
+              <TabsContent value="candidates" className="mt-0 px-6">
+                <div className="sticky top-0 z-20 -mx-6 px-6 py-4 bg-background/95 backdrop-blur border-b border-border">
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
                       <div className="w-7 h-7 rounded-md bg-violet-light flex items-center justify-center">
@@ -411,7 +411,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   </div>
                 </div>
 
-                <div className="p-6 pt-4 space-y-4">
+                <div className="pt-4 pb-6 space-y-4"> 
                   {candidates.length === 0 ? (
                     <div className="text-center py-8 bg-muted/30 rounded-lg">
                       <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
