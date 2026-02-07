@@ -75,15 +75,15 @@ export const requisitionStatusLabels: Record<RequisitionStatus, string> = {
   cerrada: 'Cerrada',
 };
 
-// Status styling
+// Status styling - Multi-tone palette
 export const requisitionStatusConfig: Record<RequisitionStatus, { bg: string; text: string; border: string }> = {
   borrador: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },
   enviada: { bg: 'bg-info/10', text: 'text-info', border: 'border-info/20' },
-  en_operaciones: { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20' },
-  en_rrhh: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/20' },
-  en_juridico: { bg: 'bg-violet-500/10', text: 'text-violet-600', border: 'border-violet-500/20' },
-  en_seleccion: { bg: 'bg-info/10', text: 'text-info', border: 'border-info/20' },
-  en_gerencia: { bg: 'bg-purple-500/10', text: 'text-purple-600', border: 'border-purple-500/20' },
+  en_rrhh: { bg: 'bg-rose/10', text: 'text-rose', border: 'border-rose/20' },
+  en_juridico: { bg: 'bg-violet/10', text: 'text-violet', border: 'border-violet/20' },
+  en_operaciones: { bg: 'bg-tertiary/10', text: 'text-tertiary', border: 'border-tertiary/20' },
+  en_gerencia: { bg: 'bg-secondary/10', text: 'text-secondary', border: 'border-secondary/20' },
+  en_seleccion: { bg: 'bg-indigo/10', text: 'text-indigo', border: 'border-indigo/20' },
   aprobada: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/20' },
   rechazada: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/20' },
   cerrada: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },

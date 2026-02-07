@@ -124,19 +124,19 @@ export default function Requisiciones() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10"><FileText className="w-5 h-5 text-primary" /></div>
+        <Card className="border-l-4 border-l-secondary"><CardContent className="p-4 flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-secondary/10"><FileText className="w-5 h-5 text-secondary" /></div>
           <div><p className="text-2xl font-bold">{stats.total}</p><p className="text-xs text-muted-foreground">Total</p></div>
         </CardContent></Card>
         <Card><CardContent className="p-4 flex items-center gap-3">
           <div className="p-2 rounded-lg bg-muted"><Clock className="w-5 h-5 text-muted-foreground" /></div>
           <div><p className="text-2xl font-bold">{stats.borrador}</p><p className="text-xs text-muted-foreground">Borrador</p></div>
         </CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-warning/10"><Send className="w-5 h-5 text-warning" /></div>
+        <Card className="border-l-4 border-l-tertiary"><CardContent className="p-4 flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-tertiary/10"><Send className="w-5 h-5 text-tertiary" /></div>
           <div><p className="text-2xl font-bold">{stats.enProceso}</p><p className="text-xs text-muted-foreground">En Proceso</p></div>
         </CardContent></Card>
-        <Card className="bg-gradient-to-br from-success/5 to-success/10 border-success/20"><CardContent className="p-4 flex items-center gap-3">
+        <Card className="bg-gradient-to-br from-success/5 to-success/10 border-success/20 border-l-4 border-l-success"><CardContent className="p-4 flex items-center gap-3">
           <div className="p-2 rounded-lg bg-success/10"><CheckCircle className="w-5 h-5 text-success" /></div>
           <div><p className="text-2xl font-bold">{stats.aprobadas}</p><p className="text-xs text-muted-foreground">Aprobadas</p></div>
         </CardContent></Card>
