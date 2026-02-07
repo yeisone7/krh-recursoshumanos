@@ -228,7 +228,7 @@ export function CandidateKanban({ candidates, onCandidateClick }: CandidateKanba
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-2">
-                <ScrollArea className="h-[calc(100vh-380px)] min-h-[300px]">
+                <ScrollArea className="h-[280px]">
                   <div className="space-y-2 pr-2">
                     <AnimatePresence mode="popLayout">
                       {columnCandidates.length === 0 ? (
