@@ -31,7 +31,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -198,7 +197,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsList>
             </div>
 
-            <ScrollArea className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto">
               {/* Info Tab */}
               <TabsContent value="info" className="p-6 mt-0 space-y-6">
                 {/* Requisition Info Card */}
@@ -378,40 +377,38 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsContent>
 
               {/* Candidates Tab */}
-              <TabsContent value="candidates" className="mt-0 px-6">
-                <div className="sticky top-0 z-20 -mx-6 px-6 py-4 bg-background/95 backdrop-blur border-b border-border">
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <h3 className="font-semibold text-foreground flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-md bg-violet-light flex items-center justify-center">
-                        <Users className="w-4 h-4 text-violet" />
-                      </div>
-                      {candidates.length} Candidato{candidates.length !== 1 && 's'}
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      <ToggleGroup
-                        type="single"
-                        value={candidateViewMode}
-                        onValueChange={(v) => v && setCandidateViewMode(v as 'table' | 'kanban')}
-                        className="border rounded-lg p-1"
-                      >
-                        <ToggleGroupItem value="kanban" aria-label="Vista Kanban" className="gap-1.5 text-xs px-2 h-7">
-                          <LayoutGrid className="w-3.5 h-3.5" />
-                          Kanban
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value="table" aria-label="Vista Lista" className="gap-1.5 text-xs px-2 h-7">
-                          <LayoutList className="w-3.5 h-3.5" />
-                          Lista
-                        </ToggleGroupItem>
-                      </ToggleGroup>
-                      <Button size="sm" onClick={() => setShowCandidateForm(true)}>
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Agregar Candidato
-                      </Button>
+              <TabsContent value="candidates" className="mt-0 p-6 space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-md bg-violet-light flex items-center justify-center">
+                      <Users className="w-4 h-4 text-violet" />
                     </div>
+                    {candidates.length} Candidato{candidates.length !== 1 && 's'}
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <ToggleGroup
+                      type="single"
+                      value={candidateViewMode}
+                      onValueChange={(v) => v && setCandidateViewMode(v as 'table' | 'kanban')}
+                      className="border rounded-lg p-1"
+                    >
+                      <ToggleGroupItem value="kanban" aria-label="Vista Kanban" className="gap-1.5 text-xs px-2 h-7">
+                        <LayoutGrid className="w-3.5 h-3.5" />
+                        Kanban
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="table" aria-label="Vista Lista" className="gap-1.5 text-xs px-2 h-7">
+                        <LayoutList className="w-3.5 h-3.5" />
+                        Lista
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                    <Button size="sm" onClick={() => setShowCandidateForm(true)}>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Agregar Candidato
+                    </Button>
                   </div>
                 </div>
 
-                <div className="pt-4 pb-6 space-y-4"> 
+                <div className="space-y-4">
                   {candidates.length === 0 ? (
                     <div className="text-center py-8 bg-muted/30 rounded-lg">
                       <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
@@ -428,7 +425,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     </div>
                   ) : candidateViewMode === 'kanban' ? (
                     <div
-                      className="overflow-x-auto -mx-6 px-6 pb-4"
+                      className="overflow-x-auto overflow-y-hidden pb-4 -mx-6 px-6"
                       onWheel={(e) => {
                         // Permite desplazamiento horizontal con rueda/trackpad
                         if (e.deltaY && !e.shiftKey) {
@@ -534,8 +531,9 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   )}
                 </div>
               </TabsContent>
-            </ScrollArea>
+            </div>
           </Tabs>
+
 
           {/* Footer Actions */}
           <div className="flex-shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-wrap items-center justify-between gap-3">

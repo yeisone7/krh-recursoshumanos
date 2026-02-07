@@ -228,7 +228,7 @@ export function CandidateKanban({ candidates, onCandidateClick }: CandidateKanba
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-2">
-                <ScrollArea className="h-[280px]">
+                <ScrollArea className="h-[220px]">
                   <div className="space-y-2 pr-2">
                     <AnimatePresence mode="popLayout">
                       {columnCandidates.length === 0 ? (
@@ -271,10 +271,10 @@ interface CandidateCardProps {
   onClick: () => void;
 }
 
-function CandidateCard({ 
-  candidate, 
-  isDragging, 
-  onDragStart, 
+function CandidateCard({
+  candidate,
+  isDragging,
+  onDragStart,
   onDragEnd,
   onClick,
 }: CandidateCardProps) {
@@ -292,7 +292,7 @@ function CandidateCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       className={cn(
-        'p-3 rounded-lg border bg-card shadow-sm cursor-grab active:cursor-grabbing transition-all',
+        'p-2.5 rounded-lg border bg-card shadow-sm cursor-grab active:cursor-grabbing transition-all',
         'hover:shadow-md hover:border-primary/30',
         isDragging && 'shadow-lg border-primary'
       )}
@@ -304,7 +304,7 @@ function CandidateCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-medium text-primary">
                   {candidate.first_name[0]}{candidate.last_name[0]}
                 </span>
@@ -330,8 +330,8 @@ function CandidateCard({
               <Eye className="w-3.5 h-3.5" />
             </Button>
           </div>
-          
-          <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+
+          <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {format(new Date(candidate.application_date), 'dd MMM', { locale: es })}
@@ -353,3 +353,4 @@ function CandidateCard({
     </motion.div>
   );
 }
+
