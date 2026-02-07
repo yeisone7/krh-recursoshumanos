@@ -55,7 +55,7 @@ export default function Dashboard() {
                   value={kpis?.expiringContractsCount || 0}
                   subtitle="Próximos 30 días"
                   icon={<FileText className="w-6 h-6" />}
-                  variant="warning"
+                  variant="tertiary"
                 />
                 <KPICard
                   title="Alertas Críticas"
@@ -69,7 +69,7 @@ export default function Dashboard() {
                   value={kpis?.activeCandidatesCount || 0}
                   subtitle={`${kpis?.candidatesInFinalStage || 0} en proceso final`}
                   icon={<Briefcase className="w-6 h-6" />}
-                  variant="accent"
+                  variant="secondary"
                 />
               </>
             )}
@@ -89,9 +89,9 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.15 }}
-                  className="card-elevated p-5 flex items-center gap-4"
+                  className="card-elevated card-accent-info p-5 flex items-center gap-4"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-info-light flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center">
                     <Clock className="w-6 h-6 text-info" />
                   </div>
                   <div>
@@ -103,10 +103,10 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.2 }}
-                  className="card-elevated p-5 flex items-center gap-4"
+                  className="card-elevated card-accent-primary p-5 flex items-center gap-4"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <HeartPulse className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 rounded-xl bg-rose/10 flex items-center justify-center">
+                    <HeartPulse className="w-6 h-6 text-rose" />
                   </div>
                   <div>
                     <p className="text-2xl font-display font-bold text-foreground">{kpis?.activeIncapacitiesCount || 0}</p>
@@ -117,10 +117,10 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.25 }}
-                  className="card-elevated p-5 flex items-center gap-4"
+                  className="card-elevated card-accent-tertiary p-5 flex items-center gap-4"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                    <Award className="w-6 h-6 text-warning" />
+                  <div className="w-12 h-12 rounded-xl bg-violet/10 flex items-center justify-center">
+                    <Award className="w-6 h-6 text-violet" />
                   </div>
                   <div>
                     <p className="text-2xl font-display font-bold text-foreground">{kpis?.expiringCertificationsCount || 0}</p>
@@ -131,7 +131,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.3 }}
-                  className="card-elevated p-5 flex items-center gap-4"
+                  className="card-elevated card-accent-destructive p-5 flex items-center gap-4"
                 >
                   <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center">
                     <UserMinus className="w-6 h-6 text-destructive" />
