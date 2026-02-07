@@ -4,7 +4,7 @@ import { useCesantiasReport } from '@/hooks/useReports';
 import { exportToExcel, exportToPDF, ReportData } from '@/lib/reportExporter';
 import { ReportCard } from './ReportCard';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { toast } from 'sonner';
 
 export function CesantiasReport() {
@@ -57,7 +57,10 @@ export function CesantiasReport() {
   const interestsPaid = cesantias?.filter(c => c.intereses_pagados === 'Sí').length || 0;
   
   // Generate year options (last 5 years)
-  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const yearOptions = Array.from({ length: 5 }, (_, i) => ({
+    value: (currentYear - i).toString(),
+    label: (currentYear - i).toString(),
+  }));
   
   return (
     <ReportCard
@@ -71,18 +74,13 @@ export function CesantiasReport() {
     >
       <div className="space-y-2">
         <Label>Año</Label>
-        <Select value={year.toString()} onValueChange={(v) => setYear(parseInt(v))}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {yearOptions.map((y) => (
-              <SelectItem key={y} value={y.toString()}>
-                {y}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          options={yearOptions}
+          value={year.toString()}
+          onValueChange={(v) => setYear(parseInt(v))}
+          placeholder="Seleccionar año"
+          searchPlaceholder="Buscar año..."
+        />
       </div>
       
       {/* Summary */}

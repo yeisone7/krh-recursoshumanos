@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Plus, Edit2, Landmark, Percent, ArrowRightLeft, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { 
@@ -66,6 +66,11 @@ export default function Cesantias() {
     }
   };
 
+  const yearOptions = years.map((year) => ({
+    value: year.toString(),
+    label: year.toString(),
+  }));
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -76,16 +81,14 @@ export default function Cesantias() {
             Gestión y cumplimiento legal de cesantías e intereses
           </p>
         </div>
-        <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-background">
-            {years.map((year) => (
-              <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          options={yearOptions}
+          value={selectedYear.toString()}
+          onValueChange={(v) => setSelectedYear(parseInt(v))}
+          placeholder="Año"
+          searchPlaceholder="Buscar año..."
+          triggerClassName="w-32"
+        />
       </div>
 
       {/* Compliance Summary Cards */}
