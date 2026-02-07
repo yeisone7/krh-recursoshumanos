@@ -212,6 +212,11 @@ export function RequisitionApprovalDialog({
                 <p className="text-sm text-muted-foreground">
                   ¿Se aprueba el salario propuesto?
                 </p>
+                {requisition.salario_propuesto && (
+                  <p className="text-sm font-semibold text-primary mt-1">
+                    ${requisition.salario_propuesto.toLocaleString('es-CO')}
+                  </p>
+                )}
               </div>
               <Switch checked={salarioAprobado} onCheckedChange={setSalarioAprobado} />
             </div>
