@@ -248,10 +248,10 @@ export default function Empleados() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.15 }}
-            className="card-elevated p-4 flex items-center gap-3"
+            className="card-elevated p-4 flex items-center gap-3 border-l-4 border-l-secondary"
           >
-            <div className="w-10 h-10 rounded-lg bg-primary-light flex items-center justify-center flex-shrink-0">
-              <Users className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-lg bg-secondary-light flex items-center justify-center flex-shrink-0">
+              <Users className="w-5 h-5 text-secondary" />
             </div>
             <div>
               <p className="text-2xl font-display font-bold text-foreground">{stats.total}</p>
@@ -262,7 +262,7 @@ export default function Empleados() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
-            className="card-elevated p-4 flex items-center gap-3"
+            className="card-elevated p-4 flex items-center gap-3 border-l-4 border-l-success"
           >
             <div className="w-10 h-10 rounded-lg bg-success-light flex items-center justify-center flex-shrink-0">
               <Users className="w-5 h-5 text-success" />
@@ -276,10 +276,10 @@ export default function Empleados() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.25 }}
-            className="card-elevated p-4 flex items-center gap-3"
+            className="card-elevated p-4 flex items-center gap-3 border-l-4 border-l-rose"
           >
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-              <Users className="w-5 h-5 text-muted-foreground" />
+            <div className="w-10 h-10 rounded-lg bg-rose-light flex items-center justify-center flex-shrink-0">
+              <Users className="w-5 h-5 text-rose" />
             </div>
             <div>
               <p className="text-2xl font-display font-bold text-foreground">{stats.inactive}</p>
@@ -374,18 +374,24 @@ export default function Empleados() {
               </div>
 
               <div className="space-y-2 mb-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Briefcase className="w-4 h-4" />
-                  <span>{employee.areas?.name || 'Sin área'}</span>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-6 h-6 rounded-md bg-secondary-light flex items-center justify-center">
+                    <Briefcase className="w-3.5 h-3.5 text-secondary" />
+                  </div>
+                  <span className="text-foreground">{employee.areas?.name || 'Sin área'}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
-                  <span>{employee.operation_centers?.name || 'Sin centro asignado'}</span>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-6 h-6 rounded-md bg-tertiary-light flex items-center justify-center">
+                    <MapPin className="w-3.5 h-3.5 text-tertiary" />
+                  </div>
+                  <span className="text-foreground">{employee.operation_centers?.name || 'Sin centro asignado'}</span>
                 </div>
                 {employee.work_info?.hire_date && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="w-4 h-4" />
-                    <span>Desde {new Date(employee.work_info.hire_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'short' })}</span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-6 h-6 rounded-md bg-violet-light flex items-center justify-center">
+                      <Calendar className="w-3.5 h-3.5 text-violet" />
+                    </div>
+                    <span className="text-foreground">Desde {new Date(employee.work_info.hire_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'short' })}</span>
                   </div>
                 )}
               </div>
@@ -394,18 +400,18 @@ export default function Empleados() {
                 <Badge variant="outline" className={cn(
                   employee.is_active 
                     ? 'bg-success-light text-success border-success/20'
-                    : 'bg-muted text-muted-foreground border-border'
+                    : 'bg-rose-light text-rose border-rose/20'
                 )}>
                   {employee.is_active ? 'Activo' : 'Inactivo'}
                 </Badge>
                 <div className="flex items-center gap-2">
                   {employee.contact?.email && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 bg-indigo-light text-indigo hover:bg-indigo/20">
                       <Mail className="w-4 h-4" />
                     </Button>
                   )}
                   {employee.contact?.phone && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 bg-teal-light text-teal hover:bg-teal/20">
                       <Phone className="w-4 h-4" />
                     </Button>
                   )}
