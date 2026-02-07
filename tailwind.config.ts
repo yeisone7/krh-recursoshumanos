@@ -37,6 +37,12 @@ export default {
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          light: "hsl(var(--secondary-light))",
+        },
+        tertiary: {
+          DEFAULT: "hsl(var(--tertiary))",
+          foreground: "hsl(var(--tertiary-foreground))",
+          light: "hsl(var(--tertiary-light))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -66,6 +72,27 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
           light: "hsl(var(--info-light))",
+        },
+        // Extended palette
+        violet: {
+          DEFAULT: "hsl(var(--violet))",
+          foreground: "hsl(var(--violet-foreground))",
+          light: "hsl(var(--violet-light))",
+        },
+        indigo: {
+          DEFAULT: "hsl(var(--indigo))",
+          foreground: "hsl(var(--indigo-foreground))",
+          light: "hsl(var(--indigo-light))",
+        },
+        teal: {
+          DEFAULT: "hsl(var(--teal))",
+          foreground: "hsl(var(--teal-foreground))",
+          light: "hsl(var(--teal-light))",
+        },
+        rose: {
+          DEFAULT: "hsl(var(--rose))",
+          foreground: "hsl(var(--rose-foreground))",
+          light: "hsl(var(--rose-light))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
