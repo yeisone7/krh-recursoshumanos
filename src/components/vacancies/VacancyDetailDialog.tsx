@@ -378,149 +378,161 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsContent>
 
               {/* Candidates Tab */}
-              <TabsContent value="candidates" className="p-6 mt-0 space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <h3 className="font-semibold text-foreground flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-md bg-violet-light flex items-center justify-center">
-                      <Users className="w-4 h-4 text-violet" />
+              <TabsContent value="candidates" className="mt-0">
+                <div className="sticky top-0 z-10 -mx-6 px-6 py-4 bg-background/95 backdrop-blur border-b border-border">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <h3 className="font-semibold text-foreground flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-md bg-violet-light flex items-center justify-center">
+                        <Users className="w-4 h-4 text-violet" />
+                      </div>
+                      {candidates.length} Candidato{candidates.length !== 1 && 's'}
+                    </h3>
+                    <div className="flex items-center gap-3">
+                      <ToggleGroup
+                        type="single"
+                        value={candidateViewMode}
+                        onValueChange={(v) => v && setCandidateViewMode(v as 'table' | 'kanban')}
+                        className="border rounded-lg p-1"
+                      >
+                        <ToggleGroupItem value="kanban" aria-label="Vista Kanban" className="gap-1.5 text-xs px-2 h-7">
+                          <LayoutGrid className="w-3.5 h-3.5" />
+                          Kanban
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="table" aria-label="Vista Lista" className="gap-1.5 text-xs px-2 h-7">
+                          <LayoutList className="w-3.5 h-3.5" />
+                          Lista
+                        </ToggleGroupItem>
+                      </ToggleGroup>
+                      <Button size="sm" onClick={() => setShowCandidateForm(true)}>
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Agregar Candidato
+                      </Button>
                     </div>
-                    {candidates.length} Candidato{candidates.length !== 1 && 's'}
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <ToggleGroup
-                      type="single"
-                      value={candidateViewMode}
-                      onValueChange={(v) => v && setCandidateViewMode(v as 'table' | 'kanban')}
-                      className="border rounded-lg p-1"
-                    >
-                      <ToggleGroupItem value="kanban" aria-label="Vista Kanban" className="gap-1.5 text-xs px-2 h-7">
-                        <LayoutGrid className="w-3.5 h-3.5" />
-                        Kanban
-                      </ToggleGroupItem>
-                      <ToggleGroupItem value="table" aria-label="Vista Lista" className="gap-1.5 text-xs px-2 h-7">
-                        <LayoutList className="w-3.5 h-3.5" />
-                        Lista
-                      </ToggleGroupItem>
-                    </ToggleGroup>
-                    <Button size="sm" onClick={() => setShowCandidateForm(true)}>
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Agregar Candidato
-                    </Button>
                   </div>
                 </div>
 
-                {candidates.length === 0 ? (
-                  <div className="text-center py-8 bg-muted/30 rounded-lg">
-                    <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground">No hay candidatos registrados</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-3"
-                      onClick={() => setShowCandidateForm(true)}
+                <div className="p-6 pt-4 space-y-4">
+                  {candidates.length === 0 ? (
+                    <div className="text-center py-8 bg-muted/30 rounded-lg">
+                      <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-muted-foreground">No hay candidatos registrados</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => setShowCandidateForm(true)}
+                      >
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Agregar primer candidato
+                      </Button>
+                    </div>
+                  ) : candidateViewMode === 'kanban' ? (
+                    <div
+                      className="overflow-x-auto -mx-6 px-6 pb-4"
+                      onWheel={(e) => {
+                        // Permite desplazamiento horizontal con rueda/trackpad
+                        if (e.deltaY && !e.shiftKey) {
+                          e.currentTarget.scrollLeft += e.deltaY;
+                        }
+                      }}
                     >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Agregar primer candidato
-                    </Button>
-                  </div>
-                ) : candidateViewMode === 'kanban' ? (
-                  <div className="overflow-x-auto -mx-6 px-6 pb-4">
-                    <CandidateKanban
-                      candidates={candidates.map((c: any) => ({
-                        ...c,
-                        vacancies: { position_title: vacancy.position_title, operation_centers: (vacancy as any).operation_centers }
-                      }))}
-                      onCandidateClick={openCandidateDetail}
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {candidates.map((candidate: any) => {
-                      const candidateStatus = candidate.status as CandidateStatus;
-                      const statusStyle = candidateStatusConfig[candidateStatus];
+                      <CandidateKanban
+                        candidates={candidates.map((c: any) => ({
+                          ...c,
+                          vacancies: { position_title: vacancy.position_title, operation_centers: (vacancy as any).operation_centers },
+                        }))}
+                        onCandidateClick={openCandidateDetail}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {candidates.map((candidate: any) => {
+                        const candidateStatus = candidate.status as CandidateStatus;
+                        const statusStyle = candidateStatusConfig[candidateStatus];
 
-                      return (
-                        <div
-                          key={candidate.id}
-                          className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
-                          onClick={() => openCandidateDetail(candidate.id)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-violet-light flex items-center justify-center">
-                              <span className="font-medium text-violet">
-                                {candidate.first_name[0]}{candidate.last_name[0]}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="font-medium">
-                                {candidate.first_name} {candidate.last_name}
-                              </p>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <span>{candidate.document_number}</span>
-                                {candidate.mobile && (
-                                  <>
-                                    <span>•</span>
-                                    <span>{candidate.mobile}</span>
-                                  </>
-                                )}
+                        return (
+                          <div
+                            key={candidate.id}
+                            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                            onClick={() => openCandidateDetail(candidate.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-violet-light flex items-center justify-center">
+                                <span className="font-medium text-violet">
+                                  {candidate.first_name[0]}{candidate.last_name[0]}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="font-medium">
+                                  {candidate.first_name} {candidate.last_name}
+                                </p>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <span>{candidate.document_number}</span>
+                                  {candidate.mobile && (
+                                    <>
+                                      <span>•</span>
+                                      <span>{candidate.mobile}</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          <div className="flex items-center gap-2">
-                            <Badge className={cn('text-xs', statusStyle.bg, statusStyle.text)}>
-                              {candidateStatusLabels[candidateStatus]}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge className={cn('text-xs', statusStyle.bg, statusStyle.text)}>
+                                {candidateStatusLabels[candidateStatus]}
+                              </Badge>
 
-                            {candidateStatus === 'selected' && (
-                              <Button
-                                size="sm"
-                                variant="default"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleConvertToEmployee(candidate.id);
-                                }}
-                                disabled={convertToEmployee.isPending}
-                              >
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Contratar
-                              </Button>
-                            )}
+                              {candidateStatus === 'selected' && (
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleConvertToEmployee(candidate.id);
+                                  }}
+                                  disabled={convertToEmployee.isPending}
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  Contratar
+                                </Button>
+                              )}
 
-                            {candidateStatus !== 'hired' && candidateStatus !== 'withdrawn' && candidateStatus !== 'not_selected' && (
-                              <div className="flex gap-1">
-                                {candidateStatus !== 'selected' && (
+                              {candidateStatus !== 'hired' && candidateStatus !== 'withdrawn' && candidateStatus !== 'not_selected' && (
+                                <div className="flex gap-1">
+                                  {candidateStatus !== 'selected' && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-success hover:text-success"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCandidateStatusChange(candidate.id, 'selected');
+                                      }}
+                                    >
+                                      <CheckCircle className="w-4 h-4" />
+                                    </Button>
+                                  )}
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="text-success hover:text-success"
+                                    className="text-destructive hover:text-destructive"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleCandidateStatusChange(candidate.id, 'selected');
+                                      handleCandidateStatusChange(candidate.id, 'not_selected');
                                     }}
                                   >
-                                    <CheckCircle className="w-4 h-4" />
+                                    <XCircle className="w-4 h-4" />
                                   </Button>
-                                )}
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-destructive hover:text-destructive"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleCandidateStatusChange(candidate.id, 'not_selected');
-                                  }}
-                                >
-                                  <XCircle className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            )}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </TabsContent>
             </ScrollArea>
           </Tabs>
