@@ -13,8 +13,8 @@ import {
   RecruitmentType,
 } from '@/types/requisition';
 
-// Import logo as base64
-import petrocasinosLogo from '@/assets/petrocasinos-logo-full.png';
+// Import white logo for dark header background
+import petrocasinosLogoWhite from '@/assets/petrocasinos-logo-white.png';
 
 // Helper to format currency
 function formatCurrency(amount: number | null | undefined): string {
@@ -138,11 +138,11 @@ export async function generateRequisitionPDF(
   doc.setFillColor(...ORANGE_PRIMARY);
   doc.rect(0, 35, pageWidth, 2, 'F');
 
-  // Load and add logo
+  // Load and add white logo for dark header
   try {
-    const logoBase64 = await loadImageAsBase64(petrocasinosLogo);
+    const logoBase64 = await loadImageAsBase64(petrocasinosLogoWhite);
     // Logo on the left side of header
-    doc.addImage(logoBase64, 'PNG', margin, y, 70, 18);
+    doc.addImage(logoBase64, 'PNG', margin, y, 60, 16);
   } catch (error) {
     console.error('Error loading logo:', error);
     // Fallback text if logo fails
