@@ -259,11 +259,11 @@ export function useApproveRequisitionStep() {
         [`${step}_fecha_aprobacion`]: new Date().toISOString(),
       };
 
-      // Determine next status
+      // Determine next status (new order: RRHH → Jurídico → Operaciones → Gerencia → Selección)
       const statusMap: Record<string, string> = {
-        operaciones: approved ? 'en_rrhh' : 'rechazada',
         rrhh: approved ? 'en_juridico' : 'rechazada',
-        juridico: approved ? 'en_gerencia' : 'rechazada',
+        juridico: approved ? 'en_operaciones' : 'rechazada',
+        operaciones: approved ? 'en_gerencia' : 'rechazada',
         gerencia: approved ? 'en_seleccion' : 'rechazada',
         seleccion: approved ? 'aprobada' : 'rechazada',
       };
@@ -323,9 +323,10 @@ export function useSubmitRequisition() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // First step is now RRHH
       const { data, error } = await supabase
         .from('personnel_requisitions')
-        .update({ estado_requisicion: 'en_operaciones' } as any)
+        .update({ estado_requisicion: 'en_rrhh' } as any)
         .eq('id', id)
         .select()
         .single();
