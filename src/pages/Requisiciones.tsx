@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   FileText, Plus, Search, Eye, Clock, CheckCircle, XCircle,
-  Building2, Users, Calendar, Send, ArrowRight,
+  Building2, Users, Calendar, Send, ArrowRight, FileDown, Loader2,
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,9 +16,12 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { useRequisitions, PersonnelRequisition } from '@/hooks/useRequisitions';
 import { RequisitionFormDialog, RequisitionDetailDialog, RequisitionApprovalDialog } from '@/components/requisitions';
+import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
 import {
   RequisitionStatus,
   requisitionStatusLabels,
@@ -35,8 +38,33 @@ export default function Requisiciones() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editRequisition, setEditRequisition] = useState<PersonnelRequisition | null>(null);
   const [approvalStep, setApprovalStep] = useState<'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia' | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   const { data: requisitions = [], isLoading } = useRequisitions();
+  const { companies, currentCompanyId } = useAuth();
+  const currentCompany = companies.find(c => c.id === currentCompanyId);
+  const { toast } = useToast();
+
+  const handleExportPDF = async (req: PersonnelRequisition, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExportingId(req.id);
+    try {
+      await exportRequisitionToPDF(req, currentCompany?.name || 'Empresa');
+      toast({
+        title: 'PDF generado',
+        description: 'La requisición se ha exportado correctamente.',
+      });
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo generar el PDF.',
+        variant: 'destructive',
+      });
+    } finally {
+      setExportingId(null);
+    }
+  };
 
   const stats = useMemo(() => ({
     total: requisitions.length,
@@ -235,16 +263,38 @@ export default function Requisiciones() {
                     <TableCell><Badge variant="outline" className={cn(cfg.bg, cfg.text, cfg.border)}>{requisitionStatusLabels[status]}</Badge></TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => openDetail(req.id)}
-                          aria-label={`Ver detalle de requisición ${req.cargo_solicitado}`}
-                          data-testid={`view-requisition-${req.id}`}
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span className="sr-only">Ver detalle</span>
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={(e) => handleExportPDF(req, e)}
+                              disabled={exportingId === req.id}
+                              aria-label={`Exportar requisición ${req.cargo_solicitado} a PDF`}
+                            >
+                              {exportingId === req.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <FileDown className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Exportar PDF</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => openDetail(req.id)}
+                              aria-label={`Ver detalle de requisición ${req.cargo_solicitado}`}
+                              data-testid={`view-requisition-${req.id}`}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Ver detalle</TooltipContent>
+                        </Tooltip>
                         {step && (
                           <Button 
                             size="sm" 
