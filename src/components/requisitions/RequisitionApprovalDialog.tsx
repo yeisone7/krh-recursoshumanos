@@ -73,6 +73,35 @@ export function RequisitionApprovalDialog({
   const [duracion, setDuracion] = useState('');
   const [fechaInicioProceso, setFechaInicioProceso] = useState<Date | undefined>();
 
+  // Validation: check if required fields are filled for the current step
+  const isStepValid = (): boolean => {
+    // Approver name is always required
+    if (!approverName.trim()) return false;
+
+    // If rejecting, no additional fields required
+    if (!approved) return true;
+
+    // Step-specific required fields (excluding observations)
+    switch (step) {
+      case 'operaciones':
+        // salarioAprobado is a boolean, always has a value
+        return true;
+      case 'rrhh':
+        return !!(asignacionSalarial && asignacionSalarial > 0 && tipoConvocatoria);
+      case 'juridico':
+        return !!(tipoContrato && duracion.trim());
+      case 'seleccion':
+        return !!fechaInicioProceso;
+      case 'gerencia':
+        // gerencia_aprobado_salario is a boolean, always has a value
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  const canSubmit = isStepValid();
+
   const onSubmit = async () => {
     if (!requisition) return;
 
@@ -122,11 +151,14 @@ export function RequisitionApprovalDialog({
         <div className="space-y-4">
           {/* Approver name */}
           <div className="space-y-2">
-            <Label>Nombre del aprobador</Label>
+            <Label>
+              Nombre del aprobador <span className="text-destructive">*</span>
+            </Label>
             <Input
               value={approverName}
               onChange={(e) => setApproverName(e.target.value)}
               placeholder="Tu nombre"
+              className={!approverName.trim() ? 'border-destructive/50' : ''}
             />
           </div>
 
@@ -143,21 +175,26 @@ export function RequisitionApprovalDialog({
             </div>
           )}
 
-          {step === 'rrhh' && (
+          {step === 'rrhh' && approved && (
             <>
               <div className="space-y-2">
-                <Label>Asignación Salarial</Label>
+                <Label>
+                  Asignación Salarial <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   type="number"
                   placeholder="0"
                   value={asignacionSalarial || ''}
                   onChange={(e) => setAsignacionSalarial(parseFloat(e.target.value) || undefined)}
+                  className={!asignacionSalarial ? 'border-destructive/50' : ''}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Tipo de Convocatoria</Label>
+                <Label>
+                  Tipo de Convocatoria <span className="text-destructive">*</span>
+                </Label>
                 <Select value={tipoConvocatoria} onValueChange={setTipoConvocatoria}>
-                  <SelectTrigger>
+                  <SelectTrigger className={!tipoConvocatoria ? 'border-destructive/50' : ''}>
                     <SelectValue placeholder="Seleccionar tipo" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
@@ -180,12 +217,14 @@ export function RequisitionApprovalDialog({
             </>
           )}
 
-          {step === 'juridico' && (
+          {step === 'juridico' && approved && (
             <>
               <div className="space-y-2">
-                <Label>Tipo de Contrato</Label>
+                <Label>
+                  Tipo de Contrato <span className="text-destructive">*</span>
+                </Label>
                 <Select value={tipoContrato} onValueChange={setTipoContrato}>
-                  <SelectTrigger>
+                  <SelectTrigger className={!tipoContrato ? 'border-destructive/50' : ''}>
                     <SelectValue placeholder="Seleccionar tipo" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
@@ -198,26 +237,31 @@ export function RequisitionApprovalDialog({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Duración del Contrato</Label>
+                <Label>
+                  Duración del Contrato <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   value={duracion}
                   onChange={(e) => setDuracion(e.target.value)}
                   placeholder="Ej: 6 meses, Indefinido..."
+                  className={!duracion.trim() ? 'border-destructive/50' : ''}
                 />
               </div>
             </>
           )}
 
-          {step === 'seleccion' && (
+          {step === 'seleccion' && approved && (
             <div className="space-y-2">
-              <Label>Fecha Inicio del Proceso</Label>
+              <Label>
+                Fecha Inicio del Proceso <span className="text-destructive">*</span>
+              </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       'w-full pl-3 text-left font-normal',
-                      !fechaInicioProceso && 'text-muted-foreground'
+                      !fechaInicioProceso && 'text-muted-foreground border-destructive/50'
                     )}
                   >
                     {fechaInicioProceso ? format(fechaInicioProceso, 'dd/MM/yyyy') : 'Seleccionar fecha'}
@@ -277,7 +321,7 @@ export function RequisitionApprovalDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button onClick={onSubmit} disabled={approveStep.isPending}>
+            <Button onClick={onSubmit} disabled={approveStep.isPending || !canSubmit}>
               {approveStep.isPending ? 'Procesando...' : 'Confirmar'}
             </Button>
           </div>
