@@ -424,13 +424,15 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     </Button>
                   </div>
                 ) : candidateViewMode === 'kanban' ? (
-                  <CandidateKanban
-                    candidates={candidates.map((c: any) => ({
-                      ...c,
-                      vacancies: { position_title: vacancy.position_title, operation_centers: (vacancy as any).operation_centers }
-                    }))}
-                    onCandidateClick={openCandidateDetail}
-                  />
+                  <div className="overflow-x-auto -mx-6 px-6 pb-4">
+                    <CandidateKanban
+                      candidates={candidates.map((c: any) => ({
+                        ...c,
+                        vacancies: { position_title: vacancy.position_title, operation_centers: (vacancy as any).operation_centers }
+                      }))}
+                      onCandidateClick={openCandidateDetail}
+                    />
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {candidates.map((candidate: any) => {
