@@ -138,18 +138,25 @@ export async function generateRequisitionPDF(
   doc.setFillColor(...ORANGE_PRIMARY);
   doc.rect(0, 35, pageWidth, 2, 'F');
 
+  // Document code and version in top-left corner
+  doc.setTextColor(...ORANGE_LIGHT);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Código: GT FO 218', margin, y);
+  doc.text('Versión: 04', margin, y + 4);
+
   // Load and add white logo for dark header
   try {
     const logoBase64 = await loadImageAsBase64(petrocasinosLogoWhite);
-    // Logo on the left side of header
-    doc.addImage(logoBase64, 'PNG', margin, y, 60, 16);
+    // Logo on the left side of header, positioned below the code
+    doc.addImage(logoBase64, 'PNG', margin, y + 7, 55, 14);
   } catch (error) {
     console.error('Error loading logo:', error);
     // Fallback text if logo fails
     doc.setTextColor(...WHITE);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('PETROCASINOS', margin, y + 12);
+    doc.text('PETROCASINOS', margin, y + 16);
   }
 
   // Title on right side of header
