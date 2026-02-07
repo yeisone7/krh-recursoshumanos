@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 import {
   Dialog,
@@ -32,6 +33,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useApproveRequisitionStep, PersonnelRequisition } from '@/hooks/useRequisitions';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { recruitmentTypeLabels, RecruitmentType } from '@/types/requisition';
+import { supabase } from '@/integrations/supabase/client';
 
 type ApprovalStep = 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia';
 
@@ -60,11 +62,28 @@ export function RequisitionApprovalDialog({
   const approveStep = useApproveRequisitionStep();
   const { data: contractTypes = [] } = useContractTypes();
   
-  const [approverName, setApproverName] = useState(user?.email?.split('@')[0] || '');
+  // Fetch user profile for full_name
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile-name', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+  
+  // Determine default name: profile full_name > email prefix
+  const defaultApproverName = userProfile?.full_name || user?.email?.split('@')[0] || '';
+  
+  // All state declarations
+  const [approverName, setApproverName] = useState(defaultApproverName);
   const [approved, setApproved] = useState(true);
   const [observations, setObservations] = useState('');
-  
-  // Step-specific fields
   const [salarioAprobado, setSalarioAprobado] = useState(true);
   const [asignacionSalarial, setAsignacionSalarial] = useState<number | undefined>();
   const [tipoConvocatoria, setTipoConvocatoria] = useState<string>('');
@@ -72,6 +91,29 @@ export function RequisitionApprovalDialog({
   const [tipoContrato, setTipoContrato] = useState('');
   const [duracion, setDuracion] = useState('');
   const [fechaInicioProceso, setFechaInicioProceso] = useState<Date | undefined>();
+  
+  // Update approverName when profile loads
+  useEffect(() => {
+    if (defaultApproverName && !approverName) {
+      setApproverName(defaultApproverName);
+    }
+  }, [defaultApproverName]);
+
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      setApproverName(defaultApproverName);
+      setApproved(true);
+      setObservations('');
+      setSalarioAprobado(true);
+      setAsignacionSalarial(undefined);
+      setTipoConvocatoria('');
+      setCondicionesAdicionales('');
+      setTipoContrato('');
+      setDuracion('');
+      setFechaInicioProceso(undefined);
+    }
+  }, [open, defaultApproverName]);
 
   // Validation: check if required fields are filled for the current step
   const isStepValid = (): boolean => {
