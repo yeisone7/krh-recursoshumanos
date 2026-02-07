@@ -12,7 +12,7 @@ interface KPICardProps {
     value: number;
     label: string;
   };
-  variant?: 'default' | 'primary' | 'accent' | 'warning' | 'destructive';
+  variant?: 'default' | 'primary' | 'secondary' | 'tertiary' | 'accent' | 'warning' | 'destructive' | 'info' | 'violet' | 'indigo' | 'teal' | 'rose';
 }
 
 export function KPICard({ title, value, subtitle, icon, trend, variant = 'default' }: KPICardProps) {
@@ -32,18 +32,47 @@ export function KPICard({ title, value, subtitle, icon, trend, variant = 'defaul
 
   const iconBgColors = {
     default: 'bg-muted',
-    primary: 'bg-primary-light',
-    accent: 'bg-accent-light',
-    warning: 'bg-warning-light',
-    destructive: 'bg-destructive-light',
+    primary: 'bg-primary/10',
+    secondary: 'bg-secondary/10',
+    tertiary: 'bg-tertiary/10',
+    accent: 'bg-accent/10',
+    warning: 'bg-warning/10',
+    destructive: 'bg-destructive/10',
+    info: 'bg-info/10',
+    violet: 'bg-violet/10',
+    indigo: 'bg-indigo/10',
+    teal: 'bg-teal/10',
+    rose: 'bg-rose/10',
   };
 
   const iconColors = {
     default: 'text-muted-foreground',
     primary: 'text-primary',
+    secondary: 'text-secondary',
+    tertiary: 'text-tertiary',
     accent: 'text-accent',
     warning: 'text-warning',
     destructive: 'text-destructive',
+    info: 'text-info',
+    violet: 'text-violet',
+    indigo: 'text-indigo',
+    teal: 'text-teal',
+    rose: 'text-rose',
+  };
+
+  const cardBorderAccent = {
+    default: '',
+    primary: 'border-l-4 border-l-primary',
+    secondary: 'border-l-4 border-l-secondary',
+    tertiary: 'border-l-4 border-l-tertiary',
+    accent: 'border-l-4 border-l-accent',
+    warning: 'border-l-4 border-l-warning',
+    destructive: 'border-l-4 border-l-destructive',
+    info: 'border-l-4 border-l-info',
+    violet: 'border-l-4 border-l-violet',
+    indigo: 'border-l-4 border-l-indigo',
+    teal: 'border-l-4 border-l-teal',
+    rose: 'border-l-4 border-l-rose',
   };
 
   return (
@@ -51,7 +80,10 @@ export function KPICard({ title, value, subtitle, icon, trend, variant = 'defaul
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="kpi-card group hover:shadow-card-hover transition-shadow duration-300"
+      className={cn(
+        "kpi-card group hover:shadow-card-hover transition-shadow duration-300",
+        cardBorderAccent[variant]
+      )}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
