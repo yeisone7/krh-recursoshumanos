@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -76,6 +76,11 @@ export default function Requisiciones() {
     return steps;
   };
 
+  const statusOptions = [
+    { value: 'all', label: 'Todos' },
+    ...Object.entries(requisitionStatusLabels).map(([k, v]) => ({ value: k, label: v })),
+  ];
+
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -115,13 +120,14 @@ export default function Requisiciones() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input placeholder="Buscar..." className="pl-9" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Estado" /></SelectTrigger>
-            <SelectContent className="bg-background">
-              <SelectItem value="all">Todos</SelectItem>
-              {Object.entries(requisitionStatusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={statusOptions}
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            placeholder="Estado"
+            searchPlaceholder="Buscar estado..."
+            triggerClassName="w-[180px]"
+          />
         </div>
 
         {isLoading ? (
