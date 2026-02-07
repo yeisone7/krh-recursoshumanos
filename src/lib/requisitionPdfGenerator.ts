@@ -138,12 +138,12 @@ export async function generateRequisitionPDF(
   doc.setFillColor(...ORANGE_PRIMARY);
   doc.rect(0, 35, pageWidth, 2, 'F');
 
-  // Document code and version in top-left corner
+  // Document code and version in top-right corner
   doc.setTextColor(...ORANGE_LIGHT);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.text('Código: GT FO 218', margin, y);
-  doc.text('Versión: 04', margin, y + 4);
+  doc.text('Código: GT FO 218', pageWidth - margin, y, { align: 'right' });
+  doc.text('Versión: 04', pageWidth - margin, y + 4, { align: 'right' });
 
   // Load and add white logo for dark header
   try {
