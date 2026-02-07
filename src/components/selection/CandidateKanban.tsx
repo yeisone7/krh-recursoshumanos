@@ -195,7 +195,7 @@ export function CandidateKanban({ candidates, onCandidateClick }: CandidateKanba
   };
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="flex gap-4 pb-4 w-max">
       {columns.map((column) => {
         const columnCandidates = candidatesByStatus[column.id] || [];
         const Icon = column.icon;
