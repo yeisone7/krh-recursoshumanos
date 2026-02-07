@@ -160,7 +160,7 @@ export default function Requisiciones() {
                 return (
                   <TableRow key={req.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(req.id)}>
                     <TableCell>
-                      <p className="font-medium">{req.cargo_solicitado}</p>
+                      <p className="font-medium uppercase">{req.cargo_solicitado}</p>
                       <p className="text-xs text-muted-foreground">{req.cantidad_vacantes_requeridas} vacantes • {req.solicitante_nombre}</p>
                     </TableCell>
                     <TableCell><div className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-muted-foreground" />{req.operation_centers?.name || '-'}</div></TableCell>
