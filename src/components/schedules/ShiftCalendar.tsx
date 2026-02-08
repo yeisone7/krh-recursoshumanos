@@ -598,8 +598,16 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
           <span>Festivo</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-purple-200 border border-purple-400 rounded" />
-          <span>Novedad</span>
+          <div className="w-4 h-4 bg-green-100 border border-green-400 rounded text-[8px] font-bold text-green-700 flex items-center justify-center">V</div>
+          <span>Vacaciones</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-blue-100 border border-blue-400 rounded text-[8px] font-bold text-blue-700 flex items-center justify-center">P</div>
+          <span>Permiso</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-orange-100 border border-orange-400 rounded text-[8px] font-bold text-orange-700 flex items-center justify-center">I</div>
+          <span>Incapacidad</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 bg-red-50 border-2 border-destructive rounded relative">
@@ -725,7 +733,9 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                         'w-10 p-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
                                         sunday && !absence && 'bg-red-50',
                                         holiday && !absence && 'bg-amber-50',
-                                        absence && !hasConflict && 'bg-purple-100',
+                                        absence && !hasConflict && absence.type === 'vacation' && 'bg-green-50',
+                                        absence && !hasConflict && absence.type === 'leave' && 'bg-blue-50',
+                                        absence && !hasConflict && absence.type === 'incapacity' && 'bg-orange-50',
                                         hasConflict && 'bg-red-50 ring-2 ring-inset ring-destructive',
                                         selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
                                       )}
@@ -752,8 +762,17 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                               )}
                                               
                                               {absence && !shift && (
-                                                <div className="h-6 rounded text-[10px] font-medium text-purple-700 flex items-center justify-center bg-purple-200">
-                                                  <AlertTriangle className="w-3 h-3" />
+                                                <div 
+                                                  className={cn(
+                                                    'h-6 rounded text-[10px] font-bold flex items-center justify-center',
+                                                    absence.type === 'vacation' && 'bg-green-100 text-green-700 border border-green-300',
+                                                    absence.type === 'leave' && 'bg-blue-100 text-blue-700 border border-blue-300',
+                                                    absence.type === 'incapacity' && 'bg-orange-100 text-orange-700 border border-orange-300'
+                                                  )}
+                                                >
+                                                  {absence.type === 'vacation' && 'VAC'}
+                                                  {absence.type === 'leave' && 'PER'}
+                                                  {absence.type === 'incapacity' && 'INC'}
                                                 </div>
                                               )}
                                               {shift && (
