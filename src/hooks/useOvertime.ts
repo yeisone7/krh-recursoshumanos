@@ -8,7 +8,6 @@ import {
   OvertimeStatus,
   OVERTIME_SURCHARGES,
 } from '@/types/overtime';
-import { ALL_COLOMBIAN_HOLIDAYS } from '@/types/vacation';
 import { format } from 'date-fns';
 
 // =============================================
@@ -16,15 +15,17 @@ import { format } from 'date-fns';
 // =============================================
 
 /**
- * Determines if a date is a Sunday or Colombian holiday
+ * Determines if a date is a Sunday or a holiday
+ * @param date - The date to check
+ * @param holidaysSet - Optional set of holiday dates in 'yyyy-MM-dd' format (from useHolidaysSet hook)
  */
-export function isHolidayOrSunday(date: Date): { isSunday: boolean; isHoliday: boolean } {
+export function isHolidayOrSunday(date: Date, holidaysSet?: Set<string>): { isSunday: boolean; isHoliday: boolean } {
   const dayOfWeek = date.getDay();
   const dateStr = format(date, 'yyyy-MM-dd');
   
   return {
     isSunday: dayOfWeek === 0,
-    isHoliday: ALL_COLOMBIAN_HOLIDAYS.includes(dateStr),
+    isHoliday: holidaysSet ? holidaysSet.has(dateStr) : false,
   };
 }
 
@@ -38,14 +39,20 @@ export function isNocturnalTime(timeStr: string): boolean {
 
 /**
  * Classifies overtime type based on date, time, and whether it's actual extra hours
+ * @param workDate - The date of the overtime work
+ * @param startTime - Start time in HH:mm format
+ * @param endTime - End time in HH:mm format
+ * @param isExtraHours - Whether this is extra hours (true) or regular hours with surcharge (false)
+ * @param holidaysSet - Optional set of holiday dates in 'yyyy-MM-dd' format (from useHolidaysSet hook)
  */
 export function classifyOvertimeType(
   workDate: Date,
   startTime: string,
   endTime: string,
-  isExtraHours: boolean = true
+  isExtraHours: boolean = true,
+  holidaysSet?: Set<string>
 ): OvertimeType {
-  const { isSunday, isHoliday } = isHolidayOrSunday(workDate);
+  const { isSunday, isHoliday } = isHolidayOrSunday(workDate, holidaysSet);
   const isNocturnal = isNocturnalTime(startTime) || isNocturnalTime(endTime);
 
   if (isHoliday) {

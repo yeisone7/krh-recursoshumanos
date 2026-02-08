@@ -42,67 +42,11 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAreas } from '@/hooks/useSystemConfig';
 import { useShifts, useShiftAssignments, useCreateBulkShiftAssignments, useDeleteShiftAssignment } from '@/hooks/useSchedules';
+import { useHolidaysMap } from '@/hooks/useHolidays';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { getEmployeeFullName } from '@/types/employee';
 import type { Shift, EmployeeShiftAssignment, EmployeeAbsence } from '@/types/schedule';
-
-// Festivos de Colombia 2024-2026
-const COLOMBIAN_HOLIDAYS: Record<string, string> = {
-  '2024-01-01': 'Año Nuevo',
-  '2024-01-08': 'Reyes Magos',
-  '2024-03-25': 'San José',
-  '2024-03-28': 'Jueves Santo',
-  '2024-03-29': 'Viernes Santo',
-  '2024-05-01': 'Día del Trabajo',
-  '2024-05-13': 'Ascensión',
-  '2024-06-03': 'Corpus Christi',
-  '2024-06-10': 'Sagrado Corazón',
-  '2024-07-01': 'San Pedro y San Pablo',
-  '2024-07-20': 'Día de la Independencia',
-  '2024-08-07': 'Batalla de Boyacá',
-  '2024-08-19': 'Asunción',
-  '2024-10-14': 'Día de la Raza',
-  '2024-11-04': 'Todos los Santos',
-  '2024-11-11': 'Independencia de Cartagena',
-  '2024-12-08': 'Inmaculada Concepción',
-  '2024-12-25': 'Navidad',
-  '2025-01-01': 'Año Nuevo',
-  '2025-01-06': 'Reyes Magos',
-  '2025-03-24': 'San José',
-  '2025-04-17': 'Jueves Santo',
-  '2025-04-18': 'Viernes Santo',
-  '2025-05-01': 'Día del Trabajo',
-  '2025-06-02': 'Ascensión',
-  '2025-06-23': 'Corpus Christi',
-  '2025-06-30': 'Sagrado Corazón',
-  '2025-07-20': 'Día de la Independencia',
-  '2025-08-07': 'Batalla de Boyacá',
-  '2025-08-18': 'Asunción',
-  '2025-10-13': 'Día de la Raza',
-  '2025-11-03': 'Todos los Santos',
-  '2025-11-17': 'Independencia de Cartagena',
-  '2025-12-08': 'Inmaculada Concepción',
-  '2025-12-25': 'Navidad',
-  '2026-01-01': 'Año Nuevo',
-  '2026-01-12': 'Reyes Magos',
-  '2026-03-23': 'San José',
-  '2026-04-02': 'Jueves Santo',
-  '2026-04-03': 'Viernes Santo',
-  '2026-05-01': 'Día del Trabajo',
-  '2026-05-18': 'Ascensión',
-  '2026-06-08': 'Corpus Christi',
-  '2026-06-15': 'Sagrado Corazón',
-  '2026-06-29': 'San Pedro y San Pablo',
-  '2026-07-20': 'Día de la Independencia',
-  '2026-08-07': 'Batalla de Boyacá',
-  '2026-08-17': 'Asunción',
-  '2026-10-12': 'Día de la Raza',
-  '2026-11-02': 'Todos los Santos',
-  '2026-11-16': 'Independencia de Cartagena',
-  '2026-12-08': 'Inmaculada Concepción',
-  '2026-12-25': 'Navidad',
-};
 
 type ViewMode = 'quincenal' | 'mensual';
 
@@ -145,6 +89,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   const { data: shifts = [] } = useShifts();
   const { data: centers = [] } = useOperationCenters();
   const { data: areas = [] } = useAreas();
+  const { data: holidaysMap = {} } = useHolidaysMap();
   
   // Calculate date range based on view mode
   const { startDate, endDate, daysInPeriod } = useMemo(() => {
@@ -342,7 +287,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   }, [assignments]);
 
   const getShiftById = (id: string): Shift | undefined => shifts.find(s => s.id === id);
-  const isHoliday = (date: Date): string | null => COLOMBIAN_HOLIDAYS[format(date, 'yyyy-MM-dd')] || null;
+  const isHoliday = (date: Date): string | null => holidaysMap[format(date, 'yyyy-MM-dd')] || null;
 
   const navigatePeriod = (direction: 'prev' | 'next') => {
     if (viewMode === 'quincenal') {
