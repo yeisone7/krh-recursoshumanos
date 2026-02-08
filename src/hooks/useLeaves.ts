@@ -517,8 +517,9 @@ export function calculateBusinessDays(startDate: Date, endDate: Date, holidaysSe
     const dayOfWeek = current.getDay();
     const dateStr = format(current, 'yyyy-MM-dd');
     
-    // Check if it's a weekday and not a holiday
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+    // Only Sundays are non-business days (dayOfWeek === 0)
+    // Saturdays ARE business days for leaves/vacations
+    if (dayOfWeek !== 0) {
       const isHoliday = holidaysSet ? holidaysSet.has(dateStr) : false;
       if (!isHoliday) {
         count++;
