@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { cleanupShiftAssignments } from '@/hooks/useCleanupShiftAssignments';
 import { 
   VacationConfig, 
   VacationBalance, 
@@ -324,12 +325,18 @@ export function useApproveVacation() {
       requestId, 
       balanceId, 
       businessDays,
-      requestType 
+      requestType,
+      employeeId,
+      startDate,
+      endDate,
     }: { 
       requestId: string; 
       balanceId?: string;
       businessDays: number;
       requestType: VacationRequestType;
+      employeeId: string;
+      startDate: string;
+      endDate: string;
     }) => {
       // Update request status
       const { error: requestError } = await supabase
@@ -386,11 +393,22 @@ export function useApproveVacation() {
         if (balanceError) throw balanceError;
       }
 
+      // Cleanup conflicting shift assignments (only for disfrute/compensacion)
+      if (requestType === 'disfrute' || requestType === 'compensacion') {
+        await cleanupShiftAssignments({
+          employeeId,
+          startDate,
+          endDate,
+          absenceType: 'vacaciones',
+        });
+      }
+
       return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vacation-requests'] });
       queryClient.invalidateQueries({ queryKey: ['vacation-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['shift_assignments'] });
       toast({ title: 'Vacaciones aprobadas', description: 'El saldo fue actualizado correctamente.' });
     },
     onError: (error: Error) => {

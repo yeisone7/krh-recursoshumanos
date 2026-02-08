@@ -72,6 +72,9 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
       balanceId: request.balance_id ?? undefined,
       businessDays: request.business_days,
       requestType: request.request_type,
+      employeeId: request.employee_id,
+      startDate: request.start_date,
+      endDate: request.end_date,
     });
   };
 
