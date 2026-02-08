@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSunday, parseISO, isWithinInterval, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp, Trash2, Edit, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -28,13 +28,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAreas } from '@/hooks/useSystemConfig';
-import { useShifts, useShiftAssignments, useCreateBulkShiftAssignments } from '@/hooks/useSchedules';
+import { useShifts, useShiftAssignments, useCreateBulkShiftAssignments, useDeleteShiftAssignment } from '@/hooks/useSchedules';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { getEmployeeFullName } from '@/types/employee';
@@ -124,6 +131,14 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   const [selectedShiftId, setSelectedShiftId] = useState<string>('');
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ employeeId: string; date: string } | null>(null);
+  // Context menu state
+  const [contextMenuTarget, setContextMenuTarget] = useState<{
+    employeeId: string;
+    date: string;
+    assignment: EmployeeShiftAssignment | null;
+    shift: Shift | null;
+    hasAbsence: boolean;
+  } | null>(null);
 
   const { currentCompanyId } = useAuth();
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
@@ -161,6 +176,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   });
   
   const createBulkAssignments = useCreateBulkShiftAssignments();
+  const deleteAssignment = useDeleteShiftAssignment();
 
   // Fetch absences
   const { data: absences = [] } = useQuery({
@@ -459,6 +475,47 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
     return selectedCells.some(cell => cell.employeeId === employeeId && cell.dates.includes(date));
   };
 
+  // Context menu handlers
+  const handleContextMenuAction = async (action: 'assign' | 'change' | 'delete', shiftId?: string) => {
+    if (!contextMenuTarget) return;
+
+    const { employeeId, date, assignment, hasAbsence } = contextMenuTarget;
+
+    if (action === 'delete' && assignment) {
+      try {
+        await deleteAssignment.mutateAsync(assignment.id);
+        toast.success('Asignación eliminada');
+      } catch (error: any) {
+        toast.error('Error', { description: error.message });
+      }
+    } else if ((action === 'assign' || action === 'change') && shiftId) {
+      const selectedShift = getShiftById(shiftId);
+      const isWorkShift = selectedShift && !selectedShift.is_rest_day;
+
+      // Check for absence conflict when assigning work shift
+      if (isWorkShift && hasAbsence) {
+        toast.error('No se puede asignar turno laboral', {
+          description: 'El empleado tiene una novedad activa en este día',
+        });
+        return;
+      }
+
+      try {
+        await createBulkAssignments.mutateAsync([{
+          employee_id: employeeId,
+          shift_id: shiftId,
+          assignment_date: date,
+          source: 'manual' as const,
+        }]);
+        toast.success(action === 'change' ? 'Turno cambiado' : 'Turno asignado');
+      } catch (error: any) {
+        toast.error('Error', { description: error.message });
+      }
+    }
+
+    setContextMenuTarget(null);
+  };
+
   const activeShifts = shifts.filter(s => s.is_active);
   const isLoading = loadingEmployees || loadingAssignments;
 
@@ -661,87 +718,183 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                               const hasConflict = shift && absence && !shift.is_rest_day;
 
                               return (
-                                <TooltipProvider key={dateStr}>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div
-                                        className={cn(
-                                          'w-10 p-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
-                                          sunday && !absence && 'bg-red-50',
-                                          holiday && !absence && 'bg-amber-50',
-                                          absence && !hasConflict && 'bg-purple-100',
-                                          hasConflict && 'bg-red-50 ring-2 ring-inset ring-destructive',
-                                          selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
-                                        )}
-                                        onMouseDown={() => handleCellMouseDown(employee.id, dateStr)}
-                                        onMouseEnter={() => handleCellMouseEnter(employee.id, dateStr)}
-                                        onMouseUp={handleCellMouseUp}
-                                      >
-                                        {/* Conflict indicator badge */}
-                                        {hasConflict && (
-                                          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center z-10 shadow-sm">
-                                            <span className="text-[8px] text-destructive-foreground font-bold">!</span>
-                                          </div>
-                                        )}
-                                        
-                                        {absence && !shift && (
-                                          <div className="h-6 rounded text-[10px] font-medium text-purple-700 flex items-center justify-center bg-purple-200">
-                                            <AlertTriangle className="w-3 h-3" />
-                                          </div>
-                                        )}
-                                        {shift && (
-                                          <div
-                                            className={cn(
-                                              'h-6 rounded text-[10px] font-medium text-white flex items-center justify-center',
-                                              hasConflict && 'opacity-70'
-                                            )}
-                                            style={{ backgroundColor: shift.color }}
-                                          >
-                                            {shift.code || shift.name.slice(0, 2).toUpperCase()}
-                                          </div>
-                                        )}
-                                        {!shift && !absence && <div className="h-6" />}
-                                      </div>
-                                    </TooltipTrigger>
-                                    
-                                    {/* Conflict tooltip */}
-                                    {hasConflict && (
-                                      <TooltipContent side="top" className="bg-red-50 border-destructive/30 max-w-[200px]">
-                                        <div className="space-y-1">
-                                          <p className="font-semibold text-destructive flex items-center gap-1">
-                                            <AlertTriangle className="w-3 h-3" />
-                                            Conflicto detectado
-                                          </p>
-                                          <p className="text-sm text-foreground">Turno: {shift.name}</p>
-                                          <p className="text-sm text-foreground">Novedad: {absence.description}</p>
-                                          <p className="text-xs text-muted-foreground">
-                                            El turno debería eliminarse
-                                          </p>
+                                <ContextMenu key={dateStr}>
+                                  <ContextMenuTrigger asChild>
+                                    <div
+                                      className={cn(
+                                        'w-10 p-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
+                                        sunday && !absence && 'bg-red-50',
+                                        holiday && !absence && 'bg-amber-50',
+                                        absence && !hasConflict && 'bg-purple-100',
+                                        hasConflict && 'bg-red-50 ring-2 ring-inset ring-destructive',
+                                        selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
+                                      )}
+                                      onMouseDown={() => handleCellMouseDown(employee.id, dateStr)}
+                                      onMouseEnter={() => handleCellMouseEnter(employee.id, dateStr)}
+                                      onMouseUp={handleCellMouseUp}
+                                      onContextMenu={() => setContextMenuTarget({
+                                        employeeId: employee.id,
+                                        date: dateStr,
+                                        assignment: assignment || null,
+                                        shift: shift || null,
+                                        hasAbsence: !!absence,
+                                      })}
+                                    >
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div className="w-full h-full">
+                                              {/* Conflict indicator badge */}
+                                              {hasConflict && (
+                                                <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center z-10 shadow-sm">
+                                                  <span className="text-[8px] text-destructive-foreground font-bold">!</span>
+                                                </div>
+                                              )}
+                                              
+                                              {absence && !shift && (
+                                                <div className="h-6 rounded text-[10px] font-medium text-purple-700 flex items-center justify-center bg-purple-200">
+                                                  <AlertTriangle className="w-3 h-3" />
+                                                </div>
+                                              )}
+                                              {shift && (
+                                                <div
+                                                  className={cn(
+                                                    'h-6 rounded text-[10px] font-medium text-white flex items-center justify-center',
+                                                    hasConflict && 'opacity-70'
+                                                  )}
+                                                  style={{ backgroundColor: shift.color }}
+                                                >
+                                                  {shift.code || shift.name.slice(0, 2).toUpperCase()}
+                                                </div>
+                                              )}
+                                              {!shift && !absence && <div className="h-6" />}
+                                            </div>
+                                          </TooltipTrigger>
+                                          
+                                          {/* Conflict tooltip */}
+                                          {hasConflict && (
+                                            <TooltipContent side="top" className="bg-red-50 border-destructive/30 max-w-[200px]">
+                                              <div className="space-y-1">
+                                                <p className="font-semibold text-destructive flex items-center gap-1">
+                                                  <AlertTriangle className="w-3 h-3" />
+                                                  Conflicto detectado
+                                                </p>
+                                                <p className="text-sm text-foreground">Turno: {shift.name}</p>
+                                                <p className="text-sm text-foreground">Novedad: {absence.description}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                  Click derecho → Eliminar
+                                                </p>
+                                              </div>
+                                            </TooltipContent>
+                                          )}
+                                          
+                                          {/* Absence-only tooltip */}
+                                          {absence && !hasConflict && (
+                                            <TooltipContent>
+                                              <p className="font-medium">{absence.description}</p>
+                                              <p className="text-xs text-muted-foreground">
+                                                {absence.start_date} - {absence.end_date}
+                                              </p>
+                                            </TooltipContent>
+                                          )}
+                                          
+                                          {/* Shift-only tooltip */}
+                                          {shift && !absence && (
+                                            <TooltipContent>
+                                              <p>{shift.name}</p>
+                                              <p className="text-xs text-muted-foreground">
+                                                {shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}
+                                              </p>
+                                              <p className="text-xs text-muted-foreground mt-1">Click derecho para opciones</p>
+                                            </TooltipContent>
+                                          )}
+                                          
+                                          {/* Empty cell tooltip */}
+                                          {!shift && !absence && (
+                                            <TooltipContent>
+                                              <p className="text-xs text-muted-foreground">Click derecho para asignar turno</p>
+                                            </TooltipContent>
+                                          )}
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    </div>
+                                  </ContextMenuTrigger>
+                                  
+                                  <ContextMenuContent className="w-48 bg-background">
+                                    {/* Assign shift (when no shift exists) */}
+                                    {!shift && !absence && (
+                                      <>
+                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                                          Asignar turno
                                         </div>
-                                      </TooltipContent>
+                                        {activeShifts.map((s) => (
+                                          <ContextMenuItem
+                                            key={s.id}
+                                            onClick={() => handleContextMenuAction('assign', s.id)}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                                            <span className="truncate">{s.name}</span>
+                                            {s.is_rest_day && <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>}
+                                          </ContextMenuItem>
+                                        ))}
+                                      </>
                                     )}
                                     
-                                    {/* Absence-only tooltip */}
-                                    {absence && !hasConflict && (
-                                      <TooltipContent>
-                                        <p className="font-medium">{absence.description}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                          {absence.start_date} - {absence.end_date}
-                                        </p>
-                                      </TooltipContent>
+                                    {/* Change/Delete shift (when shift exists) */}
+                                    {shift && (
+                                      <>
+                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                                          Cambiar turno
+                                        </div>
+                                        {activeShifts.filter(s => s.id !== shift.id).map((s) => (
+                                          <ContextMenuItem
+                                            key={s.id}
+                                            onClick={() => handleContextMenuAction('change', s.id)}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                                            <span className="truncate">{s.name}</span>
+                                            {s.is_rest_day && <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>}
+                                          </ContextMenuItem>
+                                        ))}
+                                        <ContextMenuSeparator />
+                                        <ContextMenuItem
+                                          onClick={() => handleContextMenuAction('delete')}
+                                          className="text-destructive focus:text-destructive"
+                                        >
+                                          <Trash2 className="w-4 h-4 mr-2" />
+                                          Eliminar asignación
+                                        </ContextMenuItem>
+                                      </>
                                     )}
                                     
-                                    {/* Shift-only tooltip */}
-                                    {shift && !absence && (
-                                      <TooltipContent>
-                                        <p>{shift.name}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                          {shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}
-                                        </p>
-                                      </TooltipContent>
+                                    {/* Absence day - can only assign rest days */}
+                                    {absence && !shift && (
+                                      <>
+                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                                          Solo descansos (hay novedad)
+                                        </div>
+                                        {activeShifts.filter(s => s.is_rest_day).map((s) => (
+                                          <ContextMenuItem
+                                            key={s.id}
+                                            onClick={() => handleContextMenuAction('assign', s.id)}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                                            <span className="truncate">{s.name}</span>
+                                            <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>
+                                          </ContextMenuItem>
+                                        ))}
+                                        {activeShifts.filter(s => s.is_rest_day).length === 0 && (
+                                          <div className="px-2 py-1.5 text-xs text-muted-foreground italic">
+                                            No hay turnos de descanso configurados
+                                          </div>
+                                        )}
+                                      </>
                                     )}
-                                  </Tooltip>
-                                </TooltipProvider>
+                                  </ContextMenuContent>
+                                </ContextMenu>
                               );
                             })}
                           </div>
@@ -758,7 +911,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
       {/* Instructions */}
       <p className="text-sm text-muted-foreground">
-        💡 Seleccione celdas arrastrando para asignar turnos a múltiples días. Use los controles para filtrar por centro y cambiar el periodo.
+        💡 <strong>Click derecho</strong> para asignar, cambiar o eliminar turnos. <strong>Arrastre</strong> para selección múltiple.
       </p>
 
       {/* Assign Dialog */}

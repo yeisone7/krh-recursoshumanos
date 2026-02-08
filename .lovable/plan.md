@@ -1,40 +1,48 @@
-# Plan: Conflictos Turno/Novedad - COMPLETADO ✓
+# Plan: Gestión de Turnos - COMPLETADO ✓
 
-## Resumen
+## Funcionalidades Implementadas
 
-Se implementaron dos funcionalidades para gestionar conflictos entre asignaciones de turnos y novedades:
+### 1. Alerta Visual para Conflictos Turno/Novedad ✓
+- Indicador rojo (borde + badge "!") cuando hay turno de trabajo en día con novedad
+- Tooltip diferenciado explicando el conflicto
 
-1. ✅ **Alerta Visual en el Calendario**: Indicador de conflicto (borde rojo + badge "!") cuando hay turno de trabajo en un día con novedad
-2. ✅ **Trigger Automático**: Eliminación de turnos conflictivos al aprobar vacaciones/permisos o crear incapacidades
+### 2. Eliminación Automática de Turnos ✓
+- Al aprobar vacaciones/permisos: turnos de trabajo eliminados automáticamente
+- Al crear incapacidad: turnos de trabajo eliminados automáticamente
+- Turnos de descanso NO se eliminan (compatibles con novedades)
+- Toast informativo indicando cantidad eliminada
+
+### 3. Menú Contextual en Calendario ✓
+- **Click derecho en celda vacía**: Lista de turnos disponibles para asignar
+- **Click derecho en celda con turno**: Cambiar a otro turno o eliminar
+- **Click derecho en día con novedad**: Solo permite asignar descansos
+- Los tooltips ahora indican "Click derecho para opciones"
 
 ---
 
-## Cambios Realizados
-
-### Backend (Supabase)
-- ✅ Función SQL `delete_shift_assignments_for_absence(employee_id, start_date, end_date)` que elimina turnos de trabajo (no descansos)
-
-### Frontend
+## Archivos Modificados
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/hooks/useCleanupShiftAssignments.ts` | Hook reutilizable + función standalone para limpieza |
-| `src/components/schedules/ShiftCalendar.tsx` | Indicador visual de conflicto + leyenda actualizada |
-| `src/hooks/useVacations.ts` | Limpieza al aprobar vacaciones (disfrute/compensación) |
+| `supabase/migrations/..._cleanup_shifts.sql` | Función SQL `delete_shift_assignments_for_absence` |
+| `src/hooks/useCleanupShiftAssignments.ts` | Hook + función standalone para limpieza |
+| `src/hooks/useVacations.ts` | Limpieza al aprobar vacaciones |
 | `src/hooks/useLeaves.ts` | Limpieza al aprobar permisos |
 | `src/hooks/useIncapacities.ts` | Limpieza al crear incapacidad |
-| `src/components/vacations/VacationDetailDialog.tsx` | Pasar parámetros adicionales al aprobar |
+| `src/components/vacations/VacationDetailDialog.tsx` | Parámetros adicionales para aprobar |
+| `src/components/schedules/ShiftCalendar.tsx` | ContextMenu + indicador conflicto + leyenda |
 
 ---
 
-## Comportamiento
+## Uso
 
-### Visual
-- Celda con conflicto: `ring-destructive`, badge rojo con "!", turno semitransparente
-- Tooltip diferenciado: muestra turno + novedad + advertencia
+### Menú Contextual
+1. Navega a **Jornadas** → pestaña **Calendario**
+2. Haz **click derecho** en cualquier celda:
+   - **Celda vacía**: Asignar turno
+   - **Celda con turno**: Cambiar o eliminar
+   - **Celda con novedad**: Solo descansos permitidos
 
-### Automático
-- Al aprobar vacación/permiso → elimina turnos de trabajo en el período
-- Al crear incapacidad → elimina turnos de trabajo inmediatamente
-- Turnos de descanso NO se eliminan (compatibles con novedades)
-- Toast informativo si se eliminaron asignaciones
+### Conflictos
+- Los conflictos se muestran automáticamente con indicador rojo
+- Al aprobar novedades, los turnos conflictivos se eliminan solos
