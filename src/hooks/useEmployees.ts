@@ -268,6 +268,18 @@ export function useCreateEmployee() {
           rest_day: data.restDay || null,
           is_current: true,
         }),
+        // K. Time Config (Modalidad de Tiempo)
+        supabase.from('employee_time_config').insert({
+          employee_id: employeeId,
+          mode: data.timeMode,
+          work_schedule_id: data.timeMode === 'administrative' ? data.workScheduleId : null,
+          shift_cycle_id: data.timeMode === 'shift' ? data.shiftCycleId : null,
+          cycle_start_date: data.cycleStartDate ? format(data.cycleStartDate, 'yyyy-MM-dd') : null,
+          start_date: format(data.timeModeStartDate, 'yyyy-MM-dd'),
+          notes: data.timeModeNotes || null,
+          is_active: true,
+          created_by: user.id,
+        }),
       ];
 
       const results = await Promise.all(relatedInserts);
@@ -297,6 +309,7 @@ export function useCreateEmployee() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
+      queryClient.invalidateQueries({ queryKey: ['employee_time_configs'] });
     },
   });
 }
