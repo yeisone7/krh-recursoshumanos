@@ -71,7 +71,7 @@ const statusIcons: Record<VacancyStatus, React.ElementType> = {
 
 export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDetailDialogProps) {
   const [activeTab, setActiveTab] = useState('info');
-  const [candidateViewMode, setCandidateViewMode] = useState<'table' | 'kanban'>('kanban');
+  const [candidateViewMode, setCandidateViewMode] = useState<'table' | 'kanban'>('table');
   const [showCandidateForm, setShowCandidateForm] = useState(false);
   const [showCandidateDetail, setShowCandidateDetail] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
