@@ -219,8 +219,32 @@ export const employeeScheduleSchema = z.object({
   restDay: z.string().max(20).optional(),
 });
 
+// K. Time Mode Schema (Modalidad de Tiempo)
+export const employeeTimeModeSchema = z.object({
+  timeMode: z.enum(['administrative', 'shift'], {
+    required_error: 'Seleccione una modalidad de tiempo',
+  }),
+  workScheduleId: z.string().uuid().optional(),
+  shiftCycleId: z.string().uuid().optional(),
+  cycleStartDate: z.date().optional(),
+  timeModeStartDate: z.date({ required_error: 'Fecha de vigencia requerida' }),
+  timeModeNotes: z.string().max(500).optional(),
+}).refine((data) => {
+  if (data.timeMode === 'administrative') {
+    return !!data.workScheduleId;
+  }
+  if (data.timeMode === 'shift') {
+    return !!data.shiftCycleId;
+  }
+  return false;
+}, {
+  message: 'Seleccione un horario o ciclo según la modalidad',
+  path: ['workScheduleId'],
+});
+
 // Combined Form Schema for creating/editing employees
-export const employeeFullFormSchema = z.object({
+// We need to handle the time mode validation separately due to refinement
+const baseFormSchema = z.object({
   // A. Core
   ...employeeCoreSchema.shape,
   // B. Contact
@@ -235,6 +259,28 @@ export const employeeFullFormSchema = z.object({
   ...employeeBankInfoSchema.shape,
   // J. Schedule
   ...employeeScheduleSchema.shape,
+  // K. Time Mode (inline without refinement for base)
+  timeMode: z.enum(['administrative', 'shift'], {
+    required_error: 'Seleccione una modalidad de tiempo',
+  }),
+  workScheduleId: z.string().uuid().optional(),
+  shiftCycleId: z.string().uuid().optional(),
+  cycleStartDate: z.date().optional(),
+  timeModeStartDate: z.date({ required_error: 'Fecha de vigencia requerida' }),
+  timeModeNotes: z.string().max(500).optional(),
+});
+
+export const employeeFullFormSchema = baseFormSchema.refine((data) => {
+  if (data.timeMode === 'administrative') {
+    return !!data.workScheduleId;
+  }
+  if (data.timeMode === 'shift') {
+    return !!data.shiftCycleId;
+  }
+  return false;
+}, {
+  message: 'Seleccione un horario o ciclo según la modalidad',
+  path: ['workScheduleId'],
 });
 
 export type EmployeeFullFormData = z.infer<typeof employeeFullFormSchema>;
