@@ -9,3 +9,4 @@ export { default as CatalogosAFC } from './AFC';
 export { default as CatalogosIPS } from './IPS';
 export { default as CatalogosBancos } from './Bancos';
 export { default as CatalogosTiposContrato } from './TiposContrato';
+export { default as CatalogosFestivos } from './Festivos';

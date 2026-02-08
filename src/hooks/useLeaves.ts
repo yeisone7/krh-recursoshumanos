@@ -10,8 +10,8 @@ import {
   LeaveDurationType,
   LeaveRequestStatus 
 } from '@/types/leave';
-import { addDays } from 'date-fns';
-import { ALL_COLOMBIAN_HOLIDAYS } from '@/types/vacation';
+import { addDays, format } from 'date-fns';
+import { useHolidaysSet } from '@/hooks/useHolidays';
 
 // =============================================
 // LEAVE TYPE CONFIG
@@ -503,17 +503,23 @@ export function useCancelLeaveRequest() {
 // UTILITY FUNCTIONS
 // =============================================
 
-export function calculateBusinessDays(startDate: Date, endDate: Date): number {
+/**
+ * Calculate business days between two dates
+ * @param startDate - Start date
+ * @param endDate - End date
+ * @param holidaysSet - Set of holiday dates in 'yyyy-MM-dd' format (from useHolidaysSet hook)
+ */
+export function calculateBusinessDays(startDate: Date, endDate: Date, holidaysSet?: Set<string>): number {
   let count = 0;
   let current = new Date(startDate);
   
   while (current <= endDate) {
     const dayOfWeek = current.getDay();
-    const dateStr = current.toISOString().split('T')[0];
+    const dateStr = format(current, 'yyyy-MM-dd');
     
     // Check if it's a weekday and not a holiday
     if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      const isHoliday = ALL_COLOMBIAN_HOLIDAYS.includes(dateStr);
+      const isHoliday = holidaysSet ? holidaysSet.has(dateStr) : false;
       if (!isHoliday) {
         count++;
       }
