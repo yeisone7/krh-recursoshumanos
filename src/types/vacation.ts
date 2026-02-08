@@ -157,18 +157,18 @@ export function isColombianHoliday(date: Date): boolean {
 }
 
 /**
- * Check if a date is a weekend (Saturday or Sunday)
+ * Check if a date is Sunday (only Sunday is non-business day per Colombian vacation law)
  */
-export function isWeekend(date: Date): boolean {
-  const day = date.getDay();
-  return day === 0 || day === 6;
+export function isSunday(date: Date): boolean {
+  return date.getDay() === 0;
 }
 
 /**
- * Check if a date is a business day (not weekend and not holiday)
+ * Check if a date is a business day (not Sunday and not holiday)
+ * Per Colombian vacation law, only Sundays and holidays are non-business days
  */
 export function isBusinessDay(date: Date): boolean {
-  return !isWeekend(date) && !isColombianHoliday(date);
+  return !isSunday(date) && !isColombianHoliday(date);
 }
 
 /**
