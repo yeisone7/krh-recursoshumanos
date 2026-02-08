@@ -307,7 +307,7 @@ export default function Jornadas() {
                       <TableRow>
                         <TableHead>Turno</TableHead>
                         <TableHead>Horario</TableHead>
-                        <TableHead>Características</TableHead>
+                        <TableHead>Descripción</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
@@ -324,10 +324,9 @@ export default function Jornadas() {
                           </TableCell>
                           <TableCell>{formatTime(shift.start_time)} - {formatTime(shift.end_time)}</TableCell>
                           <TableCell>
-                            <div className="flex gap-1">
-                              {shift.crosses_midnight && <Badge variant="outline">Nocturno</Badge>}
-                              {shift.is_rest_day && <Badge variant="secondary">Descanso</Badge>}
-                            </div>
+                            <span className="text-muted-foreground text-sm">
+                              {shift.description || '—'}
+                            </span>
                           </TableCell>
                           <TableCell>
                             <Badge variant={shift.is_active ? 'default' : 'secondary'}>
