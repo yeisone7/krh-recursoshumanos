@@ -152,47 +152,6 @@ export default function Jornadas() {
         </div>
       </motion.div>
 
-      {/* Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-3 gap-4"
-      >
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Briefcase className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.schedules}</p>
-              <p className="text-xs text-muted-foreground">Horarios Activos</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-info/10">
-              <Clock className="w-5 h-5 text-info" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.shifts}</p>
-              <p className="text-xs text-muted-foreground">Turnos Activos</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-100">
-              <RotateCcw className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.cycles}</p>
-              <p className="text-xs text-muted-foreground">Ciclos Activos</p>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
 
       {/* Main Content */}
       <motion.div
