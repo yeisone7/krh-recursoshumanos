@@ -5,7 +5,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
   CalendarIcon, User, Briefcase, MapPin, Heart, Building, 
-  CreditCard, Shield, Clock, Users as UsersIcon, Camera, AlertCircle
+  CreditCard, Shield, Clock, Users as UsersIcon, Camera, AlertCircle,
+  RotateCcw
 } from 'lucide-react';
 
 import {
@@ -44,6 +45,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -111,6 +113,13 @@ const fieldToTabMap: Record<string, string> = {
   shiftTypeId: 'schedule',
   isOfficeSchedule: 'schedule',
   restDay: 'schedule',
+  // TimeMode tab
+  timeMode: 'timemode',
+  workScheduleId: 'timemode',
+  shiftCycleId: 'timemode',
+  cycleStartDate: 'timemode',
+  timeModeStartDate: 'timemode',
+  timeModeNotes: 'timemode',
 };
 
 import {
@@ -140,6 +149,7 @@ import {
   useIPSCatalog 
 } from '@/hooks/useSocialSecurityCatalogs';
 import { useBanksCatalog } from '@/hooks/useBanksCatalog';
+import { useWorkSchedules, useShiftCycles } from '@/hooks/useSchedules';
 import { AvatarUpload } from './AvatarUpload';
 
 interface EmployeeFormDialogProps {
@@ -163,10 +173,16 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   const { data: afcOptions = [] } = useAFCCatalog();
   const { data: ipsOptions = [] } = useIPSCatalog();
   const { data: bankOptions = [] } = useBanksCatalog();
+  const { data: workSchedules = [] } = useWorkSchedules();
+  const { data: shiftCycles = [] } = useShiftCycles();
   const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
   
   const isEditMode = !!employee;
+
+  // Filter active schedules and cycles
+  const activeSchedules = workSchedules.filter(s => s.is_active);
+  const activeCycles = shiftCycles.filter(c => c.is_active);
 
   // Sync avatar URL when employee changes
   useEffect(() => {
@@ -183,8 +199,13 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
       spouseWorks: false,
       childrenCount: 0,
       accountRegistered: false,
+      timeMode: 'administrative',
+      timeModeStartDate: new Date(),
     },
   });
+
+  // Watch time mode for conditional fields
+  const selectedTimeMode = form.watch('timeMode');
 
   // Reset form with employee data when editing
   useEffect(() => {
@@ -258,6 +279,10 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         shiftTypeId: employee.schedule?.shift_type_id || undefined,
         isOfficeSchedule: employee.schedule?.is_office_schedule ?? true,
         restDay: employee.schedule?.rest_day || undefined,
+
+        // K. Time Mode (will be loaded from employee_time_config if exists)
+        timeMode: 'administrative',
+        timeModeStartDate: new Date(),
       });
     } else if (!employee && open) {
       form.reset({
@@ -268,6 +293,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         spouseWorks: false,
         childrenCount: 0,
         accountRegistered: false,
+        timeMode: 'administrative',
+        timeModeStartDate: new Date(),
       });
     }
   }, [employee, open, form]);
@@ -307,9 +334,10 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
     { value: 'contact', label: 'Contacto', icon: MapPin },
     { value: 'family', label: 'Familia', icon: Heart },
     { value: 'labor', label: 'Laboral', icon: Briefcase },
+    { value: 'timemode', label: 'Modalidad', icon: RotateCcw },
     { value: 'security', label: 'Seguridad Social', icon: Shield },
     { value: 'bank', label: 'Banco', icon: CreditCard },
-    { value: 'schedule', label: 'Jornada', icon: Clock },
+    { value: 'schedule', label: 'Nómina', icon: Clock },
   ];
 
   // Get errors per tab for visual indicators
@@ -1082,6 +1110,259 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                           <FormLabel>Observaciones</FormLabel>
                           <FormControl>
                             <Textarea placeholder="Notas adicionales sobre el empleado..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* K. TIME MODE TAB - Modalidad de Tiempo */}
+                <TabsContent value="timemode" className="mt-0 space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Modalidad de Tiempo *</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Seleccione cómo se gestionará el horario de este empleado. Este campo es obligatorio.
+                    </p>
+                    
+                    <FormField
+                      control={form.control}
+                      name="timeMode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Modalidad *</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                // Clear dependent fields when mode changes
+                                if (value === 'administrative') {
+                                  form.setValue('shiftCycleId', undefined);
+                                  form.setValue('cycleStartDate', undefined);
+                                } else {
+                                  form.setValue('workScheduleId', undefined);
+                                }
+                              }}
+                              value={field.value}
+                              className="grid grid-cols-2 gap-4"
+                            >
+                              <label
+                                className={cn(
+                                  'flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all',
+                                  field.value === 'administrative'
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-input hover:border-primary/50'
+                                )}
+                              >
+                                <RadioGroupItem value="administrative" className="sr-only" />
+                                <Briefcase className={cn(
+                                  'w-5 h-5',
+                                  field.value === 'administrative' ? 'text-primary' : 'text-muted-foreground'
+                                )} />
+                                <div>
+                                  <p className="font-medium">Administrativo</p>
+                                  <p className="text-xs text-muted-foreground">Horario fijo de oficina</p>
+                                </div>
+                              </label>
+                              <label
+                                className={cn(
+                                  'flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all',
+                                  field.value === 'shift'
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-input hover:border-primary/50'
+                                )}
+                              >
+                                <RadioGroupItem value="shift" className="sr-only" />
+                                <RotateCcw className={cn(
+                                  'w-5 h-5',
+                                  field.value === 'shift' ? 'text-primary' : 'text-muted-foreground'
+                                )} />
+                                <div>
+                                  <p className="font-medium">Turnos</p>
+                                  <p className="text-xs text-muted-foreground">Ciclo rotativo operativo</p>
+                                </div>
+                              </label>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {selectedTimeMode === 'administrative' && (
+                      <FormField
+                        control={form.control}
+                        name="workScheduleId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Horario Administrativo *</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleccione horario" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {activeSchedules.length === 0 ? (
+                                  <div className="p-2 text-sm text-muted-foreground text-center">
+                                    No hay horarios activos. Configure uno primero en Jornadas.
+                                  </div>
+                                ) : (
+                                  activeSchedules.map((schedule) => (
+                                    <SelectItem key={schedule.id} value={schedule.id}>
+                                      <span>{schedule.name}</span>
+                                      <span className="text-muted-foreground ml-2">
+                                        ({schedule.start_time.slice(0, 5)} - {schedule.end_time.slice(0, 5)})
+                                      </span>
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {selectedTimeMode === 'shift' && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="shiftCycleId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Ciclo de Rotación *</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ''}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleccione ciclo" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-background">
+                                  {activeCycles.length === 0 ? (
+                                    <div className="p-2 text-sm text-muted-foreground text-center">
+                                      No hay ciclos activos. Configure uno primero en Jornadas.
+                                    </div>
+                                  ) : (
+                                    activeCycles.map((cycle) => (
+                                      <SelectItem key={cycle.id} value={cycle.id}>
+                                        <span>{cycle.name}</span>
+                                        <span className="text-muted-foreground ml-2">
+                                          ({cycle.total_days} días)
+                                        </span>
+                                      </SelectItem>
+                                    ))
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="cycleStartDate"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Inicio del Ciclo</FormLabel>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant="outline"
+                                      className={cn(
+                                        'w-full pl-3 text-left font-normal',
+                                        !field.value && 'text-muted-foreground'
+                                      )}
+                                    >
+                                      {field.value ? (
+                                        format(field.value, 'dd MMM yyyy', { locale: es })
+                                      ) : (
+                                        <span>Fecha de referencia del ciclo</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 bg-background" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    initialFocus
+                                    locale={es}
+                                    className="pointer-events-auto"
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <p className="text-xs text-muted-foreground">
+                                Fecha desde la cual se calcula la posición en el ciclo
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                      <FormField
+                        control={form.control}
+                        name="timeModeStartDate"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Vigente Desde *</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      'w-full pl-3 text-left font-normal',
+                                      !field.value && 'text-muted-foreground'
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, 'dd MMM yyyy', { locale: es })
+                                    ) : (
+                                      <span>Seleccione fecha</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  initialFocus
+                                  locale={es}
+                                  className="pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="timeModeNotes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notas (opcional)</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Observaciones adicionales sobre la modalidad de tiempo..."
+                              className="min-h-[60px]"
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
