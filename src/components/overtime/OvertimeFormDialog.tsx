@@ -45,6 +45,7 @@ import {
   calculateHours,
   isHolidayOrSunday 
 } from '@/hooks/useOvertime';
+import { useHolidaysSet } from '@/hooks/useHolidays';
 import { OVERTIME_TYPE_LABELS, OVERTIME_SURCHARGES } from '@/types/overtime';
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
@@ -66,6 +67,7 @@ interface OvertimeFormDialogProps {
 export function OvertimeFormDialog({ open, onOpenChange }: OvertimeFormDialogProps) {
   const { data: employees = [] } = useEmployees();
   const createRecord = useCreateOvertimeRecord();
+  const { data: holidaysSet } = useHolidaysSet();
   
   const [previewType, setPreviewType] = useState<string | null>(null);
   const [previewHours, setPreviewHours] = useState<number>(0);
@@ -89,7 +91,7 @@ export function OvertimeFormDialog({ open, onOpenChange }: OvertimeFormDialogPro
   useEffect(() => {
     if (watchDate && watchStartTime && watchEndTime) {
       try {
-        const overtimeType = classifyOvertimeType(watchDate, watchStartTime, watchEndTime);
+        const overtimeType = classifyOvertimeType(watchDate, watchStartTime, watchEndTime, true, holidaysSet);
         const hours = calculateHours(watchStartTime, watchEndTime);
         setPreviewType(overtimeType);
         setPreviewHours(hours);
@@ -102,7 +104,7 @@ export function OvertimeFormDialog({ open, onOpenChange }: OvertimeFormDialogPro
     } else {
       setPreviewType(null);
     }
-  }, [watchDate, watchStartTime, watchEndTime]);
+  }, [watchDate, watchStartTime, watchEndTime, holidaysSet]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
