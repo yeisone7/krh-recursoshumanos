@@ -75,14 +75,6 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   const [selectedShiftId, setSelectedShiftId] = useState<string>('');
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ employeeId: string; date: string } | null>(null);
-  // Context menu state
-  const [contextMenuTarget, setContextMenuTarget] = useState<{
-    employeeId: string;
-    date: string;
-    assignment: EmployeeShiftAssignment | null;
-    shift: Shift | null;
-    hasAbsence: boolean;
-  } | null>(null);
 
   const { currentCompanyId } = useAuth();
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
@@ -420,47 +412,6 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
     return selectedCells.some(cell => cell.employeeId === employeeId && cell.dates.includes(date));
   };
 
-  // Context menu handlers
-  const handleContextMenuAction = async (action: 'assign' | 'change' | 'delete', shiftId?: string) => {
-    if (!contextMenuTarget) return;
-
-    const { employeeId, date, assignment, hasAbsence } = contextMenuTarget;
-
-    if (action === 'delete' && assignment) {
-      try {
-        await deleteAssignment.mutateAsync(assignment.id);
-        toast.success('Asignación eliminada');
-      } catch (error: any) {
-        toast.error('Error', { description: error.message });
-      }
-    } else if ((action === 'assign' || action === 'change') && shiftId) {
-      const selectedShift = getShiftById(shiftId);
-      const isWorkShift = selectedShift && !selectedShift.is_rest_day;
-
-      // Check for absence conflict when assigning work shift
-      if (isWorkShift && hasAbsence) {
-        toast.error('No se puede asignar turno laboral', {
-          description: 'El empleado tiene una novedad activa en este día',
-        });
-        return;
-      }
-
-      try {
-        await createBulkAssignments.mutateAsync([{
-          employee_id: employeeId,
-          shift_id: shiftId,
-          assignment_date: date,
-          source: 'manual' as const,
-        }]);
-        toast.success(action === 'change' ? 'Turno cambiado' : 'Turno asignado');
-      } catch (error: any) {
-        toast.error('Error', { description: error.message });
-      }
-    }
-
-    setContextMenuTarget(null);
-  };
-
   const activeShifts = shifts.filter(s => s.is_active);
   const isLoading = loadingEmployees || loadingAssignments;
 
@@ -672,7 +623,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
                               return (
                                 <ContextMenu key={dateStr}>
-                                  <ContextMenuTrigger asChild>
+                                  <ContextMenuTrigger>
                                     <div
                                       className={cn(
                                         'w-10 p-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
@@ -692,21 +643,11 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                       }}
                                       onMouseEnter={() => handleCellMouseEnter(employee.id, dateStr)}
                                       onMouseUp={handleCellMouseUp}
-                                      onContextMenu={(e) => {
-                                        e.preventDefault();
-                                        setContextMenuTarget({
-                                          employeeId: employee.id,
-                                          date: dateStr,
-                                          assignment: assignment || null,
-                                          shift: shift || null,
-                                          hasAbsence: !!absence,
-                                        });
-                                      }}
                                     >
                                       <TooltipProvider>
                                         <Tooltip>
                                           <TooltipTrigger asChild>
-                                            <div className="w-full h-full">
+                                            <div className="w-full h-full min-h-[24px]">
                                               {/* Conflict indicator badge */}
                                               {hasConflict && (
                                                 <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center z-10 shadow-sm">
@@ -794,15 +735,26 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                   
                                   <ContextMenuContent className="w-48 bg-background">
                                     {/* Assign shift (when no shift exists) */}
-                                    {!shift && !absence && (
+                                    {!assignment && !absence && (
                                       <>
-                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                                          <Plus className="w-3 h-3" />
                                           Asignar turno
                                         </div>
                                         {activeShifts.map((s) => (
                                           <ContextMenuItem
                                             key={s.id}
-                                            onClick={() => handleContextMenuAction('assign', s.id)}
+                                            onClick={() => {
+                                              createBulkAssignments.mutate([{
+                                                employee_id: employee.id,
+                                                shift_id: s.id,
+                                                assignment_date: dateStr,
+                                                source: 'manual' as const,
+                                              }], {
+                                                onSuccess: () => toast.success('Turno asignado'),
+                                                onError: (error: any) => toast.error('Error', { description: error.message })
+                                              });
+                                            }}
                                             className="flex items-center gap-2"
                                           >
                                             <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
@@ -814,15 +766,26 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                     )}
                                     
                                     {/* Change/Delete shift (when shift exists) */}
-                                    {shift && (
+                                    {assignment && (
                                       <>
-                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                                          <Edit className="w-3 h-3" />
                                           Cambiar turno
                                         </div>
-                                        {activeShifts.filter(s => s.id !== shift.id).map((s) => (
+                                        {activeShifts.filter(s => s.id !== assignment.shift_id).map((s) => (
                                           <ContextMenuItem
                                             key={s.id}
-                                            onClick={() => handleContextMenuAction('change', s.id)}
+                                            onClick={() => {
+                                              createBulkAssignments.mutate([{
+                                                employee_id: employee.id,
+                                                shift_id: s.id,
+                                                assignment_date: dateStr,
+                                                source: 'manual' as const,
+                                              }], {
+                                                onSuccess: () => toast.success('Turno cambiado'),
+                                                onError: (error: any) => toast.error('Error', { description: error.message })
+                                              });
+                                            }}
                                             className="flex items-center gap-2"
                                           >
                                             <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
@@ -832,7 +795,12 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                         ))}
                                         <ContextMenuSeparator />
                                         <ContextMenuItem
-                                          onClick={() => handleContextMenuAction('delete')}
+                                          onClick={() => {
+                                            deleteAssignment.mutate(assignment.id, {
+                                              onSuccess: () => toast.success('Asignación eliminada'),
+                                              onError: (error: any) => toast.error('Error', { description: error.message })
+                                            });
+                                          }}
                                           className="text-destructive focus:text-destructive"
                                         >
                                           <Trash2 className="w-4 h-4 mr-2" />
@@ -842,7 +810,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                     )}
                                     
                                     {/* Absence day - can only assign rest days */}
-                                    {absence && !shift && (
+                                    {absence && !assignment && (
                                       <>
                                         <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                                           Solo descansos (hay novedad)
@@ -850,7 +818,17 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                         {activeShifts.filter(s => s.is_rest_day).map((s) => (
                                           <ContextMenuItem
                                             key={s.id}
-                                            onClick={() => handleContextMenuAction('assign', s.id)}
+                                            onClick={() => {
+                                              createBulkAssignments.mutate([{
+                                                employee_id: employee.id,
+                                                shift_id: s.id,
+                                                assignment_date: dateStr,
+                                                source: 'manual' as const,
+                                              }], {
+                                                onSuccess: () => toast.success('Turno asignado'),
+                                                onError: (error: any) => toast.error('Error', { description: error.message })
+                                              });
+                                            }}
                                             className="flex items-center gap-2"
                                           >
                                             <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
@@ -901,6 +879,21 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
               <p className="text-sm text-muted-foreground mb-2">
                 Se asignará el turno a <strong>{selectedCells[0]?.dates.length || 0}</strong> día(s).
               </p>
+              
+              {/* Show existing assignments info */}
+              {selectedCells.length > 0 && (() => {
+                const existingAssignments = selectedCells[0]?.dates.filter(date => 
+                  assignmentsMap[selectedCells[0].employeeId]?.[date]
+                ) || [];
+                if (existingAssignments.length > 0) {
+                  return (
+                    <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                      ⚠️ {existingAssignments.length} día(s) ya tienen turno asignado y serán reemplazados.
+                    </p>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
             <div>
@@ -924,14 +917,52 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowAssignDialog(false); clearSelection(); }}>
-              Cancelar
-            </Button>
-            <Button onClick={handleAssign} disabled={!selectedShiftId || createBulkAssignments.isPending}>
-              {createBulkAssignments.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Asignar
-            </Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {/* Delete button - only show when there are existing assignments */}
+            {selectedCells.length > 0 && selectedCells[0]?.dates.some(date => 
+              assignmentsMap[selectedCells[0].employeeId]?.[date]
+            ) && (
+              <Button 
+                variant="destructive" 
+                className="sm:mr-auto"
+                onClick={async () => {
+                  const assignmentsToDelete = selectedCells[0]?.dates
+                    .map(date => assignmentsMap[selectedCells[0].employeeId]?.[date])
+                    .filter(Boolean) as EmployeeShiftAssignment[];
+                  
+                  if (assignmentsToDelete.length === 0) return;
+                  
+                  try {
+                    for (const assignment of assignmentsToDelete) {
+                      await deleteAssignment.mutateAsync(assignment.id);
+                    }
+                    toast.success(`${assignmentsToDelete.length} asignación(es) eliminada(s)`);
+                    setShowAssignDialog(false);
+                    clearSelection();
+                  } catch (error: any) {
+                    toast.error('Error', { description: error.message });
+                  }
+                }}
+                disabled={deleteAssignment.isPending}
+              >
+                {deleteAssignment.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                Eliminar
+              </Button>
+            )}
+            
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => { setShowAssignDialog(false); clearSelection(); }}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAssign} disabled={!selectedShiftId || createBulkAssignments.isPending}>
+                {createBulkAssignments.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Asignar
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
