@@ -65,7 +65,7 @@ import { DAY_NAMES_SHORT } from '@/types/schedule';
 import type { WorkSchedule, Shift, ShiftCycle } from '@/types/schedule';
 
 export default function Jornadas() {
-  const [activeTab, setActiveTab] = useState<'schedules' | 'shifts' | 'cycles' | 'calendar'>('schedules');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'schedules' | 'shifts' | 'cycles'>('calendar');
   const [searchQuery, setSearchQuery] = useState('');
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [showShiftForm, setShowShiftForm] = useState(false);
@@ -163,6 +163,10 @@ export default function Jornadas() {
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <TabsList>
+                <TabsTrigger value="calendar" className="gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Calendario
+                </TabsTrigger>
                 <TabsTrigger value="schedules" className="gap-2">
                   <Briefcase className="w-4 h-4" />
                   Horarios
@@ -174,10 +178,6 @@ export default function Jornadas() {
                 <TabsTrigger value="cycles" className="gap-2">
                   <RotateCcw className="w-4 h-4" />
                   Ciclos
-                </TabsTrigger>
-                <TabsTrigger value="calendar" className="gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Calendario
                 </TabsTrigger>
               </TabsList>
 
