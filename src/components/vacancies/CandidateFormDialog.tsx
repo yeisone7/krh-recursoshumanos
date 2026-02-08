@@ -116,7 +116,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-2xl max-h-[95vh] p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             <User className="w-5 h-5 text-primary" />
