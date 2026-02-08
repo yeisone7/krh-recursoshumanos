@@ -1,116 +1,205 @@
 
-# Plan: Completar datos dinámicos para generación de contratos
+# Plan: Alerta Visual y Trigger Automático para Conflictos Turno/Novedad
 
 ## Resumen
 
-Agregar los campos faltantes para que la plantilla DOCX pueda inyectar toda la información solicitada del empleado y contrato.
+Implementar dos funcionalidades complementarias para gestionar conflictos entre asignaciones de turnos y novedades (vacaciones, permisos, incapacidades):
 
-## Cambios Necesarios
+1. **Alerta Visual en el Calendario**: Mostrar un indicador de conflicto cuando existe un turno asignado en un día donde el empleado tiene una novedad activa
+2. **Trigger Automático**: Eliminar automáticamente las asignaciones de turno cuando se aprueba una vacación, permiso o incapacidad que afecta ese período
 
-### 1. Actualizar la interfaz ContractDocumentData
+---
 
-Agregar el campo para el término inicial del contrato:
+## Comportamiento Esperado
 
-```typescript
-// En src/lib/contractDocumentGenerator.ts
-export interface ContractDocumentData {
-  // ... campos existentes ...
-  
-  // Nuevo campo
-  contractDurationMonths?: number; // Término inicial en meses
-}
-```
+### Alerta Visual
+- En el `ShiftCalendar`, cuando un empleado tiene **tanto** un turno asignado **como** una novedad en el mismo día:
+  - La celda mostrará un indicador de conflicto (borde rojo + ícono de advertencia)
+  - El tooltip mostrará información del conflicto: turno asignado vs tipo de novedad
+  - El usuario podrá identificar rápidamente qué asignaciones deben revisarse
 
-### 2. Agregar nuevo placeholder en prepareTemplateData
+### Trigger Automático
+- Cuando se **aprueba** una vacación, permiso o incapacidad:
+  - El sistema eliminará automáticamente las asignaciones de turno existentes para ese empleado en el período de la novedad
+  - Solo se eliminarán turnos de trabajo (no días de descanso)
+  - Se mostrará una notificación indicando cuántas asignaciones fueron eliminadas
 
-```typescript
-// Nuevo placeholder para término inicial
-CONTRATO_DURACION_MESES: data.contractDurationMonths 
-  ? `${data.contractDurationMonths} meses` 
-  : 'Indefinido',
-```
+---
 
-### 3. Modificar GenerateContractDialog para obtener datos completos del empleado
+## Cambios Técnicos
 
-Actualmente el diálogo solo recibe datos básicos del empleado. Se debe:
+### 1. Modificar el Calendario de Turnos (Frontend)
 
-- Hacer una consulta adicional a `employee_contact` para obtener: email, telefono, direccion
-- Hacer una consulta adicional a `employee_work_info` para obtener: cargo (position_name), centro de operacion
+**Archivo:** `src/components/schedules/ShiftCalendar.tsx`
 
-### 4. Calcular el término inicial automáticamente
-
-Agregar función para calcular meses entre fecha inicio y fecha fin:
-
-```typescript
-function calculateMonthsDifference(startDate: Date, endDate: Date): number {
-  const months = (endDate.getFullYear() - startDate.getFullYear()) * 12;
-  return months + endDate.getMonth() - startDate.getMonth();
-}
-```
-
-## Archivos a Modificar
-
-1. **src/lib/contractDocumentGenerator.ts**
-   - Agregar `contractDurationMonths` a la interfaz
-   - Agregar placeholder `CONTRATO_DURACION_MESES`
-   - Agregar funcion `calculateMonthsDifference`
-
-2. **src/components/contracts/GenerateContractDialog.tsx**
-   - Agregar consulta a `employee_contact` para obtener email, telefono, direccion
-   - Agregar consulta a `employee_work_info` para obtener cargo real
-   - Pasar los nuevos datos a `prepareDocumentData`
-   - Calcular duracion del contrato en meses
-
-## Lista Final de Placeholders
-
-Despues de implementar, tu plantilla Word podra usar:
-
-| Placeholder | Descripcion |
-|-------------|-------------|
-| `{{EMPRESA_NOMBRE}}` | Nombre de la empresa |
-| `{{EMPRESA_DIRECCION}}` | Domicilio del empleador |
-| `{{EMPRESA_NIT}}` | NIT de la empresa |
-| `{{EMPLEADO_NOMBRE_COMPLETO}}` | Nombre completo del trabajador |
-| `{{EMPLEADO_DOCUMENTO}}` | Numero de identificacion |
-| `{{EMPLEADO_TIPO_DOCUMENTO}}` | Tipo de documento (C.C., etc.) |
-| `{{EMPLEADO_EMAIL}}` | Correo electronico del trabajador |
-| `{{EMPLEADO_DIRECCION}}` | Direccion de residencia |
-| `{{EMPLEADO_TELEFONO}}` | Telefono del trabajador |
-| `{{EMPLEADO_CARGO}}` | Cargo del empleado |
-| `{{EMPLEADO_CENTRO_OPERACION}}` | Centro de operaciones |
-| `{{CONTRATO_SALARIO}}` | Salario formateado ($2.500.000) |
-| `{{CONTRATO_SALARIO_LETRAS}}` | Salario en letras |
-| `{{CONTRATO_FECHA_INICIO}}` | Fecha inicio (dd/mm/yyyy) |
-| `{{CONTRATO_FECHA_INICIO_LETRAS}}` | Fecha inicio en palabras |
-| `{{CONTRATO_DURACION_MESES}}` | Termino inicial (ej: "12 meses") |
-| `{{CONTRATO_FECHA_FIN}}` | Fecha fin del contrato |
-| `{{CONTRATO_FECHA_FIN_LETRAS}}` | Fecha fin en palabras |
-| `{{FECHA_GENERACION_LETRAS}}` | Fecha de generacion del documento |
-| `{{CIUDAD_GENERACION}}` | Ciudad donde se genera |
-
-## Ejemplo de Uso en Plantilla
+**Cambios:**
+- Detectar cuando existe conflicto: `shift` presente Y `absence` presente en el mismo día
+- Aplicar estilos de conflicto: borde rojo, fondo con indicador de alerta
+- Mostrar tooltip con información del conflicto
+- Agregar indicador visual (ícono de exclamación superpuesto)
 
 ```text
-CONTRATO DE TRABAJO
-
-Entre {{EMPRESA_NOMBRE}}, con domicilio en {{EMPRESA_DIRECCION}}, 
-identificada con NIT {{EMPRESA_NIT}}, y {{EMPLEADO_NOMBRE_COMPLETO}}, 
-identificado con {{EMPLEADO_TIPO_DOCUMENTO}} No. {{EMPLEADO_DOCUMENTO}}, 
-residente en {{EMPLEADO_DIRECCION}}, telefono {{EMPLEADO_TELEFONO}}, 
-correo {{EMPLEADO_EMAIL}}.
-
-CARGO: {{EMPLEADO_CARGO}}
-CENTRO DE OPERACIONES: {{EMPLEADO_CENTRO_OPERACION}}
-SALARIO: {{CONTRATO_SALARIO}} ({{CONTRATO_SALARIO_LETRAS}})
-FECHA DE INICIO: {{CONTRATO_FECHA_INICIO_LETRAS}}
-DURACION: {{CONTRATO_DURACION_MESES}}
-
-Firmado en {{CIUDAD_GENERACION}}, {{FECHA_GENERACION_LETRAS}}.
+Flujo Visual:
+┌─────────────────────────────────────────────────────────────┐
+│  Celda Normal con Turno    │  Celda con Conflicto          │
+│  ┌─────────┐               │  ┌─────────┐                  │
+│  │  T1     │               │  │⚠ T1 ⚠  │ ← Borde rojo     │
+│  └─────────┘               │  └─────────┘                  │
+│                            │  Tooltip: "Conflicto:         │
+│                            │  Turno Mañana asignado        │
+│                            │  durante Vacaciones"          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Como Subir la Plantilla
+### 2. Crear Función para Eliminar Asignaciones (Backend)
 
-1. Ir a Configuracion > Tipos de Contrato
-2. Editar el tipo de contrato deseado
-3. En la seccion "Plantilla de Contrato", subir el archivo .docx
-4. El sistema asociara automaticamente la plantilla al tipo de contrato
+**Archivo:** Nueva migración SQL
+
+**Crear función de base de datos:**
+```sql
+CREATE OR REPLACE FUNCTION delete_shift_assignments_for_absence(
+  p_employee_id UUID,
+  p_start_date DATE,
+  p_end_date DATE
+) RETURNS INTEGER
+```
+
+Esta función:
+- Elimina registros de `employee_shift_assignments` donde el turno NO es día de descanso
+- Retorna la cantidad de registros eliminados
+- Se ejecuta con permisos de servicio (`SECURITY DEFINER`)
+
+### 3. Integrar Eliminación Automática en Hooks (Frontend)
+
+**Archivos a modificar:**
+- `src/hooks/useVacations.ts` - en `useApproveVacation`
+- `src/hooks/useLeaves.ts` - en `useApproveLeaveRequest`
+- `src/hooks/useIncapacities.ts` - en `useCreateIncapacity`
+
+**Lógica:**
+Después de aprobar/crear la novedad, llamar a una función RPC o ejecutar un DELETE directo que elimine las asignaciones de turno en el período afectado.
+
+```text
+Flujo de Aprobación:
+┌──────────────────────────────────────────────────────────────┐
+│  1. Usuario aprueba vacación (15-30 Ene)                     │
+│                     ↓                                        │
+│  2. Se actualiza vacation_requests.status = 'aprobado'       │
+│                     ↓                                        │
+│  3. Se ejecuta DELETE en employee_shift_assignments          │
+│     WHERE employee_id = X                                    │
+│       AND assignment_date BETWEEN '2026-01-15' AND '2026-01-30'
+│       AND shift.is_rest_day = false                          │
+│                     ↓                                        │
+│  4. Toast: "3 asignaciones de turno eliminadas               │
+│     por conflicto con vacaciones"                            │
+│                     ↓                                        │
+│  5. Invalidar queries de shift_assignments                   │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 4. Crear Hook Reutilizable para Limpiar Asignaciones
+
+**Archivo nuevo:** `src/hooks/useCleanupShiftAssignments.ts`
+
+```typescript
+export function useCleanupShiftAssignments() {
+  return useMutation({
+    mutationFn: async ({
+      employeeId,
+      startDate,
+      endDate,
+    }: {
+      employeeId: string;
+      startDate: string;
+      endDate: string;
+    }) => {
+      // Eliminar asignaciones que no sean días de descanso
+      // ...
+    },
+  });
+}
+```
+
+---
+
+## Archivos a Crear/Modificar
+
+| Archivo | Acción | Descripción |
+|---------|--------|-------------|
+| `supabase/migrations/XXXXX_cleanup_shifts_on_absence.sql` | Crear | Función SQL para limpieza |
+| `src/hooks/useCleanupShiftAssignments.ts` | Crear | Hook reutilizable para limpieza |
+| `src/components/schedules/ShiftCalendar.tsx` | Modificar | Agregar indicador visual de conflicto |
+| `src/hooks/useVacations.ts` | Modificar | Llamar limpieza al aprobar vacaciones |
+| `src/hooks/useLeaves.ts` | Modificar | Llamar limpieza al aprobar permisos |
+| `src/hooks/useIncapacities.ts` | Modificar | Llamar limpieza al crear incapacidad |
+
+---
+
+## Detalles de Implementación Visual
+
+### Estilos de Conflicto en Celda
+
+```tsx
+// Detectar conflicto
+const hasConflict = shift && absence && !shift.is_rest_day;
+
+// Aplicar estilos
+<div className={cn(
+  'w-10 p-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
+  // Estilos existentes...
+  hasConflict && 'ring-2 ring-red-500 bg-red-50'
+)}>
+  {/* Indicador de turno con conflicto */}
+  {hasConflict && (
+    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+      <span className="text-[8px] text-white font-bold">!</span>
+    </div>
+  )}
+  {/* Turno */}
+  {shift && (
+    <div className={cn(
+      'h-6 rounded text-[10px] font-medium text-white flex items-center justify-center',
+      hasConflict && 'opacity-70'
+    )} style={{ backgroundColor: shift.color }}>
+      {shift.code || shift.name.slice(0, 2).toUpperCase()}
+    </div>
+  )}
+</div>
+```
+
+### Tooltip de Conflicto
+
+```tsx
+{hasConflict && (
+  <TooltipContent side="top" className="bg-red-50 border-red-200">
+    <div className="space-y-1">
+      <p className="font-semibold text-red-700">⚠️ Conflicto detectado</p>
+      <p className="text-sm">Turno: {shift.name}</p>
+      <p className="text-sm">Novedad: {absence.description}</p>
+      <p className="text-xs text-red-600">
+        La asignación debería eliminarse
+      </p>
+    </div>
+  </TooltipContent>
+)}
+```
+
+---
+
+## Consideraciones
+
+1. **Incapacidades**: Se eliminan turnos al **crear** la incapacidad (no hay flujo de aprobación separado)
+2. **Vacaciones y Permisos**: Se eliminan turnos al **aprobar** la solicitud
+3. **Turnos de Descanso**: NO se eliminan (son compatibles con cualquier novedad)
+4. **Invalidación de Queries**: Después de eliminar, se invalidan los queries de `shift_assignments` para refrescar el calendario
+5. **Notificaciones**: Se muestra toast informando cuántas asignaciones fueron eliminadas
+
+---
+
+## Resultado Final
+
+El usuario podrá:
+1. **Visualizar conflictos** existentes en el calendario con indicadores claros
+2. **Confiar** en que al aprobar novedades, los turnos conflictivos se eliminarán automáticamente
+3. **Reducir errores manuales** al no tener que recordar limpiar asignaciones manualmente
