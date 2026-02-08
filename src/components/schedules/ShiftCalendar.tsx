@@ -549,172 +549,170 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="border rounded-lg overflow-hidden">
-        <ScrollArea className="max-h-[calc(100vh-350px)]">
-          <div className="min-w-[900px]">
-            {/* Days Header */}
-            <div className="flex bg-muted sticky top-0 z-10">
-              <div className="w-56 p-2 border-r font-medium flex items-center gap-2 shrink-0">
-                <Users className="w-4 h-4" />
-                Centro / Área / Empleado
-              </div>
-              {daysInPeriod.map((day) => {
-                const dateStr = format(day, 'yyyy-MM-dd');
-                const holiday = isHoliday(day);
-                const sunday = isSunday(day);
-                const today = isToday(day);
-
-                return (
-                  <div
-                    key={dateStr}
-                    className={cn(
-                      'w-10 p-1 text-center text-xs border-r shrink-0',
-                      sunday && 'bg-red-50',
-                      holiday && 'bg-amber-50',
-                      today && 'ring-2 ring-inset ring-primary'
-                    )}
-                    title={holiday || undefined}
-                  >
-                    <div className="font-medium">{format(day, 'EEE', { locale: es })}</div>
-                    <div className={cn('text-muted-foreground', today && 'text-primary font-bold')}>
-                      {format(day, 'd')}
-                    </div>
-                  </div>
-                );
-              })}
+      <div className="border rounded-lg overflow-auto max-h-[calc(100vh-320px)]">
+        <div className="min-w-max">
+          {/* Days Header */}
+          <div className="flex bg-muted sticky top-0 z-10">
+            <div className="w-56 p-2 border-r font-medium flex items-center gap-2 shrink-0 sticky left-0 bg-muted z-20">
+              <Users className="w-4 h-4" />
+              Centro / Área / Empleado
             </div>
+            {daysInPeriod.map((day) => {
+              const dateStr = format(day, 'yyyy-MM-dd');
+              const holiday = isHoliday(day);
+              const sunday = isSunday(day);
+              const today = isToday(day);
 
-            {/* Grouped Rows */}
-            {groupedEmployees.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                No hay empleados activos en el centro seleccionado
-              </div>
-            ) : (
-              groupedEmployees.map((group) => {
-                const isCenterExpanded = expandedCenters.has(group.centerId);
-                
-                return (
-                  <div key={group.centerId}>
-                    {/* Center Header */}
-                    <div 
-                      className="flex border-t bg-slate-100 cursor-pointer hover:bg-slate-200"
-                      onClick={() => toggleCenter(group.centerId)}
-                    >
-                      <div className="w-56 p-2 border-r font-semibold flex items-center gap-2 shrink-0 text-sm">
-                        {isCenterExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-                        <Building2 className="w-4 h-4 text-primary" />
-                        {group.centerName}
-                        <Badge variant="secondary" className="ml-auto text-xs">
-                          {group.areas.reduce((acc, a) => acc + (a.employees?.length || 0), 0)}
-                        </Badge>
-                      </div>
-                      {daysInPeriod.map((day) => (
-                        <div key={format(day, 'yyyy-MM-dd')} className="w-10 border-r shrink-0" />
-                      ))}
+              return (
+                <div
+                  key={dateStr}
+                  className={cn(
+                    'w-10 p-1 text-center text-xs border-r shrink-0',
+                    sunday && 'bg-red-50',
+                    holiday && 'bg-amber-50',
+                    today && 'ring-2 ring-inset ring-primary'
+                  )}
+                  title={holiday || undefined}
+                >
+                  <div className="font-medium">{format(day, 'EEE', { locale: es })}</div>
+                  <div className={cn('text-muted-foreground', today && 'text-primary font-bold')}>
+                    {format(day, 'd')}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Grouped Rows */}
+          {groupedEmployees.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              No hay empleados activos en el centro seleccionado
+            </div>
+          ) : (
+            groupedEmployees.map((group) => {
+              const isCenterExpanded = expandedCenters.has(group.centerId);
+              
+              return (
+                <div key={group.centerId}>
+                  {/* Center Header */}
+                  <div 
+                    className="flex border-t bg-slate-100 cursor-pointer hover:bg-slate-200"
+                    onClick={() => toggleCenter(group.centerId)}
+                  >
+                    <div className="w-56 p-2 border-r font-semibold flex items-center gap-2 shrink-0 text-sm sticky left-0 bg-slate-100 z-10">
+                      {isCenterExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                      <Building2 className="w-4 h-4 text-primary" />
+                      {group.centerName}
+                      <Badge variant="secondary" className="ml-auto text-xs">
+                        {group.areas.reduce((acc, a) => acc + (a.employees?.length || 0), 0)}
+                      </Badge>
                     </div>
+                    {daysInPeriod.map((day) => (
+                      <div key={format(day, 'yyyy-MM-dd')} className="w-10 border-r shrink-0" />
+                    ))}
+                  </div>
 
-                    {/* Areas & Employees */}
-                    {isCenterExpanded && group.areas.map((area) => {
-                      const areaKey = `${group.centerId}-${area.areaId}`;
-                      const isAreaExpanded = expandedAreas.has(areaKey);
+                  {/* Areas & Employees */}
+                  {isCenterExpanded && group.areas.map((area) => {
+                    const areaKey = `${group.centerId}-${area.areaId}`;
+                    const isAreaExpanded = expandedAreas.has(areaKey);
 
-                      return (
-                        <div key={area.areaId}>
-                          {/* Area Header */}
-                          <div 
-                            className="flex border-t bg-slate-50 cursor-pointer hover:bg-slate-100"
-                            onClick={() => toggleArea(areaKey)}
-                          >
-                            <div className="w-56 p-2 pl-6 border-r font-medium flex items-center gap-2 shrink-0 text-sm">
-                              {isAreaExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
-                              {area.areaName}
-                              <Badge variant="outline" className="ml-auto text-xs">
-                                {area.employees?.length || 0}
-                              </Badge>
-                            </div>
-                            {daysInPeriod.map((day) => (
-                              <div key={format(day, 'yyyy-MM-dd')} className="w-10 border-r shrink-0" />
-                            ))}
+                    return (
+                      <div key={area.areaId}>
+                        {/* Area Header */}
+                        <div 
+                          className="flex border-t bg-slate-50 cursor-pointer hover:bg-slate-100"
+                          onClick={() => toggleArea(areaKey)}
+                        >
+                          <div className="w-56 p-2 pl-6 border-r font-medium flex items-center gap-2 shrink-0 text-sm sticky left-0 bg-slate-50 z-10">
+                            {isAreaExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+                            {area.areaName}
+                            <Badge variant="outline" className="ml-auto text-xs">
+                              {area.employees?.length || 0}
+                            </Badge>
                           </div>
-
-                          {/* Employees */}
-                          {isAreaExpanded && area.employees?.map((employee) => (
-                            <div key={employee.id} className="flex border-t hover:bg-muted/30">
-                              <div className="w-56 p-2 pl-10 border-r shrink-0 flex items-center">
-                                <span className="truncate text-sm">{getEmployeeFullName(employee)}</span>
-                              </div>
-                              {daysInPeriod.map((day) => {
-                                const dateStr = format(day, 'yyyy-MM-dd');
-                                const assignment = assignmentsMap[employee.id]?.[dateStr];
-                                const shift = assignment ? getShiftById(assignment.shift_id) : null;
-                                const holiday = isHoliday(day);
-                                const sunday = isSunday(day);
-                                const selected = isCellSelected(employee.id, dateStr);
-                                const absence = absencesMap[employee.id]?.[dateStr];
-
-                                return (
-                                  <TooltipProvider key={dateStr}>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div
-                                          className={cn(
-                                            'w-10 p-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
-                                            sunday && !absence && 'bg-red-50',
-                                            holiday && !absence && 'bg-amber-50',
-                                            absence && 'bg-purple-100',
-                                            selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
-                                          )}
-                                          onMouseDown={() => handleCellMouseDown(employee.id, dateStr)}
-                                          onMouseEnter={() => handleCellMouseEnter(employee.id, dateStr)}
-                                          onMouseUp={handleCellMouseUp}
-                                        >
-                                          {absence && !shift && (
-                                            <div className="h-6 rounded text-[10px] font-medium text-purple-700 flex items-center justify-center bg-purple-200">
-                                              <AlertTriangle className="w-3 h-3" />
-                                            </div>
-                                          )}
-                                          {shift && (
-                                            <div
-                                              className="h-6 rounded text-[10px] font-medium text-white flex items-center justify-center"
-                                              style={{ backgroundColor: shift.color }}
-                                            >
-                                              {shift.code || shift.name.slice(0, 2).toUpperCase()}
-                                            </div>
-                                          )}
-                                          {!shift && !absence && <div className="h-6" />}
-                                        </div>
-                                      </TooltipTrigger>
-                                      {absence && (
-                                        <TooltipContent>
-                                          <p className="font-medium">{absence.description}</p>
-                                          <p className="text-xs text-muted-foreground">
-                                            {absence.start_date} - {absence.end_date}
-                                          </p>
-                                        </TooltipContent>
-                                      )}
-                                      {shift && !absence && (
-                                        <TooltipContent>
-                                          <p>{shift.name}</p>
-                                          <p className="text-xs text-muted-foreground">
-                                            {shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}
-                                          </p>
-                                        </TooltipContent>
-                                      )}
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                );
-                              })}
-                            </div>
+                          {daysInPeriod.map((day) => (
+                            <div key={format(day, 'yyyy-MM-dd')} className="w-10 border-r shrink-0" />
                           ))}
                         </div>
-                      );
-                    })}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </ScrollArea>
+
+                        {/* Employees */}
+                        {isAreaExpanded && area.employees?.map((employee) => (
+                          <div key={employee.id} className="flex border-t hover:bg-muted/30">
+                            <div className="w-56 p-2 pl-10 border-r shrink-0 flex items-center sticky left-0 bg-background z-10">
+                              <span className="truncate text-sm">{getEmployeeFullName(employee)}</span>
+                            </div>
+                            {daysInPeriod.map((day) => {
+                              const dateStr = format(day, 'yyyy-MM-dd');
+                              const assignment = assignmentsMap[employee.id]?.[dateStr];
+                              const shift = assignment ? getShiftById(assignment.shift_id) : null;
+                              const holiday = isHoliday(day);
+                              const sunday = isSunday(day);
+                              const selected = isCellSelected(employee.id, dateStr);
+                              const absence = absencesMap[employee.id]?.[dateStr];
+
+                              return (
+                                <TooltipProvider key={dateStr}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div
+                                        className={cn(
+                                          'w-10 p-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
+                                          sunday && !absence && 'bg-red-50',
+                                          holiday && !absence && 'bg-amber-50',
+                                          absence && 'bg-purple-100',
+                                          selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
+                                        )}
+                                        onMouseDown={() => handleCellMouseDown(employee.id, dateStr)}
+                                        onMouseEnter={() => handleCellMouseEnter(employee.id, dateStr)}
+                                        onMouseUp={handleCellMouseUp}
+                                      >
+                                        {absence && !shift && (
+                                          <div className="h-6 rounded text-[10px] font-medium text-purple-700 flex items-center justify-center bg-purple-200">
+                                            <AlertTriangle className="w-3 h-3" />
+                                          </div>
+                                        )}
+                                        {shift && (
+                                          <div
+                                            className="h-6 rounded text-[10px] font-medium text-white flex items-center justify-center"
+                                            style={{ backgroundColor: shift.color }}
+                                          >
+                                            {shift.code || shift.name.slice(0, 2).toUpperCase()}
+                                          </div>
+                                        )}
+                                        {!shift && !absence && <div className="h-6" />}
+                                      </div>
+                                    </TooltipTrigger>
+                                    {absence && (
+                                      <TooltipContent>
+                                        <p className="font-medium">{absence.description}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {absence.start_date} - {absence.end_date}
+                                        </p>
+                                      </TooltipContent>
+                                    )}
+                                    {shift && !absence && (
+                                      <TooltipContent>
+                                        <p>{shift.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}
+                                        </p>
+                                      </TooltipContent>
+                                    )}
+                                  </Tooltip>
+                                </TooltipProvider>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Instructions */}
