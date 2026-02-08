@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { AlertTriangle, UserX, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -36,51 +35,48 @@ export function MissingConfigAlert({ onAssignClick }: MissingConfigAlertProps) {
   }
 
   return (
-    <Alert variant="default" className="border-amber-200 bg-amber-50">
-      <AlertTriangle className="h-4 w-4 text-amber-600" />
-      <AlertTitle className="text-amber-800">
-        Empleados sin configuración de tiempo
-      </AlertTitle>
-      <AlertDescription className="text-amber-700">
-        <Collapsible>
-          <div className="flex items-center justify-between mt-2">
-            <span>
+    <div className="border border-warning/30 bg-warning/10 rounded-md px-3 py-2">
+      <Collapsible>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-warning flex-shrink-0" />
+            <span className="text-warning-foreground text-sm">
               <strong>{employeesWithoutConfig.length}</strong> empleado(s) activo(s) no tienen modalidad de tiempo asignada.
             </span>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-amber-700 hover:text-amber-800 hover:bg-amber-100">
-                Ver lista
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </CollapsibleTrigger>
           </div>
-          <CollapsibleContent className="mt-2">
-            <div className="flex flex-wrap gap-2 mb-3">
-              {employeesWithoutConfig.slice(0, 10).map((emp) => (
-                <Link key={emp.id} to={`/empleados/${emp.id}/360`}>
-                  <Badge 
-                    variant="outline" 
-                    className="cursor-pointer hover:bg-amber-100 border-amber-300 text-amber-800"
-                  >
-                    <UserX className="w-3 h-3 mr-1" />
-                    {getEmployeeFullName(emp)}
-                  </Badge>
-                </Link>
-              ))}
-              {employeesWithoutConfig.length > 10 && (
-                <Badge variant="secondary">
-                  +{employeesWithoutConfig.length - 10} más
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-warning-foreground hover:bg-warning/20 h-7 px-2">
+              Ver lista
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent className="mt-2">
+          <div className="flex flex-wrap gap-2 mb-3">
+            {employeesWithoutConfig.slice(0, 10).map((emp) => (
+              <Link key={emp.id} to={`/empleados/${emp.id}/360`}>
+                <Badge 
+                  variant="outline" 
+                  className="cursor-pointer hover:bg-warning/20 border-warning/50 text-warning-foreground"
+                >
+                  <UserX className="w-3 h-3 mr-1" />
+                  {getEmployeeFullName(emp)}
                 </Badge>
-              )}
-            </div>
-            {onAssignClick && (
-              <Button size="sm" variant="outline" onClick={onAssignClick} className="border-amber-300 text-amber-800 hover:bg-amber-100">
-                Asignar modalidad
-              </Button>
+              </Link>
+            ))}
+            {employeesWithoutConfig.length > 10 && (
+              <Badge variant="secondary">
+                +{employeesWithoutConfig.length - 10} más
+              </Badge>
             )}
-          </CollapsibleContent>
-        </Collapsible>
-      </AlertDescription>
-    </Alert>
+          </div>
+          {onAssignClick && (
+            <Button size="sm" variant="outline" onClick={onAssignClick} className="border-warning/50 text-warning-foreground hover:bg-warning/20">
+              Asignar modalidad
+            </Button>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
   );
 }
