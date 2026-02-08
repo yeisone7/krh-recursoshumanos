@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { cleanupShiftAssignments } from '@/hooks/useCleanupShiftAssignments';
 import { 
   LeaveRequest, 
   LeaveTypeConfig, 
@@ -355,11 +356,20 @@ export function useApproveLeaveRequest() {
           .eq('id', existingBalance.id);
       }
 
+      // Cleanup conflicting shift assignments
+      await cleanupShiftAssignments({
+        employeeId: request.employee_id,
+        startDate: request.start_date,
+        endDate: request.end_date,
+        absenceType: 'permiso',
+      });
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leave_requests'] });
       queryClient.invalidateQueries({ queryKey: ['leave_balances'] });
+      queryClient.invalidateQueries({ queryKey: ['shift_assignments'] });
     },
   });
 }

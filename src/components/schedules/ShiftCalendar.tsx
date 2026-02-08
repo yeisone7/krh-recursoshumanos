@@ -531,7 +531,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+      <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 bg-red-100 border border-red-300 rounded" />
           <span>Domingo</span>
@@ -543,6 +543,12 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 bg-purple-200 border border-purple-400 rounded" />
           <span>Novedad</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-red-50 border-2 border-destructive rounded relative">
+            <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-destructive rounded-full" />
+          </div>
+          <span className="text-destructive font-medium">Conflicto</span>
         </div>
         <span className="text-xs">|</span>
         <span className="text-xs">{totalEmployees} empleados</span>
@@ -650,6 +656,9 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                               const sunday = isSunday(day);
                               const selected = isCellSelected(employee.id, dateStr);
                               const absence = absencesMap[employee.id]?.[dateStr];
+                              
+                              // Conflict: work shift assigned on a day with an absence
+                              const hasConflict = shift && absence && !shift.is_rest_day;
 
                               return (
                                 <TooltipProvider key={dateStr}>
@@ -660,13 +669,21 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                           'w-10 p-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
                                           sunday && !absence && 'bg-red-50',
                                           holiday && !absence && 'bg-amber-50',
-                                          absence && 'bg-purple-100',
+                                          absence && !hasConflict && 'bg-purple-100',
+                                          hasConflict && 'bg-red-50 ring-2 ring-inset ring-destructive',
                                           selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
                                         )}
                                         onMouseDown={() => handleCellMouseDown(employee.id, dateStr)}
                                         onMouseEnter={() => handleCellMouseEnter(employee.id, dateStr)}
                                         onMouseUp={handleCellMouseUp}
                                       >
+                                        {/* Conflict indicator badge */}
+                                        {hasConflict && (
+                                          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center z-10 shadow-sm">
+                                            <span className="text-[8px] text-destructive-foreground font-bold">!</span>
+                                          </div>
+                                        )}
+                                        
                                         {absence && !shift && (
                                           <div className="h-6 rounded text-[10px] font-medium text-purple-700 flex items-center justify-center bg-purple-200">
                                             <AlertTriangle className="w-3 h-3" />
@@ -674,7 +691,10 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                         )}
                                         {shift && (
                                           <div
-                                            className="h-6 rounded text-[10px] font-medium text-white flex items-center justify-center"
+                                            className={cn(
+                                              'h-6 rounded text-[10px] font-medium text-white flex items-center justify-center',
+                                              hasConflict && 'opacity-70'
+                                            )}
                                             style={{ backgroundColor: shift.color }}
                                           >
                                             {shift.code || shift.name.slice(0, 2).toUpperCase()}
@@ -683,7 +703,26 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                         {!shift && !absence && <div className="h-6" />}
                                       </div>
                                     </TooltipTrigger>
-                                    {absence && (
+                                    
+                                    {/* Conflict tooltip */}
+                                    {hasConflict && (
+                                      <TooltipContent side="top" className="bg-red-50 border-destructive/30 max-w-[200px]">
+                                        <div className="space-y-1">
+                                          <p className="font-semibold text-destructive flex items-center gap-1">
+                                            <AlertTriangle className="w-3 h-3" />
+                                            Conflicto detectado
+                                          </p>
+                                          <p className="text-sm text-foreground">Turno: {shift.name}</p>
+                                          <p className="text-sm text-foreground">Novedad: {absence.description}</p>
+                                          <p className="text-xs text-muted-foreground">
+                                            El turno debería eliminarse
+                                          </p>
+                                        </div>
+                                      </TooltipContent>
+                                    )}
+                                    
+                                    {/* Absence-only tooltip */}
+                                    {absence && !hasConflict && (
                                       <TooltipContent>
                                         <p className="font-medium">{absence.description}</p>
                                         <p className="text-xs text-muted-foreground">
@@ -691,6 +730,8 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                         </p>
                                       </TooltipContent>
                                     )}
+                                    
+                                    {/* Shift-only tooltip */}
                                     {shift && !absence && (
                                       <TooltipContent>
                                         <p>{shift.name}</p>
