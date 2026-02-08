@@ -684,16 +684,24 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                         hasConflict && 'bg-red-50 ring-2 ring-inset ring-destructive',
                                         selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
                                       )}
-                                      onMouseDown={() => handleCellMouseDown(employee.id, dateStr)}
+                                      onMouseDown={(e) => {
+                                        // Only handle left click for selection
+                                        if (e.button === 0) {
+                                          handleCellMouseDown(employee.id, dateStr);
+                                        }
+                                      }}
                                       onMouseEnter={() => handleCellMouseEnter(employee.id, dateStr)}
                                       onMouseUp={handleCellMouseUp}
-                                      onContextMenu={() => setContextMenuTarget({
-                                        employeeId: employee.id,
-                                        date: dateStr,
-                                        assignment: assignment || null,
-                                        shift: shift || null,
-                                        hasAbsence: !!absence,
-                                      })}
+                                      onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        setContextMenuTarget({
+                                          employeeId: employee.id,
+                                          date: dateStr,
+                                          assignment: assignment || null,
+                                          shift: shift || null,
+                                          hasAbsence: !!absence,
+                                        });
+                                      }}
                                     >
                                       <TooltipProvider>
                                         <Tooltip>
