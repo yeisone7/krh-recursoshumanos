@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, differenceInDays, addDays, isBefore, isAfter } from 'date-fns';
 import { toast } from 'sonner';
+import { cleanupShiftAssignments } from '@/hooks/useCleanupShiftAssignments';
 import type { 
   EmployeeIncapacity, 
   IncapacityWithEmployee, 
@@ -256,6 +257,14 @@ export function useCreateIncapacity() {
         }
       }
       
+      // Cleanup conflicting shift assignments
+      await cleanupShiftAssignments({
+        employeeId: formData.employee_id,
+        startDate: format(formData.start_date, 'yyyy-MM-dd'),
+        endDate: format(formData.end_date, 'yyyy-MM-dd'),
+        absenceType: 'incapacidad',
+      });
+      
       return data;
     },
     onSuccess: () => {
@@ -263,6 +272,7 @@ export function useCreateIncapacity() {
       queryClient.invalidateQueries({ queryKey: ['employee_incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
       queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
+      queryClient.invalidateQueries({ queryKey: ['shift_assignments'] });
     },
   });
 }

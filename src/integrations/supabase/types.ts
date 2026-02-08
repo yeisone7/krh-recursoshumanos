@@ -5522,6 +5522,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_shift_assignments_for_absence: {
+        Args: {
+          p_employee_id: string
+          p_end_date: string
+          p_start_date: string
+        }
+        Returns: number
+      }
       get_my_employee_id: { Args: never; Returns: string }
       get_next_contract_number: {
         Args: { _company_id: string; _prefix?: string }
