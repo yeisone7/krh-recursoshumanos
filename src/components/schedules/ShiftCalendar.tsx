@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSunday, parseISO, isWithinInterval, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp, Trash2, Edit, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp, Trash2, Edit, Plus, Briefcase, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -41,12 +41,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAreas } from '@/hooks/useSystemConfig';
-import { useShifts, useShiftAssignments, useCreateBulkShiftAssignments, useDeleteShiftAssignment } from '@/hooks/useSchedules';
+import { useShifts, useShiftAssignments, useCreateBulkShiftAssignments, useDeleteShiftAssignment, useEmployeeTimeConfigs } from '@/hooks/useSchedules';
 import { useHolidaysMap } from '@/hooks/useHolidays';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { getEmployeeFullName } from '@/types/employee';
-import type { Shift, EmployeeShiftAssignment, EmployeeAbsence } from '@/types/schedule';
+import type { Shift, EmployeeShiftAssignment, EmployeeAbsence, WorkSchedule, EmployeeTimeMode } from '@/types/schedule';
 
 type ViewMode = 'quincenal' | 'mensual';
 
@@ -68,6 +68,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('quincenal');
   const [selectedCenterId, setSelectedCenterId] = useState<string>(propCenterId || 'all');
+  const [modeFilter, setModeFilter] = useState<'all' | 'administrative' | 'shift'>('all');
   const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set());
   const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
   const [selectedCells, setSelectedCells] = useState<{ employeeId: string; dates: string[] }[]>([]);
@@ -82,6 +83,21 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   const { data: centers = [] } = useOperationCenters();
   const { data: areas = [] } = useAreas();
   const { data: holidaysMap = {} } = useHolidaysMap();
+  const { data: timeConfigs = [] } = useEmployeeTimeConfigs();
+
+  // Build employee mode map: employeeId -> { mode, workSchedule }
+  const employeeModeMap = useMemo(() => {
+    const map: Record<string, { mode: EmployeeTimeMode; workSchedule?: WorkSchedule }> = {};
+    timeConfigs.forEach(tc => {
+      if (tc.is_active) {
+        map[tc.employee_id] = {
+          mode: tc.mode,
+          workSchedule: tc.work_schedules || undefined,
+        };
+      }
+    });
+    return map;
+  }, [timeConfigs]);
   
   // Calculate date range based on view mode
   const { startDate, endDate, daysInPeriod } = useMemo(() => {
@@ -211,7 +227,11 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
     const filtered = employees.filter(e => {
       if (!e.is_active) return false;
       if (selectedCenterId !== 'all') {
-        return e.work_info?.operation_center_id === selectedCenterId;
+        if (e.work_info?.operation_center_id !== selectedCenterId) return false;
+      }
+      if (modeFilter !== 'all') {
+        const empMode = employeeModeMap[e.id]?.mode;
+        if (empMode !== modeFilter) return false;
       }
       return true;
     });
@@ -257,7 +277,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
     result.sort((a, b) => a.centerName.localeCompare(b.centerName));
     return result;
-  }, [employees, selectedCenterId, centers, areas]);
+  }, [employees, selectedCenterId, modeFilter, employeeModeMap, centers, areas]);
 
   // Flatten for total count
   const totalEmployees = useMemo(() => {
@@ -454,7 +474,22 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
           </Button>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Mode Filter */}
+          <ToggleGroup type="single" value={modeFilter} onValueChange={(v) => v && setModeFilter(v as any)}>
+            <ToggleGroupItem value="all" aria-label="Todos" className="text-xs">
+              Todos
+            </ToggleGroupItem>
+            <ToggleGroupItem value="administrative" aria-label="Administrativos" className="text-xs gap-1">
+              <Briefcase className="w-3 h-3" />
+              Admin
+            </ToggleGroupItem>
+            <ToggleGroupItem value="shift" aria-label="Turnos" className="text-xs gap-1">
+              <RotateCcw className="w-3 h-3" />
+              Turnos
+            </ToggleGroupItem>
+          </ToggleGroup>
+
           {/* View Mode Toggle */}
           <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as ViewMode)}>
             <ToggleGroupItem value="quincenal" aria-label="Vista quincenal" className="text-xs">
@@ -485,6 +520,10 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
       {/* Legend */}
       <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-indigo-100 border border-indigo-400 rounded text-[8px] font-bold text-indigo-700 flex items-center justify-center">H</div>
+          <span>Horario Admin</span>
+        </div>
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 bg-red-100 border border-red-300 rounded" />
           <span>Domingo</span>
@@ -604,10 +643,20 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                         </div>
 
                         {/* Employees */}
-                        {isAreaExpanded && area.employees?.map((employee) => (
+                        {isAreaExpanded && area.employees?.map((employee) => {
+                          const empConfig = employeeModeMap[employee.id];
+                          const isAdminMode = empConfig?.mode === 'administrative';
+                          const adminSchedule = isAdminMode ? empConfig?.workSchedule : undefined;
+
+                          return (
                           <div key={employee.id} className="flex border-t hover:bg-muted/30">
-                            <div className="w-56 p-2 pl-10 border-r shrink-0 flex items-center sticky left-0 bg-background z-10">
+                            <div className="w-56 p-2 pl-10 border-r shrink-0 flex items-center gap-1 sticky left-0 bg-background z-10">
                               <span className="truncate text-sm">{getEmployeeFullName(employee)}</span>
+                              {isAdminMode ? (
+                                <Briefcase className="w-3 h-3 text-indigo-500 shrink-0" />
+                              ) : (
+                                <RotateCcw className="w-3 h-3 text-muted-foreground shrink-0" />
+                              )}
                             </div>
                             {daysInPeriod.map((day) => {
                               const dateStr = format(day, 'yyyy-MM-dd');
@@ -618,6 +667,9 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                               const selected = isCellSelected(employee.id, dateStr);
                               const absence = absencesMap[employee.id]?.[dateStr];
                               
+                              // Admin mode: derive working day from work_schedule.days_of_week
+                              const adminIsWorkDay = adminSchedule?.days_of_week?.includes(day.getDay()) ?? false;
+
                               // Conflict: work shift assigned on a day with an absence
                               const hasConflict = shift && absence && !shift.is_rest_day;
 
@@ -680,7 +732,14 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                                   {shift.code || shift.name.slice(0, 2).toUpperCase()}
                                                 </div>
                                               )}
-                                              {!shift && !absence && <div className="h-6" />}
+                                              {/* Admin schedule: working day */}
+                                              {isAdminMode && !shift && !absence && adminIsWorkDay && (
+                                                <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-indigo-100 text-indigo-700 border border-indigo-300">
+                                                  {adminSchedule?.name?.slice(0, 3).toUpperCase() || 'ADM'}
+                                                </div>
+                                              )}
+                                              {/* Empty: non-admin with no shift/absence, or admin rest day */}
+                                              {!shift && !absence && (!isAdminMode || !adminIsWorkDay) && <div className="h-6" />}
                                             </div>
                                           </TooltipTrigger>
                                           
@@ -722,10 +781,23 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                             </TooltipContent>
                                           )}
                                           
-                                          {/* Empty cell tooltip */}
-                                          {!shift && !absence && (
+                                          {/* Admin schedule tooltip */}
+                                          {isAdminMode && !shift && !absence && adminIsWorkDay && adminSchedule && (
                                             <TooltipContent>
-                                              <p className="text-xs text-muted-foreground">Click derecho para asignar turno</p>
+                                              <p className="font-medium">{adminSchedule.name}</p>
+                                              <p className="text-xs text-muted-foreground">
+                                                {adminSchedule.start_time?.slice(0, 5)} - {adminSchedule.end_time?.slice(0, 5)}
+                                              </p>
+                                              <p className="text-xs text-muted-foreground">Descanso: {adminSchedule.break_minutes} min</p>
+                                            </TooltipContent>
+                                          )}
+
+                                          {/* Empty cell tooltip */}
+                                          {!shift && !absence && (!isAdminMode || !adminIsWorkDay) && (
+                                            <TooltipContent>
+                                              <p className="text-xs text-muted-foreground">
+                                                {isAdminMode ? 'Día de descanso (horario administrativo)' : 'Click derecho para asignar turno'}
+                                              </p>
                                             </TooltipContent>
                                           )}
                                         </Tooltip>
@@ -848,7 +920,8 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                               );
                             })}
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     );
                   })}
@@ -861,7 +934,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
       {/* Instructions */}
       <p className="text-sm text-muted-foreground">
-        💡 <strong>Click derecho</strong> para asignar, cambiar o eliminar turnos. <strong>Arrastre</strong> para selección múltiple.
+        💡 <strong>Click derecho</strong> para asignar, cambiar o eliminar turnos (operativos). <strong>Arrastre</strong> para selección múltiple. Los horarios administrativos se proyectan automáticamente según la configuración del empleado.
       </p>
 
       {/* Assign Dialog */}
