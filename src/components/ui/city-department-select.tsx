@@ -90,7 +90,7 @@ export function CityDepartmentSelect({
               className="w-full justify-between font-normal"
               disabled={disabled}
             >
-              {departmentValue || departmentPlaceholder}
+              <span className="truncate">{departmentValue || departmentPlaceholder}</span>
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -136,7 +136,7 @@ export function CityDepartmentSelect({
               className="w-full justify-between font-normal"
               disabled={disabled || !departmentValue}
             >
-              {cityValue || (departmentValue ? cityPlaceholder : 'Seleccione departamento primero')}
+              <span className="truncate">{cityValue || (departmentValue ? cityPlaceholder : 'Seleccione departamento primero')}</span>
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
