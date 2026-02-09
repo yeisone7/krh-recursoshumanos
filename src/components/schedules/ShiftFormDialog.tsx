@@ -136,7 +136,7 @@ export function ShiftFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden">
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>
             {isEditing ? 'Editar Turno' : 'Nuevo Turno Operativo'}
