@@ -140,12 +140,12 @@ export const employeeCoreSchema = z.object({
   birthCountry: z.string().max(100).default('Colombia'),
   birthDepartment: z.string().max(100).optional(),
   birthCity: z.string().max(100).optional(),
-  birthDate: z.date().optional(),
+  birthDate: z.date({ required_error: 'La fecha de nacimiento es requerida' }),
   
   // Characteristics
-  gender: z.enum(['M', 'F', 'O']).optional(),
+  gender: z.enum(['M', 'F', 'O'], { required_error: 'Seleccione el género' }),
   bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
-  maritalStatus: z.enum(['soltero', 'casado', 'union_libre', 'divorciado', 'viudo']).optional(),
+  maritalStatus: z.enum(['soltero', 'casado', 'union_libre', 'divorciado', 'viudo'], { required_error: 'Seleccione el estado civil' }),
 });
 
 // B. Contact Schema
@@ -179,9 +179,9 @@ export const employeeFamilySchema = z.object({
 
 // D. Work Info Schema
 export const employeeWorkInfoSchema = z.object({
-  operationCenterId: z.string().uuid().optional(),
-  costCenter: z.string().max(50).optional(),
-  areaId: z.string().uuid().optional(),
+  operationCenterId: z.string().uuid({ message: 'Seleccione el centro de operación' }),
+  costCenter: z.string().min(1, 'El centro de costos es requerido').max(50),
+  areaId: z.string().uuid({ message: 'Seleccione el área' }),
   positionId: z.string().uuid().optional(),
   positionName: z.string().min(2, 'El cargo es requerido').max(100),
   workCity: z.string().max(100).optional(),
@@ -193,30 +193,30 @@ export const employeeWorkInfoSchema = z.object({
 
 // E. Social Security Schema
 export const employeeSocialSecuritySchema = z.object({
-  riskLevel: z.enum(['I', 'II', 'III', 'IV', 'V']).optional(),
-  arl: z.string().max(100).optional(),
-  eps: z.string().max(100).optional(),
-  afp: z.string().max(100).optional(),
-  ccf: z.string().max(100).optional(),
-  afc: z.string().max(100).optional(),
+  riskLevel: z.enum(['I', 'II', 'III', 'IV', 'V'], { required_error: 'Seleccione el nivel de riesgo ARL' }),
+  arl: z.string().min(1, 'Seleccione la ARL').max(100),
+  eps: z.string().min(1, 'Seleccione la EPS').max(100),
+  afp: z.string().min(1, 'Seleccione la AFP').max(100),
+  ccf: z.string().min(1, 'Seleccione la Caja de Compensación').max(100),
+  afc: z.string().min(1, 'Seleccione la AFC').max(100),
   ips: z.string().max(100).optional(),
 });
 
 // F. Bank Info Schema
 export const employeeBankInfoSchema = z.object({
-  bankName: z.string().max(100).optional(),
-  accountType: z.enum(['ahorros', 'corriente']).optional(),
-  accountNumber: z.string().max(30).optional(),
+  bankName: z.string().min(1, 'Seleccione el banco').max(100),
+  accountType: z.enum(['ahorros', 'corriente'], { required_error: 'Seleccione el tipo de cuenta' }),
+  accountNumber: z.string().min(1, 'El número de cuenta es requerido').max(30),
   bankLetterUrl: z.string().optional(),
   accountRegistered: z.boolean().default(false),
 });
 
 // J. Schedule Schema
 export const employeeScheduleSchema = z.object({
-  payrollType: z.enum(['quincenal', 'mensual']).default('quincenal'),
+  payrollType: z.enum(['quincenal', 'mensual'], { required_error: 'Seleccione el tipo de nómina' }).default('quincenal'),
   shiftTypeId: z.string().uuid().optional(),
   isOfficeSchedule: z.boolean().default(true),
-  restDay: z.string().max(20).optional(),
+  restDay: z.string().min(1, 'Seleccione el día de descanso').max(20),
 });
 
 // K. Time Mode Schema (Modalidad de Tiempo)
