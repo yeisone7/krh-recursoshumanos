@@ -55,12 +55,10 @@ import {
   WorkScheduleFormDialog, 
   ShiftFormDialog, 
   ShiftCycleFormDialog,
-  EmployeeTimeConfigDialog,
   ShiftCalendar,
   CycleGeneratorDialog,
   BulkCycleGeneratorDialog,
   ShiftReportExport,
-  MissingConfigAlert,
 } from '@/components/schedules';
 import { DAY_NAMES_SHORT } from '@/types/schedule';
 import type { WorkSchedule, Shift, ShiftCycle } from '@/types/schedule';
@@ -71,7 +69,7 @@ export default function Jornadas() {
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [showShiftForm, setShowShiftForm] = useState(false);
   const [showCycleForm, setShowCycleForm] = useState(false);
-  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  
   const [showGeneratorDialog, setShowGeneratorDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showBulkGeneratorDialog, setShowBulkGeneratorDialog] = useState(false);
@@ -139,10 +137,6 @@ export default function Jornadas() {
           <p className="text-muted-foreground mt-1">Gestiona horarios administrativos, turnos operativos y ciclos de rotación</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setShowConfigDialog(true)}>
-            <Users className="w-4 h-4 mr-2" />
-            Asignar Empleado
-          </Button>
           <Button variant="outline" onClick={() => setShowGeneratorDialog(true)}>
             <Zap className="w-4 h-4 mr-2" />
             Generar Ciclo
@@ -362,7 +356,6 @@ export default function Jornadas() {
 
             {/* Calendario */}
             <TabsContent value="calendar" className="space-y-4">
-              <MissingConfigAlert onAssignClick={() => setShowConfigDialog(true)} />
               <ShiftCalendar />
             </TabsContent>
           </Tabs>
@@ -373,10 +366,8 @@ export default function Jornadas() {
       <WorkScheduleFormDialog open={showScheduleForm} onOpenChange={setShowScheduleForm} schedule={selectedSchedule} />
       <ShiftFormDialog open={showShiftForm} onOpenChange={setShowShiftForm} shift={selectedShift} />
       <ShiftCycleFormDialog open={showCycleForm} onOpenChange={setShowCycleForm} cycle={selectedCycle} />
-      <EmployeeTimeConfigDialog open={showConfigDialog} onOpenChange={setShowConfigDialog} />
       <CycleGeneratorDialog open={showGeneratorDialog} onOpenChange={setShowGeneratorDialog} />
       <ShiftReportExport open={showExportDialog} onOpenChange={setShowExportDialog} />
-      <EmployeeTimeConfigDialog open={showConfigDialog} onOpenChange={setShowConfigDialog} />
       <BulkCycleGeneratorDialog open={showBulkGeneratorDialog} onOpenChange={setShowBulkGeneratorDialog} />
 
       {/* Delete Confirm */}
