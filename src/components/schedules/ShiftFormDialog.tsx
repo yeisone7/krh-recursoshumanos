@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { useCreateShift, useUpdateShift } from '@/hooks/useSchedules';
 import type { Shift } from '@/types/schedule';
-import { SHIFT_COLORS } from '@/types/schedule';
+import { SHIFT_COLORS, SHIFT_COLOR_TRANSPARENT } from '@/types/schedule';
 
 const shiftSchema = z.object({
   name: z.string().min(1, 'Nombre requerido').max(100),
@@ -68,7 +68,7 @@ export function ShiftFormDialog({
       end_time: '14:00',
       break_minutes: 0,
       crosses_midnight: false,
-      color: SHIFT_COLORS[0],
+      color: SHIFT_COLOR_TRANSPARENT,
       is_rest_day: false,
       is_active: true,
     },
@@ -97,7 +97,7 @@ export function ShiftFormDialog({
         end_time: '14:00',
         break_minutes: 0,
         crosses_midnight: false,
-        color: SHIFT_COLORS[Math.floor(Math.random() * SHIFT_COLORS.length)],
+        color: SHIFT_COLOR_TRANSPARENT,
         is_rest_day: false,
         is_active: true,
       });
@@ -256,13 +256,18 @@ export function ShiftFormDialog({
                         type="button"
                         onClick={() => field.onChange(color)}
                         className={`
-                          w-8 h-8 rounded-md transition-all
+                          w-8 h-8 rounded-md transition-all border
                           ${field.value === color 
                             ? 'ring-2 ring-offset-2 ring-primary scale-110' 
                             : 'hover:scale-105'
                           }
+                          ${color === SHIFT_COLOR_TRANSPARENT 
+                            ? 'bg-[repeating-conic-gradient(#e5e7eb_0%_25%,transparent_0%_50%)] bg-[length:8px_8px]' 
+                            : ''
+                          }
                         `}
-                        style={{ backgroundColor: color }}
+                        style={color !== SHIFT_COLOR_TRANSPARENT ? { backgroundColor: color } : undefined}
+                        title={color === SHIFT_COLOR_TRANSPARENT ? 'Sin color' : color}
                       />
                     ))}
                   </div>
