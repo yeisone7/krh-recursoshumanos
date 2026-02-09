@@ -152,8 +152,12 @@ export const DAY_NAMES_SHORT: Record<number, string> = {
   6: 'Sáb',
 };
 
+// Color transparente / sin color
+export const SHIFT_COLOR_TRANSPARENT = 'transparent';
+
 // Colores predefinidos para turnos
 export const SHIFT_COLORS = [
+  SHIFT_COLOR_TRANSPARENT, // Sin color
   '#3B82F6', // Blue
   '#10B981', // Green
   '#F59E0B', // Amber
