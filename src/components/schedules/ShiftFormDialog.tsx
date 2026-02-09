@@ -249,7 +249,7 @@ export function ShiftFormDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Color</FormLabel>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2 flex-wrap p-1">
                     {SHIFT_COLORS.map((color) => (
                       <button
                         key={color}
