@@ -6,3 +6,4 @@ export { ShiftCalendar } from './ShiftCalendar';
 export { CycleGeneratorDialog } from './CycleGeneratorDialog';
 export { ShiftReportExport } from './ShiftReportExport';
 export { MissingConfigAlert } from './MissingConfigAlert';
+export { BulkCycleGeneratorDialog } from './BulkCycleGeneratorDialog';

@@ -58,6 +58,7 @@ import {
   EmployeeTimeConfigDialog,
   ShiftCalendar,
   CycleGeneratorDialog,
+  BulkCycleGeneratorDialog,
   ShiftReportExport,
   MissingConfigAlert,
 } from '@/components/schedules';
@@ -73,6 +74,7 @@ export default function Jornadas() {
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [showGeneratorDialog, setShowGeneratorDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showBulkGeneratorDialog, setShowBulkGeneratorDialog] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<WorkSchedule | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [selectedCycle, setSelectedCycle] = useState<ShiftCycle | null>(null);
@@ -144,6 +146,10 @@ export default function Jornadas() {
           <Button variant="outline" onClick={() => setShowGeneratorDialog(true)}>
             <Zap className="w-4 h-4 mr-2" />
             Generar Ciclo
+          </Button>
+          <Button onClick={() => setShowBulkGeneratorDialog(true)}>
+            <Users className="w-4 h-4 mr-2" />
+            Generar Todos
           </Button>
           <Button variant="outline" onClick={() => setShowExportDialog(true)}>
             <FileSpreadsheet className="w-4 h-4 mr-2" />
@@ -371,6 +377,7 @@ export default function Jornadas() {
       <CycleGeneratorDialog open={showGeneratorDialog} onOpenChange={setShowGeneratorDialog} />
       <ShiftReportExport open={showExportDialog} onOpenChange={setShowExportDialog} />
       <EmployeeTimeConfigDialog open={showConfigDialog} onOpenChange={setShowConfigDialog} />
+      <BulkCycleGeneratorDialog open={showBulkGeneratorDialog} onOpenChange={setShowBulkGeneratorDialog} />
 
       {/* Delete Confirm */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
