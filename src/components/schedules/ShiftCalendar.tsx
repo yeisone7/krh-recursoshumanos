@@ -556,7 +556,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
       {/* Calendar Grid */}
       <div className="border rounded-lg overflow-auto max-h-[calc(100vh-320px)]">
-        <div className="min-w-max">
+        <div className="min-w-max border-b">
           {/* Days Header */}
           <div className="flex bg-muted sticky top-0 z-10">
             <div className="w-56 p-2 border-r font-medium flex items-center gap-2 shrink-0 sticky left-0 bg-muted z-20">
@@ -649,7 +649,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                           const adminSchedule = isAdminMode ? empConfig?.workSchedule : undefined;
 
                           return (
-                          <div key={employee.id} className="flex border-t border-b -mb-px hover:bg-muted/30">
+                          <div key={employee.id} className="flex border-t hover:bg-muted/30">
                             <div className="w-56 p-2 pl-10 border-r shrink-0 flex items-center gap-1 sticky left-0 bg-background z-10">
                               <span className="truncate text-sm">{getEmployeeFullName(employee)}</span>
                               {isAdminMode ? (
