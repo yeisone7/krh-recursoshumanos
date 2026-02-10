@@ -649,7 +649,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                           const adminSchedule = isAdminMode ? empConfig?.workSchedule : undefined;
 
                           return (
-                          <div key={employee.id} className="flex border-t last:border-b hover:bg-muted/30">
+                          <div key={employee.id} className="flex border-t border-b -mb-px hover:bg-muted/30">
                             <div className="w-56 p-2 pl-10 border-r shrink-0 flex items-center gap-1 sticky left-0 bg-background z-10">
                               <span className="truncate text-sm">{getEmployeeFullName(employee)}</span>
                               {isAdminMode ? (
