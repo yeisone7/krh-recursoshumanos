@@ -121,6 +121,7 @@ const toolsNavItems: NavItem[] = [
 const payrollNavItems: NavItem[] = [
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas' },
   { label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion' },
+  { label: 'Configuración Laboral', icon: <Settings className="w-5 h-5" />, href: '/configuracion-laboral' },
 ];
 
 const adminNavItems: NavItem[] = [
