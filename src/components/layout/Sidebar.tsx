@@ -74,7 +74,7 @@ const seleccionNavItems: NavItem[] = [
 const timeManagementNavItems: NavItem[] = [
   { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones' },
   { label: 'Permisos', icon: <ClipboardList className="w-5 h-5" />, href: '/permisos' },
-  { label: 'Horas Extra', icon: <Clock className="w-5 h-5" />, href: '/horas-extra' },
+  
   { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' },
 ];
 
@@ -120,6 +120,7 @@ const toolsNavItems: NavItem[] = [
 
 const payrollNavItems: NavItem[] = [
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas' },
+  { label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades' },
   { label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion' },
   { label: 'Configuración Laboral', icon: <Settings className="w-5 h-5" />, href: '/configuracion-laboral' },
 ];
