@@ -76,7 +76,10 @@ export default function Novedades() {
       Documento: n.employees_v2?.document_number || '',
       Fecha: n.novelty_date,
       Tipo: NOVELTY_TYPE_LABELS[n.novelty_type] || n.novelty_type,
+      'Hora Inicio': (n as any).start_time ? (n as any).start_time.slice(0, 5) : '',
       Horas: n.hours,
+      'Hora Final': (n as any).end_time ? (n as any).end_time.slice(0, 5) : '',
+      Motivo: (n as any).novelty_reasons ? `${(n as any).novelty_reasons.item_number}. ${(n as any).novelty_reasons.name}` : '',
       Fuente: n.source === 'manual' ? 'Manual' : 'Automático',
       Observaciones: n.notes || '',
     }));
@@ -234,7 +237,10 @@ export default function Novedades() {
                 <TableHead>Empleado</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Tipo</TableHead>
+                <TableHead>Hora inicio</TableHead>
                 <TableHead>Horas</TableHead>
+                <TableHead>Hora final</TableHead>
+                <TableHead>Motivo</TableHead>
                 <TableHead>Fuente</TableHead>
                 <TableHead>Observaciones</TableHead>
                 <TableHead className="w-[80px]">Acciones</TableHead>
@@ -243,11 +249,11 @@ export default function Novedades() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">Cargando novedades...</TableCell>
+                  <TableCell colSpan={10} className="text-center py-8">Cargando novedades...</TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     No se encontraron novedades
                   </TableCell>
                 </TableRow>
@@ -265,7 +271,12 @@ export default function Novedades() {
                         {NOVELTY_TYPE_LABELS[n.novelty_type] || n.novelty_type}
                       </Badge>
                     </TableCell>
+                    <TableCell className="font-semibold">{(n as any).start_time ? (n as any).start_time.slice(0, 5) : '—'}</TableCell>
                     <TableCell className="font-semibold">{n.hours}h</TableCell>
+                    <TableCell className="font-semibold">{(n as any).end_time ? (n as any).end_time.slice(0, 5) : '—'}</TableCell>
+                    <TableCell className="text-sm">
+                      {(n as any).novelty_reasons ? `${(n as any).novelty_reasons.item_number}. ${(n as any).novelty_reasons.name}` : '—'}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={n.source === 'manual' ? 'secondary' : 'default'} className="text-xs">
                         {n.source === 'manual' ? 'Manual' : 'Auto'}

@@ -3485,6 +3485,50 @@ export type Database = {
           },
         ]
       }
+      novelty_reasons: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          item_number: number
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          item_number: number
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          item_number?: number
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "novelty_reasons_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operation_centers: {
         Row: {
           address: string | null
@@ -3767,12 +3811,15 @@ export type Database = {
           created_at: string
           created_by: string | null
           employee_id: string
+          end_time: string | null
           hours: number
           id: string
           notes: string | null
           novelty_date: string
           novelty_type: string
+          reason_id: string | null
           source: string
+          start_time: string | null
           updated_at: string
         }
         Insert: {
@@ -3780,12 +3827,15 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           employee_id: string
+          end_time?: string | null
           hours?: number
           id?: string
           notes?: string | null
           novelty_date: string
           novelty_type: string
+          reason_id?: string | null
           source?: string
+          start_time?: string | null
           updated_at?: string
         }
         Update: {
@@ -3793,12 +3843,15 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           employee_id?: string
+          end_time?: string | null
           hours?: number
           id?: string
           notes?: string | null
           novelty_date?: string
           novelty_type?: string
+          reason_id?: string | null
           source?: string
+          start_time?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -3814,6 +3867,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_novelties_reason_id_fkey"
+            columns: ["reason_id"]
+            isOneToOne: false
+            referencedRelation: "novelty_reasons"
             referencedColumns: ["id"]
           },
         ]
