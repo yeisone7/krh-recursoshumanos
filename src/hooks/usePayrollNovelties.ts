@@ -53,6 +53,9 @@ export function useCreatePayrollNovelty() {
       hours: number;
       notes?: string;
       source?: string;
+      start_time?: string | null;
+      end_time?: string | null;
+      reason_id?: string | null;
     }) => {
       const { data, error } = await supabase
         .from('payroll_novelties')
