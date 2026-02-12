@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calculator, Settings, Plus, Trash2, Pencil, AlertTriangle } from 'lucide-react';
-import { PreLiquidationTable, PreLiquidationExport, PayrollConfigDialog, NoveltyFormDialog } from '@/components/payroll';
+import { Calculator, Plus, Trash2, Pencil, AlertTriangle } from 'lucide-react';
+import { PreLiquidationTable, PreLiquidationExport, NoveltyFormDialog } from '@/components/payroll';
 import { usePreLiquidation } from '@/hooks/usePreLiquidation';
 import { usePayrollConfig } from '@/hooks/usePayrollConfig';
 import { usePayrollNovelties, useDeletePayrollNovelty } from '@/hooks/usePayrollNovelties';
@@ -27,7 +27,7 @@ export default function PreLiquidacion() {
   const [startDate, setStartDate] = useState(format(startOfMonth(today), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(endOfMonth(today), 'yyyy-MM-dd'));
   const [calculated, setCalculated] = useState(false);
-  const [configOpen, setConfigOpen] = useState(false);
+  
   const [noveltyOpen, setNoveltyOpen] = useState(false);
   const [editingNovelty, setEditingNovelty] = useState<PayrollNovelty | null>(null);
 
@@ -150,15 +150,9 @@ export default function PreLiquidacion() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Pre-Liquidación de Nómina</h1>
-          <p className="text-muted-foreground">Cálculo de conceptos laborales por período</p>
-        </div>
-        <Button variant="outline" onClick={() => setConfigOpen(true)}>
-          <Settings className="w-4 h-4 mr-2" />
-          Configuración Laboral
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold">Pre-Liquidación de Nómina</h1>
+        <p className="text-muted-foreground">Cálculo de conceptos laborales por período</p>
       </div>
 
       <Tabs defaultValue="liquidacion">
@@ -273,7 +267,7 @@ export default function PreLiquidacion() {
         </TabsContent>
       </Tabs>
 
-      <PayrollConfigDialog open={configOpen} onOpenChange={setConfigOpen} />
+      
       <NoveltyFormDialog
         open={noveltyOpen}
         onOpenChange={setNoveltyOpen}
