@@ -37,6 +37,7 @@ import {
   Landmark,
   FileBarChart,
   BarChart3,
+  Calculator,
   FolderOpen,
   Shirt,
   Check,
@@ -119,6 +120,7 @@ const toolsNavItems: NavItem[] = [
 
 const payrollNavItems: NavItem[] = [
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas' },
+  { label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion' },
 ];
 
 const adminNavItems: NavItem[] = [

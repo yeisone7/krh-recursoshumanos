@@ -3693,6 +3693,131 @@ export type Database = {
           },
         ]
       }
+      payroll_labor_config: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          daily_hours: number
+          display_unit: string
+          id: string
+          max_weekly_hours: number
+          night_end: string
+          night_start: string
+          surcharge_dominical: number
+          surcharge_hedf: number
+          surcharge_hedo: number
+          surcharge_henf: number
+          surcharge_heno: number
+          surcharge_rn: number
+          surcharge_rnf: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          daily_hours?: number
+          display_unit?: string
+          id?: string
+          max_weekly_hours?: number
+          night_end?: string
+          night_start?: string
+          surcharge_dominical?: number
+          surcharge_hedf?: number
+          surcharge_hedo?: number
+          surcharge_henf?: number
+          surcharge_heno?: number
+          surcharge_rn?: number
+          surcharge_rnf?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          daily_hours?: number
+          display_unit?: string
+          id?: string
+          max_weekly_hours?: number
+          night_end?: string
+          night_start?: string
+          surcharge_dominical?: number
+          surcharge_hedf?: number
+          surcharge_hedo?: number
+          surcharge_henf?: number
+          surcharge_heno?: number
+          surcharge_rn?: number
+          surcharge_rnf?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_labor_config_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_novelties: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          hours: number
+          id: string
+          notes: string | null
+          novelty_date: string
+          novelty_type: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          hours?: number
+          id?: string
+          notes?: string | null
+          novelty_date: string
+          novelty_type: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          hours?: number
+          id?: string
+          notes?: string | null
+          novelty_date?: string
+          novelty_type?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_novelties_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_novelties_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_evaluations: {
         Row: {
           areas_to_improve: string | null
