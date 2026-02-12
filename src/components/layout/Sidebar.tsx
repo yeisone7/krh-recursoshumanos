@@ -108,6 +108,7 @@ const catalogosItem: NavItem = {
     { label: 'AFC', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afc' },
     { label: 'IPS', icon: <Stethoscope className="w-4 h-4" />, href: '/catalogos/ips' },
     { label: 'Bancos', icon: <BanknoteIcon className="w-4 h-4" />, href: '/catalogos/bancos' },
+    { label: 'Motivos Novedad', icon: <ClipboardList className="w-4 h-4" />, href: '/catalogos/motivos-novedad' },
   ],
 };
 

@@ -10,3 +10,4 @@ export { default as CatalogosIPS } from './IPS';
 export { default as CatalogosBancos } from './Bancos';
 export { default as CatalogosTiposContrato } from './TiposContrato';
 export { default as CatalogosFestivos } from './Festivos';
+export { default as CatalogosMotivosNovedad } from './MotivosNovedad';
