@@ -36,6 +36,7 @@ import Onboarding from "./pages/Onboarding";
 import Empleado360 from "./pages/Empleado360";
 import Requisiciones from "./pages/Requisiciones";
 import Perfil from "./pages/Perfil";
+import PreLiquidacion from "./pages/PreLiquidacion";
 import { 
   CatalogosAreas, 
   CatalogosCargos, 
@@ -96,6 +97,7 @@ const App = () => (
                         <Route path="/vacaciones" element={<Vacaciones />} />
                         <Route path="/permisos" element={<Permisos />} />
                         <Route path="/horas-extra" element={<HorasExtra />} />
+                        <Route path="/pre-liquidacion" element={<PreLiquidacion />} />
                         <Route path="/capacitaciones" element={<Capacitaciones />} />
                         <Route path="/evaluaciones" element={<Evaluaciones />} />
                         <Route path="/organigrama" element={<Organigrama />} />
