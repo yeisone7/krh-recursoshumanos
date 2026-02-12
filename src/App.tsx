@@ -22,7 +22,7 @@ import Configuracion from "./pages/Configuracion";
 import Disciplinarios from "./pages/Disciplinarios";
 import Vacaciones from "./pages/Vacaciones";
 import Permisos from "./pages/Permisos";
-import HorasExtra from "./pages/HorasExtra";
+import Novedades from "./pages/Novedades";
 import Capacitaciones from "./pages/Capacitaciones";
 import Evaluaciones from "./pages/Evaluaciones";
 import Organigrama from "./pages/Organigrama";
@@ -97,7 +97,7 @@ const App = () => (
                         <Route path="/disciplinarios" element={<Disciplinarios />} />
                         <Route path="/vacaciones" element={<Vacaciones />} />
                         <Route path="/permisos" element={<Permisos />} />
-                        <Route path="/horas-extra" element={<HorasExtra />} />
+                        <Route path="/novedades" element={<Novedades />} />
                         <Route path="/pre-liquidacion" element={<PreLiquidacion />} />
                         <Route path="/configuracion-laboral" element={<ConfiguracionLaboral />} />
                         <Route path="/capacitaciones" element={<Capacitaciones />} />
