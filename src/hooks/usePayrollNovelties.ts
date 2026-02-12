@@ -17,7 +17,8 @@ export function usePayrollNovelties(filters?: {
         .from('payroll_novelties')
         .select(`
           *,
-          employees_v2(id, first_name, last_name, document_number)
+          employees_v2(id, first_name, last_name, document_number),
+          novelty_reasons(id, item_number, name)
         `)
         .eq('company_id', currentCompanyId!)
         .order('novelty_date', { ascending: false });
@@ -81,6 +82,9 @@ export function useUpdatePayrollNovelty() {
       novelty_type: NoveltyType;
       hours: number;
       notes: string;
+      start_time: string | null;
+      end_time: string | null;
+      reason_id: string | null;
     }>) => {
       const { data, error } = await supabase
         .from('payroll_novelties')
