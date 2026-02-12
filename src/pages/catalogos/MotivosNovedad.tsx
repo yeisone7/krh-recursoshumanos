@@ -1,0 +1,119 @@
+import { useState } from 'react';
+import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
+import { useNoveltyReasons, useDeleteNoveltyReason, type NoveltyReason } from '@/hooks/useNoveltyReasons';
+import { NoveltyReasonFormDialog } from '@/components/config/NoveltyReasonFormDialog';
+import { toast } from '@/hooks/use-toast';
+
+export default function MotivosNovedad() {
+  const { data: reasons = [], isLoading } = useNoveltyReasons();
+  const deleteReason = useDeleteNoveltyReason();
+  const [showDialog, setShowDialog] = useState(false);
+  const [editing, setEditing] = useState<NoveltyReason | null>(null);
+  const [search, setSearch] = useState('');
+
+  const filtered = reasons.filter(r =>
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    (r.description || '').toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteReason.mutateAsync(id);
+      toast({ title: 'Motivo eliminado' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Motivos de Novedad</h1>
+          <p className="text-muted-foreground">Catálogo de motivos para novedades de nómina</p>
+        </div>
+        <Button onClick={() => { setEditing(null); setShowDialog(true); }}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo Motivo
+        </Button>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar motivo..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[80px]">Item</TableHead>
+                <TableHead>Motivo</TableHead>
+                <TableHead>Descripción</TableHead>
+                <TableHead className="w-[100px]">Estado</TableHead>
+                <TableHead className="w-[100px]">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">Cargando...</TableCell>
+                </TableRow>
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    No se encontraron motivos
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map(r => (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-mono font-semibold">{r.item_number}</TableCell>
+                    <TableCell className="font-medium">{r.name}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm max-w-[300px] truncate">
+                      {r.description || '—'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={r.is_active ? 'default' : 'secondary'}>
+                        {r.is_active ? 'Activo' : 'Inactivo'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => { setEditing(r); setShowDialog(true); }}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <NoveltyReasonFormDialog
+        open={showDialog}
+        onOpenChange={setShowDialog}
+        reason={editing}
+      />
+    </div>
+  );
+}
