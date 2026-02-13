@@ -33,7 +33,7 @@ export default function Dashboard() {
         {/* Left Column - KPI Cards */}
         <div className="lg:col-span-2 space-y-4">
           {/* Primary KPIs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 [&>a>div]:h-full [&>div]:h-full">
             {kpisLoading ? (
               <>
                 {[1, 2, 3, 4].map(i => (
@@ -76,7 +76,7 @@ export default function Dashboard() {
           </div>
 
           {/* Secondary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {kpisLoading ? (
               <>
                 {[1, 2, 3, 4].map(i => (
@@ -89,7 +89,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.15 }}
-                  className="card-elevated card-accent-info p-3 flex items-center gap-3"
+                  className="card-elevated card-accent-info p-4 flex flex-col gap-2"
                 >
                   <div className="w-9 h-9 rounded-lg bg-info/10 flex items-center justify-center">
                     <Clock className="w-4 h-4 text-info" />
@@ -103,7 +103,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.2 }}
-                  className="card-elevated card-accent-primary p-3 flex items-center gap-3"
+                  className="card-elevated card-accent-primary p-4 flex flex-col gap-2"
                 >
                   <div className="w-9 h-9 rounded-lg bg-rose/10 flex items-center justify-center">
                     <HeartPulse className="w-4 h-4 text-rose" />
@@ -117,7 +117,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.25 }}
-                  className="card-elevated card-accent-tertiary p-3 flex items-center gap-3"
+                  className="card-elevated card-accent-tertiary p-4 flex flex-col gap-2"
                 >
                   <div className="w-9 h-9 rounded-lg bg-violet/10 flex items-center justify-center">
                     <Award className="w-4 h-4 text-violet" />
@@ -131,7 +131,7 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.3 }}
-                  className="card-elevated card-accent-destructive p-3 flex items-center gap-3"
+                  className="card-elevated card-accent-destructive p-4 flex flex-col gap-2"
                 >
                   <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
                     <UserMinus className="w-4 h-4 text-destructive" />
