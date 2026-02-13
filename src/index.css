@@ -208,7 +208,7 @@
   }
 
   .kpi-card {
-    @apply bg-card rounded-xl border border-border p-4;
+    @apply bg-card rounded-xl border border-border p-6;
     box-shadow: var(--shadow-card);
   }
 
