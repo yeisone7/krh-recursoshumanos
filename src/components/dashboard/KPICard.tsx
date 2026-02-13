@@ -87,13 +87,13 @@ export function KPICard({ title, value, subtitle, icon, trend, variant = 'defaul
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-xs font-medium text-muted-foreground mb-0.5">{title}</p>
-          <p className="text-2xl font-display font-bold text-foreground">{value}</p>
+          <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+          <p className="text-3xl font-display font-bold text-foreground">{value}</p>
           {subtitle && (
-            <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
           )}
           {trend && (
-            <div className={cn("flex items-center gap-1 mt-1 text-xs font-medium", getTrendColor())}>
+            <div className={cn("flex items-center gap-1 mt-2 text-sm font-medium", getTrendColor())}>
               {getTrendIcon()}
               <span>{Math.abs(trend.value)}%</span>
               <span className="text-muted-foreground font-normal">{trend.label}</span>
@@ -101,7 +101,7 @@ export function KPICard({ title, value, subtitle, icon, trend, variant = 'defaul
           )}
         </div>
         <div className={cn(
-          "w-10 h-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105",
+          "w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105",
           iconBgColors[variant]
         )}>
           <span className={iconColors[variant]}>{icon}</span>

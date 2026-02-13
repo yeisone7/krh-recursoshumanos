@@ -33,7 +33,7 @@ export default function Dashboard() {
         {/* Left Column - KPI Cards */}
         <div className="lg:col-span-2 space-y-4">
           {/* Primary KPIs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 [&>a>div]:h-full [&>div]:h-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {kpisLoading ? (
               <>
                 {[1, 2, 3, 4].map(i => (
@@ -46,7 +46,7 @@ export default function Dashboard() {
                   title="Empleados Activos"
                   value={kpis?.totalActiveEmployees || 0}
                   subtitle={`${kpis?.newHiresThisMonth || 0} nuevos este mes`}
-                  icon={<Users className="w-5 h-5" />}
+                  icon={<Users className="w-6 h-6" />}
                   trend={kpis?.employeeTrend ? { value: kpis.employeeTrend, label: 'vs mes anterior' } : undefined}
                   variant="primary"
                 />
@@ -54,21 +54,21 @@ export default function Dashboard() {
                   title="Contratos por Vencer"
                   value={kpis?.expiringContractsCount || 0}
                   subtitle="Próximos 30 días"
-                  icon={<FileText className="w-5 h-5" />}
+                  icon={<FileText className="w-6 h-6" />}
                   variant="tertiary"
                 />
                 <KPICard
                   title="Alertas Críticas"
                   value={criticalAlerts}
                   subtitle="Requieren atención"
-                  icon={<Bell className="w-5 h-5" />}
+                  icon={<Bell className="w-6 h-6" />}
                   variant="destructive"
                 />
                 <KPICard
                   title="Vacantes Abiertas"
                   value={kpis?.activeCandidatesCount || 0}
                   subtitle={`${kpis?.candidatesInFinalStage || 0} en proceso final`}
-                  icon={<Briefcase className="w-5 h-5" />}
+                  icon={<Briefcase className="w-6 h-6" />}
                   variant="secondary"
                 />
               </>
@@ -76,7 +76,7 @@ export default function Dashboard() {
           </div>
 
           {/* Secondary Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {kpisLoading ? (
               <>
                 {[1, 2, 3, 4].map(i => (
@@ -89,56 +89,56 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.15 }}
-                  className="card-elevated card-accent-info p-4 flex flex-col gap-2"
+                  className="card-elevated card-accent-info p-5 flex items-center gap-4"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-info/10 flex items-center justify-center">
-                    <Clock className="w-4 h-4 text-info" />
+                  <div className="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-info" />
                   </div>
                   <div>
-                    <p className="text-lg font-display font-bold text-foreground">{kpis?.averageTenureMonths || 0} meses</p>
-                    <p className="text-xs text-muted-foreground">Antigüedad promedio</p>
+                    <p className="text-2xl font-display font-bold text-foreground">{kpis?.averageTenureMonths || 0} meses</p>
+                    <p className="text-sm text-muted-foreground">Antigüedad promedio</p>
                   </div>
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.2 }}
-                  className="card-elevated card-accent-primary p-4 flex flex-col gap-2"
+                  className="card-elevated card-accent-primary p-5 flex items-center gap-4"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-rose/10 flex items-center justify-center">
-                    <HeartPulse className="w-4 h-4 text-rose" />
+                  <div className="w-12 h-12 rounded-xl bg-rose/10 flex items-center justify-center">
+                    <HeartPulse className="w-6 h-6 text-rose" />
                   </div>
                   <div>
-                    <p className="text-lg font-display font-bold text-foreground">{kpis?.activeIncapacitiesCount || 0}</p>
-                    <p className="text-xs text-muted-foreground">Incapacidades activas</p>
+                    <p className="text-2xl font-display font-bold text-foreground">{kpis?.activeIncapacitiesCount || 0}</p>
+                    <p className="text-sm text-muted-foreground">Incapacidades activas</p>
                   </div>
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.25 }}
-                  className="card-elevated card-accent-tertiary p-4 flex flex-col gap-2"
+                  className="card-elevated card-accent-tertiary p-5 flex items-center gap-4"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-violet/10 flex items-center justify-center">
-                    <Award className="w-4 h-4 text-violet" />
+                  <div className="w-12 h-12 rounded-xl bg-violet/10 flex items-center justify-center">
+                    <Award className="w-6 h-6 text-violet" />
                   </div>
                   <div>
-                    <p className="text-lg font-display font-bold text-foreground">{kpis?.expiringCertificationsCount || 0}</p>
-                    <p className="text-xs text-muted-foreground">Certificaciones por vencer</p>
+                    <p className="text-2xl font-display font-bold text-foreground">{kpis?.expiringCertificationsCount || 0}</p>
+                    <p className="text-sm text-muted-foreground">Certificaciones por vencer</p>
                   </div>
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.3 }}
-                  className="card-elevated card-accent-destructive p-4 flex flex-col gap-2"
+                  className="card-elevated card-accent-destructive p-5 flex items-center gap-4"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
-                    <UserMinus className="w-4 h-4 text-destructive" />
+                  <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center">
+                    <UserMinus className="w-6 h-6 text-destructive" />
                   </div>
                   <div>
-                    <p className="text-lg font-display font-bold text-foreground">{kpis?.employeesInRetirement || 0}</p>
-                    <p className="text-xs text-muted-foreground">Procesos de retiro</p>
+                    <p className="text-2xl font-display font-bold text-foreground">{kpis?.employeesInRetirement || 0}</p>
+                    <p className="text-sm text-muted-foreground">Procesos de retiro</p>
                   </div>
                 </motion.div>
               </>
