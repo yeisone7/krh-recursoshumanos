@@ -724,10 +724,11 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                               {shift && (
                                                 <div
                                                   className={cn(
-                                                    'h-6 rounded text-[10px] font-medium text-white flex items-center justify-center',
+                                                    'h-6 rounded text-[10px] font-medium flex items-center justify-center',
+                                                    (!shift.color || shift.color === 'transparent') ? 'text-foreground bg-muted border border-border' : 'text-white',
                                                     hasConflict && 'opacity-70'
                                                   )}
-                                                  style={{ backgroundColor: shift.color }}
+                                                  style={shift.color && shift.color !== 'transparent' ? { backgroundColor: shift.color } : undefined}
                                                 >
                                                   {shift.code || shift.name.slice(0, 2).toUpperCase()}
                                                 </div>
