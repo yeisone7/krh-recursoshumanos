@@ -241,7 +241,7 @@ export function ShiftCycleFormDialog({
             </div>
 
             {/* Cycle Days */}
-            <div className="mt-4 flex flex-col">
+            <div className="mt-4 flex flex-col min-h-0 flex-1">
               <div className="flex items-center justify-between mb-2">
                 <FormLabel>Días del Ciclo ({cycleDays.length} días)</FormLabel>
                 <Button
@@ -267,7 +267,7 @@ export function ShiftCycleFormDialog({
                   <p className="text-sm">Agregue días para definir el ciclo de rotación.</p>
                 </div>
               ) : (
-                <div className="border rounded-md overflow-y-auto max-h-[240px]">
+                <div className="border rounded-md overflow-y-auto max-h-[200px]">
                   <div className="p-2 space-y-2">
                     {cycleDays.map((day, index) => {
                       const shift = getShiftById(day.shift_id);
