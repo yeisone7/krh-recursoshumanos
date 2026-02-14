@@ -171,7 +171,7 @@ export const employeeContactSchema = z.object({
 // C. Family Schema
 export const employeeFamilySchema = z.object({
   spouseName: z.string().max(100).optional(),
-  spouseGender: z.enum(['M', 'F', 'O']).optional(),
+  spouseGender: z.enum(['M', 'F', 'O']).nullable().optional(),
   spouseBirthDate: z.date().optional(),
   spouseWorks: z.boolean().default(false),
   childrenCount: z.number().min(0).max(20).default(0),
