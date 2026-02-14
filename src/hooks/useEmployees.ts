@@ -362,6 +362,7 @@ export function useUpdateEmployee() {
         { data: existingSocialSecurity },
         { data: existingBankInfo },
         { data: existingSchedule },
+        { data: existingTimeConfig },
       ] = await Promise.all([
         supabase.from('employee_contact').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
         supabase.from('employee_family').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
@@ -369,6 +370,7 @@ export function useUpdateEmployee() {
         supabase.from('employee_social_security').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
         supabase.from('employee_bank_info').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
         supabase.from('employee_schedule').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
+        supabase.from('employee_time_config').select('id').eq('employee_id', id).eq('is_active', true).maybeSingle(),
       ]);
 
       // Prepare upsert operations
@@ -554,6 +556,36 @@ export function useUpdateEmployee() {
             is_office_schedule: data.isOfficeSchedule ?? true,
             rest_day: data.restDay || null,
             is_current: true,
+          })
+        );
+      }
+
+      // Time Config (Modalidad de Tiempo)
+      if (existingTimeConfig) {
+        upsertOperations.push(
+          supabase.from('employee_time_config')
+            .update({
+              mode: data.timeMode,
+              work_schedule_id: data.timeMode === 'administrative' ? data.workScheduleId : null,
+              shift_cycle_id: data.timeMode === 'shift' ? data.shiftCycleId : null,
+              cycle_start_date: data.cycleStartDate ? format(data.cycleStartDate, 'yyyy-MM-dd') : null,
+              start_date: format(data.timeModeStartDate, 'yyyy-MM-dd'),
+              notes: data.timeModeNotes || null,
+            })
+            .eq('id', existingTimeConfig.id)
+        );
+      } else {
+        upsertOperations.push(
+          supabase.from('employee_time_config').insert({
+            employee_id: id,
+            mode: data.timeMode,
+            work_schedule_id: data.timeMode === 'administrative' ? data.workScheduleId : null,
+            shift_cycle_id: data.timeMode === 'shift' ? data.shiftCycleId : null,
+            cycle_start_date: data.cycleStartDate ? format(data.cycleStartDate, 'yyyy-MM-dd') : null,
+            start_date: format(data.timeModeStartDate, 'yyyy-MM-dd'),
+            notes: data.timeModeNotes || null,
+            is_active: true,
+            created_by: user.id,
           })
         );
       }
