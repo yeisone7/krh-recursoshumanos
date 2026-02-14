@@ -482,6 +482,18 @@ export interface EmployeeV2WithRelations extends EmployeeV2 {
   documents?: EmployeeDocument[];
   certifications?: EmployeeCertification[];
   vaccinations?: EmployeeVaccination[];
+  time_config?: {
+    id: string;
+    mode: 'administrative' | 'shift';
+    start_date: string;
+    end_date?: string | null;
+    is_active: boolean;
+    notes?: string | null;
+    work_schedule_id?: string | null;
+    shift_cycle_id?: string | null;
+    work_schedules?: { id: string; name: string; days_of_week: number[]; start_time: string; end_time: string; break_minutes: number } | null;
+    shift_cycles?: { id: string; name: string; code?: string; total_days: number } | null;
+  } | null;
   // Joined tables
   operation_centers?: { id: string; name: string; city?: string | null } | null;
   areas?: { id: string; name: string } | null;
