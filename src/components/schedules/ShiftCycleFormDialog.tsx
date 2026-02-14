@@ -267,7 +267,7 @@ export function ShiftCycleFormDialog({
                   <p className="text-sm">Agregue días para definir el ciclo de rotación.</p>
                 </div>
               ) : (
-                <ScrollArea className="flex-1 border rounded-md">
+                <ScrollArea className="flex-1 border rounded-md max-h-[240px]">
                   <div className="p-2 space-y-2">
                     {cycleDays.map((day, index) => {
                       const shift = getShiftById(day.shift_id);
