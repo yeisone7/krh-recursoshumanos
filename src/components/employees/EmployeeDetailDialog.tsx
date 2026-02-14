@@ -25,7 +25,9 @@ import {
   Users as UsersIcon,
   Plus,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  CalendarClock,
+  RotateCcw
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
@@ -171,7 +173,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
             </div>
 
             <Tabs defaultValue="identity" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-7">
                 <TabsTrigger value="identity" className="text-xs sm:text-sm">
                   <User className="w-4 h-4 mr-1 hidden sm:inline" />
                   Identidad
@@ -183,6 +185,10 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                 <TabsTrigger value="security" className="text-xs sm:text-sm">
                   <Shield className="w-4 h-4 mr-1 hidden sm:inline" />
                   SS & Banco
+                </TabsTrigger>
+                <TabsTrigger value="timemode" className="text-xs sm:text-sm">
+                  <Clock className="w-4 h-4 mr-1 hidden sm:inline" />
+                  Modalidad
                 </TabsTrigger>
                 <TabsTrigger value="health" className="text-xs sm:text-sm">
                   <Stethoscope className="w-4 h-4 mr-1 hidden sm:inline" />
@@ -678,6 +684,105 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     </div>
                   )}
                 </div>
+              </TabsContent>
+
+              {/* MODALIDAD TAB */}
+              <TabsContent value="timemode" className="space-y-4 mt-4">
+                {employee.time_config ? (
+                  <div className="space-y-4">
+                    {/* Mode Badge */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground">Modalidad:</span>
+                      <Badge 
+                        variant={employee.time_config.mode === 'administrative' ? 'default' : 'secondary'}
+                        className="flex items-center gap-1"
+                      >
+                        {employee.time_config.mode === 'administrative' ? (
+                          <>
+                            <Briefcase className="w-3 h-3" />
+                            Horario Administrativo
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="w-3 h-3" />
+                            Turnos Operativos
+                          </>
+                        )}
+                      </Badge>
+                    </div>
+
+                    {/* Administrative Schedule Details */}
+                    {employee.time_config.mode === 'administrative' && employee.time_config.work_schedules && (
+                      <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                        <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <CalendarClock className="w-4 h-4" />
+                          {employee.time_config.work_schedules.name}
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground block">Días:</span>
+                            <span className="font-medium">
+                              {employee.time_config.work_schedules.days_of_week
+                                ?.map((d: number) => ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d])
+                                .join(', ') || '-'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground block">Entrada:</span>
+                            <span className="font-medium">{employee.time_config.work_schedules.start_time?.slice(0, 5)}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground block">Salida:</span>
+                            <span className="font-medium">{employee.time_config.work_schedules.end_time?.slice(0, 5)}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground block">Descanso:</span>
+                            <span className="font-medium">{employee.time_config.work_schedules.break_minutes} min</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Shift Cycle Details */}
+                    {employee.time_config.mode === 'shift' && employee.time_config.shift_cycles && (
+                      <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                        <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <RotateCcw className="w-4 h-4" />
+                          {employee.time_config.shift_cycles.name}
+                          {employee.time_config.shift_cycles.code && (
+                            <Badge variant="outline">{employee.time_config.shift_cycles.code}</Badge>
+                          )}
+                        </h3>
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Duración del ciclo:</span>
+                          <span className="font-medium ml-2">{employee.time_config.shift_cycles.total_days} días</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Dates */}
+                    <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Vigente desde:</span>
+                        <span className="font-medium">
+                          {format(new Date(employee.time_config.start_date), 'PPP', { locale: es })}
+                        </span>
+                      </div>
+                      {employee.time_config.notes && (
+                        <div className="text-sm mt-2">
+                          <span className="text-muted-foreground">Notas:</span>
+                          <p className="mt-1">{employee.time_config.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No hay configuración de modalidad registrada</p>
+                  </div>
+                )}
               </TabsContent>
 
               {/* FAMILY TAB */}

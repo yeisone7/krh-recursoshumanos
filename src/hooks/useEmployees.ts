@@ -112,6 +112,7 @@ export function useEmployee(id: string | undefined) {
         { data: documents },
         { data: certifications },
         { data: vaccinations },
+        { data: timeConfig },
       ] = await Promise.all([
         supabase.from('employee_contact').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
         supabase.from('employee_family').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
@@ -127,6 +128,11 @@ export function useEmployee(id: string | undefined) {
         supabase.from('employee_documents').select('*').eq('employee_id', id).eq('is_valid', true).order('upload_date', { ascending: false }),
         supabase.from('employee_certifications').select('*').eq('employee_id', id).eq('is_valid', true).order('expiry_date', { ascending: true }),
         supabase.from('employee_vaccinations').select('*').eq('employee_id', id).order('application_date', { ascending: false }),
+        supabase.from('employee_time_config').select(`
+          *,
+          work_schedules(id, name, days_of_week, start_time, end_time, break_minutes),
+          shift_cycles(id, name, code, total_days)
+        `).eq('employee_id', id).eq('is_active', true).maybeSingle(),
       ]);
 
       return {
@@ -140,6 +146,7 @@ export function useEmployee(id: string | undefined) {
         documents: documents || [],
         certifications: certifications || [],
         vaccinations: vaccinations || [],
+        time_config: timeConfig || null,
         operation_centers: workInfo?.operation_centers || null,
         areas: workInfo?.areas || null,
         positions: workInfo?.positions || null,
