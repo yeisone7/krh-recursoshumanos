@@ -99,8 +99,9 @@ export default function ConfiguracionLaboral() {
               <Label>Jornada diaria ordinaria (horas)</Label>
               <Input
                 type="number"
+                step="0.5"
                 value={form.daily_hours}
-                onChange={e => setForm(f => ({ ...f, daily_hours: Number(e.target.value) }))}
+                onChange={e => setForm(f => ({ ...f, daily_hours: parseFloat(e.target.value) || 0 }))}
               />
             </div>
             <div className="space-y-2">
