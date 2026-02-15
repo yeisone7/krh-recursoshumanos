@@ -459,7 +459,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
     : format(currentMonth, 'MMMM yyyy', { locale: es });
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col flex-1 min-h-0 gap-2">
       {/* Header Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
@@ -555,7 +555,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="border rounded-lg overflow-auto max-h-[calc(100vh-320px)]">
+      <div className="border rounded-lg overflow-auto flex-1 min-h-0">
         <div className="min-w-max">
           {/* Days Header */}
           <div className="flex bg-muted sticky top-0 z-10">
