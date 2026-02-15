@@ -725,7 +725,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                                   {absence.type === 'incapacity' && 'INC'}
                                                 </div>
                                               )}
-                                              {shift && (
+                                              {shift && !shift.is_rest_day && (
                                                 <div
                                                   className={cn(
                                                     'h-6 rounded text-[10px] font-medium flex items-center justify-center',
@@ -735,6 +735,14 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                                   style={shift.color && shift.color !== 'transparent' ? { backgroundColor: shift.color } : undefined}
                                                 >
                                                   {shift.code || shift.name.slice(0, 2).toUpperCase()}
+                                                </div>
+                                              )}
+                                              {shift && shift.is_rest_day && (
+                                                <div className={cn(
+                                                  'h-6 rounded text-[10px] font-bold flex items-center justify-center bg-emerald-100 text-emerald-700 border border-emerald-300',
+                                                  hasConflict && 'opacity-70'
+                                                )}>
+                                                  D
                                                 </div>
                                               )}
                                               {/* Admin schedule: working day */}
