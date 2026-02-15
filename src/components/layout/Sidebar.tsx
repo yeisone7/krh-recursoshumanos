@@ -598,7 +598,7 @@ function UserSection({ collapsed }: { collapsed: boolean }) {
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-sm font-semibold text-sidebar-accent-foreground">{userInitials}</span>
+                <span className="text-sm font-semibold text-white">{userInitials}</span>
               )}
             </div>
             {!collapsed && (
