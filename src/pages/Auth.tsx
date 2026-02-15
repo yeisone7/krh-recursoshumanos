@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2, ChevronRight, Sparkles } from 'lucide-react';
 import petrocasinosLogo from '@/assets/petrocasinos-logo-white.png';
-import petrocasinosIcon from '@/assets/petrocasinos-profile-icon.png';
+import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
 
 const authSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
