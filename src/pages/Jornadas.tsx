@@ -125,7 +125,7 @@ export default function Jornadas() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2 h-[calc(100vh-3rem)]">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <div>
@@ -149,8 +149,8 @@ export default function Jornadas() {
       </div>
 
       {/* Main Content */}
-      <Card>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-2">
+      <Card className="flex-1 min-h-0 flex flex-col">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-2 flex-1 min-h-0 flex flex-col">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
               <TabsList className="h-8">
                 <TabsTrigger value="calendar" className="gap-1.5 text-xs h-7 px-2.5">
@@ -345,7 +345,7 @@ export default function Jornadas() {
             </TabsContent>
 
             {/* Calendario */}
-            <TabsContent value="calendar" className="mt-1">
+            <TabsContent value="calendar" className="mt-1 flex-1 min-h-0 flex flex-col">
               <ShiftCalendar />
             </TabsContent>
           </Tabs>
