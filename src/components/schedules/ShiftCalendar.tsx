@@ -545,7 +545,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
           <span>Incapacidad</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded text-[8px] font-bold text-gray-500 flex items-center justify-center">D</div>
+          <div className="w-4 h-4 bg-emerald-100 border border-emerald-400 rounded text-[8px] font-bold text-emerald-700 flex items-center justify-center">D</div>
           <span>Descanso</span>
         </div>
         <div className="flex items-center gap-1">
@@ -745,7 +745,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                               )}
                                               {/* Admin rest day: show D */}
                                               {isAdminMode && !shift && !absence && !adminIsWorkDay && (
-                                                <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-gray-100 text-gray-500 border border-gray-300">
+                                                <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-emerald-100 text-emerald-700 border border-emerald-300">
                                                   D
                                                 </div>
                                               )}
