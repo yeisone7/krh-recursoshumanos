@@ -180,7 +180,17 @@
 @layer base {
   * {
     @apply border-border;
+    --tw-radius-override: calc(var(--radius) * 1);
   }
+
+  /* Force all rounded utilities to use the design system radius */
+  .rounded-sm { border-radius: calc(var(--radius) * 0.75) !important; }
+  .rounded { border-radius: var(--radius) !important; }
+  .rounded-md { border-radius: var(--radius) !important; }
+  .rounded-lg { border-radius: calc(var(--radius) * 1.5) !important; }
+  .rounded-xl { border-radius: calc(var(--radius) * 2) !important; }
+  .rounded-2xl { border-radius: calc(var(--radius) * 2.5) !important; }
+  .rounded-3xl { border-radius: calc(var(--radius) * 3) !important; }
 
   body {
     @apply bg-background text-foreground antialiased;
