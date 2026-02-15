@@ -45,7 +45,7 @@ import {
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import petroVerdeLogo from '@/assets/petrocasinos-sidebar-logo.png';
+import petroVerdeLogo from '@/assets/petrocasinos-sidebar-icon.png';
 
 interface NavItem {
   label: string;
