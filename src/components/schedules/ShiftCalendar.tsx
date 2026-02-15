@@ -545,6 +545,10 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
           <span>Incapacidad</span>
         </div>
         <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded text-[8px] font-bold text-gray-500 flex items-center justify-center">D</div>
+          <span>Descanso</span>
+        </div>
+        <div className="flex items-center gap-1">
           <div className="w-3 h-3 bg-red-50 border-2 border-destructive rounded relative">
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
           </div>
@@ -739,8 +743,14 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                                   {adminSchedule?.name?.slice(0, 3).toUpperCase() || 'ADM'}
                                                 </div>
                                               )}
-                                              {/* Empty: non-admin with no shift/absence, or admin rest day */}
-                                              {!shift && !absence && (!isAdminMode || !adminIsWorkDay) && <div className="h-6" />}
+                                              {/* Admin rest day: show D */}
+                                              {isAdminMode && !shift && !absence && !adminIsWorkDay && (
+                                                <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-gray-100 text-gray-500 border border-gray-300">
+                                                  D
+                                                </div>
+                                              )}
+                                              {/* Empty: non-admin with no shift/absence */}
+                                              {!isAdminMode && !shift && !absence && <div className="h-6" />}
                                             </div>
                                           </TooltipTrigger>
                                           
