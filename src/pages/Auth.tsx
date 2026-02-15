@@ -231,9 +231,9 @@ export default function Auth() {
               <div className="hidden lg:flex justify-center mb-5">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="w-14 h-14 flex items-center justify-center shadow-lg" style={{ backgroundColor: '#3b3a59' }}
+                  className="w-18 h-18 flex items-center justify-center shadow-lg" style={{ backgroundColor: '#3b3a59' }}
                 >
-                  <img src={petrocasinosIcon} alt="KRH" className="w-10 h-10 object-contain" />
+                  <img src={petrocasinosIcon} alt="KRH" className="w-12 h-12 object-contain" />
                 </motion.div>
               </div>
               <AnimatePresence mode="wait">
