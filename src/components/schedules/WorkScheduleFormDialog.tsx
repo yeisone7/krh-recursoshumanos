@@ -130,7 +130,7 @@ export function WorkScheduleFormDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto flex-1 min-h-0 pr-1">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto flex-1 min-h-0 px-1 py-1">
             <FormField
               control={form.control}
               name="name"
