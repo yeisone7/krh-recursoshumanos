@@ -594,7 +594,7 @@ function UserSection({ collapsed }: { collapsed: boolean }) {
               collapsed ? "justify-center" : ""
             )}
           >
-            <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden">
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
