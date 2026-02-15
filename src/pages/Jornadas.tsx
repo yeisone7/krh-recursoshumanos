@@ -125,58 +125,48 @@ export default function Jornadas() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-      >
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Horarios y Turnos</h1>
-          <p className="text-muted-foreground mt-1">Gestiona horarios administrativos, turnos operativos y ciclos de rotación</p>
+          <h1 className="font-display text-lg font-bold text-foreground">Horarios y Turnos</h1>
+          <p className="text-muted-foreground text-xs">Gestiona horarios administrativos, turnos operativos y ciclos de rotación</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setShowGeneratorDialog(true)}>
-            <Zap className="w-4 h-4 mr-2" />
+        <div className="flex flex-wrap gap-1.5">
+          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowGeneratorDialog(true)}>
+            <Zap className="w-3.5 h-3.5 mr-1" />
             Generar Ciclo
           </Button>
-          <Button onClick={() => setShowBulkGeneratorDialog(true)}>
-            <Users className="w-4 h-4 mr-2" />
+          <Button size="sm" className="h-7 text-xs" onClick={() => setShowBulkGeneratorDialog(true)}>
+            <Users className="w-3.5 h-3.5 mr-1" />
             Generar Todos
           </Button>
-          <Button variant="outline" onClick={() => setShowExportDialog(true)}>
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
+          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowExportDialog(true)}>
+            <FileSpreadsheet className="w-3.5 h-3.5 mr-1" />
             Exportar
           </Button>
         </div>
-      </motion.div>
-
+      </div>
 
       {/* Main Content */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <Card>
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-              <TabsList>
-                <TabsTrigger value="calendar" className="gap-2">
-                  <Calendar className="w-4 h-4" />
+      <Card>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+              <TabsList className="h-8">
+                <TabsTrigger value="calendar" className="gap-1.5 text-xs h-7 px-2.5">
+                  <Calendar className="w-3.5 h-3.5" />
                   Calendario
                 </TabsTrigger>
-                <TabsTrigger value="schedules" className="gap-2">
-                  <Briefcase className="w-4 h-4" />
+                <TabsTrigger value="schedules" className="gap-1.5 text-xs h-7 px-2.5">
+                  <Briefcase className="w-3.5 h-3.5" />
                   Horarios
                 </TabsTrigger>
-                <TabsTrigger value="shifts" className="gap-2">
-                  <Clock className="w-4 h-4" />
+                <TabsTrigger value="shifts" className="gap-1.5 text-xs h-7 px-2.5">
+                  <Clock className="w-3.5 h-3.5" />
                   Turnos
                 </TabsTrigger>
-                <TabsTrigger value="cycles" className="gap-2">
-                  <RotateCcw className="w-4 h-4" />
+                <TabsTrigger value="cycles" className="gap-1.5 text-xs h-7 px-2.5">
+                  <RotateCcw className="w-3.5 h-3.5" />
                   Ciclos
                 </TabsTrigger>
               </TabsList>
@@ -355,12 +345,11 @@ export default function Jornadas() {
             </TabsContent>
 
             {/* Calendario */}
-            <TabsContent value="calendar" className="space-y-4">
+            <TabsContent value="calendar" className="mt-1">
               <ShiftCalendar />
             </TabsContent>
           </Tabs>
         </Card>
-      </motion.div>
 
       {/* Dialogs */}
       <WorkScheduleFormDialog open={showScheduleForm} onOpenChange={setShowScheduleForm} schedule={selectedSchedule} />
