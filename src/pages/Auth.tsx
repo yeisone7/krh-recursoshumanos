@@ -203,15 +203,15 @@ export default function Auth() {
             <img src={petrocasinosIcon} alt="KRH" className="h-14 object-contain" />
           </div>
 
-          <div className="bg-card border border-border p-8 shadow-xl">
+          <div className="bg-card border border-border p-6 shadow-xl">
             {/* Header */}
-            <div className="text-center mb-8">
-              <div className="hidden lg:flex justify-center mb-5">
+            <div className="text-center mb-4">
+              <div className="hidden lg:flex justify-center mb-3">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
-                  className="w-18 h-18 flex items-center justify-center shadow-lg" style={{ backgroundColor: '#3b3a59' }}
+                  className="w-14 h-14 flex items-center justify-center shadow-lg" style={{ backgroundColor: '#3b3a59' }}
                 >
-                  <img src={petrocasinosIcon} alt="KRH" className="w-12 h-12 object-contain" />
+                  <img src={petrocasinosIcon} alt="KRH" className="w-9 h-9 object-contain" />
                 </motion.div>
               </div>
               <AnimatePresence mode="wait">
@@ -222,10 +222,10 @@ export default function Auth() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <h2 className="text-2xl font-bold text-foreground">
+                  <h2 className="text-xl font-bold text-foreground">
                     {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
                   </h2>
-                  <p className="text-muted-foreground text-sm mt-1.5">
+                  <p className="text-muted-foreground text-xs mt-1">
                     {isLogin
                       ? 'Ingresa tus credenciales para acceder'
                       : 'Completa el formulario para registrarte'}
@@ -237,7 +237,7 @@ export default function Auth() {
             {/* Forms */}
             {isLogin ? (
               <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-3">
                   <FormField
                     control={loginForm.control}
                     name="email"
@@ -245,7 +245,7 @@ export default function Auth() {
                       <FormItem>
                         <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -258,13 +258,13 @@ export default function Auth() {
                       <FormItem>
                         <FormLabel className="text-sm font-semibold">Contraseña</FormLabel>
                         <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                          <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full h-11 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full h-9 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Iniciar Sesión
                   </Button>
@@ -272,16 +272,16 @@ export default function Auth() {
               </Form>
             ) : (
               <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
+                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-2.5">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <FormField
                       control={registerForm.control}
                       name="first_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-semibold">Nombre</FormLabel>
+                          <FormLabel className="text-xs font-semibold">Nombre</FormLabel>
                           <FormControl>
-                            <Input placeholder="Juan" autoComplete="given-name" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                            <Input placeholder="Juan" autoComplete="given-name" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -292,9 +292,9 @@ export default function Auth() {
                       name="last_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-semibold">Apellido</FormLabel>
+                          <FormLabel className="text-xs font-semibold">Apellido</FormLabel>
                           <FormControl>
-                            <Input placeholder="Pérez" autoComplete="family-name" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                            <Input placeholder="Pérez" autoComplete="family-name" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -306,9 +306,9 @@ export default function Auth() {
                     name="document_number"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold">Número de identificación</FormLabel>
+                        <FormLabel className="text-xs font-semibold">Número de identificación</FormLabel>
                         <FormControl>
-                          <Input placeholder="1234567890" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                          <Input placeholder="1234567890" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -332,9 +332,9 @@ export default function Auth() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold">Contraseña</FormLabel>
+                        <FormLabel className="text-xs font-semibold">Contraseña</FormLabel>
                         <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -345,15 +345,15 @@ export default function Auth() {
                     name="confirm_password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold">Confirmar contraseña</FormLabel>
+                        <FormLabel className="text-xs font-semibold">Confirmar contraseña</FormLabel>
                         <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full h-11 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full h-9 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Crear Cuenta
                   </Button>
@@ -362,7 +362,7 @@ export default function Auth() {
             )}
 
             {/* Divider */}
-            <div className="relative my-6">
+            <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border" />
               </div>
