@@ -159,7 +159,7 @@ export function Sidebar() {
         >
           <span className={cn(
             "transition-colors",
-            isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+            isActive ? "text-secondary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
           )}>
             {item.icon}
           </span>
@@ -336,7 +336,7 @@ export function Sidebar() {
                     >
                       <span className={cn(
                         "transition-colors",
-                        isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+                        isActive ? "text-secondary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
                       )}>
                         {child.icon}
                       </span>
