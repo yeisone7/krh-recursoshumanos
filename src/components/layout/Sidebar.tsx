@@ -7,8 +7,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  TooltipTrigger } from
+'@/components/ui/tooltip';
 import {
   LayoutDashboard,
   Users,
@@ -40,8 +40,8 @@ import {
   Calculator,
   FolderOpen,
   Shirt,
-  Check,
-} from 'lucide-react';
+  Check } from
+'lucide-react';
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -57,79 +57,79 @@ interface NavItem {
 
 // Reorganized: Grouped by workflow logic
 const coreNavItems: NavItem[] = [
-  { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
-  { label: 'Analítica RRHH', icon: <BarChart3 className="w-5 h-5" />, href: '/analitica' },
-];
+{ label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
+{ label: 'Analítica RRHH', icon: <BarChart3 className="w-5 h-5" />, href: '/analitica' }];
+
 
 const personnelNavItems: NavItem[] = [
-  { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados' },
-  { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' },
-];
+{ label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados' },
+{ label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' }];
+
 
 const seleccionNavItems: NavItem[] = [
-  { label: 'Requisiciones', icon: <ClipboardList className="w-5 h-5" />, href: '/requisiciones' },
-  { label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' },
-];
+{ label: 'Requisiciones', icon: <ClipboardList className="w-5 h-5" />, href: '/requisiciones' },
+{ label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' }];
+
 
 const timeManagementNavItems: NavItem[] = [
-  { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones' },
-  { label: 'Permisos', icon: <ClipboardList className="w-5 h-5" />, href: '/permisos' },
-  
-  { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' },
-];
+{ label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones' },
+{ label: 'Permisos', icon: <ClipboardList className="w-5 h-5" />, href: '/permisos' },
+
+{ label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' }];
+
 
 const developmentNavItems: NavItem[] = [
-  { label: 'Capacitaciones', icon: <GraduationCap className="w-5 h-5" />, href: '/capacitaciones' },
-  { label: 'Evaluación Desempeño', icon: <Target className="w-5 h-5" />, href: '/evaluaciones' },
-  { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' },
-];
+{ label: 'Capacitaciones', icon: <GraduationCap className="w-5 h-5" />, href: '/capacitaciones' },
+{ label: 'Evaluación Desempeño', icon: <Target className="w-5 h-5" />, href: '/evaluaciones' },
+{ label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' }];
+
 
 const benefitsNavItems: NavItem[] = [
-  { label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion' },
-  { label: 'Cesantías', icon: <Landmark className="w-5 h-5" />, href: '/cesantias' },
-  { label: 'Exámenes Médicos', icon: <Stethoscope className="w-5 h-5" />, href: '/examenes' },
-];
+{ label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion' },
+{ label: 'Cesantías', icon: <Landmark className="w-5 h-5" />, href: '/cesantias' },
+{ label: 'Exámenes Médicos', icon: <Stethoscope className="w-5 h-5" />, href: '/examenes' }];
+
 
 const catalogosItem: NavItem = {
   label: 'Catálogos',
   icon: <FolderOpen className="w-5 h-5" />,
   href: '/catalogos',
   children: [
-    { label: 'Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros' },
-    { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
-    { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
-    { label: 'Tipos de Contrato', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-contrato' },
-    { label: 'Tipos de Dotación', icon: <Shirt className="w-4 h-4" />, href: '/catalogos/tipos-dotacion' },
-    { label: 'Días Festivos', icon: <Calendar className="w-4 h-4" />, href: '/catalogos/festivos' },
-    { label: 'ARL', icon: <ShieldCheck className="w-4 h-4" />, href: '/catalogos/arl' },
-    { label: 'EPS', icon: <HeartPulse className="w-4 h-4" />, href: '/catalogos/eps' },
-    { label: 'AFP', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afp' },
-    { label: 'Caja Compensación', icon: <Users className="w-4 h-4" />, href: '/catalogos/ccf' },
-    { label: 'AFC', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afc' },
-    { label: 'IPS', icon: <Stethoscope className="w-4 h-4" />, href: '/catalogos/ips' },
-    { label: 'Bancos', icon: <BanknoteIcon className="w-4 h-4" />, href: '/catalogos/bancos' },
-    { label: 'Motivos Novedad', icon: <ClipboardList className="w-4 h-4" />, href: '/catalogos/motivos-novedad' },
-  ],
+  { label: 'Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros' },
+  { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
+  { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
+  { label: 'Tipos de Contrato', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-contrato' },
+  { label: 'Tipos de Dotación', icon: <Shirt className="w-4 h-4" />, href: '/catalogos/tipos-dotacion' },
+  { label: 'Días Festivos', icon: <Calendar className="w-4 h-4" />, href: '/catalogos/festivos' },
+  { label: 'ARL', icon: <ShieldCheck className="w-4 h-4" />, href: '/catalogos/arl' },
+  { label: 'EPS', icon: <HeartPulse className="w-4 h-4" />, href: '/catalogos/eps' },
+  { label: 'AFP', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afp' },
+  { label: 'Caja Compensación', icon: <Users className="w-4 h-4" />, href: '/catalogos/ccf' },
+  { label: 'AFC', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afc' },
+  { label: 'IPS', icon: <Stethoscope className="w-4 h-4" />, href: '/catalogos/ips' },
+  { label: 'Bancos', icon: <BanknoteIcon className="w-4 h-4" />, href: '/catalogos/bancos' },
+  { label: 'Motivos Novedad', icon: <ClipboardList className="w-4 h-4" />, href: '/catalogos/motivos-novedad' }]
+
 };
 
 const toolsNavItems: NavItem[] = [
-  { label: 'Calendario', icon: <Calendar className="w-5 h-5" />, href: '/calendario' },
-  { label: 'Reportes', icon: <FileBarChart className="w-5 h-5" />, href: '/reportes' },
-  { label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama' },
-  { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', badge: 5 },
-];
+{ label: 'Calendario', icon: <Calendar className="w-5 h-5" />, href: '/calendario' },
+{ label: 'Reportes', icon: <FileBarChart className="w-5 h-5" />, href: '/reportes' },
+{ label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama' },
+{ label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', badge: 5 }];
+
 
 const payrollNavItems: NavItem[] = [
-  { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas' },
-  { label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades' },
-  { label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion' },
-  { label: 'Configuración Laboral', icon: <Settings className="w-5 h-5" />, href: '/configuracion-laboral' },
-];
+{ label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas' },
+{ label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades' },
+{ label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion' },
+{ label: 'Configuración Laboral', icon: <Settings className="w-5 h-5" />, href: '/configuracion-laboral' }];
+
 
 const adminNavItems: NavItem[] = [
-  { label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad' },
-  { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion' },
-];
+{ label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad' },
+{ label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion' }];
+
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -142,52 +142,52 @@ export function Sidebar() {
     setCatalogosOpen(true);
   }
 
-  const NavLink = ({ item }: { item: NavItem }) => {
+  const NavLink = ({ item }: {item: NavItem;}) => {
     const isActive = location.pathname === item.href;
-    
-    const linkContent = (
-      <Link to={item.href}>
+
+    const linkContent =
+    <Link to={item.href}>
         <motion.div
-          whileHover={{ x: 4 }}
-          whileTap={{ scale: 0.98 }}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
-            isActive
-              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-          )}
-        >
+        whileHover={{ x: 4 }}
+        whileTap={{ scale: 0.98 }}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
+          isActive ?
+          "bg-sidebar-accent text-sidebar-accent-foreground" :
+          "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+        )}>
+
           <span className={cn(
-            "transition-colors",
-            isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
-          )}>
+          "transition-colors",
+          isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+        )}>
             {item.icon}
           </span>
           <AnimatePresence>
-            {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                className="font-medium text-sm whitespace-nowrap overflow-hidden"
-              >
+            {!collapsed &&
+          <motion.span
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: 'auto' }}
+            exit={{ opacity: 0, width: 0 }}
+            className="font-medium text-sm whitespace-nowrap overflow-hidden">
+
                 {item.label}
               </motion.span>
-            )}
+          }
           </AnimatePresence>
-          {item.badge && !collapsed && (
-            <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-0.5 rounded-full">
+          {item.badge && !collapsed &&
+        <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-0.5 rounded-full">
               {item.badge}
             </span>
-          )}
-          {item.badge && collapsed && (
-            <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-semibold w-5 h-5 rounded-full flex items-center justify-center">
+        }
+          {item.badge && collapsed &&
+        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-semibold w-5 h-5 rounded-full flex items-center justify-center">
               {item.badge}
             </span>
-          )}
+        }
         </motion.div>
-      </Link>
-    );
+      </Link>;
+
 
     if (collapsed) {
       return (
@@ -195,161 +195,161 @@ export function Sidebar() {
           <TooltipTrigger asChild>
             {linkContent}
           </TooltipTrigger>
-          <TooltipContent 
-            side="right" 
+          <TooltipContent
+            side="right"
             className="bg-sidebar border-sidebar-border text-sidebar-foreground font-medium px-3 py-2 shadow-lg"
-            sideOffset={8}
-          >
+            sideOffset={8}>
+
             <div className="flex items-center gap-2">
               <span>{item.label}</span>
-              {item.badge && (
-                <span className="bg-destructive text-destructive-foreground text-xs font-semibold px-1.5 py-0.5 rounded-full">
+              {item.badge &&
+              <span className="bg-destructive text-destructive-foreground text-xs font-semibold px-1.5 py-0.5 rounded-full">
                   {item.badge}
                 </span>
-              )}
+              }
             </div>
           </TooltipContent>
-        </Tooltip>
-      );
+        </Tooltip>);
+
     }
 
     return linkContent;
   };
 
-  const SectionLabel = ({ label }: { label: string }) => (
-    <AnimatePresence>
-      {!collapsed && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-3 pt-4 pb-1"
-        >
+  const SectionLabel = ({ label }: {label: string;}) =>
+  <AnimatePresence>
+      {!collapsed &&
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-3 pt-4 pb-1">
+
           {label}
         </motion.p>
-      )}
-    </AnimatePresence>
-  );
+    }
+    </AnimatePresence>;
+
 
   const CatalogosMenu = () => {
-    const isAnyChildActive = catalogosItem.children?.some(child => location.pathname === child.href);
-    
-    const menuButton = (
-      <motion.div
-        whileHover={{ x: 4 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => !collapsed && setCatalogosOpen(!catalogosOpen)}
-        className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
-          isAnyChildActive
-            ? "bg-sidebar-accent text-sidebar-accent-foreground"
-            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-        )}
-      >
+    const isAnyChildActive = catalogosItem.children?.some((child) => location.pathname === child.href);
+
+    const menuButton =
+    <motion.div
+      whileHover={{ x: 4 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => !collapsed && setCatalogosOpen(!catalogosOpen)}
+      className={cn(
+        "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
+        isAnyChildActive ?
+        "bg-sidebar-accent text-sidebar-accent-foreground" :
+        "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+      )}>
+
         <span className={cn(
-          "transition-colors",
-          isAnyChildActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
-        )}>
+        "transition-colors",
+        isAnyChildActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+      )}>
           {catalogosItem.icon}
         </span>
         <AnimatePresence>
-          {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 'auto' }}
-              exit={{ opacity: 0, width: 0 }}
-              className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1"
-            >
+          {!collapsed &&
+        <motion.span
+          initial={{ opacity: 0, width: 0 }}
+          animate={{ opacity: 1, width: 'auto' }}
+          exit={{ opacity: 0, width: 0 }}
+          className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1">
+
               {catalogosItem.label}
             </motion.span>
-          )}
+        }
         </AnimatePresence>
-        {!collapsed && (
-          <ChevronDown className={cn(
-            "w-4 h-4 transition-transform",
-            catalogosOpen && "rotate-180"
-          )} />
-        )}
-      </motion.div>
-    );
-    
+        {!collapsed &&
+      <ChevronDown className={cn(
+        "w-4 h-4 transition-transform",
+        catalogosOpen && "rotate-180"
+      )} />
+      }
+      </motion.div>;
+
+
     return (
       <div>
-        {collapsed ? (
-          <Tooltip delayDuration={0}>
+        {collapsed ?
+        <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               {menuButton}
             </TooltipTrigger>
-            <TooltipContent 
-              side="right" 
-              className="bg-sidebar border-sidebar-border text-sidebar-foreground p-0 shadow-lg"
-              sideOffset={8}
-            >
+            <TooltipContent
+            side="right"
+            className="bg-sidebar border-sidebar-border text-sidebar-foreground p-0 shadow-lg"
+            sideOffset={8}>
+
               <div className="py-2">
                 <p className="px-3 pb-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider border-b border-sidebar-border mb-1">
                   {catalogosItem.label}
                 </p>
                 {catalogosItem.children?.map((child) => {
-                  const isActive = location.pathname === child.href;
-                  return (
-                    <Link key={child.href} to={child.href}>
-                      <div className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
-                        isActive
-                          ? "bg-sidebar-accent text-primary font-medium"
-                          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                      )}>
-                        {child.icon}
-                        <span>{child.label}</span>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          menuButton
-        )}
-        
-        <AnimatePresence>
-          {catalogosOpen && !collapsed && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="ml-4 pl-3 border-l border-sidebar-border space-y-1 mt-1"
-            >
-              {catalogosItem.children?.map((child) => {
                 const isActive = location.pathname === child.href;
                 return (
                   <Link key={child.href} to={child.href}>
+                      <div className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
+                      isActive ?
+                      "bg-sidebar-accent text-primary font-medium" :
+                      "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    )}>
+                        {child.icon}
+                        <span>{child.label}</span>
+                      </div>
+                    </Link>);
+
+              })}
+              </div>
+            </TooltipContent>
+          </Tooltip> :
+
+        menuButton
+        }
+        
+        <AnimatePresence>
+          {catalogosOpen && !collapsed &&
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="ml-4 pl-3 border-l border-sidebar-border space-y-1 mt-1">
+
+              {catalogosItem.children?.map((child) => {
+              const isActive = location.pathname === child.href;
+              return (
+                <Link key={child.href} to={child.href}>
                     <motion.div
-                      whileHover={{ x: 4 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group",
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      )}
-                    >
+                    whileHover={{ x: 4 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group",
+                      isActive ?
+                      "bg-sidebar-accent text-sidebar-accent-foreground" :
+                      "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                    )}>
+
                       <span className={cn(
-                        "transition-colors",
-                        isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
-                      )}>
+                      "transition-colors",
+                      isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+                    )}>
                         {child.icon}
                       </span>
                       <span className="font-medium text-sm">{child.label}</span>
                     </motion.div>
-                  </Link>
-                );
-              })}
+                  </Link>);
+
+            })}
             </motion.div>
-          )}
+          }
         </AnimatePresence>
-      </div>
-    );
+      </div>);
+
   };
 
 
@@ -359,47 +359,47 @@ export function Sidebar() {
         initial={false}
         animate={{ width: collapsed ? 80 : 260 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative"
-      >
+        className="h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative">
+
       {/* Collapse/Expand Toggle Button - Floating on edge near company selector */}
       <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute top-20 -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
-      >
-        {collapsed ? (
-          <ChevronRight className="w-3.5 h-3.5" />
-        ) : (
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute top-20 -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors">
+
+        {collapsed ?
+          <ChevronRight className="w-3.5 h-3.5" /> :
+
           <ChevronLeft className="w-3.5 h-3.5" />
-        )}
+          }
       </button>
 
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
         <AnimatePresence mode="wait">
-          {!collapsed ? (
+          {!collapsed ?
             <motion.div
               key="full-logo"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center gap-2"
-            >
+              className="flex items-center gap-2">
+
               <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center shadow-sm border border-border/30">
-                <img src={petroVerdeLogo} alt="KRH Logo" className="w-10 h-10 object-cover rounded-lg" />
+                <img alt="KRH Logo" className="w-10 h-10 object-cover rounded-lg" src="/lovable-uploads/a34684ce-00a3-46fe-8113-8c397a467b22.png" />
               </div>
               <span className="font-display font-bold text-xl text-sidebar-primary">KRH</span>
-            </motion.div>
-          ) : (
+            </motion.div> :
+
             <motion.div
               key="icon-logo"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center mx-auto shadow-sm border border-border/30"
-            >
+              className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center mx-auto shadow-sm border border-border/30">
+
               <img src={petroVerdeLogo} alt="KRH Logo" className="w-10 h-10 object-cover rounded-lg" />
             </motion.div>
-          )}
+            }
         </AnimatePresence>
       </div>
 
@@ -410,94 +410,94 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto py-2 px-3 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Core */}
         <div className="space-y-0.5">
-          {coreNavItems.map((item) => (
+          {coreNavItems.map((item) =>
             <NavLink key={item.href} item={item} />
-          ))}
+            )}
         </div>
 
         {/* Personnel */}
         <SectionLabel label="Personal" />
         <div className="space-y-0.5">
-          {personnelNavItems.map((item) => (
+          {personnelNavItems.map((item) =>
             <NavLink key={item.href} item={item} />
-          ))}
+            )}
         </div>
 
         {/* Selección */}
         <SectionLabel label="Selección" />
         <div className="space-y-0.5">
-          {seleccionNavItems.map((item) => (
+          {seleccionNavItems.map((item) =>
             <NavLink key={item.href} item={item} />
-          ))}
+            )}
         </div>
 
         {/* Payroll */}
         <SectionLabel label="Nómina" />
         <div className="space-y-0.5">
-          {payrollNavItems.map((item) => (
+          {payrollNavItems.map((item) =>
             <NavLink key={item.href} item={item} />
-          ))}
+            )}
         </div>
 
         {/* Time Management */}
         <SectionLabel label="Tiempo" />
         <div className="space-y-0.5">
-          {timeManagementNavItems.map((item) => (
+          {timeManagementNavItems.map((item) =>
             <NavLink key={item.href} item={item} />
-          ))}
+            )}
         </div>
 
         {/* Development */}
         <SectionLabel label="Desarrollo" />
         <div className="space-y-0.5">
-          {developmentNavItems.map((item) => (
+          {developmentNavItems.map((item) =>
             <NavLink key={item.href} item={item} />
-          ))}
+            )}
         </div>
 
         {/* Benefits */}
         <SectionLabel label="Beneficios" />
         <div className="space-y-0.5">
-          {benefitsNavItems.map((item) => (
+          {benefitsNavItems.map((item) =>
             <NavLink key={item.href} item={item} />
-          ))}
+            )}
         </div>
 
         {/* Tools */}
         <SectionLabel label="Herramientas" />
         <div className="space-y-0.5">
-          {toolsNavItems.map((item) => (
+          {toolsNavItems.map((item) =>
             <NavLink key={item.href} item={item} />
-          ))}
+            )}
         </div>
 
         {/* Admin */}
         <SectionLabel label="Administración" />
         <div className="space-y-0.5">
           <CatalogosMenu />
-          {adminNavItems.map((item) => (
+          {adminNavItems.map((item) =>
             <NavLink key={item.href} item={item} />
-          ))}
+            )}
         </div>
       </nav>
 
       {/* User section */}
       <UserSection collapsed={collapsed} />
     </motion.aside>
-    </TooltipProvider>
-  );
+    </TooltipProvider>);
+
 }
 
-function CompanySelector({ collapsed }: { collapsed: boolean }) {
+function CompanySelector({ collapsed }: {collapsed: boolean;}) {
   const { currentCompanyId, setCurrentCompanyId, roles } = useAuth();
   const { data: companies } = useCompanies();
   const { data: currentCompany } = useCompany(currentCompanyId || undefined);
   const [open, setOpen] = useState(false);
-  
+
   // Only admins can switch companies
   const canSwitchCompany = roles.includes('admin');
   const hasMultipleCompanies = companies && companies.length > 1;
-  
+
   if (collapsed) {
     return (
       <div className="px-3 py-2">
@@ -506,77 +506,77 @@ function CompanySelector({ collapsed }: { collapsed: boolean }) {
             <Building2 className="w-4 h-4 text-sidebar-foreground" />
           </div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
     <div className="px-3 py-2 border-b border-sidebar-border">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild disabled={!canSwitchCompany || !hasMultipleCompanies}>
-          <button 
+          <button
             className={cn(
               "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left",
-              canSwitchCompany && hasMultipleCompanies 
-                ? "hover:bg-sidebar-accent/50 cursor-pointer" 
-                : "cursor-default"
-            )}
-          >
+              canSwitchCompany && hasMultipleCompanies ?
+              "hover:bg-sidebar-accent/50 cursor-pointer" :
+              "cursor-default"
+            )}>
+
             <Building2 className="w-4 h-4 text-sidebar-foreground/60 shrink-0" />
             <span className="text-sm font-medium text-sidebar-foreground truncate flex-1">
               {currentCompany?.name || 'Seleccionar empresa'}
             </span>
-            {canSwitchCompany && hasMultipleCompanies && (
-              <ChevronDown className="w-4 h-4 text-sidebar-foreground/50 shrink-0" />
-            )}
+            {canSwitchCompany && hasMultipleCompanies &&
+            <ChevronDown className="w-4 h-4 text-sidebar-foreground/50 shrink-0" />
+            }
           </button>
         </PopoverTrigger>
-        <PopoverContent 
-          side="bottom" 
-          align="start" 
+        <PopoverContent
+          side="bottom"
+          align="start"
           className="w-56 p-1 bg-popover border border-border shadow-lg"
-          sideOffset={4}
-        >
+          sideOffset={4}>
+
           <div className="space-y-0.5">
-            {companies?.map((company) => (
-              <button
-                key={company.id}
-                onClick={() => {
-                  setCurrentCompanyId(company.id);
-                  setOpen(false);
-                }}
-                className={cn(
-                  "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
-                  currentCompanyId === company.id
-                    ? "bg-primary/10 text-primary"
-                    : "text-foreground hover:bg-accent"
-                )}
-              >
+            {companies?.map((company) =>
+            <button
+              key={company.id}
+              onClick={() => {
+                setCurrentCompanyId(company.id);
+                setOpen(false);
+              }}
+              className={cn(
+                "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
+                currentCompanyId === company.id ?
+                "bg-primary/10 text-primary" :
+                "text-foreground hover:bg-accent"
+              )}>
+
                 <Building2 className="w-4 h-4 shrink-0" />
                 <span className="truncate flex-1 text-left">{company.name}</span>
-                {currentCompanyId === company.id && (
-                  <Check className="w-4 h-4 shrink-0" />
-                )}
+                {currentCompanyId === company.id &&
+              <Check className="w-4 h-4 shrink-0" />
+              }
               </button>
-            ))}
+            )}
           </div>
         </PopoverContent>
       </Popover>
-    </div>
-  );
+    </div>);
+
 }
 
-function UserSection({ collapsed }: { collapsed: boolean }) {
+function UserSection({ collapsed }: {collapsed: boolean;}) {
   const { user, roles, signOut } = useAuth();
   const navigate = useNavigate();
-  
+
   const roleLabels: Record<string, string> = {
     admin: 'Administrador',
     rrhh: 'RRHH',
     psicologo: 'Psicólogo',
     jefe_area: 'Jefe de Área',
     auditor: 'Auditor',
-    empleado: 'Empleado',
+    empleado: 'Empleado'
   };
 
   const userEmail = user?.email || '';
@@ -588,36 +588,36 @@ function UserSection({ collapsed }: { collapsed: boolean }) {
     <div className="border-t border-sidebar-border p-3">
       <Popover>
         <PopoverTrigger asChild>
-          <div 
+          <div
             className={cn(
               "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-sidebar-accent/50 transition-colors",
               collapsed ? "justify-center" : ""
-            )}
-          >
+            )}>
+
             <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-sm font-semibold text-sidebar-accent-foreground">{userInitials}</span>
-              )}
+              {avatarUrl ?
+              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" /> :
+
+              <span className="text-sm font-semibold text-sidebar-accent-foreground">{userInitials}</span>
+              }
             </div>
-            {!collapsed && (
-              <div className="flex-1 min-w-0">
+            {!collapsed &&
+            <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-sidebar-foreground truncate">{userEmail}</p>
                 <p className="text-xs text-sidebar-foreground/60 truncate">{primaryRole}</p>
               </div>
-            )}
-            {!collapsed && (
-              <ChevronDown className="w-4 h-4 text-sidebar-foreground/50" />
-            )}
+            }
+            {!collapsed &&
+            <ChevronDown className="w-4 h-4 text-sidebar-foreground/50" />
+            }
           </div>
         </PopoverTrigger>
-        <PopoverContent 
-          side="top" 
-          align="start" 
+        <PopoverContent
+          side="top"
+          align="start"
           className="w-64 p-0 bg-popover border border-border shadow-lg"
-          sideOffset={8}
-        >
+          sideOffset={8}>
+
           <div className="p-4 border-b border-border">
             <p className="text-sm font-medium text-foreground">{userEmail}</p>
             <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
@@ -627,28 +627,28 @@ function UserSection({ collapsed }: { collapsed: boolean }) {
           <div className="p-2">
             <button
               onClick={() => navigate('/perfil')}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
-            >
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors">
+
               <Users className="w-4 h-4" />
               Mi Perfil
             </button>
             <button
               onClick={() => navigate('/configuracion')}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
-            >
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors">
+
               <Settings className="w-4 h-4" />
               Configuración
             </button>
             <button
               onClick={() => signOut()}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors"
-            >
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors">
+
               <LogOut className="w-4 h-4" />
               Cerrar sesión
             </button>
           </div>
         </PopoverContent>
       </Popover>
-    </div>
-  );
+    </div>);
+
 }
