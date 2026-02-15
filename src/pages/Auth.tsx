@@ -14,12 +14,25 @@ import { Loader2, Users, Shield, Building2, ChevronRight, Sparkles } from 'lucid
 import petrocasinosLogo from '@/assets/petrocasinos-logo-white.png';
 import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
 
-const authSchema = z.object({
+const loginSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
 });
 
-type AuthFormData = z.infer<typeof authSchema>;
+const registerSchema = z.object({
+  first_name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  last_name: z.string().min(2, 'El apellido debe tener al menos 2 caracteres'),
+  document_number: z.string().min(5, 'Ingrese un número de identificación válido'),
+  email: z.string().email('Ingrese un correo válido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  confirm_password: z.string().min(6, 'Confirme su contraseña'),
+}).refine((data) => data.password === data.confirm_password, {
+  message: 'Las contraseñas no coinciden',
+  path: ['confirm_password'],
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 const features = [
   { icon: Shield, title: 'Seguridad basada en roles', desc: 'Control de acceso granular por rol y centro' },
@@ -43,61 +56,54 @@ export default function Auth() {
     }
   }, [user, navigate, from]);
 
-  const form = useForm<AuthFormData>({
-    resolver: zodResolver(authSchema),
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = async (data: AuthFormData) => {
+  const registerForm = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { first_name: '', last_name: '', document_number: '', email: '', password: '', confirm_password: '' },
+  });
+
+  const onLoginSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
     try {
-      if (isLogin) {
-        const { error } = await signIn(data.email, data.password);
-        if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            toast({
-              variant: 'destructive',
-              title: 'Error de autenticación',
-              description: 'Correo o contraseña incorrectos.',
-            });
-          } else {
-            toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: error.message,
-            });
-          }
-          return;
-        }
+      const { error } = await signIn(data.email, data.password);
+      if (error) {
         toast({
-          title: '¡Bienvenido!',
-          description: 'Has iniciado sesión correctamente.',
+          variant: 'destructive',
+          title: 'Error de autenticación',
+          description: error.message.includes('Invalid login credentials')
+            ? 'Correo o contraseña incorrectos.'
+            : error.message,
         });
-      } else {
-        const { error } = await signUp(data.email, data.password);
-        if (error) {
-          if (error.message.includes('already registered')) {
-            toast({
-              variant: 'destructive',
-              title: 'Error de registro',
-              description: 'Este correo ya está registrado. Intenta iniciar sesión.',
-            });
-          } else {
-            toast({
-              variant: 'destructive',
-              title: 'Error',
-              description: error.message,
-            });
-          }
-          return;
-        }
-        toast({
-          title: '¡Cuenta creada!',
-          description: 'Tu cuenta ha sido creada. Ahora puedes iniciar sesión.',
-        });
-        setIsLogin(true);
-        form.reset();
+        return;
       }
+      toast({ title: '¡Bienvenido!', description: 'Has iniciado sesión correctamente.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const onRegisterSubmit = async (data: RegisterFormData) => {
+    setIsSubmitting(true);
+    try {
+      const { error } = await signUp(data.email, data.password);
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error de registro',
+          description: error.message.includes('already registered')
+            ? 'Este correo ya está registrado. Intenta iniciar sesión.'
+            : error.message,
+        });
+        return;
+      }
+      toast({ title: '¡Cuenta creada!', description: 'Revisa tu correo para confirmar tu cuenta.' });
+      setIsLogin(true);
+      loginForm.reset();
+      registerForm.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -127,33 +133,18 @@ export default function Auth() {
             transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}
             className="absolute top-1/3 right-12 w-64 h-64 rounded-full border border-secondary/10"
           />
-          {/* Glowing orbs */}
           <div className="absolute top-20 right-20 w-72 h-72 bg-secondary/8 rounded-full blur-3xl" />
           <div className="absolute bottom-32 left-16 w-56 h-56 bg-primary/20 rounded-full blur-3xl" />
         </div>
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <img 
-              src={petrocasinosLogo} 
-              alt="Petrocasinos Logo" 
-              className="h-20 object-contain"
-            />
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <img src={petrocasinosLogo} alt="Petrocasinos Logo" className="h-20 object-contain" />
           </motion.div>
           
-          {/* Main text */}
           <div className="space-y-8">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-            >
+            <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary/15 border border-secondary/25 text-secondary text-sm font-medium mb-6">
                 <Sparkles className="w-4 h-4" />
                 Plataforma KRH
@@ -169,13 +160,7 @@ export default function Auth() {
               </p>
             </motion.div>
             
-            {/* Feature cards */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
-              className="space-y-3"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }} className="space-y-3">
               {features.map((feat, i) => (
                 <motion.div
                   key={feat.title}
@@ -197,13 +182,7 @@ export default function Auth() {
             </motion.div>
           </div>
           
-          {/* Footer */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="text-sm text-white/30"
-          >
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="text-sm text-white/30">
             © 2025 KRH. Todos los derechos reservados.
           </motion.p>
         </div>
@@ -211,7 +190,6 @@ export default function Auth() {
 
       {/* Right side - Auth Form */}
       <div className="flex-1 flex items-center justify-center p-8 relative">
-        {/* Subtle background pattern */}
         <div className="absolute inset-0 bg-[radial-gradient(hsl(224,18%,88%)_1px,transparent_1px)] bg-[size:24px_24px] opacity-40" />
         
         <motion.div
@@ -256,57 +234,132 @@ export default function Auth() {
               </AnimatePresence>
             </div>
 
-            {/* Form */}
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder="correo@ejemplo.com"
-                          autoComplete="email"
-                          className="h-11 bg-muted/50 border-border focus:bg-background transition-colors"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-semibold">Contraseña</FormLabel>
-                      <FormControl>
-                        <PasswordInput
-                          placeholder="••••••••"
-                          autoComplete={isLogin ? 'current-password' : 'new-password'}
-                          className="h-11 bg-muted/50 border-border focus:bg-background transition-colors"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button 
-                  type="submit" 
-                  className="w-full h-11 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
-                </Button>
-              </form>
-            </Form>
+            {/* Forms */}
+            {isLogin ? (
+              <Form {...loginForm}>
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
+                  <FormField
+                    control={loginForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={loginForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold">Contraseña</FormLabel>
+                        <FormControl>
+                          <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full h-11 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Iniciar Sesión
+                  </Button>
+                </form>
+              </Form>
+            ) : (
+              <Form {...registerForm}>
+                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={registerForm.control}
+                      name="first_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold">Nombre</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Juan" autoComplete="given-name" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="last_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold">Apellido</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Pérez" autoComplete="family-name" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={registerForm.control}
+                    name="document_number"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold">Número de identificación</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1234567890" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={registerForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={registerForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold">Contraseña</FormLabel>
+                        <FormControl>
+                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={registerForm.control}
+                    name="confirm_password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold">Confirmar contraseña</FormLabel>
+                        <FormControl>
+                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full h-11 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Crear Cuenta
+                  </Button>
+                </form>
+              </Form>
+            )}
 
             {/* Divider */}
             <div className="relative my-6">
@@ -325,7 +378,8 @@ export default function Auth() {
                 className="text-secondary hover:text-secondary/80 font-semibold transition-colors"
                 onClick={() => {
                   setIsLogin(!isLogin);
-                  form.reset();
+                  loginForm.reset();
+                  registerForm.reset();
                 }}
               >
                 {isLogin ? 'Regístrate' : 'Inicia sesión'}
@@ -333,7 +387,6 @@ export default function Auth() {
             </div>
           </div>
 
-          {/* Extra info below card */}
           <p className="text-center text-xs text-muted-foreground/60 mt-6">
             Protegido con encriptación de extremo a extremo
           </p>
