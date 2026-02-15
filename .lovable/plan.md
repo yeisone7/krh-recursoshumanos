@@ -1,72 +1,46 @@
 
-# Unificar Horas Extra y Novedades Manuales
+## Show "D" (Descanso) on non-working days for administrative schedules
 
-## Resumen
+### Problem
+When an employee has an administrative schedule (e.g., Monday-Friday), the calendar shows working days with the schedule badge (e.g., "ADM") but leaves non-working days (Saturday, Sunday) as blank/empty cells. This is confusing because the user cannot distinguish between "no configuration" and "rest day."
 
-Reemplazar la vista "Horas Extra" (`/horas-extra`) y la pestana "Novedades Manuales" de Pre-Liquidacion con una unica vista principal llamada **"Novedades"** (`/novedades`) en el grupo Nomina del sidebar. La nueva vista adoptara la interfaz visual de Horas Extra (KPI cards, filtros, tabla con estados) pero operara sobre la tabla `payroll_novelties`.
+### Solution
+For employees in administrative mode, on days NOT included in their `days_of_week` configuration (rest days), display a "D" badge (Descanso) with a neutral/gray style, similar to how rest-day shifts are displayed.
 
----
+### Changes
 
-## Cambios principales
+**File: `src/components/schedules/ShiftCalendar.tsx`**
 
-### 1. Nueva pagina: Novedades (`src/pages/Novedades.tsx`)
+1. Replace the empty cell rendering for admin rest days (line 743) with a styled "D" badge:
+   - Instead of `<div className="h-6" />` when `isAdminMode && !adminIsWorkDay`, render a badge with text "D" using a gray/neutral style (e.g., `bg-gray-100 text-gray-500 border border-gray-300`).
+   - Keep the truly empty cell only for non-admin employees with no shift/absence.
 
-Adoptara el layout de `HorasExtra.tsx`:
-- **Header** con titulo "Novedades de Nomina" y botones "Exportar" + "Nueva Novedad"
-- **4 KPI Cards**: Total registros, Total horas, Por tipo (distribucion), Novedades del periodo
-- **Card de referencia**: Badges con los tipos de novedad disponibles (HEDO 25%, HENO 75%, etc.) tomados de la configuracion laboral
-- **Filtros**: Buscador por empleado, selector de tipo de novedad, selector de periodo (fecha inicio/fin)
-- **Tabla de resultados**: Empleado, Fecha, Tipo (badge), Horas, Notas, Fuente (manual/auto), Acciones (editar/eliminar)
-- Reutilizara `NoveltyFormDialog` para crear/editar
+2. Update the legend section (around line 522-555) to add an entry for "D" (Descanso) so users understand the badge meaning.
 
-### 2. Eliminar vista Horas Extra
+### Technical Detail
 
-- Eliminar `src/pages/HorasExtra.tsx`
-- Remover la ruta `/horas-extra` de `App.tsx`
-- Remover "Horas Extra" de `timeManagementNavItems` en `Sidebar.tsx`
+Current code (line 742-743):
+```tsx
+{/* Empty: non-admin with no shift/absence, or admin rest day */}
+{!shift && !absence && (!isAdminMode || !adminIsWorkDay) && <div className="h-6" />}
+```
 
-### 3. Actualizar Pre-Liquidacion
+Will become two separate conditions:
+```tsx
+{/* Admin rest day: show D */}
+{isAdminMode && !shift && !absence && !adminIsWorkDay && (
+  <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-gray-100 text-gray-500 border border-gray-300">
+    D
+  </div>
+)}
+{/* Empty: non-admin with no shift/absence */}
+{!isAdminMode && !shift && !absence && <div className="h-6" />}
+```
 
-- Eliminar la pestana "Novedades Manuales" y el sistema de Tabs
-- La pagina mostrara directamente el contenido de Pre-Liquidacion sin tabs
-- Remover imports y estado relacionado con novedades (noveltyOpen, editingNovelty, handleDeleteNovelty)
-
-### 4. Actualizar Sidebar
-
-- Agregar "Novedades" en `payrollNavItems` (grupo Nomina) con icono `Clock`
-- Remover "Horas Extra" de `timeManagementNavItems` (grupo Tiempo)
-
-### 5. Actualizar App.tsx
-
-- Reemplazar import/ruta de `HorasExtra` por `Novedades` (`/novedades`)
-- Remover ruta `/horas-extra`
-
----
-
-## Detalles tecnicos
-
-### Archivos nuevos
-| Archivo | Proposito |
-|---|---|
-| `src/pages/Novedades.tsx` | Vista principal CRUD de novedades con UI estilo HorasExtra |
-
-### Archivos modificados
-| Archivo | Cambio |
-|---|---|
-| `src/App.tsx` | Reemplazar ruta `/horas-extra` por `/novedades`, nuevo import |
-| `src/components/layout/Sidebar.tsx` | Mover de timeManagement a payrollNavItems como "Novedades" |
-| `src/pages/PreLiquidacion.tsx` | Eliminar Tabs y pestana de novedades, dejar solo contenido de pre-liquidacion |
-
-### Archivos eliminados
-| Archivo | Razon |
-|---|---|
-| `src/pages/HorasExtra.tsx` | Funcionalidad absorbida por Novedades |
-
-### Datos y hooks reutilizados
-- `usePayrollNovelties` (ya existente) para listar/filtrar novedades
-- `useCreatePayrollNovelty`, `useUpdatePayrollNovelty`, `useDeletePayrollNovelty`
-- `NoveltyFormDialog` (ya existente) para crear/editar
-- `usePayrollConfig` para mostrar los porcentajes de recargo configurados
-
-### Nota sobre overtime_records
-La tabla `overtime_records` y el hook `useOvertime` seguiran existiendo ya que la pre-liquidacion los consulta directamente para el calculo. Sin embargo, la vista de gestion manual ahora sera unificada a traves de `payroll_novelties`.
+And a new legend entry:
+```tsx
+<div className="flex items-center gap-1">
+  <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded text-[8px] font-bold text-gray-500 flex items-center justify-center">D</div>
+  <span>Descanso</span>
+</div>
+```
