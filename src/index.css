@@ -5,72 +5,68 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 /* KRH Design System - Corporate HR Platform
-   Multi-tone Palette: Emerald (Primary) + Navy Blue (Secondary) + Orange (Accent) */
+   Petrocasinos Palette: Navy Blue (Primary) + Vibrant Orange (Accent) */
 
 @layer base {
   :root {
-    /* Core backgrounds - Slate neutrals */
-    --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
+    /* Core backgrounds */
+    --background: 220 20% 97%;
+    --foreground: 224 40% 18%;
 
-    /* Cards and surfaces - Clean white */
+    /* Cards and surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 224 40% 18%;
 
     /* Popovers */
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 224 40% 18%;
 
-    /* Primary - Corporate Emerald Green */
-    --primary: 158 64% 35%;
+    /* Primary - Petrocasinos Navy Blue */
+    --primary: 224 42% 28%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 158 64% 30%;
-    --primary-light: 158 60% 94%;
+    --primary-hover: 224 42% 22%;
+    --primary-light: 224 45% 95%;
 
-    /* Secondary - Navy Blue */
-    --secondary: 220 60% 25%;
+    /* Secondary - Warm Deep Orange */
+    --secondary: 22 92% 47%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-light: 220 55% 94%;
+    --secondary-light: 22 95% 95%;
 
-    /* Tertiary - Brand Orange (Petrocasinos accent) */
-    --tertiary: 24 95% 53%;
+    /* Tertiary - Vibrant Teal (complementary pop) */
+    --tertiary: 174 70% 38%;
     --tertiary-foreground: 0 0% 100%;
-    --tertiary-light: 24 100% 95%;
+    --tertiary-light: 174 65% 94%;
 
-    /* Muted - Light Slate */
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 15% 45%;
+    /* Muted */
+    --muted: 220 18% 95%;
+    --muted-foreground: 224 15% 46%;
 
-    /* Accent - Soft Emerald (kept for backwards compat) */
-    --accent: 158 50% 45%;
+    /* Accent - Orange (main brand accent) */
+    --accent: 22 92% 47%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 158 55% 94%;
+    --accent-light: 22 95% 95%;
 
     /* Extended Color Palette */
-    /* Violet - For juridico, special processes */
     --violet: 262 60% 55%;
     --violet-foreground: 0 0% 100%;
     --violet-light: 262 70% 95%;
 
-    /* Indigo - For analytics, reports */
     --indigo: 234 60% 55%;
     --indigo-foreground: 0 0% 100%;
     --indigo-light: 234 70% 95%;
 
-    /* Teal - Alternative to primary */
     --teal: 174 65% 40%;
     --teal-foreground: 0 0% 100%;
     --teal-light: 174 70% 94%;
 
-    /* Rose - For HR, people related */
     --rose: 346 75% 55%;
     --rose-foreground: 0 0% 100%;
     --rose-light: 346 85% 96%;
 
     /* Status colors */
-    --success: 158 64% 40%;
+    --success: 152 60% 40%;
     --success-foreground: 0 0% 100%;
-    --success-light: 158 60% 94%;
+    --success-light: 152 55% 94%;
 
     --warning: 38 95% 50%;
     --warning-foreground: 38 95% 15%;
@@ -85,66 +81,66 @@
     --info-light: 200 90% 95%;
 
     /* Borders and inputs */
-    --border: 215 20% 88%;
-    --input: 215 20% 88%;
-    --ring: 158 64% 35%;
+    --border: 224 18% 88%;
+    --input: 224 18% 88%;
+    --ring: 22 92% 47%;
 
     --radius: 0.75rem;
 
-    /* Sidebar - Dark Navy Green (blend) */
-    --sidebar-background: 180 35% 12%;
-    --sidebar-foreground: 158 15% 90%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 180 35% 12%;
-    --sidebar-accent: 180 30% 18%;
+    /* Sidebar - Deep Navy */
+    --sidebar-background: 224 45% 16%;
+    --sidebar-foreground: 220 20% 90%;
+    --sidebar-primary: 22 92% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 224 40% 22%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 180 25% 20%;
-    --sidebar-ring: 158 50% 50%;
+    --sidebar-border: 224 35% 24%;
+    --sidebar-ring: 22 92% 52%;
 
-    /* Gradients - Multi-tone */
-    --gradient-primary: linear-gradient(135deg, hsl(158 64% 35%) 0%, hsl(168 55% 40%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(220 60% 25%) 0%, hsl(220 55% 35%) 100%);
-    --gradient-tertiary: linear-gradient(135deg, hsl(24 95% 53%) 0%, hsl(32 95% 55%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(158 50% 45%) 0%, hsl(165 50% 50%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(180 35% 12%) 0%, hsl(180 30% 18%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 98%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(24 95% 53%) 0%, hsl(346 75% 55%) 100%);
-    --gradient-cool: linear-gradient(135deg, hsl(220 60% 25%) 0%, hsl(262 60% 55%) 100%);
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(224 42% 28%) 0%, hsl(224 38% 38%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(22 92% 47%) 0%, hsl(30 90% 52%) 100%);
+    --gradient-tertiary: linear-gradient(135deg, hsl(174 70% 38%) 0%, hsl(180 60% 42%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(22 92% 47%) 0%, hsl(32 95% 55%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(224 45% 16%) 0%, hsl(224 40% 22%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 20% 97%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(22 92% 47%) 0%, hsl(346 75% 55%) 100%);
+    --gradient-cool: linear-gradient(135deg, hsl(224 42% 28%) 0%, hsl(262 60% 55%) 100%);
 
-    /* Shadows - Neutral based */
-    --shadow-sm: 0 1px 2px 0 hsl(215 25% 15% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(215 25% 15% / 0.07), 0 2px 4px -2px hsl(215 25% 15% / 0.05);
-    --shadow-lg: 0 10px 15px -3px hsl(215 25% 15% / 0.08), 0 4px 6px -4px hsl(215 25% 15% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(215 25% 15% / 0.1), 0 8px 10px -6px hsl(215 25% 15% / 0.05);
-    --shadow-card: 0 1px 3px 0 hsl(215 25% 15% / 0.06), 0 1px 2px -1px hsl(215 25% 15% / 0.06);
-    --shadow-card-hover: 0 10px 20px -5px hsl(215 25% 15% / 0.1), 0 4px 8px -4px hsl(215 25% 15% / 0.06);
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(224 40% 18% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(224 40% 18% / 0.07), 0 2px 4px -2px hsl(224 40% 18% / 0.05);
+    --shadow-lg: 0 10px 15px -3px hsl(224 40% 18% / 0.08), 0 4px 6px -4px hsl(224 40% 18% / 0.05);
+    --shadow-xl: 0 20px 25px -5px hsl(224 40% 18% / 0.1), 0 8px 10px -6px hsl(224 40% 18% / 0.05);
+    --shadow-card: 0 1px 3px 0 hsl(224 40% 18% / 0.06), 0 1px 2px -1px hsl(224 40% 18% / 0.06);
+    --shadow-card-hover: 0 10px 20px -5px hsl(224 40% 18% / 0.1), 0 4px 8px -4px hsl(224 40% 18% / 0.06);
   }
 
   .dark {
-    --background: 215 25% 8%;
-    --foreground: 210 20% 95%;
+    --background: 224 30% 8%;
+    --foreground: 220 20% 95%;
 
-    --card: 215 25% 12%;
-    --card-foreground: 210 20% 95%;
+    --card: 224 30% 12%;
+    --card-foreground: 220 20% 95%;
 
-    --popover: 215 25% 12%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 224 30% 12%;
+    --popover-foreground: 220 20% 95%;
 
-    --primary: 158 55% 50%;
-    --primary-foreground: 158 45% 8%;
+    --primary: 224 40% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 55% 45%;
+    --secondary: 22 88% 55%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-light: 220 50% 20%;
+    --secondary-light: 22 80% 20%;
 
-    --tertiary: 24 90% 55%;
+    --tertiary: 174 60% 45%;
     --tertiary-foreground: 0 0% 100%;
-    --tertiary-light: 24 80% 20%;
+    --tertiary-light: 174 50% 18%;
 
-    --muted: 215 20% 18%;
-    --muted-foreground: 215 15% 55%;
+    --muted: 224 20% 18%;
+    --muted-foreground: 224 15% 55%;
 
-    --accent: 158 50% 45%;
+    --accent: 22 88% 55%;
     --accent-foreground: 0 0% 100%;
 
     --violet: 262 55% 60%;
@@ -166,18 +162,18 @@
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 20%;
-    --input: 215 20% 20%;
-    --ring: 158 55% 50%;
+    --border: 224 20% 20%;
+    --input: 224 20% 20%;
+    --ring: 22 88% 55%;
 
-    --sidebar-background: 180 30% 6%;
-    --sidebar-foreground: 158 15% 85%;
-    --sidebar-primary: 158 55% 50%;
-    --sidebar-primary-foreground: 180 30% 6%;
-    --sidebar-accent: 180 25% 15%;
+    --sidebar-background: 224 40% 8%;
+    --sidebar-foreground: 220 15% 85%;
+    --sidebar-primary: 22 88% 55%;
+    --sidebar-primary-foreground: 224 40% 8%;
+    --sidebar-accent: 224 35% 15%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 180 20% 15%;
-    --sidebar-ring: 158 55% 50%;
+    --sidebar-border: 224 30% 15%;
+    --sidebar-ring: 22 88% 55%;
   }
 }
 
