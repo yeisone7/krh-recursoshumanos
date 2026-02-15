@@ -385,7 +385,7 @@ export function Sidebar() {
               className="flex items-center gap-2">
 
               <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center shadow-sm border border-border/30">
-                <img alt="KRH Logo" className="w-12 h-12 object-cover rounded-lg" src="/lovable-uploads/a34684ce-00a3-46fe-8113-8c397a467b22.png" />
+                <img alt="KRH Logo" className="w-12 h-12 object-cover rounded-lg" src="/lovable-uploads/Perfil_Petrocasinos-04-3.png" />
               </div>
               <span className="font-display font-bold text-xl text-sidebar-primary">KRH</span>
             </motion.div> :
