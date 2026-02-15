@@ -87,14 +87,14 @@
 
     --radius: 0.15rem;
 
-    /* Sidebar - Deep Navy */
+    /* Sidebar - Light Gray */
     --sidebar-background: 220 14% 93%;
-    --sidebar-foreground: 220 20% 90%;
+    --sidebar-foreground: 224 40% 18%;
     --sidebar-primary: 22 92% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 40% 22%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 224 35% 24%;
+    --sidebar-accent: 220 14% 86%;
+    --sidebar-accent-foreground: 224 40% 18%;
+    --sidebar-border: 220 13% 85%;
     --sidebar-ring: 22 92% 52%;
 
     /* Gradients */
