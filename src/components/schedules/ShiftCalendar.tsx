@@ -519,34 +519,34 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-        <div className="flex items-center gap-0.5">
-          <div className="w-3 h-3 bg-indigo-100 border border-indigo-400 rounded text-[7px] font-bold text-indigo-700 flex items-center justify-center">H</div>
+      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-indigo-100 border border-indigo-400 rounded text-[8px] font-bold text-indigo-700 flex items-center justify-center">H</div>
           <span>Horario Admin</span>
         </div>
-        <div className="flex items-center gap-0.5">
-          <div className="w-2.5 h-2.5 bg-red-100 border border-red-300 rounded" />
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-red-100 border border-red-300 rounded" />
           <span>Domingo</span>
         </div>
-        <div className="flex items-center gap-0.5">
-          <div className="w-2.5 h-2.5 bg-amber-100 border border-amber-300 rounded" />
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-amber-100 border border-amber-300 rounded" />
           <span>Festivo</span>
         </div>
-        <div className="flex items-center gap-0.5">
-          <div className="w-3 h-3 bg-green-100 border border-green-400 rounded text-[7px] font-bold text-green-700 flex items-center justify-center">V</div>
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-green-100 border border-green-400 rounded text-[8px] font-bold text-green-700 flex items-center justify-center">V</div>
           <span>Vacaciones</span>
         </div>
-        <div className="flex items-center gap-0.5">
-          <div className="w-3 h-3 bg-blue-100 border border-blue-400 rounded text-[7px] font-bold text-blue-700 flex items-center justify-center">P</div>
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-blue-100 border border-blue-400 rounded text-[8px] font-bold text-blue-700 flex items-center justify-center">P</div>
           <span>Permiso</span>
         </div>
-        <div className="flex items-center gap-0.5">
-          <div className="w-3 h-3 bg-orange-100 border border-orange-400 rounded text-[7px] font-bold text-orange-700 flex items-center justify-center">I</div>
+        <div className="flex items-center gap-1">
+          <div className="w-4 h-4 bg-orange-100 border border-orange-400 rounded text-[8px] font-bold text-orange-700 flex items-center justify-center">I</div>
           <span>Incapacidad</span>
         </div>
-        <div className="flex items-center gap-0.5">
-          <div className="w-2.5 h-2.5 bg-red-50 border-2 border-destructive rounded relative">
-            <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-destructive rounded-full" />
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-red-50 border-2 border-destructive rounded relative">
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
           </div>
           <span className="text-destructive font-medium">Conflicto</span>
         </div>
@@ -555,12 +555,12 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="border rounded-lg overflow-auto max-h-[calc(100vh-260px)]">
+      <div className="border rounded-lg overflow-auto max-h-[calc(100vh-320px)]">
         <div className="min-w-max">
           {/* Days Header */}
           <div className="flex bg-muted sticky top-0 z-10">
-            <div className="w-48 px-2 py-1 border-r font-medium text-xs flex items-center gap-1.5 shrink-0 sticky left-0 bg-muted z-20">
-              <Users className="w-3 h-3" />
+            <div className="w-56 px-3 py-1.5 border-r font-medium text-xs flex items-center gap-2 shrink-0 sticky left-0 bg-muted z-20">
+              <Users className="w-3.5 h-3.5" />
               Empleado
             </div>
             {daysInPeriod.map((day) => {
@@ -573,7 +573,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                 <div
                   key={dateStr}
                   className={cn(
-                    'w-9 py-0.5 text-center text-[10px] border-r shrink-0 leading-tight',
+                    'w-10 py-1 text-center text-[10px] border-r shrink-0 leading-tight',
                     sunday && 'bg-red-50',
                     holiday && 'bg-amber-50',
                     today && 'ring-2 ring-inset ring-primary'
@@ -605,7 +605,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                     className="flex border-t bg-slate-100 cursor-pointer hover:bg-slate-200"
                     onClick={() => toggleCenter(group.centerId)}
                   >
-                    <div className="w-48 px-2 py-1 border-r font-semibold flex items-center gap-1.5 shrink-0 text-xs sticky left-0 bg-slate-100 z-10">
+                    <div className="w-56 px-3 py-1.5 border-r font-semibold flex items-center gap-2 shrink-0 text-xs sticky left-0 bg-slate-100 z-10">
                       {isCenterExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
                       <Building2 className="w-3 h-3 text-primary" />
                       <span className="truncate">{group.centerName}</span>
@@ -614,7 +614,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                       </Badge>
                     </div>
                     {daysInPeriod.map((day) => (
-                      <div key={format(day, 'yyyy-MM-dd')} className="w-9 border-r shrink-0" />
+                      <div key={format(day, 'yyyy-MM-dd')} className="w-10 border-r shrink-0" />
                     ))}
                   </div>
 
@@ -630,7 +630,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                           className="flex border-t bg-slate-50 cursor-pointer hover:bg-slate-100"
                           onClick={() => toggleArea(areaKey)}
                         >
-                          <div className="w-48 px-2 py-1 pl-5 border-r font-medium flex items-center gap-1.5 shrink-0 text-xs sticky left-0 bg-slate-50 z-10">
+                          <div className="w-56 px-3 py-1.5 pl-6 border-r font-medium flex items-center gap-2 shrink-0 text-xs sticky left-0 bg-slate-50 z-10">
                             {isAreaExpanded ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronUp className="w-2.5 h-2.5" />}
                             <span className="truncate">{area.areaName}</span>
                             <Badge variant="outline" className="ml-auto text-[10px] h-4 px-1">
@@ -638,7 +638,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                             </Badge>
                           </div>
                           {daysInPeriod.map((day) => (
-                            <div key={format(day, 'yyyy-MM-dd')} className="w-9 border-r shrink-0" />
+                            <div key={format(day, 'yyyy-MM-dd')} className="w-10 border-r shrink-0" />
                           ))}
                         </div>
 
@@ -650,7 +650,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
                           return (
                           <div key={employee.id} className="flex border-y hover:bg-muted/30 -mt-px">
-                            <div className="w-48 px-2 py-0.5 pl-8 border-r shrink-0 flex items-center gap-1 sticky left-0 bg-background z-10">
+                            <div className="w-56 px-3 py-1 pl-9 border-r shrink-0 flex items-center gap-1.5 sticky left-0 bg-background z-10">
                               <span className="truncate text-xs">{getEmployeeFullName(employee)}</span>
                               {isAdminMode ? (
                                 <Briefcase className="w-3 h-3 text-indigo-500 shrink-0" />
@@ -678,7 +678,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                   <ContextMenuTrigger>
                                     <div
                                       className={cn(
-                                        'w-9 px-0.5 py-px border-r shrink-0 cursor-pointer transition-colors select-none relative',
+                                        'w-10 px-0.5 py-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
                                         sunday && !absence && 'bg-red-50',
                                         holiday && !absence && 'bg-amber-50',
                                         absence && !hasConflict && absence.type === 'vacation' && 'bg-green-50',
@@ -710,7 +710,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                               {absence && !shift && (
                                                 <div 
                                                   className={cn(
-                                                    'h-5 rounded text-[9px] font-bold flex items-center justify-center',
+                                              'h-6 rounded text-[10px] font-bold flex items-center justify-center',
                                                     absence.type === 'vacation' && 'bg-green-100 text-green-700 border border-green-300',
                                                     absence.type === 'leave' && 'bg-blue-100 text-blue-700 border border-blue-300',
                                                     absence.type === 'incapacity' && 'bg-orange-100 text-orange-700 border border-orange-300'
@@ -724,7 +724,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                               {shift && (
                                                 <div
                                                   className={cn(
-                                                    'h-5 rounded text-[9px] font-medium flex items-center justify-center',
+                                                    'h-6 rounded text-[10px] font-medium flex items-center justify-center',
                                                     (!shift.color || shift.color === 'transparent') ? 'text-foreground bg-muted border border-border' : 'text-white',
                                                     hasConflict && 'opacity-70'
                                                   )}
@@ -735,12 +735,12 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                               )}
                                               {/* Admin schedule: working day */}
                                               {isAdminMode && !shift && !absence && adminIsWorkDay && (
-                                                <div className="h-5 rounded text-[9px] font-bold flex items-center justify-center bg-indigo-100 text-indigo-700 border border-indigo-300">
+                                                <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-indigo-100 text-indigo-700 border border-indigo-300">
                                                   {adminSchedule?.name?.slice(0, 3).toUpperCase() || 'ADM'}
                                                 </div>
                                               )}
                                               {/* Empty: non-admin with no shift/absence, or admin rest day */}
-                                              {!shift && !absence && (!isAdminMode || !adminIsWorkDay) && <div className="h-5" />}
+                                              {!shift && !absence && (!isAdminMode || !adminIsWorkDay) && <div className="h-6" />}
                                             </div>
                                           </TooltipTrigger>
                                           
