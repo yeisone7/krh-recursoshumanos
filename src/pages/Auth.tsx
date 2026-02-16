@@ -140,7 +140,7 @@ export default function Auth() {
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <img src={petrocasinosLogo} alt="Petrocasinos Logo" className="h-20 object-contain" />
+            <img src={petrocasinosLogo} alt="Petrocasinos Logo" className="h-12 object-contain" />
           </motion.div>
           
           <div className="space-y-8">
