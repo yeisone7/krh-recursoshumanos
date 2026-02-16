@@ -138,38 +138,38 @@ export default function Auth() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+        <div className="relative z-10 flex flex-col justify-between p-8 w-full">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <img src={petrocasinosLogo} alt="Petrocasinos Logo" className="h-12 object-contain" />
           </motion.div>
           
-          <div className="space-y-8">
+          <div className="space-y-5">
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary/15 border border-secondary/25 text-secondary text-sm font-medium mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-secondary/15 border border-secondary/25 text-secondary text-sm font-medium mb-4">
                 <Sparkles className="w-4 h-4" />
                 Plataforma KRH
               </div>
-              <h1 className="text-5xl font-bold text-white leading-tight tracking-tight">
+              <h1 className="text-4xl font-bold text-white leading-tight tracking-tight">
                 Gestión de<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-[hsl(30,90%,60%)]">
                   Recursos Humanos
                 </span>
               </h1>
-              <p className="text-lg text-white/60 mt-4 max-w-md leading-relaxed">
+              <p className="text-base text-white/60 mt-3 max-w-md leading-relaxed">
                 Plataforma integral para la administración de empleados, contratos, dotación y exámenes médicos.
               </p>
             </motion.div>
             
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }} className="space-y-3">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }} className="space-y-2">
               {features.map((feat, i) => (
                 <motion.div
                   key={feat.title}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
-                  className="flex items-center gap-4 p-3 bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors group cursor-default"
+                  className="flex items-center gap-3 p-2.5 bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors group cursor-default"
                 >
-                  <div className="w-10 h-10 bg-secondary/15 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 bg-secondary/15 flex items-center justify-center shrink-0">
                     <feat.icon className="w-5 h-5 text-secondary" />
                   </div>
                   <div className="flex-1">
