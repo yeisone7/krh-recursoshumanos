@@ -389,7 +389,7 @@ export function Sidebar() {
               </div>
               <div className="flex flex-col">
                 <span className="font-display font-bold text-xl text-sidebar-primary leading-tight">KRH</span>
-                <span className="text-[9px] font-semibold text-sidebar-primary/70 leading-tight">Gestión de<br />Talento Humano</span>
+                <span className="text-[9px] font-semibold text-sidebar-primary leading-tight">Gestión de<br />Talento Humano</span>
               </div>
             </motion.div>
           ) : (
