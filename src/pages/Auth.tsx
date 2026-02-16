@@ -203,9 +203,9 @@ export default function Auth() {
             <img src={petrocasinosIcon} alt="KRH" className="h-14 object-contain" />
           </div>
 
-          <div className="bg-card border border-border p-6 shadow-xl">
+          <div className="bg-card border border-border p-8 shadow-xl">
             {/* Header */}
-            <div className="text-center mb-4">
+            <div className="text-center mb-6">
               <div className="hidden lg:flex justify-center mb-3">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -237,7 +237,7 @@ export default function Auth() {
             {/* Forms */}
             {isLogin ? (
               <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-3">
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                   <FormField
                     control={loginForm.control}
                     name="email"
@@ -245,7 +245,7 @@ export default function Auth() {
                       <FormItem>
                         <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
+                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -258,13 +258,13 @@ export default function Auth() {
                       <FormItem>
                         <FormLabel className="text-sm font-semibold">Contraseña</FormLabel>
                         <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
+                          <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full h-9 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-2" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Iniciar Sesión
                   </Button>
