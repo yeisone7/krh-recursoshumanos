@@ -206,8 +206,10 @@ export default function Auth() {
           <div className="bg-card border border-border p-8 shadow-xl">
             {/* Header */}
             <div className="text-center mb-6">
-              <div className="hidden lg:flex justify-center mb-3">
+              <div className="hidden lg:flex flex-col items-center mb-3">
                 <img src={petrocasinosIcon} alt="KRH" className="w-16 h-16 object-contain" style={{ borderRadius: '10%' }} />
+                <span className="text-lg font-bold text-primary mt-1">KRH</span>
+                <span className="text-xs font-semibold text-primary/80 leading-tight text-center">Gestión de<br />Talento Humano</span>
               </div>
               <AnimatePresence mode="wait">
                 <motion.div
