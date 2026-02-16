@@ -387,7 +387,10 @@ export function Sidebar() {
               <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center">
                 <img src={petroVerdeLogo} alt="KRH Logo" className="w-10 h-10 object-cover rounded-xl" />
               </div>
-              <span className="font-display font-bold text-xl text-sidebar-primary">KRH</span>
+              <div className="flex flex-col">
+                <span className="font-display font-bold text-xl text-sidebar-primary leading-tight">KRH</span>
+                <span className="text-[9px] font-semibold text-sidebar-primary/70 leading-tight">Gestión de<br />Talento Humano</span>
+              </div>
             </motion.div>
           ) : (
             <motion.div
