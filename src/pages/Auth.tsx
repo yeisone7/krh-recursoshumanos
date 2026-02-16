@@ -183,7 +183,7 @@ export default function Auth() {
           </div>
           
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="text-sm text-white/30">
-            © 2025 KRH. Todos los derechos reservados pETROCASINOS S.A..
+            © 2025 KRH. Todos los derechos reservados Petrocasinos s.a.
           </motion.p>
         </div>
       </div>
