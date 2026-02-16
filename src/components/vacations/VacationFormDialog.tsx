@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, AlertTriangle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -37,7 +37,8 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { 
   useEmployeeVacationBalances, 
   useCreateVacationRequest,
-  useVacationConfig 
+  useVacationConfig,
+  useVacationRequests,
 } from '@/hooks/useVacations';
 import {
   VacationRequestType,
@@ -72,6 +73,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
   const { data: employees } = useEmployees();
   const { data: balances } = useEmployeeVacationBalances(selectedEmployeeId);
   const { data: config } = useVacationConfig();
+  const { data: allRequests } = useVacationRequests();
   const createRequest = useCreateVacationRequest();
 
   const form = useForm<FormData>({
@@ -113,6 +115,19 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
   const compensationValidation = selectedBalance && watchType === 'compensacion'
     ? canCompensate(selectedBalance, businessDays, config?.max_compensation_percentage ?? 50)
     : null;
+
+  // Check for overlapping vacation requests
+  const overlappingRequest = useMemo(() => {
+    if (!watchStartDate || !watchEndDate || !selectedEmployeeId || !allRequests) return null;
+    const startStr = format(watchStartDate, 'yyyy-MM-dd');
+    const endStr = format(watchEndDate, 'yyyy-MM-dd');
+    return allRequests.find(
+      r => r.employee_id === selectedEmployeeId
+        && r.status !== 'cancelado'
+        && r.start_date <= endStr
+        && r.end_date >= startStr
+    ) ?? null;
+  }, [watchStartDate, watchEndDate, selectedEmployeeId, allRequests]);
 
   const onSubmit = async (data: FormData) => {
     await createRequest.mutateAsync({
@@ -337,6 +352,19 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
               </div>
             )}
 
+            {/* Overlap Warning */}
+            {overlappingRequest && (
+              <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+                <div className="text-sm text-destructive">
+                  <p className="font-medium">Solapamiento detectado</p>
+                  <p>
+                    Este empleado ya tiene una solicitud de vacaciones ({format(new Date(overlappingRequest.start_date), 'dd/MM/yyyy', { locale: es })} - {format(new Date(overlappingRequest.end_date), 'dd/MM/yyyy', { locale: es })}) con estado "{overlappingRequest.status}". No se puede crear una solicitud con fechas superpuestas.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Compensation Amount (if compensation type) */}
             {watchType === 'compensacion' && (
               <FormField
@@ -384,7 +412,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
               </Button>
               <Button 
                 type="submit" 
-                disabled={createRequest.isPending || (compensationValidation && !compensationValidation.allowed)}
+                disabled={createRequest.isPending || (compensationValidation && !compensationValidation.allowed) || !!overlappingRequest}
               >
                 {createRequest.isPending ? 'Guardando...' : 'Guardar'}
               </Button>
