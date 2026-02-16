@@ -207,7 +207,7 @@ export default function Auth() {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="hidden lg:flex justify-center mb-3">
-                <img src={petrocasinosIcon} alt="KRH" className="w-16 h-16 object-contain" />
+                <img src={petrocasinosIcon} alt="KRH" className="w-16 h-16 object-contain" style={{ borderRadius: '10%' }} />
               </div>
               <AnimatePresence mode="wait">
                 <motion.div
