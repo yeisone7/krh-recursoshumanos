@@ -711,7 +711,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                                 </div>
                                               )}
                                               
-                                              {absence && !shift && (
+                                              {absence && (!shift || shift.is_rest_day) && (
                                                 <div 
                                                   className={cn(
                                               'h-6 rounded text-[10px] font-bold flex items-center justify-center',
@@ -737,11 +737,8 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                                   {shift.code || shift.name.slice(0, 2).toUpperCase()}
                                                 </div>
                                               )}
-                                              {shift && shift.is_rest_day && (
-                                                <div className={cn(
-                                                  'h-6 rounded text-[10px] font-bold flex items-center justify-center bg-emerald-100 text-emerald-700 border border-emerald-300',
-                                                  hasConflict && 'opacity-70'
-                                                )}>
+                                              {shift && shift.is_rest_day && !absence && (
+                                                <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-emerald-100 text-emerald-700 border border-emerald-300">
                                                   D
                                                 </div>
                                               )}
