@@ -142,7 +142,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
         .from('vacation_requests')
         .select('employee_id, start_date, end_date, status')
         .in('employee_id', employeeIds)
-        .in('status', ['aprobado', 'en_curso'])
+        .in('status', ['aprobado', 'en_curso', 'completado'])
         .gte('end_date', startDate)
         .lte('start_date', endDate);
 
