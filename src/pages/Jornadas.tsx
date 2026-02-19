@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Clock,
@@ -13,6 +13,8 @@ import {
   Loader2,
   Zap,
   FileSpreadsheet,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -65,6 +67,7 @@ import type { WorkSchedule, Shift, ShiftCycle } from '@/types/schedule';
 
 export default function Jornadas() {
   const [activeTab, setActiveTab] = useState<'calendar' | 'schedules' | 'shifts' | 'cycles'>('calendar');
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [showShiftForm, setShowShiftForm] = useState(false);
@@ -114,12 +117,38 @@ export default function Jornadas() {
     setDeleteConfirm(null);
   };
 
+  // Escape key to exit fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) setIsFullscreen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
+
   if (!currentCompanyId) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] text-center">
         <Clock className="w-16 h-16 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Sin empresa asignada</h2>
         <p className="text-muted-foreground">Contacta al administrador.</p>
+      </div>
+    );
+  }
+
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background p-4 flex flex-col">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-display text-lg font-bold text-foreground">Calendario de Turnos</h2>
+          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsFullscreen(false)}>
+            <Minimize2 className="w-3.5 h-3.5 mr-1" />
+            Restaurar
+          </Button>
+        </div>
+        <div className="flex-1 min-h-0 flex flex-col">
+          <ShiftCalendar />
+        </div>
       </div>
     );
   }
@@ -346,6 +375,12 @@ export default function Jornadas() {
 
             {/* Calendario */}
             <TabsContent value="calendar" className="mt-1 flex-1 min-h-0 flex flex-col">
+              <div className="flex justify-end mb-1">
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsFullscreen(true)}>
+                  <Maximize2 className="w-3.5 h-3.5 mr-1" />
+                  Pantalla completa
+                </Button>
+              </div>
               <ShiftCalendar />
             </TabsContent>
           </Tabs>
