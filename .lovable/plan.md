@@ -1,46 +1,29 @@
 
-## Show "D" (Descanso) on non-working days for administrative schedules
 
-### Problem
-When an employee has an administrative schedule (e.g., Monday-Friday), the calendar shows working days with the schedule badge (e.g., "ADM") but leaves non-working days (Saturday, Sunday) as blank/empty cells. This is confusing because the user cannot distinguish between "no configuration" and "rest day."
+## Plan: Fix Vacation Detail Actions and Calendar Display
 
-### Solution
-For employees in administrative mode, on days NOT included in their `days_of_week` configuration (rest days), display a "D" badge (Descanso) with a neutral/gray style, similar to how rest-day shifts are displayed.
+### Problem 1: Action buttons don't update after clicking
+When you perform an action (approve, start, complete, cancel) in the vacation detail dialog, the modal stays open but the buttons don't refresh to reflect the new status.
 
-### Changes
+**Solution**: After each successful action, close the dialog automatically. This ensures the user sees the updated list, and reopening the detail will show the correct buttons.
 
-**File: `src/components/schedules/ShiftCalendar.tsx`**
+**Files to modify**: `src/components/vacations/VacationDetailDialog.tsx`
+- Add `onOpenChange(false)` after each successful mutation call (`handleApprove`, `handleCancel`, `handleStartVacation`, `handleCompleteVacation`)
 
-1. Replace the empty cell rendering for admin rest days (line 743) with a styled "D" badge:
-   - Instead of `<div className="h-6" />` when `isAdminMode && !adminIsWorkDay`, render a badge with text "D" using a gray/neutral style (e.g., `bg-gray-100 text-gray-500 border border-gray-300`).
-   - Keep the truly empty cell only for non-admin employees with no shift/absence.
+### Problem 2: Completed vacations not visible in the shift calendar
+The shift/schedule calendar only queries vacations with status "aprobado" or "en_curso", so once a vacation is marked as "completado", it disappears from the calendar.
 
-2. Update the legend section (around line 522-555) to add an entry for "D" (Descanso) so users understand the badge meaning.
+**Solution**: Add `'completado'` to the status filter in the absences query.
 
-### Technical Detail
+**Files to modify**: `src/components/schedules/ShiftCalendar.tsx`
+- Change line 145 from `.in('status', ['aprobado', 'en_curso'])` to `.in('status', ['aprobado', 'en_curso', 'completado'])`
 
-Current code (line 742-743):
-```tsx
-{/* Empty: non-admin with no shift/absence, or admin rest day */}
-{!shift && !absence && (!isAdminMode || !adminIsWorkDay) && <div className="h-6" />}
-```
+### Technical Summary
 
-Will become two separate conditions:
-```tsx
-{/* Admin rest day: show D */}
-{isAdminMode && !shift && !absence && !adminIsWorkDay && (
-  <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-gray-100 text-gray-500 border border-gray-300">
-    D
-  </div>
-)}
-{/* Empty: non-admin with no shift/absence */}
-{!isAdminMode && !shift && !absence && <div className="h-6" />}
-```
+| File | Change |
+|---|---|
+| `VacationDetailDialog.tsx` | Close dialog (`onOpenChange(false)`) after each action handler succeeds |
+| `ShiftCalendar.tsx` | Add `'completado'` to the vacation status filter in the absences query |
 
-And a new legend entry:
-```tsx
-<div className="flex items-center gap-1">
-  <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded text-[8px] font-bold text-gray-500 flex items-center justify-center">D</div>
-  <span>Descanso</span>
-</div>
-```
+Both changes are minimal and isolated, with no risk of side effects.
+
