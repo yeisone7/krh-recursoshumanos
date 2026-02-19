@@ -1,29 +1,25 @@
 
 
-## Plan: Fix Vacation Detail Actions and Calendar Display
+## Modo pantalla completa para el calendario de Jornadas
 
-### Problem 1: Action buttons don't update after clicking
-When you perform an action (approve, start, complete, cancel) in the vacation detail dialog, the modal stays open but the buttons don't refresh to reflect the new status.
+Se agregara un boton de "pantalla completa" en la pestana de Calendario que expandira el calendario para ocupar toda la ventana, ocultando el sidebar, header y demas controles. Un segundo clic (o tecla Escape) restaurara la vista normal.
 
-**Solution**: After each successful action, close the dialog automatically. This ensures the user sees the updated list, and reopening the detail will show the correct buttons.
+### Cambios
 
-**Files to modify**: `src/components/vacations/VacationDetailDialog.tsx`
-- Add `onOpenChange(false)` after each successful mutation call (`handleApprove`, `handleCancel`, `handleStartVacation`, `handleCompleteVacation`)
+**Archivo: `src/pages/Jornadas.tsx`**
 
-### Problem 2: Completed vacations not visible in the shift calendar
-The shift/schedule calendar only queries vacations with status "aprobado" or "en_curso", so once a vacation is marked as "completado", it disappears from the calendar.
+1. Agregar un estado `isFullscreen` (booleano, por defecto `false`).
+2. Agregar un listener de teclado para salir con la tecla `Escape`.
+3. Cuando `isFullscreen` esta activo:
+   - El contenedor principal usa `fixed inset-0 z-50 bg-background p-4` para cubrir toda la pantalla (sobre el sidebar y header).
+   - Se ocultan el header con titulo/botones de accion y las tabs de navegacion.
+   - Solo se muestra el calendario con un mini-header que tiene el boton para restaurar la vista.
+4. Cuando `isFullscreen` esta desactivado, la vista funciona exactamente como ahora.
+5. El boton de fullscreen se ubicara junto a los controles existentes del calendario (o como un boton flotante dentro del tab de calendario). Usara el icono `Maximize2` de lucide-react, y el boton de restaurar usara `Minimize2`.
 
-**Solution**: Add `'completado'` to the status filter in the absences query.
+### Detalles tecnicos
 
-**Files to modify**: `src/components/schedules/ShiftCalendar.tsx`
-- Change line 145 from `.in('status', ['aprobado', 'en_curso'])` to `.in('status', ['aprobado', 'en_curso', 'completado'])`
-
-### Technical Summary
-
-| File | Change |
-|---|---|
-| `VacationDetailDialog.tsx` | Close dialog (`onOpenChange(false)`) after each action handler succeeds |
-| `ShiftCalendar.tsx` | Add `'completado'` to the vacation status filter in the absences query |
-
-Both changes are minimal and isolated, with no risk of side effects.
+- Se usara `fixed inset-0 z-50` para superponer la vista sobre el sidebar sin necesidad de modificar el layout global (`AppLayout`).
+- El estado es local al componente, no requiere contexto ni cambios en otros archivos.
+- Solo se modifica un archivo: `src/pages/Jornadas.tsx`.
 
