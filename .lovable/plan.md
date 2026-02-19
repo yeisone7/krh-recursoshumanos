@@ -1,25 +1,28 @@
 
+## Validacion visual de turnos/descansos afectados antes de crear vacaciones
 
-## Modo pantalla completa para el calendario de Jornadas
+### Que se hara
 
-Se agregara un boton de "pantalla completa" en la pestana de Calendario que expandira el calendario para ocupar toda la ventana, ocultando el sidebar, header y demas controles. Un segundo clic (o tecla Escape) restaurara la vista normal.
+Cuando el usuario seleccione un empleado y un rango de fechas en el formulario de vacaciones (`VacationFormDialog`), el sistema consultara en tiempo real cuantas asignaciones de turno (trabajo y descanso) existen para ese empleado en ese periodo. Se mostrara un aviso informativo justo debajo del calculo de dias habiles indicando cuantas asignaciones seran eliminadas al confirmar.
 
 ### Cambios
 
-**Archivo: `src/pages/Jornadas.tsx`**
+**Archivo: `src/components/vacations/VacationFormDialog.tsx`**
 
-1. Agregar un estado `isFullscreen` (booleano, por defecto `false`).
-2. Agregar un listener de teclado para salir con la tecla `Escape`.
-3. Cuando `isFullscreen` esta activo:
-   - El contenedor principal usa `fixed inset-0 z-50 bg-background p-4` para cubrir toda la pantalla (sobre el sidebar y header).
-   - Se ocultan el header con titulo/botones de accion y las tabs de navegacion.
-   - Solo se muestra el calendario con un mini-header que tiene el boton para restaurar la vista.
-4. Cuando `isFullscreen` esta desactivado, la vista funciona exactamente como ahora.
-5. El boton de fullscreen se ubicara junto a los controles existentes del calendario (o como un boton flotante dentro del tab de calendario). Usara el icono `Maximize2` de lucide-react, y el boton de restaurar usara `Minimize2`.
+1. Agregar una consulta reactiva a la tabla `employee_shift_assignments` que se ejecute cuando se tengan `selectedEmployeeId`, `watchStartDate` y `watchEndDate`.
+   - Contar total de asignaciones en el rango.
+   - Separar cuantas son turnos de trabajo (donde `shifts.is_rest_day = false`) y cuantas son descansos (`shifts.is_rest_day = true`).
+
+2. Mostrar un bloque informativo (con icono de alerta naranja) debajo del panel de "Dias habiles" con texto como:
+   ```
+   Se eliminaran X asignacion(es) de turno en este periodo:
+   - Y turno(s) de trabajo
+   - Z descanso(s)
+   ```
+   Solo se muestra si hay al menos 1 asignacion afectada.
 
 ### Detalles tecnicos
 
-- Se usara `fixed inset-0 z-50` para superponer la vista sobre el sidebar sin necesidad de modificar el layout global (`AppLayout`).
-- El estado es local al componente, no requiere contexto ni cambios en otros archivos.
-- Solo se modifica un archivo: `src/pages/Jornadas.tsx`.
-
+- La consulta usara `supabase.from('employee_shift_assignments').select('id, shifts(is_rest_day)').eq('employee_id', ...).gte('assignment_date', startDate).lte('assignment_date', endDate)`.
+- Se implementara con `useEffect` y estado local (`affectedShifts`) para evitar agregar un hook de react-query dedicado (mantener el cambio en un solo archivo).
+- No se modifica ningun otro archivo.
