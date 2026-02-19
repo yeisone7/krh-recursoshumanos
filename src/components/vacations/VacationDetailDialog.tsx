@@ -76,6 +76,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
       startDate: request.start_date,
       endDate: request.end_date,
     });
+    onOpenChange(false);
   };
 
   const handleCancel = async () => {
@@ -83,6 +84,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
       id: request.id,
       status: 'cancelado',
     });
+    onOpenChange(false);
   };
 
   const handleStartVacation = async () => {
@@ -90,6 +92,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
       id: request.id,
       status: 'en_curso',
     });
+    onOpenChange(false);
   };
 
   const handleCompleteVacation = async () => {
@@ -97,6 +100,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
       id: request.id,
       status: 'completado',
     });
+    onOpenChange(false);
   };
 
   const handleInterrupt = async () => {
