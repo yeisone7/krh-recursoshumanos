@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, AlertTriangle, Info } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/useEmployees';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   useEmployeeVacationBalances, 
   useCreateVacationRequest,
@@ -69,6 +70,7 @@ interface VacationFormDialogProps {
 export function VacationFormDialog({ open, onOpenChange, editData }: VacationFormDialogProps) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>();
   const [businessDays, setBusinessDays] = useState<number>(0);
+  const [affectedShifts, setAffectedShifts] = useState<{ total: number; work: number; rest: number } | null>(null);
   
   const { data: employees } = useEmployees();
   const { data: balances } = useEmployeeVacationBalances(selectedEmployeeId);
@@ -98,6 +100,37 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
       setBusinessDays(days);
     }
   }, [watchStartDate, watchEndDate]);
+
+  // Query affected shift assignments when dates and employee change
+  useEffect(() => {
+    if (!selectedEmployeeId || !watchStartDate || !watchEndDate) {
+      setAffectedShifts(null);
+      return;
+    }
+    const startStr = format(watchStartDate, 'yyyy-MM-dd');
+    const endStr = format(watchEndDate, 'yyyy-MM-dd');
+
+    supabase
+      .from('employee_shift_assignments')
+      .select('id, shifts(is_rest_day)')
+      .eq('employee_id', selectedEmployeeId)
+      .gte('assignment_date', startStr)
+      .lte('assignment_date', endStr)
+      .then(({ data }) => {
+        if (!data || data.length === 0) {
+          setAffectedShifts(null);
+          return;
+        }
+        let work = 0;
+        let rest = 0;
+        data.forEach((row: any) => {
+          const isRest = row.shifts?.is_rest_day;
+          if (isRest) rest++;
+          else work++;
+        });
+        setAffectedShifts({ total: data.length, work, rest });
+      });
+  }, [selectedEmployeeId, watchStartDate, watchEndDate]);
 
   // Update selected employee when form changes
   useEffect(() => {
@@ -352,7 +385,19 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
               </div>
             )}
 
-            {/* Overlap Warning */}
+            {/* Affected Shift Assignments Warning */}
+            {affectedShifts && affectedShifts.total > 0 && (
+              <div className="rounded-lg border border-orange-300 bg-orange-50 p-3 flex items-start gap-2">
+                <Info className="h-4 w-4 text-orange-600 mt-0.5 shrink-0" />
+                <div className="text-sm text-orange-800">
+                  <p className="font-medium">Se eliminarán {affectedShifts.total} asignación(es) de turno en este período:</p>
+                  <ul className="list-disc list-inside mt-1">
+                    <li>{affectedShifts.work} turno(s) de trabajo</li>
+                    <li>{affectedShifts.rest} descanso(s)</li>
+                  </ul>
+                </div>
+              </div>
+            )}
             {overlappingRequest && (
               <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
