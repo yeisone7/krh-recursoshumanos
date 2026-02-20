@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Upload, AlertCircle } from 'lucide-react';
+import { CalendarIcon, Upload, AlertCircle, FileText, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,8 @@ import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useLeaveTypeConfigs, useCreateLeaveRequest, calculateBusinessDays } from '@/hooks/useLeaves';
 import { LeaveType, LeaveDurationType, LEAVE_DURATION_TYPE_LABELS } from '@/types/leave';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const formSchema = z.object({
@@ -71,6 +73,9 @@ export function LeaveRequestFormDialog({
   
   const [selectedTypeConfig, setSelectedTypeConfig] = useState<typeof leaveTypeConfigs[0] | null>(null);
   const [calculatedDays, setCalculatedDays] = useState<number>(0);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { currentCompanyId } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -120,7 +125,27 @@ export function LeaveRequestFormDialog({
         const [startH, startM] = values.start_time.split(':').map(Number);
         const [endH, endM] = values.end_time.split(':').map(Number);
         totalHours = (endH * 60 + endM - startH * 60 - startM) / 60;
-        totalDays = totalHours / 8; // Assuming 8-hour workday
+        totalDays = totalHours / 8;
+      }
+
+      let documentUrl: string | undefined;
+      let documentName: string | undefined;
+
+      // Upload document if provided
+      if (documentFile && currentCompanyId) {
+        setIsUploading(true);
+        const fileExt = documentFile.name.split('.').pop();
+        const sanitized = documentFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filePath = `${currentCompanyId}/leaves/${values.employee_id}/${Date.now()}_${sanitized}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, documentFile, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) throw uploadError;
+        documentUrl = filePath;
+        documentName = documentFile.name;
+        setIsUploading(false);
       }
 
       await createRequest.mutateAsync({
@@ -134,12 +159,16 @@ export function LeaveRequestFormDialog({
         total_days: totalDays,
         total_hours: totalHours,
         reason: values.reason,
+        document_url: documentUrl,
+        document_name: documentName,
       });
 
       toast.success('Solicitud de permiso creada exitosamente');
       form.reset();
+      setDocumentFile(null);
       onOpenChange(false);
     } catch (error: any) {
+      setIsUploading(false);
       toast.error(error.message || 'Error al crear la solicitud');
     }
   }
@@ -415,26 +444,70 @@ export function LeaveRequestFormDialog({
               )}
             />
 
-            {/* Document Upload Note */}
-            {selectedTypeConfig?.requires_document && (
-              <Alert variant="destructive">
-                <Upload className="h-4 w-4" />
-                <AlertDescription>
-                  Este tipo de permiso requiere adjuntar un documento de soporte.
-                  {selectedTypeConfig.document_description && (
-                    <span className="block mt-1">{selectedTypeConfig.document_description}</span>
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* Document Upload */}
+            <div className="space-y-2">
+              <FormLabel>
+                Documento de Soporte
+                {selectedTypeConfig?.requires_document && (
+                  <span className="text-destructive ml-1">*</span>
+                )}
+              </FormLabel>
+              {selectedTypeConfig?.requires_document && selectedTypeConfig.document_description && (
+                <p className="text-xs text-muted-foreground">{selectedTypeConfig.document_description}</p>
+              )}
+              {documentFile ? (
+                <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+                  <FileText className="h-4 w-4 text-primary shrink-0" />
+                  <span className="text-sm truncate flex-1">{documentFile.name}</span>
+                  <span className="text-xs text-muted-foreground shrink-0">
+                    {(documentFile.size / 1024 / 1024).toFixed(2)} MB
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => setDocumentFile(null)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                  <Upload className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    Haga clic para seleccionar un archivo
+                  </span>
+                  <span className="text-xs text-muted-foreground">PDF, JPG, PNG (máx. 10 MB)</span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast.error('El archivo no puede superar 10 MB');
+                          return;
+                        }
+                        setDocumentFile(file);
+                      }
+                    }}
+                  />
+                </label>
+              )}
+              {selectedTypeConfig?.requires_document && !documentFile && (
+                <p className="text-xs text-destructive">Este tipo de permiso requiere un documento de soporte</p>
+              )}
+            </div>
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createRequest.isPending}>
-                {createRequest.isPending ? 'Creando...' : 'Crear Solicitud'}
+              <Button type="submit" disabled={createRequest.isPending || isUploading}>
+                {isUploading ? 'Subiendo documento...' : createRequest.isPending ? 'Creando...' : 'Crear Solicitud'}
               </Button>
             </div>
           </form>
