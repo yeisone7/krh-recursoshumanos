@@ -26,7 +26,7 @@ interface VacationCalendarViewProps {
 
 export function VacationCalendarView({ onRequestClick }: VacationCalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week'>('month');
+  const [view, setView] = useState<'month' | 'week'>('week');
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   
