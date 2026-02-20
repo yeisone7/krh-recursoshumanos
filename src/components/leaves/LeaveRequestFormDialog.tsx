@@ -497,7 +497,7 @@ export function LeaveRequestFormDialog({
                 </label>
               )}
               {selectedTypeConfig?.requires_document && !documentFile && (
-                <p className="text-xs text-destructive">Este tipo de permiso requiere un documento de soporte</p>
+                <p className="text-xs text-warning-foreground">Se recomienda adjuntar un documento de soporte. Puede agregarlo después.</p>
               )}
             </div>
 
