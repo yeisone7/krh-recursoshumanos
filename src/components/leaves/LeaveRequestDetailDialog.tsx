@@ -8,7 +8,9 @@ import {
   CheckCircle, 
   XCircle, 
   AlertCircle,
-  Download
+  Download,
+  Upload,
+  X
 } from 'lucide-react';
 import {
   Dialog,
@@ -22,9 +24,11 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LeaveRequest, LEAVE_TYPE_LABELS, LEAVE_STATUS_LABELS, LEAVE_DURATION_TYPE_LABELS } from '@/types/leave';
-import { useApproveLeaveRequest, useRejectLeaveRequest, useCancelLeaveRequest } from '@/hooks/useLeaves';
+import { useApproveLeaveRequest, useRejectLeaveRequest, useCancelLeaveRequest, useUpdateLeaveRequest } from '@/hooks/useLeaves';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LeaveRequestDetailDialogProps {
   open: boolean;
@@ -42,10 +46,14 @@ export function LeaveRequestDetailDialog({
   const [cancellationReason, setCancellationReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [showCancelForm, setShowCancelForm] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [documentSignedUrl, setDocumentSignedUrl] = useState<string | null>(null);
 
+  const { currentCompanyId } = useAuth();
   const approveRequest = useApproveLeaveRequest();
   const rejectRequest = useRejectLeaveRequest();
   const cancelRequest = useCancelLeaveRequest();
+  const updateRequest = useUpdateLeaveRequest();
 
   if (!request) return null;
 
@@ -106,6 +114,57 @@ export function LeaveRequestDetailDialog({
       onOpenChange(false);
     } catch (error: any) {
       toast.error(error.message || 'Error al cancelar la solicitud');
+    }
+  };
+
+  const handleUploadDocument = async (file: File) => {
+    if (!currentCompanyId) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('El archivo no puede superar 10 MB');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const sanitized = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = `${currentCompanyId}/leaves/${request.employee_id}/${Date.now()}_${sanitized}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      await updateRequest.mutateAsync({
+        id: request.id,
+        document_url: filePath,
+        document_name: file.name,
+      });
+
+      // Update local request object
+      request.document_url = filePath;
+      request.document_name = file.name;
+
+      toast.success('Documento adjuntado exitosamente');
+    } catch (error: any) {
+      toast.error(error.message || 'Error al subir el documento');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDownloadDocument = async () => {
+    if (!request.document_url) return;
+
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(request.document_url, 3600);
+
+      if (error) throw error;
+      window.open(data.signedUrl, '_blank');
+    } catch (error: any) {
+      toast.error('Error al descargar el documento');
     }
   };
 
@@ -218,18 +277,38 @@ export function LeaveRequestDetailDialog({
             <p className="p-3 bg-muted rounded-lg">{request.reason}</p>
           </div>
 
-          {/* Document */}
-          {request.document_url && (
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Documento Adjunto</p>
-              <Button variant="outline" size="sm" asChild>
-                <a href={request.document_url} target="_blank" rel="noopener noreferrer">
-                  <Download className="w-4 h-4 mr-2" />
-                  {request.document_name || 'Descargar documento'}
-                </a>
-              </Button>
-            </div>
-          )}
+          {/* Document Section */}
+          <div>
+            <p className="text-sm text-muted-foreground mb-2">Documento de Soporte</p>
+            {request.document_url ? (
+              <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+                <FileText className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm truncate flex-1">{request.document_name || 'Documento adjunto'}</span>
+                <Button variant="outline" size="sm" onClick={handleDownloadDocument}>
+                  <Download className="w-4 h-4 mr-1" />
+                  Descargar
+                </Button>
+              </div>
+            ) : (
+              <label className={`flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                <Upload className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {isUploading ? 'Subiendo...' : 'Haga clic para adjuntar un documento'}
+                </span>
+                <span className="text-xs text-muted-foreground">PDF, JPG, PNG (máx. 10 MB)</span>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  disabled={isUploading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUploadDocument(file);
+                  }}
+                />
+              </label>
+            )}
+          </div>
 
           {/* Review Info */}
           {request.reviewed_at && (
