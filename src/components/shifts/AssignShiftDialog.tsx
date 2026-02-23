@@ -6,6 +6,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
+import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
 
 import {
   Dialog,
@@ -71,6 +73,18 @@ export function AssignShiftDialog({
       notes: '',
     },
   });
+
+  const watchEmployeeId = form.watch('employee_id');
+  const watchFrom = form.watch('effective_from');
+  const watchTo = form.watch('effective_to');
+
+  // Unified absence conflict detection
+  const { data: shiftConflicts = [] } = useAbsenceConflicts(
+    watchEmployeeId || undefined,
+    watchFrom,
+    watchTo || watchFrom, // if no end date, check just the start date
+  );
+  const hasShiftConflicts = shiftConflicts.length > 0;
 
   const onSubmit = async (data: AssignShiftFormData) => {
     try {
@@ -257,6 +271,9 @@ export function AssignShiftDialog({
               )}
             />
 
+            {/* Absence Conflict Alert */}
+            <AbsenceConflictAlert conflicts={shiftConflicts} />
+
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"
@@ -267,7 +284,7 @@ export function AssignShiftDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={createEmployeeShift.isPending}
+                disabled={createEmployeeShift.isPending || hasShiftConflicts}
               >
                 {createEmployeeShift.isPending && (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

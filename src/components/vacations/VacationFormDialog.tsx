@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, AlertTriangle, Info } from 'lucide-react';
+import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
+import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
 import {
   Dialog,
   DialogContent,
@@ -149,18 +151,13 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
     ? canCompensate(selectedBalance, businessDays, config?.max_compensation_percentage ?? 50)
     : null;
 
-  // Check for overlapping vacation requests
-  const overlappingRequest = useMemo(() => {
-    if (!watchStartDate || !watchEndDate || !selectedEmployeeId || !allRequests) return null;
-    const startStr = format(watchStartDate, 'yyyy-MM-dd');
-    const endStr = format(watchEndDate, 'yyyy-MM-dd');
-    return allRequests.find(
-      r => r.employee_id === selectedEmployeeId
-        && r.status !== 'cancelado'
-        && r.start_date <= endStr
-        && r.end_date >= startStr
-    ) ?? null;
-  }, [watchStartDate, watchEndDate, selectedEmployeeId, allRequests]);
+  // Unified absence conflict detection
+  const { data: absenceConflicts = [] } = useAbsenceConflicts(
+    selectedEmployeeId,
+    watchStartDate,
+    watchEndDate,
+  );
+  const hasConflicts = absenceConflicts.length > 0;
 
   const onSubmit = async (data: FormData) => {
     await createRequest.mutateAsync({
@@ -398,17 +395,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                 </div>
               </div>
             )}
-            {overlappingRequest && (
-              <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-                <div className="text-sm text-destructive">
-                  <p className="font-medium">Solapamiento detectado</p>
-                  <p>
-                    Este empleado ya tiene una solicitud de vacaciones ({format(new Date(overlappingRequest.start_date), 'dd/MM/yyyy', { locale: es })} - {format(new Date(overlappingRequest.end_date), 'dd/MM/yyyy', { locale: es })}) con estado "{overlappingRequest.status}". No se puede crear una solicitud con fechas superpuestas.
-                  </p>
-                </div>
-              </div>
-            )}
+            <AbsenceConflictAlert conflicts={absenceConflicts} />
 
             {/* Compensation Amount (if compensation type) */}
             {watchType === 'compensacion' && (
@@ -457,7 +444,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
               </Button>
               <Button 
                 type="submit" 
-                disabled={createRequest.isPending || (compensationValidation && !compensationValidation.allowed) || !!overlappingRequest}
+                disabled={createRequest.isPending || (compensationValidation && !compensationValidation.allowed) || hasConflicts}
               >
                 {createRequest.isPending ? 'Guardando...' : 'Guardar'}
               </Button>

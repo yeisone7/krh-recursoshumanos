@@ -4,6 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, Loader2 } from 'lucide-react';
+import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
+import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
 import { toast } from 'sonner';
 
 import {
@@ -88,7 +90,18 @@ export function IncapacityFormDialog({
   });
   
   const watchEmployeeId = form.watch('employee_id');
+  const watchStartDate = form.watch('start_date');
+  const watchEndDate = form.watch('end_date');
   const { data: employeeIncapacities } = useEmployeeIncapacities(watchEmployeeId || undefined);
+
+  // Unified absence conflict detection
+  const { data: incapConflicts = [] } = useAbsenceConflicts(
+    watchEmployeeId || undefined,
+    watchStartDate,
+    watchEndDate,
+    incapacityId ? { type: 'incapacity', id: incapacityId } : undefined,
+  );
+  const hasIncapConflicts = incapConflicts.length > 0;
   
   // Load existing incapacity data for editing
   useEffect(() => {
@@ -496,12 +509,15 @@ export function IncapacityFormDialog({
                 </div>
               </TabsContent>
             </Tabs>
+
+            {/* Absence Conflict Alert */}
+            <AbsenceConflictAlert conflicts={incapConflicts} />
             
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || hasIncapConflicts}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditing ? 'Actualizar' : 'Registrar'}
               </Button>
