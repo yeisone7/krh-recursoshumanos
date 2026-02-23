@@ -5,6 +5,8 @@ import * as z from 'zod';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, Upload, AlertCircle, FileText, X } from 'lucide-react';
+import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
+import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
 import {
   Dialog,
   DialogContent,
@@ -91,6 +93,15 @@ export function LeaveRequestFormDialog({
   const watchStartDate = form.watch('start_date');
   const watchEndDate = form.watch('end_date');
   const watchLeaveType = form.watch('leave_type');
+  const watchEmployeeId = form.watch('employee_id');
+
+  // Unified absence conflict detection
+  const { data: leaveConflicts = [] } = useAbsenceConflicts(
+    watchEmployeeId || undefined,
+    watchStartDate,
+    watchEndDate,
+  );
+  const hasLeaveConflicts = leaveConflicts.length > 0;
 
   // Update selected type config when leave type changes
   useEffect(() => {
@@ -501,12 +512,15 @@ export function LeaveRequestFormDialog({
               )}
             </div>
 
+            {/* Absence Conflict Alert */}
+            <AbsenceConflictAlert conflicts={leaveConflicts} />
+
             {/* Actions */}
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createRequest.isPending || isUploading}>
+              <Button type="submit" disabled={createRequest.isPending || isUploading || hasLeaveConflicts}>
                 {isUploading ? 'Subiendo documento...' : createRequest.isPending ? 'Creando...' : 'Crear Solicitud'}
               </Button>
             </div>
