@@ -24,6 +24,12 @@ import Vacaciones from "./pages/Vacaciones";
 import Permisos from "./pages/Permisos";
 import Novedades from "./pages/Novedades";
 import Capacitaciones from "./pages/Capacitaciones";
+import CrearCapacitacion from "./pages/capacitaciones/CrearCapacitacion";
+import CrearManual from "./pages/capacitaciones/CrearManual";
+import BibliotecaCapacitaciones from "./pages/capacitaciones/Biblioteca";
+import GenerarAcceso from "./pages/capacitaciones/GenerarAcceso";
+import EvidenciasCapacitaciones from "./pages/capacitaciones/Evidencias";
+import AnaliticasCapacitaciones from "./pages/capacitaciones/Analiticas";
 import Evaluaciones from "./pages/Evaluaciones";
 import Organigrama from "./pages/Organigrama";
 import Cesantias from "./pages/Cesantias";
@@ -102,6 +108,12 @@ const App = () => (
                         <Route path="/pre-liquidacion" element={<PreLiquidacion />} />
                         <Route path="/configuracion-laboral" element={<ConfiguracionLaboral />} />
                         <Route path="/capacitaciones" element={<Capacitaciones />} />
+                        <Route path="/capacitaciones/crear" element={<CrearCapacitacion />} />
+                        <Route path="/capacitaciones/crear-manual" element={<CrearManual />} />
+                        <Route path="/capacitaciones/biblioteca" element={<BibliotecaCapacitaciones />} />
+                        <Route path="/capacitaciones/acceso/generar" element={<GenerarAcceso />} />
+                        <Route path="/capacitaciones/evidencias" element={<EvidenciasCapacitaciones />} />
+                        <Route path="/capacitaciones/analiticas" element={<AnaliticasCapacitaciones />} />
                         <Route path="/evaluaciones" element={<Evaluaciones />} />
                         <Route path="/organigrama" element={<Organigrama />} />
                         <Route path="/cesantias" element={<Cesantias />} />

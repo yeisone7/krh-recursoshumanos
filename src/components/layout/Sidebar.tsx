@@ -40,7 +40,12 @@ import {
   Calculator,
   FolderOpen,
   Shirt,
-  Check } from
+  Check,
+  Sparkles,
+  PenLine,
+  Library,
+  Link2,
+  FileSignature } from
 'lucide-react';
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -78,8 +83,22 @@ const timeManagementNavItems: NavItem[] = [
 { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' }];
 
 
+const capacitacionesItem: NavItem = {
+  label: 'Capacitaciones',
+  icon: <GraduationCap className="w-5 h-5" />,
+  href: '/capacitaciones',
+  children: [
+    { label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, href: '/capacitaciones' },
+    { label: 'Nueva con IA', icon: <Sparkles className="w-4 h-4" />, href: '/capacitaciones/crear' },
+    { label: 'Nueva Manual', icon: <PenLine className="w-4 h-4" />, href: '/capacitaciones/crear-manual' },
+    { label: 'Biblioteca', icon: <Library className="w-4 h-4" />, href: '/capacitaciones/biblioteca' },
+    { label: 'Enlaces', icon: <Link2 className="w-4 h-4" />, href: '/capacitaciones/acceso/generar' },
+    { label: 'Evidencias', icon: <FileSignature className="w-4 h-4" />, href: '/capacitaciones/evidencias' },
+    { label: 'Analíticas', icon: <BarChart3 className="w-4 h-4" />, href: '/capacitaciones/analiticas' },
+  ],
+};
+
 const developmentNavItems: NavItem[] = [
-{ label: 'Capacitaciones', icon: <GraduationCap className="w-5 h-5" />, href: '/capacitaciones' },
 { label: 'Evaluación Desempeño', icon: <Target className="w-5 h-5" />, href: '/evaluaciones' },
 { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' }];
 
