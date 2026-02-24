@@ -30,6 +30,7 @@ import BibliotecaCapacitaciones from "./pages/capacitaciones/Biblioteca";
 import GenerarAcceso from "./pages/capacitaciones/GenerarAcceso";
 import EvidenciasCapacitaciones from "./pages/capacitaciones/Evidencias";
 import AnaliticasCapacitaciones from "./pages/capacitaciones/Analiticas";
+import AccesoPublico from "./pages/capacitaciones/AccesoPublico";
 import Evaluaciones from "./pages/Evaluaciones";
 import Organigrama from "./pages/Organigrama";
 import Cesantias from "./pages/Cesantias";
@@ -72,6 +73,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/capacitacion" element={<AccesoPublico />} />
             <Route path="/portal" element={
               <ProtectedRoute>
                 <Portal />
