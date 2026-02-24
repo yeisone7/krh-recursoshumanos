@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.notify-requisition-approver]
 verify_jwt = false
+
+[functions.extract-pdf]
+verify_jwt = false
+
+[functions.generate-training]
+verify_jwt = false
