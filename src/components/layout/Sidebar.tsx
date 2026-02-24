@@ -153,12 +153,19 @@ const adminNavItems: NavItem[] = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [catalogosOpen, setCatalogosOpen] = useState(false);
+  const [capacitacionesOpen, setCapacitacionesOpen] = useState(false);
   const location = useLocation();
 
   // Auto-open catalogos menu if on a catalogos route or centros
   const isCatalogosRoute = location.pathname.startsWith('/catalogos') || location.pathname === '/centros';
   if (isCatalogosRoute && !catalogosOpen) {
     setCatalogosOpen(true);
+  }
+
+  // Auto-open capacitaciones menu if on a capacitaciones route
+  const isCapacitacionesRoute = location.pathname.startsWith('/capacitaciones');
+  if (isCapacitacionesRoute && !capacitacionesOpen) {
+    setCapacitacionesOpen(true);
   }
 
   const NavLink = ({ item }: {item: NavItem;}) => {
@@ -250,14 +257,20 @@ export function Sidebar() {
     </AnimatePresence>;
 
 
-  const CatalogosMenu = () => {
-    const isAnyChildActive = catalogosItem.children?.some((child) => location.pathname === child.href);
+  const ExpandableMenu = ({ item, isOpen, setIsOpen, collapsed: isCollapsed, location: loc }: {
+    item: NavItem;
+    isOpen: boolean;
+    setIsOpen: (v: boolean) => void;
+    collapsed: boolean;
+    location: ReturnType<typeof useLocation>;
+  }) => {
+    const isAnyChildActive = item.children?.some((child) => loc.pathname === child.href);
 
     const menuButton =
     <motion.div
       whileHover={{ x: 4 }}
       whileTap={{ scale: 0.98 }}
-      onClick={() => !collapsed && setCatalogosOpen(!catalogosOpen)}
+      onClick={() => !isCollapsed && setIsOpen(!isOpen)}
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
         isAnyChildActive ?
@@ -269,24 +282,24 @@ export function Sidebar() {
         "transition-colors",
         isAnyChildActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
       )}>
-          {catalogosItem.icon}
+          {item.icon}
         </span>
         <AnimatePresence>
-          {!collapsed &&
+          {!isCollapsed &&
         <motion.span
           initial={{ opacity: 0, width: 0 }}
           animate={{ opacity: 1, width: 'auto' }}
           exit={{ opacity: 0, width: 0 }}
           className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1">
 
-              {catalogosItem.label}
+              {item.label}
             </motion.span>
         }
         </AnimatePresence>
-        {!collapsed &&
+        {!isCollapsed &&
       <ChevronDown className={cn(
         "w-4 h-4 transition-transform",
-        catalogosOpen && "rotate-180"
+        isOpen && "rotate-180"
       )} />
       }
       </motion.div>;
@@ -294,7 +307,7 @@ export function Sidebar() {
 
     return (
       <div>
-        {collapsed ?
+        {isCollapsed ?
         <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               {menuButton}
@@ -306,10 +319,10 @@ export function Sidebar() {
 
               <div className="py-2">
                 <p className="px-3 pb-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider border-b border-sidebar-border mb-1">
-                  {catalogosItem.label}
+                  {item.label}
                 </p>
-                {catalogosItem.children?.map((child) => {
-                const isActive = location.pathname === child.href;
+                {item.children?.map((child) => {
+                const isActive = loc.pathname === child.href;
                 return (
                   <Link key={child.href} to={child.href}>
                       <div className={cn(
@@ -332,15 +345,15 @@ export function Sidebar() {
         }
         
         <AnimatePresence>
-          {catalogosOpen && !collapsed &&
+          {isOpen && !isCollapsed &&
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="ml-4 pl-3 border-l border-sidebar-border space-y-1 mt-1">
 
-              {catalogosItem.children?.map((child) => {
-              const isActive = location.pathname === child.href;
+              {item.children?.map((child) => {
+              const isActive = loc.pathname === child.href;
               return (
                 <Link key={child.href} to={child.href}>
                     <motion.div
@@ -370,6 +383,16 @@ export function Sidebar() {
       </div>);
 
   };
+
+  const CatalogosMenu = () => (
+    <ExpandableMenu
+      item={catalogosItem}
+      isOpen={catalogosOpen}
+      setIsOpen={setCatalogosOpen}
+      collapsed={collapsed}
+      location={location}
+    />
+  );
 
 
   return (
@@ -472,6 +495,13 @@ export function Sidebar() {
         {/* Development */}
         <SectionLabel label="Desarrollo" />
         <div className="space-y-0.5">
+          <ExpandableMenu
+            item={capacitacionesItem}
+            isOpen={capacitacionesOpen}
+            setIsOpen={setCapacitacionesOpen}
+            collapsed={collapsed}
+            location={location}
+          />
           {developmentNavItems.map((item) =>
             <NavLink key={item.href} item={item} />
             )}
