@@ -4718,6 +4718,69 @@ export type Database = {
           },
         ]
       }
+      training_access_tokens: {
+        Row: {
+          access_type: string
+          company_id: string
+          course_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          requires_evaluation: boolean
+          token: string
+          usage_type: string
+          uses_count: number
+        }
+        Insert: {
+          access_type?: string
+          company_id: string
+          course_id: string
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          requires_evaluation?: boolean
+          token?: string
+          usage_type?: string
+          uses_count?: number
+        }
+        Update: {
+          access_type?: string
+          company_id?: string
+          course_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          requires_evaluation?: boolean
+          token?: string
+          usage_type?: string
+          uses_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_access_tokens_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_access_tokens_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_attendance: {
         Row: {
           attendance_date: string | null
@@ -4731,6 +4794,7 @@ export type Database = {
           passed: boolean | null
           score: number | null
           session_id: string
+          signature_data: string | null
           updated_at: string
         }
         Insert: {
@@ -4745,6 +4809,7 @@ export type Database = {
           passed?: boolean | null
           score?: number | null
           session_id: string
+          signature_data?: string | null
           updated_at?: string
         }
         Update: {
@@ -4759,6 +4824,7 @@ export type Database = {
           passed?: boolean | null
           score?: number | null
           session_id?: string
+          signature_data?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -4858,12 +4924,84 @@ export type Database = {
           },
         ]
       }
+      training_completions: {
+        Row: {
+          company_id: string
+          completed_at: string
+          course_id: string
+          employee_id: string | null
+          id: string
+          ip_address: string | null
+          operator_cedula: string | null
+          operator_name: string
+          signature_data: string
+          token_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string
+          course_id: string
+          employee_id?: string | null
+          id?: string
+          ip_address?: string | null
+          operator_cedula?: string | null
+          operator_name: string
+          signature_data: string
+          token_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string
+          course_id?: string
+          employee_id?: string | null
+          id?: string
+          ip_address?: string | null
+          operator_cedula?: string | null
+          operator_name?: string
+          signature_data?: string
+          token_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_completions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_completions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_completions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_completions_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "training_access_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_courses: {
         Row: {
+          audience: string | null
           category: string
           code: string | null
           company_id: string
-          content: string | null
+          content: Json | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -4871,21 +5009,29 @@ export type Database = {
           id: string
           is_active: boolean
           is_mandatory: boolean
+          language: string
+          legal_framework: string | null
+          level: string
           modality: Database["public"]["Enums"]["training_modality"]
           name: string
+          objective: string | null
           objectives: string | null
           prerequisites: string | null
           provider: string | null
           requires_certification: boolean
+          risk_level: string
+          status: string
           target_audience: string | null
           updated_at: string
           validity_months: number | null
+          version: number
         }
         Insert: {
+          audience?: string | null
           category?: string
           code?: string | null
           company_id: string
-          content?: string | null
+          content?: Json | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -4893,21 +5039,29 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_mandatory?: boolean
+          language?: string
+          legal_framework?: string | null
+          level?: string
           modality?: Database["public"]["Enums"]["training_modality"]
           name: string
+          objective?: string | null
           objectives?: string | null
           prerequisites?: string | null
           provider?: string | null
           requires_certification?: boolean
+          risk_level?: string
+          status?: string
           target_audience?: string | null
           updated_at?: string
           validity_months?: number | null
+          version?: number
         }
         Update: {
+          audience?: string | null
           category?: string
           code?: string | null
           company_id?: string
-          content?: string | null
+          content?: Json | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -4915,15 +5069,22 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_mandatory?: boolean
+          language?: string
+          legal_framework?: string | null
+          level?: string
           modality?: Database["public"]["Enums"]["training_modality"]
           name?: string
+          objective?: string | null
           objectives?: string | null
           prerequisites?: string | null
           provider?: string | null
           requires_certification?: boolean
+          risk_level?: string
+          status?: string
           target_audience?: string | null
           updated_at?: string
           validity_months?: number | null
+          version?: number
         }
         Relationships: [
           {
@@ -4931,6 +5092,56 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_media: {
+        Row: {
+          course_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          duration: number | null
+          file_size: number | null
+          file_url: string
+          id: string
+          metadata: Json
+          title: string
+          type: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration?: number | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          metadata?: Json
+          title: string
+          type: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration?: number | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          metadata?: Json
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_media_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
             referencedColumns: ["id"]
           },
         ]

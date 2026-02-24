@@ -3,7 +3,26 @@
 export type TrainingModality = 'presencial' | 'virtual' | 'mixto';
 export type TrainingStatus = 'programado' | 'en_curso' | 'completado' | 'cancelado';
 export type AttendanceStatus = 'inscrito' | 'asistio' | 'no_asistio' | 'justificado';
-export type CertificateStatus = 'emitido' | 'vigente' | 'vencido';
+export type CertificateStatus = 'emitido' | 'vigente' | 'vencido' | 'por_vencer';
+export type CourseStatus = 'borrador' | 'publicado' | 'completado';
+export type AccessType = 'solo_link' | 'link_cedula';
+export type UsageType = 'unico' | 'multiple';
+export type MediaType = 'imagen' | 'video' | 'documento' | 'infografia';
+
+export interface TrainingCourseContent {
+  introduccion?: string;
+  objetivos?: string[];
+  contenido?: string; // markdown
+  puntosClave?: string[];
+  evaluacion?: TrainingQuizQuestion[];
+  isManual?: boolean;
+}
+
+export interface TrainingQuizQuestion {
+  pregunta: string;
+  respuestaCorrecta: string;
+  opciones: string[];
+}
 
 export interface TrainingCourse {
   id: string;
@@ -19,9 +38,17 @@ export interface TrainingCourse {
   validity_months: number | null;
   provider: string | null;
   objectives: string | null;
-  content: string | null;
+  content: TrainingCourseContent | null;
   target_audience: string | null;
   prerequisites: string | null;
+  level: string;
+  audience: string | null;
+  objective: string | null;
+  legal_framework: string | null;
+  risk_level: string;
+  language: string;
+  status: CourseStatus;
+  version: number;
   is_active: boolean;
   created_by: string | null;
   created_at: string;
@@ -47,7 +74,6 @@ export interface TrainingSession {
   created_by: string | null;
   created_at: string;
   updated_at: string;
-  // Joined data
   course?: TrainingCourse;
 }
 
@@ -61,10 +87,10 @@ export interface TrainingAttendance {
   score: number | null;
   passed: boolean | null;
   observations: string | null;
+  signature_data: string | null;
   enrolled_by: string | null;
   created_at: string;
   updated_at: string;
-  // Joined data
   employee?: {
     id: string;
     first_name: string;
@@ -89,7 +115,6 @@ export interface TrainingCertificate {
   observations: string | null;
   created_at: string;
   updated_at: string;
-  // Joined data
   employee?: {
     id: string;
     first_name: string;
@@ -97,6 +122,52 @@ export interface TrainingCertificate {
     document_number: string;
   };
   course?: TrainingCourse;
+}
+
+export interface TrainingAccessToken {
+  id: string;
+  company_id: string;
+  course_id: string;
+  token: string;
+  access_type: AccessType;
+  usage_type: UsageType;
+  max_uses: number | null;
+  uses_count: number;
+  expires_at: string;
+  is_active: boolean;
+  requires_evaluation: boolean;
+  created_by: string;
+  created_at: string;
+  course?: TrainingCourse;
+}
+
+export interface TrainingCompletion {
+  id: string;
+  company_id: string;
+  course_id: string;
+  token_id: string | null;
+  employee_id: string | null;
+  completed_at: string;
+  operator_name: string;
+  operator_cedula: string | null;
+  signature_data: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  course?: TrainingCourse;
+}
+
+export interface TrainingMedia {
+  id: string;
+  course_id: string;
+  type: MediaType;
+  title: string;
+  description: string | null;
+  file_url: string;
+  file_size: number | null;
+  duration: number | null;
+  metadata: Record<string, unknown>;
+  created_by: string;
+  created_at: string;
 }
 
 export interface TrainingPlan {
@@ -146,6 +217,12 @@ export interface CreateCourseData {
   provider?: string;
   objectives?: string;
   prerequisites?: string;
+  level?: string;
+  audience?: string;
+  objective?: string;
+  legalFramework?: string;
+  riskLevel?: string;
+  language?: string;
 }
 
 export interface CreateSessionData {
