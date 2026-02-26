@@ -112,11 +112,11 @@ export default function Capacitaciones() {
         </div>
       </div>
 
-      {/* AI Banner */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
-          <CardContent className="pt-6 pb-6">
-            <div className="flex items-center justify-between">
+      {/* AI Banner + Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <motion.div className="lg:col-span-2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20 h-full">
+            <CardContent className="pt-6 pb-6 flex items-center justify-between h-full">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-primary/20 rounded-xl">
                   <Sparkles className="h-8 w-8 text-primary" />
@@ -129,36 +129,34 @@ export default function Capacitaciones() {
               <Button onClick={() => navigate('/capacitaciones/crear')} size="lg">
                 <Plus className="h-4 w-4 mr-2" /> Crear Capacitación
               </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Acciones Rápidas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" className="justify-start" onClick={() => navigate('/capacitaciones/crear')}>
+                <Sparkles className="h-4 w-4 mr-2" /> Nueva con IA
+              </Button>
+              <Button variant="outline" className="justify-start" onClick={() => navigate('/capacitaciones/biblioteca')}>
+                <Library className="h-4 w-4 mr-2" /> Ver Biblioteca
+              </Button>
+              <Button variant="outline" className="justify-start" onClick={() => navigate('/capacitaciones/crear-manual')}>
+                <PenLine className="h-4 w-4 mr-2" /> Nueva Manual
+              </Button>
+              <Button variant="outline" className="justify-start" onClick={() => navigate('/capacitaciones/acceso/generar')}>
+                <Link2 className="h-4 w-4 mr-2" /> Generar Enlace
+              </Button>
             </div>
           </CardContent>
         </Card>
-      </motion.div>
-
-      {/* Alerts + Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <CertificateAlertsCard />
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Acciones Rápidas</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/capacitaciones/crear')}>
-              <Sparkles className="h-4 w-4 mr-2" /> Nueva con IA
-            </Button>
-            <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/capacitaciones/crear-manual')}>
-              <PenLine className="h-4 w-4 mr-2" /> Nueva Manual
-            </Button>
-            <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/capacitaciones/biblioteca')}>
-              <Library className="h-4 w-4 mr-2" /> Ver Biblioteca
-            </Button>
-            <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/capacitaciones/acceso/generar')}>
-              <Link2 className="h-4 w-4 mr-2" /> Generar Enlace
-            </Button>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Alerts */}
+      <CertificateAlertsCard />
 
       {/* Search */}
       <div className="flex items-center gap-4">
