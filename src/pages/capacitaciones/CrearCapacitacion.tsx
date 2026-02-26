@@ -644,9 +644,9 @@ export default function CrearCapacitacion() {
                     </Card>
                   </div>
 
-                  {/* Row 3: Video */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card className="border">
-                    <CardContent className="pt-5 pb-4 space-y-2 max-w-[calc(50%-0.5rem)]">
+                    <CardContent className="pt-5 pb-4 space-y-2">
                       <div className="flex items-center gap-2">
                         <Video className="h-5 w-5 text-muted-foreground" />
                         <span className="font-semibold text-sm">Video Educativo</span>
@@ -670,6 +670,7 @@ export default function CrearCapacitacion() {
                       </Button>
                     </CardContent>
                   </Card>
+                  </div>
 
                   {/* Existing media gallery */}
                   {media.length > 0 && (
