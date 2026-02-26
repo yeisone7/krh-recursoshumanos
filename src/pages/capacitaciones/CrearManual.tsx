@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, PenLine, X, Loader2, Target, Scale, Tag, LayoutGrid, BarChart3, Users, Clock, Monitor, ShieldAlert, CalendarCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, PenLine, X, Loader2, Target, Scale, Tag, LayoutGrid, BarChart3, Users, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, CircleDot, AlignLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,6 +47,7 @@ export default function CrearManual() {
   const [certificacion, setCertificacion] = useState(false);
   const [vigencia, setVigencia] = useState<number | undefined>();
 
+  const [descripcion, setDescripcion] = useState('');
   const [content, setContent] = useState<TrainingCourseContent>({ isManual: true, introduccion: '', objetivos: [''], contenido: '', puntosClave: [''], evaluacion: [] });
 
   const createCourse = useCreateFullCourse();
@@ -110,17 +111,42 @@ export default function CrearManual() {
       {step === 0 && (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
           <Card>
-            <CardHeader><CardTitle>Parámetros</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div><Label className="flex items-center gap-1.5"><Tag className="h-4 w-4" /> Título *</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label className="flex items-center gap-1.5"><LayoutGrid className="h-4 w-4" /> Tipo</Label><Select value={tipo} onValueChange={setTipo}><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger><SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>{tipo === 'Otro' && <Input className="mt-2" value={tipoOtro} onChange={e => setTipoOtro(e.target.value)} />}</div>
-                <div><Label className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4" /> Área</Label><Select value={area} onValueChange={setArea}><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger><SelectContent>{AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent></Select>{area === 'Otro' && <Input className="mt-2" value={areaOtra} onChange={e => setAreaOtra(e.target.value)} />}</div>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <PenLine className="h-6 w-6 text-primary" />
+                <div>
+                  <CardTitle>Parámetros de la Capacitación</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-0.5">Define las características principales</p>
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div><Label className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4" /> Nivel</Label><Select value={nivel} onValueChange={setNivel}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{NIVELES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent></Select></div>
-                <div><Label className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> Duración (min)</Label><Input type="number" value={duracion} onChange={e => setDuracion(Number(e.target.value))} /></div>
-                <div><Label className="flex items-center gap-1.5"><Monitor className="h-4 w-4" /> Modalidad</Label><Select value={modalidad} onValueChange={setModalidad}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="presencial">Presencial</SelectItem><SelectItem value="virtual">Virtual</SelectItem><SelectItem value="mixto">Mixto</SelectItem></SelectContent></Select></div>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div>
+                <Label className="flex items-center gap-1.5"><Tag className="h-4 w-4" /> Título de la Capacitación *</Label>
+                <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej: Manipulación segura de alimentos en cocina industrial" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="flex items-center gap-1.5"><LayoutGrid className="h-4 w-4" /> Tipo de Capacitación *</Label>
+                  <Select value={tipo} onValueChange={setTipo}><SelectTrigger><SelectValue placeholder="Selecciona el tipo" /></SelectTrigger><SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
+                  {tipo === 'Otro' && <Input className="mt-2" placeholder="Especifique" value={tipoOtro} onChange={e => setTipoOtro(e.target.value)} />}
+                </div>
+                <div>
+                  <Label className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4" /> Área *</Label>
+                  <Select value={area} onValueChange={setArea}><SelectTrigger><SelectValue placeholder="Selecciona el área" /></SelectTrigger><SelectContent>{AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent></Select>
+                  {area === 'Otro' && <Input className="mt-2" placeholder="Especifique" value={areaOtra} onChange={e => setAreaOtra(e.target.value)} />}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="flex items-center gap-1.5"><Users className="h-4 w-4" /> Público Objetivo *</Label>
+                  <Select value={publico} onValueChange={setPublico}><SelectTrigger><SelectValue placeholder="Selecciona el público" /></SelectTrigger><SelectContent>{PUBLICOS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
+                  {publico === 'Otro' && <Input className="mt-2" placeholder="Especifique" value={publicoOtro} onChange={e => setPublicoOtro(e.target.value)} />}
+                </div>
+                <div>
+                  <Label className="flex items-center gap-1.5"><CircleDot className="h-4 w-4" /> Nivel *</Label>
+                  <Select value={nivel} onValueChange={setNivel}><SelectTrigger><SelectValue placeholder="Selecciona el nivel" /></SelectTrigger><SelectContent>{NIVELES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent></Select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -135,10 +161,39 @@ export default function CrearManual() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3"><Switch checked={obligatorio} onCheckedChange={setObligatorio} /><Label>Obligatorio</Label></div>
-                <div className="flex items-center gap-3"><Switch checked={certificacion} onCheckedChange={setCertificacion} /><Label>Certificación</Label></div>
+                <div>
+                  <Label className="flex items-center gap-1.5"><ShieldAlert className="h-4 w-4" /> Riesgo Asociado</Label>
+                  <Select value={riesgo} onValueChange={setRiesgo}><SelectTrigger><SelectValue placeholder="Selecciona el nivel de riesgo" /></SelectTrigger><SelectContent><SelectItem value="bajo">Bajo</SelectItem><SelectItem value="medio">Medio</SelectItem><SelectItem value="alto">Alto</SelectItem></SelectContent></Select>
+                </div>
+                <div>
+                  <Label className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> Duración Estimada *</Label>
+                  <Select value={String(duracion)} onValueChange={v => setDuracion(Number(v))}><SelectTrigger><SelectValue placeholder="Selecciona la duración" /></SelectTrigger><SelectContent>
+                    <SelectItem value="5">5 minutos</SelectItem><SelectItem value="10">10 minutos</SelectItem><SelectItem value="15">15 minutos</SelectItem>
+                    <SelectItem value="30">30 minutos</SelectItem><SelectItem value="45">45 minutos</SelectItem><SelectItem value="60">1 hora</SelectItem>
+                    <SelectItem value="90">1.5 horas</SelectItem><SelectItem value="120">2 horas</SelectItem><SelectItem value="180">3 horas</SelectItem>
+                    <SelectItem value="240">4 horas</SelectItem><SelectItem value="480">8 horas</SelectItem>
+                  </SelectContent></Select>
+                </div>
               </div>
-              {certificacion && <div><Label className="flex items-center gap-1.5"><CalendarCheck className="h-4 w-4" /> Vigencia (meses)</Label><Input type="number" value={vigencia || ''} onChange={e => setVigencia(e.target.value ? Number(e.target.value) : undefined)} /></div>}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="flex items-center gap-1.5"><Monitor className="h-4 w-4" /> Modalidad *</Label>
+                  <Select value={modalidad} onValueChange={setModalidad}><SelectTrigger><SelectValue placeholder="Selecciona la modalidad" /></SelectTrigger><SelectContent><SelectItem value="presencial">Presencial</SelectItem><SelectItem value="virtual">Virtual</SelectItem><SelectItem value="mixto">Mixto</SelectItem></SelectContent></Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="flex items-center gap-1.5"><CalendarCheck className="h-4 w-4" /> Vigencia</Label>
+                  <Select value={vigencia ? String(vigencia) : ''} onValueChange={v => setVigencia(v ? Number(v) : undefined)}><SelectTrigger><SelectValue placeholder="Selecciona la vigencia" /></SelectTrigger><SelectContent>
+                    <SelectItem value="3">3 meses</SelectItem><SelectItem value="6">6 meses</SelectItem><SelectItem value="12">12 meses</SelectItem>
+                    <SelectItem value="18">18 meses</SelectItem><SelectItem value="24">24 meses</SelectItem><SelectItem value="36">36 meses</SelectItem>
+                  </SelectContent></Select>
+                </div>
+              </div>
+              <div>
+                <Label className="flex items-center gap-1.5"><AlignLeft className="h-4 w-4" /> Descripción o Contexto Adicional</Label>
+                <Textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Proporciona información adicional que ayude a definir el contenido de la capacitación..." rows={4} />
+              </div>
               <div className="flex justify-end"><Button onClick={() => setStep(1)} disabled={!title}>Siguiente <ArrowRight className="h-4 w-4 ml-2" /></Button></div>
             </CardContent>
           </Card>
