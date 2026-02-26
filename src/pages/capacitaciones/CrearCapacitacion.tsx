@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGallery } from '@/components/training';
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { TrainingCourseContent, TrainingQuizQuestion } from '@/types/training';
 
@@ -32,6 +33,7 @@ export default function CrearCapacitacion() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('id');
+  const { currentCompanyId } = useAuth();
 
   const [step, setStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -135,6 +137,7 @@ export default function CrearCapacitacion() {
           language: idioma,
           pdfText,
           additionalContext,
+          companyId: currentCompanyId,
         },
       });
       if (error) throw error;

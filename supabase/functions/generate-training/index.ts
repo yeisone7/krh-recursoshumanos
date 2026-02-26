@@ -1,9 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+const MODEL_MAP: Record<string, string> = {
+  gemini: "google/gemini-3-flash-preview",
+  openai: "openai/gpt-5-mini",
 };
 
 serve(async (req) => {
@@ -17,13 +23,38 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const { title, type, area, audience, level, objective, legalFramework, riskLevel, duration, language, pdfText, additionalContext } = await req.json();
+    const { title, type, area, audience, level, objective, legalFramework, riskLevel, duration, language, pdfText, additionalContext, companyId } = await req.json();
 
     if (!title) {
       return new Response(
         JSON.stringify({ error: "Title is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Read AI config from system_config
+    let selectedModel = MODEL_MAP.gemini; // default
+    try {
+      if (companyId) {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const { data: configRow } = await supabase
+          .from("system_config")
+          .select("config_value")
+          .eq("company_id", companyId)
+          .eq("config_key", "ai_config")
+          .maybeSingle();
+
+        if (configRow?.config_value) {
+          const aiConfig = configRow.config_value;
+          const modelKey = aiConfig.model || "gemini";
+          selectedModel = MODEL_MAP[modelKey] || MODEL_MAP.gemini;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not read AI config, using default model:", e);
     }
 
     const systemPrompt = `Eres un experto en capacitación empresarial colombiana, especializado en seguridad industrial, HSEQ, calidad y desarrollo organizacional. Genera contenido de capacitación estructurado y profesional en español.
@@ -63,6 +94,8 @@ Genera un JSON con esta estructura exacta:
 
 La evaluación debe tener mínimo 5 preguntas. La primera opción (índice 0) SIEMPRE debe ser la respuesta correcta y debe coincidir con respuestaCorrecta.`;
 
+    console.log("Using model:", selectedModel);
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -70,7 +103,7 @@ La evaluación debe tener mínimo 5 preguntas. La primera opción (índice 0) SI
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: selectedModel,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
