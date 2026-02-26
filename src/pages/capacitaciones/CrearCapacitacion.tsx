@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -364,83 +364,175 @@ export default function CrearCapacitacion() {
       {step === 2 && content && (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
           <Card>
-            <CardHeader><CardTitle>Revisión del Contenido</CardTitle></CardHeader>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Contenido Generado</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-0.5">Revisa y edita el contenido antes de publicar</p>
+                </div>
+              </div>
+            </CardHeader>
             <CardContent className="space-y-6">
-              <div><Label>Introducción</Label><Textarea value={content.introduccion || ''} onChange={e => setContent({ ...content, introduccion: e.target.value })} rows={3} /></div>
-              <div>
-                <Label>Objetivos</Label>
-                {content.objetivos?.map((obj, i) => (
-                  <div key={i} className="flex gap-2 mt-1">
-                    <Input value={obj} onChange={e => { const newObj = [...(content.objetivos || [])]; newObj[i] = e.target.value; setContent({ ...content, objetivos: newObj }); }} />
-                    <Button variant="ghost" size="icon" onClick={() => setContent({ ...content, objetivos: content.objetivos?.filter((_, idx) => idx !== i) })}><X className="h-4 w-4" /></Button>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => setContent({ ...content, objetivos: [...(content.objetivos || []), ''] })}>+ Agregar Objetivo</Button>
+              {/* Título */}
+              <div className="space-y-1.5">
+                <Label>Título</Label>
+                <Input value={title} onChange={e => setTitle(e.target.value)} />
               </div>
-              <div><Label>Contenido Principal (Markdown)</Label><Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} className="font-mono text-sm" /></div>
-              {content.contenido && (
-                <div><Label>Vista previa</Label><div className="border rounded-lg p-4 mt-1"><MarkdownContent content={content.contenido} /></div></div>
-              )}
-              <div>
-                <Label>Puntos Clave</Label>
-                {content.puntosClave?.map((punto, i) => (
-                  <div key={i} className="flex gap-2 mt-1">
-                    <Input value={punto} onChange={e => { const np = [...(content.puntosClave || [])]; np[i] = e.target.value; setContent({ ...content, puntosClave: np }); }} />
-                    <Button variant="ghost" size="icon" onClick={() => setContent({ ...content, puntosClave: content.puntosClave?.filter((_, idx) => idx !== i) })}><X className="h-4 w-4" /></Button>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => setContent({ ...content, puntosClave: [...(content.puntosClave || []), ''] })}>+ Agregar Punto</Button>
+
+              {/* 1. Introducción */}
+              <div className="space-y-1.5">
+                <h3 className="font-semibold text-base">1. Introducción</h3>
+                <Textarea value={content.introduccion || ''} onChange={e => setContent({ ...content, introduccion: e.target.value })} rows={5} />
               </div>
-              <div>
-                <Label>Evaluación</Label>
+
+              {/* 2. Objetivos de Aprendizaje */}
+              <div className="space-y-1.5">
+                <h3 className="font-semibold text-base">2. Objetivos de Aprendizaje</h3>
+                <p className="text-xs text-muted-foreground">Un objetivo por línea</p>
+                <Textarea
+                  value={(content.objetivos || []).join('\n')}
+                  onChange={e => setContent({ ...content, objetivos: e.target.value.split('\n') })}
+                  rows={4}
+                />
+              </div>
+
+              {/* 3. Contenido Principal */}
+              <div className="space-y-1.5">
+                <h3 className="font-semibold text-base">3. Contenido Principal</h3>
+                <Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} />
+              </div>
+
+              {/* 4. Puntos Clave */}
+              <div className="space-y-1.5">
+                <h3 className="font-semibold text-base">4. Puntos Clave</h3>
+                <p className="text-xs text-muted-foreground">Un punto por línea</p>
+                <Textarea
+                  value={(content.puntosClave || []).join('\n')}
+                  onChange={e => setContent({ ...content, puntosClave: e.target.value.split('\n') })}
+                  rows={5}
+                />
+              </div>
+
+              {/* 5. Evaluación */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-base">5. Evaluación</h3>
+                    <p className="text-xs text-muted-foreground">Edita las preguntas y respuestas de la evaluación</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setContent({
+                    ...content,
+                    evaluacion: [...(content.evaluacion || []), { pregunta: '', respuestaCorrecta: '', opciones: ['', '', '', ''] }],
+                  })}>+ Añadir Pregunta</Button>
+                </div>
+
                 {content.evaluacion?.map((q, qi) => (
-                  <Card key={qi} className="mt-3 p-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm">P{qi + 1}.</span>
-                        <Input value={q.pregunta} onChange={e => { const ne = [...(content.evaluacion || [])]; ne[qi] = { ...ne[qi], pregunta: e.target.value }; setContent({ ...content, evaluacion: ne }); }} />
-                        <Button variant="ghost" size="icon" onClick={() => setContent({ ...content, evaluacion: content.evaluacion?.filter((_, idx) => idx !== qi) })}><X className="h-4 w-4" /></Button>
+                  <Card key={qi} className="p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm">Pregunta {qi + 1}</span>
+                      <div className="flex-1" />
+                      <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => setContent({ ...content, evaluacion: content.evaluacion?.filter((_, idx) => idx !== qi) })}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Input value={q.pregunta} onChange={e => {
+                      const ne = [...(content.evaluacion || [])];
+                      ne[qi] = { ...ne[qi], pregunta: e.target.value };
+                      setContent({ ...content, evaluacion: ne });
+                    }} />
+                    <div>
+                      <p className="text-xs font-medium mb-1">Opciones de Respuesta</p>
+                      <p className="text-xs text-muted-foreground mb-2">La primera opción (verde) es la respuesta correcta</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {q.opciones.map((opt, oi) => (
+                          <div key={oi} className="flex items-center gap-2">
+                            <span className={`flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                              oi === 0
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
+                                : 'bg-muted text-muted-foreground'
+                            }`}>
+                              {String.fromCharCode(65 + oi)}
+                            </span>
+                            <Input
+                              value={opt}
+                              onChange={e => {
+                                const ne = [...(content.evaluacion || [])];
+                                const newOpts = [...ne[qi].opciones];
+                                newOpts[oi] = e.target.value;
+                                ne[qi] = { ...ne[qi], opciones: newOpts };
+                                if (oi === 0) ne[qi].respuestaCorrecta = e.target.value;
+                                setContent({ ...content, evaluacion: ne });
+                              }}
+                              className={oi === 0 ? 'border-green-300 dark:border-green-700' : ''}
+                            />
+                          </div>
+                        ))}
                       </div>
-                      {q.opciones.map((opt, oi) => (
-                        <div key={oi} className="flex items-center gap-2 ml-6">
-                          <span className={`text-xs font-bold w-5 ${oi === 0 ? 'text-green-600' : ''}`}>{String.fromCharCode(65 + oi)})</span>
-                          <Input value={opt} onChange={e => {
-                            const ne = [...(content.evaluacion || [])];
-                            const newOpts = [...ne[qi].opciones];
-                            newOpts[oi] = e.target.value;
-                            ne[qi] = { ...ne[qi], opciones: newOpts };
-                            if (oi === 0) ne[qi].respuestaCorrecta = e.target.value;
-                            setContent({ ...content, evaluacion: ne });
-                          }} className={oi === 0 ? 'border-green-300' : ''} />
-                        </div>
-                      ))}
                     </div>
                   </Card>
                 ))}
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => setContent({
-                  ...content,
-                  evaluacion: [...(content.evaluacion || []), { pregunta: '', respuestaCorrecta: '', opciones: ['', '', '', ''] }],
-                })}>+ Agregar Pregunta</Button>
+              </div>
+
+              {/* Summary bar */}
+              <div className="grid grid-cols-4 gap-3">
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground">Tipo</p>
+                  <p className="font-semibold text-sm">{tipo === 'Otro' ? tipoOtro : tipo || '-'}</p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground">Área</p>
+                  <p className="font-semibold text-sm">{area === 'Otro' ? areaOtra : area || '-'}</p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground">Norma</p>
+                  <p className="font-semibold text-sm">{marcoLegal === 'Otro' ? marcoLegalOtro : marcoLegal || '-'}</p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground">Duración</p>
+                  <p className="font-semibold text-sm">{duracion >= 60 ? `${duracion / 60} hora${duracion > 60 ? 's' : ''}` : `${duracion} minutos`}</p>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Multimedia (only when editing) */}
-          {editId && (
-            <Card>
-              <CardHeader><CardTitle>Multimedia</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <ImageUploader courseId={editId} onUploaded={handleMediaUploaded} />
-                <TrainingMediaGallery media={media as any} onDelete={handleDeleteMedia} />
-              </CardContent>
-            </Card>
-          )}
+          {/* Multimedia card */}
+          <Card className="border-dashed">
+            <CardContent className="py-5">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Generación Multimedia</p>
+                  <p className="text-xs text-muted-foreground">
+                    {editId ? 'Genera materiales visuales adicionales con IA' : 'Guarda la capacitación primero para poder generar materiales visuales adicionales con IA'}
+                  </p>
+                </div>
+              </div>
+              {editId && (
+                <div className="mt-4 space-y-4">
+                  <ImageUploader courseId={editId} onUploaded={handleMediaUploaded} />
+                  <TrainingMediaGallery media={media as any} onDelete={handleDeleteMedia} />
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4 mr-2" /> Anterior</Button>
+          {/* Footer actions */}
+          <div className="flex items-center justify-between">
+            <Button variant="outline" onClick={() => setStep(0)}>
+              <ArrowLeft className="h-4 w-4 mr-2" /> Editar Parámetros
+            </Button>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => handleSave('borrador')} disabled={createCourse.isPending || updateCourse.isPending}>Guardar Borrador</Button>
-              <Button onClick={() => handleSave('publicado')} disabled={createCourse.isPending || updateCourse.isPending}>Publicar</Button>
+              <Button variant="outline" onClick={() => handleSave('borrador')} disabled={createCourse.isPending || updateCourse.isPending}>
+                <FileText className="h-4 w-4 mr-2" /> Guardar Borrador
+              </Button>
+              <Button onClick={() => handleSave('publicado')} disabled={createCourse.isPending || updateCourse.isPending} className="bg-green-600 hover:bg-green-700 text-white">
+                Publicar Capacitación
+              </Button>
             </div>
           </div>
         </motion.div>
