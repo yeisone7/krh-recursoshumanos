@@ -308,31 +308,48 @@ export default function CrearCapacitacion() {
       {step === 1 && (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
           <Card>
-            <CardHeader><CardTitle>Contexto y Generación con IA</CardTitle></CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label>Cargar PDF de referencia (opcional)</Label>
-                <div className="mt-2 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center">
-                  {pdfName ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <FileText className="h-5 w-5 text-primary" />
-                      <span className="font-medium">{pdfName}</span>
-                      <Button variant="ghost" size="icon" onClick={() => { setPdfName(''); setPdfText(''); }}><X className="h-4 w-4" /></Button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground mb-2">Arrastra un PDF o haz clic para seleccionar</p>
-                      <Input type="file" accept=".pdf" onChange={handlePdfUpload} disabled={isExtractingPdf} className="max-w-xs mx-auto" />
-                      {isExtractingPdf && <div className="flex items-center justify-center gap-2 mt-2"><Loader2 className="h-4 w-4 animate-spin" /> Extrayendo texto...</div>}
-                    </>
-                  )}
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-primary" />
                 </div>
+                <div>
+                  <CardTitle>Documentos de Contexto</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-0.5">Sube PDFs que la IA usará como referencia</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center bg-muted/30">
+                {pdfName ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <span className="font-medium">{pdfName}</span>
+                    <Button variant="ghost" size="icon" onClick={() => { setPdfName(''); setPdfText(''); }}><X className="h-4 w-4" /></Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                      <Upload className="h-6 w-6 text-primary" />
+                    </div>
+                    <p className="text-sm font-medium mb-1">Arrastra archivos aquí o haz clic para seleccionar</p>
+                    <p className="text-xs text-muted-foreground mb-4">Formatos aceptados: PDF (Máx. 10MB por archivo)</p>
+                    <label>
+                      <Input type="file" accept=".pdf" onChange={handlePdfUpload} disabled={isExtractingPdf} className="hidden" />
+                      <Button variant="outline" size="sm" asChild className="cursor-pointer"><span><Upload className="h-4 w-4 mr-2" /> Seleccionar archivos</span></Button>
+                    </label>
+                    {isExtractingPdf && <div className="flex items-center justify-center gap-2 mt-3"><Loader2 className="h-4 w-4 animate-spin" /> Extrayendo texto...</div>}
+                  </>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label>Contenido adicional para la IA</Label>
+                <Textarea value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Puedes pegar aquí texto adicional de procedimientos, normativas, o información que la IA deba considerar..." rows={5} />
               </div>
               <div className="flex justify-between">
                 <Button variant="outline" onClick={() => setStep(0)}><ArrowLeft className="h-4 w-4 mr-2" /> Anterior</Button>
-                <Button onClick={handleGenerate} disabled={isGenerating}>
-                  {isGenerating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</> : <><Sparkles className="h-4 w-4 mr-2" /> Generar con IA</>}
+                <Button onClick={handleGenerate} disabled={isGenerating} className="bg-primary hover:bg-primary/90">
+                  {isGenerating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</> : <><Sparkles className="h-4 w-4 mr-2" /> Generar Capacitación</>}
                 </Button>
               </div>
             </CardContent>
