@@ -134,32 +134,6 @@ export default function Capacitaciones() {
         </Card>
       </motion.div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Cursos Activos', value: stats?.totalCourses || 0, icon: BookOpen, color: 'text-primary', bg: 'bg-primary/10' },
-          { label: 'Sesiones Programadas', value: stats?.activeSessions || 0, icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-          { label: 'Certificados (Año)', value: stats?.certificatesThisYear || 0, icon: Award, color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
-          { label: 'Por Vencer', value: stats?.expiringCertificates || 0, icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-        ].map((kpi, i) => (
-          <motion.div key={kpi.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{kpi.label}</p>
-                    <p className="text-3xl font-bold">{kpi.value}</p>
-                  </div>
-                  <div className={`p-3 rounded-full ${kpi.bg}`}>
-                    <kpi.icon className={`h-6 w-6 ${kpi.color}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
-
       {/* Alerts + Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
