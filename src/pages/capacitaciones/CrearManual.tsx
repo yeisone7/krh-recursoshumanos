@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, PenLine, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, PenLine, X, Loader2, Target, Scale, Tag, LayoutGrid, BarChart3, Users, Clock, Monitor, ShieldAlert, CalendarCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,8 @@ const TIPOS = ['Charla 5 min', 'Calidad', 'HSEQ', 'Reinducción', 'Refuerzo', 'E
 const AREAS = ['Producción', 'Calidad', 'Seguridad', 'HSEQ', 'Administrativo', 'Logística', 'Mantenimiento', 'Otro'];
 const PUBLICOS = ['Operarios', 'Supervisores', 'Administrativos', 'Nuevos ingresos', 'Todo el personal', 'Otro'];
 const NIVELES = ['Básico', 'Intermedio', 'Avanzado'];
+const OBJETIVOS = ['Sensibilización', 'Cumplimiento', 'Corrección de hallazgo', 'Formación inicial', 'Actualización', 'Otro'];
+const MARCOS_LEGALES = ['ISO 9001', 'ISO 22000', 'ISO 45001', 'BPM', 'HACCP', 'Interno', 'Otro'];
 
 export default function CrearManual() {
   const navigate = useNavigate();
@@ -35,7 +37,9 @@ export default function CrearManual() {
   const [publicoOtro, setPublicoOtro] = useState('');
   const [nivel, setNivel] = useState('Básico');
   const [objetivo, setObjetivo] = useState('');
+  const [objetivoOtro, setObjetivoOtro] = useState('');
   const [marcoLegal, setMarcoLegal] = useState('');
+  const [marcoLegalOtro, setMarcoLegalOtro] = useState('');
   const [riesgo, setRiesgo] = useState('medio');
   const [duracion, setDuracion] = useState(30);
   const [modalidad, setModalidad] = useState('presencial');
@@ -75,8 +79,10 @@ export default function CrearManual() {
         name: title, category: tipo === 'Otro' ? tipoOtro : tipo, modality: modalidad,
         durationHours: duracion, isMandatory: obligatorio, requiresCertification: certificacion,
         validityMonths: vigencia, level: nivel.toLowerCase(),
-        audience: publico === 'Otro' ? publicoOtro : publico, objective: objetivo,
-        legalFramework: marcoLegal, riskLevel: riesgo, content, status,
+        audience: publico === 'Otro' ? publicoOtro : publico,
+        objective: objetivo === 'Otro' ? objetivoOtro : objetivo,
+        legalFramework: marcoLegal === 'Otro' ? marcoLegalOtro : marcoLegal,
+        riskLevel: riesgo, content, status,
       };
       if (editId) {
         await updateCourse.mutateAsync({ id: editId, ...courseData });
@@ -106,23 +112,33 @@ export default function CrearManual() {
           <Card>
             <CardHeader><CardTitle>Parámetros</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div><Label>Título *</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
+              <div><Label className="flex items-center gap-1.5"><Tag className="h-4 w-4" /> Título *</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Tipo</Label><Select value={tipo} onValueChange={setTipo}><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger><SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>{tipo === 'Otro' && <Input className="mt-2" value={tipoOtro} onChange={e => setTipoOtro(e.target.value)} />}</div>
-                <div><Label>Área</Label><Select value={area} onValueChange={setArea}><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger><SelectContent>{AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent></Select>{area === 'Otro' && <Input className="mt-2" value={areaOtra} onChange={e => setAreaOtra(e.target.value)} />}</div>
+                <div><Label className="flex items-center gap-1.5"><LayoutGrid className="h-4 w-4" /> Tipo</Label><Select value={tipo} onValueChange={setTipo}><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger><SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>{tipo === 'Otro' && <Input className="mt-2" value={tipoOtro} onChange={e => setTipoOtro(e.target.value)} />}</div>
+                <div><Label className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4" /> Área</Label><Select value={area} onValueChange={setArea}><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger><SelectContent>{AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent></Select>{area === 'Otro' && <Input className="mt-2" value={areaOtra} onChange={e => setAreaOtra(e.target.value)} />}</div>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div><Label>Nivel</Label><Select value={nivel} onValueChange={setNivel}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{NIVELES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent></Select></div>
-                <div><Label>Duración (min)</Label><Input type="number" value={duracion} onChange={e => setDuracion(Number(e.target.value))} /></div>
-                <div><Label>Modalidad</Label><Select value={modalidad} onValueChange={setModalidad}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="presencial">Presencial</SelectItem><SelectItem value="virtual">Virtual</SelectItem><SelectItem value="mixto">Mixto</SelectItem></SelectContent></Select></div>
+                <div><Label className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4" /> Nivel</Label><Select value={nivel} onValueChange={setNivel}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{NIVELES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent></Select></div>
+                <div><Label className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> Duración (min)</Label><Input type="number" value={duracion} onChange={e => setDuracion(Number(e.target.value))} /></div>
+                <div><Label className="flex items-center gap-1.5"><Monitor className="h-4 w-4" /> Modalidad</Label><Select value={modalidad} onValueChange={setModalidad}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="presencial">Presencial</SelectItem><SelectItem value="virtual">Virtual</SelectItem><SelectItem value="mixto">Mixto</SelectItem></SelectContent></Select></div>
               </div>
-              <div><Label>Objetivo</Label><Textarea value={objetivo} onChange={e => setObjetivo(e.target.value)} /></div>
-              <div><Label>Marco Legal</Label><Input value={marcoLegal} onChange={e => setMarcoLegal(e.target.value)} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="flex items-center gap-1.5"><Target className="h-4 w-4" /> Objetivo *</Label>
+                  <Select value={objetivo} onValueChange={setObjetivo}><SelectTrigger><SelectValue placeholder="Selecciona el objetivo" /></SelectTrigger><SelectContent>{OBJETIVOS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select>
+                  {objetivo === 'Otro' && <Input className="mt-2" placeholder="Especifique el objetivo" value={objetivoOtro} onChange={e => setObjetivoOtro(e.target.value)} />}
+                </div>
+                <div>
+                  <Label className="flex items-center gap-1.5"><Scale className="h-4 w-4" /> Norma / Marco Legal *</Label>
+                  <Select value={marcoLegal} onValueChange={setMarcoLegal}><SelectTrigger><SelectValue placeholder="Selecciona la norma" /></SelectTrigger><SelectContent>{MARCOS_LEGALES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select>
+                  {marcoLegal === 'Otro' && <Input className="mt-2" placeholder="Especifique la norma" value={marcoLegalOtro} onChange={e => setMarcoLegalOtro(e.target.value)} />}
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3"><Switch checked={obligatorio} onCheckedChange={setObligatorio} /><Label>Obligatorio</Label></div>
                 <div className="flex items-center gap-3"><Switch checked={certificacion} onCheckedChange={setCertificacion} /><Label>Certificación</Label></div>
               </div>
-              {certificacion && <div><Label>Vigencia (meses)</Label><Input type="number" value={vigencia || ''} onChange={e => setVigencia(e.target.value ? Number(e.target.value) : undefined)} /></div>}
+              {certificacion && <div><Label className="flex items-center gap-1.5"><CalendarCheck className="h-4 w-4" /> Vigencia (meses)</Label><Input type="number" value={vigencia || ''} onChange={e => setVigencia(e.target.value ? Number(e.target.value) : undefined)} /></div>}
               <div className="flex justify-end"><Button onClick={() => setStep(1)} disabled={!title}>Siguiente <ArrowRight className="h-4 w-4 ml-2" /></Button></div>
             </CardContent>
           </Card>
