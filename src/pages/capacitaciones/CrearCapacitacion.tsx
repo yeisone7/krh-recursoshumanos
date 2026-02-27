@@ -43,7 +43,9 @@ export default function CrearCapacitacion() {
   const [generatingMedia, setGeneratingMedia] = useState<Record<string, boolean>>({});
   const [generatedMedia, setGeneratedMedia] = useState<Record<string, string>>({});
   const [audioDuration, setAudioDuration] = useState('medium');
-  const [videoDuration, setVideoDuration] = useState('5');
+  const [videoDuration, setVideoDuration] = useState('medium');
+  const [videoStyle, setVideoStyle] = useState('clasico');
+  const [videoScript, setVideoScript] = useState<any>(null);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -644,33 +646,94 @@ export default function CrearCapacitacion() {
                     </Card>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card className="border">
-                    <CardContent className="pt-5 pb-4 space-y-2">
+                    <CardContent className="pt-5 pb-4 space-y-3">
                       <div className="flex items-center gap-2">
-                        <Video className="h-5 w-5 text-muted-foreground" />
-                        <span className="font-semibold text-sm">Video Educativo</span>
+                        <Video className="h-5 w-5 text-primary" />
+                        <span className="font-semibold text-sm">Video Educativo (Storyboard)</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">Próximamente — generación de video en desarrollo</p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Duración:</span>
-                        <Select value={videoDuration} onValueChange={setVideoDuration}>
-                          <SelectTrigger className="h-8 text-xs flex-1">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="5">5 segundos</SelectItem>
-                            <SelectItem value="10">10 segundos</SelectItem>
-                            <SelectItem value="15">15 segundos</SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <p className="text-xs text-muted-foreground">Genera un guion narrado + secuencia de imágenes estilizadas con IA</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <span className="text-xs text-muted-foreground">Estilo visual:</span>
+                          <Select value={videoStyle} onValueChange={setVideoStyle}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="clasico">🎨 Clásico</SelectItem>
+                              <SelectItem value="pizarra">📝 Pizarra</SelectItem>
+                              <SelectItem value="kawaii">🌸 Kawaii</SelectItem>
+                              <SelectItem value="anime">⚡ Anime</SelectItem>
+                              <SelectItem value="acuarela">💧 Acuarela</SelectItem>
+                              <SelectItem value="retro">📻 Dibujo Retro</SelectItem>
+                              <SelectItem value="legado">📜 Legado</SelectItem>
+                              <SelectItem value="papiroflexia">🦢 Papiroflexia</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-xs text-muted-foreground">Escenas:</span>
+                          <Select value={videoDuration} onValueChange={setVideoDuration}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="short">Corto (3 escenas)</SelectItem>
+                              <SelectItem value="medium">Medio (4 escenas)</SelectItem>
+                              <SelectItem value="long">Largo (6 escenas)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                      <Button className="w-full bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-primary-foreground opacity-60" disabled>
-                        <Plus className="h-4 w-4 mr-2" /> Generar
+                      <Button
+                        className="w-full"
+                        disabled={!editId || generatingMedia['video']}
+                        onClick={async () => {
+                          if (!editId || !content) return;
+                          setGeneratingMedia(prev => ({ ...prev, video: true }));
+                          try {
+                            const { data, error } = await supabase.functions.invoke('generate-training-video', {
+                              body: {
+                                courseId: editId,
+                                style: videoStyle,
+                                duration: videoDuration,
+                                title,
+                                content: content.contenido?.substring(0, 2000),
+                                puntosClave: content.puntosClave,
+                                companyId: currentCompanyId,
+                              },
+                            });
+                            if (error) throw error;
+                            setVideoScript(data?.script);
+                            toast.success(`Storyboard generado: ${data?.sceneCount} escenas con estilo ${data?.style}`);
+                          } catch (err: any) {
+                            toast.error(err?.message || 'Error al generar video');
+                          } finally {
+                            setGeneratingMedia(prev => ({ ...prev, video: false }));
+                          }
+                        }}
+                      >
+                        {generatingMedia['video'] ? (
+                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando escenas...</>
+                        ) : (
+                          <><Sparkles className="h-4 w-4 mr-2" /> Generar Storyboard</>
+                        )}
                       </Button>
+                      {!editId && <p className="text-xs text-destructive">Guarde como borrador primero para habilitar la generación</p>}
+                      {videoScript && (
+                        <div className="mt-2 space-y-2 border-t pt-2">
+                          <p className="text-xs font-medium">Guion generado ({videoScript.scenes?.length} escenas)</p>
+                          {videoScript.scenes?.map((scene: any, idx: number) => (
+                            <div key={idx} className="text-xs p-2 rounded bg-muted/50">
+                              <p className="font-medium">{idx + 1}. {scene.title}</p>
+                              <p className="text-muted-foreground mt-0.5">{scene.narration}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
-                  </div>
 
                   {/* Existing media gallery */}
                   {media.length > 0 && (
