@@ -85,15 +85,47 @@ export default function CrearCapacitacion() {
     if (existingCourse) {
       setTitle(existingCourse.name);
       setTipo(existingCourse.category);
-      setArea(existingCourse.audience || '');
-      setNivel(existingCourse.level || 'Básico');
-      setObjetivo(existingCourse.objective || '');
-      setMarcoLegal(existingCourse.legal_framework || '');
+      // area is stored in target_audience
+      const savedArea = existingCourse.target_audience || '';
+      if (AREAS.includes(savedArea)) {
+        setArea(savedArea);
+      } else if (savedArea) {
+        setArea('Otro');
+        setAreaOtra(savedArea);
+      }
+      // público is stored in audience
+      const savedPublico = existingCourse.audience || '';
+      if (PUBLICOS.includes(savedPublico)) {
+        setPublico(savedPublico);
+      } else if (savedPublico) {
+        setPublico('Otro');
+        setPublicoOtro(savedPublico);
+      }
+      // nivel is stored lowercase, capitalize first letter
+      const savedNivel = existingCourse.level || 'basico';
+      const nivelMap: Record<string, string> = { basico: 'Básico', intermedio: 'Intermedio', avanzado: 'Avanzado' };
+      setNivel(nivelMap[savedNivel] || savedNivel.charAt(0).toUpperCase() + savedNivel.slice(1));
+      // objetivo
+      const savedObjetivo = existingCourse.objective || '';
+      if (OBJETIVOS.includes(savedObjetivo)) {
+        setObjetivo(savedObjetivo);
+      } else if (savedObjetivo) {
+        setObjetivo('Otro');
+        setObjetivoOtro(savedObjetivo);
+      }
+      // marco legal
+      const savedMarco = existingCourse.legal_framework || '';
+      if (MARCOS_LEGALES.includes(savedMarco)) {
+        setMarcoLegal(savedMarco);
+      } else if (savedMarco) {
+        setMarcoLegal('Otro');
+        setMarcoLegalOtro(savedMarco);
+      }
       setRiesgo(existingCourse.risk_level || 'medio');
       setDuracion(existingCourse.duration_hours);
       setModalidad(existingCourse.modality);
       setIdioma(existingCourse.language || 'es');
-      setVigencia(existingCourse.validity_months || undefined);
+      setVigencia(existingCourse.validity_months ?? undefined);
       setObligatorio(existingCourse.is_mandatory);
       setCertificacion(existingCourse.requires_certification);
       if (existingCourse.content) {
@@ -170,6 +202,7 @@ export default function CrearCapacitacion() {
         validityMonths: vigencia,
         level: nivel.toLowerCase(),
         audience: publico === 'Otro' ? publicoOtro : publico,
+        targetAudience: area === 'Otro' ? areaOtra : area,
         objective: objetivo === 'Otro' ? objetivoOtro : objetivo,
         legalFramework: marcoLegal === 'Otro' ? marcoLegalOtro : marcoLegal,
         riskLevel: riesgo,
