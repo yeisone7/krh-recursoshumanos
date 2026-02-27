@@ -180,10 +180,11 @@ serve(async (req) => {
     }
 
     const aiConfig = await getAIConfig(companyId);
-    const useGeminiDirect = aiConfig.model === "gemini" && !!aiConfig.gemini_api_key;
+    const useGeminiForImages = !!aiConfig.gemini_api_key; // Images ALWAYS use Gemini
+    const useGeminiForText = aiConfig.model === "gemini" && !!aiConfig.gemini_api_key;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!useGeminiDirect && !LOVABLE_API_KEY) throw new Error("No AI provider configured");
+    if (!useGeminiForText && !LOVABLE_API_KEY) throw new Error("No AI provider configured");
 
     const sceneCount = duration === "short" ? 3 : duration === "long" ? 6 : 4;
     const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.clasico;
@@ -217,8 +218,8 @@ Responde en formato JSON con esta estructura exacta:
   "summary": "Resumen breve del video"
 }`;
 
-    console.log(`Generating script via ${useGeminiDirect ? 'Gemini direct' : 'Gateway'}...`);
-    const scriptText = useGeminiDirect
+    console.log(`Generating script via ${useGeminiForText ? 'Gemini direct' : 'Gateway'}...`);
+    const scriptText = useGeminiForText
       ? await generateScriptGeminiDirect(aiConfig.gemini_api_key!, scriptPrompt)
       : await generateScriptGateway(LOVABLE_API_KEY!, scriptPrompt);
 
@@ -239,7 +240,7 @@ Responde en formato JSON con esta estructura exacta:
     const imagePromises = script.scenes.map(async (scene, i) => {
       const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${scene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
       
-      const imageBase64 = useGeminiDirect
+      const imageBase64 = useGeminiForImages
         ? await generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt)
         : await generateImageGateway(LOVABLE_API_KEY!, imagePrompt);
 
