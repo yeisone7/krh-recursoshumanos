@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BookOpen, Clock, Users, Shield, Globe, Target, Scale, Send,
   GraduationCap, Sparkles, ChevronRight, CircleHelp, Image as ImageIcon,
@@ -13,8 +14,11 @@ import {
   Mic, Video, ExternalLink, Trash2,
 } from 'lucide-react';
 import { MarkdownContent } from './MarkdownContent';
-import { TrainingMediaGallery } from './TrainingMediaGallery';
-import { useTrainingMedia } from '@/hooks/useTraining';
+import { MediaTypeCard } from './MediaTypeCard';
+import { useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { TrainingCourse, TrainingCourseContent, TrainingMedia } from '@/types/training';
@@ -114,11 +118,54 @@ function MediaReadOnlyCard({ icon, title, description, items }: {
 
 export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }: TrainingPreviewDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
+  const [generatingMedia, setGeneratingMedia] = useState<Record<string, boolean>>({});
+  const [audioDuration, setAudioDuration] = useState('medium');
+  const { currentCompanyId } = useAuth();
   const { data: media = [] } = useTrainingMedia(course?.id);
+  const createMedia = useCreateTrainingMedia();
+  const deleteMedia = useDeleteTrainingMedia();
 
   if (!course) return null;
 
   const content = course.content as TrainingCourseContent | null;
+  const isDraft = course.status === 'borrador';
+
+  const handleGenerateMedia = async (type: string) => {
+    if (!course.id || !content) return;
+    setGeneratingMedia(prev => ({ ...prev, [type]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-training-media', {
+        body: {
+          type,
+          title: course.name,
+          content: content.contenido?.substring(0, 2000),
+          puntosClave: content.puntosClave,
+          companyId: currentCompanyId,
+          courseId: course.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.imageUrl) {
+        await createMedia.mutateAsync({
+          courseId: course.id,
+          type: type === 'mapa_mental' ? 'imagen' : type === 'infografia' ? 'infografia' : 'imagen',
+          title: type === 'imagen' ? 'Imagen Explicativa' : type === 'mapa_mental' ? 'Mapa Mental' : 'Infografía',
+          fileUrl: data.imageUrl,
+          fileSize: 0,
+        });
+        toast.success(`${type === 'imagen' ? 'Imagen' : type === 'mapa_mental' ? 'Mapa mental' : 'Infografía'} generada exitosamente`);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || `Error al generar ${type}`);
+    } finally {
+      setGeneratingMedia(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
+  const handleDeleteMedia = async (id: string) => {
+    await deleteMedia.mutateAsync({ id, courseId: course.id });
+  };
+
   const durationLabel = course.duration_hours < 1
     ? `${Math.round(course.duration_hours * 60)} minutos`
     : `${course.duration_hours} hora${course.duration_hours > 1 ? 's' : ''}`;
@@ -381,47 +428,101 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                 </div>
                 <Separator />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Imagen Explicativa */}
-                  <MediaReadOnlyCard
-                    icon={<ImageIcon className="h-5 w-5 text-muted-foreground" />}
-                    title="Imagen Explicativa"
-                    description="Genera una imagen visual que represente el tema de la capacitación"
-                    items={media.filter(m => m.title === 'Imagen Explicativa')}
-                  />
-                  {/* Mapa Mental */}
-                  <MediaReadOnlyCard
-                    icon={<Network className="h-5 w-5 text-muted-foreground" />}
-                    title="Mapa Mental"
-                    description="Crea un mapa mental con los conceptos clave organizados visualmente"
-                    items={media.filter(m => m.title === 'Mapa Mental')}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Infografía */}
-                  <MediaReadOnlyCard
-                    icon={<LayoutPanelTop className="h-5 w-5 text-muted-foreground" />}
-                    title="Infografía"
-                    description="Diseña una infografía profesional con los puntos principales"
-                    items={media.filter(m => m.title === 'Infografía')}
-                  />
-                  {/* Audio Narrado */}
-                  <MediaReadOnlyCard
-                    icon={<Mic className="h-5 w-5 text-muted-foreground" />}
-                    title="Audio Narrado"
-                    description="Genera una narración tipo podcast del contenido"
-                    items={media.filter(m => m.title === 'Audio Narrado')}
-                  />
-                </div>
-
-                {/* Video Educativo */}
-                <MediaReadOnlyCard
-                  icon={<Video className="h-5 w-5 text-primary" />}
-                  title="Video Educativo"
-                  description="Genera un guion narrado + secuencia de imágenes estilizadas con IA"
-                  items={media.filter(m => m.type === 'video')}
-                />
+                {isDraft ? (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <MediaTypeCard
+                        icon={<ImageIcon className="h-5 w-5 text-muted-foreground" />}
+                        title="Imagen Explicativa"
+                        description="Genera una imagen visual que represente el tema de la capacitación"
+                        items={media.filter(m => m.title === 'Imagen Explicativa')}
+                        isGenerating={!!generatingMedia.imagen}
+                        onGenerate={() => handleGenerateMedia('imagen')}
+                        onDelete={handleDeleteMedia}
+                      />
+                      <MediaTypeCard
+                        icon={<Network className="h-5 w-5 text-muted-foreground" />}
+                        title="Mapa Mental"
+                        description="Crea un mapa mental con los conceptos clave organizados visualmente"
+                        items={media.filter(m => m.title === 'Mapa Mental')}
+                        isGenerating={!!generatingMedia.mapa_mental}
+                        onGenerate={() => handleGenerateMedia('mapa_mental')}
+                        onDelete={handleDeleteMedia}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <MediaTypeCard
+                        icon={<LayoutPanelTop className="h-5 w-5 text-muted-foreground" />}
+                        title="Infografía"
+                        description="Diseña una infografía profesional con los puntos principales"
+                        items={media.filter(m => m.title === 'Infografía')}
+                        isGenerating={!!generatingMedia.infografia}
+                        onGenerate={() => handleGenerateMedia('infografia')}
+                        onDelete={handleDeleteMedia}
+                      />
+                      <MediaTypeCard
+                        icon={<Mic className="h-5 w-5 text-muted-foreground" />}
+                        title="Audio Narrado"
+                        description="Genera una narración tipo podcast del contenido (requiere API key de OpenAI)"
+                        items={media.filter(m => m.title === 'Audio Narrado')}
+                        isGenerating={false}
+                        onGenerate={() => {}}
+                        onDelete={handleDeleteMedia}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Duración:</span>
+                          <Select value={audioDuration} onValueChange={setAudioDuration}>
+                            <SelectTrigger className="h-8 text-xs flex-1">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="short">Corto (~1 min)</SelectItem>
+                              <SelectItem value="medium">Medio (~3 min)</SelectItem>
+                              <SelectItem value="long">Largo (~5 min)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </MediaTypeCard>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <MediaReadOnlyCard
+                        icon={<ImageIcon className="h-5 w-5 text-muted-foreground" />}
+                        title="Imagen Explicativa"
+                        description="Genera una imagen visual que represente el tema de la capacitación"
+                        items={media.filter(m => m.title === 'Imagen Explicativa')}
+                      />
+                      <MediaReadOnlyCard
+                        icon={<Network className="h-5 w-5 text-muted-foreground" />}
+                        title="Mapa Mental"
+                        description="Crea un mapa mental con los conceptos clave organizados visualmente"
+                        items={media.filter(m => m.title === 'Mapa Mental')}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <MediaReadOnlyCard
+                        icon={<LayoutPanelTop className="h-5 w-5 text-muted-foreground" />}
+                        title="Infografía"
+                        description="Diseña una infografía profesional con los puntos principales"
+                        items={media.filter(m => m.title === 'Infografía')}
+                      />
+                      <MediaReadOnlyCard
+                        icon={<Mic className="h-5 w-5 text-muted-foreground" />}
+                        title="Audio Narrado"
+                        description="Genera una narración tipo podcast del contenido"
+                        items={media.filter(m => m.title === 'Audio Narrado')}
+                      />
+                    </div>
+                    <MediaReadOnlyCard
+                      icon={<Video className="h-5 w-5 text-primary" />}
+                      title="Video Educativo"
+                      description="Genera un guion narrado + secuencia de imágenes estilizadas con IA"
+                      items={media.filter(m => m.type === 'video')}
+                    />
+                  </>
+                )}
               </TabsContent>
             </div>
           </ScrollArea>
