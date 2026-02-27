@@ -7,66 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-interface AIConfig {
-  model?: string;
-  openai_api_key?: string;
-  gemini_api_key?: string;
-}
-
-async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
-  if (!companyId) return {};
-  try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    const { data: configRow } = await supabase
-      .from("system_config")
-      .select("config_value")
-      .eq("company_id", companyId)
-      .eq("config_key", "ai_config")
-      .maybeSingle();
-    return (configRow?.config_value as AIConfig) || {};
-  } catch (e) {
-    console.warn("Could not read AI config:", e);
-    return {};
-  }
-}
-
-function getImageEndpoint(aiConfig: AIConfig): {
-  url: string;
-  headers: Record<string, string>;
-  model: string;
-  isDirectGemini: boolean;
-} {
-  // Image generation always uses Gemini models
-  // Check if user has their own Gemini API key
-  if (aiConfig.gemini_api_key) {
-    const model = "gemini-2.0-flash-exp-image-generation";
-    console.log("Using direct Google Gemini API for images with user key, model:", model);
-    return {
-      url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${aiConfig.gemini_api_key}`,
-      headers: { "Content-Type": "application/json" },
-      model,
-      isDirectGemini: true,
-    };
-  }
-
-  // Fallback to Lovable gateway - always use pro image model
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) throw new Error("No API key configured");
-
-  const model = "google/gemini-3-pro-image-preview";
-  console.log("Using Lovable gateway for images, model:", model);
-  return {
-    url: "https://ai.gateway.lovable.dev/v1/chat/completions",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    model,
-    isDirectGemini: false,
-  };
-}
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const IMAGE_MODEL = "google/gemini-3-pro-image-preview";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -74,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { type, title, content, puntosClave, companyId, courseId } = await req.json();
+    const { type, title, content, puntosClave, courseId } = await req.json();
 
     if (!type || !title) {
       return new Response(
@@ -83,8 +25,8 @@ serve(async (req) => {
       );
     }
 
-    const aiConfig = await getAIConfig(companyId);
-    const { url, headers, model, isDirectGemini } = getImageEndpoint(aiConfig);
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const keyPoints = (puntosClave || []).slice(0, 5).join(", ");
     let prompt = "";
@@ -106,72 +48,54 @@ serve(async (req) => {
         );
     }
 
-    console.log("Generating media:", type, "direct:", isDirectGemini);
+    console.log("Generating media:", type, "model:", IMAGE_MODEL);
 
-    let imageData: string | undefined;
-
-    if (isDirectGemini) {
-      // Direct Gemini REST API call
-      const response = await fetch(url, {
+    // Retry logic for rate limits
+    let response: Response | null = null;
+    const maxRetries = 3;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      response = await fetch(GATEWAY_URL, {
         method: "POST",
-        headers,
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          return new Response(
-            JSON.stringify({ error: "Límite de solicitudes excedido. Intente de nuevo en unos momentos." }),
-            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        const errorText = await response.text();
-        console.error("Direct Gemini error:", response.status, errorText);
-        throw new Error(`Gemini API error: ${response.status}`);
-      }
-
-      const geminiResponse = await response.json();
-      const parts = geminiResponse.candidates?.[0]?.content?.parts || [];
-      const imagePart = parts.find((p: any) => p.inlineData);
-      if (imagePart?.inlineData) {
-        imageData = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
-      }
-    } else {
-      // Lovable gateway call
-      const response = await fetch(url, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model,
+          model: IMAGE_MODEL,
           messages: [{ role: "user", content: prompt }],
           modalities: ["image", "text"],
         }),
       });
 
-      if (!response.ok) {
-        if (response.status === 429) {
-          return new Response(
-            JSON.stringify({ error: "Límite de solicitudes excedido. Intente de nuevo en unos momentos." }),
-            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        if (response.status === 402) {
-          return new Response(
-            JSON.stringify({ error: "Créditos insuficientes. Contacte al administrador." }),
-            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-        const errorText = await response.text();
-        console.error("AI gateway error:", response.status, errorText);
-        throw new Error(`AI gateway error: ${response.status}`);
+      if (response.status === 429 && attempt < maxRetries - 1) {
+        const wait = (attempt + 1) * 5000;
+        console.log(`Rate limited (429), retrying in ${wait}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(r => setTimeout(r, wait));
+        continue;
       }
-
-      const aiResponse = await response.json();
-      imageData = aiResponse.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      break;
     }
+
+    if (!response || !response.ok) {
+      if (response?.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Límite de solicitudes excedido. Intente de nuevo en unos momentos." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response?.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Créditos insuficientes. Contacte al administrador." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const errorText = await response?.text();
+      console.error("AI gateway error:", response?.status, errorText);
+      throw new Error(`AI gateway error: ${response?.status}`);
+    }
+
+    const aiResponse = await response.json();
+    const imageData = aiResponse.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!imageData) {
       throw new Error("No image generated");
