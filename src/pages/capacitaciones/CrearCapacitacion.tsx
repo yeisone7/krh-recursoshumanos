@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGallery, MediaTypeCard } from '@/components/training';
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { supabase } from '@/integrations/supabase/client';
+import { applyWatermark } from '@/lib/watermark';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { TrainingCourseContent, TrainingQuizQuestion } from '@/types/training';
@@ -246,17 +247,28 @@ export default function CrearCapacitacion() {
           puntosClave: content.puntosClave,
           companyId: currentCompanyId,
           courseId: editId,
+          skipUpload: true,
         },
       });
       if (error) throw error;
       if (data?.imageUrl) {
-        setGeneratedMedia(prev => ({ ...prev, [type]: data.imageUrl }));
+        // Apply watermark client-side
+        const watermarkedBlob = await applyWatermark(data.imageUrl);
+        const fileName = `${editId}/${type}_${Date.now()}.png`;
+        const { error: uploadError } = await supabase.storage
+          .from('training-media')
+          .upload(fileName, watermarkedBlob, { contentType: 'image/png', upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('training-media').getPublicUrl(fileName);
+        const finalUrl = urlData.publicUrl;
+
+        setGeneratedMedia(prev => ({ ...prev, [type]: finalUrl }));
         await createMedia.mutateAsync({
           courseId: editId,
           type: type === 'mapa_mental' ? 'imagen' : type === 'infografia' ? 'infografia' : 'imagen',
           title: type === 'imagen' ? 'Imagen Explicativa' : type === 'mapa_mental' ? 'Mapa Mental' : 'Infografía',
-          fileUrl: data.imageUrl,
-          fileSize: 0,
+          fileUrl: finalUrl,
+          fileSize: watermarkedBlob.size,
         });
         toast.success(`${type === 'imagen' ? 'Imagen' : type === 'mapa_mental' ? 'Mapa mental' : 'Infografía'} generada exitosamente`);
       }

@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { type, title, content, puntosClave, courseId } = await req.json();
+    const { type, title, content, puntosClave, courseId, skipUpload } = await req.json();
 
     if (!type || !title) {
       return new Response(
@@ -101,9 +101,11 @@ serve(async (req) => {
       throw new Error("No image generated");
     }
 
-    // Upload to storage if courseId provided
+    // If skipUpload, return base64 directly (client will apply watermark and upload)
     let storedUrl = imageData;
-    if (courseId) {
+    if (skipUpload) {
+      // Return raw base64 for client-side watermarking
+    } else if (courseId) {
       try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
