@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.generate-training]
 verify_jwt = false
+
+[functions.generate-training-video]
+verify_jwt = false
