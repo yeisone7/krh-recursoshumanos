@@ -14,7 +14,9 @@ import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGal
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { supabase } from '@/integrations/supabase/client';
 import { applyWatermark } from '@/lib/watermark';
+import type { WatermarkConfig } from '@/lib/watermark';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { toast } from 'sonner';
 import type { TrainingCourseContent, TrainingQuizQuestion } from '@/types/training';
 
@@ -36,6 +38,7 @@ export default function CrearCapacitacion() {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('id');
   const { currentCompanyId } = useAuth();
+  const { data: systemConfig } = useSystemConfig();
 
   const [step, setStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -252,8 +255,9 @@ export default function CrearCapacitacion() {
       });
       if (error) throw error;
       if (data?.imageUrl) {
-        // Apply watermark client-side
-        const watermarkedBlob = await applyWatermark(data.imageUrl);
+        // Apply watermark client-side using system config
+        const wmConfig = systemConfig?.watermark_config as WatermarkConfig | undefined;
+        const watermarkedBlob = await applyWatermark(data.imageUrl, wmConfig);
         const fileName = `${editId}/${type}_${Date.now()}.png`;
         const { error: uploadError } = await supabase.storage
           .from('training-media')
