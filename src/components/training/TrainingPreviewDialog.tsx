@@ -1,179 +1,338 @@
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { BookOpen, Clock, Users, Shield, Globe, Target, Scale } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  BookOpen, Clock, Users, Shield, Globe, Target, Scale, Send,
+  GraduationCap, Sparkles, ChevronRight, CircleHelp, Image as ImageIcon,
+  Lightbulb, FileText, CheckCircle2, Calendar,
+} from 'lucide-react';
 import { MarkdownContent } from './MarkdownContent';
+import { TrainingMediaGallery } from './TrainingMediaGallery';
+import { useTrainingMedia } from '@/hooks/useTraining';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 import type { TrainingCourse, TrainingCourseContent } from '@/types/training';
 
 interface TrainingPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   course: TrainingCourse | null;
+  onPublish?: (courseId: string) => void;
 }
 
 const statusColors: Record<string, string> = {
-  borrador: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-  publicado: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  completado: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  borrador: 'bg-amber-500 text-white',
+  publicado: 'bg-green-600 text-white',
+  completado: 'bg-blue-600 text-white',
 };
 
-export function TrainingPreviewDialog({ open, onOpenChange, course }: TrainingPreviewDialogProps) {
+const categoryLabels: Record<string, string> = {
+  seguridad: 'Seguridad',
+  operativa: 'Operativa',
+  calidad: 'Calidad',
+  ambiental: 'Ambiental',
+  liderazgo: 'Liderazgo',
+  tecnica: 'Técnica',
+  induccion: 'Inducción',
+  cumplimiento: 'Cumplimiento',
+  otra: 'Otra',
+};
+
+const riskIcons: Record<string, React.ReactNode> = {
+  bajo: <Shield className="h-5 w-5 text-green-600" />,
+  medio: <Shield className="h-5 w-5 text-amber-500" />,
+  alto: <Shield className="h-5 w-5 text-red-500" />,
+  critico: <Shield className="h-5 w-5 text-red-700" />,
+};
+
+export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }: TrainingPreviewDialogProps) {
+  const [activeTab, setActiveTab] = useState('general');
+  const { data: media = [] } = useTrainingMedia(course?.id);
+
   if (!course) return null;
 
   const content = course.content as TrainingCourseContent | null;
+  const durationLabel = course.duration_hours < 1
+    ? `${Math.round(course.duration_hours * 60)} minutos`
+    : `${course.duration_hours} hora${course.duration_hours > 1 ? 's' : ''}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh]">
-        <DialogHeader>
-          <div className="flex items-center gap-2 flex-wrap">
-            <DialogTitle className="text-xl">{course.name}</DialogTitle>
-            <Badge className={statusColors[course.status] || ''}>
-              {course.status}
-            </Badge>
-            {content?.isManual ? (
-              <Badge variant="outline">Manual</Badge>
-            ) : content ? (
-              <Badge variant="secondary">IA</Badge>
-            ) : null}
-          </div>
-        </DialogHeader>
-
-        <ScrollArea className="max-h-[65vh] pr-4">
-          <div className="space-y-6">
-            {/* Metadata grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Categoría:</span>
-                <span className="font-medium capitalize">{course.category}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Duración:</span>
-                <span className="font-medium">{course.duration_hours}h</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Nivel:</span>
-                <span className="font-medium capitalize">{course.level}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Riesgo:</span>
-                <span className="font-medium capitalize">{course.risk_level}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Modalidad:</span>
-                <span className="font-medium capitalize">{course.modality}</span>
-              </div>
-              {course.audience && (
-                <div className="flex items-center gap-2">
-                  <Target className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Público:</span>
-                  <span className="font-medium">{course.audience}</span>
-                </div>
-              )}
+      <DialogContent className="max-w-3xl max-h-[90vh] p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 space-y-3">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-primary/10 flex-shrink-0">
+              <GraduationCap className="h-7 w-7 text-primary" />
             </div>
-
-            {course.objective && (
-              <>
-                <Separator />
-                <div>
-                  <h3 className="font-semibold mb-1 flex items-center gap-2">
-                    <Target className="h-4 w-4" /> Objetivo
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{course.objective}</p>
-                </div>
-              </>
-            )}
-
-            {course.legal_framework && (
-              <div>
-                <h3 className="font-semibold mb-1 flex items-center gap-2">
-                  <Scale className="h-4 w-4" /> Marco Legal
-                </h3>
-                <p className="text-sm text-muted-foreground">{course.legal_framework}</p>
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="outline" className="text-xs font-medium">
+                  {categoryLabels[course.category] || course.category} {durationLabel}
+                </Badge>
+                <Badge className={statusColors[course.status] || 'bg-muted text-muted-foreground'}>
+                  {course.status === 'borrador' ? 'Borrador' : course.status === 'publicado' ? 'Publicado' : 'Completado'}
+                </Badge>
+                {content && !content.isManual && (
+                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 gap-1">
+                    <Sparkles className="h-3 w-3" /> Generado por IA
+                  </Badge>
+                )}
+                {content?.isManual && (
+                  <Badge variant="outline">Manual</Badge>
+                )}
               </div>
-            )}
-
-            {content && (
-              <>
-                <Separator />
-                {content.introduccion && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Introducción</h3>
-                    <p className="text-sm text-muted-foreground">{content.introduccion}</p>
-                  </div>
+              <h2 className="text-xl font-bold leading-tight">{course.name}</h2>
+              <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                {course.audience && (
+                  <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {course.audience}</span>
                 )}
-
-                {content.objetivos && content.objetivos.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Objetivos</h3>
-                    <ul className="list-disc pl-5 space-y-1 text-sm">
-                      {content.objetivos.map((obj, i) => (
-                        <li key={i} className="text-muted-foreground">{obj}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {content.contenido && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Contenido</h3>
-                    <MarkdownContent content={content.contenido} />
-                  </div>
-                )}
-
-                {content.puntosClave && content.puntosClave.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Puntos Clave</h3>
-                    <ul className="space-y-2">
-                      {content.puntosClave.map((punto, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm">
-                          <span className="bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 text-xs font-bold">
-                            {i + 1}
-                          </span>
-                          <span className="text-muted-foreground">{punto}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {content.evaluacion && content.evaluacion.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Evaluación ({content.evaluacion.length} preguntas)</h3>
-                    <div className="space-y-4">
-                      {content.evaluacion.map((q, i) => (
-                        <div key={i} className="bg-muted/50 rounded-lg p-3">
-                          <p className="font-medium text-sm mb-2">{i + 1}. {q.pregunta}</p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                            {q.opciones.map((opt, oi) => (
-                              <span
-                                key={oi}
-                                className={`text-xs px-2 py-1 rounded ${
-                                  opt === q.respuestaCorrecta
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 font-medium'
-                                    : 'text-muted-foreground'
-                                }`}
-                              >
-                                {String.fromCharCode(65 + oi)}) {opt}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+                <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {durationLabel}</span>
+                <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> v{course.version}</span>
+              </div>
+            </div>
           </div>
-        </ScrollArea>
+
+          {course.status === 'borrador' && onPublish && (
+            <Button
+              onClick={() => onPublish(course.id)}
+              className="gap-2"
+            >
+              <Send className="h-4 w-4" /> Publicar Capacitación
+            </Button>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          <div className="px-6 border-b">
+            <TabsList className="bg-transparent h-auto p-0 gap-0 w-full justify-start rounded-none">
+              {[
+                { value: 'general', icon: BookOpen, label: 'General' },
+                { value: 'contenido', icon: FileText, label: 'Contenido' },
+                { value: 'claves', icon: Lightbulb, label: 'Claves' },
+                { value: 'evaluacion', icon: CircleHelp, label: 'Evaluación' },
+                { value: 'media', icon: ImageIcon, label: 'Media' },
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 gap-1.5 text-sm"
+                >
+                  <tab.icon className="h-4 w-4" />
+                  {tab.label}
+                  {tab.value === 'media' && media.length > 0 && (
+                    <Badge className="ml-1 h-5 min-w-[20px] px-1.5 text-[10px] bg-primary text-primary-foreground">
+                      {media.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+
+          <ScrollArea className="flex-1 max-h-[50vh]">
+            <div className="p-6">
+              {/* General Tab */}
+              <TabsContent value="general" className="mt-0 space-y-5">
+                {content?.introduccion && (
+                  <Card>
+                    <CardContent className="p-5">
+                      <h3 className="font-semibold mb-2 flex items-center gap-2">
+                        <BookOpen className="h-4 w-4" /> Introducción
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{content.introduccion}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {course.objective && !content?.introduccion && (
+                  <Card>
+                    <CardContent className="p-5">
+                      <h3 className="font-semibold mb-2 flex items-center gap-2">
+                        <Target className="h-4 w-4" /> Objetivo
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{course.objective}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {content?.objetivos && content.objetivos.length > 0 && (
+                  <Card>
+                    <CardContent className="p-5">
+                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                        <Target className="h-4 w-4" /> Objetivos
+                      </h3>
+                      <ul className="space-y-2">
+                        {content.objetivos.map((obj, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <ChevronRight className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
+                            <span>{obj}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Metadata cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <Card>
+                    <CardContent className="p-4 flex flex-col items-center text-center gap-1.5">
+                      <Users className="h-5 w-5 text-primary" />
+                      <span className="text-xs text-muted-foreground">Nivel</span>
+                      <span className="font-semibold text-sm capitalize">{course.level}</span>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 flex flex-col items-center text-center gap-1.5">
+                      {riskIcons[course.risk_level] || <Shield className="h-5 w-5 text-muted-foreground" />}
+                      <span className="text-xs text-muted-foreground">Riesgo</span>
+                      <span className="font-semibold text-sm capitalize">{course.risk_level}</span>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 flex flex-col items-center text-center gap-1.5">
+                      <Scale className="h-5 w-5 text-primary" />
+                      <span className="text-xs text-muted-foreground">Marco Legal</span>
+                      <span className="font-semibold text-sm capitalize">{course.legal_framework || 'Interno'}</span>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 flex flex-col items-center text-center gap-1.5">
+                      <Globe className="h-5 w-5 text-primary" />
+                      <span className="text-xs text-muted-foreground">Modalidad</span>
+                      <span className="font-semibold text-sm capitalize">{course.modality === 'mixto' ? 'híbrida' : course.modality}</span>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Contenido Tab */}
+              <TabsContent value="contenido" className="mt-0">
+                {content?.contenido ? (
+                  <Card>
+                    <CardContent className="p-5">
+                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                        <FileText className="h-4 w-4" /> Desarrollo del Contenido
+                      </h3>
+                      <MarkdownContent content={content.contenido} />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <FileText className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                    <p>No hay contenido generado aún</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Claves Tab */}
+              <TabsContent value="claves" className="mt-0">
+                {content?.puntosClave && content.puntosClave.length > 0 ? (
+                  <Card>
+                    <CardContent className="p-5">
+                      <h3 className="font-semibold mb-4 flex items-center gap-2">
+                        <Lightbulb className="h-4 w-4" /> Puntos Clave
+                      </h3>
+                      <div className="space-y-3">
+                        {content.puntosClave.map((punto, i) => (
+                          <div
+                            key={i}
+                            className="flex items-start gap-3 rounded-lg border-l-4 border-amber-400 bg-amber-50/50 dark:bg-amber-900/10 p-4"
+                          >
+                            <span className="bg-amber-500 text-white rounded-full w-7 h-7 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                              {i + 1}
+                            </span>
+                            <span className="text-sm leading-relaxed">{punto}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Lightbulb className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                    <p>No hay puntos clave definidos</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Evaluación Tab */}
+              <TabsContent value="evaluacion" className="mt-0">
+                {content?.evaluacion && content.evaluacion.length > 0 ? (
+                  <Card>
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <h3 className="font-semibold flex items-center gap-2">
+                          <CircleHelp className="h-4 w-4" /> Preguntas de Evaluación
+                        </h3>
+                        <Badge className="bg-primary text-primary-foreground text-xs">
+                          {content.evaluacion.length} pregunta{content.evaluacion.length !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                      <div className="space-y-3">
+                        {content.evaluacion.map((q, i) => (
+                          <div key={i} className="rounded-lg border p-4 space-y-2">
+                            <div className="flex items-start gap-3">
+                              <span className="font-bold text-sm text-muted-foreground flex-shrink-0">P{i + 1}</span>
+                              <p className="font-medium text-sm">{q.pregunta}</p>
+                            </div>
+                            <div className="pl-8 flex items-center gap-1.5 text-sm">
+                              <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                              <span className="text-green-700 dark:text-green-400 font-medium">Respuesta:</span>
+                              <span className="text-muted-foreground">
+                                {q.opciones.findIndex(o => o === q.respuestaCorrecta) >= 0
+                                  ? `${String.fromCharCode(65 + q.opciones.findIndex(o => o === q.respuestaCorrecta))}) ${q.respuestaCorrecta}`
+                                  : q.respuestaCorrecta
+                                }
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <CircleHelp className="h-10 w-10 mx-auto mb-2 opacity-30" />
+                    <p>No hay evaluación definida</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Media Tab */}
+              <TabsContent value="media" className="mt-0">
+                <TrainingMediaGallery media={media} />
+              </TabsContent>
+            </div>
+          </ScrollArea>
+        </Tabs>
+
+        {/* Footer */}
+        <div className="border-t px-6 py-3 flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center gap-5">
+            {media.length > 0 && (
+              <span className="flex items-center gap-1.5">
+                <ImageIcon className="h-4 w-4" />
+                <strong className="text-foreground">{media.length}</strong> Media
+              </span>
+            )}
+            <span className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4" />
+              {format(parseISO(course.created_at), "dd MMM yyyy", { locale: es })}
+              <span className="text-xs">Creación</span>
+            </span>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+            Cerrar
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
