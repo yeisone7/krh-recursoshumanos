@@ -162,6 +162,39 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
     }
   };
 
+  const handleGenerateAudio = async () => {
+    if (!course.id || !content) return;
+    setGeneratingMedia(prev => ({ ...prev, audio: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-training-audio', {
+        body: {
+          title: course.name,
+          content: content.contenido?.substring(0, 2000),
+          puntosClave: content.puntosClave,
+          duration: audioDuration,
+          companyId: currentCompanyId,
+          courseId: course.id,
+        },
+      });
+      if (error) throw error;
+      if (data?.audioUrl) {
+        await createMedia.mutateAsync({
+          courseId: course.id,
+          type: 'audio',
+          title: 'Audio Narrado',
+          fileUrl: data.audioUrl,
+          fileSize: 0,
+          description: data.script?.substring(0, 500),
+        });
+        toast.success('Audio narrado generado exitosamente');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Error al generar audio');
+    } finally {
+      setGeneratingMedia(prev => ({ ...prev, audio: false }));
+    }
+  };
+
   const handleDeleteMedia = async (id: string) => {
     await deleteMedia.mutateAsync({ id, courseId: course.id });
   };
@@ -465,8 +498,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                         title="Audio Narrado"
                         description="Genera una narración tipo podcast del contenido (requiere API key de OpenAI)"
                         items={media.filter(m => m.title === 'Audio Narrado')}
-                        isGenerating={false}
-                        onGenerate={() => {}}
+                        isGenerating={!!generatingMedia.audio}
+                        onGenerate={handleGenerateAudio}
                         onDelete={handleDeleteMedia}
                       >
                         <div className="flex items-center gap-2">

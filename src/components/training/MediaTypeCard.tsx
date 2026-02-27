@@ -58,22 +58,28 @@ export function MediaTypeCard({
                   <span className="text-xs text-muted-foreground">
                     {format(parseISO(item.created_at), 'dd/M/yyyy')}
                   </span>
-                  <button
-                    onClick={() => {
-                      if (item.file_url.startsWith('data:')) {
-                        const w = window.open();
-                        if (w) {
-                          w.document.write(`<img src="${item.file_url}" style="max-width:100%;height:auto;" />`);
-                          w.document.title = 'Vista previa';
+                  {item.file_url?.endsWith('.mp3') || item.file_url?.endsWith('.wav') ? (
+                    <audio controls className="h-8 max-w-[180px]" src={item.file_url}>
+                      Tu navegador no soporta audio.
+                    </audio>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (item.file_url.startsWith('data:')) {
+                          const w = window.open();
+                          if (w) {
+                            w.document.write(`<img src="${item.file_url}" style="max-width:100%;height:auto;" />`);
+                            w.document.title = 'Vista previa';
+                          }
+                        } else {
+                          window.open(item.file_url, '_blank');
                         }
-                      } else {
-                        window.open(item.file_url, '_blank');
-                      }
-                    }}
-                    className="text-primary hover:text-primary/80 p-1"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </button>
+                      }}
+                      className="text-primary hover:text-primary/80 p-1"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
                 <button
                   onClick={() => onDelete(item.id)}
