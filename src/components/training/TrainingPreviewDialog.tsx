@@ -9,14 +9,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   BookOpen, Clock, Users, Shield, Globe, Target, Scale, Send,
   GraduationCap, Sparkles, ChevronRight, CircleHelp, Image as ImageIcon,
-  Lightbulb, FileText, CheckCircle2, Calendar,
+  Lightbulb, FileText, CheckCircle2, Calendar, Network, LayoutPanelTop,
+  Mic, Video, ExternalLink, Trash2,
 } from 'lucide-react';
 import { MarkdownContent } from './MarkdownContent';
 import { TrainingMediaGallery } from './TrainingMediaGallery';
 import { useTrainingMedia } from '@/hooks/useTraining';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import type { TrainingCourse, TrainingCourseContent } from '@/types/training';
+import type { TrainingCourse, TrainingCourseContent, TrainingMedia } from '@/types/training';
 
 interface TrainingPreviewDialogProps {
   open: boolean;
@@ -50,6 +51,67 @@ const riskIcons: Record<string, React.ReactNode> = {
   critico: <Shield className="h-5 w-5 text-red-700" />,
 };
 
+/* Read-only media card for preview */
+function MediaReadOnlyCard({ icon, title, description, items }: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  items: TrainingMedia[];
+}) {
+  return (
+    <Card className="border">
+      <CardContent className="pt-5 pb-4 space-y-3">
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-lg bg-muted">{icon}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm">{title}</span>
+              {items.length > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  {items.length} generado{items.length !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+          </div>
+        </div>
+        {items.length > 0 && (
+          <div className="space-y-1.5">
+            {items.map((item) => (
+              <div key={item.id} className="flex items-center justify-between rounded-md border px-3 py-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xs text-muted-foreground">
+                    {format(parseISO(item.created_at), 'dd/M/yyyy')}
+                  </span>
+                  <button
+                    onClick={() => {
+                      if (item.file_url.startsWith('data:')) {
+                        const w = window.open();
+                        if (w) {
+                          w.document.write(`<img src="${item.file_url}" style="max-width:100%;height:auto;" />`);
+                          w.document.title = 'Vista previa';
+                        }
+                      } else {
+                        window.open(item.file_url, '_blank');
+                      }
+                    }}
+                    className="text-primary hover:text-primary/80 p-1"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {items.length === 0 && (
+          <p className="text-xs text-muted-foreground italic text-center py-2">Sin contenido generado</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }: TrainingPreviewDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
   const { data: media = [] } = useTrainingMedia(course?.id);
@@ -63,7 +125,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-3xl max-h-[95vh] p-0 gap-0 overflow-hidden">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 space-y-3">
           <div className="flex items-start gap-4">
@@ -136,7 +198,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1 max-h-[50vh]">
+          <ScrollArea className="flex-1 max-h-[60vh]">
             <div className="p-6">
               {/* General Tab */}
               <TabsContent value="general" className="mt-0 space-y-5">
@@ -307,8 +369,59 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
               </TabsContent>
 
               {/* Media Tab */}
-              <TabsContent value="media" className="mt-0">
-                <TrainingMediaGallery media={media} />
+              <TabsContent value="media" className="mt-0 space-y-5">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Generación Multimedia</p>
+                    <p className="text-sm text-muted-foreground">Genera materiales visuales adicionales con IA (opcional)</p>
+                  </div>
+                </div>
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Imagen Explicativa */}
+                  <MediaReadOnlyCard
+                    icon={<ImageIcon className="h-5 w-5 text-muted-foreground" />}
+                    title="Imagen Explicativa"
+                    description="Genera una imagen visual que represente el tema de la capacitación"
+                    items={media.filter(m => m.title === 'Imagen Explicativa')}
+                  />
+                  {/* Mapa Mental */}
+                  <MediaReadOnlyCard
+                    icon={<Network className="h-5 w-5 text-muted-foreground" />}
+                    title="Mapa Mental"
+                    description="Crea un mapa mental con los conceptos clave organizados visualmente"
+                    items={media.filter(m => m.title === 'Mapa Mental')}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Infografía */}
+                  <MediaReadOnlyCard
+                    icon={<LayoutPanelTop className="h-5 w-5 text-muted-foreground" />}
+                    title="Infografía"
+                    description="Diseña una infografía profesional con los puntos principales"
+                    items={media.filter(m => m.title === 'Infografía')}
+                  />
+                  {/* Audio Narrado */}
+                  <MediaReadOnlyCard
+                    icon={<Mic className="h-5 w-5 text-muted-foreground" />}
+                    title="Audio Narrado"
+                    description="Genera una narración tipo podcast del contenido"
+                    items={media.filter(m => m.title === 'Audio Narrado')}
+                  />
+                </div>
+
+                {/* Video Educativo */}
+                <MediaReadOnlyCard
+                  icon={<Video className="h-5 w-5 text-primary" />}
+                  title="Video Educativo"
+                  description="Genera un guion narrado + secuencia de imágenes estilizadas con IA"
+                  items={media.filter(m => m.type === 'video')}
+                />
               </TabsContent>
             </div>
           </ScrollArea>
