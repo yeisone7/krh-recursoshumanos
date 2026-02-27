@@ -41,8 +41,7 @@ function getImageEndpoint(aiConfig: AIConfig): {
   // Image generation always uses Gemini models
   // Check if user has their own Gemini API key
   if (aiConfig.gemini_api_key) {
-    const useProModel = aiConfig.model === "openai"; // pro model for higher quality
-    const model = useProModel ? "gemini-2.0-flash-preview-image-generation" : "gemini-2.0-flash-preview-image-generation";
+    const model = "gemini-2.0-flash-exp-image-generation";
     console.log("Using direct Google Gemini API for images with user key, model:", model);
     return {
       url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${aiConfig.gemini_api_key}`,
