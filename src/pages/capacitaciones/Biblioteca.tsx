@@ -93,12 +93,12 @@ export default function Biblioteca() {
       </div>
 
       {/* Search + Filters + View Mode */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 bg-card border rounded-xl p-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar capacitaciones por título..."
-            className="pl-10"
+            className="pl-10 border-0 shadow-none bg-transparent focus-visible:ring-0"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -166,7 +166,7 @@ export default function Biblioteca() {
             return (
               <motion.div key={course.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03, duration: 0.25 }}>
                 <Card
-                  className="hover:shadow-lg transition-all cursor-pointer group border h-full"
+                  className="hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer group border h-full"
                   onClick={() => setPreviewCourse(course)}
                 >
                   <CardContent className="p-6 flex flex-col gap-4 h-full">
