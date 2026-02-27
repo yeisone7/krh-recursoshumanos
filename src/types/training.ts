@@ -138,7 +138,9 @@ export interface TrainingAccessToken {
   requires_evaluation: boolean;
   created_by: string;
   created_at: string;
+  operation_center_id: string | null;
   course?: TrainingCourse;
+  center?: { id: string; name: string; code: string | null };
 }
 
 export interface TrainingCompletion {

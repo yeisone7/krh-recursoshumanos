@@ -531,7 +531,7 @@ export function useTrainingAccessTokens() {
 
       const { data, error } = await supabase
         .from('training_access_tokens')
-        .select(`*, course:training_courses(id, name, category, status)`)
+        .select(`*, course:training_courses(id, name, category, status), center:operation_centers(id, name, code)`)
         .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false });
 
@@ -554,6 +554,7 @@ export function useCreateAccessToken() {
       maxUses?: number;
       expiresInDays: number;
       requiresEvaluation: boolean;
+      operationCenterId?: string;
     }) => {
       if (!currentCompanyId || !user) throw new Error('No company assigned');
 
@@ -571,6 +572,7 @@ export function useCreateAccessToken() {
           expires_at: expiresAt.toISOString(),
           requires_evaluation: data.requiresEvaluation,
           created_by: user.id,
+          operation_center_id: data.operationCenterId || null,
         })
         .select()
         .single();
