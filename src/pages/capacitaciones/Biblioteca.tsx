@@ -157,7 +157,7 @@ export default function Biblioteca() {
 
       {/* Grid View */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((course, i) => {
             const content = course.content as TrainingCourseContent | null;
             const statusCfg = STATUS_CONFIG[course.status] || STATUS_CONFIG.borrador;
@@ -166,27 +166,27 @@ export default function Biblioteca() {
             return (
               <motion.div key={course.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03, duration: 0.25 }}>
                 <Card
-                  className="hover:shadow-md transition-all cursor-pointer group border"
+                  className="hover:shadow-lg transition-all cursor-pointer group border h-full"
                   onClick={() => setPreviewCourse(course)}
                 >
-                  <CardContent className="p-5 flex flex-col gap-3">
+                  <CardContent className="p-6 flex flex-col gap-4 h-full">
                     {/* Top row: icon + badges + menu */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-md bg-muted">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-lg bg-muted/70">
                           {TYPE_ICONS[course.category] || <BookOpen className="h-5 w-5 text-muted-foreground" />}
                         </div>
-                        <Badge variant="outline" className="text-xs font-medium">{course.category}</Badge>
+                        <Badge variant="outline" className="text-xs font-medium rounded-full">{course.category}</Badge>
                         {content?.isManual ? (
-                          <Badge variant="outline" className="text-xs gap-1 px-1.5"><PenLine className="h-3 w-3" /> Manual</Badge>
+                          <Badge variant="outline" className="text-xs gap-1 px-2 rounded-full"><PenLine className="h-3 w-3" /> Manual</Badge>
                         ) : content ? (
-                          <Badge className="text-xs gap-1 px-1.5 bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"><Sparkles className="h-3 w-3" /> IA</Badge>
+                          <Badge className="text-xs gap-1 px-2 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800"><Sparkles className="h-3 w-3" /> IA</Badge>
                         ) : null}
                       </div>
                       <div onClick={e => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -202,10 +202,10 @@ export default function Biblioteca() {
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-semibold text-sm leading-snug line-clamp-2">{course.name}</h3>
+                    <h3 className="font-bold text-base leading-snug line-clamp-2">{course.name}</h3>
 
                     {/* Meta lines */}
-                    <div className="space-y-1 text-xs text-muted-foreground">
+                    <div className="space-y-1.5 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
                         <BookOpen className="h-3.5 w-3.5 shrink-0" />
                         <span>{course.category}</span>
@@ -227,18 +227,18 @@ export default function Biblioteca() {
                     </div>
 
                     {/* Footer: media counts + status */}
-                    <div className="flex items-center justify-between pt-1 border-t border-border/50">
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
+                    <div className="flex items-center justify-between pt-3 mt-auto border-t border-border/40">
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
                           <FileText className="h-3.5 w-3.5" />
                           {content?.contenido ? 1 : 0}
                         </span>
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1.5">
                           <ImageIcon className="h-3.5 w-3.5" />
                           {evalCount}
                         </span>
                       </div>
-                      <Badge variant="outline" className={`text-[11px] font-medium ${statusCfg.className}`}>
+                      <Badge variant="outline" className={`text-[11px] font-medium rounded-full px-3 py-0.5 ${statusCfg.className}`}>
                         {statusCfg.label}
                       </Badge>
                     </div>
