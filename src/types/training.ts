@@ -7,7 +7,7 @@ export type CertificateStatus = 'emitido' | 'vigente' | 'vencido' | 'por_vencer'
 export type CourseStatus = 'borrador' | 'publicado' | 'completado';
 export type AccessType = 'solo_link' | 'link_cedula';
 export type UsageType = 'unico' | 'multiple';
-export type MediaType = 'imagen' | 'video' | 'documento' | 'infografia';
+export type MediaType = 'imagen' | 'video' | 'documento' | 'infografia' | 'audio';
 
 export interface TrainingCourseContent {
   introduccion?: string;

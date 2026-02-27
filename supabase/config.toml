@@ -26,3 +26,9 @@ verify_jwt = false
 
 [functions.generate-training-video]
 verify_jwt = false
+
+[functions.generate-training-audio]
+verify_jwt = false
+
+[functions.generate-training-media]
+verify_jwt = false

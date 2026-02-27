@@ -234,6 +234,39 @@ export default function CrearCapacitacion() {
     }
   };
 
+  const handleGenerateAudio = async () => {
+    if (!editId || !content) return;
+    setGeneratingMedia(prev => ({ ...prev, audio: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-training-audio', {
+        body: {
+          title,
+          content: content.contenido?.substring(0, 2000),
+          puntosClave: content.puntosClave,
+          duration: audioDuration,
+          companyId: currentCompanyId,
+          courseId: editId,
+        },
+      });
+      if (error) throw error;
+      if (data?.audioUrl) {
+        await createMedia.mutateAsync({
+          courseId: editId,
+          type: 'audio',
+          title: 'Audio Narrado',
+          fileUrl: data.audioUrl,
+          fileSize: 0,
+          description: data.script?.substring(0, 500),
+        });
+        toast.success('Audio narrado generado exitosamente');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Error al generar audio');
+    } finally {
+      setGeneratingMedia(prev => ({ ...prev, audio: false }));
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-4">
@@ -593,8 +626,8 @@ export default function CrearCapacitacion() {
                       title="Audio Narrado"
                       description="Genera una narración tipo podcast del contenido"
                       items={(media as any[]).filter((m: any) => m.title === 'Audio Narrado')}
-                      isGenerating={false}
-                      onGenerate={() => {}}
+                      isGenerating={!!generatingMedia.audio}
+                      onGenerate={handleGenerateAudio}
                       onDelete={handleDeleteMedia}
                     >
                       <div className="flex items-center gap-2">
