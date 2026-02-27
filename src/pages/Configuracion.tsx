@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Settings,
@@ -15,6 +15,10 @@ import {
   Eye,
   EyeOff,
   Key,
+  Image as ImageIcon,
+  Upload,
+  X,
+  Stamp,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -25,6 +29,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompany } from '@/hooks/useCompanies';
@@ -32,6 +38,9 @@ import {
   useSystemConfig,
   useUpdateSystemConfig,
 } from '@/hooks/useSystemConfig';
+import { supabase } from '@/integrations/supabase/client';
+import type { WatermarkPosition } from '@/lib/watermark';
+import { DEFAULT_WATERMARK_CONFIG } from '@/lib/watermark';
 
 export default function Configuracion() {
   const [activeTab, setActiveTab] = useState('company');
@@ -55,7 +64,15 @@ export default function Configuracion() {
   const [testingGemini, setTestingGemini] = useState(false);
   const [savingAi, setSavingAi] = useState(false);
 
-  const { currentCompanyId } = useAuth();
+  // Watermark config state
+  const [watermarkEnabled, setWatermarkEnabled] = useState(DEFAULT_WATERMARK_CONFIG.enabled);
+  const [watermarkPosition, setWatermarkPosition] = useState<WatermarkPosition>(DEFAULT_WATERMARK_CONFIG.position);
+  const [watermarkLogoUrl, setWatermarkLogoUrl] = useState<string | null>(DEFAULT_WATERMARK_CONFIG.logo_url);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [savingWatermark, setSavingWatermark] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const { currentCompanyId, user } = useAuth();
   const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
   const { data: systemConfig, isLoading: loadingConfig } = useSystemConfig();
 
@@ -91,6 +108,14 @@ export default function Configuracion() {
         setAiModel(aiConfig.model || 'gemini');
         setOpenaiApiKey(aiConfig.openai_api_key || '');
         setGeminiApiKey(aiConfig.gemini_api_key || '');
+      }
+
+      // Load Watermark config
+      const wmConfig = systemConfig.watermark_config;
+      if (wmConfig) {
+        setWatermarkEnabled(wmConfig.enabled ?? DEFAULT_WATERMARK_CONFIG.enabled);
+        setWatermarkPosition(wmConfig.position || DEFAULT_WATERMARK_CONFIG.position);
+        setWatermarkLogoUrl(wmConfig.logo_url || null);
       }
     }
   }, [systemConfig]);
@@ -151,7 +176,6 @@ export default function Configuracion() {
     if (provider === 'openai') setTestingOpenai(true);
     else setTestingGemini(true);
 
-    // Simple validation: just check the key format
     setTimeout(() => {
       if (provider === 'openai') {
         if (key.startsWith('sk-')) {
@@ -171,6 +195,53 @@ export default function Configuracion() {
     }, 1000);
   };
 
+  const handleUploadWatermarkLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Solo se permiten archivos de imagen');
+      return;
+    }
+    setUploadingLogo(true);
+    try {
+      const fileName = `watermark/${currentCompanyId}_${Date.now()}.png`;
+      const { error: uploadError } = await supabase.storage
+        .from('training-media')
+        .upload(fileName, file, { contentType: file.type, upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from('training-media').getPublicUrl(fileName);
+      setWatermarkLogoUrl(urlData.publicUrl);
+      toast.success('Logo subido exitosamente');
+    } catch (err: any) {
+      toast.error(err?.message || 'Error al subir el logo');
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+    }
+  };
+
+  const handleSaveWatermarkConfig = async () => {
+    setSavingWatermark(true);
+    try {
+      await updateConfig.mutateAsync({
+        key: 'watermark_config',
+        value: {
+          enabled: watermarkEnabled,
+          position: watermarkPosition,
+          logo_url: watermarkLogoUrl,
+          opacity: DEFAULT_WATERMARK_CONFIG.opacity,
+          scale: DEFAULT_WATERMARK_CONFIG.scale,
+        },
+        description: 'Configuración de marca de agua para imágenes generadas con IA',
+      });
+      toast.success('Configuración de marca de agua guardada');
+    } catch (error) {
+      toast.error('Error al guardar la configuración');
+    } finally {
+      setSavingWatermark(false);
+    }
+  };
+
   if (!currentCompanyId) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] text-center">
@@ -181,6 +252,13 @@ export default function Configuracion() {
     );
   }
 
+  const positionLabels: Record<WatermarkPosition, string> = {
+    'bottom-right': 'Inferior derecha',
+    'bottom-left': 'Inferior izquierda',
+    'top-right': 'Superior derecha',
+    'top-left': 'Superior izquierda',
+  };
+
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
@@ -189,7 +267,7 @@ export default function Configuracion() {
       </motion.div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="company" className="gap-2">
             <Building2 className="w-4 h-4" />Empresa
           </TabsTrigger>
@@ -197,7 +275,10 @@ export default function Configuracion() {
             <Bell className="w-4 h-4" />Alertas
           </TabsTrigger>
           <TabsTrigger value="ai" className="gap-2">
-            <Brain className="w-4 h-4" />Inteligencia Artificial
+            <Brain className="w-4 h-4" />IA
+          </TabsTrigger>
+          <TabsTrigger value="watermark" className="gap-2">
+            <Stamp className="w-4 h-4" />Marca de agua
           </TabsTrigger>
         </TabsList>
 
@@ -480,6 +561,133 @@ export default function Configuracion() {
               <Button onClick={handleSaveAiConfig} disabled={savingAi} className="bg-primary hover:bg-primary/90">
                 {savingAi ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Guardar Configuración IA
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Watermark Tab */}
+        <TabsContent value="watermark">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Stamp className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Marca de Agua</CardTitle>
+                  <CardDescription>Configura el logo que se aplica a las imágenes generadas con IA en capacitaciones</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Enable/Disable */}
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-medium">Activar marca de agua</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Agrega automáticamente el logo a las imágenes, mapas mentales e infografías generadas
+                  </p>
+                </div>
+                <Switch
+                  checked={watermarkEnabled}
+                  onCheckedChange={setWatermarkEnabled}
+                />
+              </div>
+
+              <div className={`space-y-5 transition-opacity ${watermarkEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                {/* Logo Upload */}
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-1.5">
+                    <ImageIcon className="h-4 w-4" /> Logo personalizado
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Sube un logo PNG transparente. Si no subes uno, se usará el logo por defecto de Petrocasinos.
+                  </p>
+
+                  <div className="flex items-start gap-4">
+                    {/* Preview */}
+                    <div className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30 overflow-hidden flex-shrink-0">
+                      {watermarkLogoUrl ? (
+                        <img
+                          src={watermarkLogoUrl}
+                          alt="Logo watermark"
+                          className="max-w-full max-h-full object-contain p-2"
+                        />
+                      ) : (
+                        <div className="text-center p-2">
+                          <ImageIcon className="h-8 w-8 text-muted-foreground/40 mx-auto mb-1" />
+                          <span className="text-xs text-muted-foreground">Logo por defecto</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/png,image/svg+xml,image/webp"
+                        className="hidden"
+                        onChange={handleUploadWatermarkLogo}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={uploadingLogo}
+                        className="gap-2"
+                      >
+                        {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        Subir logo
+                      </Button>
+                      {watermarkLogoUrl && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setWatermarkLogoUrl(null)}
+                          className="gap-2 text-destructive hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" /> Usar por defecto
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Position */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1.5">Posición del logo</Label>
+                  <Select value={watermarkPosition} onValueChange={(v) => setWatermarkPosition(v as WatermarkPosition)}>
+                    <SelectTrigger className="w-64">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.entries(positionLabels) as [WatermarkPosition, string][]).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Visual position indicator */}
+                  <div className="w-48 h-32 border rounded-lg bg-muted/20 relative mt-3">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs text-muted-foreground/50">Imagen</span>
+                    </div>
+                    <div className={`absolute w-10 h-6 rounded bg-primary/20 border border-primary/40 flex items-center justify-center ${
+                      watermarkPosition === 'top-left' ? 'top-2 left-2' :
+                      watermarkPosition === 'top-right' ? 'top-2 right-2' :
+                      watermarkPosition === 'bottom-left' ? 'bottom-2 left-2' :
+                      'bottom-2 right-2'
+                    }`}>
+                      <Stamp className="h-3 w-3 text-primary" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Button onClick={handleSaveWatermarkConfig} disabled={savingWatermark}>
+                {savingWatermark ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                Guardar Configuración
               </Button>
             </CardContent>
           </Card>

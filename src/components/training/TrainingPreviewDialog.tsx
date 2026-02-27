@@ -17,8 +17,10 @@ import { MarkdownContent } from './MarkdownContent';
 import { MediaTypeCard } from './MediaTypeCard';
 import { useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { applyWatermark } from '@/lib/watermark';
+import type { WatermarkConfig } from '@/lib/watermark';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -122,6 +124,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
   const [generatingMedia, setGeneratingMedia] = useState<Record<string, boolean>>({});
   const [audioDuration, setAudioDuration] = useState('medium');
   const { currentCompanyId } = useAuth();
+  const { data: systemConfig } = useSystemConfig();
   const { data: media = [] } = useTrainingMedia(course?.id);
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
@@ -148,7 +151,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
       });
       if (error) throw error;
       if (data?.imageUrl) {
-        const watermarkedBlob = await applyWatermark(data.imageUrl);
+        const wmConfig = systemConfig?.watermark_config as WatermarkConfig | undefined;
+        const watermarkedBlob = await applyWatermark(data.imageUrl, wmConfig);
         const fileName = `${course.id}/${type}_${Date.now()}.png`;
         const { error: uploadError } = await supabase.storage
           .from('training-media')
