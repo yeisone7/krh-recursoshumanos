@@ -7,6 +7,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const TEXT_MODEL = "google/gemini-2.5-flash-lite";
+const IMAGE_MODEL = "google/gemini-3-pro-image-preview";
+
 const STYLE_PROMPTS: Record<string, string> = {
   clasico: "professional corporate illustration style, clean lines, business colors, modern flat design",
   pizarra: "chalk drawing on a dark green/black chalkboard, white and colored chalk, hand-drawn educational style",
@@ -29,85 +33,27 @@ const STYLE_LABELS: Record<string, string> = {
   papiroflexia: "Papiroflexia",
 };
 
-interface AIConfig {
-  model?: string;
-  openai_api_key?: string;
-  gemini_api_key?: string;
-}
+async function gatewayFetch(apiKey: string, body: Record<string, unknown>, retries = 3): Promise<Response> {
+  let response: Response | null = null;
+  for (let attempt = 0; attempt < retries; attempt++) {
+    response = await fetch(GATEWAY_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
-async function getAIConfig(companyId: string | undefined, supabase: any): Promise<AIConfig> {
-  if (!companyId) return {};
-  try {
-    const { data: configRow } = await supabase
-      .from("system_config")
-      .select("config_value")
-      .eq("company_id", companyId)
-      .eq("config_key", "ai_config")
-      .maybeSingle();
-    return (configRow?.config_value as AIConfig) || {};
-  } catch (e) {
-    console.warn("Could not read AI config:", e);
-    return {};
+    if (response.status === 429 && attempt < retries - 1) {
+      const wait = (attempt + 1) * 5000;
+      console.log(`Rate limited (429), retrying in ${wait}ms (attempt ${attempt + 1}/${retries})`);
+      await new Promise(r => setTimeout(r, wait));
+      continue;
+    }
+    break;
   }
-}
-
-function getTextEndpoint(aiConfig: AIConfig): {
-  url: string;
-  headers: Record<string, string>;
-  model: string;
-} {
-  const provider = aiConfig.model || "gemini";
-
-  // Video scripts use a lighter/faster model
-  if (provider === "openai" && aiConfig.openai_api_key) {
-    return {
-      url: "https://api.openai.com/v1/chat/completions",
-      headers: { Authorization: `Bearer ${aiConfig.openai_api_key}`, "Content-Type": "application/json" },
-      model: "gpt-4o-mini",
-    };
-  }
-  if (provider === "gemini" && aiConfig.gemini_api_key) {
-    return {
-      url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-      headers: { Authorization: `Bearer ${aiConfig.gemini_api_key}`, "Content-Type": "application/json" },
-      model: "gemini-2.0-flash-lite",
-    };
-  }
-
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) throw new Error("No API key configured");
-  return {
-    url: "https://ai.gateway.lovable.dev/v1/chat/completions",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    model: "google/gemini-2.5-flash-lite",
-  };
-}
-
-function getImageEndpoint(aiConfig: AIConfig): {
-  url: string;
-  headers: Record<string, string>;
-  model: string;
-  isDirectGemini: boolean;
-} {
-  if (aiConfig.gemini_api_key) {
-    const model = "gemini-2.0-flash-exp-image-generation";
-    return {
-      url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${aiConfig.gemini_api_key}`,
-      headers: { "Content-Type": "application/json" },
-      model,
-      isDirectGemini: true,
-    };
-  }
-
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) throw new Error("No API key configured");
-  const model = "google/gemini-3-pro-image-preview";
-  return {
-    url: "https://ai.gateway.lovable.dev/v1/chat/completions",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    model,
-    isDirectGemini: false,
-  };
+  return response!;
 }
 
 serve(async (req) => {
@@ -117,7 +63,9 @@ serve(async (req) => {
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const { courseId, style = "clasico", duration = "medium", title, content, puntosClave, companyId } = await req.json();
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const { courseId, style = "clasico", duration = "medium", title, content, puntosClave } = await req.json();
 
     if (!title || !courseId) {
       return new Response(
@@ -135,12 +83,8 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const aiConfig = await getAIConfig(companyId, supabase);
-    const textEndpoint = getTextEndpoint(aiConfig);
-    const imageEndpoint = getImageEndpoint(aiConfig);
-
     // Step 1: Generate script
-    console.log("Generating script with:", textEndpoint.model);
+    console.log("Generating script with:", TEXT_MODEL);
     const scriptPrompt = `Eres un experto en capacitación empresarial. Genera un guion narrado para un video educativo sobre "${title}".
 
 Contexto del contenido: ${content?.substring(0, 1500) || "No disponible"}
@@ -163,13 +107,9 @@ Responde en formato JSON con esta estructura exacta:
   "summary": "Resumen breve del video"
 }`;
 
-    const scriptResponse = await fetch(textEndpoint.url, {
-      method: "POST",
-      headers: textEndpoint.headers,
-      body: JSON.stringify({
-        model: textEndpoint.model,
-        messages: [{ role: "user", content: scriptPrompt }],
-      }),
+    const scriptResponse = await gatewayFetch(LOVABLE_API_KEY, {
+      model: TEXT_MODEL,
+      messages: [{ role: "user", content: scriptPrompt }],
     });
 
     if (!scriptResponse.ok) {
@@ -204,7 +144,7 @@ Responde en formato JSON con esta estructura exacta:
       };
     }
 
-    console.log(`Script: ${script.scenes.length} scenes. Generating images with ${imageEndpoint.isDirectGemini ? "direct Gemini" : "Lovable gateway"}...`);
+    console.log(`Script: ${script.scenes.length} scenes. Generating images...`);
 
     // Step 2: Generate images
     const imageUrls: string[] = [];
@@ -214,44 +154,20 @@ Responde en formato JSON con esta estructura exacta:
 
       try {
         console.log(`Image ${i + 1}/${script.scenes.length}...`);
-        let imageBase64: string | undefined;
 
-        if (imageEndpoint.isDirectGemini) {
-          const imgResponse = await fetch(imageEndpoint.url, {
-            method: "POST",
-            headers: imageEndpoint.headers,
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: imagePrompt }] }],
-              generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
-            }),
-          });
-          if (!imgResponse.ok) {
-            console.warn(`Image ${i + 1} failed: ${imgResponse.status}`);
-            continue;
-          }
-          const geminiData = await imgResponse.json();
-          const parts = geminiData.candidates?.[0]?.content?.parts || [];
-          const imagePart = parts.find((p: any) => p.inlineData);
-          if (imagePart?.inlineData) {
-            imageBase64 = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
-          }
-        } else {
-          const imgResponse = await fetch(imageEndpoint.url, {
-            method: "POST",
-            headers: imageEndpoint.headers,
-            body: JSON.stringify({
-              model: imageEndpoint.model,
-              messages: [{ role: "user", content: imagePrompt }],
-              modalities: ["image", "text"],
-            }),
-          });
-          if (!imgResponse.ok) {
-            console.warn(`Image ${i + 1} failed: ${imgResponse.status}`);
-            continue;
-          }
-          const imgData = await imgResponse.json();
-          imageBase64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        const imgResponse = await gatewayFetch(LOVABLE_API_KEY, {
+          model: IMAGE_MODEL,
+          messages: [{ role: "user", content: imagePrompt }],
+          modalities: ["image", "text"],
+        });
+
+        if (!imgResponse.ok) {
+          console.warn(`Image ${i + 1} failed: ${imgResponse.status}`);
+          continue;
         }
+
+        const imgData = await imgResponse.json();
+        const imageBase64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
         if (imageBase64) {
           try {
