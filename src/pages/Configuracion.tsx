@@ -433,128 +433,146 @@ export default function Configuracion() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Model Selection */}
+              {/* Model Selection with integrated API Keys */}
               <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => setAiModel('gemini')}
-                  className={`w-full flex items-start gap-4 p-4 rounded-lg border-2 transition-all text-left ${
+                {/* Google Gemini Card */}
+                <div
+                  className={`w-full rounded-xl border-2 transition-all ${
                     aiModel === 'gemini' 
                       ? 'border-primary bg-primary/5' 
                       : 'border-border hover:border-muted-foreground/30'
                   }`}
                 >
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                      aiModel === 'gemini' ? 'border-primary' : 'border-muted-foreground/40'
-                    }`}>
-                      {aiModel === 'gemini' && <div className="h-2 w-2 rounded-full bg-primary" />}
+                  <button
+                    type="button"
+                    onClick={() => setAiModel('gemini')}
+                    className="w-full flex items-start gap-4 p-4 text-left"
+                  >
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                        aiModel === 'gemini' ? 'border-primary' : 'border-muted-foreground/40'
+                      }`}>
+                        {aiModel === 'gemini' && <div className="h-2 w-2 rounded-full bg-primary" />}
+                      </div>
+                      <Zap className={`h-5 w-5 ${aiModel === 'gemini' ? 'text-primary' : 'text-muted-foreground'}`} />
                     </div>
-                    <Zap className={`h-5 w-5 ${aiModel === 'gemini' ? 'text-primary' : 'text-muted-foreground'}`} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">Google Gemini</p>
-                    <p className="text-sm text-muted-foreground">Rápido y eficiente. Ideal para generación ágil de contenido.</p>
-                    <Badge variant="secondary" className="mt-2 font-mono text-xs">gemini-3-flash-preview</Badge>
-                  </div>
-                </button>
+                    <div className="flex-1">
+                      <p className="font-semibold">Google Gemini</p>
+                      <p className="text-sm text-muted-foreground">Rápido y eficiente. Ideal para generación ágil de contenido.</p>
+                      <Badge variant="secondary" className="mt-2 font-mono text-xs">gemini-3-flash-preview</Badge>
+                    </div>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setAiModel('openai')}
-                  className={`w-full flex items-start gap-4 p-4 rounded-lg border-2 transition-all text-left ${
+                  {aiModel === 'gemini' && (
+                    <div className="px-4 pb-4 pt-1 border-t border-primary/20 mx-4 mt-1">
+                      <div className="space-y-1.5 pt-3">
+                        <Label className="text-xs font-medium flex items-center gap-1.5">
+                          <Key className="h-3.5 w-3.5 text-muted-foreground" />
+                          Google Gemini API Key
+                          <span className="text-muted-foreground font-normal">(Opcional)</span>
+                        </Label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              type={showGeminiKey ? 'text' : 'password'}
+                              value={geminiApiKey}
+                              onChange={(e) => setGeminiApiKey(e.target.value)}
+                              placeholder="AIza..."
+                              className="text-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowGeminiKey(!showGeminiKey)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              {showGeminiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleTestApiKey('gemini')}
+                            disabled={testingGemini || !geminiApiKey}
+                          >
+                            {testingGemini ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Probar'}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Déjala vacía para usar el gateway integrado por defecto.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* OpenAI Card */}
+                <div
+                  className={`w-full rounded-xl border-2 transition-all ${
                     aiModel === 'openai' 
                       ? 'border-primary bg-primary/5' 
                       : 'border-border hover:border-muted-foreground/30'
                   }`}
                 >
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                      aiModel === 'openai' ? 'border-primary' : 'border-muted-foreground/40'
-                    }`}>
-                      {aiModel === 'openai' && <div className="h-2 w-2 rounded-full bg-primary" />}
+                  <button
+                    type="button"
+                    onClick={() => setAiModel('openai')}
+                    className="w-full flex items-start gap-4 p-4 text-left"
+                  >
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
+                        aiModel === 'openai' ? 'border-primary' : 'border-muted-foreground/40'
+                      }`}>
+                        {aiModel === 'openai' && <div className="h-2 w-2 rounded-full bg-primary" />}
+                      </div>
+                      <Sparkles className={`h-5 w-5 ${aiModel === 'openai' ? 'text-primary' : 'text-muted-foreground'}`} />
                     </div>
-                    <Sparkles className={`h-5 w-5 ${aiModel === 'openai' ? 'text-primary' : 'text-muted-foreground'}`} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">OpenAI ChatGPT</p>
-                    <p className="text-sm text-muted-foreground">Alta precisión y razonamiento avanzado para contenido detallado.</p>
-                    <Badge variant="secondary" className="mt-2 font-mono text-xs">gpt-5-mini</Badge>
-                  </div>
-                </button>
-              </div>
-
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <Zap className="h-4 w-4 text-amber-500" />
-                La generación de imágenes siempre usa Google Gemini independientemente del modelo seleccionado.
-              </p>
-
-              {/* API Keys Section */}
-              <div className="border-t pt-6 space-y-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Key className="h-4 w-4 text-muted-foreground" />
-                  <h4 className="font-semibold">API Keys (Opcional)</h4>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Si proporcionas tus propias API keys, se usarán directamente en vez del gateway integrado. Déjalas vacías para usar el servicio por defecto.
-                </p>
-
-                <div className="space-y-1.5">
-                  <Label>OpenAI API Key</Label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Input
-                        type={showOpenaiKey ? 'text' : 'password'}
-                        value={openaiApiKey}
-                        onChange={(e) => setOpenaiApiKey(e.target.value)}
-                        placeholder="sk-..."
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowOpenaiKey(!showOpenaiKey)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showOpenaiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
+                    <div className="flex-1">
+                      <p className="font-semibold">OpenAI ChatGPT</p>
+                      <p className="text-sm text-muted-foreground">Alta precisión y razonamiento avanzado para contenido detallado.</p>
+                      <Badge variant="secondary" className="mt-2 font-mono text-xs">gpt-5-mini</Badge>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleTestApiKey('openai')}
-                      disabled={testingOpenai || !openaiApiKey}
-                    >
-                      {testingOpenai ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Probar'}
-                    </Button>
-                  </div>
-                </div>
+                  </button>
 
-                <div className="space-y-1.5">
-                  <Label>Google Gemini API Key</Label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Input
-                        type={showGeminiKey ? 'text' : 'password'}
-                        value={geminiApiKey}
-                        onChange={(e) => setGeminiApiKey(e.target.value)}
-                        placeholder="AIza..."
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowGeminiKey(!showGeminiKey)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showGeminiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
+                  {aiModel === 'openai' && (
+                    <div className="px-4 pb-4 pt-1 border-t border-primary/20 mx-4 mt-1">
+                      <div className="space-y-1.5 pt-3">
+                        <Label className="text-xs font-medium flex items-center gap-1.5">
+                          <Key className="h-3.5 w-3.5 text-muted-foreground" />
+                          OpenAI API Key
+                          <span className="text-muted-foreground font-normal">(Opcional)</span>
+                        </Label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              type={showOpenaiKey ? 'text' : 'password'}
+                              value={openaiApiKey}
+                              onChange={(e) => setOpenaiApiKey(e.target.value)}
+                              placeholder="sk-..."
+                              className="text-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowOpenaiKey(!showOpenaiKey)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                              {showOpenaiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleTestApiKey('openai')}
+                            disabled={testingOpenai || !openaiApiKey}
+                          >
+                            {testingOpenai ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Probar'}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Déjala vacía para usar el gateway integrado por defecto.
+                        </p>
+                      </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleTestApiKey('gemini')}
-                      disabled={testingGemini || !geminiApiKey}
-                    >
-                      {testingGemini ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Probar'}
-                    </Button>
-                  </div>
+                  )}
                 </div>
               </div>
 
