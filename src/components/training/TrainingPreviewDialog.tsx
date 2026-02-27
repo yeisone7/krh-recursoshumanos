@@ -18,6 +18,7 @@ import { MediaTypeCard } from './MediaTypeCard';
 import { useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { applyWatermark } from '@/lib/watermark';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -142,16 +143,26 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
           puntosClave: content.puntosClave,
           companyId: currentCompanyId,
           courseId: course.id,
+          skipUpload: true,
         },
       });
       if (error) throw error;
       if (data?.imageUrl) {
+        const watermarkedBlob = await applyWatermark(data.imageUrl);
+        const fileName = `${course.id}/${type}_${Date.now()}.png`;
+        const { error: uploadError } = await supabase.storage
+          .from('training-media')
+          .upload(fileName, watermarkedBlob, { contentType: 'image/png', upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('training-media').getPublicUrl(fileName);
+        const finalUrl = urlData.publicUrl;
+
         await createMedia.mutateAsync({
           courseId: course.id,
           type: type === 'mapa_mental' ? 'imagen' : type === 'infografia' ? 'infografia' : 'imagen',
           title: type === 'imagen' ? 'Imagen Explicativa' : type === 'mapa_mental' ? 'Mapa Mental' : 'Infografía',
-          fileUrl: data.imageUrl,
-          fileSize: 0,
+          fileUrl: finalUrl,
+          fileSize: watermarkedBlob.size,
         });
         toast.success(`${type === 'imagen' ? 'Imagen' : type === 'mapa_mental' ? 'Mapa mental' : 'Infografía'} generada exitosamente`);
       }
