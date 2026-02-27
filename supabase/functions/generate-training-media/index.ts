@@ -51,7 +51,7 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 3): P
 }
 
 async function generateImageGeminiDirect(apiKey: string, prompt: string): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
   const response = await fetchWithRetry(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -144,15 +144,20 @@ serve(async (req) => {
     }
 
     let imageData: string;
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     // Images ALWAYS use Gemini regardless of the selected text model
     if (aiConfig.gemini_api_key) {
       console.log("Generating media via Gemini direct (always for images):", type);
-      imageData = await generateImageGeminiDirect(aiConfig.gemini_api_key, prompt);
+      try {
+        imageData = await generateImageGeminiDirect(aiConfig.gemini_api_key, prompt);
+      } catch (geminiErr: any) {
+        console.warn("Gemini direct failed, falling back to Gateway:", geminiErr?.message);
+        if (!LOVABLE_API_KEY) throw geminiErr;
+        imageData = await generateImageGateway(LOVABLE_API_KEY, prompt);
+      }
     } else {
-      // Fallback to Gateway only if no Gemini key is configured
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+      if (!LOVABLE_API_KEY) throw new Error("No AI provider configured for images");
       console.log("Generating media via Gateway (no Gemini key):", type, "model:", GATEWAY_IMAGE_MODEL);
       imageData = await generateImageGateway(LOVABLE_API_KEY, prompt);
     }
