@@ -58,6 +58,7 @@ function getTextEndpoint(aiConfig: AIConfig): {
 } {
   const provider = aiConfig.model || "gemini";
 
+  // Video scripts use a lighter/faster model
   if (provider === "openai" && aiConfig.openai_api_key) {
     return {
       url: "https://api.openai.com/v1/chat/completions",
@@ -69,7 +70,7 @@ function getTextEndpoint(aiConfig: AIConfig): {
     return {
       url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       headers: { Authorization: `Bearer ${aiConfig.gemini_api_key}`, "Content-Type": "application/json" },
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash-lite",
     };
   }
 
@@ -78,7 +79,7 @@ function getTextEndpoint(aiConfig: AIConfig): {
   return {
     url: "https://ai.gateway.lovable.dev/v1/chat/completions",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    model: "google/gemini-3-flash-preview",
+    model: "google/gemini-2.5-flash-lite",
   };
 }
 
@@ -100,8 +101,7 @@ function getImageEndpoint(aiConfig: AIConfig): {
 
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("No API key configured");
-  const useProModel = aiConfig.model === "openai";
-  const model = useProModel ? "google/gemini-3-pro-image-preview" : "google/gemini-2.5-flash-image";
+  const model = "google/gemini-3-pro-image-preview";
   return {
     url: "https://ai.gateway.lovable.dev/v1/chat/completions",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
