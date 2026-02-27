@@ -29,10 +29,22 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 };
 
 const TYPE_ICONS: Record<string, React.ReactNode> = {
-  'Charla 5 min': <MessageCircle className="h-5 w-5 text-muted-foreground" />,
-  'Inducción': <GraduationCap className="h-5 w-5 text-muted-foreground" />,
-  'Reinducción': <RefreshCw className="h-5 w-5 text-muted-foreground" />,
-  'Evaluación': <ClipboardCheck className="h-5 w-5 text-muted-foreground" />,
+  'Charla 5 min': <MessageCircle className="h-5 w-5" />,
+  'Inducción': <GraduationCap className="h-5 w-5" />,
+  'Reinducción': <RefreshCw className="h-5 w-5" />,
+  'Evaluación': <ClipboardCheck className="h-5 w-5" />,
+};
+
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; badge: string }> = {
+  'Charla 5 min': { bg: 'bg-sky-100 dark:bg-sky-900/30', text: 'text-sky-600 dark:text-sky-400', badge: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-900/20 dark:text-sky-400 dark:border-sky-800' },
+  'Calidad': { bg: 'bg-violet-100 dark:bg-violet-900/30', text: 'text-violet-600 dark:text-violet-400', badge: 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-900/20 dark:text-violet-400 dark:border-violet-800' },
+  'HSEQ': { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400', badge: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' },
+  'Reinducción': { bg: 'bg-teal-100 dark:bg-teal-900/30', text: 'text-teal-600 dark:text-teal-400', badge: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-900/20 dark:text-teal-400 dark:border-teal-800' },
+  'Refuerzo': { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-600 dark:text-orange-400', badge: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' },
+  'Emergencias': { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', badge: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800' },
+  'Auditoría': { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400', badge: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800' },
+  'Inducción': { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800' },
+  'Otro': { bg: 'bg-slate-100 dark:bg-slate-900/30', text: 'text-slate-600 dark:text-slate-400', badge: 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800' },
 };
 
 const MODALITY_LABELS: Record<string, string> = {
@@ -173,10 +185,15 @@ export default function Biblioteca() {
                     {/* Top row: icon + badges + menu */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="p-2 rounded-lg bg-muted/70">
-                          {TYPE_ICONS[course.category] || <BookOpen className="h-5 w-5 text-muted-foreground" />}
-                        </div>
-                        <Badge variant="outline" className="text-xs font-medium rounded-full">{course.category}</Badge>
+                        {(() => {
+                          const colors = CATEGORY_COLORS[course.category] || CATEGORY_COLORS['Otro'];
+                          return (
+                            <div className={`p-2 rounded-lg ${colors.bg} ${colors.text}`}>
+                              {TYPE_ICONS[course.category] || <BookOpen className="h-5 w-5" />}
+                            </div>
+                          );
+                        })()}
+                        <Badge variant="outline" className={`text-xs font-medium rounded-full border ${(CATEGORY_COLORS[course.category] || CATEGORY_COLORS['Otro']).badge}`}>{course.category}</Badge>
                         {content?.isManual ? (
                           <Badge variant="outline" className="text-xs gap-1 px-2 rounded-full"><PenLine className="h-3 w-3" /> Manual</Badge>
                         ) : content ? (
