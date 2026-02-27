@@ -7,10 +7,88 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const MODEL_MAP: Record<string, string> = {
+// Models for Lovable gateway
+const LOVABLE_MODEL_MAP: Record<string, string> = {
   gemini: "google/gemini-3-flash-preview",
   openai: "openai/gpt-5-mini",
 };
+
+// Models for direct API calls
+const DIRECT_GEMINI_MODEL = "gemini-2.5-flash-preview-04-17";
+const DIRECT_OPENAI_MODEL = "gpt-4o-mini";
+
+interface AIConfig {
+  model?: string;
+  openai_api_key?: string;
+  gemini_api_key?: string;
+}
+
+async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
+  if (!companyId) return {};
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: configRow } = await supabase
+      .from("system_config")
+      .select("config_value")
+      .eq("company_id", companyId)
+      .eq("config_key", "ai_config")
+      .maybeSingle();
+    return (configRow?.config_value as AIConfig) || {};
+  } catch (e) {
+    console.warn("Could not read AI config:", e);
+    return {};
+  }
+}
+
+function getEndpointAndHeaders(aiConfig: AIConfig): {
+  url: string;
+  headers: Record<string, string>;
+  model: string;
+} {
+  const provider = aiConfig.model || "gemini";
+
+  // Check if user has their own API key for the selected provider
+  if (provider === "openai" && aiConfig.openai_api_key) {
+    console.log("Using direct OpenAI API with user key");
+    return {
+      url: "https://api.openai.com/v1/chat/completions",
+      headers: {
+        Authorization: `Bearer ${aiConfig.openai_api_key}`,
+        "Content-Type": "application/json",
+      },
+      model: DIRECT_OPENAI_MODEL,
+    };
+  }
+
+  if (provider === "gemini" && aiConfig.gemini_api_key) {
+    console.log("Using direct Google Gemini API with user key");
+    return {
+      url: `https://generativelanguage.googleapis.com/v1beta/openai/chat/completions`,
+      headers: {
+        Authorization: `Bearer ${aiConfig.gemini_api_key}`,
+        "Content-Type": "application/json",
+      },
+      model: DIRECT_GEMINI_MODEL,
+    };
+  }
+
+  // Fallback to Lovable gateway
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) throw new Error("No API key configured");
+  
+  const model = LOVABLE_MODEL_MAP[provider] || LOVABLE_MODEL_MAP.gemini;
+  console.log("Using Lovable gateway with model:", model);
+  return {
+    url: "https://ai.gateway.lovable.dev/v1/chat/completions",
+    headers: {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    model,
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -18,11 +96,6 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
-    }
-
     const { title, type, area, audience, level, objective, legalFramework, riskLevel, duration, language, pdfText, additionalContext, companyId } = await req.json();
 
     if (!title) {
@@ -32,30 +105,8 @@ serve(async (req) => {
       );
     }
 
-    // Read AI config from system_config
-    let selectedModel = MODEL_MAP.gemini; // default
-    try {
-      if (companyId) {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
-        const { data: configRow } = await supabase
-          .from("system_config")
-          .select("config_value")
-          .eq("company_id", companyId)
-          .eq("config_key", "ai_config")
-          .maybeSingle();
-
-        if (configRow?.config_value) {
-          const aiConfig = configRow.config_value;
-          const modelKey = aiConfig.model || "gemini";
-          selectedModel = MODEL_MAP[modelKey] || MODEL_MAP.gemini;
-        }
-      }
-    } catch (e) {
-      console.warn("Could not read AI config, using default model:", e);
-    }
+    const aiConfig = await getAIConfig(companyId);
+    const { url, headers, model } = getEndpointAndHeaders(aiConfig);
 
     const systemPrompt = `Eres un experto en capacitación empresarial colombiana, especializado en seguridad industrial, HSEQ, calidad y desarrollo organizacional. Genera contenido de capacitación estructurado y profesional en español.
 
@@ -94,16 +145,13 @@ Genera un JSON con esta estructura exacta:
 
 La evaluación debe tener mínimo 5 preguntas. La primera opción (índice 0) SIEMPRE debe ser la respuesta correcta y debe coincidir con respuestaCorrecta.`;
 
-    console.log("Using model:", selectedModel);
+    console.log("Calling AI with model:", model, "url:", url);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(url, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
-        model: selectedModel,
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -126,8 +174,8 @@ La evaluación debe tener mínimo 5 preguntas. La primera opción (índice 0) SI
         );
       }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      console.error("AI error:", response.status, errorText);
+      throw new Error(`AI error: ${response.status}`);
     }
 
     const aiResponse = await response.json();
@@ -137,7 +185,6 @@ La evaluación debe tener mínimo 5 preguntas. La primera opción (índice 0) SI
       throw new Error("No content returned from AI");
     }
 
-    // Parse the JSON from the AI response (may be wrapped in ```json blocks)
     let parsed;
     try {
       const cleaned = rawContent
@@ -150,7 +197,6 @@ La evaluación debe tener mínimo 5 preguntas. La primera opción (índice 0) SI
       throw new Error("Failed to parse AI-generated content");
     }
 
-    // Validate structure
     if (!parsed.introduccion || !parsed.objetivos || !parsed.contenido || !parsed.puntosClave || !parsed.evaluacion) {
       throw new Error("AI response missing required fields");
     }
