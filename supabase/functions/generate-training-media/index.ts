@@ -145,10 +145,11 @@ serve(async (req) => {
 
     let imageData: string;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const provider = aiConfig.model || "gateway";
 
-    // Images ALWAYS use Gemini regardless of the selected text model
-    if (aiConfig.gemini_api_key) {
-      console.log("Generating media via Gemini direct (always for images):", type);
+    // Route based on selected provider in configuration
+    if (provider === "gemini" && aiConfig.gemini_api_key) {
+      console.log("Generating media via Gemini direct (selected in config):", type);
       try {
         imageData = await generateImageGeminiDirect(aiConfig.gemini_api_key, prompt);
       } catch (geminiErr: any) {
@@ -156,9 +157,15 @@ serve(async (req) => {
         if (!LOVABLE_API_KEY) throw geminiErr;
         imageData = await generateImageGateway(LOVABLE_API_KEY, prompt);
       }
+    } else if (provider === "openai" && aiConfig.openai_api_key) {
+      // OpenAI selected: use Gateway with Gemini image model (OpenAI doesn't support same image gen format)
+      console.log("Generating media via Gateway (OpenAI selected, using Gemini image model):", type);
+      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured for image generation");
+      imageData = await generateImageGateway(LOVABLE_API_KEY, prompt);
     } else {
+      // No provider configured or no API key: use Gateway
       if (!LOVABLE_API_KEY) throw new Error("No AI provider configured for images");
-      console.log("Generating media via Gateway (no Gemini key):", type, "model:", GATEWAY_IMAGE_MODEL);
+      console.log("Generating media via Gateway (default):", type, "model:", GATEWAY_IMAGE_MODEL);
       imageData = await generateImageGateway(LOVABLE_API_KEY, prompt);
     }
 

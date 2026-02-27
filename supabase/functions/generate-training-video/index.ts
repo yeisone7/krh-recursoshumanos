@@ -73,8 +73,10 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 3): P
   return response!;
 }
 
+// --- Text generation (script) ---
+
 async function generateScriptGeminiDirect(apiKey: string, prompt: string): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
   const response = await fetchWithRetry(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -90,6 +92,28 @@ async function generateScriptGeminiDirect(apiKey: string, prompt: string): Promi
   }
   const data = await response.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+}
+
+async function generateScriptOpenAIDirect(apiKey: string, prompt: string): Promise<string> {
+  const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+    }),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("OpenAI script error:", response.status, errorText);
+    throw new Error(`OpenAI API error: ${response.status}`);
+  }
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
 }
 
 async function generateScriptGateway(apiKey: string, prompt: string): Promise<string> {
@@ -114,6 +138,8 @@ async function generateScriptGateway(apiKey: string, prompt: string): Promise<st
   const data = await response.json();
   return data.choices?.[0]?.message?.content || "";
 }
+
+// --- Image generation ---
 
 async function generateImageGeminiDirect(apiKey: string, prompt: string): Promise<string | null> {
   try {
@@ -180,11 +206,14 @@ serve(async (req) => {
     }
 
     const aiConfig = await getAIConfig(companyId);
-    const useGeminiForImages = !!aiConfig.gemini_api_key; // Images ALWAYS use Gemini
-    const useGeminiForText = aiConfig.model === "gemini" && !!aiConfig.gemini_api_key;
+    const provider = aiConfig.model || "gateway";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!useGeminiForText && !LOVABLE_API_KEY) throw new Error("No AI provider configured");
+    // Determine which provider to use for text (script) and images
+    const useGeminiDirect = provider === "gemini" && !!aiConfig.gemini_api_key;
+    const useOpenAIDirect = provider === "openai" && !!aiConfig.openai_api_key;
+
+    if (!useGeminiDirect && !useOpenAIDirect && !LOVABLE_API_KEY) throw new Error("No AI provider configured");
 
     const sceneCount = duration === "short" ? 3 : duration === "long" ? 6 : 4;
     const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.clasico;
@@ -195,7 +224,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Step 1: Generate script
+    // Step 1: Generate script using the selected provider
     const scriptPrompt = `Eres un experto en capacitación empresarial. Genera un guion narrado para un video educativo sobre "${title}".
 
 Contexto del contenido: ${content?.substring(0, 1500) || "No disponible"}
@@ -218,10 +247,17 @@ Responde en formato JSON con esta estructura exacta:
   "summary": "Resumen breve del video"
 }`;
 
-    console.log(`Generating script via ${useGeminiForText ? 'Gemini direct' : 'Gateway'}...`);
-    const scriptText = useGeminiForText
-      ? await generateScriptGeminiDirect(aiConfig.gemini_api_key!, scriptPrompt)
-      : await generateScriptGateway(LOVABLE_API_KEY!, scriptPrompt);
+    let scriptText: string;
+    if (useGeminiDirect) {
+      console.log("Generating script via Gemini direct...");
+      scriptText = await generateScriptGeminiDirect(aiConfig.gemini_api_key!, scriptPrompt);
+    } else if (useOpenAIDirect) {
+      console.log("Generating script via OpenAI direct...");
+      scriptText = await generateScriptOpenAIDirect(aiConfig.openai_api_key!, scriptPrompt);
+    } else {
+      console.log("Generating script via Gateway...");
+      scriptText = await generateScriptGateway(LOVABLE_API_KEY!, scriptPrompt);
+    }
 
     let script: { scenes: Array<{ title: string; narration: string; visual_description: string }>; summary: string };
     try {
@@ -236,13 +272,24 @@ Responde en formato JSON con esta estructura exacta:
 
     console.log(`Script: ${script.scenes.length} scenes. Generating images in parallel...`);
 
-    // Step 2: Generate images in parallel
+    // Step 2: Generate images using the selected provider
     const imagePromises = script.scenes.map(async (scene, i) => {
       const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${scene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
-      
-      const imageBase64 = useGeminiForImages
-        ? await generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt)
-        : await generateImageGateway(LOVABLE_API_KEY!, imagePrompt);
+
+      let imageBase64: string | null = null;
+
+      if (useGeminiDirect) {
+        imageBase64 = await generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt);
+        // Fallback to gateway if Gemini direct fails
+        if (!imageBase64 && LOVABLE_API_KEY) {
+          imageBase64 = await generateImageGateway(LOVABLE_API_KEY, imagePrompt);
+        }
+      } else {
+        // OpenAI selected or no direct key: use Gateway for images
+        if (LOVABLE_API_KEY) {
+          imageBase64 = await generateImageGateway(LOVABLE_API_KEY, imagePrompt);
+        }
+      }
 
       if (!imageBase64) return null;
 
