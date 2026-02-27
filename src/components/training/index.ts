@@ -10,3 +10,4 @@ export { TrainingMediaGallery } from './TrainingMediaGallery';
 export { ImageUploader } from './ImageUploader';
 export { QRCodeDialog } from './QRCodeDialog';
 export { TrainingStepIndicator } from './TrainingStepIndicator';
+export { MediaTypeCard } from './MediaTypeCard';
