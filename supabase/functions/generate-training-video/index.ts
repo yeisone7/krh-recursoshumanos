@@ -89,7 +89,7 @@ function getImageEndpoint(aiConfig: AIConfig): {
   isDirectGemini: boolean;
 } {
   if (aiConfig.gemini_api_key) {
-    const model = "gemini-2.0-flash-preview-image-generation";
+    const model = "gemini-2.0-flash-exp-image-generation";
     return {
       url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${aiConfig.gemini_api_key}`,
       headers: { "Content-Type": "application/json" },
