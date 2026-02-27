@@ -1,14 +1,15 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Eraser, Check } from 'lucide-react';
+import { Eraser, Check, X } from 'lucide-react';
 
 interface SignatureCanvasProps {
   onSave: (dataUrl: string) => void;
+  onCancel?: () => void;
   width?: number;
   height?: number;
 }
 
-export function SignatureCanvas({ onSave, width = 500, height = 200 }: SignatureCanvasProps) {
+export function SignatureCanvas({ onSave, onCancel, width = 500, height = 200 }: SignatureCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
@@ -98,12 +99,17 @@ export function SignatureCanvas({ onSave, width = 500, height = 200 }: Signature
         />
       </div>
       <p className="text-xs text-muted-foreground text-center">
-        Dibuje su firma en el recuadro superior
+        Firma aquí con el mouse o dedo
       </p>
       <div className="flex gap-2 justify-center">
         <Button variant="outline" size="sm" onClick={clear}>
           <Eraser className="h-4 w-4 mr-1" /> Limpiar
         </Button>
+        {onCancel && (
+          <Button variant="outline" size="sm" onClick={onCancel}>
+            <X className="h-4 w-4 mr-1" /> Cancelar
+          </Button>
+        )}
         <Button size="sm" onClick={confirm} disabled={!hasSignature}>
           <Check className="h-4 w-4 mr-1" /> Confirmar Firma
         </Button>
