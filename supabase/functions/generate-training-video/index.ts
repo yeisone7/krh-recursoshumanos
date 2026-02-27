@@ -117,7 +117,7 @@ async function generateScriptGateway(apiKey: string, prompt: string): Promise<st
 
 async function generateImageGeminiDirect(apiKey: string, prompt: string): Promise<string | null> {
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
     const response = await fetchWithRetry(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
