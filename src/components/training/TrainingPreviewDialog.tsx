@@ -484,6 +484,15 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                         </div>
                       </MediaTypeCard>
                     </div>
+                    <MediaTypeCard
+                      icon={<Video className="h-5 w-5 text-muted-foreground" />}
+                      title="Video Educativo"
+                      description="Genera un guion narrado + secuencia de imágenes estilizadas con IA"
+                      items={media.filter(m => m.type === 'video')}
+                      isGenerating={false}
+                      onGenerate={() => {}}
+                      onDelete={handleDeleteMedia}
+                    />
                   </>
                 ) : (
                   <>
