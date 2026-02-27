@@ -44,7 +44,7 @@ export default function GenerarAcceso() {
     } catch { toast.error('Error al crear enlace'); }
   };
 
-  const getAccessUrl = (token: string) => `${window.location.origin}/capacitaciones/acceso?token=${token}`;
+  const getAccessUrl = (token: string) => `${window.location.origin}/capacitacion?token=${token}`;
 
   const handleCopy = (token: string) => {
     navigator.clipboard.writeText(getAccessUrl(token));
