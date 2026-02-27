@@ -775,8 +775,16 @@ export default function CrearCapacitacion() {
                           if (!editId || !content) return;
                           setGeneratingMedia(prev => ({ ...prev, video: true }));
                           try {
-                            const { data, error } = await supabase.functions.invoke('generate-training-video', {
-                              body: {
+                            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+                            const session = (await supabase.auth.getSession()).data.session;
+                            const response = await fetch(`${supabaseUrl}/functions/v1/generate-training-video`, {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${session?.access_token}`,
+                                'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                              },
+                              body: JSON.stringify({
                                 courseId: editId,
                                 style: videoStyle,
                                 duration: videoDuration,
@@ -784,9 +792,15 @@ export default function CrearCapacitacion() {
                                 content: content.contenido?.substring(0, 2000),
                                 puntosClave: content.puntosClave,
                                 companyId: currentCompanyId,
-                              },
+                              }),
+                              signal: AbortSignal.timeout(300000), // 5 min timeout
                             });
-                            if (error) throw error;
+                            if (!response.ok) {
+                              const errData = await response.json().catch(() => ({}));
+                              throw new Error(errData.error || `Error ${response.status}`);
+                            }
+                            const data = await response.json();
+                            
                             setVideoScript(data?.script);
                             toast.success(`Storyboard generado: ${data?.sceneCount} escenas con estilo ${data?.style}`);
                           } catch (err: any) {
