@@ -69,7 +69,7 @@ function getTextEndpoint(aiConfig: AIConfig): {
     return {
       url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       headers: { Authorization: `Bearer ${aiConfig.gemini_api_key}`, "Content-Type": "application/json" },
-      model: "gemini-2.5-flash-preview-04-17",
+      model: "gemini-2.5-flash",
     };
   }
 

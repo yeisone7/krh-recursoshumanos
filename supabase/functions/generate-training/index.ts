@@ -14,7 +14,7 @@ const LOVABLE_MODEL_MAP: Record<string, string> = {
 };
 
 // Models for direct API calls
-const DIRECT_GEMINI_MODEL = "gemini-2.5-flash-preview-04-17";
+const DIRECT_GEMINI_MODEL = "gemini-2.5-flash";
 const DIRECT_OPENAI_MODEL = "gpt-4o-mini";
 
 interface AIConfig {
