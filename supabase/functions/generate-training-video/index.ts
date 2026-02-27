@@ -146,55 +146,51 @@ Responde en formato JSON con esta estructura exacta:
 
     console.log(`Script: ${script.scenes.length} scenes. Generating images...`);
 
-    // Step 2: Generate images
-    const imageUrls: string[] = [];
-    for (let i = 0; i < script.scenes.length; i++) {
-      const scene = script.scenes[i];
+    // Step 2: Generate images in parallel
+    console.log(`Generating ${script.scenes.length} images in parallel...`);
+    const imagePromises = script.scenes.map(async (scene, i) => {
       const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${scene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
-
       try {
-        console.log(`Image ${i + 1}/${script.scenes.length}...`);
-
         const imgResponse = await gatewayFetch(LOVABLE_API_KEY, {
           model: IMAGE_MODEL,
           messages: [{ role: "user", content: imagePrompt }],
           modalities: ["image", "text"],
         });
-
         if (!imgResponse.ok) {
           console.warn(`Image ${i + 1} failed: ${imgResponse.status}`);
-          continue;
+          return null;
         }
-
         const imgData = await imgResponse.json();
         const imageBase64 = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        if (!imageBase64) return null;
 
-        if (imageBase64) {
-          try {
-            const base64Part = imageBase64.split(",")[1];
-            const binaryStr = atob(base64Part);
-            const bytes = new Uint8Array(binaryStr.length);
-            for (let j = 0; j < binaryStr.length; j++) {
-              bytes[j] = binaryStr.charCodeAt(j);
-            }
-            const fileName = `${courseId}/video_${style}_scene_${i + 1}_${Date.now()}.png`;
-            const { error: uploadError } = await supabase.storage
-              .from("training-media")
-              .upload(fileName, bytes.buffer, { contentType: "image/png", upsert: true });
-            if (!uploadError) {
-              const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
-              imageUrls.push(urlData.publicUrl);
-            } else {
-              imageUrls.push(imageBase64);
-            }
-          } catch (e) {
-            imageUrls.push(imageBase64);
+        try {
+          const base64Part = imageBase64.split(",")[1];
+          const binaryStr = atob(base64Part);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let j = 0; j < binaryStr.length; j++) {
+            bytes[j] = binaryStr.charCodeAt(j);
           }
+          const fileName = `${courseId}/video_${style}_scene_${i + 1}_${Date.now()}.png`;
+          const { error: uploadError } = await supabase.storage
+            .from("training-media")
+            .upload(fileName, bytes.buffer, { contentType: "image/png", upsert: true });
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
+            return urlData.publicUrl;
+          }
+          return imageBase64;
+        } catch {
+          return imageBase64;
         }
       } catch (e) {
         console.warn(`Error scene ${i + 1}:`, e);
+        return null;
       }
-    }
+    });
+
+    const results = await Promise.all(imagePromises);
+    const imageUrls = results.filter((url): url is string => url !== null);
 
     console.log(`${imageUrls.length} images. Saving...`);
 
