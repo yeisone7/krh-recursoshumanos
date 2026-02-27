@@ -7,14 +7,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Models for Lovable gateway
+// Models for Lovable gateway (text generation)
 const LOVABLE_MODEL_MAP: Record<string, string> = {
   gemini: "google/gemini-3-flash-preview",
   openai: "openai/gpt-5-mini",
 };
 
-// Models for direct API calls
-const DIRECT_GEMINI_MODEL = "gemini-2.5-flash";
+// Models for direct API calls (text generation)
+const DIRECT_GEMINI_MODEL = "gemini-2.0-flash";
 const DIRECT_OPENAI_MODEL = "gpt-4o-mini";
 
 interface AIConfig {

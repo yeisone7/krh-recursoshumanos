@@ -51,14 +51,11 @@ function getImageEndpoint(aiConfig: AIConfig): {
     };
   }
 
-  // Fallback to Lovable gateway
+  // Fallback to Lovable gateway - always use pro image model
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("No API key configured");
 
-  const useProModel = aiConfig.model === "openai";
-  const model = useProModel
-    ? "google/gemini-3-pro-image-preview"
-    : "google/gemini-2.5-flash-image";
+  const model = "google/gemini-3-pro-image-preview";
   console.log("Using Lovable gateway for images, model:", model);
   return {
     url: "https://ai.gateway.lovable.dev/v1/chat/completions",
