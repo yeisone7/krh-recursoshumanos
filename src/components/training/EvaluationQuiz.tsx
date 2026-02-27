@@ -149,8 +149,8 @@ export function EvaluationQuiz({ questions, onComplete, onGoBack }: EvaluationQu
         {current.opciones.map((option, idx) => (
           <div
             key={idx}
-            className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-pointer hover:border-primary hover:bg-accent ${
-              selectedAnswer === option ? 'border-primary bg-accent' : 'border-border'
+            className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all cursor-pointer hover:border-primary/40 hover:bg-primary-light ${
+              selectedAnswer === option ? 'border-primary bg-primary-light' : 'border-border'
             }`}
             onClick={() => handleSelect(option)}
           >
