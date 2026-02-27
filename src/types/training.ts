@@ -153,6 +153,7 @@ export interface TrainingCompletion {
   operator_name: string;
   operator_cedula: string | null;
   signature_data: string;
+  quiz_score: number | null;
   ip_address: string | null;
   user_agent: string | null;
   course?: TrainingCourse;
