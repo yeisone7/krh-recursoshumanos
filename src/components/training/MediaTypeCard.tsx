@@ -58,14 +58,22 @@ export function MediaTypeCard({
                   <span className="text-xs text-muted-foreground">
                     {format(parseISO(item.created_at), 'dd/M/yyyy')}
                   </span>
-                  <a
-                    href={item.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
+                  <button
+                    onClick={() => {
+                      if (item.file_url.startsWith('data:')) {
+                        const w = window.open();
+                        if (w) {
+                          w.document.write(`<img src="${item.file_url}" style="max-width:100%;height:auto;" />`);
+                          w.document.title = 'Vista previa';
+                        }
+                      } else {
+                        window.open(item.file_url, '_blank');
+                      }
+                    }}
+                    className="text-primary hover:text-primary/80 p-1"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+                  </button>
                 </div>
                 <button
                   onClick={() => onDelete(item.id)}
