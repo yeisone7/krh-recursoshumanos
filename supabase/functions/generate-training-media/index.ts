@@ -127,13 +127,13 @@ serve(async (req) => {
           bytes[i] = binaryStr.charCodeAt(i);
         }
 
-        const fileName = `training-media/${courseId}/${type}_${Date.now()}.png`;
+        const fileName = `${courseId}/${type}_${Date.now()}.png`;
         const { error: uploadError } = await supabase.storage
-          .from("training")
+          .from("training-media")
           .upload(fileName, bytes.buffer, { contentType: "image/png", upsert: true });
 
         if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("training").getPublicUrl(fileName);
+          const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
           storedUrl = urlData.publicUrl;
         } else {
           console.warn("Upload failed, returning base64:", uploadError);
