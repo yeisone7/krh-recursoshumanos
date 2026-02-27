@@ -147,35 +147,45 @@ La evaluación debe tener mínimo 5 preguntas. La primera opción (índice 0) SI
 
     console.log("Calling AI with model:", model, "url:", url);
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.7,
-      }),
+    const requestBody = JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.7,
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
+    let response: Response | null = null;
+    const maxRetries = 3;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      response = await fetch(url, { method: "POST", headers, body: requestBody });
+      
+      if (response.status === 429 && attempt < maxRetries - 1) {
+        const wait = (attempt + 1) * 5000; // 5s, 10s, 15s
+        console.log(`Rate limited (429), retrying in ${wait}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(r => setTimeout(r, wait));
+        continue;
+      }
+      break;
+    }
+
+    if (!response || !response.ok) {
+      if (response?.status === 429) {
         return new Response(
           JSON.stringify({ error: "Límite de solicitudes excedido. Intente de nuevo en unos momentos." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (response.status === 402) {
+      if (response?.status === 402) {
         return new Response(
           JSON.stringify({ error: "Créditos insuficientes. Contacte al administrador." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const errorText = await response.text();
-      console.error("AI error:", response.status, errorText);
-      throw new Error(`AI error: ${response.status}`);
+      const errorText = await response?.text();
+      console.error("AI error:", response?.status, errorText);
+      throw new Error(`AI error: ${response?.status}`);
     }
 
     const aiResponse = await response.json();
