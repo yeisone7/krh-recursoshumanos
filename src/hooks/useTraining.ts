@@ -790,6 +790,7 @@ export function useCreateFullCourse() {
       validityMonths?: number;
       level?: string;
       audience?: string;
+      targetAudience?: string;
       objective?: string;
       legalFramework?: string;
       riskLevel?: string;
@@ -814,6 +815,7 @@ export function useCreateFullCourse() {
           validity_months: data.validityMonths || null,
           level: data.level || 'basico',
           audience: data.audience || null,
+          target_audience: data.targetAudience || null,
           objective: data.objective || null,
           legal_framework: data.legalFramework || null,
           risk_level: data.riskLevel || 'medio',
@@ -852,6 +854,7 @@ export function useUpdateFullCourse() {
       validityMonths?: number;
       level?: string;
       audience?: string;
+      targetAudience?: string;
       objective?: string;
       legalFramework?: string;
       riskLevel?: string;
@@ -871,6 +874,7 @@ export function useUpdateFullCourse() {
       if (data.validityMonths !== undefined) updateData.validity_months = data.validityMonths;
       if (data.level !== undefined) updateData.level = data.level;
       if (data.audience !== undefined) updateData.audience = data.audience;
+      if (data.targetAudience !== undefined) updateData.target_audience = data.targetAudience;
       if (data.objective !== undefined) updateData.objective = data.objective;
       if (data.legalFramework !== undefined) updateData.legal_framework = data.legalFramework;
       if (data.riskLevel !== undefined) updateData.risk_level = data.riskLevel;
