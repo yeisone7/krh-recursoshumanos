@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { Link2, QrCode, Copy, Trash2, Plus, Shield, Users, Clock, Building2, ClipboardCheck, ExternalLink } from 'lucide-react';
+import { Link2, QrCode, Copy, Trash2, Plus, Shield, Users, Clock, Building2, ClipboardCheck, ExternalLink, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { QRCodeDialog } from '@/components/training';
 import { useTrainingCourses, useTrainingAccessTokens, useCreateAccessToken, useToggleAccessToken, useDeleteAccessToken } from '@/hooks/useTraining';
+import { useOperationCenters } from '@/hooks/useCompanies';
 import { toast } from 'sonner';
 import type { TrainingAccessToken } from '@/types/training';
 
@@ -19,6 +20,7 @@ export default function GenerarAcceso() {
   const preselectedCourseId = searchParams.get('courseId') || '';
   const { data: courses = [] } = useTrainingCourses();
   const { data: tokens = [] } = useTrainingAccessTokens();
+  const { data: centers = [] } = useOperationCenters();
   const createToken = useCreateAccessToken();
   const toggleToken = useToggleAccessToken();
   const deleteToken = useDeleteAccessToken();
@@ -29,6 +31,7 @@ export default function GenerarAcceso() {
   const [maxUses, setMaxUses] = useState<number | undefined>();
   const [expiresInDays, setExpiresInDays] = useState(7);
   const [requiresEvaluation, setRequiresEvaluation] = useState(false);
+  const [operationCenterId, setOperationCenterId] = useState<string>('');
   const [qrDialog, setQrDialog] = useState<{ url: string; title: string } | null>(null);
 
   const publishedCourses = courses.filter(c => c.status === 'publicado');
@@ -36,7 +39,7 @@ export default function GenerarAcceso() {
   const handleCreate = async () => {
     if (!courseId) { toast.error('Seleccione una capacitación'); return; }
     try {
-      await createToken.mutateAsync({ courseId, accessType, usageType, maxUses, expiresInDays, requiresEvaluation });
+      await createToken.mutateAsync({ courseId, accessType, usageType, maxUses, expiresInDays, requiresEvaluation, operationCenterId: operationCenterId && operationCenterId !== 'sin_centro' ? operationCenterId : undefined });
       toast.success('Enlace creado');
     } catch { toast.error('Error al crear enlace'); }
   };
@@ -76,6 +79,25 @@ export default function GenerarAcceso() {
             <Select value={courseId} onValueChange={setCourseId}>
               <SelectTrigger><SelectValue placeholder="Selecciona una capacitación" /></SelectTrigger>
               <SelectContent>{publishedCourses.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+            </Select>
+           </div>
+
+          {/* Centro de Operación */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5 text-muted-foreground" /> Centro de Operación
+            </Label>
+            <Select value={operationCenterId} onValueChange={setOperationCenterId}>
+              <SelectTrigger><SelectValue placeholder="Selecciona un centro (opcional)" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sin_centro">Sin centro específico</SelectItem>
+                {centers.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    <span className="text-xs font-mono text-muted-foreground mr-2">{c.code || '—'}</span>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
 
@@ -202,6 +224,12 @@ export default function GenerarAcceso() {
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
                       <h3 className="font-semibold">{token.course?.name || 'Capacitación'}</h3>
+                      {token.center && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {token.center.name}
+                        </p>
+                      )}
                       {token.course?.category && (
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <Building2 className="h-3 w-3" />

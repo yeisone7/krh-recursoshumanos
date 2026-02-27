@@ -4729,6 +4729,7 @@ export type Database = {
           id: string
           is_active: boolean
           max_uses: number | null
+          operation_center_id: string | null
           requires_evaluation: boolean
           token: string
           usage_type: string
@@ -4744,6 +4745,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           max_uses?: number | null
+          operation_center_id?: string | null
           requires_evaluation?: boolean
           token?: string
           usage_type?: string
@@ -4759,6 +4761,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           max_uses?: number | null
+          operation_center_id?: string | null
           requires_evaluation?: boolean
           token?: string
           usage_type?: string
@@ -4777,6 +4780,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_access_tokens_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
             referencedColumns: ["id"]
           },
         ]
