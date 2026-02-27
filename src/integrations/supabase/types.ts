@@ -6009,6 +6009,13 @@ export type Database = {
       is_company_member: { Args: { _company_id: string }; Returns: boolean }
       is_psicologo: { Args: never; Returns: boolean }
       is_user_active: { Args: { _user_id: string }; Returns: boolean }
+      verify_employee_cedula: {
+        Args: { p_cedula: string; p_company_id: string }
+        Returns: {
+          employee_id: string
+          employee_name: string
+        }[]
+      }
     }
     Enums: {
       account_type: "ahorros" | "corriente"
