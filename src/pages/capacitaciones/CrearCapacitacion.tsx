@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { format, parseISO } from 'date-fns';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft, Trash2, ImageIcon, Network, LayoutPanelTop, Mic, Video, Plus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft, Trash2, ImageIcon, Network, LayoutPanelTop, Mic, Video, Plus, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGallery } from '@/components/training';
+import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGallery, MediaTypeCard } from '@/components/training';
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -554,105 +555,82 @@ export default function CrearCapacitacion() {
                 <p className="text-sm text-muted-foreground text-center py-4">Guarda la capacitación como borrador primero para habilitar la generación multimedia.</p>
               ) : (
                 <div className="space-y-4">
-                  {/* Row 1: Imagen + Mapa Mental */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="border">
-                      <CardContent className="pt-5 pb-4 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                          <span className="font-semibold text-sm">Imagen Explicativa</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Genera una imagen visual que represente el tema de la capacitación</p>
-                        {generatedMedia.imagen && (
-                          <img src={generatedMedia.imagen} alt="Imagen generada" className="rounded-md w-full max-h-40 object-cover" />
-                        )}
-                        <Button
-                          className="w-full bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-primary-foreground"
-                          onClick={() => handleGenerateMedia('imagen')}
-                          disabled={generatingMedia.imagen}
-                        >
-                          {generatingMedia.imagen ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</> : <><Plus className="h-4 w-4 mr-2" /> Generar</>}
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    <MediaTypeCard
+                      icon={<ImageIcon className="h-5 w-5 text-muted-foreground" />}
+                      title="Imagen Explicativa"
+                      description="Genera una imagen visual que represente el tema de la capacitación"
+                      items={(media as any[]).filter((m: any) => m.title === 'Imagen Explicativa')}
+                      isGenerating={!!generatingMedia.imagen}
+                      onGenerate={() => handleGenerateMedia('imagen')}
+                      onDelete={handleDeleteMedia}
+                    />
 
-                    <Card className="border">
-                      <CardContent className="pt-5 pb-4 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Network className="h-5 w-5 text-muted-foreground" />
-                          <span className="font-semibold text-sm">Mapa Mental</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Crea un mapa mental con los conceptos clave organizados visualmente</p>
-                        {generatedMedia.mapa_mental && (
-                          <img src={generatedMedia.mapa_mental} alt="Mapa mental generado" className="rounded-md w-full max-h-40 object-cover" />
-                        )}
-                        <Button
-                          className="w-full bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-primary-foreground"
-                          onClick={() => handleGenerateMedia('mapa_mental')}
-                          disabled={generatingMedia.mapa_mental}
-                        >
-                          {generatingMedia.mapa_mental ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</> : <><Plus className="h-4 w-4 mr-2" /> Generar</>}
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    <MediaTypeCard
+                      icon={<Network className="h-5 w-5 text-muted-foreground" />}
+                      title="Mapa Mental"
+                      description="Crea un mapa mental con los conceptos clave organizados visualmente"
+                      items={(media as any[]).filter((m: any) => m.title === 'Mapa Mental')}
+                      isGenerating={!!generatingMedia.mapa_mental}
+                      onGenerate={() => handleGenerateMedia('mapa_mental')}
+                      onDelete={handleDeleteMedia}
+                    />
                   </div>
 
-                  {/* Row 2: Infografía + Audio */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="border">
-                      <CardContent className="pt-5 pb-4 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <LayoutPanelTop className="h-5 w-5 text-muted-foreground" />
-                          <span className="font-semibold text-sm">Infografía</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Diseña una infografía profesional con los puntos principales</p>
-                        {generatedMedia.infografia && (
-                          <img src={generatedMedia.infografia} alt="Infografía generada" className="rounded-md w-full max-h-40 object-cover" />
-                        )}
-                        <Button
-                          className="w-full bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-primary-foreground"
-                          onClick={() => handleGenerateMedia('infografia')}
-                          disabled={generatingMedia.infografia}
-                        >
-                          {generatingMedia.infografia ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</> : <><Plus className="h-4 w-4 mr-2" /> Generar</>}
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    <MediaTypeCard
+                      icon={<LayoutPanelTop className="h-5 w-5 text-muted-foreground" />}
+                      title="Infografía"
+                      description="Diseña una infografía profesional con los puntos principales"
+                      items={(media as any[]).filter((m: any) => m.title === 'Infografía')}
+                      isGenerating={!!generatingMedia.infografia}
+                      onGenerate={() => handleGenerateMedia('infografia')}
+                      onDelete={handleDeleteMedia}
+                    />
 
-                    <Card className="border">
-                      <CardContent className="pt-5 pb-4 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Mic className="h-5 w-5 text-muted-foreground" />
-                          <span className="font-semibold text-sm">Audio Narrado</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Genera una narración tipo podcast del contenido (requiere API key de OpenAI)</p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Duración:</span>
-                          <Select value={audioDuration} onValueChange={setAudioDuration}>
-                            <SelectTrigger className="h-8 text-xs flex-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="short">Corto (~1 min)</SelectItem>
-                              <SelectItem value="medium">Medio (~3 min)</SelectItem>
-                              <SelectItem value="long">Largo (~5 min)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Button className="w-full bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-primary-foreground" disabled>
-                          <Plus className="h-4 w-4 mr-2" /> Generar
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    <MediaTypeCard
+                      icon={<Mic className="h-5 w-5 text-muted-foreground" />}
+                      title="Audio Narrado"
+                      description="Genera una narración tipo podcast del contenido"
+                      items={(media as any[]).filter((m: any) => m.title === 'Audio Narrado')}
+                      isGenerating={false}
+                      onGenerate={() => {}}
+                      onDelete={handleDeleteMedia}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Duración:</span>
+                        <Select value={audioDuration} onValueChange={setAudioDuration}>
+                          <SelectTrigger className="h-8 text-xs flex-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="short">Corto (~1 min)</SelectItem>
+                            <SelectItem value="medium">Medio (~3 min)</SelectItem>
+                            <SelectItem value="long">Largo (~5 min)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </MediaTypeCard>
                   </div>
 
                   <Card className="border">
                     <CardContent className="pt-5 pb-4 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Video className="h-5 w-5 text-primary" />
-                        <span className="font-semibold text-sm">Video Educativo (Storyboard)</span>
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-muted">
+                          <Video className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm">Video Educativo (Storyboard)</span>
+                            {(media as any[]).filter((m: any) => m.type === 'video').length > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                {(media as any[]).filter((m: any) => m.type === 'video').length} generado(s)
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">Genera un guion narrado + secuencia de imágenes estilizadas con IA</p>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">Genera un guion narrado + secuencia de imágenes estilizadas con IA</p>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
                           <span className="text-xs text-muted-foreground">Estilo visual:</span>
@@ -686,7 +664,29 @@ export default function CrearCapacitacion() {
                           </Select>
                         </div>
                       </div>
+
+                      {(media as any[]).filter((m: any) => m.type === 'video').length > 0 && (
+                        <div className="space-y-1.5">
+                          {(media as any[]).filter((m: any) => m.type === 'video').map((item: any) => (
+                            <div key={item.id} className="flex items-center justify-between rounded-md border px-3 py-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {format(parseISO(item.created_at), 'dd/M/yyyy')}
+                                </span>
+                                <a href={item.file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </a>
+                              </div>
+                              <button onClick={() => handleDeleteMedia(item.id)} className="text-destructive hover:text-destructive/80 p-1">
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <Button
+                        variant="outline"
                         className="w-full"
                         disabled={!editId || generatingMedia['video']}
                         onClick={async () => {
@@ -717,7 +717,7 @@ export default function CrearCapacitacion() {
                         {generatingMedia['video'] ? (
                           <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando escenas...</>
                         ) : (
-                          <><Sparkles className="h-4 w-4 mr-2" /> Generar Storyboard</>
+                          <><Plus className="h-4 w-4 mr-2" /> {(media as any[]).filter((m: any) => m.type === 'video').length > 0 ? 'Generar otro' : 'Generar Storyboard'}</>
                         )}
                       </Button>
                       {!editId && <p className="text-xs text-destructive">Guarde como borrador primero para habilitar la generación</p>}
@@ -734,11 +734,6 @@ export default function CrearCapacitacion() {
                       )}
                     </CardContent>
                   </Card>
-
-                  {/* Existing media gallery */}
-                  {media.length > 0 && (
-                    <TrainingMediaGallery media={media as any} onDelete={handleDeleteMedia} />
-                  )}
                 </div>
               )}
             </CardContent>
