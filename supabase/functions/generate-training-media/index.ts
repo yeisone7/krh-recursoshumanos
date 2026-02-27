@@ -144,15 +144,16 @@ serve(async (req) => {
     }
 
     let imageData: string;
-    const provider = aiConfig.model || "gateway";
 
-    if (provider === "gemini" && aiConfig.gemini_api_key) {
-      console.log("Generating media via Gemini direct:", type);
+    // Images ALWAYS use Gemini regardless of the selected text model
+    if (aiConfig.gemini_api_key) {
+      console.log("Generating media via Gemini direct (always for images):", type);
       imageData = await generateImageGeminiDirect(aiConfig.gemini_api_key, prompt);
     } else {
+      // Fallback to Gateway only if no Gemini key is configured
       const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
       if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-      console.log("Generating media via Gateway:", type, "model:", GATEWAY_IMAGE_MODEL);
+      console.log("Generating media via Gateway (no Gemini key):", type, "model:", GATEWAY_IMAGE_MODEL);
       imageData = await generateImageGateway(LOVABLE_API_KEY, prompt);
     }
 
