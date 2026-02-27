@@ -85,7 +85,7 @@
     --input: 224 18% 88%;
     --ring: 22 92% 47%;
 
-    --radius: 0.15rem;
+    --radius: 0.75rem;
 
     /* Sidebar - Light Gray */
     --sidebar-background: 220 14% 93%;
@@ -183,14 +183,6 @@
     --tw-radius-override: calc(var(--radius) * 1);
   }
 
-  /* Force all rounded utilities to use the design system radius */
-  .rounded-sm { border-radius: calc(var(--radius) * 0.75) !important; }
-  .rounded { border-radius: var(--radius) !important; }
-  .rounded-md { border-radius: var(--radius) !important; }
-  .rounded-lg { border-radius: calc(var(--radius) * 1.5) !important; }
-  .rounded-xl { border-radius: calc(var(--radius) * 2) !important; }
-  .rounded-2xl { border-radius: calc(var(--radius) * 2.5) !important; }
-  .rounded-3xl { border-radius: calc(var(--radius) * 3) !important; }
 
   body {
     @apply bg-background text-foreground antialiased;
