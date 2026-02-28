@@ -423,7 +423,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
         ) : (
           <>
             {/* ── HEADER ── */}
-            <div className="gradient-primary px-6 pt-6 pb-5 rounded-t-xl relative">
+            <div className="px-6 pt-6 pb-5 rounded-t-xl relative" style={{ background: 'linear-gradient(135deg, hsl(224 30% 55%) 0%, hsl(224 28% 65%) 100%)' }}>
               <div className="flex items-start gap-4">
                 {/* Avatar with upload overlay */}
                 <div className="relative group shrink-0">
