@@ -43,6 +43,23 @@ export default function Evidencias() {
     try { await bulkDelete.mutateAsync([...selected]); setSelected(new Set()); toast.success(`${selected.size} registros eliminados`); } catch { toast.error('Error'); }
   };
 
+  const loadImageAsDataUrl = (src: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject();
+      img.src = src;
+    });
+  };
+
   const exportPdf = async (completion: TrainingCompletion) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -57,6 +74,17 @@ export default function Evidencias() {
     // Orange accent line under header
     doc.setFillColor(237, 137, 54);
     doc.rect(0, 38, pageWidth, 3, 'F');
+
+    // Logo top-right on header
+    try {
+      const logoDataUrl = await loadImageAsDataUrl('/images/petrocasinos-logo-white.png');
+      const tmpImg = new Image();
+      tmpImg.src = logoDataUrl;
+      await new Promise(r => { tmpImg.onload = r; });
+      const logoH = 20;
+      const logoW = (tmpImg.naturalWidth / tmpImg.naturalHeight) * logoH;
+      doc.addImage(logoDataUrl, 'PNG', pageWidth - margin - logoW, 9, logoW, logoH);
+    } catch { /* skip logo */ }
 
     // Company name in header
     doc.setFont('helvetica', 'bold');
