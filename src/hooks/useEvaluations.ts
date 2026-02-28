@@ -25,11 +25,16 @@ export function useEvaluations() {
       if (!currentCompanyId) return [];
       const { data, error } = await supabase
         .from('evaluation_templates')
-        .select('*, evaluation_criteria(*)')
+        .select('*, evaluation_criteria(*), positions(id, name)')
         .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as EvaluationTemplate[];
+      return data.map(t => ({
+        ...t,
+        position: t.positions || null,
+        qualitative_questions: t.qualitative_questions as unknown as string[] | null,
+        rating_scale: t.rating_scale as unknown as import('@/types/evaluation').RatingScaleItem[] | null,
+      })) as unknown as EvaluationTemplate[];
     },
     enabled: !!currentCompanyId,
   });
@@ -39,9 +44,17 @@ export function useEvaluations() {
       if (!currentCompanyId) throw new Error('No company ID');
       const { criteria, ...templateData } = template;
       
+      const insertData = { 
+        name: templateData.name || '', 
+        company_id: currentCompanyId, 
+        ...templateData,
+        qualitative_questions: templateData.qualitative_questions as unknown as any,
+        rating_scale: templateData.rating_scale as unknown as any,
+      };
+      delete (insertData as any).position;
       const { data: newTemplate, error } = await supabase
         .from('evaluation_templates')
-        .insert({ name: templateData.name || '', company_id: currentCompanyId, ...templateData } as any)
+        .insert(insertData as any)
         .select()
         .single();
       if (error) throw error;
@@ -71,11 +84,16 @@ export function useEvaluations() {
 
   const updateTemplate = useMutation({
     mutationFn: async ({ id, ...data }: Partial<EvaluationTemplate> & { id: string; criteria?: Partial<EvaluationCriteria>[] }) => {
-      const { criteria, ...templateData } = data;
+      const { criteria, position, ...templateData } = data as any;
+      const updateData = {
+        ...templateData,
+        qualitative_questions: templateData.qualitative_questions as unknown as any,
+        rating_scale: templateData.rating_scale as unknown as any,
+      };
       
       const { error } = await supabase
         .from('evaluation_templates')
-        .update(templateData)
+        .update(updateData)
         .eq('id', id);
       if (error) throw error;
 
@@ -137,7 +155,7 @@ export function useEvaluations() {
       return data.map(c => ({
         ...c,
         status: c.status as EvaluationCycleStatus,
-        template: c.evaluation_templates as EvaluationTemplate | null,
+        template: c.evaluation_templates as unknown as EvaluationTemplate | null,
       })) as EvaluationCycle[];
     },
     enabled: !!currentCompanyId,

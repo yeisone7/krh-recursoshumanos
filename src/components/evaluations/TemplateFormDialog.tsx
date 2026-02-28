@@ -20,25 +20,48 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Plus, Trash2, GripVertical } from 'lucide-react';
-import type { EvaluationTemplate, EvaluationCriteria } from '@/types/evaluation';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import { Plus, Trash2 } from 'lucide-react';
+import { CriteriaRubricItem } from './CriteriaRubricItem';
+import { usePositions } from '@/hooks/useSystemConfig';
+import type { EvaluationTemplate, DEFAULT_QUALITATIVE_QUESTIONS, DEFAULT_RATING_SCALE } from '@/types/evaluation';
+import {
+  DEFAULT_QUALITATIVE_QUESTIONS as defaultQuestions,
+  DEFAULT_RATING_SCALE as defaultScale,
+} from '@/types/evaluation';
 
 const criteriaSchema = z.object({
   name: z.string().min(1, 'Nombre requerido'),
   description: z.string().optional(),
   category: z.string().optional(),
   weight: z.number().min(0).default(1),
-  max_score: z.number().min(1).default(5),
+  max_score: z.number().min(1).default(4),
+  level_4_description: z.string().optional(),
+  level_3_description: z.string().optional(),
+  level_2_description: z.string().optional(),
+  level_1_description: z.string().optional(),
+});
+
+const ratingScaleItemSchema = z.object({
+  label: z.string(),
+  min: z.number(),
+  max: z.number(),
+  description: z.string(),
 });
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nombre requerido'),
   description: z.string().optional(),
   is_active: z.boolean().default(true),
+  position_id: z.string().optional(),
   criteria: z.array(criteriaSchema).min(1, 'Debe agregar al menos un criterio'),
+  qualitative_questions: z.array(z.string()),
+  rating_scale: z.array(ratingScaleItemSchema),
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+const emptyCriteria = { name: '', description: '', category: 'general', weight: 1, max_score: 4, level_4_description: '', level_3_description: '', level_2_description: '', level_1_description: '' };
 
 interface TemplateFormDialogProps {
   open: boolean;
@@ -55,19 +78,29 @@ export function TemplateFormDialog({
   onSubmit,
   isLoading,
 }: TemplateFormDialogProps) {
+  const { data: positions = [] } = usePositions();
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
       description: '',
       is_active: true,
-      criteria: [{ name: '', description: '', category: 'general', weight: 1, max_score: 5 }],
+      position_id: '',
+      criteria: [{ ...emptyCriteria }],
+      qualitative_questions: [...defaultQuestions],
+      rating_scale: [...defaultScale],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields: criteriaFields, append: appendCriteria, remove: removeCriteria } = useFieldArray({
     control: form.control,
     name: 'criteria',
+  });
+
+  const { fields: questionFields, append: appendQuestion, remove: removeQuestion } = useFieldArray({
+    control: form.control,
+    name: 'qualitative_questions' as any,
   });
 
   useEffect(() => {
@@ -76,22 +109,32 @@ export function TemplateFormDialog({
         name: template.name,
         description: template.description || '',
         is_active: template.is_active ?? true,
+        position_id: template.position_id || '',
         criteria: template.criteria?.length
           ? template.criteria.map(c => ({
               name: c.name,
               description: c.description || '',
               category: c.category || 'general',
               weight: c.weight || 1,
-              max_score: c.max_score || 5,
+              max_score: c.max_score || 4,
+              level_4_description: c.level_4_description || '',
+              level_3_description: c.level_3_description || '',
+              level_2_description: c.level_2_description || '',
+              level_1_description: c.level_1_description || '',
             }))
-          : [{ name: '', description: '', category: 'general', weight: 1, max_score: 5 }],
+          : [{ ...emptyCriteria }],
+        qualitative_questions: (template.qualitative_questions as string[]) || [...defaultQuestions],
+        rating_scale: (template.rating_scale as any[]) || [...defaultScale],
       });
     } else {
       form.reset({
         name: '',
         description: '',
         is_active: true,
-        criteria: [{ name: '', description: '', category: 'general', weight: 1, max_score: 5 }],
+        position_id: '',
+        criteria: [{ ...emptyCriteria }],
+        qualitative_questions: [...defaultQuestions],
+        rating_scale: [...defaultScale],
       });
     }
   }, [template, form]);
@@ -101,9 +144,17 @@ export function TemplateFormDialog({
     onOpenChange(false);
   };
 
+  const positionOptions = positions.map((p: any) => ({
+    value: p.id,
+    label: p.name,
+  }));
+
+  const qualitativeQuestions = form.watch('qualitative_questions');
+  const ratingScale = form.watch('rating_scale');
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {template ? 'Editar Plantilla' : 'Nueva Plantilla de Evaluación'}
@@ -112,6 +163,7 @@ export function TemplateFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {/* Basic info */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -123,6 +175,40 @@ export function TemplateFormDialog({
                       <Input placeholder="Evaluación Anual 2024" {...field} />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="position_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cargo</FormLabel>
+                    <FormControl>
+                      <SearchableSelect
+                        options={positionOptions}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Seleccionar cargo..."
+                        searchPlaceholder="Buscar cargo..."
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descripción</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Descripción de la plantilla..." {...field} />
+                    </FormControl>
                   </FormItem>
                 )}
               />
@@ -141,133 +227,149 @@ export function TemplateFormDialog({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descripción</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Descripción de la plantilla..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* Criteria */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium">Criterios de Evaluación</h4>
+                <h4 className="font-medium">Competencias / Criterios</h4>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    append({ name: '', description: '', category: 'general', weight: 1, max_score: 5 })
-                  }
+                  onClick={() => appendCriteria({ ...emptyCriteria })}
                 >
                   <Plus className="w-4 h-4 mr-1" />
-                  Agregar Criterio
+                  Agregar
                 </Button>
               </div>
 
+              <p className="text-xs text-muted-foreground">
+                Escala 1-4: (4) Ampliamente Desarrollada, (3) Bueno dentro del Estándar, (2) Competencia en Desarrollo, (1) Competencia No Desarrollada
+              </p>
+
               <div className="space-y-3">
-                {fields.map((field, index) => (
-                  <div
+                {criteriaFields.map((field, index) => (
+                  <CriteriaRubricItem
                     key={field.id}
-                    className="flex gap-2 items-start p-3 border rounded-lg bg-muted/30"
-                  >
-                    <GripVertical className="w-4 h-4 mt-2 text-muted-foreground cursor-grab" />
-                    
-                    <div className="flex-1 grid grid-cols-4 gap-2">
-                      <FormField
-                        control={form.control}
-                        name={`criteria.${index}.name`}
-                        render={({ field }) => (
-                          <FormItem className="col-span-2">
-                            <FormControl>
-                              <Input placeholder="Nombre del criterio" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name={`criteria.${index}.category`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input placeholder="Categoría" {...field} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex gap-2">
-                        <FormField
-                          control={form.control}
-                          name={`criteria.${index}.weight`}
-                          render={({ field }) => (
-                            <FormItem className="w-16">
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="Peso"
-                                  {...field}
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 1)}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name={`criteria.${index}.max_score`}
-                          render={({ field }) => (
-                            <FormItem className="w-16">
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="Máx"
-                                  {...field}
-                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 5)}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name={`criteria.${index}.description`}
-                        render={({ field }) => (
-                          <FormItem className="col-span-4">
-                            <FormControl>
-                              <Input placeholder="Descripción (opcional)" {...field} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => remove(index)}
-                      disabled={fields.length === 1}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
+                    index={index}
+                    form={form}
+                    onRemove={() => removeCriteria(index)}
+                    canRemove={criteriaFields.length > 1}
+                  />
                 ))}
+              </div>
+            </div>
+
+            {/* Qualitative Questions */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Preguntas Cualitativas</h4>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const current = form.getValues('qualitative_questions');
+                    form.setValue('qualitative_questions', [...current, '']);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Agregar
+                </Button>
+              </div>
+              {qualitativeQuestions.map((_, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <Input
+                    value={qualitativeQuestions[idx]}
+                    onChange={(e) => {
+                      const updated = [...qualitativeQuestions];
+                      updated[idx] = e.target.value;
+                      form.setValue('qualitative_questions', updated);
+                    }}
+                    placeholder="Pregunta..."
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const updated = qualitativeQuestions.filter((_, i) => i !== idx);
+                      form.setValue('qualitative_questions', updated);
+                    }}
+                    disabled={qualitativeQuestions.length <= 1}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            {/* Rating Scale */}
+            <div className="space-y-3">
+              <h4 className="font-medium">Tabla de Calificación</h4>
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="px-3 py-2 text-left">Nivel</th>
+                      <th className="px-3 py-2 text-left">Mín %</th>
+                      <th className="px-3 py-2 text-left">Máx %</th>
+                      <th className="px-3 py-2 text-left">Acción Requerida</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ratingScale.map((item, idx) => (
+                      <tr key={idx} className="border-t">
+                        <td className="px-3 py-2">
+                          <Input
+                            value={item.label}
+                            onChange={(e) => {
+                              const updated = [...ratingScale];
+                              updated[idx] = { ...updated[idx], label: e.target.value };
+                              form.setValue('rating_scale', updated);
+                            }}
+                            className="h-8"
+                          />
+                        </td>
+                        <td className="px-3 py-2 w-20">
+                          <Input
+                            type="number"
+                            value={item.min}
+                            onChange={(e) => {
+                              const updated = [...ratingScale];
+                              updated[idx] = { ...updated[idx], min: parseInt(e.target.value) || 0 };
+                              form.setValue('rating_scale', updated);
+                            }}
+                            className="h-8"
+                          />
+                        </td>
+                        <td className="px-3 py-2 w-20">
+                          <Input
+                            type="number"
+                            value={item.max}
+                            onChange={(e) => {
+                              const updated = [...ratingScale];
+                              updated[idx] = { ...updated[idx], max: parseInt(e.target.value) || 0 };
+                              form.setValue('rating_scale', updated);
+                            }}
+                            className="h-8"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <Input
+                            value={item.description}
+                            onChange={(e) => {
+                              const updated = [...ratingScale];
+                              updated[idx] = { ...updated[idx], description: e.target.value };
+                              form.setValue('rating_scale', updated);
+                            }}
+                            className="h-8"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
