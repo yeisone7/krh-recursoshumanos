@@ -99,6 +99,20 @@ function usePublishedCourses() {
   });
 }
 
+function useTokenCenterAssociations() {
+  return useQuery({
+    queryKey: ['compliance-token-center'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('training_access_tokens')
+        .select('course_id, operation_center_id')
+        .not('operation_center_id', 'is', null);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
 function useAllCompletions() {
   return useQuery({
     queryKey: ['compliance-completions'],
@@ -128,21 +142,39 @@ export function useTrainingCompliance() {
   const centers = useOperationCentersList();
   const courses = usePublishedCourses();
   const completions = useAllCompletions();
+  const tokenAssociations = useTokenCenterAssociations();
 
-  const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading;
+  const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading || tokenAssociations.isLoading;
 
   const complianceData: CenterComplianceData[] = [];
 
-  if (employees.data && centers.data && courses.data && completions.data) {
+  if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data) {
+    // Build a map: center_id -> Set of course_ids that have tokens for that center
+    const centerCourseMap = new Map<string, Set<string>>();
+    for (const assoc of tokenAssociations.data) {
+      if (!assoc.operation_center_id) continue;
+      if (!centerCourseMap.has(assoc.operation_center_id)) {
+        centerCourseMap.set(assoc.operation_center_id, new Set());
+      }
+      centerCourseMap.get(assoc.operation_center_id)!.add(assoc.course_id);
+    }
+
     for (const center of centers.data) {
       const centerEmployees = employees.data.filter(
         (e) => e.operation_center_id === center.id
       );
       if (centerEmployees.length === 0) continue;
 
+      // Only courses that have at least one token associated with this center
+      const centerCourseIds = centerCourseMap.get(center.id);
+      if (!centerCourseIds || centerCourseIds.size === 0) continue;
+
+      const applicableCourses = courses.data.filter((c) => centerCourseIds.has(c.id));
+      if (applicableCourses.length === 0) continue;
+
       const coursesData: CourseComplianceData[] = [];
 
-      for (const course of courses.data) {
+      for (const course of applicableCourses) {
         const courseCompletions = completions.data.filter(
           (c) => c.course_id === course.id
         );

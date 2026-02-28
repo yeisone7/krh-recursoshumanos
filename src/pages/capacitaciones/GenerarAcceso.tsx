@@ -302,14 +302,17 @@ export default function GenerarAcceso() {
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 text-destructive hover:text-destructive"
-                      onClick={() => deleteToken.mutateAsync(token.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    {token.is_active && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-destructive hover:text-destructive"
+                        title="Desactivar enlace"
+                        onClick={() => toggleToken.mutateAsync({ id: token.id, isActive: false })}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
