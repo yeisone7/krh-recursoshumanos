@@ -1,10 +1,9 @@
-import { useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { FolderTree, FileText, Eye, Download, Trash2, Layers, Scale, Building2, MapPin } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Eye, Download, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { cn } from '@/lib/utils';
 import type { TrainingCompletion } from '@/types/training';
 
 interface EvidenciasTreeViewProps {
@@ -14,22 +13,137 @@ interface EvidenciasTreeViewProps {
   onDelete: (id: string) => void;
 }
 
-interface TreeNode {
-  center: string;
-  categories: {
-    name: string;
-    legalFrameworks: {
-      name: string;
-      areas: {
-        name: string;
-        completions: TrainingCompletion[];
-      }[];
-    }[];
-  }[];
+interface TreeNodeData {
+  id: string;
+  label: string;
+  children?: TreeNodeData[];
+  completion?: TrainingCompletion;
+}
+
+function TreeNode({
+  node,
+  depth = 0,
+  selectedId,
+  onSelect,
+  expanded,
+  onToggle,
+  onViewSignature,
+  onExportPdf,
+  onDelete,
+}: {
+  node: TreeNodeData;
+  depth?: number;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  expanded: Set<string>;
+  onToggle: (id: string) => void;
+  onViewSignature: (s: string | null) => void;
+  onExportPdf: (c: TrainingCompletion) => void;
+  onDelete: (id: string) => void;
+}) {
+  const isFolder = !!node.children;
+  const isOpen = expanded.has(node.id);
+  const isSelected = selectedId === node.id;
+  const hasChildren = isFolder && node.children!.length > 0;
+
+  return (
+    <div className="select-none">
+      {/* Node row */}
+      <div
+        className={cn(
+          'flex items-center gap-1 py-[3px] px-1 rounded-sm cursor-pointer text-sm hover:bg-muted/60 transition-colors',
+          isSelected && 'bg-primary/10 text-primary'
+        )}
+        style={{ paddingLeft: `${depth * 20 + 4}px` }}
+        onClick={() => {
+          onSelect(node.id);
+          if (isFolder) onToggle(node.id);
+        }}
+      >
+        {/* Expand/collapse caret */}
+        {isFolder ? (
+          <span className="w-4 h-4 flex items-center justify-center shrink-0">
+            {hasChildren ? (
+              isOpen ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            ) : (
+              <span className="w-3.5" />
+            )}
+          </span>
+        ) : (
+          <span className="w-4" />
+        )}
+
+        {/* Icon */}
+        {isFolder ? (
+          isOpen ? <FolderOpen className="h-4 w-4 text-primary shrink-0" /> : <Folder className="h-4 w-4 text-primary shrink-0" />
+        ) : (
+          <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+        )}
+
+        {/* Label */}
+        <span className={cn('truncate', isFolder && 'font-medium')}>{node.label}</span>
+
+        {/* Leaf actions */}
+        {node.completion && (
+          <div className="flex gap-0.5 ml-auto shrink-0 opacity-0 group-hover/leaf:opacity-100" style={{ opacity: isSelected ? 1 : undefined }}>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); onViewSignature(node.completion!.signature_data); }}><Eye className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); onExportPdf(node.completion!); }}><Download className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={e => { e.stopPropagation(); onDelete(node.completion!.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+          </div>
+        )}
+      </div>
+
+      {/* Children with tree lines */}
+      {isFolder && isOpen && hasChildren && (
+        <div className="relative">
+          {/* Vertical connector line */}
+          <div
+            className="absolute top-0 bottom-2 border-l border-border"
+            style={{ left: `${depth * 20 + 14}px` }}
+          />
+          {node.children!.map((child, idx) => (
+            <div key={child.id} className="relative group/leaf">
+              {/* Horizontal connector line */}
+              <div
+                className="absolute border-t border-border"
+                style={{
+                  left: `${depth * 20 + 14}px`,
+                  width: '10px',
+                  top: '14px',
+                }}
+              />
+              <TreeNode
+                node={child}
+                depth={depth + 1}
+                selectedId={selectedId}
+                onSelect={onSelect}
+                expanded={expanded}
+                onToggle={onToggle}
+                onViewSignature={onViewSignature}
+                onExportPdf={onExportPdf}
+                onDelete={onDelete}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function EvidenciasTreeView({ completions, onViewSignature, onExportPdf, onDelete }: EvidenciasTreeViewProps) {
-  const tree = useMemo(() => {
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const onToggle = useCallback((id: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const tree = useMemo<TreeNodeData[]>(() => {
     const centerMap = new Map<string, Map<string, Map<string, Map<string, TrainingCompletion[]>>>>();
 
     for (const c of completions) {
@@ -48,128 +162,54 @@ export default function EvidenciasTreeView({ completions, onViewSignature, onExp
       areaMap.get(area)!.push(c);
     }
 
-    const result: TreeNode[] = [];
-    for (const [center, catMap] of centerMap) {
-      const categories = [];
-      for (const [category, legalMap] of catMap) {
-        const legalFrameworks = [];
-        for (const [legal, areaMap] of legalMap) {
-          const areas = [];
-          for (const [area, comps] of areaMap) {
-            areas.push({ name: area, completions: comps });
+    const nodes: TreeNodeData[] = [];
+    for (const [center, catMap] of [...centerMap.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+      const catChildren: TreeNodeData[] = [];
+      for (const [cat, legalMap] of [...catMap.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+        const legalChildren: TreeNodeData[] = [];
+        for (const [legal, areaMap] of [...legalMap.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+          const areaChildren: TreeNodeData[] = [];
+          for (const [area, comps] of [...areaMap.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+            const leafs: TreeNodeData[] = comps.map(c => ({
+              id: c.id,
+              label: `${c.operator_name} — ${c.operator_cedula || 'Sin cédula'} — ${format(parseISO(c.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}${c.quiz_score != null ? ` — ${c.quiz_score}%` : ''}`,
+              completion: c,
+            }));
+            areaChildren.push({ id: `${center}-${cat}-${legal}-${area}`, label: area, children: leafs });
           }
-          areas.sort((a, b) => a.name.localeCompare(b.name));
-          legalFrameworks.push({ name: legal, areas });
+          legalChildren.push({ id: `${center}-${cat}-${legal}`, label: legal, children: areaChildren });
         }
-        legalFrameworks.sort((a, b) => a.name.localeCompare(b.name));
-        categories.push({ name: category, legalFrameworks });
+        catChildren.push({ id: `${center}-${cat}`, label: cat, children: legalChildren });
       }
-      categories.sort((a, b) => a.name.localeCompare(b.name));
-      result.push({ center, categories });
+      nodes.push({ id: center, label: center, children: catChildren });
     }
-    result.sort((a, b) => a.center.localeCompare(b.center));
-    return result;
+    return nodes;
   }, [completions]);
 
   if (completions.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-12">
-        <FolderTree className="h-12 w-12 mx-auto mb-3 opacity-40" />
+        <Folder className="h-12 w-12 mx-auto mb-3 opacity-40" />
         <p>No hay evidencias registradas</p>
       </div>
     );
   }
 
-  const centerCount = (node: TreeNode) =>
-    node.categories.reduce((s1, cat) => s1 + cat.legalFrameworks.reduce((s2, lf) => s2 + lf.areas.reduce((s3, a) => s3 + a.completions.length, 0), 0), 0);
-
-  const catCount = (cat: TreeNode['categories'][0]) =>
-    cat.legalFrameworks.reduce((s, lf) => s + lf.areas.reduce((s2, a) => s2 + a.completions.length, 0), 0);
-
-  const legalCount = (lf: TreeNode['categories'][0]['legalFrameworks'][0]) =>
-    lf.areas.reduce((s, a) => s + a.completions.length, 0);
-
   return (
-    <Accordion type="multiple" className="space-y-2">
-      {tree.map((node) => (
-        <AccordionItem key={node.center} value={node.center} className="border rounded-lg px-1 bg-card">
-          <AccordionTrigger className="hover:no-underline px-3">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-emerald-600" />
-              <span className="font-semibold">{node.center}</span>
-              <Badge variant="secondary" className="ml-1">{centerCount(node)}</Badge>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-2 pb-2">
-            <Accordion type="multiple" className="space-y-1">
-              {node.categories.map((cat) => (
-                <AccordionItem key={cat.name} value={`${node.center}-${cat.name}`} className="border rounded-md px-1 bg-muted/30">
-                  <AccordionTrigger className="hover:no-underline px-3 py-2.5 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Layers className="h-3.5 w-3.5 text-primary" />
-                      <span className="font-medium">{cat.name}</span>
-                      <Badge variant="outline" className="ml-1 text-xs">{catCount(cat)}</Badge>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-2 pb-2">
-                    <Accordion type="multiple" className="space-y-1">
-                      {cat.legalFrameworks.map((lf) => (
-                        <AccordionItem key={lf.name} value={`${node.center}-${cat.name}-${lf.name}`} className="border rounded-md px-1 bg-background">
-                          <AccordionTrigger className="hover:no-underline px-3 py-2 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Scale className="h-3.5 w-3.5 text-amber-600" />
-                              <span>{lf.name}</span>
-                              <Badge variant="outline" className="ml-1 text-xs">{legalCount(lf)}</Badge>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="px-2 pb-2">
-                            <Accordion type="multiple" className="space-y-1">
-                              {lf.areas.map((area) => (
-                                <AccordionItem key={area.name} value={`${node.center}-${cat.name}-${lf.name}-${area.name}`} className="border rounded-md px-1 bg-muted/20">
-                                  <AccordionTrigger className="hover:no-underline px-3 py-2 text-sm">
-                                    <div className="flex items-center gap-2">
-                                      <Building2 className="h-3.5 w-3.5 text-blue-600" />
-                                      <span>{area.name}</span>
-                                      <Badge variant="outline" className="ml-1 text-xs">{area.completions.length}</Badge>
-                                    </div>
-                                  </AccordionTrigger>
-                                  <AccordionContent className="px-1 pb-1">
-                                    <div className="space-y-1">
-                                      {area.completions.map((c) => (
-                                        <div key={c.id} className="flex items-center justify-between rounded-md border bg-card px-3 py-2 text-sm hover:bg-muted/50 transition-colors">
-                                          <div className="flex items-center gap-3 min-w-0">
-                                            <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                            <div className="min-w-0">
-                                              <p className="font-medium truncate">{c.operator_name}</p>
-                                              <p className="text-xs text-muted-foreground">
-                                                {c.operator_cedula || 'Sin cédula'} · {c.course?.name} · {format(parseISO(c.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}
-                                                {c.quiz_score != null && ` · ${c.quiz_score}%`}
-                                              </p>
-                                            </div>
-                                          </div>
-                                          <div className="flex gap-0.5 shrink-0">
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onViewSignature(c.signature_data)}><Eye className="h-3.5 w-3.5" /></Button>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onExportPdf(c)}><Download className="h-3.5 w-3.5" /></Button>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onDelete(c.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </AccordionContent>
-                                </AccordionItem>
-                              ))}
-                            </Accordion>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </AccordionContent>
-        </AccordionItem>
+    <div className="border rounded-md bg-card p-2 font-mono text-[13px]">
+      {tree.map(node => (
+        <TreeNode
+          key={node.id}
+          node={node}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          expanded={expanded}
+          onToggle={onToggle}
+          onViewSignature={onViewSignature}
+          onExportPdf={onExportPdf}
+          onDelete={onDelete}
+        />
       ))}
-    </Accordion>
+    </div>
   );
 }
