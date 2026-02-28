@@ -338,7 +338,7 @@ export default function AccesoPublico() {
           <Card className="mt-4">
             <CardHeader className="text-center pb-2">
               <div className="flex justify-center mb-3">
-                <img src={petrocasinosIcon} alt="Logo" className="h-16 w-16" />
+                <img src={petrocasinosIcon} alt="Logo" className="h-16 w-16 rounded-xl" />
               </div>
               <CardTitle className="text-xl">{course?.name}</CardTitle>
               <CardDescription className="flex items-center justify-center gap-2 mt-1">
