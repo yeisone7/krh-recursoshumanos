@@ -1,0 +1,1 @@
+ALTER TABLE public.training_completions ADD COLUMN IF NOT EXISTS quiz_score integer;
