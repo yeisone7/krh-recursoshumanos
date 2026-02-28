@@ -107,6 +107,9 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
   const trainingQuery = useQuery({
     queryKey: ['employee_360_training', employeeId],
     queryFn: async () => {
+      const employee = employeeQuery.data;
+      const documentNumber = employee?.document_number;
+
       // Get sessions where employee is an attendee
       const { data: sessions, error: sessionsError } = await supabase
         .from('training_sessions')
@@ -119,8 +122,26 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
       const employeeSessions = (sessions || []).filter((s: any) => 
         s.attendees && Array.isArray(s.attendees) && s.attendees.includes(employeeId)
       );
+
+      // Get training completions by employee_id OR operator_cedula
+      let completions: any[] = [];
+      if (employeeId || documentNumber) {
+        let query = supabase
+          .from('training_completions')
+          .select('*, course:training_courses(id, name, category, legal_framework, target_audience), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))')
+          .order('completed_at', { ascending: false });
+
+        if (documentNumber) {
+          query = query.or(`employee_id.eq.${employeeId},operator_cedula.eq.${documentNumber}`);
+        } else {
+          query = query.eq('employee_id', employeeId!);
+        }
+
+        const { data, error } = await query;
+        if (!error) completions = data || [];
+      }
       
-      return { sessions: employeeSessions, courses: [] };
+      return { sessions: employeeSessions, courses: [], completions };
     },
     enabled: !!employeeId && ['training', 'kpis'].includes(activeTab),
   });
