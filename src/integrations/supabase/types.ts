@@ -4944,6 +4944,7 @@ export type Database = {
           ip_address: string | null
           operator_cedula: string | null
           operator_name: string
+          quiz_score: number | null
           signature_data: string
           token_id: string | null
           user_agent: string | null
@@ -4957,6 +4958,7 @@ export type Database = {
           ip_address?: string | null
           operator_cedula?: string | null
           operator_name: string
+          quiz_score?: number | null
           signature_data: string
           token_id?: string | null
           user_agent?: string | null
@@ -4970,6 +4972,7 @@ export type Database = {
           ip_address?: string | null
           operator_cedula?: string | null
           operator_name?: string
+          quiz_score?: number | null
           signature_data?: string
           token_id?: string | null
           user_agent?: string | null
