@@ -636,7 +636,7 @@ export function useTrainingCompletions(courseId?: string) {
 
       let query = supabase
         .from('training_completions')
-        .select(`*, course:training_courses(id, name, category, legal_framework, target_audience)`)
+        .select(`*, course:training_courses(id, name, category, legal_framework, target_audience), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`)
         .eq('company_id', currentCompanyId)
         .order('completed_at', { ascending: false });
 
