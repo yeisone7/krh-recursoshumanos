@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { format, differenceInYears, differenceInMonths, differenceInDays } from 'date-fns';
+import { useState, useRef } from 'react';
+import { format, differenceInYears, differenceInMonths, differenceInDays, differenceInCalendarDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
   User, 
@@ -31,7 +31,12 @@ import {
   BadgeCheck,
   Droplets,
   Hash,
-  Globe
+  Globe,
+  Camera,
+  Upload,
+  AlertTriangle,
+  History,
+  ScrollText
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -48,11 +53,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useEmployee } from '@/hooks/useEmployees';
 import { useDeleteCertification, useDeleteVaccination, useDeleteDocument } from '@/hooks/useEmployeeHealth';
+import { useContracts } from '@/hooks/useContracts';
+import { useWorkInfoHistory } from '@/hooks/useWorkInfoHistory';
 import { EmployeeFormDialog } from './EmployeeFormDialog';
 import { CertificationFormDialog } from './CertificationFormDialog';
 import { VaccinationFormDialog } from './VaccinationFormDialog';
 import { DocumentFormDialog } from './DocumentFormDialog';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
   documentTypeLabels,
   genderLabels,
@@ -147,19 +155,228 @@ function computeAge(birthDate: string): string {
   return `${differenceInYears(new Date(), new Date(birthDate))} años`;
 }
 
+// ── Expiring Items Alert ──
+function ExpiringItemsAlert({ employee }: { employee: any }) {
+  const now = new Date();
+  const alerts: { label: string; name: string; daysLeft: number }[] = [];
+
+  // Check certifications
+  employee.certifications?.forEach((cert: any) => {
+    if (cert.expiry_date) {
+      const days = differenceInCalendarDays(new Date(cert.expiry_date), now);
+      if (days <= 30) {
+        alerts.push({
+          label: 'Certificación',
+          name: certificationTypeLabels[cert.certification_type as keyof typeof certificationTypeLabels] || cert.certification_type,
+          daysLeft: days,
+        });
+      }
+    }
+  });
+
+  // Check documents
+  employee.documents?.forEach((doc: any) => {
+    if (doc.expiry_date) {
+      const days = differenceInCalendarDays(new Date(doc.expiry_date), now);
+      if (days <= 30) {
+        alerts.push({
+          label: 'Documento',
+          name: doc.document_name || employeeDocumentTypeLabels[doc.document_type as keyof typeof employeeDocumentTypeLabels] || doc.document_type,
+          daysLeft: days,
+        });
+      }
+    }
+  });
+
+  // Check residence letter
+  if (employee.contact?.residence_letter_expiry) {
+    const days = differenceInCalendarDays(new Date(employee.contact.residence_letter_expiry), now);
+    if (days <= 30) {
+      alerts.push({ label: 'Documento', name: 'Carta de Residencia', daysLeft: days });
+    }
+  }
+
+  if (alerts.length === 0) return null;
+
+  // Sort most urgent first
+  alerts.sort((a, b) => a.daysLeft - b.daysLeft);
+
+  return (
+    <Card className="border-warning/40 bg-warning/5 shadow-none">
+      <CardContent className="p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="p-1.5 rounded-md bg-warning/15">
+            <AlertTriangle className="w-3.5 h-3.5 text-warning" />
+          </div>
+          <span className="text-sm font-semibold text-foreground">Alertas de Vencimiento ({alerts.length})</span>
+        </div>
+        <div className="space-y-1.5">
+          {alerts.map((a, i) => (
+            <div key={i} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-md bg-background/80">
+              <span className="text-muted-foreground">
+                <span className="font-medium text-foreground">{a.label}:</span> {a.name}
+              </span>
+              <Badge
+                variant={a.daysLeft < 0 ? 'destructive' : a.daysLeft <= 7 ? 'destructive' : 'secondary'}
+                className="text-[10px] h-5"
+              >
+                {a.daysLeft < 0 ? 'Vencido' : a.daysLeft === 0 ? 'Vence hoy' : `${a.daysLeft}d`}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ── Contract Summary Card ──
+function ContractSummaryCard({ employeeId }: { employeeId: string }) {
+  const { data: allContracts, isLoading } = useContracts();
+
+  if (isLoading) return null;
+
+  const empContracts = allContracts?.filter((c: any) => c.employee_id === employeeId) || [];
+  const activeContracts = empContracts.filter((c: any) => !c.is_terminated);
+  const terminatedCount = empContracts.length - activeContracts.length;
+
+  if (!empContracts?.length) return null;
+
+  return (
+    <SectionCard title="Contratos" icon={ScrollText}>
+      <div className="space-y-2">
+        {activeContracts.length > 0 ? (
+          activeContracts.map((c: any) => {
+            const daysToEnd = c.end_date ? differenceInCalendarDays(new Date(c.end_date), new Date()) : null;
+            return (
+              <div key={c.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm">{c.contract_type}</span>
+                    <Badge className="bg-success/10 text-success border-success/20 text-[10px] h-5">Vigente</Badge>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {c.contract_number && `${c.contract_number} • `}
+                    Desde {format(new Date(c.start_date), 'dd MMM yyyy', { locale: es })}
+                    {c.end_date && ` hasta ${format(new Date(c.end_date), 'dd MMM yyyy', { locale: es })}`}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-bold text-foreground">
+                    ${Number(c.salary).toLocaleString('es-CO')}
+                  </span>
+                  {daysToEnd !== null && daysToEnd <= 30 && daysToEnd >= 0 && (
+                    <Badge variant="destructive" className="text-[10px] h-5 ml-2">
+                      {daysToEnd}d
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <p className="text-sm text-muted-foreground">Sin contratos activos</p>
+        )}
+        {terminatedCount > 0 && (
+          <p className="text-xs text-muted-foreground pt-1">
+            + {terminatedCount} contrato{terminatedCount > 1 ? 's' : ''} finalizado{terminatedCount > 1 ? 's' : ''}
+          </p>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
+// ── Work Info History ──
+function WorkInfoHistoryCard({ employeeId }: { employeeId: string }) {
+  const { data: history, isLoading } = useWorkInfoHistory(employeeId);
+
+  if (isLoading || !history?.length || history.length <= 1) return null;
+
+  // Show historical records (not the current one)
+  const pastRecords = history.filter((r: any) => !r.is_current).slice(0, 5);
+
+  if (pastRecords.length === 0) return null;
+
+  return (
+    <SectionCard title="Historial de Cambios" icon={History}>
+      <div className="space-y-2">
+        {pastRecords.map((record: any, i: number) => (
+          <div key={record.id} className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50 relative">
+            {i < pastRecords.length - 1 && (
+              <div className="absolute left-[21px] top-[36px] bottom-[-8px] w-px bg-border" />
+            )}
+            <div className="p-1.5 rounded-full bg-muted shrink-0 z-10">
+              <Briefcase className="w-3 h-3 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm">{record.position_name}</p>
+              <p className="text-xs text-muted-foreground">
+                {record.areas?.name && `${record.areas.name} • `}
+                {record.operation_centers?.name && `${record.operation_centers.name}`}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {format(new Date(record.valid_from), 'dd MMM yyyy', { locale: es })}
+                {record.valid_to && ` → ${format(new Date(record.valid_to), 'dd MMM yyyy', { locale: es })}`}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
 export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: EmployeeDetailDialogProps) {
-  const { data: employee, isLoading } = useEmployee(employeeId || undefined);
+  const { data: employee, isLoading, refetch } = useEmployee(employeeId || undefined);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCertFormOpen, setIsCertFormOpen] = useState(false);
   const [isVacFormOpen, setIsVacFormOpen] = useState(false);
   const [isDocFormOpen, setIsDocFormOpen] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const deleteCertification = useDeleteCertification();
   const deleteVaccination = useDeleteVaccination();
   const deleteDocument = useDeleteDocument();
 
   if (!employeeId) return null;
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !employeeId) return;
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      toast({ title: 'Solo imágenes JPG, PNG o WebP', variant: 'destructive' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Máximo 5MB', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `${employeeId}/avatar_${Date.now()}.${ext}`;
+
+      const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+
+      await supabase.from('employees_v2').update({ avatar_url: urlData.publicUrl }).eq('id', employeeId);
+      refetch();
+      toast({ title: 'Foto actualizada' });
+    } catch (err: any) {
+      toast({ title: 'Error al subir foto', description: err.message, variant: 'destructive' });
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleDeleteCertification = async (certId: string) => {
     try {
@@ -207,12 +424,34 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
             {/* ── HEADER ── */}
             <div className="gradient-primary px-6 pt-6 pb-5 rounded-t-xl relative">
               <div className="flex items-start gap-4">
-                <Avatar className="w-16 h-16 border-2 border-primary-foreground/30 shrink-0">
-                  <AvatarImage src={employee.avatar_url || undefined} alt={employeeFullName} />
-                  <AvatarFallback className="bg-primary-foreground/20 text-primary-foreground text-xl font-bold">
-                    {employee.first_name[0]}{employee.last_name[0]}
-                  </AvatarFallback>
-                </Avatar>
+                {/* Avatar with upload overlay */}
+                <div className="relative group shrink-0">
+                  <Avatar className="w-16 h-16 border-2 border-primary-foreground/30">
+                    <AvatarImage src={employee.avatar_url || undefined} alt={employeeFullName} />
+                    <AvatarFallback className="bg-primary-foreground/20 text-primary-foreground text-xl font-bold">
+                      {employee.first_name[0]}{employee.last_name[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    {uploadingAvatar ? (
+                      <Loader2 className="w-5 h-5 text-white animate-spin" />
+                    ) : (
+                      <Camera className="w-5 h-5 text-white" />
+                    )}
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                  />
+                </div>
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <Badge variant="outline" className={cn(
@@ -286,6 +525,11 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   <MetricChip icon={Shield} label="Nivel Riesgo" value={riskLevelLabels[employee.social_security.risk_level].replace('Nivel ', '')} color="warning" />
                 )}
               </div>
+            </div>
+
+            {/* ── EXPIRING ALERTS ── */}
+            <div className="px-6 pt-3">
+              <ExpiringItemsAlert employee={employee} />
             </div>
 
             {/* ── TABS ── */}
@@ -421,6 +665,12 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                           )}
                         </div>
                       </div>
+
+                      {/* Contracts Summary */}
+                      <ContractSummaryCard employeeId={employee.id} />
+
+                      {/* Work Info History */}
+                      <WorkInfoHistoryCard employeeId={employee.id} />
 
                       {employee.work_info.observations && (
                         <SectionCard title="Observaciones" icon={FileText}>
