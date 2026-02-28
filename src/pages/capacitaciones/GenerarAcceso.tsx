@@ -239,7 +239,11 @@ export default function GenerarAcceso() {
                     </div>
                     <Switch
                       checked={token.is_active}
-                      onCheckedChange={(checked) => toggleToken.mutateAsync({ id: token.id, isActive: checked })}
+                      onCheckedChange={(checked) => {
+                        toggleToken.mutateAsync({ id: token.id, isActive: checked })
+                          .then(() => toast.success(checked ? 'Enlace activado' : 'Enlace desactivado'))
+                          .catch(() => toast.error('Error al cambiar estado del enlace'));
+                      }}
                     />
                   </div>
 
@@ -308,7 +312,11 @@ export default function GenerarAcceso() {
                         size="icon"
                         className="h-9 w-9 text-destructive hover:text-destructive"
                         title="Desactivar enlace"
-                        onClick={() => toggleToken.mutateAsync({ id: token.id, isActive: false })}
+                        onClick={() => {
+                          toggleToken.mutateAsync({ id: token.id, isActive: false })
+                            .then(() => toast.success('Enlace desactivado'))
+                            .catch(() => toast.error('Error al desactivar enlace'));
+                        }}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
