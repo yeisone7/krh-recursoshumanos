@@ -219,7 +219,7 @@ export default function GenerarAcceso() {
               const maxReached = token.max_uses && token.uses_count >= token.max_uses;
 
               return (
-                <div key={token.id} className="border rounded-xl bg-card p-4 space-y-3">
+                <div key={token.id} className={`border rounded-xl bg-card p-4 space-y-3 transition-opacity ${!token.is_active ? 'opacity-50 pointer-events-none select-none' : ''}`}>
                   {/* Header row */}
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
@@ -237,18 +237,25 @@ export default function GenerarAcceso() {
                         </p>
                       )}
                     </div>
-                    <Switch
-                      checked={token.is_active}
-                      onCheckedChange={(checked) => {
-                        toggleToken.mutateAsync({ id: token.id, isActive: checked })
-                          .then(() => toast.success(checked ? 'Enlace activado' : 'Enlace desactivado'))
-                          .catch(() => toast.error('Error al cambiar estado del enlace'));
-                      }}
-                    />
+                    <div className="pointer-events-auto">
+                      <Switch
+                        checked={token.is_active}
+                        onCheckedChange={(checked) => {
+                          toggleToken.mutateAsync({ id: token.id, isActive: checked })
+                            .then(() => toast.success(checked ? 'Enlace activado' : 'Enlace desactivado'))
+                            .catch(() => toast.error('Error al cambiar estado del enlace'));
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* Badges */}
                   <div className="flex items-center gap-2 flex-wrap">
+                    {!token.is_active && (
+                      <Badge variant="destructive" className="text-xs">
+                        Inhabilitado
+                      </Badge>
+                    )}
                     <Badge variant="outline" className="text-xs">
                       {token.access_type === 'link_cedula' ? 'Link + Cédula' : 'Solo Link'}
                     </Badge>
