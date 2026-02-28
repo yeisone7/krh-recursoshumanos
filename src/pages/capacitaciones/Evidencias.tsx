@@ -43,22 +43,143 @@ export default function Evidencias() {
     try { await bulkDelete.mutateAsync([...selected]); setSelected(new Set()); toast.success(`${selected.size} registros eliminados`); } catch { toast.error('Error'); }
   };
 
-  const exportPdf = (completion: TrainingCompletion) => {
+  const exportPdf = async (completion: TrainingCompletion) => {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const contentWidth = pageWidth - margin * 2;
+
+    // --- Navy blue header bar ---
+    doc.setFillColor(15, 30, 60);
+    doc.rect(0, 0, pageWidth, 38, 'F');
+
+    // Orange accent line under header
+    doc.setFillColor(237, 137, 54);
+    doc.rect(0, 38, pageWidth, 3, 'F');
+
+    // Company name in header
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
-    doc.text('CONSTANCIA DE CAPACITACIÓN', 105, 30, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`Capacitación: ${completion.course?.name || 'N/A'}`, 20, 50);
-    doc.text(`Participante: ${completion.operator_name}`, 20, 60);
-    doc.text(`Cédula: ${completion.operator_cedula || 'N/A'}`, 20, 70);
-    doc.text(`Fecha: ${format(parseISO(completion.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}`, 20, 80);
-    if (completion.signature_data) {
-      try { doc.addImage(completion.signature_data, 'PNG', 60, 100, 90, 40); } catch { /* skip */ }
-      doc.text('Firma del participante', 105, 150, { align: 'center' });
+    doc.setTextColor(255, 255, 255);
+    doc.text('PETROCASINOS S.A.', margin, 18);
+
+    // Document title in header
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(200, 210, 230);
+    doc.text('Constancia de Capacitación', margin, 28);
+
+    // Document number / date on the right
+    doc.setFontSize(9);
+    doc.setTextColor(180, 190, 210);
+    doc.text(`Fecha de generación: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, pageWidth - margin, 28, { align: 'right' });
+
+    // --- Certificate title ---
+    let y = 56;
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(15, 30, 60);
+    doc.text('CONSTANCIA DE CAPACITACIÓN', pageWidth / 2, y, { align: 'center' });
+
+    // Decorative line under title
+    y += 4;
+    doc.setDrawColor(237, 137, 54);
+    doc.setLineWidth(1.5);
+    doc.line(pageWidth / 2 - 45, y, pageWidth / 2 + 45, y);
+
+    // --- Body text ---
+    y += 14;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(50, 50, 50);
+    const bodyText = `Se hace constar que el/la participante identificado(a) a continuación completó satisfactoriamente la capacitación indicada, cumpliendo con los requisitos de evaluación y asistencia establecidos.`;
+    const bodyLines = doc.splitTextToSize(bodyText, contentWidth);
+    doc.text(bodyLines, margin, y);
+    y += bodyLines.length * 6 + 10;
+
+    // --- Information card ---
+    const cardStartY = y;
+    doc.setFillColor(245, 247, 250);
+    doc.setDrawColor(220, 225, 235);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, contentWidth, 60, 3, 3, 'FD');
+
+    y += 10;
+    const labelX = margin + 10;
+    const valueX = margin + 55;
+
+    const drawField = (label: string, value: string, yPos: number) => {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(100, 110, 130);
+      doc.text(label, labelX, yPos);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 30, 30);
+      doc.text(value, valueX, yPos);
+    };
+
+    drawField('Participante:', completion.operator_name, y);
+    y += 10;
+    drawField('Cédula:', completion.operator_cedula || 'N/A', y);
+    y += 10;
+    drawField('Capacitación:', completion.course?.name || 'N/A', y);
+    y += 10;
+    drawField('Fecha:', format(parseISO(completion.completed_at), "dd 'de' MMMM 'de' yyyy - HH:mm", { locale: es }), y);
+    y += 10;
+    if (completion.quiz_score !== null && completion.quiz_score !== undefined) {
+      drawField('Calificación:', `${completion.quiz_score}%`, y);
     }
-    doc.setFontSize(8);
-    doc.text(`Generado el ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, 105, 280, { align: 'center' });
-    doc.save(`evidencia-${completion.operator_name.replace(/\s+/g, '-')}.pdf`);
+
+    y = cardStartY + 60 + 15;
+
+    // --- Signature section ---
+    if (completion.signature_data) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(100, 110, 130);
+      doc.text('Firma del participante:', pageWidth / 2, y, { align: 'center' });
+      y += 5;
+
+      // Signature box
+      const sigWidth = 100;
+      const sigHeight = 40;
+      const sigX = (pageWidth - sigWidth) / 2;
+      doc.setDrawColor(200, 205, 215);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(sigX, y, sigWidth, sigHeight, 2, 2, 'S');
+
+      try {
+        doc.addImage(completion.signature_data, 'PNG', sigX + 5, y + 2, sigWidth - 10, sigHeight - 4);
+      } catch { /* skip */ }
+
+      y += sigHeight + 5;
+      // Name under signature
+      doc.setDrawColor(80, 80, 80);
+      doc.setLineWidth(0.5);
+      doc.line(pageWidth / 2 - 40, y, pageWidth / 2 + 40, y);
+      y += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      doc.text(completion.operator_name, pageWidth / 2, y, { align: 'center' });
+      y += 4;
+      doc.text(`C.C. ${completion.operator_cedula || 'N/A'}`, pageWidth / 2, y, { align: 'center' });
+    }
+
+    // --- Footer ---
+    // Orange line
+    doc.setFillColor(237, 137, 54);
+    doc.rect(0, pageHeight - 18, pageWidth, 2, 'F');
+
+    // Footer text
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(140, 140, 140);
+    doc.text('Este documento es una constancia de capacitación generada electrónicamente por el sistema de gestión RRHH.', pageWidth / 2, pageHeight - 10, { align: 'center' });
+    doc.text('PETROCASINOS S.A. — Sistema de Gestión de Capacitaciones', pageWidth / 2, pageHeight - 5, { align: 'center' });
+
+    doc.save(`constancia-${completion.operator_name.replace(/\s+/g, '-')}.pdf`);
   };
 
   return (
