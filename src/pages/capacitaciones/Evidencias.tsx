@@ -14,6 +14,7 @@ import { useTrainingCompletions, useDeleteCompletion, useBulkDeleteCompletions, 
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
 import type { TrainingCompletion } from '@/types/training';
+import EvidenciasTreeView from '@/components/training/EvidenciasTreeView';
 
 export default function Evidencias() {
   const { data: completions = [] } = useTrainingCompletions();
@@ -226,38 +227,47 @@ export default function Evidencias() {
         {selected.size > 0 && <Button variant="destructive" size="sm" onClick={handleBulkDelete}><Trash2 className="h-4 w-4 mr-1" /> Eliminar ({selected.size})</Button>}
       </div>
 
-      <Card>
-        <CardContent className="pt-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></TableHead>
-                <TableHead>Nombre</TableHead><TableHead>Cédula</TableHead><TableHead>Capacitación</TableHead><TableHead>Fecha</TableHead><TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No hay evidencias registradas</TableCell></TableRow>
-              ) : filtered.map(c => (
-                <TableRow key={c.id}>
-                  <TableCell><Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} /></TableCell>
-                  <TableCell className="font-medium">{c.operator_name}</TableCell>
-                  <TableCell>{c.operator_cedula || '-'}</TableCell>
-                  <TableCell>{c.course?.name || '-'}</TableCell>
-                  <TableCell>{format(parseISO(c.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => setSignatureView(c.signature_data)}><Eye className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => exportPdf(c)}><Download className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                  </TableCell>
+      {viewMode === 'tree' ? (
+        <EvidenciasTreeView
+          completions={filtered}
+          onViewSignature={setSignatureView}
+          onExportPdf={exportPdf}
+          onDelete={handleDelete}
+        />
+      ) : (
+        <Card>
+          <CardContent className="pt-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></TableHead>
+                  <TableHead>Nombre</TableHead><TableHead>Cédula</TableHead><TableHead>Capacitación</TableHead><TableHead>Fecha</TableHead><TableHead>Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {filtered.length === 0 ? (
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No hay evidencias registradas</TableCell></TableRow>
+                ) : filtered.map(c => (
+                  <TableRow key={c.id}>
+                    <TableCell><Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} /></TableCell>
+                    <TableCell className="font-medium">{c.operator_name}</TableCell>
+                    <TableCell>{c.operator_cedula || '-'}</TableCell>
+                    <TableCell>{c.course?.name || '-'}</TableCell>
+                    <TableCell>{format(parseISO(c.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => setSignatureView(c.signature_data)}><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => exportPdf(c)}><Download className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       <Dialog open={!!signatureView} onOpenChange={() => setSignatureView(null)}>
         <DialogContent className="max-w-md"><DialogHeader><DialogTitle>Firma Digital</DialogTitle></DialogHeader>
