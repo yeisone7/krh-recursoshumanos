@@ -150,6 +150,9 @@ export default function Capacitaciones() {
               <Button variant="outline" className="justify-start" onClick={() => navigate('/capacitaciones/acceso/generar')}>
                 <Link2 className="h-4 w-4 mr-2" /> Generar Enlace
               </Button>
+              <Button variant="outline" className="justify-start col-span-2" onClick={() => navigate('/capacitaciones/cumplimiento')}>
+                <LayoutDashboard className="h-4 w-4 mr-2" /> Cumplimiento
+              </Button>
             </div>
           </CardContent>
         </Card>

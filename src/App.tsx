@@ -30,6 +30,7 @@ import BibliotecaCapacitaciones from "./pages/capacitaciones/Biblioteca";
 import GenerarAcceso from "./pages/capacitaciones/GenerarAcceso";
 import EvidenciasCapacitaciones from "./pages/capacitaciones/Evidencias";
 import AnaliticasCapacitaciones from "./pages/capacitaciones/Analiticas";
+import CumplimientoCapacitaciones from "./pages/capacitaciones/Cumplimiento";
 import AccesoPublico from "./pages/capacitaciones/AccesoPublico";
 import Evaluaciones from "./pages/Evaluaciones";
 import Organigrama from "./pages/Organigrama";
@@ -116,6 +117,7 @@ const App = () => (
                         <Route path="/capacitaciones/acceso/generar" element={<GenerarAcceso />} />
                         <Route path="/capacitaciones/evidencias" element={<EvidenciasCapacitaciones />} />
                         <Route path="/capacitaciones/analiticas" element={<AnaliticasCapacitaciones />} />
+                        <Route path="/capacitaciones/cumplimiento" element={<CumplimientoCapacitaciones />} />
                         <Route path="/evaluaciones" element={<Evaluaciones />} />
                         <Route path="/organigrama" element={<Organigrama />} />
                         <Route path="/cesantias" element={<Cesantias />} />
