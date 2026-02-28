@@ -107,12 +107,12 @@ function MetricChip({ icon: Icon, label, value, color = 'primary' }: { icon: any
   };
 
   return (
-    <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border bg-card min-w-[100px]">
+    <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border bg-card flex-1 min-w-0">
       <div className={cn("p-2 rounded-lg", colorClasses[color] || colorClasses.primary)}>
         <Icon className="w-4 h-4" />
       </div>
       <span className="text-[11px] text-muted-foreground leading-tight text-center">{label}</span>
-      <span className="text-sm font-bold text-foreground text-center leading-tight">{value}</span>
+      <span className="text-sm font-bold text-foreground text-center leading-tight truncate w-full">{value}</span>
     </div>
   );
 }
@@ -509,7 +509,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
 
             {/* ── QUICK METRICS ── */}
             <div className="px-6 -mt-3 relative z-10">
-              <div className="flex gap-2 overflow-x-auto pb-1">
+              <div className="flex gap-2 pb-1">
                 {employee.work_info?.hire_date && (
                   <MetricChip icon={Clock} label="Antigüedad" value={computeSeniority(employee.work_info.hire_date)} color="primary" />
                 )}
