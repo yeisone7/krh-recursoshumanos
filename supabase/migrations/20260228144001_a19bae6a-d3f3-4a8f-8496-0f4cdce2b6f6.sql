@@ -1,0 +1,1 @@
+ALTER TABLE public.training_access_tokens ADD COLUMN updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
