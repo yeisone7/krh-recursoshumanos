@@ -4732,6 +4732,7 @@ export type Database = {
           operation_center_id: string | null
           requires_evaluation: boolean
           token: string
+          updated_at: string
           usage_type: string
           uses_count: number
         }
@@ -4748,6 +4749,7 @@ export type Database = {
           operation_center_id?: string | null
           requires_evaluation?: boolean
           token?: string
+          updated_at?: string
           usage_type?: string
           uses_count?: number
         }
@@ -4764,6 +4766,7 @@ export type Database = {
           operation_center_id?: string | null
           requires_evaluation?: boolean
           token?: string
+          updated_at?: string
           usage_type?: string
           uses_count?: number
         }
