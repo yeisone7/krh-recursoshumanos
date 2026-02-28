@@ -77,7 +77,7 @@ function TreeNode({
         {isFolder ? (
           isOpen ? <FolderOpen className="h-4 w-4 text-yellow-500 shrink-0" /> : <Folder className="h-4 w-4 text-yellow-500 shrink-0" />
         ) : (
-          <FileText className="h-4 w-4 text-yellow-700 shrink-0" />
+          <FileText className="h-4 w-4 shrink-0" style={{ color: '#3b3a59' }} />
         )}
 
         {/* Label */}
