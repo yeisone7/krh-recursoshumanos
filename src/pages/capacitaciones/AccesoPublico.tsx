@@ -208,7 +208,7 @@ export default function AccesoPublico() {
 
   // ─── Branded Header ──────────────────────────
   const BrandedHeader = () => (
-    <div className="bg-[#1a5c2e] text-white py-4 px-4">
+    <div className="gradient-primary text-primary-foreground py-4 px-4">
       <div className="max-w-3xl mx-auto flex items-center gap-3">
         <img src={petrocasinosIcon} alt="Logo" className="h-10 w-10 rounded-lg bg-white/10 p-1" />
         <div>
@@ -254,7 +254,7 @@ export default function AccesoPublico() {
         <div className="max-w-lg mx-auto p-4 mt-8">
           <Card>
             <CardContent className="pt-8 text-center space-y-5">
-              <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
+              <CheckCircle2 className="h-16 w-16 text-success mx-auto" />
               <h2 className="text-2xl font-bold">¡Capacitación Completada!</h2>
               <p className="text-muted-foreground">
                 Tu evidencia ha sido registrada exitosamente.
@@ -377,7 +377,7 @@ export default function AccesoPublico() {
                   </p>
                 )}
                 {cedulaVerified && (
-                  <p className="text-sm text-green-600 flex items-center gap-1">
+                  <p className="text-sm text-success flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3" /> Empleado verificado: {operatorName}
                   </p>
                 )}
@@ -401,9 +401,9 @@ export default function AccesoPublico() {
           <>
             {/* Evaluation required alert */}
             {tokenData?.requires_evaluation && content?.evaluacion?.length ? (
-              <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-sm">
-                <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0" />
-                <span className="text-amber-800 dark:text-amber-200">
+              <div className="flex items-center gap-3 bg-warning-light border border-warning/30 rounded-lg p-3 text-sm">
+                <ShieldCheck className="h-5 w-5 text-warning shrink-0" />
+                <span className="text-warning-foreground">
                   Esta capacitación requiere aprobar una evaluación con mínimo 80% para completar el proceso.
                 </span>
               </div>
