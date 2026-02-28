@@ -87,7 +87,7 @@ function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
 }
 
 function CenterComplianceSection({ center, courseFilter }: { center: CenterComplianceData; courseFilter: string }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   const filteredCourses = courseFilter === 'all'
     ? center.courses
