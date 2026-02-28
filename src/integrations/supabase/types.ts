@@ -2953,6 +2953,10 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          level_1_description: string | null
+          level_2_description: string | null
+          level_3_description: string | null
+          level_4_description: string | null
           max_score: number | null
           name: string
           sort_order: number | null
@@ -2964,6 +2968,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          level_1_description?: string | null
+          level_2_description?: string | null
+          level_3_description?: string | null
+          level_4_description?: string | null
           max_score?: number | null
           name: string
           sort_order?: number | null
@@ -2975,6 +2983,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          level_1_description?: string | null
+          level_2_description?: string | null
+          level_3_description?: string | null
+          level_4_description?: string | null
           max_score?: number | null
           name?: string
           sort_order?: number | null
@@ -3105,6 +3117,9 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
+          position_id: string | null
+          qualitative_questions: Json | null
+          rating_scale: Json | null
           updated_at: string
         }
         Insert: {
@@ -3115,6 +3130,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
+          position_id?: string | null
+          qualitative_questions?: Json | null
+          rating_scale?: Json | null
           updated_at?: string
         }
         Update: {
@@ -3125,6 +3143,9 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
+          position_id?: string | null
+          qualitative_questions?: Json | null
+          rating_scale?: Json | null
           updated_at?: string
         }
         Relationships: [
@@ -3133,6 +3154,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_templates_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
             referencedColumns: ["id"]
           },
         ]
