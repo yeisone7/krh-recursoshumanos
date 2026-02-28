@@ -1,78 +1,73 @@
 
+# Vista de Cumplimiento de Capacitaciones por Centro de Operacion
 
-## Plan: Redesign Public Training Access Link Flow
+## Objetivo
+Crear una nueva vista dentro del modulo de Capacitaciones que muestre, por cada Centro de Operacion, que empleados han completado cada capacitacion y cuales faltan por completarla. Seria una "Matriz de Cumplimiento".
 
-### Problems Identified
+## Estructura de la Vista
 
-1. **Completion insert error**: The `training_completions` insert likely fails because the page runs as `anon` user, and some required fields may be missing or the `quiz_score` field doesn't exist in the table. The insert also includes `completed_at` as a string which should use the default.
-2. **No cedula validation against employees**: Currently accepts any name/cedula without verification.
-3. **UI doesn't match reference images**: Current design is basic cards; reference shows branded header, structured layout with company info, media gallery, radio-style quiz, retry mechanism, detailed signature panel, and completion summary.
-4. **Quiz allows proceeding to signature even if failed**: No 80% pass enforcement.
-
-### Database Migration
-
-Add `quiz_score` column to `training_completions` and create an RLS policy allowing anon to SELECT employees by `document_number` (limited to just checking existence):
-
-```sql
--- Add quiz_score to training_completions
-ALTER TABLE public.training_completions ADD COLUMN quiz_score integer;
-
--- Allow anon to verify employee existence by document_number
-CREATE POLICY "Anon can verify employee by cedula"
-  ON public.employees_v2
-  FOR SELECT
-  TO anon
-  USING (true);
--- Note: The query will only select id, first_name, last_name filtered by document_number and company_id
+```text
++-----------------------------------------------+
+| Cumplimiento por Centro                        |
++-----------------------------------------------+
+| [Filtro: Centro de Operacion] [Filtro: Curso]  |
++-----------------------------------------------+
+| Centro: Canacol                                |
+|   Curso: BPM                                   |
+|     Completaron (3/5)  ████████░░░░  60%       |
+|     + Yeison Escobar    - 15 Feb 2026          |
+|     + Maria Lopez       - 10 Feb 2026          |
+|     + Juan Perez        - 08 Feb 2026          |
+|     Pendientes (2/5)                            |
+|     - Carlos Ruiz                               |
+|     - Ana Martinez                              |
+|                                                 |
+|   Curso: Charla 5 min                          |
+|     Completaron (5/5)  ████████████  100%      |
+|     ...                                         |
++-----------------------------------------------+
 ```
 
-Actually, exposing all employees to anon is risky. Instead, create a database function callable by anon that returns only boolean + name for a given cedula + company_id:
+## Funcionalidad
+- Filtros por Centro de Operacion y por Curso
+- Barra de progreso visual por curso dentro de cada centro
+- Lista de empleados que completaron (con fecha)
+- Lista de empleados pendientes
+- Indicadores de porcentaje de cumplimiento
+- Exportar a Excel (opcional, usando la libreria xlsx ya instalada)
 
-```sql
-CREATE OR REPLACE FUNCTION public.verify_employee_cedula(p_cedula text, p_company_id uuid)
-RETURNS TABLE(employee_id uuid, employee_name text) 
-LANGUAGE sql SECURITY DEFINER AS $$
-  SELECT id, first_name || ' ' || last_name 
-  FROM public.employees_v2 
-  WHERE document_number = p_cedula AND company_id = p_company_id AND status = 'Activo'
-  LIMIT 1;
-$$;
-```
+## Implementacion Tecnica
 
-### File Changes
+### 1. Nueva pagina: `src/pages/capacitaciones/Cumplimiento.tsx`
+- Obtiene la lista de centros de operacion (hook `useOperationCenters`)
+- Obtiene empleados activos por centro (query a `employees_v2` + `employee_work_info`)
+- Obtiene completions (hook `useTrainingCompletions`)
+- Cruza los datos: por cada centro y curso, compara empleados del centro vs completions con `operator_cedula` o `employee_id`
+- Renderiza la matriz usando el componente TreeView existente o un layout de acordeon simple
 
-#### 1. `src/pages/capacitaciones/AccesoPublico.tsx` — Full Redesign
+### 2. Nuevo hook: `src/hooks/useTrainingCompliance.ts`
+- Query que obtiene empleados activos agrupados por centro de operacion (via `employee_work_info.operation_center_id`)
+- Query que obtiene todas las completions con su token y centro asociado
+- Logica de cruce: para cada par (centro, curso), determina completados vs pendientes comparando por `document_number` / `operator_cedula`
 
-Matching all reference images in order:
+### 3. Registrar ruta en `src/App.tsx`
+- Agregar ruta `/capacitaciones/cumplimiento`
 
-- **Header**: Branded bar with Petrocasinos icon + company name + "CAPACITACION" subtitle (dark green bg, white text)
-- **Identify step**: Company logo at top, course info card (name, category, duration), Name + Cedula fields (both required), "Continuar a la Capacitacion" button. On cedula blur, call `verify_employee_cedula` RPC — if not found, show error and block continue.
-- **Content step**: Course title, metadata (category, duration, center name), evaluation required alert (amber banner), sections for Introduccion, Objetivos, Contenido (markdown), Puntos Clave. Add **Media gallery** section showing `training_media` images with carousel + thumbnails + audio player. CTA button: "He leido y entendido - Realizar Evaluacion" or "Continuar a Firma".
-- **Quiz step**: Header bar stays with course name. Card with "Evaluacion de Conocimientos / Pregunta X de N", progress bar, radio-style options (circle radio, not letter badges), "Volver al Contenido" + "Siguiente" buttons. On failure (<80%): show red icon, "Evaluacion No Aprobada", score, required minimum 80%, list of questions with correct answers, "Volver al Contenido" + "Reintentar Evaluacion" buttons. On pass: proceed to signature.
-- **Signature step**: Card with "Firma Digital / Confirma tu participacion", "Firma de Confirmacion" heading, summary (Nombre, Cedula, Fecha), signature canvas, Limpiar/Cancelar/Confirmar Firma buttons, legal notice text.
-- **Done step**: Green checkmark, "Capacitacion Completada!", summary card (Capacitacion, Nombre, Cedula, Fecha), "Puedes cerrar esta ventana" text.
+### 4. Agregar acceso desde la pagina principal de Capacitaciones
+- Nuevo boton en "Acciones Rapidas" de `src/pages/Capacitaciones.tsx` con icono de checklist
 
-#### 2. `src/components/training/EvaluationQuiz.tsx` — Redesign
+### 5. Agregar enlace en el Sidebar
+- Agregar entrada en el submenu de Capacitaciones en `src/components/layout/Sidebar.tsx`
 
-- Change to radio-style options (circle indicators instead of letter badges)
-- Don't show instant feedback per question — just select and move to next
-- Add "Volver al Contenido" button via `onGoBack` callback prop
-- On finish: if score < 80%, show failure screen with question review + "Reintentar Evaluacion" button (resets quiz)
-- If score >= 80%, call `onComplete(true, score)`
-- Remove `requirePerfect` prop, use 80% threshold always
+## Logica de Cruce de Datos
+1. Por cada centro de operacion, obtener los empleados activos asignados
+2. Por cada curso publicado, obtener las completions donde el token pertenece a ese centro O donde el `employee_id` corresponde a un empleado de ese centro
+3. Comparar: empleados del centro vs empleados que tienen completion para ese curso (match por `document_number` = `operator_cedula` o por `employee_id`)
+4. Los que no tienen match son "pendientes"
 
-#### 3. `src/components/training/SignatureCanvas.tsx` — Minor Update
-
-- Add "Cancelar" button
-- Update text to match reference: "Firma aqui con el mouse o dedo"
-- Add `onCancel` callback prop
-
-### Implementation Summary
-
-| File | Action |
-|------|--------|
-| Migration SQL | Add `quiz_score` column + `verify_employee_cedula` function |
-| `AccesoPublico.tsx` | Full rewrite to match 7 reference screens |
-| `EvaluationQuiz.tsx` | Redesign: radio options, no instant feedback, retry on fail, 80% threshold |
-| `SignatureCanvas.tsx` | Add cancel button + updated placeholder text |
-
+## Archivos a crear/modificar
+- **Crear**: `src/pages/capacitaciones/Cumplimiento.tsx` -- pagina principal
+- **Crear**: `src/hooks/useTrainingCompliance.ts` -- hook de datos
+- **Modificar**: `src/App.tsx` -- agregar ruta
+- **Modificar**: `src/pages/Capacitaciones.tsx` -- boton de acceso rapido
+- **Modificar**: `src/components/layout/Sidebar.tsx` -- enlace en submenu
