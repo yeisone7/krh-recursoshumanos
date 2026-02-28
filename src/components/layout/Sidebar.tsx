@@ -45,7 +45,8 @@ import {
   PenLine,
   Library,
   Link2,
-  FileSignature } from
+  FileSignature,
+  ClipboardCheck } from
 'lucide-react';
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -93,6 +94,7 @@ const capacitacionesItem: NavItem = {
     { label: 'Nueva Manual', icon: <PenLine className="w-4 h-4" />, href: '/capacitaciones/crear-manual' },
     { label: 'Biblioteca', icon: <Library className="w-4 h-4" />, href: '/capacitaciones/biblioteca' },
     { label: 'Enlaces', icon: <Link2 className="w-4 h-4" />, href: '/capacitaciones/acceso/generar' },
+    { label: 'Cumplimiento', icon: <ClipboardCheck className="w-4 h-4" />, href: '/capacitaciones/cumplimiento' },
     { label: 'Evidencias', icon: <FileSignature className="w-4 h-4" />, href: '/capacitaciones/evidencias' },
     { label: 'Analíticas', icon: <BarChart3 className="w-4 h-4" />, href: '/capacitaciones/analiticas' },
   ],
