@@ -82,10 +82,10 @@ export function EvaluationQuiz({ questions, onComplete, onGoBack }: EvaluationQu
             const userAnswer = answers[i];
             const isCorrect = userAnswer === q.respuestaCorrecta;
             return (
-              <div key={i} className={`p-4 rounded-lg border ${isCorrect ? 'border-green-300 bg-green-50 dark:bg-green-950/20' : 'border-destructive/30 bg-red-50 dark:bg-red-950/20'}`}>
+              <div key={i} className={`p-4 rounded-lg border ${isCorrect ? 'border-success/30 bg-success-light' : 'border-destructive/30 bg-destructive-light'}`}>
                 <div className="flex items-start gap-2 mb-2">
                   {isCorrect ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-success mt-0.5 shrink-0" />
                   ) : (
                     <XCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
                   )}
@@ -94,7 +94,7 @@ export function EvaluationQuiz({ questions, onComplete, onGoBack }: EvaluationQu
                 {!isCorrect && (
                   <div className="ml-7 space-y-1 text-sm">
                     <p className="text-destructive">Tu respuesta: {userAnswer || 'Sin respuesta'}</p>
-                    <p className="text-green-700 dark:text-green-400">Respuesta correcta: {q.respuestaCorrecta}</p>
+                    <p className="text-success">Respuesta correcta: {q.respuestaCorrecta}</p>
                   </div>
                 )}
               </div>
@@ -120,7 +120,7 @@ export function EvaluationQuiz({ questions, onComplete, onGoBack }: EvaluationQu
   if (finished && passed) {
     return (
       <div className="text-center space-y-4 py-8">
-        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
+        <CheckCircle2 className="h-16 w-16 text-success mx-auto" />
         <h3 className="text-xl font-bold">¡Evaluación Aprobada!</h3>
         <p className="text-muted-foreground">
           Resultado: {correctCount}/{questions.length} ({score}%)
