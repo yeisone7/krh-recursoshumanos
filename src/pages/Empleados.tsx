@@ -350,7 +350,7 @@ export default function Empleados() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 px-2.5 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="h-8 px-2.5 text-xs font-medium"
                     onClick={(e) => { e.stopPropagation(); navigate(`/empleados/${employee.id}/360`); }}
                   >
                     <Eye className="w-3.5 h-3.5 mr-1" />
