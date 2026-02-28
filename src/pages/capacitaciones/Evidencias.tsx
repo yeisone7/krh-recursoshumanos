@@ -81,7 +81,7 @@ export default function Evidencias() {
       const tmpImg = new Image();
       tmpImg.src = logoDataUrl;
       await new Promise(r => { tmpImg.onload = r; });
-      const logoH = 20;
+      const logoH = 14;
       const logoW = (tmpImg.naturalWidth / tmpImg.naturalHeight) * logoH;
       doc.addImage(logoDataUrl, 'PNG', pageWidth - margin - logoW, 9, logoW, logoH);
     } catch { /* skip logo */ }
