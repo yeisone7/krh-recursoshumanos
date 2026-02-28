@@ -556,6 +556,9 @@ export default function Evaluaciones() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
+                        {template.position && (
+                          <p className="text-sm font-medium text-primary">{template.position.name}</p>
+                        )}
                         {template.description && (
                           <p className="text-sm text-muted-foreground">{template.description}</p>
                         )}
