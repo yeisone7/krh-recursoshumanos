@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Eye, Download, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, Eye, Download, Trash2, MapPin, Layers, Scale, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { TrainingCompletion } from '@/types/training';
@@ -73,11 +73,14 @@ function TreeNode({
           <span className="w-4" />
         )}
 
-        {/* Icon */}
+        {/* Icon — colored by depth */}
         {isFolder ? (
-          isOpen ? <FolderOpen className="h-4 w-4 text-primary shrink-0" /> : <Folder className="h-4 w-4 text-primary shrink-0" />
+          depth === 0 ? (isOpen ? <FolderOpen className="h-4 w-4 text-emerald-500 shrink-0" /> : <MapPin className="h-4 w-4 text-emerald-500 shrink-0" />) :
+          depth === 1 ? (isOpen ? <FolderOpen className="h-4 w-4 text-violet-500 shrink-0" /> : <Layers className="h-4 w-4 text-violet-500 shrink-0" />) :
+          depth === 2 ? (isOpen ? <FolderOpen className="h-4 w-4 text-amber-500 shrink-0" /> : <Scale className="h-4 w-4 text-amber-500 shrink-0" />) :
+          (isOpen ? <FolderOpen className="h-4 w-4 text-sky-500 shrink-0" /> : <Building2 className="h-4 w-4 text-sky-500 shrink-0" />)
         ) : (
-          <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+          <FileText className="h-4 w-4 text-orange-400 shrink-0" />
         )}
 
         {/* Label */}
