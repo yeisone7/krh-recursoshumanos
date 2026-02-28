@@ -1,73 +1,92 @@
 
-# Vista de Cumplimiento de Capacitaciones por Centro de Operacion
 
-## Objetivo
-Crear una nueva vista dentro del modulo de Capacitaciones que muestre, por cada Centro de Operacion, que empleados han completado cada capacitacion y cuales faltan por completarla. Seria una "Matriz de Cumplimiento".
+## Adaptar Plantillas de Evaluacion de Desempeno segun el Excel
 
-## Estructura de la Vista
+### Resumen
+Se adaptara el modulo de Evaluaciones de Desempeno para que las plantillas sigan la estructura del formato Excel adjunto (GH-FO-05-DR), permitiendo asociar cada plantilla a un **Cargo** especifico, y que cada criterio tenga **descripciones por nivel de competencia** (4 niveles con rubricas descriptivas). Tambien se agregaran campos de preguntas cualitativas y tabla de calificacion.
+
+### Estructura del Excel analizado
+El formato define:
+- **Cargo** asociado (ej: "Cocinero 1 / Jefe de Cocina")
+- **Competencias** con 4 niveles de rubrica descriptiva:
+  - 4: Ampliamente Desarrollada
+  - 3: Bueno dentro del Estandar
+  - 2: Competencia en Desarrollo
+  - 1: Competencia No Desarrollada
+- Competencias identificadas: Trabajo en Equipo, Responsabilidad, Iniciativa, Habilidad Analitica, Tolerancia a la Presion, Seguridad Vial, SST, Ambiental, Calidad
+- **Preguntas cualitativas**: Aportes, aspectos a mejorar, compromisos
+- **Tabla de valores**: Sobresaliente (91-100%), Bueno (75-90%), Aceptable (60-74%), Deficiente (0-59%)
+
+---
+
+### Cambios planificados
+
+#### 1. Migracion de base de datos
+
+**Tabla `evaluation_templates`** - agregar columna:
+- `position_id` (UUID, nullable, FK a `positions`) -- para vincular plantilla a un cargo
+
+**Tabla `evaluation_criteria`** - agregar columnas para rubricas descriptivas:
+- `level_4_description` (TEXT) -- Descripcion para calificacion 4
+- `level_3_description` (TEXT) -- Descripcion para calificacion 3
+- `level_2_description` (TEXT) -- Descripcion para calificacion 2
+- `level_1_description` (TEXT) -- Descripcion para calificacion 1
+
+**Tabla `evaluation_templates`** - agregar columnas para preguntas cualitativas y escala:
+- `qualitative_questions` (JSONB) -- Array de preguntas abiertas configurables
+- `rating_scale` (JSONB) -- Escala de calificacion (ej: Sobresaliente 91-100%)
+
+RLS policies se mantendran las existentes ya que las tablas ya tienen politicas por empresa.
+
+#### 2. Actualizar tipos TypeScript (`src/types/evaluation.ts`)
+
+- Agregar `position_id` y relacion `position` a `EvaluationTemplate`
+- Agregar `level_1_description` a `level_4_description` en `EvaluationCriteria`
+- Agregar `qualitative_questions` y `rating_scale` a `EvaluationTemplate`
+- Definir constantes para la escala de calificacion por defecto
+
+#### 3. Actualizar `TemplateFormDialog` (`src/components/evaluations/TemplateFormDialog.tsx`)
+
+- Agregar selector de **Cargo** (SearchableSelect con los cargos de la empresa via `usePositions`)
+- Cada criterio ahora tendra 4 campos de texto para las descripciones de cada nivel (expandibles/colapsables)
+- Se fijara `max_score = 4` por defecto (escala 1-4 del formato)
+- Agregar seccion para configurar preguntas cualitativas
+- Agregar seccion para la tabla de valores/escala de calificacion con valores por defecto del Excel
+
+#### 4. Actualizar hook `useEvaluations` (`src/hooks/useEvaluations.ts`)
+
+- Incluir `position_id` en las queries de templates
+- Hacer join con `positions` para mostrar el nombre del cargo
+- Pasar las nuevas columnas de criterios en create/update
+
+#### 5. Actualizar pagina `Evaluaciones.tsx`
+
+- Mostrar la columna **Cargo** en la tabla de plantillas
+- Mostrar el nombre del cargo asociado a cada plantilla
+
+---
+
+### Detalle tecnico de la migracion SQL
 
 ```text
-+-----------------------------------------------+
-| Cumplimiento por Centro                        |
-+-----------------------------------------------+
-| [Filtro: Centro de Operacion] [Filtro: Curso]  |
-+-----------------------------------------------+
-| Centro: Canacol                                |
-|   Curso: BPM                                   |
-|     Completaron (3/5)  ████████░░░░  60%       |
-|     + Yeison Escobar    - 15 Feb 2026          |
-|     + Maria Lopez       - 10 Feb 2026          |
-|     + Juan Perez        - 08 Feb 2026          |
-|     Pendientes (2/5)                            |
-|     - Carlos Ruiz                               |
-|     - Ana Martinez                              |
-|                                                 |
-|   Curso: Charla 5 min                          |
-|     Completaron (5/5)  ████████████  100%      |
-|     ...                                         |
-+-----------------------------------------------+
+ALTER TABLE evaluation_templates
+  ADD COLUMN position_id UUID REFERENCES positions(id) ON DELETE SET NULL;
+
+ALTER TABLE evaluation_criteria
+  ADD COLUMN level_4_description TEXT,
+  ADD COLUMN level_3_description TEXT,
+  ADD COLUMN level_2_description TEXT,
+  ADD COLUMN level_1_description TEXT;
+
+ALTER TABLE evaluation_templates
+  ADD COLUMN qualitative_questions JSONB DEFAULT '["¿Qué aportes ha hecho usted a la empresa, área o campo donde se desempeña?", "¿En qué aspectos opina usted que debe mejorar?", "Teniendo en cuenta los aspectos en donde la calificación no es muy buena, ¿Qué compromisos va a adquirir para mejorar?"]'::jsonb,
+  ADD COLUMN rating_scale JSONB DEFAULT '[{"label":"Sobresaliente","min":91,"max":100,"description":"Mantener el compromiso hasta ahora alcanzado"},{"label":"Bueno","min":75,"max":90,"description":"Trabajar en mejora continua"},{"label":"Aceptable","min":60,"max":74,"description":"Requiere capacitación continua"},{"label":"Deficiente","min":0,"max":59,"description":"Requiere cumplimiento inmediato"}]'::jsonb;
 ```
 
-## Funcionalidad
-- Filtros por Centro de Operacion y por Curso
-- Barra de progreso visual por curso dentro de cada centro
-- Lista de empleados que completaron (con fecha)
-- Lista de empleados pendientes
-- Indicadores de porcentaje de cumplimiento
-- Exportar a Excel (opcional, usando la libreria xlsx ya instalada)
+### Archivos a modificar
+1. **Nueva migracion SQL** (via herramienta de migracion)
+2. `src/types/evaluation.ts` -- nuevos campos
+3. `src/components/evaluations/TemplateFormDialog.tsx` -- formulario rediseñado con cargo, rubricas, preguntas y escala
+4. `src/hooks/useEvaluations.ts` -- queries actualizadas
+5. `src/pages/Evaluaciones.tsx` -- columna de cargo en tabla de plantillas
 
-## Implementacion Tecnica
-
-### 1. Nueva pagina: `src/pages/capacitaciones/Cumplimiento.tsx`
-- Obtiene la lista de centros de operacion (hook `useOperationCenters`)
-- Obtiene empleados activos por centro (query a `employees_v2` + `employee_work_info`)
-- Obtiene completions (hook `useTrainingCompletions`)
-- Cruza los datos: por cada centro y curso, compara empleados del centro vs completions con `operator_cedula` o `employee_id`
-- Renderiza la matriz usando el componente TreeView existente o un layout de acordeon simple
-
-### 2. Nuevo hook: `src/hooks/useTrainingCompliance.ts`
-- Query que obtiene empleados activos agrupados por centro de operacion (via `employee_work_info.operation_center_id`)
-- Query que obtiene todas las completions con su token y centro asociado
-- Logica de cruce: para cada par (centro, curso), determina completados vs pendientes comparando por `document_number` / `operator_cedula`
-
-### 3. Registrar ruta en `src/App.tsx`
-- Agregar ruta `/capacitaciones/cumplimiento`
-
-### 4. Agregar acceso desde la pagina principal de Capacitaciones
-- Nuevo boton en "Acciones Rapidas" de `src/pages/Capacitaciones.tsx` con icono de checklist
-
-### 5. Agregar enlace en el Sidebar
-- Agregar entrada en el submenu de Capacitaciones en `src/components/layout/Sidebar.tsx`
-
-## Logica de Cruce de Datos
-1. Por cada centro de operacion, obtener los empleados activos asignados
-2. Por cada curso publicado, obtener las completions donde el token pertenece a ese centro O donde el `employee_id` corresponde a un empleado de ese centro
-3. Comparar: empleados del centro vs empleados que tienen completion para ese curso (match por `document_number` = `operator_cedula` o por `employee_id`)
-4. Los que no tienen match son "pendientes"
-
-## Archivos a crear/modificar
-- **Crear**: `src/pages/capacitaciones/Cumplimiento.tsx` -- pagina principal
-- **Crear**: `src/hooks/useTrainingCompliance.ts` -- hook de datos
-- **Modificar**: `src/App.tsx` -- agregar ruta
-- **Modificar**: `src/pages/Capacitaciones.tsx` -- boton de acceso rapido
-- **Modificar**: `src/components/layout/Sidebar.tsx` -- enlace en submenu
