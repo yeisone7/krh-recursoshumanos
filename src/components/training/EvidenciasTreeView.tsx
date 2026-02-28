@@ -73,14 +73,11 @@ function TreeNode({
           <span className="w-4" />
         )}
 
-        {/* Icon — colored by depth */}
+        {/* Icon */}
         {isFolder ? (
-          depth === 0 ? (isOpen ? <FolderOpen className="h-4 w-4 text-emerald-500 shrink-0" /> : <MapPin className="h-4 w-4 text-emerald-500 shrink-0" />) :
-          depth === 1 ? (isOpen ? <FolderOpen className="h-4 w-4 text-violet-500 shrink-0" /> : <Layers className="h-4 w-4 text-violet-500 shrink-0" />) :
-          depth === 2 ? (isOpen ? <FolderOpen className="h-4 w-4 text-amber-500 shrink-0" /> : <Scale className="h-4 w-4 text-amber-500 shrink-0" />) :
-          (isOpen ? <FolderOpen className="h-4 w-4 text-sky-500 shrink-0" /> : <Building2 className="h-4 w-4 text-sky-500 shrink-0" />)
+          isOpen ? <FolderOpen className="h-4 w-4 text-yellow-500 shrink-0" /> : <Folder className="h-4 w-4 text-yellow-500 shrink-0" />
         ) : (
-          <FileText className="h-4 w-4 text-orange-400 shrink-0" />
+          <FileText className="h-4 w-4 text-yellow-700 shrink-0" />
         )}
 
         {/* Label */}
