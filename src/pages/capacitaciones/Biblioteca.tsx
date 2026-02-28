@@ -319,27 +319,71 @@ export default function Biblioteca() {
       {/* Tree View */}
       {viewMode === 'tree' && (
         <Card>
-          <CardContent className="pt-6">
-            {categories.filter(c => filterType === 'all' || c === filterType).map(cat => {
-              const catCourses = filtered.filter(c => c.category === cat);
-              if (catCourses.length === 0) return null;
-              return (
-                <div key={cat} className="mb-5">
-                  <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-2">{cat} ({catCourses.length})</h3>
-                  <div className="ml-4 space-y-1">
-                    {catCourses.map(course => {
-                      const statusCfg = STATUS_CONFIG[course.status] || STATUS_CONFIG.borrador;
-                      return (
-                        <div key={course.id} className="flex items-center justify-between p-2 rounded hover:bg-muted/50 cursor-pointer" onClick={() => setPreviewCourse(course)}>
-                          <span className="text-sm">{course.name}</span>
-                          <Badge variant="outline" className={`text-[11px] ${statusCfg.className}`}>{statusCfg.label}</Badge>
-                        </div>
-                      );
-                    })}
+          <CardContent className="pt-6 space-y-4">
+            {(() => {
+              // Build hierarchy: Categoría → Marco Legal → Área
+              const tree = new Map<string, Map<string, Map<string, typeof filtered>>>();
+              filtered.forEach(course => {
+                const cat = course.category || 'Sin categoría';
+                const legal = course.legal_framework || 'Sin marco legal';
+                const area = course.target_audience || 'Sin área';
+                if (!tree.has(cat)) tree.set(cat, new Map());
+                const legalMap = tree.get(cat)!;
+                if (!legalMap.has(legal)) legalMap.set(legal, new Map());
+                const areaMap = legalMap.get(legal)!;
+                if (!areaMap.has(area)) areaMap.set(area, []);
+                areaMap.get(area)!.push(course);
+              });
+
+              return [...tree.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([cat, legalMap]) => {
+                const catCount = filtered.filter(c => (c.category || 'Sin categoría') === cat).length;
+                return (
+                  <div key={cat} className="mb-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">{cat}</h3>
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{catCount}</Badge>
+                    </div>
+                    <div className="ml-5 space-y-2">
+                      {[...legalMap.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([legal, areaMap]) => {
+                        const legalCount = [...areaMap.values()].reduce((s, arr) => s + arr.length, 0);
+                        return (
+                          <div key={legal}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="text-xs font-medium text-muted-foreground">{legal}</span>
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">{legalCount}</Badge>
+                            </div>
+                            <div className="ml-5 space-y-1.5">
+                              {[...areaMap.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([area, courses]) => (
+                                <div key={area}>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="text-xs text-muted-foreground">{area}</span>
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">{courses.length}</Badge>
+                                  </div>
+                                  <div className="ml-5 space-y-0.5">
+                                    {courses.map(course => {
+                                      const statusCfg = STATUS_CONFIG[course.status] || STATUS_CONFIG.borrador;
+                                      return (
+                                        <div key={course.id} className="flex items-center justify-between p-2 rounded hover:bg-muted/50 cursor-pointer" onClick={() => setPreviewCourse(course)}>
+                                          <span className="text-sm">{course.name}</span>
+                                          <Badge variant="outline" className={`text-[11px] ${statusCfg.className}`}>{statusCfg.label}</Badge>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </CardContent>
         </Card>
       )}
