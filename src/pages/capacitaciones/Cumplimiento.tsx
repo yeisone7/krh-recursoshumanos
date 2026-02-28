@@ -235,7 +235,7 @@ export default function Cumplimiento() {
       {isLoading ? (
         <Card><CardContent className="py-12 text-center text-muted-foreground">Cargando datos de cumplimiento...</CardContent></Card>
       ) : filteredData.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">No hay centros con empleados activos asignados</CardContent></Card>
+        <Card><CardContent className="py-12 text-center text-muted-foreground">No hay centros con empleados activos asignados que tengan enlaces de capacitación publicados. Verifica que los empleados tengan un centro de operación asignado en su información laboral y que existan enlaces publicados para ese centro.</CardContent></Card>
       ) : (
         <motion.div className="space-y-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {filteredData.map((center) => (
