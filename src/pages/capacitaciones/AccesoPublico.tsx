@@ -210,9 +210,9 @@ export default function AccesoPublico() {
   const BrandedHeader = () => (
     <div className="gradient-primary text-primary-foreground py-4 px-4">
       <div className="max-w-3xl mx-auto flex items-center gap-3">
-        <img src={petrocasinosIcon} alt="Logo" className="h-10 w-10 rounded-lg bg-white/10 p-1" />
+        <img src={petrocasinosIcon} alt="Logo" className="h-12 w-12 rounded-xl border-2 border-white" />
         <div>
-          <h1 className="text-lg font-bold tracking-wide">PETROCASINOS</h1>
+          <h1 className="text-lg font-bold tracking-wide">PETROCASINOS S.A.</h1>
           <p className="text-xs opacity-80 uppercase tracking-widest">Capacitación</p>
         </div>
       </div>
