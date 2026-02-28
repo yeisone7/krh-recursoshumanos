@@ -609,9 +609,10 @@ export function useDeleteAccessToken() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Soft-delete: deactivate instead of removing to preserve compliance history
       const { error } = await supabase
         .from('training_access_tokens')
-        .delete()
+        .update({ is_active: false })
         .eq('id', id);
 
       if (error) throw error;
