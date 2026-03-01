@@ -345,7 +345,7 @@ export default function AnaliticasEvaluaciones() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
-              Bottom 5 — Requieren Atención
+              Top 5 — Requieren Atención
             </CardTitle>
           </CardHeader>
           <CardContent>
