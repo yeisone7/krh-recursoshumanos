@@ -22,6 +22,7 @@ import {
   Filter,
   BarChart3,
   FileSpreadsheet,
+  Columns3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -69,6 +70,7 @@ import {
   
   ApplyEvaluationDialog,
   BulkGeneratePreviewDialog,
+  EvaluationKanbanBoard,
 } from '@/components/evaluations';
 import {
   CYCLE_STATUS_LABELS,
@@ -398,6 +400,10 @@ export default function Evaluaciones() {
             <TabsTrigger value="compare" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               Comparativo
+            </TabsTrigger>
+            <TabsTrigger value="kanban" className="gap-2">
+              <Columns3 className="h-4 w-4" />
+              Kanban
             </TabsTrigger>
           </TabsList>
 
@@ -934,6 +940,28 @@ export default function Evaluaciones() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Kanban Tab */}
+        <TabsContent value="kanban">
+          <EvaluationKanbanBoard
+            evaluations={evaluations}
+            cycles={cycles}
+            loading={loadingEvaluations}
+            onApply={(ev) => {
+              setEvaluationToApply(ev);
+              setApplyDialogOpen(true);
+            }}
+            onDownloadPdf={handleDownloadPdf}
+            onEdit={(ev) => {
+              setSelectedEvaluation(ev);
+              setEvaluationDialogOpen(true);
+            }}
+            onDelete={(ev) => {
+              setItemToDelete({ type: 'evaluation', id: ev.id });
+              setDeleteDialogOpen(true);
+            }}
+          />
         </TabsContent>
       </Tabs>
 
