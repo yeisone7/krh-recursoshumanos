@@ -11,6 +11,7 @@ import {
   SanctionType,
 } from '@/types/disciplinary';
 
+const WATERMARK_LOGO_PATH = '/images/petrocasinos-watermark.png';
 const COLOR_LOGO_PATH = '/images/petrocasinos-logo-white.png';
 
 function loadImageAsDataUrl(src: string): Promise<string> {
@@ -57,8 +58,12 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
 
   // Pre-load images
   let colorLogoDataUrl: string | null = null;
+  let watermarkDataUrl: string | null = null;
   try {
-    colorLogoDataUrl = await loadImageAsDataUrl(COLOR_LOGO_PATH);
+    [colorLogoDataUrl, watermarkDataUrl] = await Promise.all([
+      loadImageAsDataUrl(COLOR_LOGO_PATH),
+      loadImageAsDataUrl(WATERMARK_LOGO_PATH),
+    ]);
   } catch {
     // continue without images
   }
@@ -68,7 +73,7 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
 
   // ─── Helpers ────────────────────────────────────────────
   function drawHeader(d: jsPDF) {
-    d.setFillColor(100, 130, 180); // Pastel blue
+    d.setFillColor(27, 38, 59); // Navy
     d.rect(0, 0, PAGE_WIDTH, HEADER_HEIGHT, 'F');
     if (colorLogoDataUrl) {
       try { d.addImage(colorLogoDataUrl, 'PNG', PAGE_WIDTH - MARGIN - 38, 6, 36, 16); } catch { /* skip */ }
@@ -82,6 +87,21 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
     d.text('INFORME DE PROCESO DISCIPLINARIO', MARGIN, 21);
     d.setFontSize(8);
     d.text(`Generado: ${dateStr}`, MARGIN, 27);
+  }
+
+  function drawWatermark(d: jsPDF) {
+    if (!watermarkDataUrl) return;
+    try {
+      const wmW = 97, wmH = 54;
+      d.addImage(
+        watermarkDataUrl, 'PNG',
+        (PAGE_WIDTH - wmW) / 2, (pageHeight - wmH) / 2,
+        wmW, wmH, undefined, undefined, 0
+      );
+      // Set opacity via GState
+      const gState = (d as any).GState({ opacity: 0.06 });
+      (d as any).setGState(gState);
+    } catch { /* skip */ }
   }
 
   function drawFooter(d: jsPDF, pageNum: number, totalPages: number) {
@@ -104,9 +124,9 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
 
   function sectionTitle(title: string, y: number): number {
     y = checkNewPage(y, 14);
-    doc.setFillColor(210, 225, 245); // Pastel blue section
+    doc.setFillColor(27, 38, 59);
     doc.rect(MARGIN, y, CONTENT_WIDTH, 8, 'F');
-    doc.setTextColor(50, 70, 100);
+    doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text(title.toUpperCase(), MARGIN + 4, y + 5.5);
@@ -137,7 +157,7 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
   let y = HEADER_HEIGHT + 10;
 
   // ─── Case identification card ──────────────────────────
-  doc.setFillColor(230, 240, 250); // Pastel light blue card
+  doc.setFillColor(245, 245, 245);
   doc.roundedRect(MARGIN, y, CONTENT_WIDTH, 28, 2, 2, 'F');
 
   doc.setFontSize(14);
@@ -155,7 +175,7 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
   const faultText = faultTypeLabels[process.fault_type];
 
   // Status pill
-  doc.setFillColor(100, 130, 180); // Pastel blue
+  doc.setFillColor(27, 38, 59);
   const statusW = doc.getTextWidth(statusText) + 8;
   doc.roundedRect(PAGE_WIDTH - MARGIN - statusW - 2, y + 3, statusW, 7, 1, 1, 'F');
   doc.setTextColor(255, 255, 255);
@@ -163,23 +183,17 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
   doc.setFont('helvetica', 'bold');
   doc.text(statusText, PAGE_WIDTH - MARGIN - statusW / 2 - 2, y + 7.5, { align: 'center' });
 
-  // Fault pill - pastel tones
+  // Fault pill
   const faultColors: Record<FaultType, [number, number, number]> = {
-    leve: [240, 210, 130],     // Pastel yellow
-    grave: [240, 170, 130],    // Pastel orange
-    gravisima: [230, 140, 140], // Pastel red
+    leve: [234, 179, 8],
+    grave: [234, 88, 12],
+    gravisima: [220, 38, 38],
   };
-  const faultTextColors: Record<FaultType, [number, number, number]> = {
-    leve: [120, 90, 0],
-    grave: [140, 60, 10],
-    gravisima: [140, 30, 30],
-  };
-  const fc = faultColors[process.fault_type] || [200, 200, 200];
-  const ftc = faultTextColors[process.fault_type] || [80, 80, 80];
+  const fc = faultColors[process.fault_type] || [100, 100, 100];
   doc.setFillColor(fc[0], fc[1], fc[2]);
   const faultW = doc.getTextWidth(faultText) + 8;
   doc.roundedRect(PAGE_WIDTH - MARGIN - faultW - 2, y + 13, faultW, 7, 1, 1, 'F');
-  doc.setTextColor(ftc[0], ftc[1], ftc[2]);
+  doc.setTextColor(255, 255, 255);
   doc.text(faultText, PAGE_WIDTH - MARGIN - faultW / 2 - 2, y + 17.5, { align: 'center' });
 
   doc.setTextColor(0, 0, 0);
@@ -216,9 +230,9 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
     y = sectionTitle(`Evidencias (${process.evidence.length})`, y);
     for (const ev of process.evidence) {
       y = checkNewPage(y, 16);
-      doc.setFillColor(235, 245, 255); // Pastel blue card
+      doc.setFillColor(250, 250, 250);
       doc.roundedRect(MARGIN, y, CONTENT_WIDTH, 14, 1, 1, 'F');
-      doc.setDrawColor(190, 210, 235);
+      doc.setDrawColor(220, 220, 220);
       doc.roundedRect(MARGIN, y, CONTENT_WIDTH, 14, 1, 1, 'S');
       doc.setDrawColor(0, 0, 0);
 
@@ -245,9 +259,9 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
       const cardH = Math.max(16, contentLines.length * 4 + 10);
       y = checkNewPage(y, cardH + 4);
 
-      doc.setFillColor(240, 235, 250); // Pastel purple card
+      doc.setFillColor(250, 250, 250);
       doc.roundedRect(MARGIN, y, CONTENT_WIDTH, cardH, 1, 1, 'F');
-      doc.setDrawColor(200, 190, 225);
+      doc.setDrawColor(220, 220, 220);
       doc.roundedRect(MARGIN, y, CONTENT_WIDTH, cardH, 1, 1, 'S');
       doc.setDrawColor(0, 0, 0);
 
@@ -314,7 +328,7 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
       y = checkNewPage(y, 14);
 
       // Dot
-      doc.setFillColor(100, 130, 180); // Pastel blue dot
+      doc.setFillColor(27, 38, 59);
       doc.circle(MARGIN + 4, y + 1, 1.5, 'F');
 
       doc.setFontSize(8);
@@ -337,6 +351,7 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
+    drawWatermark(doc);
     drawFooter(doc, i, totalPages);
   }
 
