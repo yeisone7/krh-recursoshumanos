@@ -239,12 +239,13 @@ export async function generateTemplatePdf(template: EvaluationTemplate) {
 
     // Watermark: centered, large, very low opacity
     if (watermarkDataUrl) {
-      const wmWidth = 90;
+      const wmWidth = 120;
+      const wmHeight = 67;
       const wmX = (pageWidth - wmWidth) / 2;
-      const wmY = (pageHeight - wmWidth) / 2;
+      const wmY = (pageHeight - wmHeight) / 2;
       doc.saveGraphicsState();
       (doc as any).setGState(new (doc as any).GState({ opacity: 0.06 }));
-      doc.addImage(watermarkDataUrl, 'PNG', wmX, wmY, wmWidth, wmWidth);
+      doc.addImage(watermarkDataUrl, 'PNG', wmX, wmY, wmWidth, wmHeight);
       doc.restoreGraphicsState();
     }
 
