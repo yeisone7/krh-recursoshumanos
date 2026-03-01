@@ -100,8 +100,17 @@ const capacitacionesItem: NavItem = {
   ],
 };
 
+const evaluacionesItem: NavItem = {
+  label: 'Evaluaciones Desempeño',
+  icon: <Target className="w-5 h-5" />,
+  href: '/evaluaciones',
+  children: [
+    { label: 'Evaluaciones', icon: <Target className="w-4 h-4" />, href: '/evaluaciones' },
+    { label: 'Analíticas', icon: <BarChart3 className="w-4 h-4" />, href: '/evaluaciones/analiticas' },
+  ],
+};
+
 const developmentNavItems: NavItem[] = [
-{ label: 'Evaluación Desempeño', icon: <Target className="w-5 h-5" />, href: '/evaluaciones' },
 { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' }];
 
 
@@ -156,6 +165,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [catalogosOpen, setCatalogosOpen] = useState(false);
   const [capacitacionesOpen, setCapacitacionesOpen] = useState(false);
+  const [evaluacionesOpen, setEvaluacionesOpen] = useState(false);
   const location = useLocation();
 
   // Auto-open catalogos menu if on a catalogos route or centros
@@ -168,6 +178,12 @@ export function Sidebar() {
   const isCapacitacionesRoute = location.pathname.startsWith('/capacitaciones');
   if (isCapacitacionesRoute && !capacitacionesOpen) {
     setCapacitacionesOpen(true);
+  }
+
+  // Auto-open evaluaciones menu if on an evaluaciones route
+  const isEvaluacionesRoute = location.pathname.startsWith('/evaluaciones');
+  if (isEvaluacionesRoute && !evaluacionesOpen) {
+    setEvaluacionesOpen(true);
   }
 
   const NavLink = ({ item }: {item: NavItem;}) => {
@@ -501,6 +517,13 @@ export function Sidebar() {
             item={capacitacionesItem}
             isOpen={capacitacionesOpen}
             setIsOpen={setCapacitacionesOpen}
+            collapsed={collapsed}
+            location={location}
+          />
+          <ExpandableMenu
+            item={evaluacionesItem}
+            isOpen={evaluacionesOpen}
+            setIsOpen={setEvaluacionesOpen}
             collapsed={collapsed}
             location={location}
           />

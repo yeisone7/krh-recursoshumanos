@@ -33,6 +33,7 @@ import AnaliticasCapacitaciones from "./pages/capacitaciones/Analiticas";
 import CumplimientoCapacitaciones from "./pages/capacitaciones/Cumplimiento";
 import AccesoPublico from "./pages/capacitaciones/AccesoPublico";
 import Evaluaciones from "./pages/Evaluaciones";
+import AnaliticasEvaluaciones from "./pages/evaluaciones/AnaliticasEvaluaciones";
 import Organigrama from "./pages/Organigrama";
 import Cesantias from "./pages/Cesantias";
 import Calendario from "./pages/Calendario";
@@ -119,6 +120,7 @@ const App = () => (
                         <Route path="/capacitaciones/analiticas" element={<AnaliticasCapacitaciones />} />
                         <Route path="/capacitaciones/cumplimiento" element={<CumplimientoCapacitaciones />} />
                         <Route path="/evaluaciones" element={<Evaluaciones />} />
+                        <Route path="/evaluaciones/analiticas" element={<AnaliticasEvaluaciones />} />
                         <Route path="/organigrama" element={<Organigrama />} />
                         <Route path="/cesantias" element={<Cesantias />} />
                         <Route path="/calendario" element={<Calendario />} />
