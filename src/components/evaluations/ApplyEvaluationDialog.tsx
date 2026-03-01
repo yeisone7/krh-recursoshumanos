@@ -308,70 +308,6 @@ export function ApplyEvaluationDialog({
                 </div>
               )}
 
-              {/* Signatures */}
-              <div className="space-y-4">
-                <Separator />
-                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-                  Firmas
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Evaluator signature */}
-                  <div className="space-y-2 border rounded-lg p-3">
-                    <Label className="text-xs font-medium flex items-center gap-1.5">
-                      <PenLine className="h-3.5 w-3.5" /> Firma del Evaluador
-                    </Label>
-                    {evaluatorSignature ? (
-                      <div className="space-y-2">
-                        <div className="border rounded bg-white p-2">
-                          <img src={evaluatorSignature} alt="Firma evaluador" className="max-h-[80px] mx-auto" />
-                        </div>
-                        <Button variant="outline" size="sm" className="w-full" onClick={() => { setEvaluatorSignature(null); setShowEvaluatorCanvas(true); }}>
-                          Cambiar firma
-                        </Button>
-                      </div>
-                    ) : showEvaluatorCanvas ? (
-                      <SignatureCanvas
-                        width={400}
-                        height={150}
-                        onSave={(dataUrl) => { setEvaluatorSignature(dataUrl); setShowEvaluatorCanvas(false); }}
-                        onCancel={() => setShowEvaluatorCanvas(false)}
-                      />
-                    ) : (
-                      <Button variant="outline" size="sm" className="w-full" onClick={() => setShowEvaluatorCanvas(true)}>
-                        <PenLine className="h-4 w-4 mr-1.5" /> Firmar
-                      </Button>
-                    )}
-                  </div>
-                  {/* Employee signature */}
-                  <div className="space-y-2 border rounded-lg p-3">
-                    <Label className="text-xs font-medium flex items-center gap-1.5">
-                      <PenLine className="h-3.5 w-3.5" /> Firma del Evaluado
-                    </Label>
-                    {employeeSignature ? (
-                      <div className="space-y-2">
-                        <div className="border rounded bg-white p-2">
-                          <img src={employeeSignature} alt="Firma evaluado" className="max-h-[80px] mx-auto" />
-                        </div>
-                        <Button variant="outline" size="sm" className="w-full" onClick={() => { setEmployeeSignature(null); setShowEmployeeCanvas(true); }}>
-                          Cambiar firma
-                        </Button>
-                      </div>
-                    ) : showEmployeeCanvas ? (
-                      <SignatureCanvas
-                        width={400}
-                        height={150}
-                        onSave={(dataUrl) => { setEmployeeSignature(dataUrl); setShowEmployeeCanvas(false); }}
-                        onCancel={() => setShowEmployeeCanvas(false)}
-                      />
-                    ) : (
-                      <Button variant="outline" size="sm" className="w-full" onClick={() => setShowEmployeeCanvas(true)}>
-                        <PenLine className="h-4 w-4 mr-1.5" /> Firmar
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
               {/* Summary fields */}
               <div className="space-y-3">
                 <Separator />
@@ -404,6 +340,68 @@ export function ApplyEvaluationDialog({
                     onChange={(e) => setDevelopmentPlan(e.target.value)}
                     className="min-h-[60px] text-sm"
                   />
+                </div>
+              </div>
+
+              {/* Signatures */}
+              <div className="space-y-4">
+                <Separator />
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                  Firmas
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2 border rounded-lg p-3">
+                    <Label className="text-xs font-medium flex items-center gap-1.5">
+                      <PenLine className="h-3.5 w-3.5" /> Firma del Evaluador
+                    </Label>
+                    {evaluatorSignature ? (
+                      <div className="space-y-2">
+                        <div className="border rounded bg-white p-2">
+                          <img src={evaluatorSignature} alt="Firma evaluador" className="max-h-[80px] mx-auto" />
+                        </div>
+                        <Button variant="outline" size="sm" className="w-full" onClick={() => { setEvaluatorSignature(null); setShowEvaluatorCanvas(true); }}>
+                          Cambiar firma
+                        </Button>
+                      </div>
+                    ) : showEvaluatorCanvas ? (
+                      <SignatureCanvas
+                        width={400}
+                        height={150}
+                        onSave={(dataUrl) => { setEvaluatorSignature(dataUrl); setShowEvaluatorCanvas(false); }}
+                        onCancel={() => setShowEvaluatorCanvas(false)}
+                      />
+                    ) : (
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => setShowEvaluatorCanvas(true)}>
+                        <PenLine className="h-4 w-4 mr-1.5" /> Firmar
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-2 border rounded-lg p-3">
+                    <Label className="text-xs font-medium flex items-center gap-1.5">
+                      <PenLine className="h-3.5 w-3.5" /> Firma del Evaluado
+                    </Label>
+                    {employeeSignature ? (
+                      <div className="space-y-2">
+                        <div className="border rounded bg-white p-2">
+                          <img src={employeeSignature} alt="Firma evaluado" className="max-h-[80px] mx-auto" />
+                        </div>
+                        <Button variant="outline" size="sm" className="w-full" onClick={() => { setEmployeeSignature(null); setShowEmployeeCanvas(true); }}>
+                          Cambiar firma
+                        </Button>
+                      </div>
+                    ) : showEmployeeCanvas ? (
+                      <SignatureCanvas
+                        width={400}
+                        height={150}
+                        onSave={(dataUrl) => { setEmployeeSignature(dataUrl); setShowEmployeeCanvas(false); }}
+                        onCancel={() => setShowEmployeeCanvas(false)}
+                      />
+                    ) : (
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => setShowEmployeeCanvas(true)}>
+                        <PenLine className="h-4 w-4 mr-1.5" /> Firmar
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
