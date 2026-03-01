@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { 
   Package, Plus, Search, Filter, Eye, 
   AlertTriangle, CheckCircle, Clock, Calendar,
-  Loader2
+  Loader2, Warehouse
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -26,11 +26,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { DotationFormDialog } from '@/components/dotation/DotationFormDialog';
 import { DotationDetailDialog } from '@/components/dotation/DotationDetailDialog';
 import { DotationAlertsCard } from '@/components/dotation/DotationAlertsCard';
+import { DotationInventoryTab } from '@/components/dotation/DotationInventoryTab';
 import { useDotationDeliveries, getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
+import { useDotationInventory } from '@/hooks/useDotationInventory';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -90,9 +93,11 @@ export default function Dotacion() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [itemTypeFilter, setItemTypeFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('entregas');
 
   const { currentCompanyId } = useAuth();
   const { data: deliveries, isLoading } = useDotationDeliveries();
+  const { data: inventory = [] } = useDotationInventory();
 
   // Handle deep link from dashboard alerts
   useEffect(() => {
@@ -134,6 +139,7 @@ export default function Dotacion() {
   }, [deliveries]);
 
   // Stats
+  const lowStockCount = inventory.filter(i => i.minimum_stock > 0 && i.quantity_available <= i.minimum_stock).length;
   const stats = useMemo(() => {
     if (!deliveries) return { total: 0, vigentes: 0, porVencer: 0, vencidas: 0 };
     
@@ -205,11 +211,29 @@ export default function Dotacion() {
             Administra las entregas de dotación, controla vencimientos y genera alertas automáticas
           </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Nueva Entrega
-        </Button>
+        {activeTab === 'entregas' && (
+          <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Nueva Entrega
+          </Button>
+        )}
       </motion.div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="entregas" className="gap-2">
+            <Package className="w-4 h-4" /> Entregas
+          </TabsTrigger>
+          <TabsTrigger value="inventario" className="gap-2">
+            <Warehouse className="w-4 h-4" /> Inventario
+            {lowStockCount > 0 && (
+              <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">{lowStockCount}</Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="entregas" className="mt-6 space-y-6">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -438,7 +462,13 @@ export default function Dotacion() {
             )}
           </div>
         </motion.div>
-      </div>
+        </div>
+        </TabsContent>
+
+        <TabsContent value="inventario" className="mt-6">
+          <DotationInventoryTab />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialogs */}
       <DotationFormDialog
