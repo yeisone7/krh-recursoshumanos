@@ -245,19 +245,33 @@ export function useEvaluations() {
         .from('performance_evaluations')
         .select(`
           *,
-          employees_v2!inner(id, first_name, last_name, document_number, company_id),
+          employees_v2!inner(
+            id, first_name, last_name, document_number, company_id,
+            employee_work_info(operation_center_id, operation_centers(id, name))
+          ),
           evaluation_cycles!inner(*)
         `)
         .eq('employees_v2.company_id', currentCompanyId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data.map(e => ({
-        ...e,
-        evaluation_type: e.evaluation_type as EvaluationType,
-        status: e.status as EvaluationStatus,
-        employee: e.employees_v2,
-        cycle: e.evaluation_cycles,
-      })) as PerformanceEvaluation[];
+      return data.map(e => {
+        const empData = e.employees_v2 as any;
+        const workInfo = Array.isArray(empData.employee_work_info) ? empData.employee_work_info[0] : empData.employee_work_info;
+        const centerName = workInfo?.operation_centers?.name || null;
+        return {
+          ...e,
+          evaluation_type: e.evaluation_type as EvaluationType,
+          status: e.status as EvaluationStatus,
+          employee: {
+            id: empData.id,
+            first_name: empData.first_name,
+            last_name: empData.last_name,
+            document_number: empData.document_number,
+          },
+          cycle: e.evaluation_cycles,
+          operation_center_name: centerName,
+        };
+      }) as (PerformanceEvaluation & { operation_center_name: string | null })[];
     },
     enabled: !!currentCompanyId,
   });
