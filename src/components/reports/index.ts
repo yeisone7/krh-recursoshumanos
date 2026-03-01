@@ -5,3 +5,4 @@ export { CesantiasReport } from './CesantiasReport';
 export { DotationReport } from './DotationReport';
 export { ContractExtensionsReport } from './ContractExtensionsReport';
 export { ContractsExpiringSoonReport } from './ContractsExpiringSoonReport';
+export { InventoryMovementsReport } from './InventoryMovementsReport';
