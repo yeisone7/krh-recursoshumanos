@@ -20,11 +20,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { SearchableSelect } from '@/components/ui/searchable-select';
+
 import { Plus, Trash2 } from 'lucide-react';
 import { CriteriaRubricItem } from './CriteriaRubricItem';
 import { usePositions } from '@/hooks/useSystemConfig';
-import type { EvaluationTemplate, DEFAULT_QUALITATIVE_QUESTIONS, DEFAULT_RATING_SCALE } from '@/types/evaluation';
+import type { EvaluationTemplate } from '@/types/evaluation';
 import {
   DEFAULT_QUALITATIVE_QUESTIONS as defaultQuestions,
   DEFAULT_RATING_SCALE as defaultScale,
@@ -53,7 +53,7 @@ const formSchema = z.object({
   name: z.string().min(1, 'Nombre requerido'),
   description: z.string().optional(),
   is_active: z.boolean().default(true),
-  position_id: z.string().optional(),
+  position_ids: z.array(z.string()).default([]),
   criteria: z.array(criteriaSchema).min(1, 'Debe agregar al menos un criterio'),
   qualitative_questions: z.array(z.string()),
   rating_scale: z.array(ratingScaleItemSchema),
@@ -86,7 +86,7 @@ export function TemplateFormDialog({
       name: '',
       description: '',
       is_active: true,
-      position_id: '',
+      position_ids: [],
       criteria: [{ ...emptyCriteria }],
       qualitative_questions: [...defaultQuestions],
       rating_scale: [...defaultScale],
@@ -109,7 +109,7 @@ export function TemplateFormDialog({
         name: template.name,
         description: template.description || '',
         is_active: template.is_active ?? true,
-        position_id: template.position_id || '',
+        position_ids: template.positions?.map(p => p.id) || [],
         criteria: template.criteria?.length
           ? template.criteria.map(c => ({
               name: c.name,
@@ -131,7 +131,7 @@ export function TemplateFormDialog({
         name: '',
         description: '',
         is_active: true,
-        position_id: '',
+        position_ids: [],
         criteria: [{ ...emptyCriteria }],
         qualitative_questions: [...defaultQuestions],
         rating_scale: [...defaultScale],
@@ -181,18 +181,35 @@ export function TemplateFormDialog({
 
               <FormField
                 control={form.control}
-                name="position_id"
+                name="position_ids"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cargo</FormLabel>
+                    <FormLabel>Cargos que aplican</FormLabel>
                     <FormControl>
-                      <SearchableSelect
-                        options={positionOptions}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Seleccionar cargo..."
-                        searchPlaceholder="Buscar cargo..."
-                      />
+                      <div className="space-y-2">
+                        {positionOptions.map((opt) => {
+                          const checked = field.value?.includes(opt.value);
+                          return (
+                            <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  const newVal = checked
+                                    ? field.value.filter((v: string) => v !== opt.value)
+                                    : [...(field.value || []), opt.value];
+                                  field.onChange(newVal);
+                                }}
+                                className="rounded border-input"
+                              />
+                              {opt.label}
+                            </label>
+                          );
+                        })}
+                        {positionOptions.length === 0 && (
+                          <p className="text-xs text-muted-foreground">No hay cargos configurados</p>
+                        )}
+                      </div>
                     </FormControl>
                   </FormItem>
                 )}

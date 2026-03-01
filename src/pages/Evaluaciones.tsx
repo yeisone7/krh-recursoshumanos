@@ -565,12 +565,19 @@ export default function Evaluaciones() {
                                 <CardTitle className="text-base font-semibold leading-tight truncate">
                                   {template.name}
                                 </CardTitle>
-                                {template.position && (
+                                {template.positions && template.positions.length > 0 ? (
+                                  <div className="flex items-center gap-1 mt-1 flex-wrap">
+                                    <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    {template.positions.map(p => (
+                                      <Badge key={p.id} variant="outline" className="text-xs font-medium">
+                                        {p.name}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                ) : (
                                   <div className="flex items-center gap-1 mt-1">
                                     <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span className="text-sm font-medium text-primary truncate">
-                                      {template.position.name}
-                                    </span>
+                                    <span className="text-xs text-muted-foreground">Todos los cargos</span>
                                   </div>
                                 )}
                               </div>
@@ -597,7 +604,7 @@ export default function Evaluaciones() {
                                       name: `${template.name} (copia)`,
                                       description: template.description,
                                       is_active: template.is_active,
-                                      position_id: template.position_id,
+                                      position_ids: template.positions?.map(p => p.id) || [],
                                       qualitative_questions: template.qualitative_questions,
                                       rating_scale: template.rating_scale,
                                       criteria: template.criteria?.map(c => ({

@@ -28,14 +28,13 @@ export interface EvaluationTemplate {
   name: string;
   description?: string | null;
   is_active?: boolean | null;
-  position_id?: string | null;
   qualitative_questions?: string[] | null;
   rating_scale?: RatingScaleItem[] | null;
   created_by?: string | null;
   created_at: string;
   updated_at: string;
   criteria?: EvaluationCriteria[];
-  position?: { id: string; name: string } | null;
+  positions?: { id: string; name: string }[];
 }
 
 export interface EvaluationCriteria {
