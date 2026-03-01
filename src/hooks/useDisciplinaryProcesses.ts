@@ -434,6 +434,64 @@ export function useDeleteEvidence() {
 // DEFENSE MUTATIONS
 // ============================================
 
+export function useRegisterAppeal() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      processId,
+      appealDate,
+      appealResolution,
+    }: {
+      processId: string;
+      appealDate: string;
+      appealResolution: string;
+    }) => {
+      const updateData = {
+        status: 'apelacion' as DisciplinaryStatus,
+        has_appeal: true,
+        appeal_date: appealDate,
+        appeal_resolution: appealResolution,
+      };
+
+      const { error: updateError } = await supabase
+        .from('disciplinary_processes')
+        .update(updateData)
+        .eq('id', processId);
+
+      if (updateError) throw updateError;
+
+      // Create timeline entry
+      await supabase.from('disciplinary_timeline').insert({
+        process_id: processId,
+        action_type: 'apelacion',
+        description: `Apelación registrada: ${appealResolution.substring(0, 100)}...`,
+        previous_status: 'decision',
+        new_status: 'apelacion',
+        performed_by: user?.id,
+        performed_by_name: user?.email,
+      });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_processes'] });
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_process', variables.processId] });
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_stats'] });
+      toast({
+        title: 'Apelación registrada',
+        description: 'La apelación ha sido registrada exitosamente.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
 export function useAddDefense() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
