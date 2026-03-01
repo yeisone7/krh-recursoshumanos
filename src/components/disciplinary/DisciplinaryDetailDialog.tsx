@@ -107,7 +107,7 @@ export function DisciplinaryDetailDialog({
             </div>
           </DialogHeader>
 
-          <ScrollArea className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-2">
             <Tabs defaultValue="general" className="w-full">
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="general">General</TabsTrigger>
@@ -467,7 +467,7 @@ export function DisciplinaryDetailDialog({
                 )}
               </TabsContent>
             </Tabs>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
 
