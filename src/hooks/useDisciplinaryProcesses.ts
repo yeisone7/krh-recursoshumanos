@@ -30,13 +30,24 @@ export function useDisciplinaryProcesses() {
         .from('disciplinary_processes')
         .select(`
           *,
-          employee:employees_v2(id, first_name, last_name, document_number)
+          employee:employees_v2(
+            id, first_name, last_name, document_number,
+            employee_work_info(operation_center_id, is_current, operation_centers(id, name))
+          )
         `)
         .eq('company_id', currentCompanyId!)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as unknown as DisciplinaryProcessWithEmployee[];
+
+      // Map operation center name from nested join
+      return (data as any[]).map((p) => {
+        const workInfo = p.employee?.employee_work_info?.find((w: any) => w.is_current);
+        return {
+          ...p,
+          operation_center_name: workInfo?.operation_centers?.name || null,
+        };
+      }) as DisciplinaryProcessWithEmployee[];
     },
     enabled: !!currentCompanyId,
   });
@@ -527,6 +538,47 @@ export function useAddDefense() {
       toast({
         title: 'Descargos registrados',
         description: 'Los descargos del empleado han sido registrados.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+// ============================================
+// DELETE PROCESS
+// ============================================
+
+export function useDeleteDisciplinaryProcess() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (processId: string) => {
+      // Delete related records first
+      await Promise.all([
+        supabase.from('disciplinary_evidence').delete().eq('process_id', processId),
+        supabase.from('disciplinary_defenses').delete().eq('process_id', processId),
+        supabase.from('disciplinary_timeline').delete().eq('process_id', processId),
+      ]);
+
+      const { error } = await supabase
+        .from('disciplinary_processes')
+        .delete()
+        .eq('id', processId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_processes'] });
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_stats'] });
+      toast({
+        title: 'Proceso eliminado',
+        description: 'El proceso disciplinario ha sido eliminado.',
       });
     },
     onError: (error: Error) => {

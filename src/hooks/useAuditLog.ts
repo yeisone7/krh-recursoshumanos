@@ -13,7 +13,8 @@ export type AuditAction =
 export type EntityType = 
   | 'employee' | 'contract' | 'dotation' 
   | 'medical_exam' | 'operation_center' 
-  | 'user' | 'company' | 'role';
+  | 'user' | 'company' | 'role'
+  | 'disciplinary_process';
 
 export interface AuditLogEntry {
   id: string;
@@ -155,4 +156,5 @@ export const entityTypeLabels: Record<string, string> = {
   user: 'Usuario',
   company: 'Empresa',
   role: 'Rol',
+  disciplinary_process: 'Proceso Disciplinario',
 };
