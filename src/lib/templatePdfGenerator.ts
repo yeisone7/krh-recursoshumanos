@@ -11,7 +11,26 @@ const LEVEL_LABELS: Record<number, string> = {
   1: 'Competencia No Desarrollada',
 };
 
-export function generateTemplatePdf(template: EvaluationTemplate) {
+const WATERMARK_LOGO_PATH = '/images/petrocasinos-watermark.png';
+
+function loadImageAsDataUrl(src: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => reject(new Error('Failed to load watermark'));
+    img.src = src;
+  });
+}
+
+export async function generateTemplatePdf(template: EvaluationTemplate) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 18;
@@ -196,16 +215,37 @@ export function generateTemplatePdf(template: EvaluationTemplate) {
     }
   }
 
-  // ─── Footer ────────────────────────────────────────────
+  // ─── Watermark + Footer ─────────────────────────────────
+  let watermarkDataUrl: string | null = null;
+  try {
+    watermarkDataUrl = await loadImageAsDataUrl(WATERMARK_LOGO_PATH);
+  } catch {
+    // silently skip watermark if logo can't load
+  }
+
   const totalPages = doc.getNumberOfPages();
+  const pageHeight = doc.internal.pageSize.getHeight();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
+
+    // Watermark: centered, large, very low opacity
+    if (watermarkDataUrl) {
+      const wmWidth = 90;
+      const wmX = (pageWidth - wmWidth) / 2;
+      const wmY = (pageHeight - wmWidth) / 2;
+      doc.saveGraphicsState();
+      (doc as any).setGState(new (doc as any).GState({ opacity: 0.06 }));
+      doc.addImage(watermarkDataUrl, 'PNG', wmX, wmY, wmWidth, wmWidth);
+      doc.restoreGraphicsState();
+    }
+
+    // Footer
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
     doc.text(
       `Página ${p} de ${totalPages}`,
       pageWidth - margin,
-      doc.internal.pageSize.getHeight() - 8,
+      pageHeight - 8,
       { align: 'right' },
     );
   }
