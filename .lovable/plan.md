@@ -1,73 +1,61 @@
 
 
-# Plan: Descargos por Token de Un Solo Uso
+## Control de Inventarios de Dotacion (solo cantidades)
 
-## Resumen
-Agregar la opcion (opcional) de generar un enlace/token de un solo uso para que el empleado implicado en un proceso disciplinario pueda presentar sus descargos directamente a traves de una pagina publica. El descargo quedara registrado indicando que fue presentado via token.
+### Resumen
+Agregar un sistema de inventario para artículos de dotación que permita registrar existencias por tipo de artículo y centro de operación, con descuento automático al registrar entregas.
 
-## Cambios en Base de Datos
+### Cambios en la base de datos
 
-### Nueva tabla: `disciplinary_defense_tokens`
-- `id` (UUID, PK)
-- `process_id` (UUID, FK a disciplinary_processes)
-- `company_id` (UUID)
-- `token` (TEXT, UNIQUE) -- token UUID generado
-- `employee_id` (UUID, FK a employees_v2)
-- `expires_at` (TIMESTAMPTZ)
-- `is_used` (BOOLEAN, default false)
-- `used_at` (TIMESTAMPTZ, nullable)
-- `created_by` (UUID) -- quien genero el token
-- `created_at` (TIMESTAMPTZ, default now())
+**Nueva tabla `dotation_inventory`:**
+- `id` (uuid, PK)
+- `company_id` (uuid, FK a companies)
+- `operation_center_id` (uuid, FK a operation_centers, nullable)
+- `item_type` (dotation_item_type enum)
+- `item_name` (text) - nombre descriptivo del artículo
+- `size` (text, nullable) - talla si aplica
+- `quantity_available` (integer, default 0) - stock actual
+- `minimum_stock` (integer, default 0) - nivel mínimo para alertas
+- `created_by`, `created_at`, `updated_at`
+- Constraint UNIQUE en (company_id, operation_center_id, item_type, item_name, size)
 
-Se agregara una politica RLS para lectura publica (SELECT) filtrada por token, y para INSERT/UPDATE restringido a miembros de la empresa.
+**Politicas RLS:** Lectura y escritura para usuarios de la empresa (admin/rrhh).
 
-### Columna nueva en `disciplinary_defenses`
-- `submitted_via_token` (BOOLEAN, default false) -- indica si el descargo fue enviado por el empleado a traves de un enlace
+### Cambios en el frontend
 
-## Cambios en Frontend
+1. **Nueva pestana "Inventario" en la pagina de Dotacion** (`src/pages/Dotacion.tsx`)
+   - Agregar Tabs con dos pestanas: "Entregas" (vista actual) e "Inventario"
+   - La pestana de inventario muestra una tabla con: Articulo, Tipo, Centro, Talla, Stock, Minimo, Estado (bajo stock / OK)
 
-### 1. Boton "Generar Enlace de Descargos" en el tab de Descargos
-En `DisciplinaryDetailDialog.tsx`, junto al boton "Registrar Descargos", agregar un boton secundario "Enviar Enlace" que:
-- Genera un token en la tabla `disciplinary_defense_tokens`
-- Muestra un dialog con el enlace y codigo QR (reutilizando el patron de `QRCodeDialog`)
-- El enlace apunta a `/descargos?token=XXX`
+2. **Nuevo componente `DotationInventoryTab`** (`src/components/dotation/DotationInventoryTab.tsx`)
+   - Tabla con listado de inventario agrupable por centro de operacion
+   - Botones para agregar stock, editar cantidades
+   - Indicadores visuales de stock bajo (cuando quantity_available <= minimum_stock)
+   - Filtros por centro de operacion y tipo de articulo
 
-### 2. Nuevo componente: `GenerateDefenseTokenDialog.tsx`
-Dialog que genera el token, muestra el enlace copiable y un QR. Similar al flujo de `GenerarAcceso` de capacitaciones.
+3. **Nuevo dialogo `InventoryFormDialog`** (`src/components/dotation/InventoryFormDialog.tsx`)
+   - Formulario para agregar/editar articulos de inventario
+   - Campos: centro de operacion, tipo de articulo, nombre, talla (opcional), cantidad disponible, stock minimo
 
-### 3. Nueva pagina publica: `src/pages/DescargosPublico.tsx`
-Pagina accesible sin autenticacion en la ruta `/descargos?token=XXX`. Flujo:
-1. Valida el token (existe, no usado, no expirado)
-2. Muestra informacion del caso (numero de radicado, fecha de los hechos, descripcion de los hechos)
-3. Formulario para que el empleado escriba sus descargos
-4. Al enviar: inserta en `disciplinary_defenses` con `submitted_via_token = true`, marca el token como usado, y registra en `disciplinary_timeline`
+4. **Nuevo dialogo `InventoryAdjustDialog`** (`src/components/dotation/InventoryAdjustDialog.tsx`)
+   - Dialogo rapido para ajustar cantidades (sumar o restar unidades)
+   - Motivo del ajuste (entrada, ajuste manual, devolucion)
 
-### 4. Indicador visual en descargos existentes
-En la lista de descargos del detail dialog, mostrar un `Badge` "Via Enlace" cuando `submitted_via_token` sea true, para diferenciarlos de los registrados manualmente.
+5. **Nuevo hook `useDotationInventory`** (`src/hooks/useDotationInventory.ts`)
+   - Queries: listar inventario por empresa, obtener item individual
+   - Mutations: crear, actualizar, eliminar, ajustar cantidad
 
-### 5. Hook: `useDefenseTokens` 
-- `useGenerateDefenseToken(processId)` -- crea el token
-- Logica de validacion y envio en la pagina publica (sin auth, consulta directa a Supabase con RLS publica)
+6. **Descuento automatico al entregar dotacion**
+   - Modificar `useCreateDotationDelivery` en `src/hooks/useDotation.ts` para descontar del inventario al registrar una entrega exitosa (busca coincidencia por item_type, item_name, size, operation_center_id y resta la cantidad)
+   - Invalidar queries de inventario tras entrega
 
-### 6. Ruta en App.tsx
-Agregar `<Route path="/descargos" element={<DescargosPublico />} />` como ruta publica (al mismo nivel que `/capacitacion`).
+7. **KPI de inventario** en las tarjetas de estadisticas
+   - Agregar una tarjeta "Stock Bajo" que muestre cuantos articulos estan por debajo del minimo
 
-## Detalles Tecnicos
-
-- El token expira en 72 horas por defecto
-- RLS: SELECT publico filtrado por token; INSERT en defenses permitido via una funcion de base de datos segura (security definer) que valide el token antes de insertar
-- Se creara una funcion `submit_defense_via_token` que recibe el token y el contenido, valida, inserta el descargo, marca el token como usado, y crea la entrada en timeline
-- La pagina publica sigue el mismo patron visual de `AccesoPublico.tsx` (branding corporativo)
-
-## Archivos a crear/modificar
-
-| Archivo | Accion |
-|---|---|
-| Migracion SQL | Crear tabla + columna + funcion RPC + RLS |
-| `src/pages/DescargosPublico.tsx` | Crear (pagina publica) |
-| `src/components/disciplinary/GenerateDefenseTokenDialog.tsx` | Crear |
-| `src/hooks/useDisciplinaryProcesses.ts` | Agregar hook para generar token |
-| `src/components/disciplinary/DisciplinaryDetailDialog.tsx` | Agregar boton + badge |
-| `src/types/disciplinary.ts` | Agregar tipo DisciplinaryDefenseToken + campo submitted_via_token |
-| `src/App.tsx` | Agregar ruta `/descargos` |
+### Secuencia de implementacion
+1. Crear tabla y RLS (migracion)
+2. Crear hook `useDotationInventory`
+3. Crear componentes de inventario (tab, formularios)
+4. Integrar pestana en pagina de Dotacion
+5. Conectar descuento automatico en entregas
 
