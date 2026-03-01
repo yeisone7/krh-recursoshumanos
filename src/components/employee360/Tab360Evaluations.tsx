@@ -235,7 +235,7 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
                           <div className="space-y-2 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-medium">
-                                {evaluation.evaluation_templates?.name || evaluation.evaluation_cycles?.name || 'Evaluación de Desempeño'}
+                                {evaluation.evaluation_cycles?.evaluation_templates?.name || evaluation.evaluation_cycles?.name || 'Evaluación de Desempeño'}
                               </h4>
                               <Badge variant="outline" className={statusClass}>
                                 {statusLabel}
