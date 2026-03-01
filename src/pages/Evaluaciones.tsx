@@ -13,6 +13,9 @@ import {
   TrendingUp,
   Award,
   Clock,
+  Copy,
+  Layers,
+  Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -509,76 +512,163 @@ export default function Evaluaciones() {
 
         {/* Templates Tab */}
         <TabsContent value="templates">
-          <Card>
-            <CardHeader>
-              <CardTitle>Plantillas de Evaluación</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loadingTemplates ? (
-                <p className="text-muted-foreground">Cargando...</p>
-              ) : templates.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No hay plantillas configuradas
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {templates.map((template) => (
-                    <Card key={template.id} className="relative">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-lg">{template.name}</CardTitle>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedTemplate(template);
-                                  setTemplateDialogOpen(true);
-                                }}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => {
-                                  setItemToDelete({ type: 'template', id: template.id });
-                                  setDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Eliminar
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        {template.position && (
-                          <p className="text-sm font-medium text-primary">{template.position.name}</p>
-                        )}
-                        {template.description && (
-                          <p className="text-sm text-muted-foreground">{template.description}</p>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">
-                            {template.criteria?.length || 0} criterios
-                          </span>
-                          <Badge variant={template.is_active ? 'default' : 'secondary'}>
-                            {template.is_active ? 'Activa' : 'Inactiva'}
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Plantillas de Evaluación</h3>
+            {loadingTemplates ? (
+              <p className="text-muted-foreground">Cargando...</p>
+            ) : templates.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">
+                No hay plantillas configuradas
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {templates.map((template, idx) => {
+                  const criteriaCount = template.criteria?.length || 0;
+                  const questionsCount = (template.qualitative_questions as string[] | null)?.length || 0;
+                  const gradientColors = [
+                    'from-primary/10 to-primary/5',
+                    'from-blue-500/10 to-cyan-500/5',
+                    'from-emerald-500/10 to-teal-500/5',
+                    'from-amber-500/10 to-orange-500/5',
+                    'from-violet-500/10 to-purple-500/5',
+                    'from-rose-500/10 to-pink-500/5',
+                  ];
+                  const iconColors = [
+                    'text-primary bg-primary/10',
+                    'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/40',
+                    'text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/40',
+                    'text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/40',
+                    'text-violet-600 bg-violet-100 dark:text-violet-400 dark:bg-violet-900/40',
+                    'text-rose-600 bg-rose-100 dark:text-rose-400 dark:bg-rose-900/40',
+                  ];
+                  const gradient = gradientColors[idx % gradientColors.length];
+                  const iconColor = iconColors[idx % iconColors.length];
+
+                  return (
+                    <motion.div
+                      key={template.id}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                    >
+                      <Card className={`relative overflow-hidden border hover:shadow-md transition-shadow bg-gradient-to-br ${gradient}`}>
+                        {/* Decorative top bar */}
+                        <div className={`h-1.5 w-full bg-gradient-to-r ${gradient.replace('/10', '/60').replace('/5', '/30')}`} />
+
+                        <CardHeader className="pb-3 pt-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <div className={`p-2 rounded-lg shrink-0 ${iconColor}`}>
+                                <FileText className="h-5 w-5" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <CardTitle className="text-base font-semibold leading-tight truncate">
+                                  {template.name}
+                                </CardTitle>
+                                {template.position && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="text-sm font-medium text-primary truncate">
+                                      {template.position.name}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedTemplate(template);
+                                    setTemplateDialogOpen(true);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    const duplicated: any = {
+                                      name: `${template.name} (copia)`,
+                                      description: template.description,
+                                      is_active: template.is_active,
+                                      position_id: template.position_id,
+                                      qualitative_questions: template.qualitative_questions,
+                                      rating_scale: template.rating_scale,
+                                      criteria: template.criteria?.map(c => ({
+                                        name: c.name,
+                                        description: c.description,
+                                        category: c.category,
+                                        weight: c.weight,
+                                        max_score: c.max_score,
+                                        level_4_description: c.level_4_description,
+                                        level_3_description: c.level_3_description,
+                                        level_2_description: c.level_2_description,
+                                        level_1_description: c.level_1_description,
+                                      })) || [],
+                                    };
+                                    createTemplate.mutate(duplicated);
+                                  }}
+                                >
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Duplicar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => {
+                                    setItemToDelete({ type: 'template', id: template.id });
+                                    setDeleteDialogOpen(true);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Eliminar
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </CardHeader>
+
+                        <CardContent className="pt-0 space-y-3">
+                          {template.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {template.description}
+                            </p>
+                          )}
+
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Layers className="h-3.5 w-3.5" />
+                              <span>{criteriaCount} criterios</span>
+                            </div>
+                            {questionsCount > 0 && (
+                              <div className="flex items-center gap-1">
+                                <ClipboardCheck className="h-3.5 w-3.5" />
+                                <span>{questionsCount} preguntas</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-end">
+                            <Badge
+                              variant={template.is_active ? 'default' : 'secondary'}
+                              className={template.is_active ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+                            >
+                              {template.is_active ? 'Activa' : 'Inactiva'}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 
