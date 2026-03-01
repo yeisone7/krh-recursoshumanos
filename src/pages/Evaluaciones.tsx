@@ -206,7 +206,7 @@ export default function Evaluaciones() {
 
   const handleDownloadPdf = async (evaluation: PerformanceEvaluation) => {
     const cycle = cycles.find(c => c.id === evaluation.cycle_id);
-    const tpl = cycle?.template || null;
+    const tpl = (cycle?.template_id ? templates.find(t => t.id === cycle.template_id) : cycle?.template) || null;
     const { data: scores } = await supabase
       .from('evaluation_scores')
       .select('*')
