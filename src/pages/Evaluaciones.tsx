@@ -24,6 +24,9 @@ import {
   FileSpreadsheet,
   Columns3,
   List,
+  ChevronRight,
+  FolderOpen,
+  Folder,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -72,6 +75,7 @@ import {
   ApplyEvaluationDialog,
   BulkGeneratePreviewDialog,
   EvaluationKanbanBoard,
+  EvaluationTreeView,
 } from '@/components/evaluations';
 import {
   CYCLE_STATUS_LABELS,
@@ -612,92 +616,15 @@ export default function Evaluaciones() {
                 const centerNames = Object.keys(grouped).sort((a, b) =>
                   a === 'Sin Centro' ? 1 : b === 'Sin Centro' ? -1 : a.localeCompare(b)
                 );
-                return (
-                  <div className="space-y-6">
-                    {centerNames.map(centerName => {
-                      const cycleGroups = grouped[centerName];
-                      const cycleNames = Object.keys(cycleGroups).sort();
-                      return (
-                        <div key={centerName}>
-                          <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
-                            <Briefcase className="h-4 w-4 text-primary" />
-                            {centerName}
-                          </h3>
-                          <div className="space-y-4 pl-2">
-                            {cycleNames.map(cycleName => {
-                              const evals = cycleGroups[cycleName];
-                              return (
-                                <div key={cycleName}>
-                                  <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1.5">
-                                    <Calendar className="h-3.5 w-3.5" />
-                                    {cycleName}
-                                    <Badge variant="secondary" className="text-[10px] ml-1">{evals.length}</Badge>
-                                  </h4>
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Empleado</TableHead>
-                                        <TableHead>Tipo</TableHead>
-                                        <TableHead>Estado</TableHead>
-                                        <TableHead>Puntaje</TableHead>
-                                        <TableHead>Calificación</TableHead>
-                                        <TableHead className="w-12"></TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {evals.map((evaluation) => (
-                                        <TableRow key={evaluation.id}>
-                                          <TableCell className="font-medium">
-                                            {evaluation.employee?.first_name} {evaluation.employee?.last_name}
-                                          </TableCell>
-                                          <TableCell>{EVALUATION_TYPE_LABELS[evaluation.evaluation_type]}</TableCell>
-                                          <TableCell>
-                                            <Badge className={statusColors[evaluation.status]}>
-                                              {EVALUATION_STATUS_LABELS[evaluation.status]}
-                                            </Badge>
-                                          </TableCell>
-                                          <TableCell>
-                                            {evaluation.overall_score != null ? (
-                                              <span className="font-medium">{evaluation.overall_score}/100</span>
-                                            ) : '-'}
-                                          </TableCell>
-                                          <TableCell>{evaluation.overall_rating || '-'}</TableCell>
-                                          <TableCell>
-                                            <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                  <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                              </DropdownMenuTrigger>
-                                              <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => { setEvaluationToApply(evaluation); setApplyDialogOpen(true); }}>
-                                                  <PlayCircle className="h-4 w-4 mr-2" /> Evaluar
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleDownloadPdf(evaluation)}>
-                                                  <Download className="h-4 w-4 mr-2" /> Descargar PDF
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => { setSelectedEvaluation(evaluation); setEvaluationDialogOpen(true); }}>
-                                                  <Edit className="h-4 w-4 mr-2" /> Editar
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className="text-destructive" onClick={() => { setItemToDelete({ type: 'evaluation', id: evaluation.id }); setDeleteDialogOpen(true); }}>
-                                                  <Trash2 className="h-4 w-4 mr-2" /> Eliminar
-                                                </DropdownMenuItem>
-                                              </DropdownMenuContent>
-                                            </DropdownMenu>
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
+                return <EvaluationTreeView
+                  centerNames={centerNames}
+                  grouped={grouped}
+                  statusColors={statusColors}
+                  onApply={(ev) => { setEvaluationToApply(ev); setApplyDialogOpen(true); }}
+                  onDownloadPdf={handleDownloadPdf}
+                  onEdit={(ev) => { setSelectedEvaluation(ev); setEvaluationDialogOpen(true); }}
+                  onDelete={(ev) => { setItemToDelete({ type: 'evaluation', id: ev.id }); setDeleteDialogOpen(true); }}
+                />;
               })()}
             </CardContent>
           </Card>
