@@ -580,9 +580,9 @@ export default function Evaluaciones() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className={`relative overflow-hidden border hover:shadow-md transition-shadow bg-gradient-to-br ${gradient}`}>
+                      <Card className="relative overflow-hidden border hover:shadow-md transition-shadow bg-card">
                         {/* Decorative top bar */}
-                        <div className={`h-1.5 w-full bg-gradient-to-r ${gradient.replace('/10', '/60').replace('/5', '/30')}`} />
+                        <div className="h-1.5 w-full bg-gradient-to-r from-[#3b3a59] to-[#5a587a]" />
 
                         <CardHeader className="pb-3 pt-4">
                           <div className="flex items-start justify-between gap-2">
@@ -677,12 +677,12 @@ export default function Evaluaciones() {
                           )}
 
                           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 text-[#3b3a59]">
                               <Layers className="h-3.5 w-3.5" />
                               <span>{criteriaCount} criterios</span>
                             </div>
                             {questionsCount > 0 && (
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 text-[#e65a0a]">
                                 <ClipboardCheck className="h-3.5 w-3.5" />
                                 <span>{questionsCount} preguntas</span>
                               </div>
