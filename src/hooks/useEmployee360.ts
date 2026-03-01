@@ -153,7 +153,7 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
       const [evaluationsRes, goalsRes] = await Promise.all([
         supabase
           .from('performance_evaluations')
-          .select('*, evaluation_templates(*), evaluation_cycles(*), evaluation_scores(*, evaluation_criteria(*))')
+          .select('*, evaluation_cycles(*, evaluation_templates(*)), evaluation_scores(*, evaluation_criteria(*))')
           .eq('employee_id', employeeId!)
           .order('created_at', { ascending: false }),
         supabase
