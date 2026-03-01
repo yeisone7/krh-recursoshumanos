@@ -53,7 +53,9 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
   const criteria = template?.criteria || [];
   const ratingScale: RatingScaleItem[] = template?.rating_scale || DEFAULT_RATING_SCALE;
 
-  let y = 15;
+  const HEADER_HEIGHT = 32;
+  const CONTENT_START_Y = HEADER_HEIGHT + 8;
+  let y = CONTENT_START_Y;
 
   // Pre-load images
   let colorLogoDataUrl: string | null = null;
@@ -67,34 +69,27 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
     // silently continue without images
   }
 
-  // ─── Header ─────────────────────────────────────────────
-  doc.setFillColor(27, 38, 59); // navy
-  doc.rect(0, 0, pageWidth, 32, 'F');
+  const dateStr = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es });
+  const headerCompanyName = (companyName || 'PETROCASINOS S.A.').toUpperCase();
 
-  // Color logo in header
-  if (colorLogoDataUrl) {
-    try {
-      doc.addImage(colorLogoDataUrl, 'PNG', pageWidth - margin - 38, 5, 36, 20);
-    } catch { /* skip if image fails */ }
+  function drawHeader(d: jsPDF) {
+    d.setFillColor(27, 38, 59);
+    d.rect(0, 0, pageWidth, HEADER_HEIGHT, 'F');
+    if (colorLogoDataUrl) {
+      try { d.addImage(colorLogoDataUrl, 'PNG', pageWidth - margin - 38, 5, 36, 20); } catch { /* skip */ }
+    }
+    d.setTextColor(255, 255, 255);
+    d.setFontSize(16);
+    d.setFont('helvetica', 'bold');
+    d.text(headerCompanyName, margin, 14);
+    d.setFontSize(10);
+    d.setFont('helvetica', 'normal');
+    d.text('EVALUACIÓN DE DESEMPEÑO', margin, 21);
+    d.setFontSize(8);
+    d.text(`Fecha: ${dateStr}`, margin, 27);
   }
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text((companyName || 'PETROCASINOS S.A.').toUpperCase(), margin, 14);
-
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('EVALUACIÓN DE DESEMPEÑO', margin, 21);
-
-  doc.setFontSize(8);
-  doc.text(
-    `Fecha: ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })}`,
-    margin,
-    27
-  );
-
-  y = 40;
+  drawHeader(doc);
   doc.setTextColor(0, 0, 0);
 
   // ─── Employee info card ─────────────────────────────────
@@ -161,7 +156,8 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
     // Check page break
     if (y > 240) {
       doc.addPage();
-      y = 20;
+      drawHeader(doc);
+      y = CONTENT_START_Y;
     }
 
     doc.setFontSize(10);
@@ -173,7 +169,8 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
     for (const c of items) {
       if (y > 245) {
         doc.addPage();
-        y = 20;
+        drawHeader(doc);
+        y = CONTENT_START_Y;
       }
 
       const score = scores.find((s) => s.criteria_id === c.id);
@@ -243,7 +240,8 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
   if (questions.length > 0 && answers.some((a) => a)) {
     if (y > 220) {
       doc.addPage();
-      y = 20;
+      drawHeader(doc);
+      y = CONTENT_START_Y;
     }
 
     doc.setFontSize(10);
@@ -256,7 +254,8 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
     for (let i = 0; i < questions.length; i++) {
       if (y > 245) {
         doc.addPage();
-        y = 20;
+        drawHeader(doc);
+        y = CONTENT_START_Y;
       }
       doc.setFontSize(8);
       doc.setFont('helvetica', 'bold');
@@ -280,7 +279,8 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
   if (summaryItems.length > 0) {
     if (y > 220) {
       doc.addPage();
-      y = 20;
+      drawHeader(doc);
+      y = CONTENT_START_Y;
     }
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
@@ -292,7 +292,8 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
     for (const item of summaryItems) {
       if (y > 245) {
         doc.addPage();
-        y = 20;
+        drawHeader(doc);
+        y = CONTENT_START_Y;
       }
       doc.setFontSize(8);
       doc.setFont('helvetica', 'bold');
@@ -309,7 +310,8 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
   // ─── Rating scale legend ───────────────────────────────
   if (y > 235) {
     doc.addPage();
-    y = 20;
+    drawHeader(doc);
+    y = CONTENT_START_Y;
   }
   y += 4;
   doc.setFontSize(8);
@@ -324,7 +326,7 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
     y += 3.5;
   }
 
-  // ─── Watermark + Footer ─────────────────────────────────
+  // ─── Watermark + Header (pages 2+) + Footer ─────────────
   const totalPages = doc.getNumberOfPages();
   const pageHeight = doc.internal.pageSize.getHeight();
   for (let p = 1; p <= totalPages; p++) {
@@ -342,11 +344,11 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
       doc.restoreGraphicsState();
     }
 
-    // Footer
+    // Footer with pagination
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
     doc.text(
-      `Página ${p} de ${totalPages}`,
+      `${p} de ${totalPages}`,
       pageWidth - margin,
       pageHeight - 8,
       { align: 'right' }
