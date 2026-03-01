@@ -150,8 +150,22 @@ export interface DisciplinaryDefense {
   received_by: string | null;
   received_by_id: string | null;
   document_url: string | null;
+  submitted_via_token: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface DisciplinaryDefenseToken {
+  id: string;
+  process_id: string;
+  company_id: string;
+  token: string;
+  employee_id: string;
+  expires_at: string;
+  is_used: boolean;
+  used_at: string | null;
+  created_by: string | null;
+  created_at: string;
 }
 
 // Form schemas
