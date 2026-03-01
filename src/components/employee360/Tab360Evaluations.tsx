@@ -48,7 +48,6 @@ const goalStatusConfig: Record<string, { label: string; color: string }> = {
 
 export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsProps) {
   const evals = evaluations?.evaluations || [];
-  const goals = evaluations?.goals || [];
 
   const scoredEvals = evals.filter((e: any) => e.overall_score != null && e.overall_score > 0);
   const avgScore = scoredEvals.length > 0
@@ -85,14 +84,14 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
     );
   }
 
-  if (evals.length === 0 && goals.length === 0) {
+  if (evals.length === 0) {
     return (
       <Card>
         <CardContent className="p-12 text-center">
           <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="font-semibold text-lg mb-2">Sin evaluaciones de desempeño</h3>
           <p className="text-muted-foreground">
-            Este empleado no tiene evaluaciones ni metas registradas.
+            Este empleado no tiene evaluaciones registradas.
           </p>
         </CardContent>
       </Card>
@@ -200,162 +199,86 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
         </Card>
       )}
 
-      <Tabs defaultValue="evaluations" className="w-full">
-        <TabsList>
-          <TabsTrigger value="evaluations" className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
-            Evaluaciones ({evals.length})
-          </TabsTrigger>
-          <TabsTrigger value="goals" className="flex items-center gap-2">
-            <Target className="w-4 h-4" />
-            Metas ({goals.length})
-          </TabsTrigger>
-        </TabsList>
+      {/* Evaluations list */}
+      {evals.length > 0 ? (
+        <div className="space-y-3">
+          {evals.map((evaluation: any, index: number) => {
+            const statusLabel = EVALUATION_STATUS_LABELS[evaluation.status as EvaluationStatus] || evaluation.status;
+            const statusClass = statusColors[evaluation.status] || statusColors.pending;
+            const typeLabel = EVALUATION_TYPE_LABELS[evaluation.evaluation_type as EvaluationType] || evaluation.evaluation_type;
+            const score = evaluation.overall_score;
+            const ratingLabel = score != null && score > 0 ? getRatingLabel(score) : null;
 
-        <TabsContent value="evaluations" className="mt-4">
-          {evals.length > 0 ? (
-            <div className="space-y-3">
-              {evals.map((evaluation: any, index: number) => {
-                const statusLabel = EVALUATION_STATUS_LABELS[evaluation.status as EvaluationStatus] || evaluation.status;
-                const statusClass = statusColors[evaluation.status] || statusColors.pending;
-                const typeLabel = EVALUATION_TYPE_LABELS[evaluation.evaluation_type as EvaluationType] || evaluation.evaluation_type;
-                const score = evaluation.overall_score;
-                const ratingLabel = score != null && score > 0 ? getRatingLabel(score) : null;
-
-                return (
-                  <motion.div
-                    key={evaluation.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                          <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-medium">
-                                {evaluation.evaluation_cycles?.evaluation_templates?.name || evaluation.evaluation_cycles?.name || 'Evaluación de Desempeño'}
-                              </h4>
-                              <Badge variant="outline" className={statusClass}>
-                                {statusLabel}
-                              </Badge>
-                              <Badge variant="secondary" className="text-xs">
-                                {typeLabel}
-                              </Badge>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                              {evaluation.evaluation_cycles?.name && (
-                                <span>Ciclo: {evaluation.evaluation_cycles.name}</span>
-                              )}
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3" />
-                                <span>
-                                  {format(new Date(evaluation.created_at), "d MMM yyyy", { locale: es })}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Score bar */}
-                            {score != null && score > 0 && (
-                              <div className="flex items-center gap-3 mt-1">
-                                <Progress value={score} className="h-2 flex-1 max-w-[200px]" />
-                                <span className={`text-xs font-medium ${getScoreColor(score)}`}>
-                                  {ratingLabel}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          {score != null && score > 0 && (
-                            <div className="text-center shrink-0">
-                              <div className="flex items-center gap-1">
-                                <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
-                                <span className={`text-2xl font-bold ${getScoreColor(score)}`}>{score}</span>
-                              </div>
-                              <p className="text-xs text-muted-foreground">/100</p>
-                            </div>
-                          )}
+            return (
+              <motion.div
+                key={evaluation.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-medium">
+                            {evaluation.evaluation_cycles?.evaluation_templates?.name || evaluation.evaluation_cycles?.name || 'Evaluación de Desempeño'}
+                          </h4>
+                          <Badge variant="outline" className={statusClass}>
+                            {statusLabel}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {typeLabel}
+                          </Badge>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <TrendingUp className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No hay evaluaciones registradas</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
 
-        <TabsContent value="goals" className="mt-4">
-          {goals.length > 0 ? (
-            <div className="space-y-3">
-              {goals.map((goal: any, index: number) => {
-                const status = goalStatusConfig[goal.status] || goalStatusConfig.pendiente;
-                const progress = goal.progress_percentage || 0;
-
-                return (
-                  <motion.div
-                    key={goal.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-1">
-                              <h4 className="font-medium">{goal.title}</h4>
-                              {goal.description && (
-                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                  {goal.description}
-                                </p>
-                              )}
-                            </div>
-                            <Badge variant="outline" className={status.color}>
-                              {status.label}
-                            </Badge>
-                          </div>
-
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">Progreso</span>
-                              <span className="font-medium">{progress}%</span>
-                            </div>
-                            <Progress value={progress} className="h-2" />
-                          </div>
-
-                          {goal.due_date && (
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Calendar className="w-3 h-3" />
-                              <span>Fecha límite: {format(new Date(goal.due_date), "d MMM yyyy", { locale: es })}</span>
-                            </div>
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                          {evaluation.evaluation_cycles?.name && (
+                            <span>Ciclo: {evaluation.evaluation_cycles.name}</span>
                           )}
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            <span>
+                              {format(new Date(evaluation.created_at), "d MMM yyyy", { locale: es })}
+                            </span>
+                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Target className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No hay metas registradas</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+
+                        {/* Score bar */}
+                        {score != null && score > 0 && (
+                          <div className="flex items-center gap-3 mt-1">
+                            <Progress value={score} className="h-2 flex-1 max-w-[200px]" />
+                            <span className={`text-xs font-medium ${getScoreColor(score)}`}>
+                              {ratingLabel}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {score != null && score > 0 && (
+                        <div className="text-center shrink-0">
+                          <div className="flex items-center gap-1">
+                            <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
+                            <span className={`text-2xl font-bold ${getScoreColor(score)}`}>{score}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">/100</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <TrendingUp className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">No hay evaluaciones registradas</p>
+          </CardContent>
+        </Card>
+      )}
     </motion.div>
   );
 }
