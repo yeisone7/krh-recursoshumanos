@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { CriteriaScoreCard } from './CriteriaScoreCard';
@@ -213,7 +213,7 @@ export function ApplyEvaluationDialog({
             </p>
           </div>
         ) : (
-          <ScrollArea className="flex-1 min-h-0 px-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6">
             <div className="space-y-6 py-4">
               {/* Score summary bar */}
               <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
@@ -319,7 +319,7 @@ export function ApplyEvaluationDialog({
                 </div>
               </div>
             </div>
-          </ScrollArea>
+          </div>
         )}
 
         {/* Footer */}
