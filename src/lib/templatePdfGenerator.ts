@@ -12,6 +12,7 @@ const LEVEL_LABELS: Record<number, string> = {
 };
 
 const WATERMARK_LOGO_PATH = '/images/petrocasinos-watermark.png';
+const COLOR_LOGO_PATH = '/images/petrocasinos-logo-white.png';
 
 function loadImageAsDataUrl(src: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -41,9 +42,17 @@ export async function generateTemplatePdf(template: EvaluationTemplate) {
 
   let y = 15;
 
+  // Pre-load images
+  let colorLogoDataUrl: string | null = null;
+  try { colorLogoDataUrl = await loadImageAsDataUrl(COLOR_LOGO_PATH); } catch { /* skip */ }
+
   // ─── Header ─────────────────────────────────────────────
   doc.setFillColor(59, 58, 89); // #3b3a59
   doc.rect(0, 0, pageWidth, 30, 'F');
+
+  if (colorLogoDataUrl) {
+    try { doc.addImage(colorLogoDataUrl, 'PNG', pageWidth - margin - 26, 3, 24, 24); } catch { /* skip */ }
+  }
 
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(14);

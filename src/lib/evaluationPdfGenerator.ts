@@ -10,6 +10,26 @@ import type {
 } from '@/types/evaluation';
 import { DEFAULT_RATING_SCALE } from '@/types/evaluation';
 
+const WATERMARK_LOGO_PATH = '/images/petrocasinos-watermark.png';
+const COLOR_LOGO_PATH = '/images/petrocasinos-logo-white.png';
+
+function loadImageAsDataUrl(src: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = src;
+  });
+}
+
 interface EvaluationPdfData {
   evaluation: PerformanceEvaluation;
   template: EvaluationTemplate | null;
@@ -24,7 +44,7 @@ const LEVEL_LABELS: Record<number, string> = {
   4: 'Ampliamente Desarrollada',
 };
 
-export function generateEvaluationPdf(data: EvaluationPdfData) {
+export async function generateEvaluationPdf(data: EvaluationPdfData) {
   const { evaluation, template, scores, companyName } = data;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -35,9 +55,28 @@ export function generateEvaluationPdf(data: EvaluationPdfData) {
 
   let y = 15;
 
+  // Pre-load images
+  let colorLogoDataUrl: string | null = null;
+  let watermarkDataUrl: string | null = null;
+  try {
+    [colorLogoDataUrl, watermarkDataUrl] = await Promise.all([
+      loadImageAsDataUrl(COLOR_LOGO_PATH),
+      loadImageAsDataUrl(WATERMARK_LOGO_PATH),
+    ]);
+  } catch {
+    // silently continue without images
+  }
+
   // ─── Header ─────────────────────────────────────────────
   doc.setFillColor(27, 38, 59); // navy
   doc.rect(0, 0, pageWidth, 32, 'F');
+
+  // Color logo in header
+  if (colorLogoDataUrl) {
+    try {
+      doc.addImage(colorLogoDataUrl, 'PNG', pageWidth - margin - 28, 4, 26, 24);
+    } catch { /* skip if image fails */ }
+  }
 
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
@@ -271,16 +310,30 @@ export function generateEvaluationPdf(data: EvaluationPdfData) {
     y += 3.5;
   }
 
-  // ─── Footer ────────────────────────────────────────────
+  // ─── Watermark + Footer ─────────────────────────────────
   const totalPages = doc.getNumberOfPages();
+  const pageHeight = doc.internal.pageSize.getHeight();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
+
+    // Watermark
+    if (watermarkDataUrl) {
+      const wmWidth = 90;
+      const wmX = (pageWidth - wmWidth) / 2;
+      const wmY = (pageHeight - wmWidth) / 2;
+      doc.saveGraphicsState();
+      (doc as any).setGState(new (doc as any).GState({ opacity: 0.06 }));
+      doc.addImage(watermarkDataUrl, 'PNG', wmX, wmY, wmWidth, wmWidth);
+      doc.restoreGraphicsState();
+    }
+
+    // Footer
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
     doc.text(
       `Página ${p} de ${totalPages}`,
       pageWidth - margin,
-      doc.internal.pageSize.getHeight() - 8,
+      pageHeight - 8,
       { align: 'right' }
     );
   }
