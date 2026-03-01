@@ -155,7 +155,7 @@ export function TemplateFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto scrollbar-themed">
         <DialogHeader>
           <DialogTitle>
             {template ? 'Editar Plantilla' : 'Nueva Plantilla de Evaluación'}
@@ -164,21 +164,50 @@ export function TemplateFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Basic info */}
+            {/* Row 1: Name + Active toggle + Positions */}
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Evaluación Anual 2024" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-4">
+                <div className="flex items-end gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormLabel>Nombre *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Evaluación Anual 2024" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="is_active"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2 pb-2">
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel className="!mt-0">Activa</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descripción</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Descripción de la plantilla..." rows={4} {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
@@ -197,19 +226,18 @@ export function TemplateFormDialog({
                       <FormLabel>Cargos que aplican ({selectedCount})</FormLabel>
                       <FormControl>
                         <div className="space-y-2">
-                          {/* Selected badges */}
                           {selectedCount > 0 && (
                             <div className="flex flex-wrap gap-1">
                               {field.value.map((id: string) => {
                                 const opt = positionOptions.find(o => o.value === id);
                                 if (!opt) return null;
                                 return (
-                                  <Badge key={id} variant="secondary" className="text-xs gap-1 pr-1">
+                                  <Badge key={id} variant="default" className="text-xs gap-1 pr-1 bg-secondary text-secondary-foreground hover:bg-secondary/90">
                                     {opt.label}
                                     <button
                                       type="button"
                                       onClick={() => field.onChange(field.value.filter((v: string) => v !== id))}
-                                      className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                                      className="ml-0.5 rounded-full hover:bg-secondary-foreground/20 p-0.5"
                                     >
                                       <X className="h-3 w-3" />
                                     </button>
@@ -218,9 +246,8 @@ export function TemplateFormDialog({
                               })}
                             </div>
                           )}
-                          {/* Search */}
                           <div className="relative">
-                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
                               placeholder="Buscar cargo..."
                               value={posSearch}
@@ -228,8 +255,7 @@ export function TemplateFormDialog({
                               className="pl-8 h-9"
                             />
                           </div>
-                          {/* Scrollable list */}
-                          <div className="max-h-40 overflow-y-auto border rounded-md p-1 space-y-0.5">
+                          <div className="max-h-[168px] overflow-y-auto border rounded-lg p-1 space-y-0.5 scrollbar-themed">
                             {filtered.length === 0 ? (
                               <p className="text-xs text-muted-foreground text-center py-2">Sin resultados</p>
                             ) : (
@@ -245,10 +271,10 @@ export function TemplateFormDialog({
                                         : [...(field.value || []), opt.value];
                                       field.onChange(newVal);
                                     }}
-                                    className={`flex items-center gap-2 w-full text-left text-sm px-2 py-1.5 rounded-sm hover:bg-accent transition-colors ${checked ? 'bg-accent/50' : ''}`}
+                                    className={`flex items-center gap-2 w-full text-left text-sm px-2 py-1.5 rounded-lg hover:bg-accent/10 transition-colors ${checked ? 'bg-secondary/10 text-foreground' : ''}`}
                                   >
-                                    <div className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${checked ? 'bg-primary border-primary' : 'border-input'}`}>
-                                      {checked && <Check className="h-3 w-3 text-primary-foreground" />}
+                                    <div className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${checked ? 'bg-secondary border-secondary' : 'border-input'}`}>
+                                      {checked && <Check className="h-3 w-3 text-secondary-foreground" />}
                                     </div>
                                     <span className="truncate">{opt.label}</span>
                                   </button>
@@ -264,34 +290,6 @@ export function TemplateFormDialog({
                     </FormItem>
                   );
                 }}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descripción</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Descripción de la plantilla..." {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="is_active"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2 pt-6">
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <FormLabel className="!mt-0">Activa</FormLabel>
-                  </FormItem>
-                )}
               />
             </div>
 
