@@ -1061,7 +1061,7 @@ export default function Evaluaciones() {
           }}
           evaluation={evaluationToApply}
           template={
-            cycles.find((c) => c.id === evaluationToApply.cycle_id)?.template || null
+            templates.find((t) => t.id === cycles.find((c) => c.id === evaluationToApply.cycle_id)?.template_id) || null
           }
           onSave={(data) => {
             updateEvaluation.mutate(data as any);
