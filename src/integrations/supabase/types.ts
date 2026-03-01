@@ -3108,6 +3108,42 @@ export type Database = {
           },
         ]
       }
+      evaluation_template_positions: {
+        Row: {
+          created_at: string | null
+          id: string
+          position_id: string
+          template_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          position_id: string
+          template_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          position_id?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_template_positions_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_template_positions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evaluation_templates: {
         Row: {
           company_id: string
@@ -3117,7 +3153,6 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
-          position_id: string | null
           qualitative_questions: Json | null
           rating_scale: Json | null
           updated_at: string
@@ -3130,7 +3165,6 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
-          position_id?: string | null
           qualitative_questions?: Json | null
           rating_scale?: Json | null
           updated_at?: string
@@ -3143,7 +3177,6 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
-          position_id?: string | null
           qualitative_questions?: Json | null
           rating_scale?: Json | null
           updated_at?: string
@@ -3154,13 +3187,6 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "evaluation_templates_position_id_fkey"
-            columns: ["position_id"]
-            isOneToOne: false
-            referencedRelation: "positions"
             referencedColumns: ["id"]
           },
         ]
