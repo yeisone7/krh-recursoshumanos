@@ -76,7 +76,7 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
     d.setFillColor(27, 38, 59);
     d.rect(0, 0, pageWidth, HEADER_HEIGHT, 'F');
     if (colorLogoDataUrl) {
-      try { d.addImage(colorLogoDataUrl, 'PNG', pageWidth - margin - 38, 5, 36, 20); } catch { /* skip */ }
+      try { d.addImage(colorLogoDataUrl, 'PNG', pageWidth - margin - 38, 6, 36, 18); } catch { /* skip */ }
     }
     d.setTextColor(255, 255, 255);
     d.setFontSize(16);
@@ -334,8 +334,8 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
 
     // Watermark
     if (watermarkDataUrl) {
-      const wmWidth = 120;
-      const wmHeight = 67;
+      const wmWidth = 108;
+      const wmHeight = 60;
       const wmX = (pageWidth - wmWidth) / 2;
       const wmY = (pageHeight - wmHeight) / 2;
       doc.saveGraphicsState();
