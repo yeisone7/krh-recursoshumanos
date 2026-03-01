@@ -25,14 +25,16 @@ export function useEvaluations() {
       if (!currentCompanyId) return [];
       const { data, error } = await supabase
         .from('evaluation_templates')
-        .select('*, evaluation_criteria(*), positions(id, name)')
+        .select('*, evaluation_criteria(*), evaluation_template_positions(position_id, positions(id, name))')
         .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data.map(t => ({
         ...t,
-        criteria: t.evaluation_criteria || [],
-        position: t.positions || null,
+        criteria: (t as any).evaluation_criteria || [],
+        positions: ((t as any).evaluation_template_positions || [])
+          .map((etp: any) => etp.positions)
+          .filter(Boolean),
         qualitative_questions: t.qualitative_questions as unknown as string[] | null,
         rating_scale: t.rating_scale as unknown as import('@/types/evaluation').RatingScaleItem[] | null,
       })) as unknown as EvaluationTemplate[];
@@ -41,9 +43,9 @@ export function useEvaluations() {
   });
 
   const createTemplate = useMutation({
-    mutationFn: async (template: Partial<EvaluationTemplate> & { criteria?: Partial<EvaluationCriteria>[] }) => {
+    mutationFn: async (template: Partial<EvaluationTemplate> & { criteria?: Partial<EvaluationCriteria>[]; position_ids?: string[] }) => {
       if (!currentCompanyId) throw new Error('No company ID');
-      const { criteria, ...templateData } = template;
+      const { criteria, position_ids, positions, ...templateData } = template as any;
       
       const insertData = { 
         name: templateData.name || '', 
@@ -52,7 +54,6 @@ export function useEvaluations() {
         qualitative_questions: templateData.qualitative_questions as unknown as any,
         rating_scale: templateData.rating_scale as unknown as any,
       };
-      delete (insertData as any).position;
       const { data: newTemplate, error } = await supabase
         .from('evaluation_templates')
         .insert(insertData as any)
@@ -61,7 +62,7 @@ export function useEvaluations() {
       if (error) throw error;
 
       if (criteria && criteria.length > 0) {
-        const criteriaWithTemplateId = criteria.map((c, index) => ({
+        const criteriaWithTemplateId = criteria.map((c: any, index: number) => ({
           ...c,
           template_id: newTemplate.id,
           sort_order: index,
@@ -70,6 +71,12 @@ export function useEvaluations() {
           .from('evaluation_criteria')
           .insert(criteriaWithTemplateId);
         if (criteriaError) throw criteriaError;
+      }
+
+      if (position_ids && position_ids.length > 0) {
+        const rows = position_ids.map((pid: string) => ({ template_id: newTemplate.id, position_id: pid }));
+        const { error: posError } = await supabase.from('evaluation_template_positions').insert(rows);
+        if (posError) throw posError;
       }
 
       return newTemplate;
@@ -84,8 +91,8 @@ export function useEvaluations() {
   });
 
   const updateTemplate = useMutation({
-    mutationFn: async ({ id, ...data }: Partial<EvaluationTemplate> & { id: string; criteria?: Partial<EvaluationCriteria>[] }) => {
-      const { criteria, position, ...templateData } = data as any;
+    mutationFn: async ({ id, ...data }: Partial<EvaluationTemplate> & { id: string; criteria?: Partial<EvaluationCriteria>[]; position_ids?: string[] }) => {
+      const { criteria, positions, position_ids, ...templateData } = data as any;
       const updateData = {
         ...templateData,
         qualitative_questions: templateData.qualitative_questions as unknown as any,
@@ -99,12 +106,9 @@ export function useEvaluations() {
       if (error) throw error;
 
       if (criteria) {
-        // Delete existing criteria
         await supabase.from('evaluation_criteria').delete().eq('template_id', id);
-        
-        // Insert new criteria
         if (criteria.length > 0) {
-          const criteriaWithTemplateId = criteria.map((c, index) => ({
+          const criteriaWithTemplateId = criteria.map((c: any, index: number) => ({
             ...c,
             template_id: id,
             sort_order: index,
@@ -113,6 +117,16 @@ export function useEvaluations() {
             .from('evaluation_criteria')
             .insert(criteriaWithTemplateId);
           if (criteriaError) throw criteriaError;
+        }
+      }
+
+      // Update position associations
+      if (position_ids !== undefined) {
+        await supabase.from('evaluation_template_positions').delete().eq('template_id', id);
+        if (position_ids.length > 0) {
+          const rows = position_ids.map((pid: string) => ({ template_id: id, position_id: pid }));
+          const { error: posError } = await supabase.from('evaluation_template_positions').insert(rows);
+          if (posError) throw posError;
         }
       }
     },
