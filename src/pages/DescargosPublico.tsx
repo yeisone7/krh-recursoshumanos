@@ -196,12 +196,12 @@ export default function DescargosPublico() {
               <CheckCircle2 className="h-16 w-16 text-primary mx-auto" />
               <h2 className="text-2xl font-bold">Descargos Enviados</h2>
               <p className="text-muted-foreground">
-                Sus descargos han sido registrados exitosamente en el proceso {processInfo?.case_number}.
+                Sus descargos han sido registrados exitosamente en el proceso <strong>{processInfo?.case_number || 'disciplinario'}</strong>.
               </p>
               <div className="bg-muted rounded-lg p-4 text-left space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Radicado</span>
-                  <span className="font-medium">{processInfo?.case_number}</span>
+                  <span className="font-medium">{processInfo?.case_number || '—'}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between">
