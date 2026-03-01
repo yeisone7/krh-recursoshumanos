@@ -24,7 +24,8 @@ import type {
 import { DEFAULT_RATING_SCALE, DEFAULT_QUALITATIVE_QUESTIONS } from '@/types/evaluation';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Save, SendHorizonal, User, Calendar } from 'lucide-react';
+import { Save, SendHorizonal, User, Calendar, PenLine } from 'lucide-react';
+import { SignatureCanvas } from '@/components/training/SignatureCanvas';
 
 interface ApplyEvaluationDialogProps {
   open: boolean;
@@ -79,6 +80,10 @@ export function ApplyEvaluationDialog({
   const [developmentPlan, setDevelopmentPlan] = useState(evaluation.development_plan || '');
   const [qualitativeAnswers, setQualitativeAnswers] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [evaluatorSignature, setEvaluatorSignature] = useState<string | null>(null);
+  const [employeeSignature, setEmployeeSignature] = useState<string | null>(null);
+  const [showEvaluatorCanvas, setShowEvaluatorCanvas] = useState(false);
+  const [showEmployeeCanvas, setShowEmployeeCanvas] = useState(false);
 
   // Initialize from existing data
   useEffect(() => {
@@ -103,6 +108,10 @@ export function ApplyEvaluationDialog({
     } catch {
       setQualitativeAnswers(new Array(qualitativeQuestions.length).fill(''));
     }
+    setEvaluatorSignature(null);
+    setEmployeeSignature(null);
+    setShowEvaluatorCanvas(false);
+    setShowEmployeeCanvas(false);
   }, [open, existingScores, criteria.length]);
 
   // Group criteria by category
@@ -145,6 +154,21 @@ export function ApplyEvaluationDialog({
       const missing = criteria.filter((c) => !scores[c.id]?.level);
       if (missing.length > 0) {
         toast.error(`Faltan ${missing.length} criterio(s) por calificar`);
+        return;
+      }
+      // Validate qualitative answers
+      const emptyQualitative = qualitativeQuestions.filter((_, idx) => !qualitativeAnswers[idx]?.trim());
+      if (emptyQualitative.length > 0) {
+        toast.error(`Faltan ${emptyQualitative.length} pregunta(s) cualitativa(s) por responder`);
+        return;
+      }
+      // Validate signatures
+      if (!evaluatorSignature) {
+        toast.error('Falta la firma del evaluador');
+        return;
+      }
+      if (!employeeSignature) {
+        toast.error('Falta la firma del evaluado');
         return;
       }
     }
@@ -283,6 +307,70 @@ export function ApplyEvaluationDialog({
                   ))}
                 </div>
               )}
+
+              {/* Signatures */}
+              <div className="space-y-4">
+                <Separator />
+                <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                  Firmas
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Evaluator signature */}
+                  <div className="space-y-2 border rounded-lg p-3">
+                    <Label className="text-xs font-medium flex items-center gap-1.5">
+                      <PenLine className="h-3.5 w-3.5" /> Firma del Evaluador
+                    </Label>
+                    {evaluatorSignature ? (
+                      <div className="space-y-2">
+                        <div className="border rounded bg-white p-2">
+                          <img src={evaluatorSignature} alt="Firma evaluador" className="max-h-[80px] mx-auto" />
+                        </div>
+                        <Button variant="outline" size="sm" className="w-full" onClick={() => { setEvaluatorSignature(null); setShowEvaluatorCanvas(true); }}>
+                          Cambiar firma
+                        </Button>
+                      </div>
+                    ) : showEvaluatorCanvas ? (
+                      <SignatureCanvas
+                        width={400}
+                        height={150}
+                        onSave={(dataUrl) => { setEvaluatorSignature(dataUrl); setShowEvaluatorCanvas(false); }}
+                        onCancel={() => setShowEvaluatorCanvas(false)}
+                      />
+                    ) : (
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => setShowEvaluatorCanvas(true)}>
+                        <PenLine className="h-4 w-4 mr-1.5" /> Firmar
+                      </Button>
+                    )}
+                  </div>
+                  {/* Employee signature */}
+                  <div className="space-y-2 border rounded-lg p-3">
+                    <Label className="text-xs font-medium flex items-center gap-1.5">
+                      <PenLine className="h-3.5 w-3.5" /> Firma del Evaluado
+                    </Label>
+                    {employeeSignature ? (
+                      <div className="space-y-2">
+                        <div className="border rounded bg-white p-2">
+                          <img src={employeeSignature} alt="Firma evaluado" className="max-h-[80px] mx-auto" />
+                        </div>
+                        <Button variant="outline" size="sm" className="w-full" onClick={() => { setEmployeeSignature(null); setShowEmployeeCanvas(true); }}>
+                          Cambiar firma
+                        </Button>
+                      </div>
+                    ) : showEmployeeCanvas ? (
+                      <SignatureCanvas
+                        width={400}
+                        height={150}
+                        onSave={(dataUrl) => { setEmployeeSignature(dataUrl); setShowEmployeeCanvas(false); }}
+                        onCancel={() => setShowEmployeeCanvas(false)}
+                      />
+                    ) : (
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => setShowEmployeeCanvas(true)}>
+                        <PenLine className="h-4 w-4 mr-1.5" /> Firmar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               {/* Summary fields */}
               <div className="space-y-3">
