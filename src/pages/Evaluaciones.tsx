@@ -16,6 +16,7 @@ import {
   Copy,
   Layers,
   Briefcase,
+  Filter,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,6 +91,7 @@ export default function Evaluaciones() {
   const [selectedGoal, setSelectedGoal] = useState<PerformanceGoal | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: string; id: string } | null>(null);
+  const [templatePositionFilter, setTemplatePositionFilter] = useState<string>('');
 
   const {
     templates,
@@ -513,7 +515,32 @@ export default function Evaluaciones() {
         {/* Templates Tab */}
         <TabsContent value="templates">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Plantillas de Evaluación</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Plantillas de Evaluación</h3>
+              {(() => {
+                const allPositions = Array.from(
+                  new Map(
+                    templates.flatMap(t => t.positions || []).map(p => [p.id, p])
+                  ).values()
+                );
+                if (allPositions.length === 0) return null;
+                return (
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <select
+                      value={templatePositionFilter}
+                      onChange={(e) => setTemplatePositionFilter(e.target.value)}
+                      className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="">Todos los cargos</option>
+                      {allPositions.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
+            </div>
             {loadingTemplates ? (
               <p className="text-muted-foreground">Cargando...</p>
             ) : templates.length === 0 ? (
@@ -522,7 +549,9 @@ export default function Evaluaciones() {
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {templates.map((template, idx) => {
+                {templates
+                  .filter(t => !templatePositionFilter || t.positions?.some(p => p.id === templatePositionFilter))
+                  .map((template, idx) => {
                   const criteriaCount = template.criteria?.length || 0;
                   const questionsCount = (template.qualitative_questions as string[] | null)?.length || 0;
                   const gradientColors = [
