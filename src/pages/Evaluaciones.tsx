@@ -677,13 +677,13 @@ export default function Evaluaciones() {
                           )}
 
                           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1 text-[#3b3a59]">
-                              <Layers className="h-3.5 w-3.5" />
+                            <div className="flex items-center gap-1">
+                              <Layers className="h-3.5 w-3.5 text-teal" />
                               <span>{criteriaCount} criterios</span>
                             </div>
                             {questionsCount > 0 && (
-                              <div className="flex items-center gap-1 text-[#e65a0a]">
-                                <ClipboardCheck className="h-3.5 w-3.5" />
+                              <div className="flex items-center gap-1">
+                                <ClipboardCheck className="h-3.5 w-3.5 text-violet" />
                                 <span>{questionsCount} preguntas</span>
                               </div>
                             )}
