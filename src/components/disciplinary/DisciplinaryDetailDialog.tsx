@@ -38,6 +38,7 @@ import {
 import { EvidenceFormDialog } from './EvidenceFormDialog';
 import { DefenseFormDialog } from './DefenseFormDialog';
 import { DecisionFormDialog } from './DecisionFormDialog';
+import { AppealFormDialog } from './AppealFormDialog';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 
 interface DisciplinaryDetailDialogProps {
@@ -57,6 +58,7 @@ export function DisciplinaryDetailDialog({
   const [showEvidenceForm, setShowEvidenceForm] = useState(false);
   const [showDefenseForm, setShowDefenseForm] = useState(false);
   const [showDecisionForm, setShowDecisionForm] = useState(false);
+  const [showAppealForm, setShowAppealForm] = useState(false);
 
   if (!process || isLoading) {
     return null;
@@ -68,6 +70,8 @@ export function DisciplinaryDetailDialog({
   const handleAdvanceStatus = () => {
     if (process.status === 'analisis') {
       setShowDecisionForm(true);
+    } else if (process.status === 'decision') {
+      setShowAppealForm(true);
     } else if (nextStatus) {
       advanceStatus.mutate({
         processId: process.id,
@@ -489,6 +493,12 @@ export function DisciplinaryDetailDialog({
         onOpenChange={setShowDecisionForm}
         processId={process.id}
         currentStatus={process.status}
+      />
+
+      <AppealFormDialog
+        open={showAppealForm}
+        onOpenChange={setShowAppealForm}
+        processId={process.id}
       />
     </>
   );
