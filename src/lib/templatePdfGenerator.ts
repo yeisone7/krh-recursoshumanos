@@ -51,7 +51,7 @@ export async function generateTemplatePdf(template: EvaluationTemplate) {
   doc.rect(0, 0, pageWidth, 30, 'F');
 
   if (colorLogoDataUrl) {
-    try { doc.addImage(colorLogoDataUrl, 'PNG', pageWidth - margin - 26, 3, 24, 24); } catch { /* skip */ }
+    try { doc.addImage(colorLogoDataUrl, 'PNG', pageWidth - margin - 38, 5, 36, 20); } catch { /* skip */ }
   }
 
   doc.setTextColor(255, 255, 255);
