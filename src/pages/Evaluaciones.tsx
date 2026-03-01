@@ -63,6 +63,7 @@ import { useEvaluations } from '@/hooks/useEvaluations';
 import { useEmployees } from '@/hooks/useEmployees';
 import {
   TemplateFormDialog,
+  TemplatePreviewDialog,
   CycleFormDialog,
   EvaluationFormDialog,
   GoalFormDialog,
@@ -116,6 +117,7 @@ export default function Evaluaciones() {
   const [evaluationCycleFilter, setEvaluationCycleFilter] = useState<string>('all');
   const [compareCycleId, setCompareCycleId] = useState<string>('');
   const [bulkPreviewOpen, setBulkPreviewOpen] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState<EvaluationTemplate | null>(null);
   const [bulkPreviewData, setBulkPreviewData] = useState<{
     cycleId: string;
     cycleName: string;
@@ -823,7 +825,7 @@ export default function Evaluaciones() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="relative overflow-hidden border shadow-card hover:shadow-card-hover transition-shadow bg-card">
+                      <Card className="relative overflow-hidden border shadow-card hover:shadow-card-hover transition-shadow bg-card cursor-pointer" onClick={() => setPreviewTemplate(template)}>
                         {/* Decorative top bar */}
                         <div className="h-1.5 w-full bg-gradient-to-r from-[#3b3a59] to-[#5a587a]" />
 
@@ -856,7 +858,7 @@ export default function Evaluaciones() {
                             </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => e.stopPropagation()}>
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -1167,6 +1169,12 @@ export default function Evaluaciones() {
           onConfirm={handleBulkConfirm}
         />
       )}
+
+      <TemplatePreviewDialog
+        open={!!previewTemplate}
+        onOpenChange={(open) => { if (!open) setPreviewTemplate(null); }}
+        template={previewTemplate}
+      />
     </div>
   );
 }
