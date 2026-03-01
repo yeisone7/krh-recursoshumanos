@@ -180,7 +180,7 @@ export function ApplyEvaluationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-3">
           <DialogTitle className="text-lg">Aplicar Evaluación</DialogTitle>
           <DialogDescription className="sr-only">Calificar al empleado criterio por criterio</DialogDescription>
@@ -213,7 +213,7 @@ export function ApplyEvaluationDialog({
             </p>
           </div>
         ) : (
-          <ScrollArea className="flex-1 px-6">
+          <ScrollArea className="flex-1 min-h-0 px-6">
             <div className="space-y-6 py-4">
               {/* Score summary bar */}
               <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
