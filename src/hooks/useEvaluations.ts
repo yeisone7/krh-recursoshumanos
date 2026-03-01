@@ -31,6 +31,7 @@ export function useEvaluations() {
       if (error) throw error;
       return data.map(t => ({
         ...t,
+        criteria: t.evaluation_criteria || [],
         position: t.positions || null,
         qualitative_questions: t.qualitative_questions as unknown as string[] | null,
         rating_scale: t.rating_scale as unknown as import('@/types/evaluation').RatingScaleItem[] | null,
