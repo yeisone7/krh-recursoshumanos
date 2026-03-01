@@ -10,6 +10,9 @@ import {
   Users,
   Clock,
   CheckCircle2,
+  FileDown,
+  Trash2,
+  MoreHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,12 +32,32 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/hooks/use-toast';
 import {
   useDisciplinaryProcesses,
   useDisciplinaryStats,
+  useDeleteDisciplinaryProcess,
 } from '@/hooks/useDisciplinaryProcesses';
+import { useCompanies } from '@/hooks/useCompanies';
+import { useAuditLogger } from '@/hooks/useAuditLog';
 import {
   DisciplinaryFormDialog,
   DisciplinaryDetailDialog,
@@ -46,7 +69,9 @@ import {
   getFaultColor,
   DisciplinaryStatus,
   FaultType,
+  DisciplinaryProcessWithEmployee,
 } from '@/types/disciplinary';
+import { generateDisciplinaryPdf } from '@/lib/disciplinaryPdfGenerator';
 
 export default function Disciplinarios() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,9 +80,14 @@ export default function Disciplinarios() {
   const [faultFilter, setFaultFilter] = useState<string>('all');
   const [showFormDialog, setShowFormDialog] = useState(false);
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DisciplinaryProcessWithEmployee | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   const { data: processes, isLoading } = useDisciplinaryProcesses();
   const { data: stats } = useDisciplinaryStats();
+  const { data: companies } = useCompanies();
+  const deleteProcess = useDeleteDisciplinaryProcess();
+  const { log } = useAuditLogger();
 
   // Handle deep linking from dashboard
   useEffect(() => {
@@ -70,6 +100,42 @@ export default function Disciplinarios() {
 
   const handleOpenDetail = (id: string) => {
     setSelectedProcessId(id);
+  };
+
+  const handleExportPdf = async (e: React.MouseEvent, process: DisciplinaryProcessWithEmployee) => {
+    e.stopPropagation();
+    setExportingId(process.id);
+    try {
+      const companyName = companies?.[0]?.name;
+      await generateDisciplinaryPdf({ process, companyName });
+      toast({ title: 'PDF generado', description: 'El informe ha sido descargado exitosamente.' });
+    } catch {
+      toast({ title: 'Error', description: 'No se pudo generar el PDF.', variant: 'destructive' });
+    } finally {
+      setExportingId(null);
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+    log({
+      action: 'delete',
+      entityType: 'disciplinary_process',
+      entityId: target.id,
+      entityName: target.case_number,
+      oldValues: {
+        case_number: target.case_number,
+        employee: target.employee
+          ? `${target.employee.first_name} ${target.employee.last_name}`
+          : '-',
+        status: target.status,
+        fault_type: target.fault_type,
+        fault_date: target.fault_date,
+      },
+    });
+    deleteProcess.mutate(target.id);
+    setDeleteTarget(null);
   };
 
   // Filter processes
@@ -197,10 +263,12 @@ export default function Disciplinarios() {
               <TableRow>
                 <TableHead>Caso</TableHead>
                 <TableHead>Empleado</TableHead>
+                <TableHead>Centro de Operación</TableHead>
                 <TableHead>Tipo de Falta</TableHead>
                 <TableHead>Fecha Hechos</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Apertura</TableHead>
+                <TableHead className="w-[60px]">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -209,10 +277,12 @@ export default function Disciplinarios() {
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-28" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
                   </TableRow>
                 ))
               ) : filteredProcesses && filteredProcesses.length > 0 ? (
@@ -227,6 +297,9 @@ export default function Disciplinarios() {
                       {process.employee
                         ? `${process.employee.first_name} ${process.employee.last_name}`
                         : '-'}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {process.operation_center_name || '-'}
                     </TableCell>
                     <TableCell>
                       <Badge className={getFaultColor(process.fault_type)}>
@@ -244,11 +317,39 @@ export default function Disciplinarios() {
                     <TableCell>
                       {format(new Date(process.opening_date), 'dd/MM/yyyy', { locale: es })}
                     </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => handleExportPdf(e, process)}
+                            disabled={exportingId === process.id}
+                          >
+                            <FileDown className="h-4 w-4 mr-2" />
+                            {exportingId === process.id ? 'Generando...' : 'Exportar PDF'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteTarget(process);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <Scale className="h-8 w-8 opacity-50" />
                       <p>No hay procesos disciplinarios</p>
@@ -279,6 +380,28 @@ export default function Disciplinarios() {
         open={!!selectedProcessId}
         onOpenChange={(open) => !open && setSelectedProcessId(null)}
       />
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar proceso disciplinario?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará el proceso <strong>{deleteTarget?.case_number}</strong> y toda su información asociada (evidencias, descargos, línea de tiempo).
+              Esta acción quedará registrada en la auditoría.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

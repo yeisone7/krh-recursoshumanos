@@ -108,6 +108,7 @@ export interface DisciplinaryProcessWithEmployee extends DisciplinaryProcess {
     last_name: string;
     document_number: string;
   } | null;
+  operation_center_name?: string | null;
   evidence?: DisciplinaryEvidence[];
   timeline?: DisciplinaryTimeline[];
   defenses?: DisciplinaryDefense[];
