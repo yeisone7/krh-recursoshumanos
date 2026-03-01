@@ -179,6 +179,70 @@ export function useCreateDotationDelivery() {
 
       if (error) throw error;
 
+      // Auto-deduct from inventory
+      try {
+        // Find matching inventory item
+        const { data: employee } = await supabase
+          .from('employees_v2')
+          .select('company_id, employee_work_info(operation_center_id, is_current)')
+          .eq('id', data.employee_id)
+          .maybeSingle();
+
+        const currentWorkInfo = employee?.employee_work_info?.find((w: any) => w.is_current);
+        const centerId = currentWorkInfo?.operation_center_id || null;
+
+        // Try to find inventory match (with center, then without)
+        let inventoryQuery = supabase
+          .from('dotation_inventory')
+          .select('id, quantity_available')
+          .eq('company_id', employee?.company_id || '')
+          .eq('item_type', data.item_type)
+          .eq('item_name', data.item_name);
+
+        if (data.size) {
+          inventoryQuery = inventoryQuery.eq('size', data.size);
+        } else {
+          inventoryQuery = inventoryQuery.is('size', null);
+        }
+
+        // Try with center first
+        if (centerId) {
+          const { data: withCenter } = await inventoryQuery.eq('operation_center_id', centerId).maybeSingle();
+          if (withCenter) {
+            await supabase
+              .from('dotation_inventory')
+              .update({ quantity_available: Math.max(0, withCenter.quantity_available - (data.quantity || 1)) })
+              .eq('id', withCenter.id);
+          } else {
+            // Fallback: try general (no center)
+            const { data: general } = await supabase
+              .from('dotation_inventory')
+              .select('id, quantity_available')
+              .eq('company_id', employee?.company_id || '')
+              .eq('item_type', data.item_type)
+              .eq('item_name', data.item_name)
+              .is('operation_center_id', null)
+              .maybeSingle();
+            if (general) {
+              await supabase
+                .from('dotation_inventory')
+                .update({ quantity_available: Math.max(0, general.quantity_available - (data.quantity || 1)) })
+                .eq('id', general.id);
+            }
+          }
+        } else {
+          const { data: general } = await inventoryQuery.is('operation_center_id', null).maybeSingle();
+          if (general) {
+            await supabase
+              .from('dotation_inventory')
+              .update({ quantity_available: Math.max(0, general.quantity_available - (data.quantity || 1)) })
+              .eq('id', general.id);
+          }
+        }
+      } catch (inventoryError) {
+        console.warn('Could not auto-deduct from inventory:', inventoryError);
+      }
+
       // Get employee info for audit log
       const employee = await getEmployeeV2Info(data.employee_id);
 
@@ -204,6 +268,7 @@ export function useCreateDotationDelivery() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dotation_deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['dotation_inventory'] });
     },
   });
 }
