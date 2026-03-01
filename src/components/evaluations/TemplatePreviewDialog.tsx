@@ -5,6 +5,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
   FileText,
@@ -14,14 +15,18 @@ import {
   BarChart3,
   Star,
   ChevronRight,
+  Download,
+  Copy,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import type { EvaluationTemplate } from '@/types/evaluation';
+import { generateTemplatePdf } from '@/lib/templatePdfGenerator';
 
 interface TemplatePreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   template: EvaluationTemplate | null;
+  onDuplicate?: (template: EvaluationTemplate) => void;
 }
 
 const levelLabels = [
@@ -31,7 +36,7 @@ const levelLabels = [
   { level: 1, label: 'Competencia No Desarrollada', color: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' },
 ];
 
-export function TemplatePreviewDialog({ open, onOpenChange, template }: TemplatePreviewDialogProps) {
+export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicate }: TemplatePreviewDialogProps) {
   if (!template) return null;
 
   const criteria = template.criteria || [];
@@ -94,8 +99,35 @@ export function TemplatePreviewDialog({ open, onOpenChange, template }: Template
             <div className="flex items-center gap-1.5 text-white/70 text-sm">
               <BarChart3 className="h-4 w-4" />
               <span className="font-medium text-white">{ratingScale.length}</span> niveles
-            </div>
           </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-2 mt-4">
+            <Button
+              size="sm"
+              variant="secondary"
+              className="bg-white/15 text-white border-white/20 hover:bg-white/25"
+              onClick={() => generateTemplatePdf(template)}
+            >
+              <Download className="h-4 w-4 mr-1.5" />
+              Exportar PDF
+            </Button>
+            {onDuplicate && (
+              <Button
+                size="sm"
+                variant="secondary"
+                className="bg-white/15 text-white border-white/20 hover:bg-white/25"
+                onClick={() => {
+                  onDuplicate(template);
+                  onOpenChange(false);
+                }}
+              >
+                <Copy className="h-4 w-4 mr-1.5" />
+                Clonar Plantilla
+              </Button>
+            )}
+          </div>
+        </div>
         </div>
 
         <div className="px-6 py-5 space-y-6">
