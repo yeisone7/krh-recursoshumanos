@@ -20,12 +20,20 @@ import {
   Layers,
   Briefcase,
   Filter,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -101,6 +109,8 @@ export default function Evaluaciones() {
   const [templatePositionFilter, setTemplatePositionFilter] = useState<string>('');
   const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const [evaluationToApply, setEvaluationToApply] = useState<PerformanceEvaluation | null>(null);
+  const [evaluationCycleFilter, setEvaluationCycleFilter] = useState<string>('all');
+  const [compareCycleId, setCompareCycleId] = useState<string>('');
   const {
     templates,
     loadingTemplates,
@@ -128,11 +138,34 @@ export default function Evaluaciones() {
   const employees = employeesQuery.data || [];
 
   // Stats
-  const activeCycles = cycles.filter(c => c.status === 'active').length;
+  const activeCyclesCount = cycles.filter(c => c.status === 'active').length;
   const pendingEvaluations = evaluations.filter(e => e.status === 'pending' || e.status === 'in_progress').length;
   const completedEvaluations = evaluations.filter(e => e.status === 'approved').length;
   const avgProgress = goals.length > 0
     ? Math.round(goals.reduce((sum, g) => sum + (g.progress_percentage || 0), 0) / goals.length)
+    : 0;
+
+  // Cycle evaluation stats helper
+  const getCycleStats = (cycleId: string) => {
+    const cycleEvals = evaluations.filter(e => e.cycle_id === cycleId);
+    const total = cycleEvals.length;
+    const completed = cycleEvals.filter(e => e.status === 'submitted' || e.status === 'reviewed' || e.status === 'approved').length;
+    return { total, completed, pending: total - completed };
+  };
+
+  // Filtered evaluations
+  const filteredEvaluations = evaluationCycleFilter === 'all'
+    ? evaluations
+    : evaluations.filter(e => e.cycle_id === evaluationCycleFilter);
+
+  // Comparison data
+  const compareEvaluations = compareCycleId
+    ? evaluations
+        .filter(e => e.cycle_id === compareCycleId && e.overall_score !== null)
+        .sort((a, b) => (b.overall_score || 0) - (a.overall_score || 0))
+    : [];
+  const compareAvg = compareEvaluations.length > 0
+    ? Math.round(compareEvaluations.reduce((s, e) => s + (e.overall_score || 0), 0) / compareEvaluations.length)
     : 0;
 
   const handleDelete = () => {
@@ -241,7 +274,7 @@ export default function Evaluaciones() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Ciclos Activos</p>
-                  <p className="text-2xl font-bold">{activeCycles}</p>
+                  <p className="text-2xl font-bold">{activeCyclesCount}</p>
                 </div>
                 <Calendar className="h-8 w-8 text-primary" />
               </div>
@@ -313,6 +346,10 @@ export default function Evaluaciones() {
               <FileText className="h-4 w-4" />
               Plantillas
             </TabsTrigger>
+            <TabsTrigger value="compare" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Comparativo
+            </TabsTrigger>
           </TabsList>
 
           <Button
@@ -360,18 +397,35 @@ export default function Evaluaciones() {
                       <TableHead>Nombre</TableHead>
                       <TableHead>Plantilla</TableHead>
                       <TableHead>Periodo</TableHead>
+                      <TableHead>Progreso</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {cycles.map((cycle) => (
+                    {cycles.map((cycle) => {
+                      const stats = getCycleStats(cycle.id);
+                      const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+                      return (
                       <TableRow key={cycle.id}>
                         <TableCell className="font-medium">{cycle.name}</TableCell>
                         <TableCell>{cycle.template?.name || '-'}</TableCell>
                         <TableCell>
                           {format(new Date(cycle.start_date), 'dd MMM', { locale: es })} -{' '}
                           {format(new Date(cycle.end_date), 'dd MMM yyyy', { locale: es })}
+                        </TableCell>
+                        <TableCell>
+                          {stats.total > 0 ? (
+                            <div className="space-y-1 min-w-[100px]">
+                              <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>{stats.completed}/{stats.total}</span>
+                                <span>{pct}%</span>
+                              </div>
+                              <Progress value={pct} className="h-1.5" />
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Sin evaluaciones</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge className={statusColors[cycle.status]}>
@@ -415,7 +469,8 @@ export default function Evaluaciones() {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}
@@ -426,13 +481,25 @@ export default function Evaluaciones() {
         {/* Evaluations Tab */}
         <TabsContent value="evaluations">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Evaluaciones de Desempeño</CardTitle>
+              <Select value={evaluationCycleFilter} onValueChange={setEvaluationCycleFilter}>
+                <SelectTrigger className="w-[220px]">
+                  <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectValue placeholder="Filtrar por ciclo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los ciclos</SelectItem>
+                  {cycles.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent>
               {loadingEvaluations ? (
                 <p className="text-muted-foreground">Cargando...</p>
-              ) : evaluations.length === 0 ? (
+              ) : filteredEvaluations.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">
                   No hay evaluaciones registradas
                 </p>
@@ -444,12 +511,13 @@ export default function Evaluaciones() {
                       <TableHead>Ciclo</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Estado</TableHead>
+                      <TableHead>Puntaje</TableHead>
                       <TableHead>Calificación</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {evaluations.map((evaluation) => (
+                    {filteredEvaluations.map((evaluation) => (
                       <TableRow key={evaluation.id}>
                         <TableCell className="font-medium">
                           {evaluation.employee?.first_name} {evaluation.employee?.last_name}
@@ -460,6 +528,11 @@ export default function Evaluaciones() {
                           <Badge className={statusColors[evaluation.status]}>
                             {EVALUATION_STATUS_LABELS[evaluation.status]}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {evaluation.overall_score != null ? (
+                            <span className="font-medium">{evaluation.overall_score}/100</span>
+                          ) : '-'}
                         </TableCell>
                         <TableCell>{evaluation.overall_rating || '-'}</TableCell>
                         <TableCell>
@@ -799,6 +872,103 @@ export default function Evaluaciones() {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        {/* Comparativo Tab */}
+        <TabsContent value="compare">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>Resumen Comparativo</CardTitle>
+                <CardDescription className="mt-1">
+                  Compara puntajes de todos los empleados evaluados en un ciclo
+                </CardDescription>
+              </div>
+              <Select value={compareCycleId} onValueChange={setCompareCycleId}>
+                <SelectTrigger className="w-[240px]">
+                  <SelectValue placeholder="Seleccionar ciclo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cycles.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardHeader>
+            <CardContent>
+              {!compareCycleId ? (
+                <p className="text-muted-foreground text-center py-8">
+                  Selecciona un ciclo para ver el comparativo
+                </p>
+              ) : compareEvaluations.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No hay evaluaciones con puntaje en este ciclo
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {/* Summary stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-muted/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Promedio</p>
+                      <p className="text-2xl font-bold text-foreground">{compareAvg}/100</p>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Mejor Puntaje</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {compareEvaluations[0]?.overall_score || 0}/100
+                      </p>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Evaluados</p>
+                      <p className="text-2xl font-bold text-foreground">{compareEvaluations.length}</p>
+                    </div>
+                  </div>
+
+                  {/* Ranking table */}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10">#</TableHead>
+                        <TableHead>Empleado</TableHead>
+                        <TableHead>Puntaje</TableHead>
+                        <TableHead>Calificación</TableHead>
+                        <TableHead>Barra</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {compareEvaluations.map((ev, idx) => (
+                        <TableRow key={ev.id}>
+                          <TableCell className="font-medium text-muted-foreground">{idx + 1}</TableCell>
+                          <TableCell className="font-medium">
+                            {ev.employee?.first_name} {ev.employee?.last_name}
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-semibold">{ev.overall_score}/100</span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={
+                              (ev.overall_score || 0) >= 91
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : (ev.overall_score || 0) >= 75
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                : (ev.overall_score || 0) >= 60
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            }>
+                              {ev.overall_rating || '-'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="min-w-[150px]">
+                            <Progress value={ev.overall_score || 0} className="h-2" />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
