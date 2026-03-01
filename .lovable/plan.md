@@ -1,86 +1,99 @@
 
-## Permitir que una plantilla aplique a multiples cargos
+# Plan: Crear vista de "Aplicar Evaluacion" con calificacion por criterios
 
-### Problema actual
-Actualmente cada plantilla tiene un solo `position_id`, lo que obliga a duplicar plantillas identicas cuando varios cargos comparten la misma evaluacion.
+## Problema actual
+El sistema permite crear plantillas con criterios y rubricas, crear ciclos, y crear evaluaciones generales con campos de texto libre. Sin embargo, **no existe una interfaz para calificar a un empleado criterio por criterio** usando la plantilla asociada al ciclo. La tabla `evaluation_scores` ya existe en la base de datos pero no se usa desde ningun componente.
 
-### Solucion
-Crear una tabla intermedia (many-to-many) entre plantillas y cargos, reemplazando la columna `position_id` actual.
+## Solucion propuesta
+Crear un nuevo componente `ApplyEvaluationDialog` que, al abrir una evaluacion existente o crear una nueva, cargue los criterios de la plantilla del ciclo y permita puntuar cada uno con su rubrica descriptiva.
 
----
+## Flujo del usuario
+1. En la tabla de **Evaluaciones**, cada fila tendra un boton "Evaluar" (ademas de Editar/Eliminar)
+2. Al hacer clic en "Evaluar", se abre un dialog que muestra:
+   - Encabezado con datos del empleado y ciclo
+   - Lista de criterios agrupados por categoria, cada uno con:
+     - Nombre y descripcion del criterio
+     - Selector de nivel (1-4) mostrando la rubrica descriptiva de cada nivel
+     - Campo de comentarios opcional por criterio
+   - Seccion de preguntas cualitativas (las configuradas en la plantilla)
+   - Campos de resumen: fortalezas, areas de mejora, plan de desarrollo
+   - Puntaje total calculado automaticamente
+   - Calificacion cualitativa derivada de la escala de la plantilla
+3. Al guardar, se insertan/actualizan los `evaluation_scores` y se actualiza el `overall_score` y `overall_rating` de la evaluacion
 
-### Cambios planificados
+## Archivos a crear/modificar
 
-#### 1. Migracion de base de datos
+### 1. Nuevo componente: `src/components/evaluations/ApplyEvaluationDialog.tsx`
+- Dialog de pantalla completa o muy amplio (`max-w-4xl`)
+- Recibe: `evaluation` (PerformanceEvaluation), template criteria, rating scale, qualitative questions
+- Usa `react-hook-form` con campos dinamicos para scores por criterio
+- Cada criterio muestra 4 botones/radio para seleccionar nivel, con tooltip o texto describiendo cada nivel
+- Calcula puntaje ponderado en tiempo real
+- Al guardar llama a `updateEvaluation` con los scores
 
-- **Crear tabla `evaluation_template_positions`** con columnas:
-  - `id` UUID (PK)
-  - `template_id` UUID (FK a `evaluation_templates`, ON DELETE CASCADE)
-  - `position_id` UUID (FK a `positions`, ON DELETE CASCADE)
-  - `created_at` TIMESTAMPTZ
-  - Constraint UNIQUE en (template_id, position_id)
-- **Migrar datos existentes**: copiar registros donde `position_id` no sea null a la nueva tabla
-- **Eliminar columna** `position_id` de `evaluation_templates`
-- **RLS**: Politica de lectura/escritura basada en `is_company_member` a traves del template
+### 2. Nuevo componente: `src/components/evaluations/CriteriaScoreCard.tsx`
+- Componente individual para calificar un criterio
+- Muestra nombre, categoria, peso
+- 4 opciones de nivel con descripciones de rubrica (colapsables)
+- Campo de comentarios
 
-#### 2. Actualizar tipos (`src/types/evaluation.ts`)
+### 3. Modificar: `src/pages/Evaluaciones.tsx`
+- Agregar boton "Evaluar" en el dropdown de acciones de cada evaluacion
+- Agregar estado para controlar el dialog de aplicacion
+- Pasar la plantilla del ciclo al nuevo dialog
 
-- Reemplazar `position_id?: string` y `position?: { id; name }` por `positions?: { id: string; name: string }[]` en `EvaluationTemplate`
+### 4. Modificar: `src/hooks/useEvaluations.ts`
+- Agregar query para cargar scores existentes de una evaluacion (`evaluation_scores` con join a `evaluation_criteria`)
+- Asegurar que `updateEvaluation` persista scores correctamente (ya tiene logica parcial)
 
-#### 3. Actualizar hook (`src/hooks/useEvaluations.ts`)
+### 5. Modificar: `src/components/evaluations/index.ts`
+- Exportar los nuevos componentes
 
-- En la query de templates, hacer join con la nueva tabla y luego con `positions`
-- En `createTemplate` y `updateTemplate`: despues de crear/actualizar el template, insertar los registros en `evaluation_template_positions` (borrando los anteriores en update)
-- En `duplicateTemplate`: copiar tambien las asociaciones de cargos
+## Detalles tecnicos
 
-#### 4. Actualizar formulario (`src/components/evaluations/TemplateFormDialog.tsx`)
-
-- Cambiar el campo `position_id` (selector unico) por un selector multiple de cargos
-- Actualizar el schema de Zod: `position_ids: z.array(z.string()).optional()` en lugar de `position_id`
-- Cuando se edita, precargar los cargos asociados
-
-#### 5. Actualizar tarjetas en `Evaluaciones.tsx`
-
-- En la tarjeta de plantilla, mostrar multiples badges con los nombres de cargos asociados (o "Todos los cargos" si no tiene ninguno)
-- En duplicar, copiar el array de `position_ids`
-
----
-
-### Detalle tecnico de la migracion SQL
-
+### Calculo del puntaje
 ```text
--- Tabla intermedia
-CREATE TABLE evaluation_template_positions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  template_id UUID NOT NULL REFERENCES evaluation_templates(id) ON DELETE CASCADE,
-  position_id UUID NOT NULL REFERENCES positions(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(template_id, position_id)
-);
+Por cada criterio:
+  score_normalizado = (nivel_seleccionado / max_score) * peso
 
--- Migrar datos existentes
-INSERT INTO evaluation_template_positions (template_id, position_id)
-SELECT id, position_id FROM evaluation_templates WHERE position_id IS NOT NULL;
+Puntaje total = (suma de score_normalizado / suma de pesos) * 100
 
--- Eliminar columna vieja
-ALTER TABLE evaluation_templates DROP COLUMN position_id;
-
--- RLS
-ALTER TABLE evaluation_template_positions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can manage template positions for their company"
-ON evaluation_template_positions FOR ALL USING (
-  EXISTS (
-    SELECT 1 FROM evaluation_templates et
-    WHERE et.id = template_id
-    AND et.company_id IN (SELECT get_user_company_ids())
-  )
-);
+Se mapea a la escala de calificacion de la plantilla:
+  91-100 -> Sobresaliente
+  75-90  -> Bueno
+  60-74  -> Aceptable
+  0-59   -> Deficiente
 ```
 
-### Archivos a modificar
-1. **Nueva migracion SQL** (tabla intermedia + migrar datos + drop columna)
-2. `src/types/evaluation.ts` -- positions como array
-3. `src/hooks/useEvaluations.ts` -- queries y mutaciones actualizadas
-4. `src/components/evaluations/TemplateFormDialog.tsx` -- selector multiple de cargos
-5. `src/pages/Evaluaciones.tsx` -- mostrar multiples cargos en tarjetas y duplicacion
+### Estructura del formulario
+```text
++--------------------------------------------------+
+| Evaluar: Juan Perez | Ciclo: 2026-Q1             |
++--------------------------------------------------+
+| COMPETENCIAS ORGANIZACIONALES                     |
+| +----------------------------------------------+ |
+| | Trabajo en Equipo          Peso: 2            | |
+| |  (1) No Desarrollada  [descripcion...]        | |
+| |  (2) En Desarrollo    [descripcion...]        | |
+| |  (3) Bueno            [descripcion...]  <--   | |
+| |  (4) Ampliamente      [descripcion...]        | |
+| | Comentarios: [________________]               | |
+| +----------------------------------------------+ |
+|                                                  |
+| PREGUNTAS CUALITATIVAS                           |
+| Que aportes ha hecho...? [textarea]              |
+|                                                  |
+| RESUMEN                                          |
+| Puntaje: 78/100 - Bueno                         |
+| Fortalezas: [textarea]                           |
+| Areas de mejora: [textarea]                      |
+| Plan de desarrollo: [textarea]                   |
+|                                                  |
+|                    [Cancelar] [Guardar Progreso]  |
+|                               [Finalizar]         |
++--------------------------------------------------+
+```
+
+### Persistencia
+- "Guardar Progreso" guarda scores y mantiene status `in_progress`
+- "Finalizar" valida que todos los criterios esten calificados, calcula puntaje final, cambia status a `submitted`
