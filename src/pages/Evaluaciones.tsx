@@ -526,20 +526,20 @@ export default function Evaluaciones() {
                   const criteriaCount = template.criteria?.length || 0;
                   const questionsCount = (template.qualitative_questions as string[] | null)?.length || 0;
                   const gradientColors = [
-                    'from-primary/10 to-primary/5',
-                    'from-blue-500/10 to-cyan-500/5',
-                    'from-emerald-500/10 to-teal-500/5',
+                    'from-orange-500/10 to-amber-500/5',
+                    'from-orange-600/10 to-orange-400/5',
                     'from-amber-500/10 to-orange-500/5',
-                    'from-violet-500/10 to-purple-500/5',
-                    'from-rose-500/10 to-pink-500/5',
+                    'from-orange-500/10 to-yellow-500/5',
+                    'from-amber-600/10 to-orange-400/5',
+                    'from-orange-400/10 to-amber-300/5',
                   ];
                   const iconColors = [
-                    'text-primary bg-primary/10',
-                    'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/40',
-                    'text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/40',
+                    'text-[#e65a0a] bg-orange-100 dark:bg-orange-900/40',
+                    'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/40',
                     'text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/40',
-                    'text-violet-600 bg-violet-100 dark:text-violet-400 dark:bg-violet-900/40',
-                    'text-rose-600 bg-rose-100 dark:text-rose-400 dark:bg-rose-900/40',
+                    'text-[#e65a0a] bg-orange-100 dark:bg-orange-900/40',
+                    'text-orange-500 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/40',
+                    'text-amber-500 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/40',
                   ];
                   const gradient = gradientColors[idx % gradientColors.length];
                   const iconColor = iconColors[idx % iconColors.length];
@@ -656,7 +656,7 @@ export default function Evaluaciones() {
                           <div className="flex items-center justify-end">
                             <Badge
                               variant={template.is_active ? 'default' : 'secondary'}
-                              className={template.is_active ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+                              className={template.is_active ? 'bg-[#e65a0a] hover:bg-[#cf5109] text-white' : ''}
                             >
                               {template.is_active ? 'Activa' : 'Inactiva'}
                             </Badge>
