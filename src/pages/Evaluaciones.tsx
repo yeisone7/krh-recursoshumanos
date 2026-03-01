@@ -21,6 +21,7 @@ import {
   Briefcase,
   Filter,
   BarChart3,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -66,6 +67,7 @@ import {
   EvaluationFormDialog,
   GoalFormDialog,
   ApplyEvaluationDialog,
+  BulkGeneratePreviewDialog,
 } from '@/components/evaluations';
 import {
   CYCLE_STATUS_LABELS,
@@ -81,6 +83,8 @@ import { es } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { generateEvaluationPdf } from '@/lib/evaluationPdfGenerator';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import * as XLSX from 'xlsx';
 import type { EvaluationScore } from '@/types/evaluation';
 const statusColors: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
@@ -111,6 +115,15 @@ export default function Evaluaciones() {
   const [evaluationToApply, setEvaluationToApply] = useState<PerformanceEvaluation | null>(null);
   const [evaluationCycleFilter, setEvaluationCycleFilter] = useState<string>('all');
   const [compareCycleId, setCompareCycleId] = useState<string>('');
+  const [bulkPreviewOpen, setBulkPreviewOpen] = useState(false);
+  const [bulkPreviewData, setBulkPreviewData] = useState<{
+    cycleId: string;
+    cycleName: string;
+    templateName: string;
+    newEmployees: any[];
+    alreadyAssigned: number;
+  } | null>(null);
+  const { currentCompanyId } = useAuth();
   const {
     templates,
     loadingTemplates,
@@ -203,7 +216,7 @@ export default function Evaluaciones() {
     });
   };
 
-  const handleBulkGenerate = async (cycleId: string) => {
+  const handleBulkPreview = (cycleId: string) => {
     const cycle = cycles.find(c => c.id === cycleId);
     if (!cycle?.template_id) {
       toast.error('El ciclo no tiene una plantilla asociada');
@@ -229,10 +242,21 @@ export default function Evaluaciones() {
     );
     const newEmployees = targetEmployees.filter(e => !existingIds.has(e.id));
 
-    if (newEmployees.length === 0) {
-      toast.info('Todos los empleados ya tienen evaluación en este ciclo');
-      return;
-    }
+    setBulkPreviewData({
+      cycleId,
+      cycleName: cycle.name,
+      templateName: tpl?.name || '-',
+      newEmployees,
+      alreadyAssigned: targetEmployees.length - newEmployees.length,
+    });
+    setBulkPreviewOpen(true);
+  };
+
+  const handleBulkConfirm = async () => {
+    if (!bulkPreviewData) return;
+    const { cycleId, newEmployees } = bulkPreviewData;
+
+    if (newEmployees.length === 0) return;
 
     const inserts = newEmployees.map(emp => ({
       cycle_id: cycleId,
@@ -250,8 +274,60 @@ export default function Evaluaciones() {
       return;
     }
 
+    // Send in-app notifications to linked users
+    if (currentCompanyId) {
+      try {
+        const { data: links } = await supabase
+          .from('employee_user_links')
+          .select('user_id, employee_id')
+          .in('employee_id', newEmployees.map(e => e.id))
+          .eq('is_active', true);
+
+        if (links && links.length > 0) {
+          const cycle = cycles.find(c => c.id === cycleId);
+          const notifs = links.map(link => ({
+            user_id: link.user_id,
+            company_id: currentCompanyId,
+            title: 'Nueva evaluación de desempeño',
+            message: `Se te ha asignado una evaluación en el ciclo "${cycle?.name || ''}"`,
+            type: 'info' as const,
+            category: 'evaluaciones',
+            entity_type: 'evaluation_cycle',
+            entity_id: cycleId,
+            action_url: '/evaluaciones',
+          }));
+          await supabase.from('notifications').insert(notifs);
+        }
+      } catch (err) {
+        console.error('Error sending notifications:', err);
+      }
+    }
+
     toast.success(`${newEmployees.length} evaluaciones generadas exitosamente`);
     window.location.reload();
+  };
+
+  const handleExportComparative = () => {
+    if (compareEvaluations.length === 0) {
+      toast.error('No hay datos para exportar');
+      return;
+    }
+    const cycleName = cycles.find(c => c.id === compareCycleId)?.name || 'Comparativo';
+    const data = compareEvaluations.map((ev, idx) => ({
+      '#': idx + 1,
+      'Empleado': `${ev.employee?.first_name || ''} ${ev.employee?.last_name || ''}`,
+      'Documento': ev.employee?.document_number || '',
+      'Puntaje': ev.overall_score || 0,
+      'Calificación': ev.overall_rating || '-',
+      'Estado': EVALUATION_STATUS_LABELS[ev.status] || ev.status,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Comparativo');
+    ws['!cols'] = [{ wch: 5 }, { wch: 30 }, { wch: 15 }, { wch: 10 }, { wch: 18 }, { wch: 15 }];
+    XLSX.writeFile(wb, `Comparativo_${cycleName.replace(/\s/g, '_')}.xlsx`);
+    toast.success('Archivo Excel descargado');
   };
 
   return (
@@ -441,7 +517,7 @@ export default function Evaluaciones() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() => handleBulkGenerate(cycle.id)}
+                                onClick={() => handleBulkPreview(cycle.id)}
                               >
                                 <UsersRound className="h-4 w-4 mr-2" />
                                 Generar Evaluaciones
@@ -884,16 +960,24 @@ export default function Evaluaciones() {
                   Compara puntajes de todos los empleados evaluados en un ciclo
                 </CardDescription>
               </div>
-              <Select value={compareCycleId} onValueChange={setCompareCycleId}>
-                <SelectTrigger className="w-[240px]">
-                  <SelectValue placeholder="Seleccionar ciclo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cycles.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Select value={compareCycleId} onValueChange={setCompareCycleId}>
+                  <SelectTrigger className="w-[240px]">
+                    <SelectValue placeholder="Seleccionar ciclo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cycles.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {compareEvaluations.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={handleExportComparative}>
+                    <FileSpreadsheet className="h-4 w-4 mr-1.5" />
+                    Excel
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {!compareCycleId ? (
@@ -1066,6 +1150,21 @@ export default function Evaluaciones() {
           onSave={(data) => {
             updateEvaluation.mutate(data as any);
           }}
+        />
+      )}
+
+      {bulkPreviewData && (
+        <BulkGeneratePreviewDialog
+          open={bulkPreviewOpen}
+          onOpenChange={(open) => {
+            setBulkPreviewOpen(open);
+            if (!open) setBulkPreviewData(null);
+          }}
+          cycleName={bulkPreviewData.cycleName}
+          templateName={bulkPreviewData.templateName}
+          newEmployees={bulkPreviewData.newEmployees}
+          alreadyAssigned={bulkPreviewData.alreadyAssigned}
+          onConfirm={handleBulkConfirm}
         />
       )}
     </div>
