@@ -57,6 +57,7 @@ export default function Disciplinarios() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [faultFilter, setFaultFilter] = useState<string>('all');
+  const [centerFilter, setCenterFilter] = useState<string>('all');
   const [showFormDialog, setShowFormDialog] = useState(false);
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DisciplinaryProcessWithEmployee | null>(null);
@@ -117,6 +118,11 @@ export default function Disciplinarios() {
     setDeleteTarget(null);
   };
 
+  // Unique operation centers for filter
+  const operationCenters = [...new Set(
+    (processes || []).map((p) => p.operation_center_name).filter(Boolean)
+  )].sort() as string[];
+
   // Filter processes
   const filteredProcesses = processes?.filter((process) => {
     const matchesSearch =
@@ -128,8 +134,9 @@ export default function Disciplinarios() {
 
     const matchesStatus = statusFilter === 'all' || process.status === statusFilter;
     const matchesFault = faultFilter === 'all' || process.fault_type === faultFilter;
+    const matchesCenter = centerFilter === 'all' || (process.operation_center_name || 'Sin Centro Asignado') === centerFilter;
 
-    return matchesSearch && matchesStatus && matchesFault;
+    return matchesSearch && matchesStatus && matchesFault && matchesCenter;
   });
 
   return (
@@ -228,6 +235,20 @@ export default function Disciplinarios() {
             {(Object.keys(faultTypeLabels) as FaultType[]).map((fault) => (
               <SelectItem key={fault} value={fault}>
                 {faultTypeLabels[fault]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={centerFilter} onValueChange={setCenterFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Centro de operación" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los centros</SelectItem>
+            {operationCenters.map((center) => (
+              <SelectItem key={center} value={center}>
+                {center}
               </SelectItem>
             ))}
           </SelectContent>
