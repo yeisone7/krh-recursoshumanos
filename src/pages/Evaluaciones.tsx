@@ -5,6 +5,7 @@ import {
   Plus,
   FileText,
   Calendar,
+  PlayCircle,
   Target,
   Users,
   MoreHorizontal,
@@ -54,6 +55,7 @@ import {
   CycleFormDialog,
   EvaluationFormDialog,
   GoalFormDialog,
+  ApplyEvaluationDialog,
 } from '@/components/evaluations';
 import {
   CYCLE_STATUS_LABELS,
@@ -92,7 +94,8 @@ export default function Evaluaciones() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ type: string; id: string } | null>(null);
   const [templatePositionFilter, setTemplatePositionFilter] = useState<string>('');
-
+  const [applyDialogOpen, setApplyDialogOpen] = useState(false);
+  const [evaluationToApply, setEvaluationToApply] = useState<PerformanceEvaluation | null>(null);
   const {
     templates,
     loadingTemplates,
@@ -391,6 +394,15 @@ export default function Evaluaciones() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setEvaluationToApply(evaluation);
+                                  setApplyDialogOpen(true);
+                                }}
+                              >
+                                <PlayCircle className="h-4 w-4 mr-2" />
+                                Evaluar
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedEvaluation(evaluation);
@@ -787,6 +799,23 @@ export default function Evaluaciones() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {evaluationToApply && (
+        <ApplyEvaluationDialog
+          open={applyDialogOpen}
+          onOpenChange={(open) => {
+            setApplyDialogOpen(open);
+            if (!open) setEvaluationToApply(null);
+          }}
+          evaluation={evaluationToApply}
+          template={
+            cycles.find((c) => c.id === evaluationToApply.cycle_id)?.template || null
+          }
+          onSave={(data) => {
+            updateEvaluation.mutate(data as any);
+          }}
+        />
+      )}
     </div>
   );
 }
