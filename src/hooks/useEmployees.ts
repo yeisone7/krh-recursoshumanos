@@ -59,7 +59,7 @@ export function useEmployees() {
             residence_address, emergency_contact_name, emergency_contact_phone
           ),
           employee_work_info!inner(
-            id, operation_center_id, position_name, hire_date, link_type, area_id,
+            id, operation_center_id, position_id, position_name, hire_date, link_type, area_id,
             operation_centers(id, name, city)
           )
         `)
