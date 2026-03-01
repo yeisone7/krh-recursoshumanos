@@ -1696,6 +1696,63 @@ export type Database = {
           },
         ]
       }
+      dotation_inventory_movements: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          inventory_item_id: string
+          movement_type: string
+          new_stock: number
+          previous_stock: number
+          quantity: number
+          reason: string | null
+          reference_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inventory_item_id: string
+          movement_type: string
+          new_stock?: number
+          previous_stock?: number
+          quantity: number
+          reason?: string | null
+          reference_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          inventory_item_id?: string
+          movement_type?: string
+          new_stock?: number
+          previous_stock?: number
+          quantity?: number
+          reason?: string | null
+          reference_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dotation_inventory_movements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dotation_inventory_movements_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "dotation_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dotation_item_types: {
         Row: {
           category: string

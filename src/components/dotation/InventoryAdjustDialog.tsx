@@ -30,7 +30,7 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
 
     try {
       const adjustment = adjustType === 'add' ? quantity : -quantity;
-      await adjustMutation.mutateAsync({ id: item.id, adjustment });
+      await adjustMutation.mutateAsync({ id: item.id, adjustment, reason });
       toast.success('Stock actualizado', {
         description: `${adjustType === 'add' ? '+' : '-'}${quantity} unidades de ${item.item_name}`,
       });

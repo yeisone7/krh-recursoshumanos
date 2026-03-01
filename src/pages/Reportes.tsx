@@ -6,6 +6,7 @@ import {
   DotationReport,
   ContractExtensionsReport,
   ContractsExpiringSoonReport,
+  InventoryMovementsReport,
 } from '@/components/reports';
 
 export default function Reportes() {
@@ -32,6 +33,7 @@ export default function Reportes() {
         <IncapacityReport />
         <CesantiasReport />
         <DotationReport />
+        <InventoryMovementsReport />
       </div>
     </div>
   );

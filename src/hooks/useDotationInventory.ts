@@ -107,9 +107,10 @@ export function useDeleteInventoryItem() {
 
 export function useAdjustInventoryQuantity() {
   const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ id, adjustment }: { id: string; adjustment: number }) => {
+    mutationFn: async ({ id, adjustment, reason }: { id: string; adjustment: number; reason?: string }) => {
       // Get current quantity
       const { data: current, error: fetchError } = await supabase
         .from('dotation_inventory')
@@ -119,7 +120,8 @@ export function useAdjustInventoryQuantity() {
 
       if (fetchError) throw fetchError;
 
-      const newQuantity = Math.max(0, (current?.quantity_available || 0) + adjustment);
+      const previousStock = current?.quantity_available || 0;
+      const newQuantity = Math.max(0, previousStock + adjustment);
 
       const { data, error } = await supabase
         .from('dotation_inventory')
@@ -129,10 +131,29 @@ export function useAdjustInventoryQuantity() {
         .single();
 
       if (error) throw error;
+
+      // Record movement
+      const movementType = adjustment > 0 ? 'entrada' : 'salida';
+      try {
+        await supabase.from('dotation_inventory_movements').insert({
+          company_id: currentCompanyId!,
+          inventory_item_id: id,
+          movement_type: reason === 'devolucion' ? 'devolucion' : reason === 'ajuste' ? 'ajuste' : movementType,
+          quantity: Math.abs(adjustment),
+          previous_stock: previousStock,
+          new_stock: newQuantity,
+          reason: reason || null,
+          created_by: user?.id || null,
+        });
+      } catch (e) {
+        console.warn('Failed to record movement:', e);
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dotation_inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory_movements'] });
     },
   });
 }
