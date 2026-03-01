@@ -7,3 +7,4 @@ export { GoalFormDialog } from './GoalFormDialog';
 export { ApplyEvaluationDialog } from './ApplyEvaluationDialog';
 export { CriteriaScoreCard } from './CriteriaScoreCard';
 export { BulkGeneratePreviewDialog } from './BulkGeneratePreviewDialog';
+export { EvaluationKanbanBoard } from './EvaluationKanbanBoard';
