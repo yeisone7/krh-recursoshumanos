@@ -74,7 +74,7 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
   // Color logo in header
   if (colorLogoDataUrl) {
     try {
-      doc.addImage(colorLogoDataUrl, 'PNG', pageWidth - margin - 28, 4, 26, 24);
+      doc.addImage(colorLogoDataUrl, 'PNG', pageWidth - margin - 38, 5, 36, 20);
     } catch { /* skip if image fails */ }
   }
 
