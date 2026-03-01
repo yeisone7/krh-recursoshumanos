@@ -11,7 +11,7 @@ import {
   SanctionType,
 } from '@/types/disciplinary';
 
-const WATERMARK_LOGO_PATH = '/images/petrocasinos-watermark.png';
+
 const COLOR_LOGO_PATH = '/images/petrocasinos-logo-white.png';
 
 function loadImageAsDataUrl(src: string): Promise<string> {
@@ -58,12 +58,8 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
 
   // Pre-load images
   let colorLogoDataUrl: string | null = null;
-  let watermarkDataUrl: string | null = null;
   try {
-    [colorLogoDataUrl, watermarkDataUrl] = await Promise.all([
-      loadImageAsDataUrl(COLOR_LOGO_PATH),
-      loadImageAsDataUrl(WATERMARK_LOGO_PATH),
-    ]);
+    colorLogoDataUrl = await loadImageAsDataUrl(COLOR_LOGO_PATH);
   } catch {
     // continue without images
   }
@@ -89,20 +85,6 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
     d.text(`Generado: ${dateStr}`, MARGIN, 27);
   }
 
-  function drawWatermark(d: jsPDF) {
-    if (!watermarkDataUrl) return;
-    try {
-      const wmW = 97, wmH = 54;
-      d.addImage(
-        watermarkDataUrl, 'PNG',
-        (PAGE_WIDTH - wmW) / 2, (pageHeight - wmH) / 2,
-        wmW, wmH, undefined, undefined, 0
-      );
-      // Set opacity via GState
-      const gState = (d as any).GState({ opacity: 0.06 });
-      (d as any).setGState(gState);
-    } catch { /* skip */ }
-  }
 
   function drawFooter(d: jsPDF, pageNum: number, totalPages: number) {
     d.setFontSize(7);
@@ -351,7 +333,6 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
-    drawWatermark(doc);
     drawFooter(doc, i, totalPages);
   }
 
