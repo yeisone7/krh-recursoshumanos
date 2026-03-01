@@ -209,10 +209,23 @@ export function useCreateDotationDelivery() {
         if (centerId) {
           const { data: withCenter } = await inventoryQuery.eq('operation_center_id', centerId).maybeSingle();
           if (withCenter) {
+            const newQty = Math.max(0, withCenter.quantity_available - (data.quantity || 1));
             await supabase
               .from('dotation_inventory')
-              .update({ quantity_available: Math.max(0, withCenter.quantity_available - (data.quantity || 1)) })
+              .update({ quantity_available: newQty })
               .eq('id', withCenter.id);
+            // Record movement
+            await supabase.from('dotation_inventory_movements').insert({
+              company_id: employee?.company_id || '',
+              inventory_item_id: withCenter.id,
+              movement_type: 'entrega',
+              quantity: data.quantity || 1,
+              previous_stock: withCenter.quantity_available,
+              new_stock: newQty,
+              reason: `Entrega a empleado`,
+              reference_id: data.id,
+              created_by: user?.id || null,
+            });
           } else {
             // Fallback: try general (no center)
             const { data: general } = await supabase
@@ -224,19 +237,43 @@ export function useCreateDotationDelivery() {
               .is('operation_center_id', null)
               .maybeSingle();
             if (general) {
+              const newQty = Math.max(0, general.quantity_available - (data.quantity || 1));
               await supabase
                 .from('dotation_inventory')
-                .update({ quantity_available: Math.max(0, general.quantity_available - (data.quantity || 1)) })
+                .update({ quantity_available: newQty })
                 .eq('id', general.id);
+              await supabase.from('dotation_inventory_movements').insert({
+                company_id: employee?.company_id || '',
+                inventory_item_id: general.id,
+                movement_type: 'entrega',
+                quantity: data.quantity || 1,
+                previous_stock: general.quantity_available,
+                new_stock: newQty,
+                reason: `Entrega a empleado`,
+                reference_id: data.id,
+                created_by: user?.id || null,
+              });
             }
           }
         } else {
           const { data: general } = await inventoryQuery.is('operation_center_id', null).maybeSingle();
           if (general) {
+            const newQty = Math.max(0, general.quantity_available - (data.quantity || 1));
             await supabase
               .from('dotation_inventory')
-              .update({ quantity_available: Math.max(0, general.quantity_available - (data.quantity || 1)) })
+              .update({ quantity_available: newQty })
               .eq('id', general.id);
+            await supabase.from('dotation_inventory_movements').insert({
+              company_id: employee?.company_id || '',
+              inventory_item_id: general.id,
+              movement_type: 'entrega',
+              quantity: data.quantity || 1,
+              previous_stock: general.quantity_available,
+              new_stock: newQty,
+              reason: `Entrega a empleado`,
+              reference_id: data.id,
+              created_by: user?.id || null,
+            });
           }
         }
       } catch (inventoryError) {
