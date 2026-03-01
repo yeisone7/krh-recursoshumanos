@@ -46,7 +46,7 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
             render={({ field }) => (
               <FormItem className="col-span-2">
                 <FormControl>
-                  <Input placeholder="Nombre de la competencia" {...field} />
+                  <Input placeholder="Ej: Trabajo en Equipo" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -59,7 +59,7 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input placeholder="Categoría" {...field} />
+                  <Input placeholder="Ej: Organizacional" {...field} />
                 </FormControl>
               </FormItem>
             )}
@@ -73,7 +73,7 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
                 <FormControl>
                   <Input
                     type="number"
-                    placeholder="Peso"
+                    placeholder="Peso (1-5)"
                     {...field}
                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 1)}
                   />
