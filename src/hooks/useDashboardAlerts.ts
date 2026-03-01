@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export interface DashboardAlert {
   id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'preaviso';
+  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'preaviso' | 'inventory_low_stock';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
@@ -326,6 +326,32 @@ export function useDashboardAlerts() {
                 entityId: balance.employee_id,
               });
             }
+          }
+        }
+      }
+
+      // 7. Fetch low-stock inventory alerts
+      const { data: inventoryItems } = await supabase
+        .from('dotation_inventory')
+        .select('id, item_name, item_type, size, quantity_available, minimum_stock, operation_centers(name)')
+        .eq('company_id', currentCompanyId!)
+        .gt('minimum_stock', 0);
+
+      if (inventoryItems) {
+        for (const item of inventoryItems) {
+          if (item.quantity_available <= item.minimum_stock) {
+            const isOut = item.quantity_available === 0;
+            const center = (item.operation_centers as any)?.name || 'General';
+            alerts.push({
+              id: `inv-low-${item.id}`,
+              type: 'inventory_low_stock',
+              level: isOut ? 'critical' : 'warning',
+              title: isOut ? 'Sin stock' : 'Stock bajo',
+              description: `${item.item_name}${item.size ? ` (${item.size})` : ''} — ${item.quantity_available}/${item.minimum_stock} uds. en ${center}`,
+              daysRemaining: isOut ? -1 : 0,
+              entityName: item.item_name,
+              entityId: item.id,
+            });
           }
         }
       }

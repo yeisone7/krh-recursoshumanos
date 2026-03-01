@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertTriangle, Clock, FileText, Stethoscope, Package, ChevronRight, CheckCircle, Award, HeartPulse, Palmtree, Scale } from 'lucide-react';
+import { AlertTriangle, Clock, FileText, Stethoscope, Package, ChevronRight, CheckCircle, Award, HeartPulse, Palmtree, Scale, Warehouse } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ const typeIcons: Record<DashboardAlert['type'], typeof FileText> = {
   incapacity: HeartPulse,
   vacation: Palmtree,
   preaviso: Scale,
+  inventory_low_stock: Warehouse,
 };
 
 const levelStyles = {
@@ -63,6 +64,9 @@ export function AlertsPanel() {
         break;
       case 'vacation':
         navigate(`/vacaciones?empleado=${alert.entityId}`);
+        break;
+      case 'inventory_low_stock':
+        navigate('/dotacion');
         break;
     }
   };
@@ -159,7 +163,9 @@ export function AlertsPanel() {
                 <div className="flex items-center gap-2 mb-0.5">
                   <p className="font-medium text-foreground">{alert.title}</p>
                   <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", styles.badge)}>
-                    {alert.daysRemaining < 0 ? `${Math.abs(alert.daysRemaining)}d vencido` : `${alert.daysRemaining} días`}
+                    {alert.type === 'inventory_low_stock'
+                      ? (alert.daysRemaining < 0 ? 'Agotado' : 'Bajo')
+                      : alert.daysRemaining < 0 ? `${Math.abs(alert.daysRemaining)}d vencido` : `${alert.daysRemaining} días`}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground truncate">{alert.entityName} • {alert.description}</p>

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   Bell, Search, Filter, AlertTriangle, Clock, FileText, 
   Stethoscope, Package, CheckCircle, Award, Palmtree, 
-  HeartPulse, Landmark, ExternalLink, Loader2
+  HeartPulse, Landmark, ExternalLink, Loader2, Warehouse
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +34,7 @@ const typeIcons: Record<UnifiedAlert['type'], React.ElementType> = {
   incapacity: HeartPulse,
   vacation: Palmtree,
   cesantias: Landmark,
+  inventory_low_stock: Warehouse,
 };
 
 const typeLabels: Record<UnifiedAlert['type'], string> = {
@@ -45,6 +46,7 @@ const typeLabels: Record<UnifiedAlert['type'], string> = {
   incapacity: 'Incapacidad',
   vacation: 'Vacaciones',
   cesantias: 'Cesantías',
+  inventory_low_stock: 'Stock Bajo',
 };
 
 const levelStyles = {
