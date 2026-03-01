@@ -358,10 +358,6 @@ export default function Evaluaciones() {
               <FileText className="h-4 w-4" />
               Plantillas
             </TabsTrigger>
-            <TabsTrigger value="compare" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Comparativo
-            </TabsTrigger>
           </TabsList>
 
           <Button
@@ -779,111 +775,6 @@ export default function Evaluaciones() {
               </div>
             )}
           </div>
-        </TabsContent>
-
-        {/* Comparativo Tab */}
-        <TabsContent value="compare">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle>Resumen Comparativo</CardTitle>
-                <CardDescription className="mt-1">
-                  Compara puntajes de todos los empleados evaluados en un ciclo
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select value={compareCycleId} onValueChange={setCompareCycleId}>
-                  <SelectTrigger className="w-[240px]">
-                    <SelectValue placeholder="Seleccionar ciclo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cycles.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {compareEvaluations.length > 0 && (
-                  <Button variant="outline" size="sm" onClick={handleExportComparative}>
-                    <FileSpreadsheet className="h-4 w-4 mr-1.5" />
-                    Excel
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {!compareCycleId ? (
-                <p className="text-muted-foreground text-center py-8">
-                  Selecciona un ciclo para ver el comparativo
-                </p>
-              ) : compareEvaluations.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  No hay evaluaciones con puntaje en este ciclo
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {/* Summary stats */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-muted/50 rounded-lg p-3 text-center">
-                      <p className="text-xs text-muted-foreground">Promedio</p>
-                      <p className="text-2xl font-bold text-foreground">{compareAvg}/100</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3 text-center">
-                      <p className="text-xs text-muted-foreground">Mejor Puntaje</p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {compareEvaluations[0]?.overall_score || 0}/100
-                      </p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-3 text-center">
-                      <p className="text-xs text-muted-foreground">Evaluados</p>
-                      <p className="text-2xl font-bold text-foreground">{compareEvaluations.length}</p>
-                    </div>
-                  </div>
-
-                  {/* Ranking table */}
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-10">#</TableHead>
-                        <TableHead>Empleado</TableHead>
-                        <TableHead>Puntaje</TableHead>
-                        <TableHead>Calificación</TableHead>
-                        <TableHead>Barra</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {compareEvaluations.map((ev, idx) => (
-                        <TableRow key={ev.id}>
-                          <TableCell className="font-medium text-muted-foreground">{idx + 1}</TableCell>
-                          <TableCell className="font-medium">
-                            {ev.employee?.first_name} {ev.employee?.last_name}
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-semibold">{ev.overall_score}/100</span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={
-                              (ev.overall_score || 0) >= 91
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : (ev.overall_score || 0) >= 75
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                : (ev.overall_score || 0) >= 60
-                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                            }>
-                              {ev.overall_rating || '-'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="min-w-[150px]">
-                            <Progress value={ev.overall_score || 0} className="h-2" />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
 
       </Tabs>
