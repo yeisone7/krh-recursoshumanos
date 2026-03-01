@@ -1639,6 +1639,63 @@ export type Database = {
           },
         ]
       }
+      dotation_inventory: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          item_name: string
+          item_type: Database["public"]["Enums"]["dotation_item_type"]
+          minimum_stock: number
+          operation_center_id: string | null
+          quantity_available: number
+          size: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_name: string
+          item_type: Database["public"]["Enums"]["dotation_item_type"]
+          minimum_stock?: number
+          operation_center_id?: string | null
+          quantity_available?: number
+          size?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_name?: string
+          item_type?: Database["public"]["Enums"]["dotation_item_type"]
+          minimum_stock?: number
+          operation_center_id?: string | null
+          quantity_available?: number
+          size?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dotation_inventory_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dotation_inventory_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dotation_item_types: {
         Row: {
           category: string
