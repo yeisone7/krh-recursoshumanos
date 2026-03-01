@@ -1,4 +1,5 @@
 export { TemplateFormDialog } from './TemplateFormDialog';
+export { TemplatePreviewDialog } from './TemplatePreviewDialog';
 export { CriteriaRubricItem } from './CriteriaRubricItem';
 export { CycleFormDialog } from './CycleFormDialog';
 export { EvaluationFormDialog } from './EvaluationFormDialog';
