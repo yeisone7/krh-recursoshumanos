@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Target, Star, Calendar, User } from 'lucide-react';
+import { TrendingUp, Target, Star, Calendar, Award, AlertTriangle, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -7,32 +8,72 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { EVALUATION_STATUS_LABELS, EVALUATION_TYPE_LABELS, DEFAULT_RATING_SCALE } from '@/types/evaluation';
+import type { EvaluationStatus, EvaluationType } from '@/types/evaluation';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+} from 'recharts';
 
 interface Tab360EvaluationsProps {
   evaluations: { evaluations: any[]; goals: any[] } | undefined;
   isLoading: boolean;
 }
 
-const statusConfig: Record<string, { label: string; color: string }> = {
-  borrador: { label: 'Borrador', color: 'bg-muted text-muted-foreground' },
-  en_progreso: { label: 'En Progreso', color: 'bg-warning-light text-warning' },
-  pendiente_revision: { label: 'Pendiente Revisión', color: 'bg-primary-light text-primary' },
-  completado: { label: 'Completado', color: 'bg-success-light text-success' },
+const statusColors: Record<string, string> = {
+  pending: 'bg-muted text-muted-foreground',
+  in_progress: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+  submitted: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  reviewed: 'bg-primary/10 text-primary',
+  approved: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
 };
+
+function getScoreColor(score: number) {
+  if (score >= 91) return 'text-emerald-600';
+  if (score >= 75) return 'text-blue-600';
+  if (score >= 60) return 'text-amber-600';
+  return 'text-destructive';
+}
+
+function getRatingLabel(score: number): string {
+  const rating = DEFAULT_RATING_SCALE.find(r => score >= r.min && score <= r.max);
+  return rating?.label || '-';
+}
 
 const goalStatusConfig: Record<string, { label: string; color: string }> = {
   pendiente: { label: 'Pendiente', color: 'bg-muted text-muted-foreground' },
-  en_progreso: { label: 'En Progreso', color: 'bg-warning-light text-warning' },
-  completado: { label: 'Completado', color: 'bg-success-light text-success' },
+  en_progreso: { label: 'En Progreso', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' },
+  completado: { label: 'Completado', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' },
   cancelado: { label: 'Cancelado', color: 'bg-destructive/10 text-destructive' },
 };
 
 export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsProps) {
+  const evals = evaluations?.evaluations || [];
+  const goals = evaluations?.goals || [];
+
+  const scoredEvals = evals.filter((e: any) => e.overall_score != null && e.overall_score > 0);
+  const avgScore = scoredEvals.length > 0
+    ? Math.round(scoredEvals.reduce((sum: number, e: any) => sum + (e.overall_score || 0), 0) / scoredEvals.length)
+    : 0;
+  const completedCount = evals.filter((e: any) => ['submitted', 'reviewed', 'approved'].includes(e.status)).length;
+  const pendingCount = evals.filter((e: any) => e.status === 'pending' || e.status === 'in_progress').length;
+
+  const scoreHistory = useMemo(() => {
+    return scoredEvals
+      .slice()
+      .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      .slice(-8)
+      .map((e: any) => ({
+        name: e.evaluation_cycles?.name
+          ? (e.evaluation_cycles.name.length > 12 ? e.evaluation_cycles.name.substring(0, 12) + '…' : e.evaluation_cycles.name)
+          : format(new Date(e.created_at), 'MMM yy', { locale: es }),
+        puntaje: e.overall_score || 0,
+      }));
+  }, [scoredEvals]);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[1, 2].map((i) => (
+        {[1, 2, 3].map((i) => (
           <Card key={i}>
             <CardContent className="p-6">
               <Skeleton className="h-6 w-48 mb-2" />
@@ -44,15 +85,12 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
     );
   }
 
-  const evals = evaluations?.evaluations || [];
-  const goals = evaluations?.goals || [];
-
   if (evals.length === 0 && goals.length === 0) {
     return (
       <Card>
         <CardContent className="p-12 text-center">
           <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="font-semibold text-lg mb-2">Sin evaluaciones</h3>
+          <h3 className="font-semibold text-lg mb-2">Sin evaluaciones de desempeño</h3>
           <p className="text-muted-foreground">
             Este empleado no tiene evaluaciones ni metas registradas.
           </p>
@@ -67,6 +105,101 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
       animate={{ opacity: 1 }}
       className="space-y-6"
     >
+      {/* KPIs Row */}
+      {evals.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-4 pb-4 px-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Target className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total</p>
+                  <p className="text-2xl font-bold">{evals.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4 px-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                  <Award className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Promedio</p>
+                  <p className={`text-2xl font-bold ${avgScore > 0 ? getScoreColor(avgScore) : ''}`}>
+                    {avgScore > 0 ? `${avgScore}/100` : '-'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4 px-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <TrendingUp className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Completadas</p>
+                  <p className="text-2xl font-bold">{completedCount}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4 pb-4 px-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Pendientes</p>
+                  <p className="text-2xl font-bold">{pendingCount}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Score History Chart */}
+      {scoreHistory.length >= 2 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-primary" />
+              Evolución de Puntajes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={scoreHistory}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, 100]} />
+                <Tooltip formatter={(value: number) => [`${value}/100`, 'Puntaje']} />
+                <Bar dataKey="puntaje" radius={[4, 4, 0, 0]}>
+                  {scoreHistory.map((entry, i) => (
+                    <Cell
+                      key={i}
+                      fill={
+                        entry.puntaje >= 91 ? '#10b981'
+                        : entry.puntaje >= 75 ? '#3b82f6'
+                        : entry.puntaje >= 60 ? '#f59e0b'
+                        : '#ef4444'
+                      }
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="evaluations" className="w-full">
         <TabsList>
           <TabsTrigger value="evaluations" className="flex items-center gap-2">
@@ -83,7 +216,11 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
           {evals.length > 0 ? (
             <div className="space-y-3">
               {evals.map((evaluation: any, index: number) => {
-                const status = statusConfig[evaluation.status] || statusConfig.borrador;
+                const statusLabel = EVALUATION_STATUS_LABELS[evaluation.status as EvaluationStatus] || evaluation.status;
+                const statusClass = statusColors[evaluation.status] || statusColors.pending;
+                const typeLabel = EVALUATION_TYPE_LABELS[evaluation.evaluation_type as EvaluationType] || evaluation.evaluation_type;
+                const score = evaluation.overall_score;
+                const ratingLabel = score != null && score > 0 ? getRatingLabel(score) : null;
 
                 return (
                   <motion.div
@@ -96,12 +233,15 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
                       <CardContent className="p-4">
                         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                           <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-medium">
-                                {evaluation.evaluation_templates?.name || 'Evaluación de Desempeño'}
+                                {evaluation.evaluation_templates?.name || evaluation.evaluation_cycles?.name || 'Evaluación de Desempeño'}
                               </h4>
-                              <Badge variant="outline" className={status.color}>
-                                {status.label}
+                              <Badge variant="outline" className={statusClass}>
+                                {statusLabel}
+                              </Badge>
+                              <Badge variant="secondary" className="text-xs">
+                                {typeLabel}
                               </Badge>
                             </div>
 
@@ -116,15 +256,25 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
                                 </span>
                               </div>
                             </div>
+
+                            {/* Score bar */}
+                            {score != null && score > 0 && (
+                              <div className="flex items-center gap-3 mt-1">
+                                <Progress value={score} className="h-2 flex-1 max-w-[200px]" />
+                                <span className={`text-xs font-medium ${getScoreColor(score)}`}>
+                                  {ratingLabel}
+                                </span>
+                              </div>
+                            )}
                           </div>
 
-                          {evaluation.final_score !== null && (
-                            <div className="text-center">
-                              <div className="flex items-center gap-1 text-warning">
-                                <Star className="w-5 h-5 fill-warning" />
-                                <span className="text-2xl font-bold">{evaluation.final_score?.toFixed(1)}</span>
+                          {score != null && score > 0 && (
+                            <div className="text-center shrink-0">
+                              <div className="flex items-center gap-1">
+                                <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
+                                <span className={`text-2xl font-bold ${getScoreColor(score)}`}>{score}</span>
                               </div>
-                              <p className="text-xs text-muted-foreground">Calificación Final</p>
+                              <p className="text-xs text-muted-foreground">/100</p>
                             </div>
                           )}
                         </div>
@@ -149,7 +299,7 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
             <div className="space-y-3">
               {goals.map((goal: any, index: number) => {
                 const status = goalStatusConfig[goal.status] || goalStatusConfig.pendiente;
-                const progress = goal.progress || 0;
+                const progress = goal.progress_percentage || 0;
 
                 return (
                   <motion.div
