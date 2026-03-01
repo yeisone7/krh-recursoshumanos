@@ -6,6 +6,8 @@ import {
   FileText,
   Calendar,
   PlayCircle,
+  Download,
+  UsersRound,
   Target,
   Users,
   MoreHorizontal,
@@ -68,7 +70,10 @@ import {
 } from '@/types/evaluation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-
+import { supabase } from '@/integrations/supabase/client';
+import { generateEvaluationPdf } from '@/lib/evaluationPdfGenerator';
+import { toast } from 'sonner';
+import type { EvaluationScore } from '@/types/evaluation';
 const statusColors: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
   active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -149,6 +154,71 @@ export default function Evaluaciones() {
     }
     setDeleteDialogOpen(false);
     setItemToDelete(null);
+  };
+
+  const handleDownloadPdf = async (evaluation: PerformanceEvaluation) => {
+    const cycle = cycles.find(c => c.id === evaluation.cycle_id);
+    const tpl = cycle?.template || null;
+    const { data: scores } = await supabase
+      .from('evaluation_scores')
+      .select('*')
+      .eq('evaluation_id', evaluation.id);
+    generateEvaluationPdf({
+      evaluation,
+      template: tpl,
+      scores: (scores || []) as EvaluationScore[],
+    });
+  };
+
+  const handleBulkGenerate = async (cycleId: string) => {
+    const cycle = cycles.find(c => c.id === cycleId);
+    if (!cycle?.template_id) {
+      toast.error('El ciclo no tiene una plantilla asociada');
+      return;
+    }
+    const tpl = templates.find(t => t.id === cycle.template_id);
+    const positionIds = tpl?.positions?.map(p => p.id) || [];
+
+    let targetEmployees = employees;
+    if (positionIds.length > 0) {
+      targetEmployees = employees.filter(emp =>
+        emp.work_info?.position_id && positionIds.includes(emp.work_info.position_id)
+      );
+    }
+
+    if (targetEmployees.length === 0) {
+      toast.error('No se encontraron empleados para los cargos de la plantilla');
+      return;
+    }
+
+    const existingIds = new Set(
+      evaluations.filter(e => e.cycle_id === cycleId).map(e => e.employee_id)
+    );
+    const newEmployees = targetEmployees.filter(e => !existingIds.has(e.id));
+
+    if (newEmployees.length === 0) {
+      toast.info('Todos los empleados ya tienen evaluación en este ciclo');
+      return;
+    }
+
+    const inserts = newEmployees.map(emp => ({
+      cycle_id: cycleId,
+      employee_id: emp.id,
+      evaluation_type: 'manager' as const,
+      status: 'pending' as const,
+    }));
+
+    const { error } = await supabase
+      .from('performance_evaluations')
+      .insert(inserts);
+
+    if (error) {
+      toast.error('Error al generar evaluaciones: ' + error.message);
+      return;
+    }
+
+    toast.success(`${newEmployees.length} evaluaciones generadas exitosamente`);
+    window.location.reload();
   };
 
   return (
@@ -317,6 +387,12 @@ export default function Evaluaciones() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
+                                onClick={() => handleBulkGenerate(cycle.id)}
+                              >
+                                <UsersRound className="h-4 w-4 mr-2" />
+                                Generar Evaluaciones
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedCycle(cycle);
                                   setCycleDialogOpen(true);
@@ -402,6 +478,12 @@ export default function Evaluaciones() {
                               >
                                 <PlayCircle className="h-4 w-4 mr-2" />
                                 Evaluar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDownloadPdf(evaluation)}
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Descargar PDF
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
