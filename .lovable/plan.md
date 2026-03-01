@@ -1,99 +1,73 @@
 
-# Plan: Crear vista de "Aplicar Evaluacion" con calificacion por criterios
 
-## Problema actual
-El sistema permite crear plantillas con criterios y rubricas, crear ciclos, y crear evaluaciones generales con campos de texto libre. Sin embargo, **no existe una interfaz para calificar a un empleado criterio por criterio** usando la plantilla asociada al ciclo. La tabla `evaluation_scores` ya existe en la base de datos pero no se usa desde ningun componente.
+# Plan: Descargos por Token de Un Solo Uso
 
-## Solucion propuesta
-Crear un nuevo componente `ApplyEvaluationDialog` que, al abrir una evaluacion existente o crear una nueva, cargue los criterios de la plantilla del ciclo y permita puntuar cada uno con su rubrica descriptiva.
+## Resumen
+Agregar la opcion (opcional) de generar un enlace/token de un solo uso para que el empleado implicado en un proceso disciplinario pueda presentar sus descargos directamente a traves de una pagina publica. El descargo quedara registrado indicando que fue presentado via token.
 
-## Flujo del usuario
-1. En la tabla de **Evaluaciones**, cada fila tendra un boton "Evaluar" (ademas de Editar/Eliminar)
-2. Al hacer clic en "Evaluar", se abre un dialog que muestra:
-   - Encabezado con datos del empleado y ciclo
-   - Lista de criterios agrupados por categoria, cada uno con:
-     - Nombre y descripcion del criterio
-     - Selector de nivel (1-4) mostrando la rubrica descriptiva de cada nivel
-     - Campo de comentarios opcional por criterio
-   - Seccion de preguntas cualitativas (las configuradas en la plantilla)
-   - Campos de resumen: fortalezas, areas de mejora, plan de desarrollo
-   - Puntaje total calculado automaticamente
-   - Calificacion cualitativa derivada de la escala de la plantilla
-3. Al guardar, se insertan/actualizan los `evaluation_scores` y se actualiza el `overall_score` y `overall_rating` de la evaluacion
+## Cambios en Base de Datos
+
+### Nueva tabla: `disciplinary_defense_tokens`
+- `id` (UUID, PK)
+- `process_id` (UUID, FK a disciplinary_processes)
+- `company_id` (UUID)
+- `token` (TEXT, UNIQUE) -- token UUID generado
+- `employee_id` (UUID, FK a employees_v2)
+- `expires_at` (TIMESTAMPTZ)
+- `is_used` (BOOLEAN, default false)
+- `used_at` (TIMESTAMPTZ, nullable)
+- `created_by` (UUID) -- quien genero el token
+- `created_at` (TIMESTAMPTZ, default now())
+
+Se agregara una politica RLS para lectura publica (SELECT) filtrada por token, y para INSERT/UPDATE restringido a miembros de la empresa.
+
+### Columna nueva en `disciplinary_defenses`
+- `submitted_via_token` (BOOLEAN, default false) -- indica si el descargo fue enviado por el empleado a traves de un enlace
+
+## Cambios en Frontend
+
+### 1. Boton "Generar Enlace de Descargos" en el tab de Descargos
+En `DisciplinaryDetailDialog.tsx`, junto al boton "Registrar Descargos", agregar un boton secundario "Enviar Enlace" que:
+- Genera un token en la tabla `disciplinary_defense_tokens`
+- Muestra un dialog con el enlace y codigo QR (reutilizando el patron de `QRCodeDialog`)
+- El enlace apunta a `/descargos?token=XXX`
+
+### 2. Nuevo componente: `GenerateDefenseTokenDialog.tsx`
+Dialog que genera el token, muestra el enlace copiable y un QR. Similar al flujo de `GenerarAcceso` de capacitaciones.
+
+### 3. Nueva pagina publica: `src/pages/DescargosPublico.tsx`
+Pagina accesible sin autenticacion en la ruta `/descargos?token=XXX`. Flujo:
+1. Valida el token (existe, no usado, no expirado)
+2. Muestra informacion del caso (numero de radicado, fecha de los hechos, descripcion de los hechos)
+3. Formulario para que el empleado escriba sus descargos
+4. Al enviar: inserta en `disciplinary_defenses` con `submitted_via_token = true`, marca el token como usado, y registra en `disciplinary_timeline`
+
+### 4. Indicador visual en descargos existentes
+En la lista de descargos del detail dialog, mostrar un `Badge` "Via Enlace" cuando `submitted_via_token` sea true, para diferenciarlos de los registrados manualmente.
+
+### 5. Hook: `useDefenseTokens` 
+- `useGenerateDefenseToken(processId)` -- crea el token
+- Logica de validacion y envio en la pagina publica (sin auth, consulta directa a Supabase con RLS publica)
+
+### 6. Ruta en App.tsx
+Agregar `<Route path="/descargos" element={<DescargosPublico />} />` como ruta publica (al mismo nivel que `/capacitacion`).
+
+## Detalles Tecnicos
+
+- El token expira en 72 horas por defecto
+- RLS: SELECT publico filtrado por token; INSERT en defenses permitido via una funcion de base de datos segura (security definer) que valide el token antes de insertar
+- Se creara una funcion `submit_defense_via_token` que recibe el token y el contenido, valida, inserta el descargo, marca el token como usado, y crea la entrada en timeline
+- La pagina publica sigue el mismo patron visual de `AccesoPublico.tsx` (branding corporativo)
 
 ## Archivos a crear/modificar
 
-### 1. Nuevo componente: `src/components/evaluations/ApplyEvaluationDialog.tsx`
-- Dialog de pantalla completa o muy amplio (`max-w-4xl`)
-- Recibe: `evaluation` (PerformanceEvaluation), template criteria, rating scale, qualitative questions
-- Usa `react-hook-form` con campos dinamicos para scores por criterio
-- Cada criterio muestra 4 botones/radio para seleccionar nivel, con tooltip o texto describiendo cada nivel
-- Calcula puntaje ponderado en tiempo real
-- Al guardar llama a `updateEvaluation` con los scores
+| Archivo | Accion |
+|---|---|
+| Migracion SQL | Crear tabla + columna + funcion RPC + RLS |
+| `src/pages/DescargosPublico.tsx` | Crear (pagina publica) |
+| `src/components/disciplinary/GenerateDefenseTokenDialog.tsx` | Crear |
+| `src/hooks/useDisciplinaryProcesses.ts` | Agregar hook para generar token |
+| `src/components/disciplinary/DisciplinaryDetailDialog.tsx` | Agregar boton + badge |
+| `src/types/disciplinary.ts` | Agregar tipo DisciplinaryDefenseToken + campo submitted_via_token |
+| `src/App.tsx` | Agregar ruta `/descargos` |
 
-### 2. Nuevo componente: `src/components/evaluations/CriteriaScoreCard.tsx`
-- Componente individual para calificar un criterio
-- Muestra nombre, categoria, peso
-- 4 opciones de nivel con descripciones de rubrica (colapsables)
-- Campo de comentarios
-
-### 3. Modificar: `src/pages/Evaluaciones.tsx`
-- Agregar boton "Evaluar" en el dropdown de acciones de cada evaluacion
-- Agregar estado para controlar el dialog de aplicacion
-- Pasar la plantilla del ciclo al nuevo dialog
-
-### 4. Modificar: `src/hooks/useEvaluations.ts`
-- Agregar query para cargar scores existentes de una evaluacion (`evaluation_scores` con join a `evaluation_criteria`)
-- Asegurar que `updateEvaluation` persista scores correctamente (ya tiene logica parcial)
-
-### 5. Modificar: `src/components/evaluations/index.ts`
-- Exportar los nuevos componentes
-
-## Detalles tecnicos
-
-### Calculo del puntaje
-```text
-Por cada criterio:
-  score_normalizado = (nivel_seleccionado / max_score) * peso
-
-Puntaje total = (suma de score_normalizado / suma de pesos) * 100
-
-Se mapea a la escala de calificacion de la plantilla:
-  91-100 -> Sobresaliente
-  75-90  -> Bueno
-  60-74  -> Aceptable
-  0-59   -> Deficiente
-```
-
-### Estructura del formulario
-```text
-+--------------------------------------------------+
-| Evaluar: Juan Perez | Ciclo: 2026-Q1             |
-+--------------------------------------------------+
-| COMPETENCIAS ORGANIZACIONALES                     |
-| +----------------------------------------------+ |
-| | Trabajo en Equipo          Peso: 2            | |
-| |  (1) No Desarrollada  [descripcion...]        | |
-| |  (2) En Desarrollo    [descripcion...]        | |
-| |  (3) Bueno            [descripcion...]  <--   | |
-| |  (4) Ampliamente      [descripcion...]        | |
-| | Comentarios: [________________]               | |
-| +----------------------------------------------+ |
-|                                                  |
-| PREGUNTAS CUALITATIVAS                           |
-| Que aportes ha hecho...? [textarea]              |
-|                                                  |
-| RESUMEN                                          |
-| Puntaje: 78/100 - Bueno                         |
-| Fortalezas: [textarea]                           |
-| Areas de mejora: [textarea]                      |
-| Plan de desarrollo: [textarea]                   |
-|                                                  |
-|                    [Cancelar] [Guardar Progreso]  |
-|                               [Finalizar]         |
-+--------------------------------------------------+
-```
-
-### Persistencia
-- "Guardar Progreso" guarda scores y mantiene status `in_progress`
-- "Finalizar" valida que todos los criterios esten calificados, calcula puntaje final, cambia status a `submitted`
