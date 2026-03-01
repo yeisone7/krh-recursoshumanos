@@ -32,6 +32,7 @@ import EvidenciasCapacitaciones from "./pages/capacitaciones/Evidencias";
 import AnaliticasCapacitaciones from "./pages/capacitaciones/Analiticas";
 import CumplimientoCapacitaciones from "./pages/capacitaciones/Cumplimiento";
 import AccesoPublico from "./pages/capacitaciones/AccesoPublico";
+import DescargosPublico from "./pages/DescargosPublico";
 import Evaluaciones from "./pages/Evaluaciones";
 import AnaliticasEvaluaciones from "./pages/evaluaciones/AnaliticasEvaluaciones";
 import Organigrama from "./pages/Organigrama";
@@ -76,6 +77,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/capacitacion" element={<AccesoPublico />} />
+            <Route path="/descargos" element={<DescargosPublico />} />
             <Route path="/portal" element={
               <ProtectedRoute>
                 <Portal />
