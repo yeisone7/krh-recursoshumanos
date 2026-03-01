@@ -1171,6 +1171,67 @@ export type Database = {
           },
         ]
       }
+      disciplinary_defense_tokens: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          expires_at: string
+          id: string
+          is_used: boolean
+          process_id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          expires_at: string
+          id?: string
+          is_used?: boolean
+          process_id: string
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          expires_at?: string
+          id?: string
+          is_used?: boolean
+          process_id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disciplinary_defense_tokens_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disciplinary_defense_tokens_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disciplinary_defense_tokens_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "disciplinary_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disciplinary_defenses: {
         Row: {
           content: string
@@ -1182,6 +1243,7 @@ export type Database = {
           process_id: string
           received_by: string | null
           received_by_id: string | null
+          submitted_via_token: boolean
           updated_at: string
         }
         Insert: {
@@ -1194,6 +1256,7 @@ export type Database = {
           process_id: string
           received_by?: string | null
           received_by_id?: string | null
+          submitted_via_token?: boolean
           updated_at?: string
         }
         Update: {
@@ -1206,6 +1269,7 @@ export type Database = {
           process_id?: string
           received_by?: string | null
           received_by_id?: string | null
+          submitted_via_token?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -6069,6 +6133,10 @@ export type Database = {
       is_company_member: { Args: { _company_id: string }; Returns: boolean }
       is_psicologo: { Args: never; Returns: boolean }
       is_user_active: { Args: { _user_id: string }; Returns: boolean }
+      submit_defense_via_token: {
+        Args: { p_content: string; p_defense_type?: string; p_token: string }
+        Returns: Json
+      }
       verify_employee_cedula: {
         Args: { p_cedula: string; p_company_id: string }
         Returns: {

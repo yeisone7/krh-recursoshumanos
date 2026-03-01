@@ -8,6 +8,7 @@ import {
   FileText,
   Gavel,
   History,
+  Link,
   Plus,
   Scale,
   User,
@@ -40,6 +41,7 @@ import { EvidenceFormDialog } from './EvidenceFormDialog';
 import { DefenseFormDialog } from './DefenseFormDialog';
 import { DecisionFormDialog } from './DecisionFormDialog';
 import { AppealFormDialog } from './AppealFormDialog';
+import { GenerateDefenseTokenDialog } from './GenerateDefenseTokenDialog';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { generateDisciplinaryPdf } from '@/lib/disciplinaryPdfGenerator';
 import { useCompanies } from '@/hooks/useCompanies';
@@ -64,6 +66,7 @@ export function DisciplinaryDetailDialog({
   const [showDefenseForm, setShowDefenseForm] = useState(false);
   const [showDecisionForm, setShowDecisionForm] = useState(false);
   const [showAppealForm, setShowAppealForm] = useState(false);
+  const [showTokenDialog, setShowTokenDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   if (!process || isLoading) {
@@ -321,10 +324,16 @@ export function DisciplinaryDetailDialog({
               <TabsContent value="defenses" className="space-y-4 mt-4">
                 <div className="flex justify-between items-center">
                   <h3 className="font-medium">Descargos del Empleado</h3>
-                  <Button size="sm" onClick={() => setShowDefenseForm(true)}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    Registrar Descargos
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setShowTokenDialog(true)}>
+                      <Link className="h-4 w-4 mr-1" />
+                      Enviar Enlace
+                    </Button>
+                    <Button size="sm" onClick={() => setShowDefenseForm(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Registrar Descargos
+                    </Button>
+                  </div>
                 </div>
 
                 {process.defenses && process.defenses.length > 0 ? (
@@ -333,7 +342,12 @@ export function DisciplinaryDetailDialog({
                       <Card key={def.id}>
                         <CardContent className="py-4">
                           <div className="flex justify-between items-start mb-2">
-                            <Badge variant="outline">{def.defense_type === 'escrito' ? 'Escrito' : 'Oral'}</Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">{def.defense_type === 'escrito' ? 'Escrito' : 'Oral'}</Badge>
+                              {(def as any).submitted_via_token && (
+                                <Badge variant="secondary" className="text-xs">Vía Enlace</Badge>
+                              )}
+                            </div>
                             <span className="text-sm text-muted-foreground">
                               {formatDate(def.defense_date)}
                             </span>
@@ -528,6 +542,13 @@ export function DisciplinaryDetailDialog({
         open={showAppealForm}
         onOpenChange={setShowAppealForm}
         processId={process.id}
+      />
+
+      <GenerateDefenseTokenDialog
+        open={showTokenDialog}
+        onOpenChange={setShowTokenDialog}
+        processId={process.id}
+        employeeId={process.employee_id}
       />
     </>
   );
