@@ -168,53 +168,67 @@ export async function generateEvaluationPdf(data: EvaluationPdfData) {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(27, 38, 59);
     doc.text(category.toUpperCase(), margin, y);
-    y += 2;
-
-    // Table header
-    doc.setFillColor(240, 240, 240);
-    doc.rect(margin, y, contentWidth, 7, 'F');
-    doc.setFontSize(7.5);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(80, 80, 80);
-    doc.text('Criterio', margin + 2, y + 5);
-    doc.text('Peso', margin + 90, y + 5);
-    doc.text('Nivel', margin + 108, y + 5);
-    doc.text('Calificación', margin + 125, y + 5);
-    doc.text('Comentarios', margin + 148, y + 5);
-    y += 8;
-
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
+    y += 6;
 
     for (const c of items) {
-      if (y > 255) {
+      if (y > 245) {
         doc.addPage();
         y = 20;
       }
 
       const score = scores.find((s) => s.criteria_id === c.id);
-      const level = score?.score ?? '-';
+      const level = score?.score ?? 0;
+      const maxScore = c.max_score || 4;
+      const pct = typeof level === 'number' ? (level / maxScore) * 100 : 0;
       const levelLabel = typeof level === 'number' ? LEVEL_LABELS[level] || `${level}` : '-';
-      const comment = score?.comments || '';
 
+      // Criteria name + score text
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(50, 50, 50);
+      doc.text(c.name, margin, y);
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.5);
-      doc.text(c.name.substring(0, 45), margin + 2, y + 4);
-      doc.text(`${c.weight || 1}`, margin + 92, y + 4);
-      doc.text(`${level}/${c.max_score || 4}`, margin + 108, y + 4);
-      doc.text(levelLabel.substring(0, 18), margin + 125, y + 4);
+      doc.text(`${level}/${maxScore} — ${levelLabel}`, pageWidth - margin, y, { align: 'right' });
+      y += 3;
 
-      // Wrap comments
-      const commentLines = doc.splitTextToSize(comment, 30);
-      doc.setFontSize(6.5);
-      doc.text(commentLines.slice(0, 2), margin + 148, y + 4);
+      // Progress bar background
+      const barHeight = 4;
+      const barWidth = contentWidth;
+      doc.setFillColor(230, 230, 230);
+      doc.roundedRect(margin, y, barWidth, barHeight, 1.5, 1.5, 'F');
 
-      const rowHeight = Math.max(7, commentLines.length * 3.5);
-      doc.setDrawColor(220, 220, 220);
-      doc.line(margin, y + rowHeight, margin + contentWidth, y + rowHeight);
-      y += rowHeight + 1;
+      // Progress bar fill – color based on percentage
+      const fillWidth = (pct / 100) * barWidth;
+      if (fillWidth > 0) {
+        if (pct >= 75) {
+          doc.setFillColor(34, 139, 34); // green
+        } else if (pct >= 50) {
+          doc.setFillColor(30, 100, 180); // blue
+        } else if (pct >= 25) {
+          doc.setFillColor(230, 160, 0); // amber
+        } else {
+          doc.setFillColor(200, 50, 50); // red
+        }
+        doc.roundedRect(margin, y, Math.max(fillWidth, 3), barHeight, 1.5, 1.5, 'F');
+      }
+
+      y += barHeight + 1.5;
+
+      // Comment if any
+      const comment = score?.comments || '';
+      if (comment) {
+        doc.setFontSize(6.5);
+        doc.setTextColor(120, 120, 120);
+        const commentLines = doc.splitTextToSize(comment, contentWidth - 4);
+        doc.text(commentLines.slice(0, 2), margin + 2, y + 2.5);
+        y += commentLines.slice(0, 2).length * 3 + 2;
+      }
+
+      y += 4;
     }
 
-    y += 4;
+    y += 2;
   }
 
   // ─── Qualitative questions ─────────────────────────────
