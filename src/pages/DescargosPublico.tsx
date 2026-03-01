@@ -11,6 +11,7 @@ import {
   AlertTriangle, Calendar, CheckCircle2, FileText,
   Loader2, Scale, Send, ShieldAlert
 } from 'lucide-react';
+import { SignatureCanvas } from '@/components/training/SignatureCanvas';
 import petrocasinosIcon from '@/assets/petrocasinos-orange-icon.png';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -43,6 +44,7 @@ export default function DescargosPublico() {
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const [processInfo, setProcessInfo] = useState<ProcessInfo | null>(null);
   const [defenseContent, setDefenseContent] = useState('');
+  const [signatureData, setSignatureData] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -308,9 +310,21 @@ export default function DescargosPublico() {
               </p>
             </div>
 
+            <Separator />
+
+            <div className="space-y-2">
+              <Label>Firma del empleado *</Label>
+              <SignatureCanvas onSave={(data) => setSignatureData(data)} />
+              {signatureData && (
+                <p className="text-xs text-primary flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> Firma registrada
+                </p>
+              )}
+            </div>
+
             <Button
               onClick={handleSubmit}
-              disabled={submitting || defenseContent.trim().length < 10}
+              disabled={submitting || defenseContent.trim().length < 10 || !signatureData}
               className="w-full"
               size="lg"
             >
