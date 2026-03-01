@@ -124,14 +124,14 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Centro de Operación</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={(v) => field.onChange(v === '__general__' ? '' : v)} value={field.value || '__general__'}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="General (todos los centros)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">General</SelectItem>
+                      <SelectItem value="__general__">General</SelectItem>
                       {centers.map((c) => (
                         <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                       ))}
@@ -187,14 +187,14 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Talla</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={(v) => field.onChange(v === '__none__' ? '' : v)} value={field.value || '__none__'}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sin talla" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Sin talla</SelectItem>
+                      <SelectItem value="__none__">Sin talla</SelectItem>
                       {(isFootwear ? shoeSizeOptions : sizeOptions).map((s) => (
                         <SelectItem key={s} value={s}>{s}</SelectItem>
                       ))}
