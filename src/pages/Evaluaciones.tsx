@@ -580,7 +580,7 @@ export default function Evaluaciones() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="relative overflow-hidden border hover:shadow-md transition-shadow bg-card">
+                      <Card className="relative overflow-hidden border shadow-card hover:shadow-card-hover transition-shadow bg-card">
                         {/* Decorative top bar */}
                         <div className="h-1.5 w-full bg-gradient-to-r from-[#3b3a59] to-[#5a587a]" />
 
