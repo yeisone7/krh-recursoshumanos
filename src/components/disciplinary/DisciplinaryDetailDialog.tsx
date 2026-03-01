@@ -73,6 +73,7 @@ export function DisciplinaryDetailDialog({
     return null;
   }
 
+  const isClosed = process.status === 'cerrado';
   const nextStatus = canAdvanceStatus(process.status);
   const nextAction = getNextStatusAction(process.status);
 
@@ -255,18 +256,21 @@ export function DisciplinaryDetailDialog({
                       entityId={process.id}
                       entityType="disciplinary_opening"
                       title="Documento de Apertura"
+                      allowUpload={!isClosed}
                       compact
                     />
                     <DocumentSection
                       entityId={process.id}
                       entityType="disciplinary_notification"
                       title="Notificación al Empleado"
+                      allowUpload={!isClosed}
                       compact
                     />
                     <DocumentSection
                       entityId={process.id}
                       entityType="disciplinary_hearing"
                       title="Acta de Audiencia"
+                      allowUpload={!isClosed}
                       compact
                     />
                   </CardContent>
@@ -277,10 +281,12 @@ export function DisciplinaryDetailDialog({
               <TabsContent value="evidence" className="space-y-4 mt-4">
                 <div className="flex justify-between items-center">
                   <h3 className="font-medium">Evidencias del Proceso</h3>
-                  <Button size="sm" onClick={() => setShowEvidenceForm(true)}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    Agregar Evidencia
-                  </Button>
+                  {!isClosed && (
+                    <Button size="sm" onClick={() => setShowEvidenceForm(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Agregar Evidencia
+                    </Button>
+                  )}
                 </div>
 
                 {process.evidence && process.evidence.length > 0 ? (
@@ -324,16 +330,18 @@ export function DisciplinaryDetailDialog({
               <TabsContent value="defenses" className="space-y-4 mt-4">
                 <div className="flex justify-between items-center">
                   <h3 className="font-medium">Descargos del Empleado</h3>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => setShowTokenDialog(true)}>
-                      <Link className="h-4 w-4 mr-1" />
-                      Enviar Enlace
-                    </Button>
-                    <Button size="sm" onClick={() => setShowDefenseForm(true)}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Registrar Descargos
-                    </Button>
-                  </div>
+                  {!isClosed && (
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setShowTokenDialog(true)}>
+                        <Link className="h-4 w-4 mr-1" />
+                        Enviar Enlace
+                      </Button>
+                      <Button size="sm" onClick={() => setShowDefenseForm(true)}>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Registrar Descargos
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {process.defenses && process.defenses.length > 0 ? (
@@ -450,6 +458,7 @@ export function DisciplinaryDetailDialog({
                         entityId={process.id}
                         entityType="disciplinary_decision"
                         title="Documento de Decisión"
+                        allowUpload={!isClosed}
                         compact
                       />
                     </CardContent>
@@ -459,7 +468,7 @@ export function DisciplinaryDetailDialog({
                     <CardContent className="py-8 text-center text-muted-foreground">
                       <Gavel className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p>Aún no se ha tomado una decisión en este proceso</p>
-                      {process.status === 'analisis' && (
+                      {process.status === 'analisis' && !isClosed && (
                         <Button className="mt-4" onClick={() => setShowDecisionForm(true)}>
                           Registrar Decisión
                         </Button>
