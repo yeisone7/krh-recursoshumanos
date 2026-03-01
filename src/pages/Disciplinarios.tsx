@@ -1,18 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import {
   Plus,
   Search,
   AlertTriangle,
   Scale,
-  Users,
   Clock,
   CheckCircle2,
-  FileDown,
-  Trash2,
-  MoreHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,20 +19,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -48,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -62,11 +42,10 @@ import {
   DisciplinaryFormDialog,
   DisciplinaryDetailDialog,
 } from '@/components/disciplinary';
+import { DisciplinaryTreeView } from '@/components/disciplinary/DisciplinaryTreeView';
 import {
   disciplinaryStatusLabels,
   faultTypeLabels,
-  getStatusColor,
-  getFaultColor,
   DisciplinaryStatus,
   FaultType,
   DisciplinaryProcessWithEmployee,
@@ -255,121 +234,38 @@ export default function Disciplinarios() {
         </Select>
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Caso</TableHead>
-                <TableHead>Empleado</TableHead>
-                <TableHead>Centro de Operación</TableHead>
-                <TableHead>Tipo de Falta</TableHead>
-                <TableHead>Fecha Hechos</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Apertura</TableHead>
-                <TableHead className="w-[60px]">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                [...Array(5)].map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-28" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
-                  </TableRow>
-                ))
-              ) : filteredProcesses && filteredProcesses.length > 0 ? (
-                filteredProcesses.map((process) => (
-                  <TableRow
-                    key={process.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleOpenDetail(process.id)}
-                  >
-                    <TableCell className="font-medium">{process.case_number}</TableCell>
-                    <TableCell>
-                      {process.employee
-                        ? `${process.employee.first_name} ${process.employee.last_name}`
-                        : '-'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {process.operation_center_name || '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getFaultColor(process.fault_type)}>
-                        {faultTypeLabels[process.fault_type]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(process.fault_date), 'dd/MM/yyyy', { locale: es })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(process.status)}>
-                        {disciplinaryStatusLabels[process.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(process.opening_date), 'dd/MM/yyyy', { locale: es })}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={(e) => handleExportPdf(e, process)}
-                            disabled={exportingId === process.id}
-                          >
-                            <FileDown className="h-4 w-4 mr-2" />
-                            {exportingId === process.id ? 'Generando...' : 'Exportar PDF'}
-                          </DropdownMenuItem>
-                          {process.status !== 'cerrado' && (
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteTarget(process);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Eliminar
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <Scale className="h-8 w-8 opacity-50" />
-                      <p>No hay procesos disciplinarios</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowFormDialog(true)}
-                      >
-                        Crear primer proceso
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Tree View */}
+      {isLoading ? (
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : filteredProcesses && filteredProcesses.length > 0 ? (
+        <DisciplinaryTreeView
+          processes={filteredProcesses}
+          onOpenDetail={handleOpenDetail}
+          onExportPdf={handleExportPdf}
+          onDelete={setDeleteTarget}
+          exportingId={exportingId}
+        />
+      ) : (
+        <Card>
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+              <Scale className="h-8 w-8 opacity-50" />
+              <p>No hay procesos disciplinarios</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFormDialog(true)}
+              >
+                Crear primer proceso
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Dialogs */}
       <DisciplinaryFormDialog
