@@ -1,21 +1,11 @@
 
+## Permitir que una plantilla aplique a multiples cargos
 
-## Adaptar Plantillas de Evaluacion de Desempeno segun el Excel
+### Problema actual
+Actualmente cada plantilla tiene un solo `position_id`, lo que obliga a duplicar plantillas identicas cuando varios cargos comparten la misma evaluacion.
 
-### Resumen
-Se adaptara el modulo de Evaluaciones de Desempeno para que las plantillas sigan la estructura del formato Excel adjunto (GH-FO-05-DR), permitiendo asociar cada plantilla a un **Cargo** especifico, y que cada criterio tenga **descripciones por nivel de competencia** (4 niveles con rubricas descriptivas). Tambien se agregaran campos de preguntas cualitativas y tabla de calificacion.
-
-### Estructura del Excel analizado
-El formato define:
-- **Cargo** asociado (ej: "Cocinero 1 / Jefe de Cocina")
-- **Competencias** con 4 niveles de rubrica descriptiva:
-  - 4: Ampliamente Desarrollada
-  - 3: Bueno dentro del Estandar
-  - 2: Competencia en Desarrollo
-  - 1: Competencia No Desarrollada
-- Competencias identificadas: Trabajo en Equipo, Responsabilidad, Iniciativa, Habilidad Analitica, Tolerancia a la Presion, Seguridad Vial, SST, Ambiental, Calidad
-- **Preguntas cualitativas**: Aportes, aspectos a mejorar, compromisos
-- **Tabla de valores**: Sobresaliente (91-100%), Bueno (75-90%), Aceptable (60-74%), Deficiente (0-59%)
+### Solucion
+Crear una tabla intermedia (many-to-many) entre plantillas y cargos, reemplazando la columna `position_id` actual.
 
 ---
 
@@ -23,70 +13,74 @@ El formato define:
 
 #### 1. Migracion de base de datos
 
-**Tabla `evaluation_templates`** - agregar columna:
-- `position_id` (UUID, nullable, FK a `positions`) -- para vincular plantilla a un cargo
+- **Crear tabla `evaluation_template_positions`** con columnas:
+  - `id` UUID (PK)
+  - `template_id` UUID (FK a `evaluation_templates`, ON DELETE CASCADE)
+  - `position_id` UUID (FK a `positions`, ON DELETE CASCADE)
+  - `created_at` TIMESTAMPTZ
+  - Constraint UNIQUE en (template_id, position_id)
+- **Migrar datos existentes**: copiar registros donde `position_id` no sea null a la nueva tabla
+- **Eliminar columna** `position_id` de `evaluation_templates`
+- **RLS**: Politica de lectura/escritura basada en `is_company_member` a traves del template
 
-**Tabla `evaluation_criteria`** - agregar columnas para rubricas descriptivas:
-- `level_4_description` (TEXT) -- Descripcion para calificacion 4
-- `level_3_description` (TEXT) -- Descripcion para calificacion 3
-- `level_2_description` (TEXT) -- Descripcion para calificacion 2
-- `level_1_description` (TEXT) -- Descripcion para calificacion 1
+#### 2. Actualizar tipos (`src/types/evaluation.ts`)
 
-**Tabla `evaluation_templates`** - agregar columnas para preguntas cualitativas y escala:
-- `qualitative_questions` (JSONB) -- Array de preguntas abiertas configurables
-- `rating_scale` (JSONB) -- Escala de calificacion (ej: Sobresaliente 91-100%)
+- Reemplazar `position_id?: string` y `position?: { id; name }` por `positions?: { id: string; name: string }[]` en `EvaluationTemplate`
 
-RLS policies se mantendran las existentes ya que las tablas ya tienen politicas por empresa.
+#### 3. Actualizar hook (`src/hooks/useEvaluations.ts`)
 
-#### 2. Actualizar tipos TypeScript (`src/types/evaluation.ts`)
+- En la query de templates, hacer join con la nueva tabla y luego con `positions`
+- En `createTemplate` y `updateTemplate`: despues de crear/actualizar el template, insertar los registros en `evaluation_template_positions` (borrando los anteriores en update)
+- En `duplicateTemplate`: copiar tambien las asociaciones de cargos
 
-- Agregar `position_id` y relacion `position` a `EvaluationTemplate`
-- Agregar `level_1_description` a `level_4_description` en `EvaluationCriteria`
-- Agregar `qualitative_questions` y `rating_scale` a `EvaluationTemplate`
-- Definir constantes para la escala de calificacion por defecto
+#### 4. Actualizar formulario (`src/components/evaluations/TemplateFormDialog.tsx`)
 
-#### 3. Actualizar `TemplateFormDialog` (`src/components/evaluations/TemplateFormDialog.tsx`)
+- Cambiar el campo `position_id` (selector unico) por un selector multiple de cargos
+- Actualizar el schema de Zod: `position_ids: z.array(z.string()).optional()` en lugar de `position_id`
+- Cuando se edita, precargar los cargos asociados
 
-- Agregar selector de **Cargo** (SearchableSelect con los cargos de la empresa via `usePositions`)
-- Cada criterio ahora tendra 4 campos de texto para las descripciones de cada nivel (expandibles/colapsables)
-- Se fijara `max_score = 4` por defecto (escala 1-4 del formato)
-- Agregar seccion para configurar preguntas cualitativas
-- Agregar seccion para la tabla de valores/escala de calificacion con valores por defecto del Excel
+#### 5. Actualizar tarjetas en `Evaluaciones.tsx`
 
-#### 4. Actualizar hook `useEvaluations` (`src/hooks/useEvaluations.ts`)
-
-- Incluir `position_id` en las queries de templates
-- Hacer join con `positions` para mostrar el nombre del cargo
-- Pasar las nuevas columnas de criterios en create/update
-
-#### 5. Actualizar pagina `Evaluaciones.tsx`
-
-- Mostrar la columna **Cargo** en la tabla de plantillas
-- Mostrar el nombre del cargo asociado a cada plantilla
+- En la tarjeta de plantilla, mostrar multiples badges con los nombres de cargos asociados (o "Todos los cargos" si no tiene ninguno)
+- En duplicar, copiar el array de `position_ids`
 
 ---
 
 ### Detalle tecnico de la migracion SQL
 
 ```text
-ALTER TABLE evaluation_templates
-  ADD COLUMN position_id UUID REFERENCES positions(id) ON DELETE SET NULL;
+-- Tabla intermedia
+CREATE TABLE evaluation_template_positions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id UUID NOT NULL REFERENCES evaluation_templates(id) ON DELETE CASCADE,
+  position_id UUID NOT NULL REFERENCES positions(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(template_id, position_id)
+);
 
-ALTER TABLE evaluation_criteria
-  ADD COLUMN level_4_description TEXT,
-  ADD COLUMN level_3_description TEXT,
-  ADD COLUMN level_2_description TEXT,
-  ADD COLUMN level_1_description TEXT;
+-- Migrar datos existentes
+INSERT INTO evaluation_template_positions (template_id, position_id)
+SELECT id, position_id FROM evaluation_templates WHERE position_id IS NOT NULL;
 
-ALTER TABLE evaluation_templates
-  ADD COLUMN qualitative_questions JSONB DEFAULT '["¿Qué aportes ha hecho usted a la empresa, área o campo donde se desempeña?", "¿En qué aspectos opina usted que debe mejorar?", "Teniendo en cuenta los aspectos en donde la calificación no es muy buena, ¿Qué compromisos va a adquirir para mejorar?"]'::jsonb,
-  ADD COLUMN rating_scale JSONB DEFAULT '[{"label":"Sobresaliente","min":91,"max":100,"description":"Mantener el compromiso hasta ahora alcanzado"},{"label":"Bueno","min":75,"max":90,"description":"Trabajar en mejora continua"},{"label":"Aceptable","min":60,"max":74,"description":"Requiere capacitación continua"},{"label":"Deficiente","min":0,"max":59,"description":"Requiere cumplimiento inmediato"}]'::jsonb;
+-- Eliminar columna vieja
+ALTER TABLE evaluation_templates DROP COLUMN position_id;
+
+-- RLS
+ALTER TABLE evaluation_template_positions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage template positions for their company"
+ON evaluation_template_positions FOR ALL USING (
+  EXISTS (
+    SELECT 1 FROM evaluation_templates et
+    WHERE et.id = template_id
+    AND et.company_id IN (SELECT get_user_company_ids())
+  )
+);
 ```
 
 ### Archivos a modificar
-1. **Nueva migracion SQL** (via herramienta de migracion)
-2. `src/types/evaluation.ts` -- nuevos campos
-3. `src/components/evaluations/TemplateFormDialog.tsx` -- formulario rediseñado con cargo, rubricas, preguntas y escala
-4. `src/hooks/useEvaluations.ts` -- queries actualizadas
-5. `src/pages/Evaluaciones.tsx` -- columna de cargo en tabla de plantillas
-
+1. **Nueva migracion SQL** (tabla intermedia + migrar datos + drop columna)
+2. `src/types/evaluation.ts` -- positions como array
+3. `src/hooks/useEvaluations.ts` -- queries y mutaciones actualizadas
+4. `src/components/evaluations/TemplateFormDialog.tsx` -- selector multiple de cargos
+5. `src/pages/Evaluaciones.tsx` -- mostrar multiples cargos en tarjetas y duplicacion
