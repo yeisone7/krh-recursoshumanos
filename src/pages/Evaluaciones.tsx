@@ -1174,6 +1174,27 @@ export default function Evaluaciones() {
         open={!!previewTemplate}
         onOpenChange={(open) => { if (!open) setPreviewTemplate(null); }}
         template={previewTemplate}
+        onDuplicate={(tpl) => {
+          createTemplate.mutate({
+            name: `${tpl.name} (copia)`,
+            description: tpl.description,
+            is_active: tpl.is_active,
+            position_ids: tpl.positions?.map(p => p.id) || [],
+            qualitative_questions: tpl.qualitative_questions,
+            rating_scale: tpl.rating_scale,
+            criteria: tpl.criteria?.map(c => ({
+              name: c.name,
+              description: c.description,
+              category: c.category,
+              weight: c.weight,
+              max_score: c.max_score,
+              level_4_description: c.level_4_description,
+              level_3_description: c.level_3_description,
+              level_2_description: c.level_2_description,
+              level_1_description: c.level_1_description,
+            })) as any || [],
+          });
+        }}
       />
     </div>
   );
