@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -21,7 +21,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Search, X, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { CriteriaRubricItem } from './CriteriaRubricItem';
 import { usePositions } from '@/hooks/useSystemConfig';
 import type { EvaluationTemplate } from '@/types/evaluation';
@@ -182,37 +183,87 @@ export function TemplateFormDialog({
               <FormField
                 control={form.control}
                 name="position_ids"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cargos que aplican</FormLabel>
-                    <FormControl>
-                      <div className="space-y-2">
-                        {positionOptions.map((opt) => {
-                          const checked = field.value?.includes(opt.value);
-                          return (
-                            <label key={opt.value} className="flex items-center gap-2 text-sm cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => {
-                                  const newVal = checked
-                                    ? field.value.filter((v: string) => v !== opt.value)
-                                    : [...(field.value || []), opt.value];
-                                  field.onChange(newVal);
-                                }}
-                                className="rounded border-input"
-                              />
-                              {opt.label}
-                            </label>
-                          );
-                        })}
-                        {positionOptions.length === 0 && (
-                          <p className="text-xs text-muted-foreground">No hay cargos configurados</p>
-                        )}
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const [posSearch, setPosSearch] = useState('');
+                  const filtered = useMemo(() => {
+                    if (!posSearch) return positionOptions;
+                    const s = posSearch.toLowerCase();
+                    return positionOptions.filter(o => o.label.toLowerCase().includes(s));
+                  }, [posSearch, positionOptions]);
+                  const selectedCount = field.value?.length || 0;
+
+                  return (
+                    <FormItem>
+                      <FormLabel>Cargos que aplican ({selectedCount})</FormLabel>
+                      <FormControl>
+                        <div className="space-y-2">
+                          {/* Selected badges */}
+                          {selectedCount > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {field.value.map((id: string) => {
+                                const opt = positionOptions.find(o => o.value === id);
+                                if (!opt) return null;
+                                return (
+                                  <Badge key={id} variant="secondary" className="text-xs gap-1 pr-1">
+                                    {opt.label}
+                                    <button
+                                      type="button"
+                                      onClick={() => field.onChange(field.value.filter((v: string) => v !== id))}
+                                      className="ml-0.5 rounded-full hover:bg-muted-foreground/20 p-0.5"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </Badge>
+                                );
+                              })}
+                            </div>
+                          )}
+                          {/* Search */}
+                          <div className="relative">
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="Buscar cargo..."
+                              value={posSearch}
+                              onChange={(e) => setPosSearch(e.target.value)}
+                              className="pl-8 h-9"
+                            />
+                          </div>
+                          {/* Scrollable list */}
+                          <div className="max-h-40 overflow-y-auto border rounded-md p-1 space-y-0.5">
+                            {filtered.length === 0 ? (
+                              <p className="text-xs text-muted-foreground text-center py-2">Sin resultados</p>
+                            ) : (
+                              filtered.map((opt) => {
+                                const checked = field.value?.includes(opt.value);
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => {
+                                      const newVal = checked
+                                        ? field.value.filter((v: string) => v !== opt.value)
+                                        : [...(field.value || []), opt.value];
+                                      field.onChange(newVal);
+                                    }}
+                                    className={`flex items-center gap-2 w-full text-left text-sm px-2 py-1.5 rounded-sm hover:bg-accent transition-colors ${checked ? 'bg-accent/50' : ''}`}
+                                  >
+                                    <div className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${checked ? 'bg-primary border-primary' : 'border-input'}`}>
+                                      {checked && <Check className="h-3 w-3 text-primary-foreground" />}
+                                    </div>
+                                    <span className="truncate">{opt.label}</span>
+                                  </button>
+                                );
+                              })
+                            )}
+                          </div>
+                          {positionOptions.length === 0 && (
+                            <p className="text-xs text-muted-foreground">No hay cargos configurados</p>
+                          )}
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 
