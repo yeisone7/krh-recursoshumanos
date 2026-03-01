@@ -8,3 +8,4 @@ export { ApplyEvaluationDialog } from './ApplyEvaluationDialog';
 export { CriteriaScoreCard } from './CriteriaScoreCard';
 export { BulkGeneratePreviewDialog } from './BulkGeneratePreviewDialog';
 export { EvaluationKanbanBoard } from './EvaluationKanbanBoard';
+export { EvaluationTreeView } from './EvaluationTreeView';
