@@ -4,6 +4,7 @@ import { es } from 'date-fns/locale';
 import {
   AlertTriangle,
   Calendar,
+  Download,
   FileText,
   Gavel,
   History,
@@ -40,6 +41,9 @@ import { DefenseFormDialog } from './DefenseFormDialog';
 import { DecisionFormDialog } from './DecisionFormDialog';
 import { AppealFormDialog } from './AppealFormDialog';
 import { DocumentSection } from '@/components/documents/DocumentSection';
+import { generateDisciplinaryPdf } from '@/lib/disciplinaryPdfGenerator';
+import { useCompanies } from '@/hooks/useCompanies';
+import { toast } from '@/hooks/use-toast';
 
 interface DisciplinaryDetailDialogProps {
   processId: string | null;
@@ -54,11 +58,13 @@ export function DisciplinaryDetailDialog({
 }: DisciplinaryDetailDialogProps) {
   const { data: process, isLoading } = useDisciplinaryProcess(processId);
   const advanceStatus = useAdvanceStatus();
+  const { data: companies } = useCompanies();
   
   const [showEvidenceForm, setShowEvidenceForm] = useState(false);
   const [showDefenseForm, setShowDefenseForm] = useState(false);
   const [showDecisionForm, setShowDecisionForm] = useState(false);
   const [showAppealForm, setShowAppealForm] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   if (!process || isLoading) {
     return null;
@@ -78,6 +84,20 @@ export function DisciplinaryDetailDialog({
         currentStatus: process.status,
         newStatus: nextStatus,
       });
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (!process) return;
+    setIsExporting(true);
+    try {
+      const companyName = companies?.[0]?.name;
+      await generateDisciplinaryPdf({ process, companyName });
+      toast({ title: 'PDF generado', description: 'El informe ha sido descargado exitosamente.' });
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudo generar el PDF.', variant: 'destructive' });
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -101,6 +121,15 @@ export function DisciplinaryDetailDialog({
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportPdf}
+                  disabled={isExporting}
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  {isExporting ? 'Generando...' : 'Exportar PDF'}
+                </Button>
                 <Badge className={getFaultColor(process.fault_type)}>
                   {faultTypeLabels[process.fault_type]}
                 </Badge>
