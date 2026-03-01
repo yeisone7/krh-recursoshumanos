@@ -588,6 +588,9 @@ export default function Evaluaciones() {
                     setItemToDelete({ type: 'evaluation', id: ev.id });
                     setDeleteDialogOpen(true);
                   }}
+                  onStatusChange={(evalId, newStatus) => {
+                    updateEvaluation.mutate({ id: evalId, status: newStatus });
+                  }}
                   showCycleFilter={false}
                 />
               ) : loadingEvaluations ? (
