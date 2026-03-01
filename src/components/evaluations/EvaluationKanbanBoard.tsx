@@ -82,6 +82,7 @@ interface Props {
   onDownloadPdf: (evaluation: PerformanceEvaluation) => void;
   onEdit: (evaluation: PerformanceEvaluation) => void;
   onDelete: (evaluation: PerformanceEvaluation) => void;
+  showCycleFilter?: boolean;
 }
 
 export function EvaluationKanbanBoard({
@@ -92,12 +93,13 @@ export function EvaluationKanbanBoard({
   onDownloadPdf,
   onEdit,
   onDelete,
+  showCycleFilter = true,
 }: Props) {
   const [cycleFilter, setCycleFilter] = useState<string>('all');
 
   const filtered = useMemo(
-    () => (cycleFilter === 'all' ? evaluations : evaluations.filter(e => e.cycle_id === cycleFilter)),
-    [evaluations, cycleFilter],
+    () => showCycleFilter ? (cycleFilter === 'all' ? evaluations : evaluations.filter(e => e.cycle_id === cycleFilter)) : evaluations,
+    [evaluations, cycleFilter, showCycleFilter],
   );
 
   const grouped = useMemo(() => {
@@ -121,20 +123,22 @@ export function EvaluationKanbanBoard({
   return (
     <div className="space-y-4">
       {/* Filter */}
-      <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground" />
-        <Select value={cycleFilter} onValueChange={setCycleFilter}>
-          <SelectTrigger className="w-[240px]">
-            <SelectValue placeholder="Filtrar por ciclo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los ciclos</SelectItem>
-            {cycles.map(c => (
-              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {showCycleFilter && (
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={cycleFilter} onValueChange={setCycleFilter}>
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="Filtrar por ciclo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los ciclos</SelectItem>
+              {cycles.map(c => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Kanban Board */}
       <div className="grid grid-cols-5 gap-3 min-h-[500px]">

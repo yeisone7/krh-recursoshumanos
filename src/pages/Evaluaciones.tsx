@@ -23,6 +23,7 @@ import {
   BarChart3,
   FileSpreadsheet,
   Columns3,
+  List,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -103,6 +104,7 @@ const statusColors: Record<string, string> = {
 
 export default function Evaluaciones() {
   const [activeTab, setActiveTab] = useState('cycles');
+  const [evalViewMode, setEvalViewMode] = useState<'table' | 'kanban'>('table');
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [cycleDialogOpen, setCycleDialogOpen] = useState(false);
   const [evaluationDialogOpen, setEvaluationDialogOpen] = useState(false);
@@ -401,10 +403,6 @@ export default function Evaluaciones() {
               <BarChart3 className="h-4 w-4" />
               Comparativo
             </TabsTrigger>
-            <TabsTrigger value="kanban" className="gap-2">
-              <Columns3 className="h-4 w-4" />
-              Kanban
-            </TabsTrigger>
           </TabsList>
 
           <Button
@@ -535,21 +533,64 @@ export default function Evaluaciones() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Evaluaciones de Desempeño</CardTitle>
-              <Select value={evaluationCycleFilter} onValueChange={setEvaluationCycleFilter}>
-                <SelectTrigger className="w-[220px]">
-                  <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                  <SelectValue placeholder="Filtrar por ciclo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los ciclos</SelectItem>
-                  {cycles.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-3">
+                <Select value={evaluationCycleFilter} onValueChange={setEvaluationCycleFilter}>
+                  <SelectTrigger className="w-[220px]">
+                    <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                    <SelectValue placeholder="Filtrar por ciclo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los ciclos</SelectItem>
+                    {cycles.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {/* View mode toggle */}
+                <div className="flex items-center border rounded-md">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 rounded-r-none ${evalViewMode === 'kanban' ? 'bg-muted' : ''}`}
+                    onClick={() => setEvalViewMode('kanban')}
+                    title="Vista Kanban"
+                  >
+                    <Columns3 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 rounded-l-none ${evalViewMode === 'table' ? 'bg-muted' : ''}`}
+                    onClick={() => setEvalViewMode('table')}
+                    title="Vista Lista"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              {loadingEvaluations ? (
+              {evalViewMode === 'kanban' ? (
+                <EvaluationKanbanBoard
+                  evaluations={filteredEvaluations}
+                  cycles={cycles}
+                  loading={loadingEvaluations}
+                  onApply={(ev) => {
+                    setEvaluationToApply(ev);
+                    setApplyDialogOpen(true);
+                  }}
+                  onDownloadPdf={handleDownloadPdf}
+                  onEdit={(ev) => {
+                    setSelectedEvaluation(ev);
+                    setEvaluationDialogOpen(true);
+                  }}
+                  onDelete={(ev) => {
+                    setItemToDelete({ type: 'evaluation', id: ev.id });
+                    setDeleteDialogOpen(true);
+                  }}
+                  showCycleFilter={false}
+                />
+              ) : loadingEvaluations ? (
                 <p className="text-muted-foreground">Cargando...</p>
               ) : filteredEvaluations.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">
@@ -942,27 +983,6 @@ export default function Evaluaciones() {
           </Card>
         </TabsContent>
 
-        {/* Kanban Tab */}
-        <TabsContent value="kanban">
-          <EvaluationKanbanBoard
-            evaluations={evaluations}
-            cycles={cycles}
-            loading={loadingEvaluations}
-            onApply={(ev) => {
-              setEvaluationToApply(ev);
-              setApplyDialogOpen(true);
-            }}
-            onDownloadPdf={handleDownloadPdf}
-            onEdit={(ev) => {
-              setSelectedEvaluation(ev);
-              setEvaluationDialogOpen(true);
-            }}
-            onDelete={(ev) => {
-              setItemToDelete({ type: 'evaluation', id: ev.id });
-              setDeleteDialogOpen(true);
-            }}
-          />
-        </TabsContent>
       </Tabs>
 
       {/* Dialogs */}
