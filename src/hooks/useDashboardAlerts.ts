@@ -356,6 +356,87 @@ export function useDashboardAlerts() {
         }
       }
 
+      // 8. Fetch dotation profesiograma compliance alerts (missing required items)
+      try {
+        const { data: profs } = await supabase
+          .from('dotation_profesiograma' as any)
+          .select('id, operation_center_id, position_id')
+          .eq('company_id', currentCompanyId!);
+
+        if (profs && profs.length > 0) {
+          const profIds = (profs as any[]).map((p: any) => p.id);
+          const { data: profItems } = await supabase
+            .from('dotation_profesiograma_items' as any)
+            .select('profesiograma_id, dotation_item_type_id, quantity, is_required, dotation_item_types(name)')
+            .in('profesiograma_id', profIds)
+            .eq('is_required', true);
+
+          if (profItems && (profItems as any[]).length > 0) {
+            // Build map: centerId|positionId -> required item types
+            const profRequiredMap = new Map<string, { typeId: string; name: string; qty: number }[]>();
+            for (const p of profs as any[]) {
+              const key = `${p.operation_center_id}|${p.position_id}`;
+              const items = ((profItems as any[]) || [])
+                .filter((i: any) => i.profesiograma_id === p.id)
+                .map((i: any) => ({ typeId: i.dotation_item_type_id, name: (i.dotation_item_types as any)?.name || 'Artículo', qty: i.quantity }));
+              if (items.length > 0) profRequiredMap.set(key, items);
+            }
+
+            // Get employees with work info
+            const { data: empWorkInfo } = await supabase
+              .from('employee_work_info')
+              .select('employee_id, operation_center_id, position_id, employees_v2!inner(first_name, last_name, company_id, is_active)')
+              .eq('is_current', true)
+              .eq('employees_v2.company_id', currentCompanyId!)
+              .eq('employees_v2.is_active', true);
+
+            if (empWorkInfo) {
+              const relevantEmps = (empWorkInfo as any[]).filter(e =>
+                e.operation_center_id && e.position_id &&
+                profRequiredMap.has(`${e.operation_center_id}|${e.position_id}`)
+              );
+
+              if (relevantEmps.length > 0) {
+                const relEmpIds = relevantEmps.map(e => e.employee_id);
+                const { data: empDeliveries } = await supabase
+                  .from('dotation_deliveries')
+                  .select('employee_id, dotation_item_type_id')
+                  .in('employee_id', relEmpIds);
+
+                const delMap = new Map<string, number>();
+                for (const d of (empDeliveries || []) as any[]) {
+                  if (!d.dotation_item_type_id) continue;
+                  const k = `${d.employee_id}|${d.dotation_item_type_id}`;
+                  delMap.set(k, (delMap.get(k) || 0) + 1);
+                }
+
+                for (const emp of relevantEmps) {
+                  const key = `${emp.operation_center_id}|${emp.position_id}`;
+                  const required = profRequiredMap.get(key) || [];
+                  const missing = required.filter(r => (delMap.get(`${emp.employee_id}|${r.typeId}`) || 0) < r.qty);
+
+                  if (missing.length > 0) {
+                    const empName = `${emp.employees_v2.first_name} ${emp.employees_v2.last_name}`;
+                    alerts.push({
+                      id: `prof-missing-${emp.employee_id}`,
+                      type: 'dotation',
+                      level: missing.length >= 3 ? 'critical' : missing.length >= 2 ? 'warning' : 'info',
+                      title: 'Dotación obligatoria faltante',
+                      description: `Faltan ${missing.length} artículo(s): ${missing.slice(0, 2).map(m => m.name).join(', ')}${missing.length > 2 ? '...' : ''}`,
+                      daysRemaining: -missing.length,
+                      entityName: empName,
+                      entityId: emp.employee_id,
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error fetching profesiograma compliance alerts:', e);
+      }
+
       // Sort by days remaining (most urgent first, expired items at top)
       alerts.sort((a, b) => a.daysRemaining - b.daysRemaining);
 
