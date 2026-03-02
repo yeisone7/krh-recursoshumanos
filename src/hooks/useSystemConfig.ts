@@ -303,6 +303,7 @@ export function useCreateDotationItemType() {
       requires_size?: boolean;
       sizes_available?: string[];
       description?: string;
+      image_url?: string | null;
     }) => {
       const { data, error } = await supabase
         .from('dotation_item_types')
@@ -336,6 +337,7 @@ export function useUpdateDotationItemType() {
       sizes_available: string[];
       description: string;
       is_active: boolean;
+      image_url: string | null;
     }>) => {
       const { data, error } = await supabase
         .from('dotation_item_types')

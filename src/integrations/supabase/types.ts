@@ -1763,6 +1763,7 @@ export type Database = {
           default_validity_months: number | null
           description: string | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           name: string
           requires_size: boolean | null
@@ -1778,6 +1779,7 @@ export type Database = {
           default_validity_months?: number | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name: string
           requires_size?: boolean | null
@@ -1793,6 +1795,7 @@ export type Database = {
           default_validity_months?: number | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name?: string
           requires_size?: boolean | null
