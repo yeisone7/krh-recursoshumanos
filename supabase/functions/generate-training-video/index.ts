@@ -86,6 +86,30 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
   }
 }
 
+async function getRequestUserId(req: Request): Promise<string> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    throw { status: 401, message: "Sesión inválida. Inicia sesión para generar storyboard." };
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+  const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const { data, error } = await authClient.auth.getClaims(token);
+  const userId = (data?.claims as { sub?: string } | undefined)?.sub;
+
+  if (error || !userId) {
+    throw { status: 401, message: "No se pudo validar la sesión del usuario." };
+  }
+
+  return userId;
+}
+
 // --- Text generation (script) ---
 
 async function generateScriptGeminiDirect(apiKey: string, prompt: string): Promise<string> {
@@ -218,6 +242,8 @@ serve(async (req) => {
       );
     }
 
+    const requestUserId = await getRequestUserId(req);
+
     const aiConfig = await getAIConfig(companyId);
     const provider = aiConfig.model || "gateway";
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -299,7 +325,7 @@ Responde en JSON: { "title": "...", "narration": "...", "visual_description": ".
             file_url: finalUrl,
             file_size: 0,
             metadata: { style, scene_index: regenerateScene, visual_description: newScene.visual_description, regenerated: true },
-            created_by: "system",
+            created_by: requestUserId,
           });
         } catch (e) { console.warn("Failed to save regen media:", e); }
       }
@@ -424,7 +450,7 @@ Responde en formato JSON con esta estructura exacta:
             scene_index: i,
             visual_description: script.scenes[i]?.visual_description,
           },
-          created_by: "system",
+          created_by: requestUserId,
         });
       } catch (e) {
         console.warn("Failed to save media record:", e);
