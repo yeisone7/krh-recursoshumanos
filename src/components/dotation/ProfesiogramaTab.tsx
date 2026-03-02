@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ClipboardList, Plus, Pencil, Trash2, Package, Loader2 } from 'lucide-react';
+import { ClipboardList, Plus, Pencil, Trash2, Package, Loader2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
-import { useProfesiogramas, useDeleteProfesiograma, type Profesiograma } from '@/hooks/useDotationProfesiograma';
+import { useProfesiogramas, useDeleteProfesiograma, useCreateProfesiograma, type Profesiograma } from '@/hooks/useDotationProfesiograma';
 import { ProfesiogramaFormDialog } from './ProfesiogramaFormDialog';
+import { CloneProfesiogramaDialog } from './CloneProfesiogramaDialog';
 
 interface Props {
   centers: { id: string; name: string }[];
@@ -26,6 +27,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editData, setEditData] = useState<Profesiograma | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [cloneData, setCloneData] = useState<Profesiograma | null>(null);
 
   const handleEdit = (prof: Profesiograma) => {
     setEditData(prof);
@@ -121,10 +123,13 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(prof)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(prof)} title="Editar">
                         <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(prof.id)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCloneData(prof)} title="Clonar">
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(prof.id)} title="Eliminar">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -142,6 +147,14 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
         centers={centers}
         positions={positions}
         editData={editData}
+      />
+
+      <CloneProfesiogramaDialog
+        open={!!cloneData}
+        onOpenChange={(open) => { if (!open) setCloneData(null); }}
+        sourceData={cloneData}
+        centers={centers}
+        positions={positions}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
