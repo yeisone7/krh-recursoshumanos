@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { 
   Package, Plus, Search, Filter, Eye, 
   AlertTriangle, CheckCircle, Clock, Calendar,
-  Loader2, Warehouse, ClipboardList
+  Loader2, Warehouse, ClipboardList, ShieldCheck
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ import { DotationDetailDialog } from '@/components/dotation/DotationDetailDialog
 import { DotationAlertsCard } from '@/components/dotation/DotationAlertsCard';
 import { DotationInventoryTab } from '@/components/dotation/DotationInventoryTab';
 import { ProfesiogramaTab } from '@/components/dotation/ProfesiogramaTab';
+import { DotationComplianceTab } from '@/components/dotation/DotationComplianceTab';
 import { useDotationDeliveries, getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
 import { useOperationCenters } from '@/hooks/useCompanies';
@@ -238,6 +239,9 @@ export default function Dotacion() {
           </TabsTrigger>
           <TabsTrigger value="profesiograma" className="gap-2">
             <ClipboardList className="w-4 h-4" /> Profesiograma
+          </TabsTrigger>
+          <TabsTrigger value="cumplimiento" className="gap-2">
+            <ShieldCheck className="w-4 h-4" /> Cumplimiento
           </TabsTrigger>
         </TabsList>
 
@@ -482,6 +486,10 @@ export default function Dotacion() {
             centers={operationCenters.map(c => ({ id: c.id, name: c.name }))}
             positions={(positionsData as any[]).map((p: any) => ({ id: p.id, name: p.name }))}
           />
+        </TabsContent>
+
+        <TabsContent value="cumplimiento" className="mt-6">
+          <DotationComplianceTab />
         </TabsContent>
       </Tabs>
 
