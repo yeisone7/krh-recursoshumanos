@@ -51,6 +51,7 @@ export default function CrearCapacitacion() {
   const [videoDuration, setVideoDuration] = useState('medium');
   const [videoStyle, setVideoStyle] = useState('clasico');
   const [videoScript, setVideoScript] = useState<any>(null);
+  const [videoImages, setVideoImages] = useState<string[]>([]);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -801,7 +802,8 @@ export default function CrearCapacitacion() {
                             }
                             const data = await response.json();
                             
-                            setVideoScript(data?.script);
+            setVideoScript(data?.script);
+                            setVideoImages(data?.imageUrls || []);
                             toast.success(`Storyboard generado: ${data?.sceneCount} escenas con estilo ${data?.style}`);
                           } catch (err: any) {
                             toast.error(err?.message || 'Error al generar video');
@@ -818,14 +820,31 @@ export default function CrearCapacitacion() {
                       </Button>
                       {!editId && <p className="text-xs text-destructive">Guarde como borrador primero para habilitar la generación</p>}
                       {videoScript && (
-                        <div className="mt-2 space-y-2 border-t pt-2">
-                          <p className="text-xs font-medium">Guion generado ({videoScript.scenes?.length} escenas)</p>
+                        <div className="mt-3 space-y-3 border-t pt-3">
+                          <p className="text-sm font-semibold">Storyboard generado ({videoScript.scenes?.length} escenas)</p>
                           {videoScript.scenes?.map((scene: any, idx: number) => (
-                            <div key={idx} className="text-xs p-2 rounded bg-muted/50">
-                              <p className="font-medium">{idx + 1}. {scene.title}</p>
-                              <p className="text-muted-foreground mt-0.5">{scene.narration}</p>
+                            <div key={idx} className="rounded-lg border overflow-hidden">
+                              {videoImages[idx] && (
+                                <div className="bg-muted/30 flex items-center justify-center">
+                                  <img
+                                    src={videoImages[idx]}
+                                    alt={`Escena ${idx + 1}: ${scene.title}`}
+                                    className="w-full max-h-64 object-contain"
+                                  />
+                                </div>
+                              )}
+                              <div className="p-3 space-y-1">
+                                <p className="text-sm font-semibold text-foreground">{idx + 1}. {scene.title}</p>
+                                <p className="text-xs text-muted-foreground leading-relaxed">{scene.narration}</p>
+                                {scene.visual_description && (
+                                  <p className="text-xs text-muted-foreground/70 italic">🎨 {scene.visual_description}</p>
+                                )}
+                              </div>
                             </div>
                           ))}
+                          {videoImages.length === 0 && (
+                            <p className="text-xs text-amber-600">⚠️ Las imágenes no pudieron generarse. Revise la configuración de IA o intente de nuevo.</p>
+                          )}
                         </div>
                       )}
                     </CardContent>
