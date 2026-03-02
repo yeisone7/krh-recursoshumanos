@@ -297,13 +297,7 @@ Responde en JSON: { "title": "...", "narration": "...", "visual_description": ".
 
     // ── Full storyboard generation ──
     const sceneCount = duration === "short" ? 3 : duration === "long" ? 6 : 4;
-    const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.clasico;
-    const styleLabel = STYLE_LABELS[style] || "Clásico";
     const keyPoints = (puntosClave || []).slice(0, 6).join(", ");
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Step 1: Generate script using the selected provider
     const scriptPrompt = `Eres un experto en capacitación empresarial. Genera un guion narrado para un video educativo sobre "${title}".
