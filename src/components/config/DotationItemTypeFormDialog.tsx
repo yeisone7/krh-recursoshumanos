@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ImagePlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -34,6 +34,7 @@ import {
 import { useCreateDotationItemType, useUpdateDotationItemType } from '@/hooks/useSystemConfig';
 import { DOTATION_CATEGORIES, STANDARD_SIZES, SHOE_SIZES } from '@/types/config';
 import type { DotationItemType } from '@/types/config';
+import { supabase } from '@/integrations/supabase/client';
 
 const dotationItemTypeSchema = z.object({
   name: z.string().min(2, 'El nombre es requerido'),
@@ -53,6 +54,17 @@ interface DotationItemTypeFormDialogProps {
   itemType?: DotationItemType | null;
 }
 
+async function uploadDotationImage(file: File): Promise<string> {
+  const ext = file.name.split('.').pop();
+  const fileName = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from('dotation-images')
+    .upload(fileName, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from('dotation-images').getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
 export function DotationItemTypeFormDialog({ 
   open, 
   onOpenChange, 
@@ -61,6 +73,12 @@ export function DotationItemTypeFormDialog({
   const isEditing = !!itemType;
   const createItemType = useCreateDotationItemType();
   const updateItemType = useUpdateDotationItemType();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    (itemType as any)?.image_url || null
+  );
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const form = useForm<DotationItemTypeFormData>({
     resolver: zodResolver(dotationItemTypeSchema),
@@ -86,8 +104,35 @@ export function DotationItemTypeFormDialog({
   const category = form.watch('category');
   const requiresSize = form.watch('requires_size');
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no puede superar 5MB');
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const onSubmit = async (data: DotationItemTypeFormData) => {
     try {
+      let image_url = (itemType as any)?.image_url || undefined;
+
+      if (imageFile) {
+        setUploadingImage(true);
+        image_url = await uploadDotationImage(imageFile);
+        setUploadingImage(false);
+      } else if (!imagePreview) {
+        image_url = null;
+      }
+
       const payload = {
         name: data.name,
         code: data.code || undefined,
@@ -96,6 +141,7 @@ export function DotationItemTypeFormDialog({
         requires_size: data.requires_size,
         sizes_available: data.requires_size ? data.sizes_available : undefined,
         description: data.description || undefined,
+        image_url,
       };
 
       if (isEditing) {
@@ -107,18 +153,22 @@ export function DotationItemTypeFormDialog({
       }
       onOpenChange(false);
       form.reset();
+      setImageFile(null);
+      setImagePreview(null);
     } catch (error: any) {
+      setUploadingImage(false);
       toast.error('Error', {
         description: error.message || 'No se pudo guardar el tipo de dotación',
       });
     }
   };
 
-  // Get default sizes based on category
   const getDefaultSizes = () => {
     if (category === 'calzado') return SHOE_SIZES;
     return STANDARD_SIZES;
   };
+
+  const isPending = createItemType.isPending || updateItemType.isPending || uploadingImage;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -131,6 +181,46 @@ export function DotationItemTypeFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <FormLabel>Imagen</FormLabel>
+              <div className="flex items-center gap-4">
+                {imagePreview ? (
+                  <div className="relative w-20 h-20 rounded-lg border overflow-hidden bg-muted">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-destructive text-destructive-foreground"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                  >
+                    <ImagePlus className="w-5 h-5" />
+                    <span className="text-[10px]">Subir</span>
+                  </button>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageSelect}
+                />
+                {imagePreview && (
+                  <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                    Cambiar
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <FormField
               control={form.control}
               name="name"
@@ -169,7 +259,6 @@ export function DotationItemTypeFormDialog({
                     <Select 
                       onValueChange={(value) => {
                         field.onChange(value);
-                        // Update sizes when category changes
                         if (value === 'calzado') {
                           form.setValue('sizes_available', SHOE_SIZES);
                         } else if (value !== 'epp' && value !== 'herramientas' && value !== 'otros') {
@@ -196,9 +285,6 @@ export function DotationItemTypeFormDialog({
                 )}
               />
             </div>
-
-
-
 
             <FormField
               control={form.control}
@@ -273,8 +359,8 @@ export function DotationItemTypeFormDialog({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createItemType.isPending || updateItemType.isPending}>
-                {(createItemType.isPending || updateItemType.isPending) && (
+              <Button type="submit" disabled={isPending}>
+                {isPending && (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 )}
                 {isEditing ? 'Guardar' : 'Crear'}
