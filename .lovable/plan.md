@@ -1,117 +1,77 @@
 
+# Integracion de Avatar HeyGen en Capacitaciones
 
-## Profesiograma de Dotacion y Entrega Inteligente
+## Resumen
 
-### Objetivo
-Crear un sistema de "Profesiograma de Dotacion" que asocie tipos de dotacion a combinaciones de Centro de Operacion + Cargo. Al registrar una entrega, al seleccionar un empleado se cargara automaticamente la lista de articulos sugeridos segun su profesiograma, permitiendo confirmar o modificar antes de guardar.
+Agregar soporte para generar videos con avatar IA usando HeyGen. Incluye un campo para la API Key de HeyGen en la configuracion de IA, una nueva Edge Function para comunicarse con la API de HeyGen, y una tarjeta "Avatar Presentador" en la seccion de multimedia de capacitaciones.
 
----
+## Paso 1: Campo de HeyGen API Key en Configuracion IA
 
-### 1. Catalogo de Tipos de Dotacion (ya existe)
+En `src/pages/Configuracion.tsx`, dentro de la pestana "IA", agregar una tercera tarjeta (independiente de la seleccion Gemini/OpenAI) para la API Key de HeyGen:
 
-El catalogo de tipos de dotacion ya esta implementado en:
-- Tabla: `dotation_item_types`
-- Pagina: `/catalogos/tipos-dotacion` (`src/pages/catalogos/TiposDotacion.tsx`)
-- CRUD: `useSystemConfig.ts` (hooks de dotation item types)
-- Formulario: `DotationItemTypeFormDialog.tsx`
+- Tarjeta con icono de video/usuario, titulo "HeyGen - Avatar IA"
+- Campo de API Key con toggle de visibilidad (Eye/EyeOff) y boton "Probar"
+- La key se persiste en `system_config` dentro del objeto `ai_config` como `heygen_api_key`
+- El boton "Probar" llamara a la API de HeyGen para listar avatares disponibles y confirmar que la key funciona
 
-No se requieren cambios en este catalogo.
+**Estado en el componente:**
+- `heygenApiKey` / `setHeygenApiKey`
+- `showHeygenKey` / `setShowHeygenKey`
+- `testingHeygen` / `setTestingHeygen`
 
----
+**Persistencia:** Se agrega `heygen_api_key` al objeto que ya se guarda en `handleSaveAiConfig`.
 
-### 2. Nueva tabla: `dotation_profesiograma`
+## Paso 2: Edge Function `generate-training-avatar`
 
-Tabla puente que asocia Centro de Operacion + Cargo con tipos de dotacion.
+Crear `supabase/functions/generate-training-avatar/index.ts` que:
 
-```text
-dotation_profesiograma
-+---------------------+--------------------------------------+
-| id                  | UUID PK                              |
-| company_id          | UUID FK -> companies                 |
-| operation_center_id | UUID FK -> operation_centers          |
-| position_id         | UUID FK -> positions                 |
-| created_by          | UUID nullable                        |
-| created_at          | TIMESTAMPTZ                          |
-| updated_at          | TIMESTAMPTZ                          |
-+---------------------+--------------------------------------+
-UNIQUE(company_id, operation_center_id, position_id)
-```
+1. Recibe: `courseId`, `companyId`, `script` (guion de texto), `avatarId` (opcional, usa uno por defecto)
+2. Lee la `heygen_api_key` de `system_config` para la empresa
+3. Llama a la API de HeyGen:
+   - `POST https://api.heygen.com/v2/video/generate` con el guion y avatar seleccionado
+   - Retorna un `video_id` para polling
+4. Endpoint secundario para consultar estado: `GET https://api.heygen.com/v1/video_status.get?video_id=XXX`
+5. Cuando el video esta listo, descarga y sube al bucket `training-media`
+6. Inserta registro en `training_media` con `type = 'avatar'`
 
-### 3. Nueva tabla: `dotation_profesiograma_items`
+**Endpoints de HeyGen utilizados:**
+- `GET /v2/avatars` - Listar avatares disponibles
+- `POST /v2/video/generate` - Crear video
+- `GET /v1/video_status.get` - Consultar estado
 
-Articulos asociados a cada profesiograma.
+## Paso 3: Tarjeta "Avatar Presentador" en Multimedia
 
-```text
-dotation_profesiograma_items
-+---------------------+--------------------------------------+
-| id                  | UUID PK                              |
-| profesiograma_id    | UUID FK -> dotation_profesiograma    |
-| dotation_item_type_id | UUID FK -> dotation_item_types     |
-| quantity            | INTEGER default 1                    |
-| notes               | TEXT nullable                        |
-| created_at          | TIMESTAMPTZ                          |
-+---------------------+--------------------------------------+
-UNIQUE(profesiograma_id, dotation_item_type_id)
-```
+En `src/pages/capacitaciones/CrearCapacitacion.tsx`, agregar una nueva tarjeta despues del Storyboard:
 
-RLS: Lectura y escritura para miembros de la empresa con rol admin/rrhh.
+- Icono de usuario/video, titulo "Avatar Presentador"
+- Selector de avatar (dropdown con avatares disponibles de HeyGen)
+- Boton "Generar Video con Avatar"
+- Indicador de progreso (polling cada 10 segundos hasta que el video este listo)
+- Reproductor de video cuando este completo
 
----
+## Paso 4: Visualizacion en Vista Previa y Link Publico
 
-### 4. Nueva pagina: Profesiograma de Dotacion
+- En `TrainingPreviewDialog.tsx`: Agregar seccion para mostrar videos de avatar (`type === 'avatar'`) con reproductor HTML5
+- En `AccesoPublico.tsx`: Mostrar el video del avatar como reproductor integrado en la capacitacion publica
 
-**Ruta:** Nueva pestana "Profesiograma" dentro de la pagina de Dotacion (`/dotacion`) o como seccion independiente.
+## Paso 5: Componente AvatarVideoPlayer
 
-Se agregara como tercera pestana en `src/pages/Dotacion.tsx`:
-- Entregas (existente)
-- Inventario (existente)  
-- **Profesiograma** (nueva)
+Crear `src/components/training/AvatarVideoPlayer.tsx`:
+- Reproductor de video HTML5 con controles
+- Estado de generacion con polling visual (barra de progreso o spinner)
+- Mensaje informativo sobre el tiempo estimado de generacion (2-10 min)
 
-**Contenido de la pestana:**
-- Tabla con columnas: Centro de Operacion, Cargo, Cantidad de Articulos, Acciones (editar/eliminar)
-- Boton "Nuevo Profesiograma"
-- Al hacer clic en editar, abre un dialogo donde se selecciona centro + cargo y se agregan/quitan tipos de dotacion del catalogo
+## Archivos a modificar/crear
 
----
+| Archivo | Accion |
+|---------|--------|
+| `src/pages/Configuracion.tsx` | Agregar campo HeyGen API Key en tab IA |
+| `supabase/functions/generate-training-avatar/index.ts` | Crear Edge Function |
+| `src/pages/capacitaciones/CrearCapacitacion.tsx` | Agregar tarjeta Avatar Presentador |
+| `src/components/training/TrainingPreviewDialog.tsx` | Mostrar video avatar |
+| `src/pages/capacitaciones/AccesoPublico.tsx` | Mostrar video avatar en link publico |
+| `src/components/training/AvatarVideoPlayer.tsx` | Crear componente reproductor |
 
-### 5. Nuevos componentes
+## Nota sobre la API Key
 
-- **`src/components/dotation/ProfesiogramaTab.tsx`**: Pestana con tabla de profesiogramas
-- **`src/components/dotation/ProfesiogramaFormDialog.tsx`**: Formulario para crear/editar un profesiograma (seleccionar centro + cargo, asignar articulos de dotacion del catalogo)
-
----
-
-### 6. Nuevo hook: `useDotationProfesiograma`
-
-**Archivo:** `src/hooks/useDotationProfesiograma.ts`
-
-Funciones:
-- `useProfesiogramas()`: Lista todos los profesiogramas con sus items, centros y cargos
-- `useProfesiogramaByEmployee(employeeId)`: Busca el profesiograma que coincide con el centro + cargo del empleado
-- `useCreateProfesiograma()`: Crea profesiograma + items
-- `useUpdateProfesiograma()`: Actualiza items
-- `useDeleteProfesiograma()`: Elimina
-
----
-
-### 7. Modificar formulario de entrega (`DotationFormDialog.tsx`)
-
-Cambio principal: al seleccionar un empleado, el sistema:
-1. Obtiene su `operation_center_id` y `position_id` desde `employee_work_info`
-2. Consulta `dotation_profesiograma` + `dotation_profesiograma_items` para esa combinacion
-3. Si existe un profesiograma, muestra la lista de articulos sugeridos con checkboxes para confirmar o quitar
-4. El usuario puede modificar cantidades o agregar articulos adicionales
-5. Al confirmar, se crean las entregas para cada articulo seleccionado
-
-La pestana "Articulo" del formulario actual se reemplaza por una vista de lista de articulos sugeridos con capacidad de edicion.
-
----
-
-### Secuencia de implementacion
-
-1. Crear migracion con las dos tablas nuevas y politicas RLS
-2. Crear hook `useDotationProfesiograma`
-3. Crear componentes de profesiograma (tab + formulario)
-4. Integrar pestana en la pagina de Dotacion
-5. Modificar `DotationFormDialog` para cargar sugerencias automaticas al seleccionar empleado
-
+La API Key que proporcionaste (`sk_V2_hgu_...`) se almacenara de forma segura en la base de datos dentro de `system_config` (tabla ya existente), accesible solo desde las Edge Functions del servidor. No se hardcodeara en el codigo fuente.
