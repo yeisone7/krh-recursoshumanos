@@ -532,6 +532,24 @@ export default function AccesoPublico() {
               );
             })()}
 
+            {/* Avatar Video */}
+            {(() => {
+              const avatarMedia = media.filter(m => (m as any).type === 'video' && m.title === 'Avatar Presentador');
+              if (avatarMedia.length === 0) return null;
+              return (
+                <Card>
+                  <CardHeader><CardTitle className="text-lg">Presentación con Avatar</CardTitle></CardHeader>
+                  <CardContent>
+                    {avatarMedia.map((item) => (
+                      <div key={item.id} className="rounded-lg overflow-hidden border bg-black">
+                        <video controls className="w-full max-h-[400px]" src={item.file_url} preload="metadata" />
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
             <Separator />
 
             <div className="flex justify-end">

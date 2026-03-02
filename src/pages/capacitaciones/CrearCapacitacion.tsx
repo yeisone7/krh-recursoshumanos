@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft, Trash2, ImageIcon, Network, LayoutPanelTop, Mic, Video, Plus, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft, Trash2, ImageIcon, Network, LayoutPanelTop, Mic, Video, Plus, ExternalLink, UserCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGallery, MediaTypeCard, StoryboardViewer } from '@/components/training';
+import { AvatarVideoPlayer } from '@/components/training/AvatarVideoPlayer';
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { supabase } from '@/integrations/supabase/client';
 import { applyWatermark } from '@/lib/watermark';
@@ -54,6 +55,14 @@ export default function CrearCapacitacion() {
   const [videoScript, setVideoScript] = useState<any>(null);
   const [videoImages, setVideoImages] = useState<string[]>([]);
   const [storyboardAudioUrl, setStoryboardAudioUrl] = useState<string | null>(null);
+
+  // Avatar state
+  const [avatars, setAvatars] = useState<any[]>([]);
+  const [selectedAvatar, setSelectedAvatar] = useState('');
+  const [generatingAvatar, setGeneratingAvatar] = useState(false);
+  const [avatarVideoId, setAvatarVideoId] = useState<string | null>(null);
+  const [avatarVideoUrl, setAvatarVideoUrl] = useState<string | null>(null);
+  const [loadingAvatars, setLoadingAvatars] = useState(false);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -140,6 +149,16 @@ export default function CrearCapacitacion() {
       }
     }
   }, [existingCourse]);
+
+  // Load existing avatar video from media
+  useEffect(() => {
+    if (media.length > 0) {
+      const avatarItem = (media as any[]).find((m: any) => m.title === 'Avatar Presentador' || (m.metadata as any)?.is_avatar);
+      if (avatarItem) {
+        setAvatarVideoUrl(avatarItem.file_url);
+      }
+    }
+  }, [media]);
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -860,7 +879,130 @@ export default function CrearCapacitacion() {
             </CardContent>
           </Card>
 
-          {/* Footer actions */}
+          {/* Avatar Presentador */}
+          {editId && (
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-900/30">
+                    <UserCircle className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm">Avatar Presentador</span>
+                      {avatarVideoUrl && <span className="text-xs text-muted-foreground">Video generado</span>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">Genera un video con un avatar IA que presenta la capacitación (requiere API key de HeyGen)</p>
+                  </div>
+                </div>
+
+                {avatarVideoUrl || avatarVideoId ? (
+                  <AvatarVideoPlayer
+                    videoUrl={avatarVideoUrl}
+                    videoId={avatarVideoId}
+                    courseId={editId}
+                    companyId={currentCompanyId || ''}
+                    onVideoReady={(url) => setAvatarVideoUrl(url)}
+                  />
+                ) : null}
+
+                {!avatarVideoUrl && !avatarVideoId && (
+                  <>
+                    <div className="space-y-2">
+                      <span className="text-xs text-muted-foreground">Avatar:</span>
+                      <div className="flex gap-2">
+                        <Select value={selectedAvatar} onValueChange={setSelectedAvatar}>
+                          <SelectTrigger className="h-8 text-xs flex-1">
+                            <SelectValue placeholder={loadingAvatars ? 'Cargando...' : 'Selecciona un avatar'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {avatars.map((a) => (
+                              <SelectItem key={a.avatar_id} value={a.avatar_id}>
+                                {a.avatar_name}
+                              </SelectItem>
+                            ))}
+                            {avatars.length === 0 && (
+                              <SelectItem value="default" disabled>
+                                {loadingAvatars ? 'Cargando avatares...' : 'Carga avatares primero'}
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={loadingAvatars}
+                          onClick={async () => {
+                            setLoadingAvatars(true);
+                            try {
+                              const { data, error } = await supabase.functions.invoke('generate-training-avatar', {
+                                body: { action: 'list_avatars', companyId: currentCompanyId },
+                              });
+                              if (error) throw error;
+                              setAvatars(data?.avatars || []);
+                              if (data?.avatars?.length > 0) {
+                                setSelectedAvatar(data.avatars[0].avatar_id);
+                              }
+                              toast.success(`${data?.avatars?.length || 0} avatares disponibles`);
+                            } catch (err: any) {
+                              toast.error(err?.message || 'Error al cargar avatares');
+                            } finally {
+                              setLoadingAvatars(false);
+                            }
+                          }}
+                        >
+                          {loadingAvatars ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Cargar'}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      disabled={generatingAvatar || !content}
+                      onClick={async () => {
+                        if (!content) return;
+                        setGeneratingAvatar(true);
+                        try {
+                          // Build script from content
+                          const script = [
+                            content.introduccion,
+                            ...(content.puntosClave || []),
+                          ].filter(Boolean).join('. ');
+
+                          const { data, error } = await supabase.functions.invoke('generate-training-avatar', {
+                            body: {
+                              action: 'generate',
+                              companyId: currentCompanyId,
+                              courseId: editId,
+                              script: script.substring(0, 3000),
+                              avatarId: selectedAvatar || undefined,
+                            },
+                          });
+                          if (error) throw error;
+                          if (data?.videoId) {
+                            setAvatarVideoId(data.videoId);
+                            toast.success('Video de avatar en generación. Esto puede tomar de 2 a 10 minutos.');
+                          }
+                        } catch (err: any) {
+                          toast.error(err?.message || 'Error al generar video con avatar');
+                        } finally {
+                          setGeneratingAvatar(false);
+                        }
+                      }}
+                    >
+                      {generatingAvatar ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Iniciando generación...</>
+                      ) : (
+                        <><Video className="h-4 w-4 mr-2" /> Generar Video con Avatar</>
+                      )}
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           <div className="flex items-center justify-between">
             <Button variant="outline" onClick={() => setStep(0)}>
               <ArrowLeft className="h-4 w-4 mr-2" /> Editar Parámetros
