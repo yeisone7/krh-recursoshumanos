@@ -197,28 +197,8 @@ export function DotationItemTypeFormDialog({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="default_validity_months"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Vigencia por defecto (meses)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={60}
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 12)}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Meses de vigencia antes de la siguiente entrega
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+
 
             <FormField
               control={form.control}
