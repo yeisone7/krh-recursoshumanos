@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, ShieldAlert, ChevronDown, ChevronRight, Users, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { ShieldCheck, ChevronDown, ChevronRight, Users, CheckCircle, AlertTriangle, XCircle, Download, FileSpreadsheet, FileText, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -10,9 +12,12 @@ import {
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useDotationCompliance, type CenterCompliance, type EmployeeCompliance } from '@/hooks/useDotationCompliance';
-import { Loader2 } from 'lucide-react';
+import { exportComplianceToExcel, exportComplianceToPDF } from '@/lib/complianceReportExporter';
 
 export function DotationComplianceTab() {
   const { data: compliance, isLoading } = useDotationCompliance();
@@ -42,8 +47,49 @@ export function DotationComplianceTab() {
   const totalNon = compliance.reduce((s, c) => s + c.nonCompliant, 0);
   const globalPercentage = totalEmployees > 0 ? Math.round((totalCompliant / totalEmployees) * 100) : 0;
 
+  const handleExportExcel = () => {
+    if (!compliance || compliance.length === 0) return;
+    exportComplianceToExcel(compliance);
+    toast.success('Reporte Excel exportado');
+  };
+
+  const handleExportPDF = async () => {
+    if (!compliance || compliance.length === 0) return;
+    try {
+      await exportComplianceToPDF(compliance);
+      toast.success('Reporte PDF exportado');
+    } catch (e) {
+      toast.error('Error al generar el PDF');
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Header with export */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Cumplimiento de Dotación</h2>
+          <p className="text-sm text-muted-foreground">
+            Porcentaje de empleados con artículos obligatorios entregados
+          </p>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <Download className="w-4 h-4" /> Exportar
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleExportExcel} className="gap-2">
+              <FileSpreadsheet className="w-4 h-4" /> Exportar a Excel
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+              <FileText className="w-4 h-4" /> Exportar a PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       {/* Global KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <KpiCard icon={Users} label="Empleados evaluados" value={totalEmployees} color="primary" />
