@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ClipboardList, Plus, Pencil, Trash2, Package, Loader2, Copy } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -10,8 +10,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 import { useProfesiogramas, useDeleteProfesiograma, useCreateProfesiograma, type Profesiograma } from '@/hooks/useDotationProfesiograma';
+import { useDotationItemTypes } from '@/hooks/useSystemConfig';
 import { ProfesiogramaFormDialog } from './ProfesiogramaFormDialog';
 import { CloneProfesiogramaDialog } from './CloneProfesiogramaDialog';
 
@@ -23,11 +25,15 @@ interface Props {
 export function ProfesiogramaTab({ centers, positions }: Props) {
   const { data: profesiogramas, isLoading } = useProfesiogramas();
   const deleteMutation = useDeleteProfesiograma();
+  const createMutation = useCreateProfesiograma();
+  const { data: itemTypes = [] } = useDotationItemTypes();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editData, setEditData] = useState<Profesiograma | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [cloneData, setCloneData] = useState<Profesiograma | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleEdit = (prof: Profesiograma) => {
     setEditData(prof);
@@ -53,6 +59,163 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
   const getCenterName = (id: string) => centers.find(c => c.id === id)?.name || 'Desconocido';
   const getPositionName = (id: string) => positions.find(p => p.id === id)?.name || 'Desconocido';
 
+  // ── Export to Excel ──
+  const handleExport = () => {
+    if (!profesiogramas || profesiogramas.length === 0) {
+      toast.error('No hay profesiogramas para exportar');
+      return;
+    }
+
+    const rows = profesiogramas.flatMap((prof) => {
+      if (prof.items.length === 0) {
+        return [{
+          'Centro de Operación': prof.operation_centers?.name || getCenterName(prof.operation_center_id),
+          'Cargo': prof.positions?.name || getPositionName(prof.position_id),
+          'Artículo': '',
+          'Código Artículo': '',
+          'Categoría': '',
+          'Cantidad': 0 as number | string,
+          'Notas': '',
+        }];
+      }
+      return prof.items.map((item) => ({
+        'Centro de Operación': prof.operation_centers?.name || getCenterName(prof.operation_center_id),
+        'Cargo': prof.positions?.name || getPositionName(prof.position_id),
+        'Artículo': item.dotation_item_types?.name || '',
+        'Código Artículo': item.dotation_item_types?.code || '',
+        'Categoría': item.dotation_item_types?.category || '',
+        'Cantidad': item.quantity,
+        'Notas': item.notes || '',
+      }));
+    });
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Profesiogramas');
+
+    // Template sheet for imports
+    const templateRows = [
+      {
+        'Centro de Operación (nombre exacto)': 'Ejemplo Centro',
+        'Cargo (nombre exacto)': 'Ejemplo Cargo',
+        'Código Artículo': 'EPP-001',
+        'Cantidad': 1,
+        'Notas': '',
+      },
+    ];
+    const wsTemplate = XLSX.utils.json_to_sheet(templateRows);
+    XLSX.utils.book_append_sheet(wb, wsTemplate, 'Plantilla Importación');
+
+    XLSX.writeFile(wb, `profesiogramas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success('Archivo exportado exitosamente');
+  };
+
+  // ── Import from Excel ──
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws);
+
+      if (rows.length === 0) {
+        toast.error('El archivo está vacío');
+        setIsImporting(false);
+        return;
+      }
+
+      // Build lookup maps
+      const centerMap = new Map(centers.map(c => [c.name.toLowerCase().trim(), c.id]));
+      const positionMap = new Map(positions.map(p => [p.name.toLowerCase().trim(), p.id]));
+      const itemTypeMap = new Map((itemTypes as any[]).map((t: any) => [
+        (t.code || '').toLowerCase().trim(), t.id
+      ]));
+      const itemTypeNameMap = new Map((itemTypes as any[]).map((t: any) => [
+        t.name.toLowerCase().trim(), t.id
+      ]));
+
+      // Group rows by center+position
+      const grouped = new Map<string, { centerId: string; positionId: string; items: { dotation_item_type_id: string; quantity: number; notes?: string }[] }>();
+
+      let skippedRows = 0;
+
+      for (const row of rows) {
+        const centerName = String(row['Centro de Operación'] || row['Centro de Operación (nombre exacto)'] || '').toLowerCase().trim();
+        const positionName = String(row['Cargo'] || row['Cargo (nombre exacto)'] || '').toLowerCase().trim();
+        const itemCode = String(row['Código Artículo'] || row['Código'] || '').toLowerCase().trim();
+        const itemName = String(row['Artículo'] || '').toLowerCase().trim();
+        const quantity = parseInt(row['Cantidad']) || 1;
+        const notes = String(row['Notas'] || '');
+
+        const centerId = centerMap.get(centerName);
+        const positionId = positionMap.get(positionName);
+        const itemTypeId = itemTypeMap.get(itemCode) || itemTypeNameMap.get(itemName);
+
+        if (!centerId || !positionId || !itemTypeId) {
+          skippedRows++;
+          continue;
+        }
+
+        const key = `${centerId}|${positionId}`;
+        if (!grouped.has(key)) {
+          grouped.set(key, { centerId, positionId, items: [] });
+        }
+        const group = grouped.get(key)!;
+        if (!group.items.some(i => i.dotation_item_type_id === itemTypeId)) {
+          group.items.push({ dotation_item_type_id: itemTypeId, quantity, notes: notes || undefined });
+        }
+      }
+
+      // Check for existing profesiogramas
+      const existingKeys = new Set(
+        (profesiogramas || []).map(p => `${p.operation_center_id}|${p.position_id}`)
+      );
+
+      let created = 0;
+      let duplicates = 0;
+
+      for (const [key, group] of grouped) {
+        if (existingKeys.has(key)) {
+          duplicates++;
+          continue;
+        }
+        if (group.items.length === 0) continue;
+
+        try {
+          await createMutation.mutateAsync({
+            operation_center_id: group.centerId,
+            position_id: group.positionId,
+            items: group.items,
+          });
+          created++;
+        } catch {
+          // skip on error
+        }
+      }
+
+      const messages: string[] = [];
+      if (created > 0) messages.push(`${created} profesiograma${created > 1 ? 's' : ''} creado${created > 1 ? 's' : ''}`);
+      if (duplicates > 0) messages.push(`${duplicates} ya existían`);
+      if (skippedRows > 0) messages.push(`${skippedRows} filas omitidas (datos no encontrados)`);
+
+      if (created > 0) {
+        toast.success('Importación completada', { description: messages.join('. ') });
+      } else {
+        toast.info('No se crearon nuevos profesiogramas', { description: messages.join('. ') });
+      }
+    } catch (error) {
+      toast.error('Error al leer el archivo Excel');
+      console.error(error);
+    }
+
+    setIsImporting(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -70,18 +233,49 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
             Define qué dotación corresponde a cada combinación de Centro + Cargo
           </p>
         </div>
-        <Button onClick={handleNew} className="gap-2">
-          <Plus className="w-4 h-4" /> Nuevo Profesiograma
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5" disabled={!profesiogramas?.length}>
+            <Download className="w-4 h-4" /> Exportar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            className="gap-1.5"
+            disabled={isImporting}
+          >
+            {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            Importar
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleImport}
+          />
+          <Button onClick={handleNew} className="gap-2">
+            <Plus className="w-4 h-4" /> Nuevo
+          </Button>
+        </div>
       </div>
 
       {(!profesiogramas || profesiogramas.length === 0) ? (
         <div className="text-center py-12 text-muted-foreground card-elevated">
           <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>No hay profesiogramas configurados</p>
-          <Button onClick={handleNew} className="mt-4 gap-2">
-            <Plus className="w-4 h-4" /> Crear Primer Profesiograma
-          </Button>
+          <div className="flex justify-center gap-2 mt-4">
+            <Button onClick={handleNew} className="gap-2">
+              <Plus className="w-4 h-4" /> Crear Profesiograma
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="gap-2"
+            >
+              <Upload className="w-4 h-4" /> Importar desde Excel
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="card-elevated">
