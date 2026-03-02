@@ -11,9 +11,10 @@ import { MarkdownContent } from '@/components/training/MarkdownContent';
 import { EvaluationQuiz } from '@/components/training/EvaluationQuiz';
 import { SignatureCanvas } from '@/components/training/SignatureCanvas';
 import { StoryboardViewer } from '@/components/training/StoryboardViewer';
+import { ImageLightbox } from '@/components/training/ImageLightbox';
 import {
   GraduationCap, Clock, BookOpen, CheckCircle2, AlertTriangle,
-  Loader2, MapPin, Calendar, User, FileText, ShieldCheck
+  Loader2, MapPin, Calendar, User, FileText, ShieldCheck, Maximize
 } from 'lucide-react';
 import type { TrainingCourse, TrainingCourseContent, TrainingQuizQuestion } from '@/types/training';
 import petrocasinosIcon from '@/assets/petrocasinos-orange-icon.png';
@@ -49,6 +50,8 @@ export default function AccesoPublico() {
   const [submitting, setSubmitting] = useState(false);
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [centerName, setCenterName] = useState<string | null>(null);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [lightboxAlt, setLightboxAlt] = useState('');
 
   useEffect(() => {
     if (!tokenParam) {
@@ -467,19 +470,24 @@ export default function AccesoPublico() {
             ) : null}
 
             {/* Media Gallery */}
+            <ImageLightbox src={lightboxSrc} alt={lightboxAlt} onClose={() => setLightboxSrc(null)} />
+
             {images.length > 0 && (
               <Card>
                 <CardHeader><CardTitle className="text-lg">Material Visual</CardTitle></CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {images.map((img) => (
-                      <div key={img.id} className="space-y-1">
+                      <div key={img.id} className="space-y-1 group relative cursor-pointer" onClick={() => { setLightboxSrc(img.file_url); setLightboxAlt(img.title); }}>
                         <img
                           src={img.file_url}
                           alt={img.title}
                           className="rounded-lg border w-full object-contain max-h-64"
                           loading="lazy"
                         />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <Maximize className="h-6 w-6 text-white drop-shadow-lg" />
+                        </div>
                         <p className="text-xs text-muted-foreground text-center">{img.title}</p>
                       </div>
                     ))}
