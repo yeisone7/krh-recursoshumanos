@@ -579,6 +579,30 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                       description="Genera un guion narrado + secuencia de imágenes estilizadas con IA"
                       items={media.filter(m => m.type === 'video')}
                     />
+
+                    {/* Avatar Videos */}
+                    {(() => {
+                      const avatarMedia = media.filter(m => (m.metadata as any)?.is_avatar === true);
+                      if (avatarMedia.length === 0) return null;
+                      return (
+                        <Card className="border mt-4">
+                          <CardContent className="pt-5 pb-4 space-y-3">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 rounded-lg bg-muted"><Video className="h-5 w-5 text-primary" /></div>
+                              <div>
+                                <span className="font-semibold text-sm">Avatar Presentador</span>
+                                <p className="text-xs text-muted-foreground mt-0.5">Video generado con avatar IA de HeyGen</p>
+                              </div>
+                            </div>
+                            {avatarMedia.map((item) => (
+                              <div key={item.id} className="rounded-lg overflow-hidden border bg-black">
+                                <video controls className="w-full max-h-[300px]" src={item.file_url} preload="metadata" />
+                              </div>
+                            ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
                   </>
                 )}
 
