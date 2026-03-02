@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shirt, Plus, Edit2 } from 'lucide-react';
+import { Shirt, Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,17 +15,72 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
-import { useDotationItemTypes } from '@/hooks/useSystemConfig';
+import { useDotationItemTypes, useDeleteDotationItemType } from '@/hooks/useSystemConfig';
 import { DotationItemTypeFormDialog } from '@/components/config';
 import { DOTATION_CATEGORIES } from '@/types/config';
 import type { DotationItemType } from '@/types/config';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function CatalogosTiposDotacion() {
   const [showDotationForm, setShowDotationForm] = useState(false);
   const [selectedDotationItem, setSelectedDotationItem] = useState<DotationItemType | null>(null);
+  const [deleteItem, setDeleteItem] = useState<DotationItemType | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const { data: dotationTypes = [], isLoading } = useDotationItemTypes();
+  const deleteMutation = useDeleteDotationItemType();
+
+  const handleEdit = (item: DotationItemType) => {
+    setSelectedDotationItem(item);
+    setShowDotationForm(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedDotationItem(null);
+    setShowDotationForm(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteItem) return;
+    setDeleteLoading(true);
+    try {
+      // Check dependencies in dotation_profesiograma_items (FK reference)
+      const { count: profCount } = await supabase
+        .from('dotation_profesiograma_items')
+        .select('id', { count: 'exact', head: true })
+        .eq('dotation_item_type_id', deleteItem.id);
+
+      if (profCount && profCount > 0) {
+        toast.error('No se puede eliminar', {
+          description: `Este tipo de dotación está asociado a ${profCount} profesiograma(s). Elimínelo primero de los profesiogramas.`,
+        });
+        setDeleteItem(null);
+        setDeleteLoading(false);
+        return;
+      }
+
+      await deleteMutation.mutateAsync(deleteItem.id);
+      toast.success('Tipo de dotación eliminado');
+    } catch (error: any) {
+      toast.error('Error al eliminar', {
+        description: error.message || 'No se pudo eliminar el tipo de dotación',
+      });
+    } finally {
+      setDeleteItem(null);
+      setDeleteLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -46,7 +102,7 @@ export default function CatalogosTiposDotacion() {
             <CardTitle>Listado de Tipos</CardTitle>
             <CardDescription>Artículos disponibles para entrega de dotación</CardDescription>
           </div>
-          <Button onClick={() => { setSelectedDotationItem(null); setShowDotationForm(true); }}>
+          <Button onClick={handleCreate}>
             <Plus className="w-4 h-4 mr-2" />Nuevo Tipo
           </Button>
         </CardHeader>
@@ -101,13 +157,23 @@ export default function CatalogosTiposDotacion() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => { setSelectedDotationItem(item); setShowDotationForm(true); }}
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => setDeleteItem(item)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -117,11 +183,38 @@ export default function CatalogosTiposDotacion() {
         </CardContent>
       </Card>
 
+      {/* Use key to force remount and reset form values when editing different items */}
       <DotationItemTypeFormDialog 
+        key={selectedDotationItem?.id || 'new'}
         open={showDotationForm} 
         onOpenChange={setShowDotationForm} 
         itemType={selectedDotationItem} 
       />
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deleteItem} onOpenChange={(open) => !open && setDeleteItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar tipo de dotación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Estás a punto de eliminar <strong>{deleteItem?.name}</strong>. 
+              Si este tipo está asociado a entregas, inventario o profesiogramas, no se podrá eliminar.
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
