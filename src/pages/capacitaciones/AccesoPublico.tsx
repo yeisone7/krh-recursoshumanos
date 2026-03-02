@@ -524,7 +524,7 @@ export default function AccesoPublico() {
               const audioUrl = audios.length > 0 ? audios[audios.length - 1].file_url : null;
               return (
                 <Card>
-                  <CardHeader><CardTitle className="text-lg">Video Educativo</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-lg">Storyboard</CardTitle></CardHeader>
                   <CardContent>
                     <StoryboardViewer scenes={scenes} imageUrls={imageUrls} audioUrl={audioUrl} />
                   </CardContent>
