@@ -196,7 +196,7 @@ serve(async (req) => {
   }
 
   try {
-    const { courseId, style = "clasico", duration = "medium", title, content, puntosClave, companyId } = await req.json();
+    const { courseId, style = "clasico", duration = "medium", title, content, puntosClave, companyId, regenerateScene, existingScene } = await req.json();
 
     if (!title || !courseId) {
       return new Response(
@@ -215,6 +215,87 @@ serve(async (req) => {
 
     if (!useGeminiDirect && !useOpenAIDirect && !LOVABLE_API_KEY) throw new Error("No AI provider configured");
 
+    const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.clasico;
+    const styleLabel = STYLE_LABELS[style] || "Clásico";
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // ── Single scene regeneration ──
+    if (typeof regenerateScene === 'number' && existingScene) {
+      console.log(`Regenerating single scene ${regenerateScene}...`);
+
+      // Regenerate the script for this one scene
+      const scenePrompt = `Eres un experto en capacitación empresarial. Reescribe esta escena de un video educativo sobre "${title}".
+Escena original: Título: "${existingScene.title}", Narración: "${existingScene.narration}", Descripción visual: "${existingScene.visual_description || ''}".
+Genera una versión diferente manteniendo el mismo tema pero con nueva redacción y enfoque visual.
+Responde en JSON: { "title": "...", "narration": "...", "visual_description": "..." }`;
+
+      let sceneText: string;
+      if (useGeminiDirect) {
+        sceneText = await generateScriptGeminiDirect(aiConfig.gemini_api_key!, scenePrompt);
+      } else if (useOpenAIDirect) {
+        sceneText = await generateScriptOpenAIDirect(aiConfig.openai_api_key!, scenePrompt);
+      } else {
+        sceneText = await generateScriptGateway(LOVABLE_API_KEY!, scenePrompt);
+      }
+
+      let newScene: { title: string; narration: string; visual_description: string };
+      try {
+        const jsonMatch = sceneText.match(/\{[\s\S]*\}/);
+        newScene = JSON.parse(jsonMatch ? jsonMatch[0] : sceneText);
+      } catch {
+        newScene = { title: existingScene.title, narration: sceneText.substring(0, 200), visual_description: existingScene.visual_description || title };
+      }
+
+      // Generate new image
+      const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${newScene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
+      let imageBase64: string | null = null;
+      if (useGeminiDirect) {
+        imageBase64 = await generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt);
+        if (!imageBase64 && LOVABLE_API_KEY) imageBase64 = await generateImageGateway(LOVABLE_API_KEY, imagePrompt);
+      } else if (LOVABLE_API_KEY) {
+        imageBase64 = await generateImageGateway(LOVABLE_API_KEY, imagePrompt);
+      }
+
+      let finalUrl = imageBase64 || '';
+      if (imageBase64) {
+        try {
+          const base64Part = imageBase64.split(",")[1];
+          const binaryStr = atob(base64Part);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let j = 0; j < binaryStr.length; j++) bytes[j] = binaryStr.charCodeAt(j);
+          const fileName = `${courseId}/video_${style}_scene_regen_${regenerateScene}_${Date.now()}.png`;
+          const { error: uploadError } = await supabase.storage.from("training-media").upload(fileName, bytes.buffer, { contentType: "image/png", upsert: true });
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
+            finalUrl = urlData.publicUrl;
+          }
+        } catch { /* keep base64 */ }
+
+        // Update media record
+        try {
+          await supabase.from("training_media").insert({
+            course_id: courseId,
+            type: "video",
+            title: `${styleLabel} - Escena ${regenerateScene + 1} (regen): ${newScene.title}`,
+            description: newScene.narration,
+            file_url: finalUrl,
+            file_size: 0,
+            metadata: { style, scene_index: regenerateScene, visual_description: newScene.visual_description, regenerated: true },
+            created_by: "system",
+          });
+        } catch (e) { console.warn("Failed to save regen media:", e); }
+      }
+
+      return new Response(
+        JSON.stringify({ scene: newScene, imageUrl: finalUrl, sceneIndex: regenerateScene }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── Full storyboard generation ──
     const sceneCount = duration === "short" ? 3 : duration === "long" ? 6 : 4;
     const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.clasico;
     const styleLabel = STYLE_LABELS[style] || "Clásico";

@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { MarkdownContent } from '@/components/training/MarkdownContent';
 import { EvaluationQuiz } from '@/components/training/EvaluationQuiz';
 import { SignatureCanvas } from '@/components/training/SignatureCanvas';
+import { StoryboardViewer } from '@/components/training/StoryboardViewer';
 import {
   GraduationCap, Clock, BookOpen, CheckCircle2, AlertTriangle,
   Loader2, MapPin, Calendar, User, FileText, ShieldCheck
@@ -501,6 +502,27 @@ export default function AccesoPublico() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Storyboard */}
+            {(() => {
+              const videoMedia = media.filter(m => m.type === 'video');
+              if (videoMedia.length === 0) return null;
+              const scenes = videoMedia.map(m => ({
+                title: (m.title || '').replace(/^[^:]*:\s*/, '').replace(/^\(regen\):\s*/, ''),
+                narration: m.description || '',
+                visual_description: '',
+              }));
+              const imageUrls = videoMedia.map(m => m.file_url);
+              const audioUrl = audios.length > 0 ? audios[audios.length - 1].file_url : null;
+              return (
+                <Card>
+                  <CardHeader><CardTitle className="text-lg">Video Educativo</CardTitle></CardHeader>
+                  <CardContent>
+                    <StoryboardViewer scenes={scenes} imageUrls={imageUrls} audioUrl={audioUrl} />
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
             <Separator />
 
