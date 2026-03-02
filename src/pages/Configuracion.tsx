@@ -19,6 +19,7 @@ import {
   Upload,
   X,
   Stamp,
+  Video,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -64,6 +65,11 @@ export default function Configuracion() {
   const [testingGemini, setTestingGemini] = useState(false);
   const [savingAi, setSavingAi] = useState(false);
 
+  // HeyGen config state
+  const [heygenApiKey, setHeygenApiKey] = useState('');
+  const [showHeygenKey, setShowHeygenKey] = useState(false);
+  const [testingHeygen, setTestingHeygen] = useState(false);
+
   // Watermark config state
   const [watermarkEnabled, setWatermarkEnabled] = useState(DEFAULT_WATERMARK_CONFIG.enabled);
   const [watermarkPosition, setWatermarkPosition] = useState<WatermarkPosition>(DEFAULT_WATERMARK_CONFIG.position);
@@ -108,6 +114,7 @@ export default function Configuracion() {
         setAiModel(aiConfig.model || 'gemini');
         setOpenaiApiKey(aiConfig.openai_api_key || '');
         setGeminiApiKey(aiConfig.gemini_api_key || '');
+        setHeygenApiKey(aiConfig.heygen_api_key || '');
       }
 
       // Load Watermark config
@@ -156,6 +163,7 @@ export default function Configuracion() {
           model: aiModel,
           openai_api_key: openaiApiKey,
           gemini_api_key: geminiApiKey,
+          heygen_api_key: heygenApiKey,
         },
         description: 'Configuración del modelo de IA para generación de capacitaciones',
       });
@@ -566,7 +574,92 @@ export default function Configuracion() {
                           >
                             {testingOpenai ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Probar'}
                           </Button>
-                        </div>
+              </div>
+
+              {/* HeyGen Avatar Card */}
+              <div className="w-full rounded-xl border-2 border-border bg-card">
+                <div className="flex items-start gap-4 p-4">
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <div className="h-10 w-10 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                      <Video className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold">HeyGen — Avatar IA</p>
+                    <p className="text-sm text-muted-foreground">Genera videos con un avatar virtual que presenta las capacitaciones</p>
+                    <Badge variant="secondary" className="mt-2 font-mono text-xs">Avatar Video API</Badge>
+                  </div>
+                </div>
+
+                <div className="px-4 pb-4 pt-1 border-t mx-4 mt-1">
+                  <div className="space-y-1.5 pt-3">
+                    <Label className="text-xs font-medium flex items-center gap-1.5">
+                      <Key className="h-3.5 w-3.5 text-muted-foreground" />
+                      HeyGen API Key
+                    </Label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          type={showHeygenKey ? 'text' : 'password'}
+                          value={heygenApiKey}
+                          onChange={(e) => setHeygenApiKey(e.target.value)}
+                          placeholder="sk_V2_..."
+                          className="text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowHeygenKey(!showHeygenKey)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showHeygenKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          if (!heygenApiKey) {
+                            toast.error('Ingresa una API Key de HeyGen');
+                            return;
+                          }
+                          setTestingHeygen(true);
+                          try {
+                            // Save first so the edge function can read it
+                            await updateConfig.mutateAsync({
+                              key: 'ai_config',
+                              value: {
+                                model: aiModel,
+                                openai_api_key: openaiApiKey,
+                                gemini_api_key: geminiApiKey,
+                                heygen_api_key: heygenApiKey,
+                              },
+                            });
+                            const { data, error } = await supabase.functions.invoke('generate-training-avatar', {
+                              body: { action: 'test', companyId: currentCompanyId },
+                            });
+                            if (error) throw error;
+                            if (data?.success) {
+                              toast.success(`Conexión exitosa — ${data.avatarCount} avatares disponibles`);
+                            } else {
+                              toast.error(data?.error || 'No se pudo conectar con HeyGen');
+                            }
+                          } catch (err: any) {
+                            toast.error(err?.message || 'Error al probar la conexión');
+                          } finally {
+                            setTestingHeygen(false);
+                          }
+                        }}
+                        disabled={testingHeygen || !heygenApiKey}
+                      >
+                        {testingHeygen ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Probar'}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Obtén tu API Key en <a href="https://app.heygen.com/settings/api" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">heygen.com/settings/api</a>
+                    </p>
+                  </div>
+                </div>
+              </div>
                         <p className="text-xs text-muted-foreground">
                           Déjala vacía para usar el gateway integrado por defecto.
                         </p>
