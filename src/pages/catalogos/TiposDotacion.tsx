@@ -61,10 +61,10 @@ export default function CatalogosTiposDotacion() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-16">Imagen</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Código</TableHead>
                   <TableHead>Categoría</TableHead>
-                  <TableHead>Vigencia</TableHead>
                   <TableHead>Requiere Talla</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
@@ -73,12 +73,20 @@ export default function CatalogosTiposDotacion() {
               <TableBody>
                 {dotationTypes.map((item) => (
                   <TableRow key={item.id}>
+                    <TableCell>
+                      {(item as any).image_url ? (
+                        <img src={(item as any).image_url} alt={item.name} className="w-10 h-10 rounded object-cover border" />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                          <Shirt className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.code || '-'}</TableCell>
                     <TableCell>
                       {DOTATION_CATEGORIES.find(c => c.value === item.category)?.label || item.category}
                     </TableCell>
-                    <TableCell>{item.default_validity_months} meses</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={item.requires_size ? 'bg-primary/10 text-primary' : ''}>
                         {item.requires_size ? 'Sí' : 'No'}
