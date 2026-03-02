@@ -7,6 +7,7 @@ export interface ProfesiogramaItem {
   dotation_item_type_id: string;
   quantity: number;
   notes: string | null;
+  is_required: boolean;
   dotation_item_types?: {
     id: string;
     name: string;
@@ -55,7 +56,7 @@ export function useProfesiogramas() {
         const { data: itemsData, error: itemsError } = await supabase
           .from('dotation_profesiograma_items' as any)
           .select(`
-            id, profesiograma_id, dotation_item_type_id, quantity, notes,
+            id, profesiograma_id, dotation_item_type_id, quantity, notes, is_required,
             dotation_item_types(id, name, code, category, requires_size, sizes_available, default_validity_months)
           `)
           .in('profesiograma_id', profIds);
@@ -105,7 +106,7 @@ export function useProfesiogramaByEmployee(employeeId: string | undefined) {
       const { data: items } = await supabase
         .from('dotation_profesiograma_items' as any)
         .select(`
-          id, dotation_item_type_id, quantity, notes,
+          id, dotation_item_type_id, quantity, notes, is_required,
           dotation_item_types(id, name, code, category, requires_size, sizes_available, default_validity_months)
         `)
         .eq('profesiograma_id', (prof as any).id);
@@ -127,7 +128,7 @@ export function useCreateProfesiograma() {
     mutationFn: async (data: {
       operation_center_id: string;
       position_id: string;
-      items: { dotation_item_type_id: string; quantity: number; notes?: string }[];
+      items: { dotation_item_type_id: string; quantity: number; notes?: string; is_required?: boolean }[];
     }) => {
       const { data: prof, error } = await supabase
         .from('dotation_profesiograma' as any)
@@ -151,6 +152,7 @@ export function useCreateProfesiograma() {
               dotation_item_type_id: item.dotation_item_type_id,
               quantity: item.quantity,
               notes: item.notes || null,
+              is_required: item.is_required !== false,
             })) as any
           );
         if (itemsError) throw itemsError;
@@ -170,7 +172,7 @@ export function useUpdateProfesiograma() {
   return useMutation({
     mutationFn: async (data: {
       id: string;
-      items: { dotation_item_type_id: string; quantity: number; notes?: string }[];
+      items: { dotation_item_type_id: string; quantity: number; notes?: string; is_required?: boolean }[];
     }) => {
       // Delete existing items
       await supabase
@@ -188,6 +190,7 @@ export function useUpdateProfesiograma() {
               dotation_item_type_id: item.dotation_item_type_id,
               quantity: item.quantity,
               notes: item.notes || null,
+              is_required: item.is_required !== false,
             })) as any
           );
         if (error) throw error;
@@ -213,5 +216,84 @@ export function useDeleteProfesiograma() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dotation_profesiograma'] });
     },
+  });
+}
+
+export interface CoverageByCenter {
+  centerId: string;
+  centerName: string;
+  total: number;
+  covered: number;
+  percentage: number;
+}
+
+export function useProfesiogramaCoverage() {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['dotation_profesiograma_coverage', currentCompanyId],
+    queryFn: async () => {
+      if (!currentCompanyId) return [];
+
+      // Get all active employees with their center+position
+      const { data: employees } = await supabase
+        .from('employee_work_info')
+        .select('employee_id, operation_center_id, position_id, employees_v2!inner(company_id, is_active)')
+        .eq('is_current', true)
+        .eq('employees_v2.company_id', currentCompanyId)
+        .eq('employees_v2.is_active', true);
+
+      if (!employees || employees.length === 0) return [];
+
+      // Get all profesiogramas for this company
+      const { data: profs } = await supabase
+        .from('dotation_profesiograma' as any)
+        .select('operation_center_id, position_id')
+        .eq('company_id', currentCompanyId);
+
+      const profKeys = new Set(
+        ((profs as any[]) || []).map((p: any) => `${p.operation_center_id}|${p.position_id}`)
+      );
+
+      // Get center names
+      const { data: centers } = await supabase
+        .from('operation_centers')
+        .select('id, name')
+        .eq('company_id', currentCompanyId);
+
+      const centerNameMap = new Map((centers || []).map(c => [c.id, c.name]));
+
+      // Group employees by center
+      const byCenter = new Map<string, { total: number; covered: number }>();
+
+      for (const emp of employees as any[]) {
+        const centerId = emp.operation_center_id;
+        if (!centerId) continue;
+
+        if (!byCenter.has(centerId)) {
+          byCenter.set(centerId, { total: 0, covered: 0 });
+        }
+        const entry = byCenter.get(centerId)!;
+        entry.total++;
+
+        if (emp.position_id && profKeys.has(`${centerId}|${emp.position_id}`)) {
+          entry.covered++;
+        }
+      }
+
+      const result: CoverageByCenter[] = [];
+      for (const [centerId, stats] of byCenter) {
+        result.push({
+          centerId,
+          centerName: centerNameMap.get(centerId) || 'Desconocido',
+          total: stats.total,
+          covered: stats.covered,
+          percentage: stats.total > 0 ? Math.round((stats.covered / stats.total) * 100) : 0,
+        });
+      }
+
+      return result.sort((a, b) => a.centerName.localeCompare(b.centerName));
+    },
+    enabled: !!currentCompanyId,
   });
 }
