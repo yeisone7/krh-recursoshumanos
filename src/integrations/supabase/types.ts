@@ -1866,6 +1866,7 @@ export type Database = {
           created_at: string
           dotation_item_type_id: string
           id: string
+          is_required: boolean
           notes: string | null
           profesiograma_id: string
           quantity: number
@@ -1874,6 +1875,7 @@ export type Database = {
           created_at?: string
           dotation_item_type_id: string
           id?: string
+          is_required?: boolean
           notes?: string | null
           profesiograma_id: string
           quantity?: number
@@ -1882,6 +1884,7 @@ export type Database = {
           created_at?: string
           dotation_item_type_id?: string
           id?: string
+          is_required?: boolean
           notes?: string | null
           profesiograma_id?: string
           quantity?: number
