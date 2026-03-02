@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy } from 'lucide-react';
+import { Copy, Plus, X, Loader2 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -10,7 +10,12 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { useCreateProfesiograma, type Profesiograma } from '@/hooks/useDotationProfesiograma';
+import { useCreateProfesiograma, useProfesiogramas, type Profesiograma } from '@/hooks/useDotationProfesiograma';
+
+interface Destination {
+  centerId: string;
+  positionId: string;
+}
 
 interface Props {
   open: boolean;
@@ -21,14 +26,14 @@ interface Props {
 }
 
 export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, centers, positions }: Props) {
-  const [centerId, setCenterId] = useState('');
-  const [positionId, setPositionId] = useState('');
+  const [destinations, setDestinations] = useState<Destination[]>([{ centerId: '', positionId: '' }]);
+  const [isCloning, setIsCloning] = useState(false);
   const createMutation = useCreateProfesiograma();
+  const { data: existingProfesiogramas } = useProfesiogramas();
 
   useEffect(() => {
     if (open) {
-      setCenterId('');
-      setPositionId('');
+      setDestinations([{ centerId: '', positionId: '' }]);
     }
   }, [open]);
 
@@ -37,52 +42,91 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
   const sourceCenterName = sourceData.operation_centers?.name || centers.find(c => c.id === sourceData.operation_center_id)?.name || '';
   const sourcePositionName = sourceData.positions?.name || positions.find(p => p.id === sourceData.position_id)?.name || '';
 
+  const existingKeys = new Set(
+    (existingProfesiogramas || []).map(p => `${p.operation_center_id}|${p.position_id}`)
+  );
+
+  const addDestination = () => {
+    setDestinations([...destinations, { centerId: '', positionId: '' }]);
+  };
+
+  const removeDestination = (idx: number) => {
+    if (destinations.length <= 1) return;
+    setDestinations(destinations.filter((_, i) => i !== idx));
+  };
+
+  const updateDestination = (idx: number, field: keyof Destination, value: string) => {
+    const updated = [...destinations];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setDestinations(updated);
+  };
+
+  const getDestinationStatus = (dest: Destination) => {
+    if (!dest.centerId || !dest.positionId) return null;
+    if (dest.centerId === sourceData.operation_center_id && dest.positionId === sourceData.position_id) return 'same';
+    if (existingKeys.has(`${dest.centerId}|${dest.positionId}`)) return 'exists';
+    return 'ok';
+  };
+
+  const validDestinations = destinations.filter(d => {
+    const status = getDestinationStatus(d);
+    return status === 'ok';
+  });
+
   const handleClone = async () => {
-    if (!centerId || !positionId) {
-      toast.error('Selecciona centro de operación y cargo destino');
-      return;
-    }
-    if (centerId === sourceData.operation_center_id && positionId === sourceData.position_id) {
-      toast.error('El destino es igual al origen');
+    if (validDestinations.length === 0) {
+      toast.error('No hay destinos válidos para clonar');
       return;
     }
 
-    try {
-      await createMutation.mutateAsync({
-        operation_center_id: centerId,
-        position_id: positionId,
-        items: sourceData.items.map(i => ({
-          dotation_item_type_id: i.dotation_item_type_id,
-          quantity: i.quantity,
-          notes: i.notes || undefined,
-        })),
-      });
-      toast.success('Profesiograma clonado exitosamente');
-      onOpenChange(false);
-    } catch (error: any) {
-      const msg = error?.message || '';
-      if (msg.includes('duplicate') || msg.includes('unique')) {
-        toast.error('Ya existe un profesiograma para esa combinación');
-      } else {
-        toast.error('Error al clonar', { description: msg });
+    setIsCloning(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const dest of validDestinations) {
+      try {
+        await createMutation.mutateAsync({
+          operation_center_id: dest.centerId,
+          position_id: dest.positionId,
+          items: sourceData.items.map(i => ({
+            dotation_item_type_id: i.dotation_item_type_id,
+            quantity: i.quantity,
+            notes: i.notes || undefined,
+          })),
+        });
+        successCount++;
+      } catch {
+        errorCount++;
       }
+    }
+
+    setIsCloning(false);
+
+    if (successCount > 0) {
+      toast.success(`${successCount} profesiograma${successCount > 1 ? 's' : ''} clonado${successCount > 1 ? 's' : ''} exitosamente`);
+    }
+    if (errorCount > 0) {
+      toast.error(`${errorCount} destino${errorCount > 1 ? 's' : ''} fallaron al clonar`);
+    }
+    if (successCount > 0) {
+      onOpenChange(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Copy className="w-5 h-5 text-primary" />
-            Clonar Profesiograma
+            Clonación Masiva de Profesiograma
           </DialogTitle>
           <DialogDescription>
-            Copia los artículos de un profesiograma existente a otra combinación de Centro + Cargo.
+            Copia los artículos a múltiples combinaciones de Centro + Cargo.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           {/* Source info */}
           <div className="rounded-lg bg-muted/50 p-3 space-y-1">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Origen</p>
@@ -97,40 +141,82 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
             </div>
           </div>
 
-          {/* Destination */}
+          {/* Destinations */}
           <div className="space-y-3">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Destino</p>
-            <div className="space-y-2">
-              <Label>Centro de Operación *</Label>
-              <Select value={centerId} onValueChange={setCenterId}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar centro" /></SelectTrigger>
-                <SelectContent>
-                  {centers.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Destinos ({destinations.length})
+              </p>
+              <Button type="button" variant="outline" size="sm" onClick={addDestination} className="gap-1 h-7 text-xs">
+                <Plus className="w-3 h-3" /> Agregar destino
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label>Cargo *</Label>
-              <Select value={positionId} onValueChange={setPositionId}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar cargo" /></SelectTrigger>
-                <SelectContent>
-                  {positions.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+
+            {destinations.map((dest, idx) => {
+              const status = getDestinationStatus(dest);
+              return (
+                <div key={idx} className="rounded-lg border border-border p-3 space-y-2 relative">
+                  {destinations.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 absolute top-2 right-2 text-muted-foreground hover:text-destructive"
+                      onClick={() => removeDestination(idx)}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                  <p className="text-xs text-muted-foreground font-medium">Destino {idx + 1}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Centro</Label>
+                      <Select value={dest.centerId} onValueChange={(v) => updateDestination(idx, 'centerId', v)}>
+                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Centro" /></SelectTrigger>
+                        <SelectContent>
+                          {centers.map(c => (
+                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Cargo</Label>
+                      <Select value={dest.positionId} onValueChange={(v) => updateDestination(idx, 'positionId', v)}>
+                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Cargo" /></SelectTrigger>
+                        <SelectContent>
+                          {positions.map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {status === 'same' && (
+                    <p className="text-xs text-amber-600">⚠ Igual al origen, se omitirá</p>
+                  )}
+                  {status === 'exists' && (
+                    <p className="text-xs text-amber-600">⚠ Ya existe un profesiograma para esta combinación, se omitirá</p>
+                  )}
+                  {status === 'ok' && (
+                    <p className="text-xs text-success">✓ Destino válido</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t mt-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleClone} disabled={createMutation.isPending} className="gap-2">
-            <Copy className="w-4 h-4" />
-            {createMutation.isPending ? 'Clonando...' : 'Clonar'}
-          </Button>
+        <div className="flex items-center justify-between pt-4 border-t mt-2">
+          <p className="text-xs text-muted-foreground">
+            {validDestinations.length} destino{validDestinations.length !== 1 ? 's' : ''} válido{validDestinations.length !== 1 ? 's' : ''}
+          </p>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button onClick={handleClone} disabled={isCloning || validDestinations.length === 0} className="gap-2">
+              {isCloning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
+              {isCloning ? 'Clonando...' : `Clonar a ${validDestinations.length} destino${validDestinations.length !== 1 ? 's' : ''}`}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
