@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { 
   Package, Plus, Search, Filter, Eye, 
   AlertTriangle, CheckCircle, Clock, Calendar,
-  Loader2, Warehouse
+  Loader2, Warehouse, ClipboardList
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -32,8 +32,11 @@ import { DotationFormDialog } from '@/components/dotation/DotationFormDialog';
 import { DotationDetailDialog } from '@/components/dotation/DotationDetailDialog';
 import { DotationAlertsCard } from '@/components/dotation/DotationAlertsCard';
 import { DotationInventoryTab } from '@/components/dotation/DotationInventoryTab';
+import { ProfesiogramaTab } from '@/components/dotation/ProfesiogramaTab';
 import { useDotationDeliveries, getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
+import { useOperationCenters } from '@/hooks/useCompanies';
+import { usePositions } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -98,6 +101,8 @@ export default function Dotacion() {
   const { currentCompanyId } = useAuth();
   const { data: deliveries, isLoading } = useDotationDeliveries();
   const { data: inventory = [] } = useDotationInventory();
+  const { data: operationCenters = [] } = useOperationCenters();
+  const { data: positionsData = [] } = usePositions();
 
   // Handle deep link from dashboard alerts
   useEffect(() => {
@@ -230,6 +235,9 @@ export default function Dotacion() {
             {lowStockCount > 0 && (
               <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">{lowStockCount}</Badge>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="profesiograma" className="gap-2">
+            <ClipboardList className="w-4 h-4" /> Profesiograma
           </TabsTrigger>
         </TabsList>
 
@@ -467,6 +475,13 @@ export default function Dotacion() {
 
         <TabsContent value="inventario" className="mt-6">
           <DotationInventoryTab />
+        </TabsContent>
+
+        <TabsContent value="profesiograma" className="mt-6">
+          <ProfesiogramaTab
+            centers={operationCenters.map(c => ({ id: c.id, name: c.name }))}
+            positions={(positionsData as any[]).map((p: any) => ({ id: p.id, name: p.name }))}
+          />
         </TabsContent>
       </Tabs>
 
