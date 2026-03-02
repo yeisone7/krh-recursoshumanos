@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Plus, X, Loader2 } from 'lucide-react';
+import { Copy, Plus, X, Loader2, Building2 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -28,14 +28,16 @@ interface Props {
 export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, centers, positions }: Props) {
   const [destinations, setDestinations] = useState<Destination[]>([{ centerId: '', positionId: '' }]);
   const [isCloning, setIsCloning] = useState(false);
+  const [quickPositionId, setQuickPositionId] = useState('');
   const createMutation = useCreateProfesiograma();
   const { data: existingProfesiogramas } = useProfesiogramas();
 
   useEffect(() => {
     if (open) {
       setDestinations([{ centerId: '', positionId: '' }]);
+      setQuickPositionId(sourceData?.position_id || '');
     }
-  }, [open]);
+  }, [open, sourceData?.position_id]);
 
   if (!sourceData) return null;
 
@@ -61,6 +63,27 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
     setDestinations(updated);
   };
 
+  const handleSelectAllCenters = (positionId: string) => {
+    if (!positionId) {
+      toast.error('Primero selecciona un cargo para aplicar a todos los centros');
+      return;
+    }
+    const newDestinations = centers
+      .filter(c => {
+        // Exclude the source combination
+        if (c.id === sourceData.operation_center_id && positionId === sourceData.position_id) return false;
+        return true;
+      })
+      .map(c => ({ centerId: c.id, positionId }));
+
+    if (newDestinations.length === 0) {
+      toast.info('No hay centros disponibles para este cargo');
+      return;
+    }
+    setDestinations(newDestinations);
+    toast.success(`${newDestinations.length} centros seleccionados`);
+  };
+
   const getDestinationStatus = (dest: Destination) => {
     if (!dest.centerId || !dest.positionId) return null;
     if (dest.centerId === sourceData.operation_center_id && dest.positionId === sourceData.position_id) return 'same';
@@ -68,10 +91,7 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
     return 'ok';
   };
 
-  const validDestinations = destinations.filter(d => {
-    const status = getDestinationStatus(d);
-    return status === 'ok';
-  });
+  const validDestinations = destinations.filter(d => getDestinationStatus(d) === 'ok');
 
   const handleClone = async () => {
     if (validDestinations.length === 0) {
@@ -141,6 +161,35 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
             </div>
           </div>
 
+          {/* Quick action: all centers */}
+          <div className="rounded-lg border border-dashed border-primary/30 bg-primary-light/30 p-3 space-y-2">
+            <p className="text-xs font-medium text-primary uppercase tracking-wider flex items-center gap-1">
+              <Building2 className="w-3.5 h-3.5" /> Acción rápida: Todos los centros
+            </p>
+            <div className="flex items-end gap-2">
+              <div className="flex-1 space-y-1">
+                <Label className="text-xs">Cargo a aplicar</Label>
+                <Select value={quickPositionId} onValueChange={setQuickPositionId}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Seleccionar cargo" /></SelectTrigger>
+                  <SelectContent>
+                    {positions.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 h-9 whitespace-nowrap border-primary/30 text-primary hover:bg-primary-light"
+                onClick={() => handleSelectAllCenters(quickPositionId)}
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                Todos los centros ({centers.length})
+              </Button>
+            </div>
+          </div>
+
           {/* Destinations */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -192,13 +241,13 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
                     </div>
                   </div>
                   {status === 'same' && (
-                    <p className="text-xs text-amber-600">⚠ Igual al origen, se omitirá</p>
+                    <p className="text-xs text-destructive">⚠ Igual al origen, se omitirá</p>
                   )}
                   {status === 'exists' && (
-                    <p className="text-xs text-amber-600">⚠ Ya existe un profesiograma para esta combinación, se omitirá</p>
+                    <p className="text-xs text-destructive">⚠ Ya existe, se omitirá</p>
                   )}
                   {status === 'ok' && (
-                    <p className="text-xs text-success">✓ Destino válido</p>
+                    <p className="text-xs text-success">✓ Válido</p>
                   )}
                 </div>
               );
