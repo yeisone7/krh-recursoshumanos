@@ -1,10 +1,13 @@
-import { useState, useRef } from 'react';
-import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -12,10 +15,11 @@ import {
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
-import { useProfesiogramas, useDeleteProfesiograma, useCreateProfesiograma, type Profesiograma } from '@/hooks/useDotationProfesiograma';
+import { useProfesiogramas, useDeleteProfesiograma, type Profesiograma } from '@/hooks/useDotationProfesiograma';
 import { useDotationItemTypes } from '@/hooks/useSystemConfig';
 import { ProfesiogramaFormDialog } from './ProfesiogramaFormDialog';
 import { CloneProfesiogramaDialog } from './CloneProfesiogramaDialog';
+import { ImportProfesiogramaDialog } from './ImportProfesiogramaDialog';
 
 interface Props {
   centers: { id: string; name: string }[];
@@ -25,15 +29,18 @@ interface Props {
 export function ProfesiogramaTab({ centers, positions }: Props) {
   const { data: profesiogramas, isLoading } = useProfesiogramas();
   const deleteMutation = useDeleteProfesiograma();
-  const createMutation = useCreateProfesiograma();
   const { data: itemTypes = [] } = useDotationItemTypes();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editData, setEditData] = useState<Profesiograma | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [cloneData, setCloneData] = useState<Profesiograma | null>(null);
-  const [isImporting, setIsImporting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [centerFilter, setCenterFilter] = useState('all');
+  const [positionFilter, setPositionFilter] = useState('all');
 
   const handleEdit = (prof: Profesiograma) => {
     setEditData(prof);
@@ -59,6 +66,36 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
   const getCenterName = (id: string) => centers.find(c => c.id === id)?.name || 'Desconocido';
   const getPositionName = (id: string) => positions.find(p => p.id === id)?.name || 'Desconocido';
 
+  // Filtered data
+  const filteredProfesiogramas = useMemo(() => {
+    if (!profesiogramas) return [];
+    return profesiogramas.filter((prof) => {
+      const cName = (prof.operation_centers?.name || getCenterName(prof.operation_center_id)).toLowerCase();
+      const pName = (prof.positions?.name || getPositionName(prof.position_id)).toLowerCase();
+      const itemNames = prof.items.map(i => (i.dotation_item_types?.name || '').toLowerCase()).join(' ');
+      const query = searchQuery.toLowerCase();
+
+      const matchesSearch = !query || cName.includes(query) || pName.includes(query) || itemNames.includes(query);
+      const matchesCenter = centerFilter === 'all' || prof.operation_center_id === centerFilter;
+      const matchesPosition = positionFilter === 'all' || prof.position_id === positionFilter;
+
+      return matchesSearch && matchesCenter && matchesPosition;
+    });
+  }, [profesiogramas, searchQuery, centerFilter, positionFilter, centers, positions]);
+
+  // Unique centers/positions that appear in profesiogramas for filter dropdowns
+  const usedCenters = useMemo(() => {
+    if (!profesiogramas) return [];
+    const ids = [...new Set(profesiogramas.map(p => p.operation_center_id))];
+    return centers.filter(c => ids.includes(c.id));
+  }, [profesiogramas, centers]);
+
+  const usedPositions = useMemo(() => {
+    if (!profesiogramas) return [];
+    const ids = [...new Set(profesiogramas.map(p => p.position_id))];
+    return positions.filter(p => ids.includes(p.id));
+  }, [profesiogramas, positions]);
+
   // ── Export to Excel ──
   const handleExport = () => {
     if (!profesiogramas || profesiogramas.length === 0) {
@@ -74,7 +111,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           'Artículo': '',
           'Código Artículo': '',
           'Categoría': '',
-          'Cantidad': 0 as number | string,
+          'Cantidad': '' as string | number,
           'Notas': '',
         }];
       }
@@ -84,7 +121,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
         'Artículo': item.dotation_item_types?.name || '',
         'Código Artículo': item.dotation_item_types?.code || '',
         'Categoría': item.dotation_item_types?.category || '',
-        'Cantidad': item.quantity,
+        'Cantidad': item.quantity as string | number,
         'Notas': item.notes || '',
       }));
     });
@@ -93,127 +130,18 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Profesiogramas');
 
-    // Template sheet for imports
-    const templateRows = [
-      {
-        'Centro de Operación (nombre exacto)': 'Ejemplo Centro',
-        'Cargo (nombre exacto)': 'Ejemplo Cargo',
-        'Código Artículo': 'EPP-001',
-        'Cantidad': 1,
-        'Notas': '',
-      },
-    ];
+    const templateRows = [{
+      'Centro de Operación (nombre exacto)': 'Ejemplo Centro',
+      'Cargo (nombre exacto)': 'Ejemplo Cargo',
+      'Código Artículo': 'EPP-001',
+      'Cantidad': 1,
+      'Notas': '',
+    }];
     const wsTemplate = XLSX.utils.json_to_sheet(templateRows);
     XLSX.utils.book_append_sheet(wb, wsTemplate, 'Plantilla Importación');
 
     XLSX.writeFile(wb, `profesiogramas_${new Date().toISOString().slice(0, 10)}.xlsx`);
     toast.success('Archivo exportado exitosamente');
-  };
-
-  // ── Import from Excel ──
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsImporting(true);
-    try {
-      const data = await file.arrayBuffer();
-      const wb = XLSX.read(data);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws);
-
-      if (rows.length === 0) {
-        toast.error('El archivo está vacío');
-        setIsImporting(false);
-        return;
-      }
-
-      // Build lookup maps
-      const centerMap = new Map(centers.map(c => [c.name.toLowerCase().trim(), c.id]));
-      const positionMap = new Map(positions.map(p => [p.name.toLowerCase().trim(), p.id]));
-      const itemTypeMap = new Map((itemTypes as any[]).map((t: any) => [
-        (t.code || '').toLowerCase().trim(), t.id
-      ]));
-      const itemTypeNameMap = new Map((itemTypes as any[]).map((t: any) => [
-        t.name.toLowerCase().trim(), t.id
-      ]));
-
-      // Group rows by center+position
-      const grouped = new Map<string, { centerId: string; positionId: string; items: { dotation_item_type_id: string; quantity: number; notes?: string }[] }>();
-
-      let skippedRows = 0;
-
-      for (const row of rows) {
-        const centerName = String(row['Centro de Operación'] || row['Centro de Operación (nombre exacto)'] || '').toLowerCase().trim();
-        const positionName = String(row['Cargo'] || row['Cargo (nombre exacto)'] || '').toLowerCase().trim();
-        const itemCode = String(row['Código Artículo'] || row['Código'] || '').toLowerCase().trim();
-        const itemName = String(row['Artículo'] || '').toLowerCase().trim();
-        const quantity = parseInt(row['Cantidad']) || 1;
-        const notes = String(row['Notas'] || '');
-
-        const centerId = centerMap.get(centerName);
-        const positionId = positionMap.get(positionName);
-        const itemTypeId = itemTypeMap.get(itemCode) || itemTypeNameMap.get(itemName);
-
-        if (!centerId || !positionId || !itemTypeId) {
-          skippedRows++;
-          continue;
-        }
-
-        const key = `${centerId}|${positionId}`;
-        if (!grouped.has(key)) {
-          grouped.set(key, { centerId, positionId, items: [] });
-        }
-        const group = grouped.get(key)!;
-        if (!group.items.some(i => i.dotation_item_type_id === itemTypeId)) {
-          group.items.push({ dotation_item_type_id: itemTypeId, quantity, notes: notes || undefined });
-        }
-      }
-
-      // Check for existing profesiogramas
-      const existingKeys = new Set(
-        (profesiogramas || []).map(p => `${p.operation_center_id}|${p.position_id}`)
-      );
-
-      let created = 0;
-      let duplicates = 0;
-
-      for (const [key, group] of grouped) {
-        if (existingKeys.has(key)) {
-          duplicates++;
-          continue;
-        }
-        if (group.items.length === 0) continue;
-
-        try {
-          await createMutation.mutateAsync({
-            operation_center_id: group.centerId,
-            position_id: group.positionId,
-            items: group.items,
-          });
-          created++;
-        } catch {
-          // skip on error
-        }
-      }
-
-      const messages: string[] = [];
-      if (created > 0) messages.push(`${created} profesiograma${created > 1 ? 's' : ''} creado${created > 1 ? 's' : ''}`);
-      if (duplicates > 0) messages.push(`${duplicates} ya existían`);
-      if (skippedRows > 0) messages.push(`${skippedRows} filas omitidas (datos no encontrados)`);
-
-      if (created > 0) {
-        toast.success('Importación completada', { description: messages.join('. ') });
-      } else {
-        toast.info('No se crearon nuevos profesiogramas', { description: messages.join('. ') });
-      }
-    } catch (error) {
-      toast.error('Error al leer el archivo Excel');
-      console.error(error);
-    }
-
-    setIsImporting(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   if (isLoading) {
@@ -226,6 +154,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Profesiograma de Dotación</h2>
@@ -237,29 +166,54 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5" disabled={!profesiogramas?.length}>
             <Download className="w-4 h-4" /> Exportar
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            className="gap-1.5"
-            disabled={isImporting}
-          >
-            {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            Importar
+          <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)} className="gap-1.5">
+            <Upload className="w-4 h-4" /> Importar
           </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,.xls"
-            className="hidden"
-            onChange={handleImport}
-          />
           <Button onClick={handleNew} className="gap-2">
             <Plus className="w-4 h-4" /> Nuevo
           </Button>
         </div>
       </div>
 
+      {/* Filters */}
+      {profesiogramas && profesiogramas.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar por centro, cargo o artículo..."
+              className="w-full h-9 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+            />
+          </div>
+          <Select value={centerFilter} onValueChange={setCenterFilter}>
+            <SelectTrigger className="w-[180px] h-9 text-sm">
+              <SelectValue placeholder="Centro" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los centros</SelectItem>
+              {usedCenters.map(c => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={positionFilter} onValueChange={setPositionFilter}>
+            <SelectTrigger className="w-[180px] h-9 text-sm">
+              <SelectValue placeholder="Cargo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los cargos</SelectItem>
+              {usedPositions.map(p => (
+                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Table or Empty State */}
       {(!profesiogramas || profesiogramas.length === 0) ? (
         <div className="text-center py-12 text-muted-foreground card-elevated">
           <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -268,17 +222,26 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
             <Button onClick={handleNew} className="gap-2">
               <Plus className="w-4 h-4" /> Crear Profesiograma
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="gap-2"
-            >
+            <Button variant="outline" onClick={() => setIsImportOpen(true)} className="gap-2">
               <Upload className="w-4 h-4" /> Importar desde Excel
             </Button>
           </div>
         </div>
+      ) : filteredProfesiogramas.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground card-elevated">
+          <Search className="w-10 h-10 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">No se encontraron profesiogramas con los filtros seleccionados</p>
+          <Button variant="ghost" size="sm" className="mt-2" onClick={() => { setSearchQuery(''); setCenterFilter('all'); setPositionFilter('all'); }}>
+            Limpiar filtros
+          </Button>
+        </div>
       ) : (
         <div className="card-elevated">
+          <div className="px-4 py-2 border-b border-border">
+            <p className="text-xs text-muted-foreground">
+              {filteredProfesiogramas.length} de {profesiogramas.length} profesiograma{profesiogramas.length !== 1 ? 's' : ''}
+            </p>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -289,7 +252,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {profesiogramas.map((prof) => (
+              {filteredProfesiogramas.map((prof) => (
                 <TableRow key={prof.id}>
                   <TableCell className="font-medium">
                     {prof.operation_centers?.name || getCenterName(prof.operation_center_id)}
@@ -335,6 +298,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
         </div>
       )}
 
+      {/* Dialogs */}
       <ProfesiogramaFormDialog
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
@@ -349,6 +313,14 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
         sourceData={cloneData}
         centers={centers}
         positions={positions}
+      />
+
+      <ImportProfesiogramaDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        centers={centers}
+        positions={positions}
+        itemTypes={itemTypes as any[]}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
