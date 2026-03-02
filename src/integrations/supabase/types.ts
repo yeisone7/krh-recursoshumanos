@@ -1809,6 +1809,100 @@ export type Database = {
           },
         ]
       }
+      dotation_profesiograma: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          operation_center_id: string
+          position_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          operation_center_id: string
+          position_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          operation_center_id?: string
+          position_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dotation_profesiograma_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dotation_profesiograma_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dotation_profesiograma_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dotation_profesiograma_items: {
+        Row: {
+          created_at: string
+          dotation_item_type_id: string
+          id: string
+          notes: string | null
+          profesiograma_id: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          dotation_item_type_id: string
+          id?: string
+          notes?: string | null
+          profesiograma_id: string
+          quantity?: number
+        }
+        Update: {
+          created_at?: string
+          dotation_item_type_id?: string
+          id?: string
+          notes?: string | null
+          profesiograma_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dotation_profesiograma_items_dotation_item_type_id_fkey"
+            columns: ["dotation_item_type_id"]
+            isOneToOne: false
+            referencedRelation: "dotation_item_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dotation_profesiograma_items_profesiograma_id_fkey"
+            columns: ["profesiograma_id"]
+            isOneToOne: false
+            referencedRelation: "dotation_profesiograma"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_bank_info: {
         Row: {
           account_number: string | null

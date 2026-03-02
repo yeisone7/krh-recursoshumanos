@@ -1,54 +1,37 @@
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useEffect, useMemo } from 'react';
 import { format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Package, User, FileText } from 'lucide-react';
+import { CalendarIcon, Package, User, FileText, CheckSquare, Square, Plus, Trash2, Sparkles } from 'lucide-react';
 
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+  Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-import { 
-  dotationDeliverySchema, 
-  DotationDeliveryFormData,
-  dotationItemTypeLabels,
-  DOTATION_PERIOD_MONTHS,
-} from '@/types/dotation';
+import { DOTATION_PERIOD_MONTHS, dotationItemTypeLabels } from '@/types/dotation';
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
 import { useCreateDotationDelivery } from '@/hooks/useDotation';
+import { useProfesiogramaByEmployee } from '@/hooks/useDotationProfesiograma';
+import { useDotationItemTypes } from '@/hooks/useSystemConfig';
 import type { Database } from '@/integrations/supabase/types';
 
 type DotationItemType = Database['public']['Enums']['dotation_item_type'];
@@ -59,71 +42,142 @@ interface DotationFormDialogProps {
   onSuccess?: () => void;
 }
 
-// Size options
+interface DeliveryItem {
+  selected: boolean;
+  itemTypeEnum: DotationItemType;
+  itemName: string;
+  quantity: number;
+  size?: string;
+  fromProfesiograma: boolean;
+}
+
 const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 const shoeSizeOptions = Array.from({ length: 13 }, (_, i) => (35 + i).toString());
 
 export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFormDialogProps) {
   const { data: employees = [] } = useEmployees();
+  const { data: itemTypeCatalog = [] } = useDotationItemTypes();
   const createDelivery = useCreateDotationDelivery();
 
-  const form = useForm<DotationDeliveryFormData>({
-    resolver: zodResolver(dotationDeliverySchema),
-    defaultValues: {
+  const [employeeId, setEmployeeId] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState<Date>(new Date());
+  const [expirationDate, setExpirationDate] = useState<Date>(addMonths(new Date(), DOTATION_PERIOD_MONTHS));
+  const [deliveredBy, setDeliveredBy] = useState('');
+  const [notes, setNotes] = useState('');
+  const [items, setItems] = useState<DeliveryItem[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const selectedEmployee = employees.find(e => e.id === employeeId);
+  const { data: profesiograma, isLoading: loadingProf } = useProfesiogramaByEmployee(employeeId || undefined);
+
+  // When profesiograma loads, populate items
+  useEffect(() => {
+    if (!employeeId) {
+      setItems([]);
+      return;
+    }
+    if (profesiograma && profesiograma.items.length > 0) {
+      setItems(profesiograma.items.map((pi: any) => ({
+        selected: true,
+        itemTypeEnum: 'otros' as DotationItemType, // will use catalog name
+        itemName: pi.dotation_item_types?.name || 'Artículo',
+        quantity: pi.quantity,
+        size: undefined,
+        fromProfesiograma: true,
+      })));
+    } else if (!loadingProf) {
+      // No profesiograma found — start empty
+      setItems([]);
+    }
+  }, [profesiograma, employeeId, loadingProf]);
+
+  const handleReset = () => {
+    setEmployeeId('');
+    setDeliveryDate(new Date());
+    setExpirationDate(addMonths(new Date(), DOTATION_PERIOD_MONTHS));
+    setDeliveredBy('');
+    setNotes('');
+    setItems([]);
+  };
+
+  const addManualItem = () => {
+    setItems([...items, {
+      selected: true,
+      itemTypeEnum: 'otros',
+      itemName: '',
       quantity: 1,
-      deliveryDate: new Date(),
-      expirationDate: addMonths(new Date(), DOTATION_PERIOD_MONTHS),
-      deliveredBy: '',
-      notes: '',
-    },
-  });
+      size: undefined,
+      fromProfesiograma: false,
+    }]);
+  };
 
-  const selectedEmployeeId = form.watch('employeeId');
-  const selectedEmployee = employees.find(e => e.id === selectedEmployeeId);
-  const selectedItemType = form.watch('itemType');
-  const isFootwear = selectedItemType === 'calzado_seguridad' || selectedItemType === 'calzado_dielectrico';
+  const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx));
 
-  const handleSubmit = async (data: DotationDeliveryFormData) => {
+  const updateItem = (idx: number, field: keyof DeliveryItem, value: any) => {
+    const updated = [...items];
+    (updated[idx] as any)[field] = value;
+    setItems(updated);
+  };
+
+  const selectedItems = items.filter(i => i.selected);
+
+  const handleSubmit = async () => {
+    if (!employeeId) {
+      toast.error('Selecciona un empleado');
+      return;
+    }
+    if (!deliveredBy.trim()) {
+      toast.error('Indica quién entrega');
+      return;
+    }
+    if (selectedItems.length === 0) {
+      toast.error('Selecciona al menos un artículo');
+      return;
+    }
+    const invalidItems = selectedItems.filter(i => !i.itemName.trim());
+    if (invalidItems.length > 0) {
+      toast.error('Todos los artículos deben tener nombre');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      await createDelivery.mutateAsync({
-        employee_id: data.employeeId,
-        item_type: data.itemType,
-        item_name: data.itemName,
-        quantity: data.quantity,
-        size: data.size,
-        delivery_date: format(data.deliveryDate, 'yyyy-MM-dd'),
-        expiration_date: format(data.expirationDate, 'yyyy-MM-dd'),
-        delivered_by: data.deliveredBy,
-        observations: data.notes,
+      for (const item of selectedItems) {
+        await createDelivery.mutateAsync({
+          employee_id: employeeId,
+          item_type: item.itemTypeEnum,
+          item_name: item.itemName,
+          quantity: item.quantity,
+          size: item.size || null,
+          delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
+          expiration_date: format(expirationDate, 'yyyy-MM-dd'),
+          delivered_by: deliveredBy,
+          observations: notes || null,
+        });
+      }
+
+      const employeeName = selectedEmployee ? getEmployeeFullName(selectedEmployee) : 'el empleado';
+      toast.success('Entrega registrada', {
+        description: `Se registraron ${selectedItems.length} artículo(s) para ${employeeName}.`,
       });
 
-      const employeeName = selectedEmployee 
-        ? getEmployeeFullName(selectedEmployee) 
-        : 'el empleado';
-      
-      toast.success('Entrega registrada', {
-        description: `Se ha registrado la entrega de ${data.itemName} para ${employeeName}.`,
-      });
-      
       onOpenChange(false);
-      form.reset({
-        quantity: 1,
-        deliveryDate: new Date(),
-        expirationDate: addMonths(new Date(), DOTATION_PERIOD_MONTHS),
-        deliveredBy: '',
-        notes: '',
-      });
+      handleReset();
       onSuccess?.();
     } catch (error: any) {
       console.error('Error creating dotation delivery:', error);
       toast.error('Error al registrar entrega', {
         description: error.message || 'Por favor intenta de nuevo',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const isFootwear = (type: string) => type === 'calzado_seguridad' || type === 'calzado_dielectrico';
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="font-display text-xl flex items-center gap-2">
@@ -135,303 +189,287 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex-1 overflow-hidden flex flex-col">
-            <Tabs defaultValue="employee" className="flex-1 overflow-hidden flex flex-col">
-              <TabsList className="grid w-full grid-cols-3 mb-4">
-                <TabsTrigger value="employee" className="gap-2">
-                  <User className="w-4 h-4" />
-                  Empleado
-                </TabsTrigger>
-                <TabsTrigger value="item" className="gap-2">
-                  <Package className="w-4 h-4" />
-                  Artículo
-                </TabsTrigger>
-                <TabsTrigger value="delivery" className="gap-2">
-                  <FileText className="w-4 h-4" />
-                  Entrega
-                </TabsTrigger>
-              </TabsList>
+        <Tabs defaultValue="employee" className="flex-1 overflow-hidden flex flex-col">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="employee" className="gap-2">
+              <User className="w-4 h-4" /> Empleado
+            </TabsTrigger>
+            <TabsTrigger value="items" className="gap-2">
+              <Package className="w-4 h-4" /> Artículos
+              {selectedItems.length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{selectedItems.length}</Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="delivery" className="gap-2">
+              <FileText className="w-4 h-4" /> Entrega
+            </TabsTrigger>
+          </TabsList>
 
-              <div className="flex-1 overflow-y-auto pr-2">
-                {/* Employee Tab */}
-                <TabsContent value="employee" className="space-y-4 mt-0">
-                  <FormField
-                    control={form.control}
-                    name="employeeId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Empleado *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar empleado" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-background max-h-[200px]">
-                            {employees.filter(e => e.is_active).map((emp) => (
-                              <SelectItem key={emp.id} value={emp.id}>
-                                {getEmployeeFullName(emp)} - {emp.document_number}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          <div className="flex-1 overflow-y-auto pr-2">
+            {/* Employee Tab */}
+            <TabsContent value="employee" className="space-y-4 mt-0">
+              <div className="space-y-2">
+                <Label>Empleado *</Label>
+                <Select value={employeeId} onValueChange={setEmployeeId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar empleado" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background max-h-[200px]">
+                    {employees.filter(e => e.is_active).map((emp) => (
+                      <SelectItem key={emp.id} value={emp.id}>
+                        {getEmployeeFullName(emp)} - {emp.document_number}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                  {selectedEmployee && (
-                    <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Documento:</span>
-                        <span className="font-medium">{selectedEmployee.document_number}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Centro de Operación:</span>
-                        <span className="font-medium">
-                          {selectedEmployee.operation_centers?.name || 'No asignado'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Cargo:</span>
-                        <span className="font-medium">{selectedEmployee.work_info?.position_name || 'Sin cargo'}</span>
-                      </div>
-                    </div>
-                  )}
-                </TabsContent>
+              {selectedEmployee && (
+                <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Documento:</span>
+                    <span className="font-medium">{selectedEmployee.document_number}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Centro de Operación:</span>
+                    <span className="font-medium">
+                      {selectedEmployee.operation_centers?.name || 'No asignado'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Cargo:</span>
+                    <span className="font-medium">{selectedEmployee.work_info?.position_name || 'Sin cargo'}</span>
+                  </div>
+                </div>
+              )}
 
-                {/* Item Tab */}
-                <TabsContent value="item" className="space-y-4 mt-0">
-                  <FormField
-                    control={form.control}
-                    name="itemType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tipo de Artículo *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar tipo" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-background">
-                            {Object.entries(dotationItemTypeLabels).map(([value, label]) => (
-                              <SelectItem key={value} value={value}>
-                                {label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {employeeId && loadingProf && (
+                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 animate-pulse" />
+                  Buscando profesiograma...
+                </div>
+              )}
 
-                  <FormField
-                    control={form.control}
-                    name="itemName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nombre/Descripción del Artículo *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Ej: Camisa polo azul corporativa" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {employeeId && !loadingProf && profesiograma && profesiograma.items.length > 0 && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-medium text-primary">Profesiograma encontrado</p>
+                    <p className="text-muted-foreground">
+                      Se cargaron {profesiograma.items.length} artículo(s) sugeridos. Revísalos en la pestaña "Artículos".
+                    </p>
+                  </div>
+                </div>
+              )}
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="quantity"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cantidad *</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              min={1} 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
+              {employeeId && !loadingProf && (!profesiograma || profesiograma.items.length === 0) && (
+                <div className="bg-muted/30 border border-border rounded-lg p-3 text-sm text-muted-foreground">
+                  No hay profesiograma configurado para este centro + cargo. Puedes agregar artículos manualmente en la pestaña "Artículos".
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Items Tab */}
+            <TabsContent value="items" className="space-y-4 mt-0">
+              <div className="flex items-center justify-between">
+                <Label>Artículos a entregar</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addManualItem} className="gap-1">
+                  <Plus className="w-3 h-3" /> Agregar Manual
+                </Button>
+              </div>
+
+              {items.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
+                  <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">
+                    {employeeId
+                      ? 'No hay artículos sugeridos. Agrega manualmente.'
+                      : 'Selecciona un empleado primero.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {items.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className={cn(
+                        'border rounded-lg p-3 space-y-2 transition-colors',
+                        item.selected ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/20 opacity-60'
                       )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="size"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Talla</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-background">
-                              {(isFootwear ? shoeSizeOptions : sizeOptions).map((size) => (
-                                <SelectItem key={size} value={size}>
-                                  {size}
-                                </SelectItem>
+                    >
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={item.selected}
+                          onCheckedChange={(v) => updateItem(idx, 'selected', !!v)}
+                        />
+                        <div className="flex-1 grid grid-cols-2 gap-2">
+                          {item.fromProfesiograma ? (
+                            <div className="col-span-2 flex items-center gap-2">
+                              <span className="font-medium text-sm">{item.itemName}</span>
+                              <Badge variant="outline" className="text-xs gap-1">
+                                <Sparkles className="w-3 h-3" /> Sugerido
+                              </Badge>
+                            </div>
+                          ) : (
+                            <>
+                              <Select
+                                value={item.itemTypeEnum}
+                                onValueChange={(v) => updateItem(idx, 'itemTypeEnum', v)}
+                              >
+                                <SelectTrigger className="h-9">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Object.entries(dotationItemTypeLabels).map(([val, label]) => (
+                                    <SelectItem key={val} value={val}>{label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Input
+                                placeholder="Nombre del artículo"
+                                value={item.itemName}
+                                onChange={(e) => updateItem(idx, 'itemName', e.target.value)}
+                                className="h-9"
+                              />
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
+                            className="h-9 w-16"
+                          />
+                          <Select
+                            value={item.size || '__none__'}
+                            onValueChange={(v) => updateItem(idx, 'size', v === '__none__' ? undefined : v)}
+                          >
+                            <SelectTrigger className="h-9 w-20">
+                              <SelectValue placeholder="Talla" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__">—</SelectItem>
+                              {(isFootwear(item.itemTypeEnum) ? shoeSizeOptions : sizeOptions).map(s => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </TabsContent>
+                          {!item.fromProfesiograma && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeItem(idx)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
 
-                {/* Delivery Tab */}
-                <TabsContent value="delivery" className="space-y-4 mt-0">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="deliveryDate"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Fecha de Entrega *</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    'w-full pl-3 text-left font-normal',
-                                    !field.value && 'text-muted-foreground'
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, 'PPP', { locale: es })
-                                  ) : (
-                                    <span>Seleccionar</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={(date) => {
-                                  field.onChange(date);
-                                  // Auto-set expiration to 4 months later
-                                  if (date) {
-                                    form.setValue('expirationDate', addMonths(date, DOTATION_PERIOD_MONTHS));
-                                  }
-                                }}
-                                locale={es}
-                                initialFocus
-                                className="pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+            {/* Delivery Tab */}
+            <TabsContent value="delivery" className="space-y-4 mt-0">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-2">
+                  <Label>Fecha de Entrega *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full pl-3 text-left font-normal',
+                          !deliveryDate && 'text-muted-foreground'
+                        )}
+                      >
+                        {deliveryDate ? format(deliveryDate, 'PPP', { locale: es }) : 'Seleccionar'}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-background" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={deliveryDate}
+                        onSelect={(date) => {
+                          if (date) {
+                            setDeliveryDate(date);
+                            setExpirationDate(addMonths(date, DOTATION_PERIOD_MONTHS));
+                          }
+                        }}
+                        locale={es}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-                    <FormField
-                      control={form.control}
-                      name="expirationDate"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Fecha de Vencimiento *</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    'w-full pl-3 text-left font-normal',
-                                    !field.value && 'text-muted-foreground'
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, 'PPP', { locale: es })
-                                  ) : (
-                                    <span>Seleccionar</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) => date <= form.getValues('deliveryDate')}
-                                locale={es}
-                                initialFocus
-                                className="pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <FormDescription>
-                            Por ley, la dotación vence cada {DOTATION_PERIOD_MONTHS} meses
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="deliveredBy"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Entregado por *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nombre de quien entrega" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Observaciones</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Observaciones adicionales sobre la entrega..."
-                            className="resize-none"
-                            rows={3}
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </TabsContent>
+                <div className="flex flex-col space-y-2">
+                  <Label>Fecha de Vencimiento *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full pl-3 text-left font-normal',
+                          !expirationDate && 'text-muted-foreground'
+                        )}
+                      >
+                        {expirationDate ? format(expirationDate, 'PPP', { locale: es }) : 'Seleccionar'}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-background" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={expirationDate}
+                        onSelect={(date) => date && setExpirationDate(date)}
+                        disabled={(date) => date <= deliveryDate}
+                        locale={es}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground">
+                    Por ley, la dotación vence cada {DOTATION_PERIOD_MONTHS} meses
+                  </p>
+                </div>
               </div>
-            </Tabs>
 
-            <div className="flex justify-end gap-3 pt-4 border-t mt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="gap-2" disabled={createDelivery.isPending}>
-                <Package className="w-4 h-4" />
-                {createDelivery.isPending ? 'Registrando...' : 'Registrar Entrega'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+              <div className="space-y-2">
+                <Label>Entregado por *</Label>
+                <Input
+                  placeholder="Nombre de quien entrega"
+                  value={deliveredBy}
+                  onChange={(e) => setDeliveredBy(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observaciones</Label>
+                <Textarea
+                  placeholder="Observaciones adicionales sobre la entrega..."
+                  className="resize-none"
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
+              </div>
+            </TabsContent>
+          </div>
+        </Tabs>
+
+        <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+          <Button variant="outline" onClick={() => { handleReset(); onOpenChange(false); }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSubmit} className="gap-2" disabled={isSubmitting}>
+            <Package className="w-4 h-4" />
+            {isSubmitting ? 'Registrando...' : `Registrar ${selectedItems.length > 0 ? `(${selectedItems.length})` : 'Entrega'}`}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
