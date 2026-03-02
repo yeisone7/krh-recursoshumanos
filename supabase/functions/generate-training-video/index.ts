@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const GATEWAY_TEXT_MODEL = "google/gemini-2.5-flash-lite";
-const GATEWAY_IMAGE_MODEL = "google/gemini-3-pro-image-preview";
+const GATEWAY_IMAGE_MODEL = "google/gemini-2.5-flash-image";
 
 interface AIConfig {
   model?: string;
@@ -71,6 +71,19 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 3): P
     break;
   }
   return response!;
+}
+
+const IMAGE_TIMEOUT_MS = 45000;
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+    ]);
+  } catch {
+    return null;
+  }
 }
 
 // --- Text generation (script) ---
@@ -253,10 +266,12 @@ Responde en JSON: { "title": "...", "narration": "...", "visual_description": ".
       const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${newScene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
       let imageBase64: string | null = null;
       if (useGeminiDirect) {
-        imageBase64 = await generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt);
-        if (!imageBase64 && LOVABLE_API_KEY) imageBase64 = await generateImageGateway(LOVABLE_API_KEY, imagePrompt);
+        imageBase64 = await withTimeout(generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt), IMAGE_TIMEOUT_MS);
+        if (!imageBase64 && LOVABLE_API_KEY) {
+          imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
+        }
       } else if (LOVABLE_API_KEY) {
-        imageBase64 = await generateImageGateway(LOVABLE_API_KEY, imagePrompt);
+        imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
       }
 
       let finalUrl = imageBase64 || '';
@@ -354,15 +369,15 @@ Responde en formato JSON con esta estructura exacta:
       let imageBase64: string | null = null;
 
       if (useGeminiDirect) {
-        imageBase64 = await generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt);
+        imageBase64 = await withTimeout(generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt), IMAGE_TIMEOUT_MS);
         // Fallback to gateway if Gemini direct fails
         if (!imageBase64 && LOVABLE_API_KEY) {
-          imageBase64 = await generateImageGateway(LOVABLE_API_KEY, imagePrompt);
+          imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
         }
       } else {
         // OpenAI selected or no direct key: use Gateway for images
         if (LOVABLE_API_KEY) {
-          imageBase64 = await generateImageGateway(LOVABLE_API_KEY, imagePrompt);
+          imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
         }
       }
 
