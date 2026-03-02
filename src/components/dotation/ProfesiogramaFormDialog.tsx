@@ -6,6 +6,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -30,6 +31,7 @@ interface ItemRow {
   dotation_item_type_id: string;
   quantity: number;
   notes: string;
+  is_required: boolean;
 }
 
 export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions, editData }: Props) {
@@ -51,6 +53,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
         dotation_item_type_id: i.dotation_item_type_id,
         quantity: i.quantity,
         notes: i.notes || '',
+        is_required: (i as any).is_required !== false,
       })));
     } else {
       setCenterId('');
@@ -66,7 +69,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
 
   const addItem = () => {
     if (availableTypes.length === 0) return;
-    setItems([...items, { dotation_item_type_id: availableTypes[0].id, quantity: 1, notes: '' }]);
+    setItems([...items, { dotation_item_type_id: availableTypes[0].id, quantity: 1, notes: '', is_required: true }]);
   };
 
   const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx));
@@ -111,16 +114,8 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
-
-  const getItemTypeName = (id: string) => {
-    const t = activeItemTypes.find((t: any) => t.id === id);
-    return t ? `${(t as any).name}` : id;
-  };
-
-  const getItemTypeCategory = (id: string) => {
-    const t = activeItemTypes.find((t: any) => t.id === id);
-    return (t as any)?.category || '';
-  };
+  const requiredCount = items.filter(i => i.is_required).length;
+  const optionalCount = items.filter(i => !i.is_required).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -169,7 +164,14 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
           {/* Items list */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Artículos de Dotación</Label>
+              <div>
+                <Label>Artículos de Dotación</Label>
+                {items.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {requiredCount} obligatorio{requiredCount !== 1 ? 's' : ''}, {optionalCount} opcional{optionalCount !== 1 ? 'es' : ''}
+                  </p>
+                )}
+              </div>
               <Button type="button" variant="outline" size="sm" onClick={addItem} disabled={availableTypes.length === 0} className="gap-1">
                 <Plus className="w-3 h-3" /> Agregar
               </Button>
@@ -185,7 +187,8 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                 <TableHeader>
                   <TableRow>
                     <TableHead>Artículo</TableHead>
-                    <TableHead className="w-24">Cantidad</TableHead>
+                    <TableHead className="w-20">Cant.</TableHead>
+                    <TableHead className="w-24 text-center">Obligatorio</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -219,6 +222,12 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                           value={item.quantity}
                           onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
                           className="h-9"
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch
+                          checked={item.is_required}
+                          onCheckedChange={(v) => updateItem(idx, 'is_required', v)}
                         />
                       </TableCell>
                       <TableCell>

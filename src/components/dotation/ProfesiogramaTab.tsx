@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
-import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload, Search } from 'lucide-react';
+import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload, Search, CheckSquare, Users, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -15,7 +17,7 @@ import {
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
-import { useProfesiogramas, useDeleteProfesiograma, type Profesiograma } from '@/hooks/useDotationProfesiograma';
+import { useProfesiogramas, useDeleteProfesiograma, useProfesiogramaCoverage, type Profesiograma } from '@/hooks/useDotationProfesiograma';
 import { useDotationItemTypes } from '@/hooks/useSystemConfig';
 import { ProfesiogramaFormDialog } from './ProfesiogramaFormDialog';
 import { CloneProfesiogramaDialog } from './CloneProfesiogramaDialog';
@@ -30,12 +32,18 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
   const { data: profesiogramas, isLoading } = useProfesiogramas();
   const deleteMutation = useDeleteProfesiograma();
   const { data: itemTypes = [] } = useDotationItemTypes();
+  const { data: coverage } = useProfesiogramaCoverage();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editData, setEditData] = useState<Profesiograma | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [cloneData, setCloneData] = useState<Profesiograma | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
+
+  // Multi-select
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,6 +71,21 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
     setDeleteId(null);
   };
 
+  const handleBulkDelete = async () => {
+    setIsBulkDeleting(true);
+    let deleted = 0;
+    for (const id of selectedIds) {
+      try {
+        await deleteMutation.mutateAsync(id);
+        deleted++;
+      } catch { /* skip */ }
+    }
+    setIsBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    setSelectedIds(new Set());
+    toast.success(`${deleted} profesiograma${deleted > 1 ? 's' : ''} eliminado${deleted > 1 ? 's' : ''}`);
+  };
+
   const getCenterName = (id: string) => centers.find(c => c.id === id)?.name || 'Desconocido';
   const getPositionName = (id: string) => positions.find(p => p.id === id)?.name || 'Desconocido';
 
@@ -83,7 +106,6 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
     });
   }, [profesiogramas, searchQuery, centerFilter, positionFilter, centers, positions]);
 
-  // Unique centers/positions that appear in profesiogramas for filter dropdowns
   const usedCenters = useMemo(() => {
     if (!profesiogramas) return [];
     const ids = [...new Set(profesiogramas.map(p => p.operation_center_id))];
@@ -95,6 +117,23 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
     const ids = [...new Set(profesiogramas.map(p => p.position_id))];
     return positions.filter(p => ids.includes(p.id));
   }, [profesiogramas, positions]);
+
+  // Selection helpers
+  const allFilteredSelected = filteredProfesiogramas.length > 0 && filteredProfesiogramas.every(p => selectedIds.has(p.id));
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredProfesiogramas.map(p => p.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
 
   // ── Export to Excel ──
   const handleExport = () => {
@@ -112,6 +151,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           'Código Artículo': '',
           'Categoría': '',
           'Cantidad': '' as string | number,
+          'Obligatorio': '',
           'Notas': '',
         }];
       }
@@ -122,6 +162,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
         'Código Artículo': item.dotation_item_types?.code || '',
         'Categoría': item.dotation_item_types?.category || '',
         'Cantidad': item.quantity as string | number,
+        'Obligatorio': (item as any).is_required !== false ? 'Sí' : 'No',
         'Notas': item.notes || '',
       }));
     });
@@ -135,6 +176,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
       'Cargo (nombre exacto)': 'Ejemplo Cargo',
       'Código Artículo': 'EPP-001',
       'Cantidad': 1,
+      'Obligatorio': 'Sí',
       'Notas': '',
     }];
     const wsTemplate = XLSX.utils.json_to_sheet(templateRows);
@@ -163,6 +205,11 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5">
+              <Trash2 className="w-4 h-4" /> Eliminar ({selectedIds.size})
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5" disabled={!profesiogramas?.length}>
             <Download className="w-4 h-4" /> Exportar
           </Button>
@@ -174,6 +221,31 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           </Button>
         </div>
       </div>
+
+      {/* Coverage by Center */}
+      {coverage && coverage.length > 0 && (
+        <div className="card-elevated p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <BarChart3 className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-semibold">Cobertura por Centro de Operación</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {coverage.map((c) => (
+              <div key={c.centerId} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{c.centerName}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Progress value={c.percentage} className="h-2 flex-1" />
+                    <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                      {c.covered}/{c.total} ({c.percentage}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       {profesiogramas && profesiogramas.length > 0 && (
@@ -237,14 +309,24 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
         </div>
       ) : (
         <div className="card-elevated">
-          <div className="px-4 py-2 border-b border-border">
+          <div className="px-4 py-2 border-b border-border flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               {filteredProfesiogramas.length} de {profesiogramas.length} profesiograma{profesiogramas.length !== 1 ? 's' : ''}
             </p>
+            {selectedIds.size > 0 && (
+              <p className="text-xs font-medium text-primary">{selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}</p>
+            )}
           </div>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allFilteredSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Seleccionar todos"
+                  />
+                </TableHead>
                 <TableHead>Centro de Operación</TableHead>
                 <TableHead>Cargo</TableHead>
                 <TableHead>Artículos</TableHead>
@@ -253,7 +335,14 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
             </TableHeader>
             <TableBody>
               {filteredProfesiogramas.map((prof) => (
-                <TableRow key={prof.id}>
+                <TableRow key={prof.id} className={selectedIds.has(prof.id) ? 'bg-primary/5' : ''}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(prof.id)}
+                      onCheckedChange={() => toggleSelect(prof.id)}
+                      aria-label="Seleccionar"
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     {prof.operation_centers?.name || getCenterName(prof.operation_center_id)}
                   </TableCell>
@@ -262,12 +351,20 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {prof.items.slice(0, 3).map((item, i) => (
-                        <Badge key={i} variant="secondary" className="text-xs">
-                          {item.dotation_item_types?.name || 'Artículo'}
-                          {item.quantity > 1 && ` x${item.quantity}`}
-                        </Badge>
-                      ))}
+                      {prof.items.slice(0, 3).map((item, i) => {
+                        const isRequired = (item as any).is_required !== false;
+                        return (
+                          <Badge
+                            key={i}
+                            variant={isRequired ? 'secondary' : 'outline'}
+                            className={`text-xs ${!isRequired ? 'border-dashed' : ''}`}
+                          >
+                            {item.dotation_item_types?.name || 'Artículo'}
+                            {item.quantity > 1 && ` x${item.quantity}`}
+                            {!isRequired && ' ⓘ'}
+                          </Badge>
+                        );
+                      })}
                       {prof.items.length > 3 && (
                         <Badge variant="outline" className="text-xs">
                           +{prof.items.length - 3} más
@@ -323,6 +420,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
         itemTypes={itemTypes as any[]}
       />
 
+      {/* Single delete */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -335,6 +433,25 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
               Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk delete */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar {selectedIds.size} profesiograma{selectedIds.size > 1 ? 's' : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminarán los profesiogramas seleccionados y todos sus artículos asociados. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={isBulkDeleting} className="bg-destructive text-destructive-foreground gap-2">
+              {isBulkDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isBulkDeleting ? 'Eliminando...' : 'Eliminar todos'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
