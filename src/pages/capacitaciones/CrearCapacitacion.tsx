@@ -706,7 +706,7 @@ export default function CrearCapacitacion() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-sm">Video Educativo (Storyboard)</span>
+                            <span className="font-semibold text-sm">Storyboard</span>
                             {(media as any[]).filter((m: any) => m.type === 'video').length > 0 && (
                               <span className="text-xs text-muted-foreground">
                                 {(media as any[]).filter((m: any) => m.type === 'video').length} generado(s)
