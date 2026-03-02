@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { MarkdownContent } from './MarkdownContent';
 import { MediaTypeCard } from './MediaTypeCard';
+import { StoryboardViewer } from './StoryboardViewer';
 import { useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
@@ -580,6 +581,29 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                     />
                   </>
                 )}
+
+                {/* Storyboard viewer from video media */}
+                {(() => {
+                  const videoMedia = media.filter(m => m.type === 'video');
+                  if (videoMedia.length === 0) return null;
+                  const scenes = videoMedia.map(m => ({
+                    title: (m.title || '').replace(/^[^:]*:\s*/, '').replace(/^\(regen\):\s*/, ''),
+                    narration: m.description || '',
+                    visual_description: (m.metadata as any)?.visual_description || '',
+                  }));
+                  const imageUrls = videoMedia.map(m => m.file_url);
+                  const audioItems = media.filter(m => m.type === 'audio');
+                  const audioUrl = audioItems.length > 0 ? audioItems[audioItems.length - 1].file_url : null;
+                  return (
+                    <div className="mt-4">
+                      <StoryboardViewer
+                        scenes={scenes}
+                        imageUrls={imageUrls}
+                        audioUrl={audioUrl}
+                      />
+                    </div>
+                  );
+                })()}
               </TabsContent>
             </div>
           </ScrollArea>
