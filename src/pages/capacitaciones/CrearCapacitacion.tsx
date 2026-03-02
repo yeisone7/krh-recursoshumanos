@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft, Trash2, ImageIcon, Network, LayoutPanelTop, Mic, Video, Plus, ExternalLink, Play, Pause, SkipForward, SkipBack, Volume2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft, Trash2, ImageIcon, Network, LayoutPanelTop, Mic, Video, Plus, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGallery, MediaTypeCard } from '@/components/training';
+import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGallery, MediaTypeCard, StoryboardViewer } from '@/components/training';
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { supabase } from '@/integrations/supabase/client';
 import { applyWatermark } from '@/lib/watermark';
@@ -55,40 +54,6 @@ export default function CrearCapacitacion() {
   const [videoScript, setVideoScript] = useState<any>(null);
   const [videoImages, setVideoImages] = useState<string[]>([]);
   const [storyboardAudioUrl, setStoryboardAudioUrl] = useState<string | null>(null);
-  const [isPlayingStoryboard, setIsPlayingStoryboard] = useState(false);
-  const [activeSceneIdx, setActiveSceneIdx] = useState(0);
-  const [audioProgress, setAudioProgress] = useState(0);
-  const storyboardAudioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Auto-advance scenes during playback
-  useEffect(() => {
-    if (!isPlayingStoryboard || !videoScript?.scenes?.length) return;
-    const totalScenes = videoScript.scenes.length;
-    const interval = setInterval(() => {
-      setActiveSceneIdx(prev => {
-        const next = prev + 1;
-        if (next >= totalScenes) {
-          setIsPlayingStoryboard(false);
-          storyboardAudioRef.current?.pause();
-          return 0;
-        }
-        return next;
-      });
-    }, 8000); // 8s per scene
-    return () => clearInterval(interval);
-  }, [isPlayingStoryboard, videoScript]);
-
-  const toggleStoryboardPlayback = useCallback(() => {
-    const audio = storyboardAudioRef.current;
-    if (!audio) return;
-    if (isPlayingStoryboard) {
-      audio.pause();
-      setIsPlayingStoryboard(false);
-    } else {
-      audio.play().catch(() => {});
-      setIsPlayingStoryboard(true);
-    }
-  }, [isPlayingStoryboard]);
 
   // Form state
   const [title, setTitle] = useState('');
@@ -857,115 +822,35 @@ export default function CrearCapacitacion() {
                       </Button>
                       {!editId && <p className="text-xs text-destructive">Guarde como borrador primero para habilitar la generación</p>}
                       {videoScript && (
-                        <div className="mt-3 space-y-3 border-t pt-3">
-                          {/* Multimedia header */}
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold">Storyboard Multimedia</p>
-                              <Badge variant="secondary" className="text-[10px]">{videoScript.scenes?.length} escenas</Badge>
-                            </div>
-                            {/* Audio from media list */}
-                            {(() => {
+                        <div className="mt-3 border-t pt-3">
+                          <StoryboardViewer
+                            scenes={videoScript.scenes || []}
+                            imageUrls={videoImages}
+                            audioUrl={(() => {
                               const audioItems = (media as any[]).filter((m: any) => m.type === 'audio');
-                              const audioUrl = storyboardAudioUrl || (audioItems.length > 0 ? audioItems[audioItems.length - 1].file_url : null);
-                              if (!audioUrl) return (
-                                <Badge variant="outline" className="text-[10px] gap-1">
-                                  <Mic className="h-3 w-3" /> Sin audio — genere uno arriba
-                                </Badge>
-                              );
-                              return (
-                                <div className="flex items-center gap-1.5">
-                                  <Badge variant="outline" className="gap-1 text-[10px] bg-accent/20">
-                                    <Volume2 className="h-3 w-3" /> Audio vinculado
-                                  </Badge>
-                                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => {
-                                    setActiveSceneIdx(prev => Math.max(0, prev - 1));
-                                  }}>
-                                    <SkipBack className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button size="icon" variant={isPlayingStoryboard ? "default" : "outline"} className="h-8 w-8" onClick={() => {
-                                    if (!storyboardAudioRef.current) {
-                                      const audio = new Audio(audioUrl);
-                                      storyboardAudioRef.current = audio;
-                                      audio.addEventListener('timeupdate', () => {
-                                        if (audio.duration) setAudioProgress((audio.currentTime / audio.duration) * 100);
-                                      });
-                                      audio.addEventListener('ended', () => {
-                                        setIsPlayingStoryboard(false);
-                                        setActiveSceneIdx(0);
-                                        setAudioProgress(0);
-                                      });
-                                    }
-                                    toggleStoryboardPlayback();
-                                  }}>
-                                    {isPlayingStoryboard ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                                  </Button>
-                                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => {
-                                    setActiveSceneIdx(prev => Math.min((videoScript.scenes?.length || 1) - 1, prev + 1));
-                                  }}>
-                                    <SkipForward className="h-3.5 w-3.5" />
-                                  </Button>
-                                </div>
-                              );
+                              return storyboardAudioUrl || (audioItems.length > 0 ? audioItems[audioItems.length - 1].file_url : null);
                             })()}
-                          </div>
-
-                          {/* Audio progress bar */}
-                          {isPlayingStoryboard && (
-                            <Progress value={audioProgress} className="h-1" />
-                          )}
-
-                          {/* Scene cards */}
-                          {videoScript.scenes?.map((scene: any, idx: number) => (
-                            <motion.div
-                              key={idx}
-                              initial={false}
-                              animate={{
-                                scale: idx === activeSceneIdx ? 1 : 0.97,
-                                opacity: idx === activeSceneIdx ? 1 : 0.6,
-                              }}
-                              transition={{ duration: 0.3 }}
-                              className={`rounded-lg border overflow-hidden cursor-pointer transition-shadow ${idx === activeSceneIdx ? 'ring-2 ring-primary/50 shadow-md' : ''}`}
-                              onClick={() => setActiveSceneIdx(idx)}
-                            >
-                              {videoImages[idx] && (
-                                <div className="bg-muted/30 flex items-center justify-center relative">
-                                  <img
-                                    src={videoImages[idx]}
-                                    alt={`Escena ${idx + 1}: ${scene.title}`}
-                                    className="w-full max-h-64 object-contain"
-                                  />
-                                  {idx === activeSceneIdx && isPlayingStoryboard && (
-                                    <div className="absolute top-2 right-2">
-                                      <Badge className="bg-primary/90 text-primary-foreground text-[10px] animate-pulse gap-1">
-                                        <Volume2 className="h-3 w-3" /> Reproduciendo
-                                      </Badge>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              <div className="p-3 space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <Badge variant={idx === activeSceneIdx ? "default" : "secondary"} className="text-[10px] h-5 w-5 p-0 flex items-center justify-center rounded-full">{idx + 1}</Badge>
-                                  <p className="text-sm font-semibold text-foreground">{scene.title}</p>
-                                </div>
-                                <p className="text-xs text-muted-foreground leading-relaxed">{scene.narration}</p>
-                                {scene.visual_description && (
-                                  <p className="text-xs text-muted-foreground/70 italic">🎨 {scene.visual_description}</p>
-                                )}
-                              </div>
-                            </motion.div>
-                          ))}
-                          {videoImages.length === 0 && (
-                            <p className="text-xs text-amber-600">⚠️ Las imágenes no pudieron generarse. Revise la configuración de IA o intente de nuevo.</p>
-                          )}
-
-                          {/* Suggestions badges */}
-                          <div className="flex flex-wrap gap-1.5 pt-2 border-t">
-                            <Badge variant="outline" className="text-[10px] bg-accent/10">🎬 Modo presentación fullscreen</Badge>
-                            <Badge variant="outline" className="text-[10px] bg-accent/10">📥 Exportar storyboard a PDF</Badge>
-                            <Badge variant="outline" className="text-[10px] bg-accent/10">🔄 Regenerar escena individual</Badge>
-                          </div>
+                            allowRegenerate
+                            courseId={editId || undefined}
+                            courseTitle={title}
+                            companyId={currentCompanyId}
+                            style={videoStyle}
+                            contentText={content?.contenido}
+                            puntosClave={content?.puntosClave}
+                            onSceneRegenerated={(idx, newUrl, newScene) => {
+                              setVideoImages(prev => {
+                                const copy = [...prev];
+                                copy[idx] = newUrl;
+                                return copy;
+                              });
+                              setVideoScript((prev: any) => {
+                                if (!prev?.scenes) return prev;
+                                const scenes = [...prev.scenes];
+                                scenes[idx] = newScene;
+                                return { ...prev, scenes };
+                              });
+                            }}
+                          />
                         </div>
                       )}
                     </CardContent>
