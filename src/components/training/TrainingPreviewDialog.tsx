@@ -535,7 +535,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                     </div>
                     <MediaTypeCard
                       icon={<Video className="h-5 w-5 text-muted-foreground" />}
-                      title="Video Educativo"
+                      title="Storyboard"
                       description="Genera un guion narrado + secuencia de imágenes estilizadas con IA"
                       items={media.filter(m => m.type === 'video')}
                       isGenerating={false}
@@ -575,7 +575,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                     </div>
                     <MediaReadOnlyCard
                       icon={<Video className="h-5 w-5 text-primary" />}
-                      title="Video Educativo"
+                      title="Storyboard"
                       description="Genera un guion narrado + secuencia de imágenes estilizadas con IA"
                       items={media.filter(m => m.type === 'video')}
                     />
