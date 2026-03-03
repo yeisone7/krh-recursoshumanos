@@ -51,7 +51,7 @@ import {
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import petroVerdeLogo from '@/assets/petrocasinos-sidebar-icon.png';
+import petroVerdeLogo from '@/assets/petrocasinos-sidebar-icon-new.png';
 
 interface NavItem {
   label: string;
@@ -449,7 +449,7 @@ export function Sidebar() {
               </div>
               <div className="flex flex-col">
                 <span className="font-display font-bold text-xl text-sidebar-primary leading-tight">KRH</span>
-                <span className="text-[11px] font-semibold text-primary leading-tight whitespace-nowrap">Talento Humano</span>
+                <span className="text-[11px] font-semibold text-white leading-tight whitespace-nowrap">Talento Humano</span>
               </div>
             </motion.div> :
 
