@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -23,6 +24,7 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
   const [adjustType, setAdjustType] = useState<'add' | 'subtract'>('add');
   const [quantity, setQuantity] = useState(1);
   const [reason, setReason] = useState('entrada');
+  const [notes, setNotes] = useState('');
   const adjustMutation = useAdjustInventoryQuantity();
 
   const handleSubmit = async () => {
@@ -30,12 +32,14 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
 
     try {
       const adjustment = adjustType === 'add' ? quantity : -quantity;
-      await adjustMutation.mutateAsync({ id: item.id, adjustment, reason });
+      const fullReason = notes.trim() ? `${reason} | ${notes.trim()}` : reason;
+      await adjustMutation.mutateAsync({ id: item.id, adjustment, reason: fullReason });
       toast.success('Stock actualizado', {
         description: `${adjustType === 'add' ? '+' : '-'}${quantity} unidades de ${item.item_name}`,
       });
       onOpenChange(false);
       setQuantity(1);
+      setNotes('');
     } catch (error: any) {
       toast.error('Error al ajustar stock', { description: error.message });
     }
@@ -96,6 +100,17 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
                 <SelectItem value="dano">Daño / Pérdida</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label>Notas <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+            <Textarea
+              placeholder="Ej: Proveedor X, factura #123..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              maxLength={500}
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
