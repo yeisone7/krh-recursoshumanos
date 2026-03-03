@@ -306,7 +306,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                           {item.fromProfesiograma ? (
                             <div className="col-span-2 flex items-center gap-2">
                               <span className="font-medium text-sm">{item.itemName}</span>
-                              <Badge variant="outline" className="text-xs gap-1">
+                              <Badge variant="outline" className="text-xs gap-1 bg-emerald-50 text-emerald-700 border-emerald-200">
                                 <Sparkles className="w-3 h-3" /> Sugerido
                               </Badge>
                             </div>
