@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { 
   Package, Plus, Search, Filter, Eye, 
   AlertTriangle, CheckCircle, Clock, Calendar,
-  Loader2, Warehouse, ClipboardList, ShieldCheck, Settings, FileDown, Users
+  Loader2, Warehouse, ClipboardList, ShieldCheck, Settings, FileDown, Users, Trash2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ import { DotationInventoryTab } from '@/components/dotation/DotationInventoryTab
 import { ProfesiogramaTab } from '@/components/dotation/ProfesiogramaTab';
 import { DotationComplianceTab } from '@/components/dotation/DotationComplianceTab';
 import { BulkDeliveryDialog } from '@/components/dotation/BulkDeliveryDialog';
-import { useDotationDeliveries, getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
+import { useDotationDeliveries, useDeleteDotationDelivery, getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { usePositions, useSystemConfig, useUpdateSystemConfig } from '@/hooks/useSystemConfig';
@@ -109,6 +109,7 @@ export default function Dotacion() {
   const { currentCompanyId } = useAuth();
   const { data: company } = useCompany(currentCompanyId || undefined);
   const { data: deliveries, isLoading } = useDotationDeliveries();
+  const deleteMutation = useDeleteDotationDelivery();
   const { data: inventory = [] } = useDotationInventory();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: positionsData = [] } = usePositions();
@@ -516,6 +517,22 @@ export default function Dotacion() {
                               title="Exportar acta de entrega"
                             >
                               <FileDown className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => {
+                                if (window.confirm('¿Estás seguro de eliminar este registro de entrega?')) {
+                                  deleteMutation.mutate(delivery.id, {
+                                    onSuccess: () => toast.success('Registro eliminado'),
+                                    onError: () => toast.error('Error al eliminar'),
+                                  });
+                                }
+                              }}
+                              title="Eliminar registro"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </TableCell>
