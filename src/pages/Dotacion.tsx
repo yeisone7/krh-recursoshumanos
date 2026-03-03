@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { 
   Package, Plus, Search, Filter, Eye, 
   AlertTriangle, CheckCircle, Clock, Calendar,
-  Loader2, Warehouse, ClipboardList, ShieldCheck, Settings, FileDown
+  Loader2, Warehouse, ClipboardList, ShieldCheck, Settings, FileDown, Users
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,7 @@ import { DotationAlertsCard } from '@/components/dotation/DotationAlertsCard';
 import { DotationInventoryTab } from '@/components/dotation/DotationInventoryTab';
 import { ProfesiogramaTab } from '@/components/dotation/ProfesiogramaTab';
 import { DotationComplianceTab } from '@/components/dotation/DotationComplianceTab';
+import { BulkDeliveryDialog } from '@/components/dotation/BulkDeliveryDialog';
 import { useDotationDeliveries, getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
 import { useOperationCenters } from '@/hooks/useCompanies';
@@ -97,6 +98,7 @@ function getAlertLevel(daysRemaining: number): 'info' | 'warning' | 'critical' {
 export default function Dotacion() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -248,10 +250,16 @@ export default function Dotacion() {
           </p>
         </div>
         {activeTab === 'entregas' && (
-          <Button onClick={() => setIsFormOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Nueva Entrega
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsBulkOpen(true)} className="gap-2">
+              <Users className="w-4 h-4" />
+              Entrega Masiva
+            </Button>
+            <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Nueva Entrega
+            </Button>
+          </div>
         )}
       </motion.div>
 
@@ -656,6 +664,11 @@ export default function Dotacion() {
           }}
         />
       )}
+
+      <BulkDeliveryDialog
+        open={isBulkOpen}
+        onOpenChange={setIsBulkOpen}
+      />
     </div>
   );
 }
