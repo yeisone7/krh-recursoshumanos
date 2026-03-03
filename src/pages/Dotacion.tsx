@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { 
   Package, Plus, Search, Filter, Eye, 
   AlertTriangle, CheckCircle, Clock, Calendar,
-  Loader2, Warehouse, ClipboardList, ShieldCheck
+  Loader2, Warehouse, ClipboardList, ShieldCheck, Settings
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { DotationFormDialog } from '@/components/dotation/DotationFormDialog';
@@ -37,7 +39,7 @@ import { DotationComplianceTab } from '@/components/dotation/DotationComplianceT
 import { useDotationDeliveries, getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
 import { useOperationCenters } from '@/hooks/useCompanies';
-import { usePositions } from '@/hooks/useSystemConfig';
+import { usePositions, useSystemConfig, useUpdateSystemConfig } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -104,6 +106,10 @@ export default function Dotacion() {
   const { data: inventory = [] } = useDotationInventory();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: positionsData = [] } = usePositions();
+  const { data: systemConfig } = useSystemConfig();
+  const updateConfig = useUpdateSystemConfig();
+
+  const inventoryEnabled = systemConfig?.dotation_inventory_enabled?.enabled !== false;
 
   // Handle deep link from dashboard alerts
   useEffect(() => {
@@ -145,7 +151,7 @@ export default function Dotacion() {
   }, [deliveries]);
 
   // Stats
-  const lowStockCount = inventory.filter(i => i.minimum_stock > 0 && i.quantity_available <= i.minimum_stock).length;
+  const lowStockCount = inventoryEnabled ? inventory.filter(i => i.minimum_stock > 0 && i.quantity_available <= i.minimum_stock).length : 0;
   const stats = useMemo(() => {
     if (!deliveries) return { total: 0, vigentes: 0, porVencer: 0, vencidas: 0 };
     
@@ -231,17 +237,22 @@ export default function Dotacion() {
           <TabsTrigger value="entregas" className="gap-2">
             <Package className="w-4 h-4" /> Entregas
           </TabsTrigger>
-          <TabsTrigger value="inventario" className="gap-2">
-            <Warehouse className="w-4 h-4" /> Inventario
-            {lowStockCount > 0 && (
-              <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">{lowStockCount}</Badge>
-            )}
-          </TabsTrigger>
+          {inventoryEnabled && (
+            <TabsTrigger value="inventario" className="gap-2">
+              <Warehouse className="w-4 h-4" /> Inventario
+              {lowStockCount > 0 && (
+                <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">{lowStockCount}</Badge>
+              )}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="profesiograma" className="gap-2">
             <ClipboardList className="w-4 h-4" /> Profesiograma
           </TabsTrigger>
           <TabsTrigger value="cumplimiento" className="gap-2">
             <ShieldCheck className="w-4 h-4" /> Cumplimiento
+          </TabsTrigger>
+          <TabsTrigger value="ajustes" className="gap-2">
+            <Settings className="w-4 h-4" /> Ajustes
           </TabsTrigger>
         </TabsList>
 
@@ -477,9 +488,11 @@ export default function Dotacion() {
         </div>
         </TabsContent>
 
-        <TabsContent value="inventario" className="mt-6">
-          <DotationInventoryTab />
-        </TabsContent>
+        {inventoryEnabled && (
+          <TabsContent value="inventario" className="mt-6">
+            <DotationInventoryTab />
+          </TabsContent>
+        )}
 
         <TabsContent value="profesiograma" className="mt-6">
           <ProfesiogramaTab
@@ -490,6 +503,45 @@ export default function Dotacion() {
 
         <TabsContent value="cumplimiento" className="mt-6">
           <DotationComplianceTab />
+        </TabsContent>
+
+        <TabsContent value="ajustes" className="mt-6">
+          <div className="max-w-2xl space-y-6">
+            <div className="card-elevated p-6 space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Warehouse className="w-5 h-5 text-primary" />
+                  Módulo de Inventario
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Activa o desactiva el control de inventario de dotación. Si se desactiva, la pestaña de inventario no será visible y no se descontarán existencias al registrar entregas.
+                </p>
+              </div>
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">Habilitar inventario de dotación</Label>
+                  <p className="text-xs text-muted-foreground">Controla existencias por centro, artículo y talla</p>
+                </div>
+                <Switch
+                  checked={inventoryEnabled}
+                  onCheckedChange={async (checked) => {
+                    try {
+                      await updateConfig.mutateAsync({
+                        key: 'dotation_inventory_enabled',
+                        value: { enabled: checked },
+                        description: 'Habilitar/deshabilitar módulo de inventario de dotación',
+                      });
+                      if (!checked && activeTab === 'inventario') {
+                        setActiveTab('entregas');
+                      }
+                    } catch {
+                      // error handled by mutation
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
