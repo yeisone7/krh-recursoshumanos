@@ -49,24 +49,38 @@ export function useProfesiogramas() {
 
       if (error) throw error;
 
-      // Fetch items for each profesiograma
-      const profIds = (data as any[]).map((p: any) => p.id);
+      const profList = (data as any[]) || [];
+      if (profList.length === 0) return [] as Profesiograma[];
+
+      // Fetch items in batches to avoid URL length limits
+      const BATCH_SIZE = 50;
       let items: any[] = [];
-      if (profIds.length > 0) {
+      const profIds = profList.map((p: any) => p.id);
+
+      for (let i = 0; i < profIds.length; i += BATCH_SIZE) {
+        const batch = profIds.slice(i, i + BATCH_SIZE);
         const { data: itemsData, error: itemsError } = await supabase
           .from('dotation_profesiograma_items' as any)
           .select(`
             id, profesiograma_id, dotation_item_type_id, quantity, notes, is_required,
             dotation_item_types(id, name, code, category, requires_size, sizes_available, default_validity_months)
           `)
-          .in('profesiograma_id', profIds);
+          .in('profesiograma_id', batch);
         if (itemsError) throw itemsError;
-        items = (itemsData as any[]) || [];
+        if (itemsData) items = items.concat(itemsData as any[]);
       }
 
-      return (data as any[]).map((p: any) => ({
+      // Build a lookup map for performance
+      const itemsByProf = new Map<string, any[]>();
+      for (const item of items) {
+        const pid = item.profesiograma_id;
+        if (!itemsByProf.has(pid)) itemsByProf.set(pid, []);
+        itemsByProf.get(pid)!.push(item);
+      }
+
+      return profList.map((p: any) => ({
         ...p,
-        items: items.filter((i: any) => i.profesiograma_id === p.id),
+        items: itemsByProf.get(p.id) || [],
       })) as Profesiograma[];
     },
     enabled: !!currentCompanyId,
