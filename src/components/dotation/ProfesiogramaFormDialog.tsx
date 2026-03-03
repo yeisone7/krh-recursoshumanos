@@ -130,7 +130,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
           {/* Center + Position selectors */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
