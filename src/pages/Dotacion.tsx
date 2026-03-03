@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { 
   Package, Plus, Search, Filter, Eye, 
   AlertTriangle, CheckCircle, Clock, Calendar,
-  Loader2, Warehouse, ClipboardList, ShieldCheck, Settings
+  Loader2, Warehouse, ClipboardList, ShieldCheck, Settings, FileDown
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,9 @@ import { useDotationInventory } from '@/hooks/useDotationInventory';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { usePositions, useSystemConfig, useUpdateSystemConfig } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCompany } from '@/hooks/useCompanies';
+import { generateActaEntregaPdf } from '@/lib/dotationPdfGenerator';
+import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
 type DotationItemType = Database['public']['Enums']['dotation_item_type'];
@@ -102,6 +105,7 @@ export default function Dotacion() {
   const [activeTab, setActiveTab] = useState('entregas');
 
   const { currentCompanyId } = useAuth();
+  const { data: company } = useCompany(currentCompanyId || undefined);
   const { data: deliveries, isLoading } = useDotationDeliveries();
   const { data: inventory = [] } = useDotationInventory();
   const { data: operationCenters = [] } = useOperationCenters();
@@ -184,6 +188,26 @@ export default function Dotacion() {
   const handleViewDelivery = (deliveryId: string) => {
     setSelectedDeliveryId(deliveryId);
     setIsDetailOpen(true);
+  };
+
+  const handleExportPdf = async (delivery: any) => {
+    // Find all deliveries for the same employee on the same date
+    const sameBatch = deliveries?.filter(d =>
+      d.employee_id === delivery.employee_id &&
+      d.delivery_date === delivery.delivery_date
+    ) || [delivery];
+
+    try {
+      await generateActaEntregaPdf({
+        companyName: company?.name || 'Empresa',
+        companyNit: company?.nit || '',
+        deliveries: sameBatch,
+      });
+      toast.success('Acta de entrega generada');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Error al generar el PDF');
+    }
   };
 
   const selectedDelivery = deliveries?.find(d => d.id === selectedDeliveryId);
@@ -468,14 +492,24 @@ export default function Dotacion() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDelivery(delivery.id)}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Ver
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewDelivery(delivery.id)}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              Ver
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleExportPdf(delivery)}
+                              title="Exportar acta de entrega"
+                            >
+                              <FileDown className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
