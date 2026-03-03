@@ -26,7 +26,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-import { DOTATION_PERIOD_MONTHS, dotationItemTypeLabels } from '@/types/dotation';
+import { DOTATION_PERIOD_MONTHS } from '@/types/dotation';
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
 import { useCreateDotationDelivery } from '@/hooks/useDotation';
@@ -109,6 +109,13 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
       size: undefined,
       fromProfesiograma: false,
     }]);
+  };
+
+  const handleCatalogSelect = (idx: number, catalogName: string) => {
+    const updated = [...items];
+    updated[idx].itemTypeEnum = 'otros' as DotationItemType;
+    updated[idx].itemName = catalogName;
+    setItems(updated);
   };
 
   const removeItem = (idx: number) => setItems(items.filter((_, i) => i !== idx));
@@ -313,24 +320,20 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                           ) : (
                             <>
                               <Select
-                                value={item.itemTypeEnum}
-                                onValueChange={(v) => updateItem(idx, 'itemTypeEnum', v)}
+                                value={item.itemName || undefined}
+                                onValueChange={(v) => handleCatalogSelect(idx, v)}
                               >
-                                <SelectTrigger className="h-9">
-                                  <SelectValue />
+                                <SelectTrigger className="h-9 col-span-2">
+                                  <SelectValue placeholder="Seleccionar artículo" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  {Object.entries(dotationItemTypeLabels).map(([val, label]) => (
-                                    <SelectItem key={val} value={val}>{label}</SelectItem>
-                                  ))}
+                                <SelectContent className="max-h-[200px]">
+                                  {itemTypeCatalog
+                                    .filter((c: any) => c.is_active)
+                                    .map((c: any) => (
+                                      <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                                    ))}
                                 </SelectContent>
                               </Select>
-                              <Input
-                                placeholder="Nombre del artículo"
-                                value={item.itemName}
-                                onChange={(e) => updateItem(idx, 'itemName', e.target.value)}
-                                className="h-9"
-                              />
                             </>
                           )}
                         </div>
