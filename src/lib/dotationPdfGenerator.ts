@@ -28,6 +28,7 @@ interface ActaOptions {
   companyName: string;
   companyNit: string;
   deliveries: DeliveryForPdf[];
+  signatureDataUrl?: string | null;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -41,7 +42,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 export async function generateActaEntregaPdf(options: ActaOptions): Promise<void> {
-  const { companyName, companyNit, deliveries } = options;
+  const { companyName, companyNit, deliveries, signatureDataUrl } = options;
   if (deliveries.length === 0) return;
 
   const first = deliveries[0];
@@ -69,17 +70,17 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
     doc.restoreGraphicsState();
   } catch { /* watermark optional */ }
 
-  // Try to load logo
+  // Header logo — use the same watermark image (full color) for the header
   try {
-    const logoImg = await loadImage('/images/petrocasinos-logo-white.png');
-    doc.addImage(logoImg, 'PNG', margin, y, 36, 16);
+    const logoImg = await loadImage('/images/petrocasinos-watermark.png');
+    doc.addImage(logoImg, 'PNG', margin, y, 36, 20);
   } catch { /* logo optional */ }
 
   // Header
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.text('ACTA DE ENTREGA DE DOTACIÓN', pageW / 2, y + 8, { align: 'center' });
-  y += 20;
+  y += 22;
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -194,8 +195,14 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
   const sig1X = margin;
   const sig2X = pageW / 2 + 10;
 
-  // If there's a digital signature, render it
-  if (first.signature_url) {
+  // If there's a digital signature from the capture dialog, render it
+  if (signatureDataUrl) {
+    try {
+      const sigImg = await loadImage(signatureDataUrl);
+      doc.addImage(sigImg, 'PNG', sig1X, sigY - 25, 60, 22);
+    } catch { /* signature load optional */ }
+  } else if (first.signature_url) {
+    // Fallback: use stored signature if any
     try {
       const sigImg = await loadImage(first.signature_url);
       doc.addImage(sigImg, 'PNG', sig1X, sigY - 25, 60, 22);
