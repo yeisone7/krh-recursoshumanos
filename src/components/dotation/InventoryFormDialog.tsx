@@ -14,8 +14,9 @@ import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { dotationItemTypeLabels } from '@/types/dotation';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useCreateInventoryItem, useUpdateInventoryItem, type DotationInventoryItem } from '@/hooks/useDotationInventory';
+import { useDotationItemTypes } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -33,6 +34,9 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
   const { currentCompanyId } = useAuth();
   const createItem = useCreateInventoryItem();
   const updateItem = useUpdateInventoryItem();
+  const { data: dotationItemTypes = [] } = useDotationItemTypes();
+
+  const activeItemTypes = (dotationItemTypes as any[])?.filter((t: any) => t.is_active !== false) || [];
 
   const { data: centers = [] } = useQuery({
     queryKey: ['operation_centers_list', currentCompanyId],
@@ -47,7 +51,6 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
     defaultValues: {
       operation_center_id: '',
       item_type: '',
-      item_name: '',
       size: '',
       quantity_available: 0,
       minimum_stock: 0,
@@ -59,7 +62,6 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
       form.reset({
         operation_center_id: editItem.operation_center_id || '',
         item_type: editItem.item_type,
-        item_name: editItem.item_name,
         size: editItem.size || '',
         quantity_available: editItem.quantity_available,
         minimum_stock: editItem.minimum_stock,
@@ -68,7 +70,6 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
       form.reset({
         operation_center_id: '',
         item_type: '',
-        item_name: '',
         size: '',
         quantity_available: 0,
         minimum_stock: 0,
@@ -77,14 +78,16 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
   }, [editItem, open, form]);
 
   const selectedItemType = form.watch('item_type');
-  const isFootwear = selectedItemType === 'calzado_seguridad' || selectedItemType === 'calzado_dielectrico';
+  const selectedTypeData = activeItemTypes.find((t: any) => t.id === selectedItemType);
+  const isFootwear = selectedTypeData?.category?.toLowerCase()?.includes('calzado');
 
   const handleSubmit = async (values: any) => {
     try {
+      const selectedType = activeItemTypes.find((t: any) => t.id === values.item_type);
       const payload = {
         operation_center_id: values.operation_center_id || null,
         item_type: values.item_type,
-        item_name: values.item_name,
+        item_name: selectedType?.name || values.item_type,
         size: values.size || null,
         quantity_available: values.quantity_available,
         minimum_stock: values.minimum_stock,
@@ -145,36 +148,22 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
             <FormField
               control={form.control}
               name="item_type"
-              rules={{ required: 'Seleccione el tipo' }}
+              rules={{ required: 'Seleccione el tipo de dotación' }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tipo de Artículo *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.entries(dotationItemTypeLabels).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="item_name"
-              rules={{ required: 'El nombre es requerido' }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre del Artículo *</FormLabel>
+                  <FormLabel>Tipo de Dotación *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: Camisa polo azul corporativa" {...field} />
+                    <SearchableSelect
+                      options={activeItemTypes.map((t: any) => ({
+                        value: t.id,
+                        label: `${t.name}${t.code ? ` (${t.code})` : ''}`,
+                      }))}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Seleccionar tipo de dotación"
+                      searchPlaceholder="Buscar tipo..."
+                      emptyMessage="No se encontraron tipos de dotación."
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
