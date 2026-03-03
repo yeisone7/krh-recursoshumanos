@@ -116,6 +116,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
 
   useEffect(() => {
     if (selectedEmployeeId && !deposit) {
+      // Fetch fund name from social security
       supabase
         .from('employee_social_security')
         .select('afc')
@@ -125,6 +126,19 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
         .then(({ data: ssData }) => {
           if (ssData?.afc) {
             form.setValue('fund_name', ssData.afc);
+          }
+        });
+
+      // Fetch bank account number
+      supabase
+        .from('employee_bank_info')
+        .select('account_number')
+        .eq('employee_id', selectedEmployeeId)
+        .eq('is_current', true)
+        .maybeSingle()
+        .then(({ data: bankData }) => {
+          if (bankData?.account_number) {
+            form.setValue('fund_account', bankData.account_number);
           }
         });
     }
