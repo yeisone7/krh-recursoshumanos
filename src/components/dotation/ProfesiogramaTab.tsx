@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
-import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload, Search, CheckSquare, Users, BarChart3 } from 'lucide-react';
+import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Progress } from '@/components/ui/progress';
+
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -17,7 +17,7 @@ import {
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
-import { useProfesiogramas, useDeleteProfesiograma, useProfesiogramaCoverage, type Profesiograma } from '@/hooks/useDotationProfesiograma';
+import { useProfesiogramas, useDeleteProfesiograma, type Profesiograma } from '@/hooks/useDotationProfesiograma';
 import { useDotationItemTypes } from '@/hooks/useSystemConfig';
 import { ProfesiogramaFormDialog } from './ProfesiogramaFormDialog';
 import { CloneProfesiogramaDialog } from './CloneProfesiogramaDialog';
@@ -32,7 +32,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
   const { data: profesiogramas, isLoading } = useProfesiogramas();
   const deleteMutation = useDeleteProfesiograma();
   const { data: itemTypes = [] } = useDotationItemTypes();
-  const { data: coverage } = useProfesiogramaCoverage();
+  
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editData, setEditData] = useState<Profesiograma | null>(null);
@@ -105,6 +105,26 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
       return matchesSearch && matchesCenter && matchesPosition;
     });
   }, [profesiogramas, searchQuery, centerFilter, positionFilter, centers, positions]);
+
+  // Group filtered profesiogramas by center
+  const groupedByCenter = useMemo(() => {
+    const groups: { centerId: string; centerName: string; items: typeof filteredProfesiogramas }[] = [];
+    const map = new Map<string, typeof filteredProfesiogramas>();
+    
+    filteredProfesiogramas.forEach((prof) => {
+      const cId = prof.operation_center_id;
+      if (!map.has(cId)) map.set(cId, []);
+      map.get(cId)!.push(prof);
+    });
+
+    map.forEach((items, centerId) => {
+      const centerName = items[0]?.operation_centers?.name || getCenterName(centerId);
+      groups.push({ centerId, centerName, items });
+    });
+
+    groups.sort((a, b) => a.centerName.localeCompare(b.centerName));
+    return groups;
+  }, [filteredProfesiogramas, centers]);
 
   const usedCenters = useMemo(() => {
     if (!profesiogramas) return [];
@@ -222,30 +242,6 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
         </div>
       </div>
 
-      {/* Coverage by Center */}
-      {coverage && coverage.length > 0 && (
-        <div className="card-elevated p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <BarChart3 className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-semibold">Cobertura por Centro de Operación</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {coverage.map((c) => (
-              <div key={c.centerId} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{c.centerName}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Progress value={c.percentage} className="h-2 flex-1" />
-                    <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-                      {c.covered}/{c.total} ({c.percentage}%)
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Filters */}
       {profesiogramas && profesiogramas.length > 0 && (
@@ -308,8 +304,8 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           </Button>
         </div>
       ) : (
-        <div className="card-elevated">
-          <div className="px-4 py-2 border-b border-border flex items-center justify-between">
+        <div className="space-y-4">
+          <div className="px-1 flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               {filteredProfesiogramas.length} de {profesiogramas.length} profesiograma{profesiogramas.length !== 1 ? 's' : ''}
             </p>
@@ -317,81 +313,93 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
               <p className="text-xs font-medium text-primary">{selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}</p>
             )}
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">
-                  <Checkbox
-                    checked={allFilteredSelected}
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Seleccionar todos"
-                  />
-                </TableHead>
-                <TableHead>Centro de Operación</TableHead>
-                <TableHead>Cargo</TableHead>
-                <TableHead>Artículos</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProfesiogramas.map((prof) => (
-                <TableRow key={prof.id} className={selectedIds.has(prof.id) ? 'bg-primary/5' : ''}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedIds.has(prof.id)}
-                      onCheckedChange={() => toggleSelect(prof.id)}
-                      aria-label="Seleccionar"
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {prof.operation_centers?.name || getCenterName(prof.operation_center_id)}
-                  </TableCell>
-                  <TableCell>
-                    {prof.positions?.name || getPositionName(prof.position_id)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {prof.items.slice(0, 3).map((item, i) => {
-                        const isRequired = (item as any).is_required !== false;
-                        return (
-                          <Badge
-                            key={i}
-                            variant={isRequired ? 'secondary' : 'outline'}
-                            className={`text-xs ${!isRequired ? 'border-dashed' : ''}`}
-                          >
-                            {item.dotation_item_types?.name || 'Artículo'}
-                            {item.quantity > 1 && ` x${item.quantity}`}
-                            {!isRequired && ' ⓘ'}
-                          </Badge>
-                        );
-                      })}
-                      {prof.items.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{prof.items.length - 3} más
-                        </Badge>
-                      )}
-                      {prof.items.length === 0 && (
-                        <span className="text-sm text-muted-foreground">Sin artículos</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(prof)} title="Editar">
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCloneData(prof)} title="Clonar">
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(prof.id)} title="Eliminar">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {groupedByCenter.map((group) => (
+            <div key={group.centerId} className="card-elevated">
+              <div className="px-4 py-2.5 border-b border-border bg-muted/30 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold">{group.centerName}</h3>
+                  <Badge variant="secondary" className="text-xs">{group.items.length}</Badge>
+                </div>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={group.items.every(p => selectedIds.has(p.id))}
+                        onCheckedChange={() => {
+                          const allSelected = group.items.every(p => selectedIds.has(p.id));
+                          const next = new Set(selectedIds);
+                          group.items.forEach(p => allSelected ? next.delete(p.id) : next.add(p.id));
+                          setSelectedIds(next);
+                        }}
+                        aria-label="Seleccionar grupo"
+                      />
+                    </TableHead>
+                    <TableHead>Cargo</TableHead>
+                    <TableHead>Artículos</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {group.items.map((prof) => (
+                    <TableRow key={prof.id} className={selectedIds.has(prof.id) ? 'bg-primary/5' : ''}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(prof.id)}
+                          onCheckedChange={() => toggleSelect(prof.id)}
+                          aria-label="Seleccionar"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {prof.positions?.name || getPositionName(prof.position_id)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {prof.items.slice(0, 3).map((item, i) => {
+                            const isRequired = (item as any).is_required !== false;
+                            return (
+                              <Badge
+                                key={i}
+                                variant={isRequired ? 'secondary' : 'outline'}
+                                className={`text-xs ${!isRequired ? 'border-dashed' : ''}`}
+                              >
+                                {item.dotation_item_types?.name || 'Artículo'}
+                                {item.quantity > 1 && ` x${item.quantity}`}
+                                {!isRequired && ' ⓘ'}
+                              </Badge>
+                            );
+                          })}
+                          {prof.items.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{prof.items.length - 3} más
+                            </Badge>
+                          )}
+                          {prof.items.length === 0 && (
+                            <span className="text-sm text-muted-foreground">Sin artículos</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(prof)} title="Editar">
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCloneData(prof)} title="Clonar">
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(prof.id)} title="Eliminar">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ))}
         </div>
       )}
 
