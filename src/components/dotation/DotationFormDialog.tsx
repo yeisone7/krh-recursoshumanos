@@ -356,11 +356,9 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                               ))}
                             </SelectContent>
                           </Select>
-                          {!item.fromProfesiograma && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeItem(idx)}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeItem(idx)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
