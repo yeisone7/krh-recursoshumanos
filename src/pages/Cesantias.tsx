@@ -8,14 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Edit2, Landmark, Percent, ArrowRightLeft, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Edit2, Landmark, Percent, ArrowRightLeft, AlertTriangle, CheckCircle, Clock, Upload } from 'lucide-react';
 import { 
   useCesantiasDeposits, 
   useCesantiasInterestPayments, 
   useCesantiasWithdrawals,
   useCesantiasComplianceSummary 
 } from '@/hooks/useCesantias';
-import { DepositFormDialog, InterestFormDialog, WithdrawalFormDialog } from '@/components/cesantias';
+import { DepositFormDialog, InterestFormDialog, WithdrawalFormDialog, ImportCesantiasDialog } from '@/components/cesantias';
 import { cesantiasStatusLabels, withdrawalReasonLabels, withdrawalStatusLabels } from '@/types/cesantias';
 import type { CesantiasDeposit, CesantiasInterestPayment, CesantiasWithdrawal } from '@/types/cesantias';
 
@@ -30,6 +30,8 @@ export default function Cesantias() {
   const [selectedDeposit, setSelectedDeposit] = useState<CesantiasDeposit | null>(null);
   const [selectedInterest, setSelectedInterest] = useState<CesantiasInterestPayment | null>(null);
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<CesantiasWithdrawal | null>(null);
+  const [showImportDeposits, setShowImportDeposits] = useState(false);
+  const [showImportInterests, setShowImportInterests] = useState(false);
 
   const { data: deposits = [], isLoading: loadingDeposits } = useCesantiasDeposits(selectedYear);
   const { data: interests = [], isLoading: loadingInterests } = useCesantiasInterestPayments(selectedYear);
@@ -181,9 +183,14 @@ export default function Cesantias() {
                   Consignación al fondo antes del 14 de febrero del año siguiente
                 </CardDescription>
               </div>
-              <Button onClick={() => { setSelectedDeposit(null); setShowDepositForm(true); }}>
-                <Plus className="w-4 h-4 mr-2" />Nuevo Depósito
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowImportDeposits(true)}>
+                  <Upload className="w-4 h-4 mr-2" />Importar
+                </Button>
+                <Button onClick={() => { setSelectedDeposit(null); setShowDepositForm(true); }}>
+                  <Plus className="w-4 h-4 mr-2" />Nuevo Depósito
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingDeposits ? (
@@ -250,9 +257,14 @@ export default function Cesantias() {
                   Pago del 12% anual directamente al empleado antes del 31 de enero
                 </CardDescription>
               </div>
-              <Button onClick={() => { setSelectedInterest(null); setShowInterestForm(true); }}>
-                <Plus className="w-4 h-4 mr-2" />Nuevo Pago
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowImportInterests(true)}>
+                  <Upload className="w-4 h-4 mr-2" />Importar
+                </Button>
+                <Button onClick={() => { setSelectedInterest(null); setShowInterestForm(true); }}>
+                  <Plus className="w-4 h-4 mr-2" />Nuevo Pago
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingInterests ? (
@@ -406,6 +418,16 @@ export default function Cesantias() {
         open={showWithdrawalForm}
         onOpenChange={setShowWithdrawalForm}
         withdrawal={selectedWithdrawal}
+      />
+      <ImportCesantiasDialog
+        open={showImportDeposits}
+        onOpenChange={setShowImportDeposits}
+        type="deposits"
+      />
+      <ImportCesantiasDialog
+        open={showImportInterests}
+        onOpenChange={setShowImportInterests}
+        type="interests"
       />
     </div>
   );
