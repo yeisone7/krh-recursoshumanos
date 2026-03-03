@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Package, User, FileText, CheckSquare, Square, Plus, Trash2, Sparkles, History, AlertTriangle } from 'lucide-react';
+import { CalendarIcon, Package, User, FileText, CheckSquare, Square, Plus, Trash2, Sparkles, History, AlertTriangle, PenTool } from 'lucide-react';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -26,6 +26,8 @@ import {
 import { cn } from '@/lib/utils';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { toast } from 'sonner';
+import { SignatureCanvas } from '@/components/training/SignatureCanvas';
+import { supabase } from '@/integrations/supabase/client';
 
 import { DOTATION_PERIOD_MONTHS } from '@/types/dotation';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -74,6 +76,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<DeliveryItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
   const selectedEmployee = employees.find(e => e.id === employeeId);
   const { data: profesiograma, isLoading: loadingProf } = useProfesiogramaByEmployee(employeeId || undefined);
@@ -106,6 +109,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
     setDeliveredBy('');
     setNotes('');
     setItems([]);
+    setSignatureDataUrl(null);
   };
 
   const addManualItem = () => {
@@ -179,6 +183,20 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
     setIsSubmitting(true);
     try {
+      // Upload signature if provided
+      let signatureUrl: string | null = null;
+      if (signatureDataUrl) {
+        const blob = await (await fetch(signatureDataUrl)).blob();
+        const fileName = `signatures/${employeeId}/${Date.now()}.png`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('dotation-images')
+          .upload(fileName, blob, { contentType: 'image/png' });
+        if (!uploadError && uploadData) {
+          const { data: urlData } = supabase.storage.from('dotation-images').getPublicUrl(uploadData.path);
+          signatureUrl = urlData.publicUrl;
+        }
+      }
+
       for (const item of selectedItems) {
         await createDelivery.mutateAsync({
           employee_id: employeeId,
@@ -190,6 +208,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
           expiration_date: format(expirationDate, 'yyyy-MM-dd'),
           delivered_by: deliveredBy,
           observations: notes || null,
+          signature_url: signatureUrl,
         });
       }
 
@@ -513,6 +532,30 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
+              </div>
+
+              {/* Firma digital del empleado */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <PenTool className="w-4 h-4" />
+                  Firma del Empleado
+                </Label>
+                {signatureDataUrl ? (
+                  <div className="space-y-2">
+                    <div className="border-2 border-primary/20 rounded-lg p-2 bg-white">
+                      <img src={signatureDataUrl} alt="Firma" className="w-full max-h-[120px] object-contain" />
+                    </div>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setSignatureDataUrl(null)}>
+                      Volver a firmar
+                    </Button>
+                  </div>
+                ) : (
+                  <SignatureCanvas
+                    onSave={(dataUrl) => setSignatureDataUrl(dataUrl)}
+                    width={500}
+                    height={150}
+                  />
+                )}
               </div>
             </TabsContent>
           </div>

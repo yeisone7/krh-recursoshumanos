@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export interface UnifiedAlert {
   id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'cesantias' | 'inventory_low_stock';
+  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'cesantias' | 'inventory_low_stock' | 'dotation_renewal';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
@@ -439,6 +439,105 @@ export function useUnifiedAlerts() {
               createdAt: new Date().toISOString(),
               navigateTo: '/dotacion',
             });
+          }
+        }
+      }
+
+      // 9. Profesiograma-based renewal alerts
+      // For each employee with a profesiograma, check if any required item's last delivery is expired or about to expire
+      const { data: profs } = await supabase
+        .from('dotation_profesiograma' as any)
+        .select('id, operation_center_id, position_id')
+        .eq('company_id', currentCompanyId!);
+
+      if (profs && (profs as any[]).length > 0) {
+        const profIds = (profs as any[]).map((p: any) => p.id);
+        const { data: profItems } = await supabase
+          .from('dotation_profesiograma_items' as any)
+          .select('profesiograma_id, dotation_item_type_id, is_required, dotation_item_types(id, name)')
+          .in('profesiograma_id', profIds);
+
+        // Build profMap: centerId|positionId -> required item names
+        const profMap = new Map<string, { itemTypeId: string; itemName: string }[]>();
+        for (const p of profs as any[]) {
+          const key = `${p.operation_center_id}|${p.position_id}`;
+          const items = ((profItems as any[]) || [])
+            .filter((i: any) => i.profesiograma_id === p.id && i.is_required !== false)
+            .map((i: any) => ({ itemTypeId: i.dotation_item_type_id, itemName: i.dotation_item_types?.name || 'Artículo' }));
+          profMap.set(key, items);
+        }
+
+        // Get work info for employees
+        const { data: workInfos } = await supabase
+          .from('employee_work_info')
+          .select('employee_id, operation_center_id, position_id')
+          .in('employee_id', employeeIds)
+          .eq('is_current', true);
+
+        if (workInfos) {
+          // Get all deliveries for date checking
+          const { data: allDeliveries } = await supabase
+            .from('dotation_deliveries')
+            .select('employee_id, item_name, expiration_date')
+            .in('employee_id', employeeIds);
+
+          const deliveryByEmpItem = new Map<string, string>(); // emp|itemName -> latest expiration
+          for (const d of (allDeliveries || []) as any[]) {
+            const key = `${d.employee_id}|${d.item_name}`;
+            const existing = deliveryByEmpItem.get(key);
+            if (!existing || d.expiration_date > existing) {
+              deliveryByEmpItem.set(key, d.expiration_date);
+            }
+          }
+
+          for (const wi of workInfos as any[]) {
+            if (!wi.operation_center_id || !wi.position_id) continue;
+            const profKey = `${wi.operation_center_id}|${wi.position_id}`;
+            const requiredItems = profMap.get(profKey);
+            if (!requiredItems) continue;
+
+            const employee = employeeMap.get(wi.employee_id);
+            if (!employee) continue;
+
+            for (const item of requiredItems) {
+              const lastExp = deliveryByEmpItem.get(`${wi.employee_id}|${item.itemName}`);
+              if (!lastExp) {
+                // Never delivered — critical alert
+                alerts.push({
+                  id: `renewal-${wi.employee_id}-${item.itemTypeId}`,
+                  type: 'dotation_renewal',
+                  level: 'critical',
+                  title: 'Dotación nunca entregada',
+                  description: `${item.itemName} — artículo obligatorio sin entrega registrada`,
+                  daysRemaining: -999,
+                  entityName: `${employee.first_name} ${employee.last_name}`,
+                  entityId: wi.employee_id,
+                  eventDate: '',
+                  createdAt: new Date().toISOString(),
+                  navigateTo: '/dotacion',
+                  employeeId: employee.id,
+                });
+              } else {
+                const daysRem = calculateDaysRemaining(lastExp);
+                if (daysRem !== null && daysRem <= 30) {
+                  const isExpired = daysRem < 0;
+                  alerts.push({
+                    id: `renewal-${wi.employee_id}-${item.itemTypeId}`,
+                    type: 'dotation_renewal',
+                    level: isExpired ? 'critical' : getAlertLevel(daysRem),
+                    title: isExpired ? 'Renovación de dotación vencida' : 'Renovación de dotación próxima',
+                    description: `${item.itemName} ${isExpired ? 'venció hace' : 'vence en'} ${Math.abs(daysRem)} días (profesiograma)`,
+                    daysRemaining: daysRem,
+                    entityName: `${employee.first_name} ${employee.last_name}`,
+                    entityId: wi.employee_id,
+                    eventDate: lastExp,
+                    createdAt: new Date().toISOString(),
+                    navigateTo: '/dotacion',
+                    employeeId: employee.id,
+                  });
+                }
+              }
+            }
           }
         }
       }

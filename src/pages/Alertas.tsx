@@ -35,6 +35,7 @@ const typeIcons: Record<UnifiedAlert['type'], React.ElementType> = {
   vacation: Palmtree,
   cesantias: Landmark,
   inventory_low_stock: Warehouse,
+  dotation_renewal: Package,
 };
 
 const typeLabels: Record<UnifiedAlert['type'], string> = {
@@ -47,6 +48,7 @@ const typeLabels: Record<UnifiedAlert['type'], string> = {
   vacation: 'Vacaciones',
   cesantias: 'Cesantías',
   inventory_low_stock: 'Stock Bajo',
+  dotation_renewal: 'Renovación Dotación',
 };
 
 const levelStyles = {
