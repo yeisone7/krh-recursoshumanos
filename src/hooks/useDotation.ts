@@ -179,7 +179,27 @@ export function useCreateDotationDelivery() {
 
       if (error) throw error;
 
-      // Auto-deduct from inventory
+      // Check if auto-deduct is enabled
+      const { data: configData } = await supabase
+        .from('system_config')
+        .select('config_value')
+        .eq('company_id', currentCompanyId!)
+        .eq('config_key', 'dotation_auto_deduct')
+        .maybeSingle();
+
+      const autoDeductEnabled = (configData?.config_value as any)?.enabled !== false;
+
+      const inventoryEnabledCheck = await supabase
+        .from('system_config')
+        .select('config_value')
+        .eq('company_id', currentCompanyId!)
+        .eq('config_key', 'dotation_inventory_enabled')
+        .maybeSingle();
+
+      const inventoryModuleEnabled = (inventoryEnabledCheck.data?.config_value as any)?.enabled !== false;
+
+      // Auto-deduct from inventory only if both modules are enabled
+      if (autoDeductEnabled && inventoryModuleEnabled) {
       try {
         // Find matching inventory item
         const { data: employee } = await supabase
@@ -279,6 +299,7 @@ export function useCreateDotationDelivery() {
       } catch (inventoryError) {
         console.warn('Could not auto-deduct from inventory:', inventoryError);
       }
+      } // end auto-deduct check
 
       // Get employee info for audit log
       const employee = await getEmployeeV2Info(data.employee_id);
