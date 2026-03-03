@@ -12,6 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateCesantiasDeposit, useUpdateCesantiasDeposit } from '@/hooks/useCesantias';
+import { useAFCCatalog } from '@/hooks/useSocialSecurityCatalogs';
+import { supabase } from '@/integrations/supabase/client';
 import type { CesantiasDeposit, CesantiasStatus } from '@/types/cesantias';
 
 const formSchema = z.object({
@@ -39,13 +41,6 @@ interface DepositFormDialogProps {
   deposit?: CesantiasDeposit | null;
 }
 
-const FUNDS = [
-  'Porvenir',
-  'Protección',
-  'Colfondos',
-  'Skandia',
-  'FNA',
-];
 
 const STATUS_OPTIONS = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -59,6 +54,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
   const { data: employees = [] } = useEmployees();
   const createMutation = useCreateCesantiasDeposit();
   const updateMutation = useUpdateCesantiasDeposit();
+  const { data: afcCatalog = [] } = useAFCCatalog();
 
   const currentYear = new Date().getFullYear();
   const defaultDueDate = `${currentYear + 1}-02-14`;
@@ -114,6 +110,25 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
       });
     }
   }, [deposit, open]);
+
+  // Auto-fill fund info when employee is selected
+  const selectedEmployeeId = form.watch('employee_id');
+
+  useEffect(() => {
+    if (selectedEmployeeId && !deposit) {
+      supabase
+        .from('employee_social_security')
+        .select('afc')
+        .eq('employee_id', selectedEmployeeId)
+        .eq('is_current', true)
+        .maybeSingle()
+        .then(({ data: ssData }) => {
+          if (ssData?.afc) {
+            form.setValue('fund_name', ssData.afc);
+          }
+        });
+    }
+  }, [selectedEmployeeId, deposit]);
 
   // Auto-calculate cesantías amount
   const baseSalary = form.watch('base_salary');
@@ -203,10 +218,12 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
     label: `${emp.first_name} ${emp.last_name}`,
   }));
 
-  const fundOptions = FUNDS.map((fund) => ({
-    value: fund,
-    label: fund,
-  }));
+  const fundOptions = afcCatalog
+    .filter((item: any) => item.is_active !== false)
+    .map((item: any) => ({
+      value: item.name,
+      label: item.name,
+    }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
