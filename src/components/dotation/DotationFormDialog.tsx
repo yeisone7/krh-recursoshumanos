@@ -24,6 +24,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { toast } from 'sonner';
 
 import { DOTATION_PERIOD_MONTHS } from '@/types/dotation';
@@ -319,21 +320,17 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                             </div>
                           ) : (
                             <>
-                              <Select
+                              <SearchableSelect
+                                options={itemTypeCatalog
+                                  .filter((c: any) => c.is_active)
+                                  .map((c: any) => ({ value: c.name, label: c.name }))}
                                 value={item.itemName || undefined}
                                 onValueChange={(v) => handleCatalogSelect(idx, v)}
-                              >
-                                <SelectTrigger className="h-9 col-span-2">
-                                  <SelectValue placeholder="Seleccionar artículo" />
-                                </SelectTrigger>
-                                <SelectContent className="max-h-[200px]">
-                                  {itemTypeCatalog
-                                    .filter((c: any) => c.is_active)
-                                    .map((c: any) => (
-                                      <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
+                                placeholder="Seleccionar artículo"
+                                searchPlaceholder="Buscar artículo..."
+                                emptyMessage="No se encontraron artículos"
+                                className="h-9 col-span-2"
+                              />
                             </>
                           )}
                         </div>
