@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Edit, Trash2, ArrowUpDown, AlertTriangle, CheckCircle, Package } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ArrowUpDown, AlertTriangle, CheckCircle, Package, History } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { useDotationInventory, useDeleteInventoryItem, type DotationInventoryItem } from '@/hooks/useDotationInventory';
 import { InventoryFormDialog } from './InventoryFormDialog';
 import { InventoryAdjustDialog } from './InventoryAdjustDialog';
+import { InventoryHistoryDialog } from './InventoryHistoryDialog';
 import { toast } from 'sonner';
 
 export function DotationInventoryTab() {
@@ -27,6 +28,7 @@ export function DotationInventoryTab() {
   const [editItem, setEditItem] = useState<DotationInventoryItem | null>(null);
   const [adjustItem, setAdjustItem] = useState<DotationInventoryItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DotationInventoryItem | null>(null);
+  const [historyItem, setHistoryItem] = useState<DotationInventoryItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [centerFilter, setCenterFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -163,6 +165,9 @@ export function DotationInventoryTab() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => setHistoryItem(item)} title="Ver historial">
+                          <History className="w-4 h-4" />
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
                           <ArrowUpDown className="w-4 h-4" />
                         </Button>
@@ -209,6 +214,11 @@ export function DotationInventoryTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <InventoryHistoryDialog
+        open={!!historyItem}
+        onOpenChange={(open) => !open && setHistoryItem(null)}
+        item={historyItem}
+      />
     </div>
   );
 }
