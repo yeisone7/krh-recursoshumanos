@@ -119,7 +119,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             <ClipboardList className="w-5 h-5 text-primary" />
@@ -130,7 +130,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
+        <div className="max-h-[60vh] overflow-y-auto space-y-4 pr-1">
           {/* Center + Position selectors */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
