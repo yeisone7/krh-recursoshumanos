@@ -1634,7 +1634,7 @@ export type Database = {
             foreignKeyName: "dotation_deliveries_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: "employees"
+            referencedRelation: "employees_v2"
             referencedColumns: ["id"]
           },
         ]
