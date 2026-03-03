@@ -183,20 +183,6 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
     setIsSubmitting(true);
     try {
-      // Upload signature if provided
-      let signatureUrl: string | null = null;
-      if (signatureDataUrl) {
-        const blob = await (await fetch(signatureDataUrl)).blob();
-        const fileName = `signatures/${employeeId}/${Date.now()}.png`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('dotation-images')
-          .upload(fileName, blob, { contentType: 'image/png' });
-        if (!uploadError && uploadData) {
-          const { data: urlData } = supabase.storage.from('dotation-images').getPublicUrl(uploadData.path);
-          signatureUrl = urlData.publicUrl;
-        }
-      }
-
       for (const item of selectedItems) {
         await createDelivery.mutateAsync({
           employee_id: employeeId,
@@ -208,7 +194,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
           expiration_date: format(expirationDate, 'yyyy-MM-dd'),
           delivered_by: deliveredBy,
           observations: notes || null,
-          signature_url: signatureUrl,
+          signature_url: null,
         });
       }
 
@@ -534,28 +520,9 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                 />
               </div>
 
-              {/* Firma digital del empleado */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <PenTool className="w-4 h-4" />
-                  Firma del Empleado
-                </Label>
-                {signatureDataUrl ? (
-                  <div className="space-y-2">
-                    <div className="border-2 border-primary/20 rounded-lg p-2 bg-white">
-                      <img src={signatureDataUrl} alt="Firma" className="w-full max-h-[120px] object-contain" />
-                    </div>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setSignatureDataUrl(null)}>
-                      Volver a firmar
-                    </Button>
-                  </div>
-                ) : (
-                  <SignatureCanvas
-                    onSave={(dataUrl) => setSignatureDataUrl(dataUrl)}
-                    width={500}
-                    height={150}
-                  />
-                )}
+              <div className="bg-muted/30 border border-border rounded-lg p-3 text-sm text-muted-foreground flex items-center gap-2">
+                <PenTool className="w-4 h-4 shrink-0" />
+                La firma del empleado se captura al descargar el Acta de Entrega en PDF.
               </div>
             </TabsContent>
           </div>
