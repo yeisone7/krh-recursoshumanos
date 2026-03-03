@@ -38,50 +38,11 @@ export function useProfesiogramas() {
     queryKey: ['dotation_profesiograma', currentCompanyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('dotation_profesiograma' as any)
-        .select(`
-          id, company_id, operation_center_id, position_id, created_at, updated_at,
-          operation_centers(id, name),
-          positions(id, name)
-        `)
-        .eq('company_id', currentCompanyId!)
-        .order('created_at', { ascending: false });
+        .rpc('get_profesiogramas_with_items', { _company_id: currentCompanyId! });
 
       if (error) throw error;
 
-      const profList = (data as any[]) || [];
-      if (profList.length === 0) return [] as Profesiograma[];
-
-      // Fetch items in batches to avoid URL length limits
-      const BATCH_SIZE = 50;
-      let items: any[] = [];
-      const profIds = profList.map((p: any) => p.id);
-
-      for (let i = 0; i < profIds.length; i += BATCH_SIZE) {
-        const batch = profIds.slice(i, i + BATCH_SIZE);
-        const { data: itemsData, error: itemsError } = await supabase
-          .from('dotation_profesiograma_items' as any)
-          .select(`
-            id, profesiograma_id, dotation_item_type_id, quantity, notes, is_required,
-            dotation_item_types(id, name, code, category, requires_size, sizes_available, default_validity_months)
-          `)
-          .in('profesiograma_id', batch);
-        if (itemsError) throw itemsError;
-        if (itemsData) items = items.concat(itemsData as any[]);
-      }
-
-      // Build a lookup map for performance
-      const itemsByProf = new Map<string, any[]>();
-      for (const item of items) {
-        const pid = item.profesiograma_id;
-        if (!itemsByProf.has(pid)) itemsByProf.set(pid, []);
-        itemsByProf.get(pid)!.push(item);
-      }
-
-      return profList.map((p: any) => ({
-        ...p,
-        items: itemsByProf.get(p.id) || [],
-      })) as Profesiograma[];
+      return (data as any[] || []) as Profesiograma[];
     },
     enabled: !!currentCompanyId,
   });

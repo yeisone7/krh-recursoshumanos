@@ -6326,6 +6326,10 @@ export type Database = {
         Args: { _company_id: string; _prefix?: string }
         Returns: string
       }
+      get_profesiogramas_with_items: {
+        Args: { _company_id: string }
+        Returns: Json
+      }
       get_user_center_ids: { Args: never; Returns: string[] }
       get_user_company_ids: { Args: never; Returns: string[] }
       has_center_access: { Args: { _center_id: string }; Returns: boolean }
