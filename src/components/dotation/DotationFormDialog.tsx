@@ -179,28 +179,30 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl flex items-center gap-2">
-            <Package className="w-5 h-5 text-primary" />
+        <DialogHeader className="bg-gradient-to-r from-primary to-primary/80 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg">
+          <DialogTitle className="font-display text-xl flex items-center gap-2 text-primary-foreground">
+            <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm">
+              <Package className="w-5 h-5" />
+            </div>
             Nueva Entrega de Dotación
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-primary-foreground/70">
             Registra una nueva entrega de dotación a un empleado
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="employee" className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="employee" className="gap-2">
+          <TabsList className="grid w-full grid-cols-3 mb-4 bg-primary/5 border border-primary/10">
+            <TabsTrigger value="employee" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <User className="w-4 h-4" /> Empleado
             </TabsTrigger>
-            <TabsTrigger value="items" className="gap-2">
+            <TabsTrigger value="items" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
               <Package className="w-4 h-4" /> Artículos
               {selectedItems.length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{selectedItems.length}</Badge>
+                <Badge className="ml-1 h-5 px-1.5 text-xs bg-secondary text-secondary-foreground">{selectedItems.length}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="delivery" className="gap-2">
+            <TabsTrigger value="delivery" className="gap-2 data-[state=active]:bg-tertiary data-[state=active]:text-white">
               <FileText className="w-4 h-4" /> Entrega
             </TabsTrigger>
           </TabsList>
@@ -461,11 +463,11 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
           </div>
         </Tabs>
 
-        <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+        <div className="flex justify-end gap-3 pt-4 border-t border-primary/10 mt-4">
           <Button variant="outline" onClick={() => { handleReset(); onOpenChange(false); }}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} className="gap-2" disabled={isSubmitting}>
+          <Button onClick={handleSubmit} className="gap-2 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 shadow-md" disabled={isSubmitting}>
             <Package className="w-4 h-4" />
             {isSubmitting ? 'Registrando...' : `Registrar ${selectedItems.length > 0 ? `(${selectedItems.length})` : 'Entrega'}`}
           </Button>
