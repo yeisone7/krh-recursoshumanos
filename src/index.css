@@ -87,14 +87,14 @@
 
     --radius: 0.75rem;
 
-    /* Sidebar - Dark Green (Petrocasinos) */
-    --sidebar-background: 160 30% 18%;
-    --sidebar-foreground: 40 20% 85%;
+    /* Sidebar - Steel Gray (Petrocasinos) */
+    --sidebar-background: 212 8% 40%;
+    --sidebar-foreground: 210 10% 92%;
     --sidebar-primary: 36 80% 55%;
-    --sidebar-primary-foreground: 160 30% 14%;
-    --sidebar-accent: 160 25% 24%;
-    --sidebar-accent-foreground: 40 20% 90%;
-    --sidebar-border: 160 20% 22%;
+    --sidebar-primary-foreground: 212 8% 30%;
+    --sidebar-accent: 212 8% 46%;
+    --sidebar-accent-foreground: 210 10% 95%;
+    --sidebar-border: 212 8% 36%;
     --sidebar-ring: 36 80% 55%;
 
     /* Gradients */
@@ -166,13 +166,13 @@
     --input: 224 20% 20%;
     --ring: 22 88% 55%;
 
-    --sidebar-background: 160 30% 12%;
-    --sidebar-foreground: 40 20% 85%;
+    --sidebar-background: 212 8% 32%;
+    --sidebar-foreground: 210 10% 90%;
     --sidebar-primary: 36 80% 55%;
-    --sidebar-primary-foreground: 160 30% 10%;
-    --sidebar-accent: 160 25% 18%;
-    --sidebar-accent-foreground: 40 20% 90%;
-    --sidebar-border: 160 20% 16%;
+    --sidebar-primary-foreground: 212 8% 25%;
+    --sidebar-accent: 212 8% 38%;
+    --sidebar-accent-foreground: 210 10% 95%;
+    --sidebar-border: 212 8% 28%;
     --sidebar-ring: 36 80% 55%;
   }
 }
