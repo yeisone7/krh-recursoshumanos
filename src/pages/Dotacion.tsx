@@ -540,6 +540,52 @@ export default function Dotacion() {
                   }}
                 />
               </div>
+
+              {inventoryEnabled && (
+                <>
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium">Descontar inventario automáticamente</Label>
+                      <p className="text-xs text-muted-foreground">Al registrar una entrega, se descuenta automáticamente del stock disponible</p>
+                    </div>
+                    <Switch
+                      checked={systemConfig?.dotation_auto_deduct?.enabled !== false}
+                      onCheckedChange={async (checked) => {
+                        try {
+                          await updateConfig.mutateAsync({
+                            key: 'dotation_auto_deduct',
+                            value: { enabled: checked },
+                            description: 'Descontar inventario automáticamente al registrar entregas',
+                          });
+                        } catch {
+                          // error handled by mutation
+                        }
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium">Bloquear entregas sin stock suficiente</Label>
+                      <p className="text-xs text-muted-foreground">Impide registrar entregas cuando no hay existencias suficientes en el inventario</p>
+                    </div>
+                    <Switch
+                      checked={systemConfig?.dotation_block_no_stock?.enabled === true}
+                      onCheckedChange={async (checked) => {
+                        try {
+                          await updateConfig.mutateAsync({
+                            key: 'dotation_block_no_stock',
+                            value: { enabled: checked },
+                            description: 'Bloquear entregas sin stock disponible en inventario',
+                          });
+                        } catch {
+                          // error handled by mutation
+                        }
+                      }}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </TabsContent>

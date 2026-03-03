@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Package, User, FileText, CheckSquare, Square, Plus, Trash2, Sparkles } from 'lucide-react';
+import { CalendarIcon, Package, User, FileText, CheckSquare, Square, Plus, Trash2, Sparkles, History, AlertTriangle } from 'lucide-react';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -30,9 +30,10 @@ import { toast } from 'sonner';
 import { DOTATION_PERIOD_MONTHS } from '@/types/dotation';
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
-import { useCreateDotationDelivery } from '@/hooks/useDotation';
+import { useCreateDotationDelivery, useDotationDeliveries } from '@/hooks/useDotation';
 import { useProfesiogramaByEmployee } from '@/hooks/useDotationProfesiograma';
-import { useDotationItemTypes } from '@/hooks/useSystemConfig';
+import { useDotationItemTypes, useSystemConfig } from '@/hooks/useSystemConfig';
+import { useDotationInventory } from '@/hooks/useDotationInventory';
 import type { Database } from '@/integrations/supabase/types';
 
 type DotationItemType = Database['public']['Enums']['dotation_item_type'];
@@ -58,7 +59,13 @@ const shoeSizeOptions = Array.from({ length: 13 }, (_, i) => (35 + i).toString()
 export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFormDialogProps) {
   const { data: employees = [] } = useEmployees();
   const { data: itemTypeCatalog = [] } = useDotationItemTypes();
+  const { data: allDeliveries = [] } = useDotationDeliveries();
+  const { data: inventory = [] } = useDotationInventory();
+  const { data: systemConfig } = useSystemConfig();
   const createDelivery = useCreateDotationDelivery();
+
+  const inventoryEnabled = systemConfig?.dotation_inventory_enabled?.enabled !== false;
+  const blockNoStock = inventoryEnabled && systemConfig?.dotation_block_no_stock?.enabled === true;
 
   const [employeeId, setEmployeeId] = useState('');
   const [deliveryDate, setDeliveryDate] = useState<Date>(new Date());
@@ -146,6 +153,28 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
     if (invalidItems.length > 0) {
       toast.error('Todos los artículos deben tener nombre');
       return;
+    }
+
+    // Stock validation if blocking is enabled
+    if (blockNoStock) {
+      const stockIssues: string[] = [];
+      for (const item of selectedItems) {
+        const matchingInventory = inventory.find((inv: any) =>
+          inv.item_name === item.itemName &&
+          (!item.size || inv.size === item.size)
+        );
+        if (!matchingInventory || matchingInventory.quantity_available < item.quantity) {
+          const available = matchingInventory?.quantity_available || 0;
+          stockIssues.push(`${item.itemName}${item.size ? ` (${item.size})` : ''}: disponible ${available}, solicitado ${item.quantity}`);
+        }
+      }
+      if (stockIssues.length > 0) {
+        toast.error('Stock insuficiente', {
+          description: stockIssues.join('. '),
+          duration: 6000,
+        });
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -275,9 +304,41 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                   No hay profesiograma configurado para este centro + cargo. Puedes agregar artículos manualmente en la pestaña "Artículos".
                 </div>
               )}
+              {/* Employee delivery history */}
+              {employeeId && (() => {
+                const empDeliveries = allDeliveries.filter((d: any) => d.employee_id === employeeId);
+                if (empDeliveries.length === 0) return null;
+                const recent = empDeliveries.slice(0, 5);
+                return (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <History className="w-4 h-4" />
+                      Últimas entregas ({empDeliveries.length} total)
+                    </div>
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs py-2">Artículo</TableHead>
+                            <TableHead className="text-xs py-2">Fecha</TableHead>
+                            <TableHead className="text-xs py-2">Vencimiento</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {recent.map((d: any) => (
+                            <TableRow key={d.id}>
+                              <TableCell className="text-xs py-1.5">{d.item_name}</TableCell>
+                              <TableCell className="text-xs py-1.5">{format(new Date(d.delivery_date), 'dd/MM/yyyy')}</TableCell>
+                              <TableCell className="text-xs py-1.5">{format(new Date(d.expiration_date), 'dd/MM/yyyy')}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                );
+              })()}
             </TabsContent>
-
-            {/* Items Tab */}
             <TabsContent value="items" className="space-y-4 mt-0">
               <div className="flex items-center justify-between">
                 <Label>Artículos a entregar</Label>
