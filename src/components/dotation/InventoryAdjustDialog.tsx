@@ -98,6 +98,8 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
                 <SelectItem value="ajuste">Ajuste manual</SelectItem>
                 <SelectItem value="devolucion">Devolución</SelectItem>
                 <SelectItem value="dano">Daño / Pérdida</SelectItem>
+                <SelectItem value="envio_centro">Envío a centro de operaciones</SelectItem>
+                <SelectItem value="entrega_empleado">Entrega a empleado</SelectItem>
               </SelectContent>
             </Select>
           </div>
