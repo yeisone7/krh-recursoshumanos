@@ -1646,7 +1646,7 @@ export type Database = {
           created_by: string | null
           id: string
           item_name: string
-          item_type: Database["public"]["Enums"]["dotation_item_type"]
+          item_type: string
           minimum_stock: number
           operation_center_id: string | null
           quantity_available: number
@@ -1659,7 +1659,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           item_name: string
-          item_type: Database["public"]["Enums"]["dotation_item_type"]
+          item_type: string
           minimum_stock?: number
           operation_center_id?: string | null
           quantity_available?: number
@@ -1672,7 +1672,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           item_name?: string
-          item_type?: Database["public"]["Enums"]["dotation_item_type"]
+          item_type?: string
           minimum_stock?: number
           operation_center_id?: string | null
           quantity_available?: number
