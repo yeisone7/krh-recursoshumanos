@@ -129,7 +129,7 @@ export function DotationInventoryTab() {
             <TableHeader>
               <TableRow>
                 <TableHead>Artículo</TableHead>
-                <TableHead>Tipo</TableHead>
+                
                 <TableHead>Centro</TableHead>
                 <TableHead>Talla</TableHead>
                 <TableHead className="text-center">Stock</TableHead>
@@ -144,9 +144,6 @@ export function DotationInventoryTab() {
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.item_name}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {item.item_name}
-                    </TableCell>
                     <TableCell className="text-sm">
                       {item.operation_centers?.name || 'General'}
                     </TableCell>
