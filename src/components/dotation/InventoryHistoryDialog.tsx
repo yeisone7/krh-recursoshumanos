@@ -6,7 +6,6 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useInventoryMovements, type InventoryMovement } from '@/hooks/useInventoryMovements';
 import type { DotationInventoryItem } from '@/hooks/useDotationInventory';
 
@@ -31,7 +30,7 @@ export function InventoryHistoryDialog({ open, onOpenChange, item }: InventoryHi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <History className="w-5 h-5 text-primary" />
@@ -43,7 +42,7 @@ export function InventoryHistoryDialog({ open, onOpenChange, item }: InventoryHi
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[55vh]">
+        <div className="overflow-y-auto min-h-0 flex-1">
           {isLoading ? (
             <div className="py-8 text-center text-muted-foreground text-sm">Cargando historial...</div>
           ) : movements.length === 0 ? (
@@ -89,7 +88,7 @@ export function InventoryHistoryDialog({ open, onOpenChange, item }: InventoryHi
               })}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
