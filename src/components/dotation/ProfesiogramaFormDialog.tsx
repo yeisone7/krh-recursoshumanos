@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -135,29 +136,27 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Centro de Operación *</Label>
-              <Select value={centerId} onValueChange={setCenterId} disabled={isEditing}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar centro" />
-                </SelectTrigger>
-                <SelectContent>
-                  {centers.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={centers.map(c => ({ value: c.id, label: c.name }))}
+                value={centerId}
+                onValueChange={setCenterId}
+                placeholder="Seleccionar centro"
+                searchPlaceholder="Buscar centro..."
+                emptyMessage="No se encontraron centros."
+                disabled={isEditing}
+              />
             </div>
             <div className="space-y-2">
               <Label>Cargo *</Label>
-              <Select value={positionId} onValueChange={setPositionId} disabled={isEditing}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar cargo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {positions.map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={positions.map(p => ({ value: p.id, label: p.name }))}
+                value={positionId}
+                onValueChange={setPositionId}
+                placeholder="Seleccionar cargo"
+                searchPlaceholder="Buscar cargo..."
+                emptyMessage="No se encontraron cargos."
+                disabled={isEditing}
+              />
             </div>
           </div>
 
