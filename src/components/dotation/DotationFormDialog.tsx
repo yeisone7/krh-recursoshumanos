@@ -305,62 +305,60 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                         item.selected ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/20 opacity-60'
                       )}
                     >
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={item.selected}
-                          onCheckedChange={(v) => updateItem(idx, 'selected', !!v)}
-                        />
-                        <div className="flex-1 grid grid-cols-2 gap-2">
-                          {item.fromProfesiograma ? (
-                            <div className="col-span-2 flex items-center gap-2">
-                              <span className="font-medium text-sm">{item.itemName}</span>
-                              <Badge variant="outline" className="text-xs gap-1 bg-amber-50 text-amber-700 border-amber-200">
-                                <Sparkles className="w-3 h-3" /> Sugerido
-                              </Badge>
-                            </div>
-                          ) : (
-                            <>
-                              <SearchableSelect
-                                options={itemTypeCatalog
-                                  .filter((c: any) => c.is_active)
-                                  .map((c: any) => ({ value: c.name, label: c.name }))}
-                                value={item.itemName || undefined}
-                                onValueChange={(v) => handleCatalogSelect(idx, v)}
-                                placeholder="Seleccionar artículo"
-                                searchPlaceholder="Buscar artículo..."
-                                emptyMessage="No se encontraron artículos"
-                                className="h-9 col-span-2"
-                              />
-                            </>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            min={1}
-                            value={item.quantity}
-                            onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
-                            className="h-9 w-16"
-                          />
-                          <Select
-                            value={item.size || '__none__'}
-                            onValueChange={(v) => updateItem(idx, 'size', v === '__none__' ? undefined : v)}
-                          >
-                            <SelectTrigger className="h-9 w-20">
-                              <SelectValue placeholder="Talla" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="__none__">—</SelectItem>
-                              {(isFootwear(item.itemTypeEnum) ? shoeSizeOptions : sizeOptions).map(s => (
-                                <SelectItem key={s} value={s}>{s}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeItem(idx)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
+                       <div className="flex items-center gap-3 flex-wrap">
+                         <Checkbox
+                           checked={item.selected}
+                           onCheckedChange={(v) => updateItem(idx, 'selected', !!v)}
+                         />
+                         {item.fromProfesiograma ? (
+                           <div className="flex-1 flex items-center gap-2 min-w-0">
+                             <span className="font-medium text-sm truncate">{item.itemName}</span>
+                             <Badge variant="outline" className="text-xs gap-1 bg-amber-50 text-amber-700 border-amber-200 shrink-0">
+                               <Sparkles className="w-3 h-3" /> Sugerido
+                             </Badge>
+                           </div>
+                         ) : (
+                           <div className="flex-1 min-w-[180px]">
+                             <SearchableSelect
+                               options={itemTypeCatalog
+                                 .filter((c: any) => c.is_active)
+                                 .map((c: any) => ({ value: c.name, label: c.name }))}
+                               value={item.itemName || undefined}
+                               onValueChange={(v) => handleCatalogSelect(idx, v)}
+                               placeholder="Seleccionar artículo"
+                               searchPlaceholder="Buscar artículo..."
+                               emptyMessage="No se encontraron artículos"
+                               triggerClassName="h-9"
+                             />
+                           </div>
+                         )}
+                         <div className="flex items-center gap-2 shrink-0">
+                           <Input
+                             type="number"
+                             min={1}
+                             value={item.quantity}
+                             onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
+                             className="h-9 w-16"
+                           />
+                           <Select
+                             value={item.size || '__none__'}
+                             onValueChange={(v) => updateItem(idx, 'size', v === '__none__' ? undefined : v)}
+                           >
+                             <SelectTrigger className="h-9 w-20">
+                               <SelectValue placeholder="Talla" />
+                             </SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="__none__">—</SelectItem>
+                               {(isFootwear(item.itemTypeEnum) ? shoeSizeOptions : sizeOptions).map(s => (
+                                 <SelectItem key={s} value={s}>{s}</SelectItem>
+                               ))}
+                             </SelectContent>
+                           </Select>
+                           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeItem(idx)}>
+                             <Trash2 className="w-4 h-4" />
+                           </Button>
+                         </div>
+                       </div>
                     </div>
                   ))}
                 </div>
