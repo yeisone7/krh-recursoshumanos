@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload, Search, ChevronDown, ChevronRight, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,6 +22,7 @@ import { useDotationItemTypes } from '@/hooks/useSystemConfig';
 import { ProfesiogramaFormDialog } from './ProfesiogramaFormDialog';
 import { CloneProfesiogramaDialog } from './CloneProfesiogramaDialog';
 import { ImportProfesiogramaDialog } from './ImportProfesiogramaDialog';
+import { ProfesiogramaDetailDialog } from './ProfesiogramaDetailDialog';
 
 interface Props {
   centers: { id: string; name: string }[];
@@ -39,6 +40,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [cloneData, setCloneData] = useState<Profesiograma | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [previewData, setPreviewData] = useState<Profesiograma | null>(null);
 
   // Multi-select
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -400,6 +402,9 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setPreviewData(prof); }} title="Ver detalle">
+                            <Eye className="w-4 h-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(prof); }} title="Editar">
                             <Pencil className="w-4 h-4" />
                           </Button>
@@ -444,6 +449,12 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
         centers={centers}
         positions={positions}
         itemTypes={itemTypes as any[]}
+      />
+
+      <ProfesiogramaDetailDialog
+        open={!!previewData}
+        onOpenChange={(open) => { if (!open) setPreviewData(null); }}
+        data={previewData}
       />
 
       {/* Single delete */}
