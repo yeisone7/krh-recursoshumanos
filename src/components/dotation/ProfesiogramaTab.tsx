@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload, Search } from 'lucide-react';
+import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -44,6 +44,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [collapsedCenters, setCollapsedCenters] = useState<Set<string>>(new Set());
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -315,13 +316,29 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           </div>
           {groupedByCenter.map((group) => (
             <div key={group.centerId} className="card-elevated">
-              <div className="px-4 py-2.5 border-b border-border bg-muted/30 flex items-center justify-between">
+              <div
+                className="px-4 py-2.5 border-b border-border bg-muted/30 flex items-center justify-between cursor-pointer select-none"
+                onClick={() => {
+                  setCollapsedCenters(prev => {
+                    const next = new Set(prev);
+                    if (next.has(group.centerId)) next.delete(group.centerId);
+                    else next.add(group.centerId);
+                    return next;
+                  });
+                }}
+              >
                 <div className="flex items-center gap-2">
+                  {collapsedCenters.has(group.centerId) ? (
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
                   <ClipboardList className="w-4 h-4 text-primary" />
                   <h3 className="text-sm font-semibold">{group.centerName}</h3>
                   <Badge variant="secondary" className="text-xs">{group.items.length}</Badge>
                 </div>
               </div>
+              {!collapsedCenters.has(group.centerId) && (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -383,13 +400,13 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(prof)} title="Editar">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(prof); }} title="Editar">
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setCloneData(prof)} title="Clonar">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setCloneData(prof); }} title="Clonar">
                             <Copy className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(prof.id)} title="Eliminar">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(prof.id); }} title="Eliminar">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -398,6 +415,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                   ))}
                 </TableBody>
               </Table>
+              )}
             </div>
           ))}
         </div>
