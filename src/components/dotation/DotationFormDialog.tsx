@@ -179,14 +179,12 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="bg-gradient-to-r from-primary to-primary/80 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-lg">
-          <DialogTitle className="font-display text-xl flex items-center gap-2 text-primary-foreground">
-            <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm">
-              <Package className="w-5 h-5" />
-            </div>
+        <DialogHeader>
+          <DialogTitle className="font-display text-xl flex items-center gap-2">
+            <Package className="w-5 h-5 text-primary" />
             Nueva Entrega de Dotación
           </DialogTitle>
-          <DialogDescription className="text-primary-foreground/70">
+          <DialogDescription>
             Registra una nueva entrega de dotación a un empleado
           </DialogDescription>
         </DialogHeader>
