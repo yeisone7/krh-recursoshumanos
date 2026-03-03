@@ -14,7 +14,6 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
-import { dotationItemTypeLabels } from '@/types/dotation';
 import { useDotationInventory, useDeleteInventoryItem, type DotationInventoryItem } from '@/hooks/useDotationInventory';
 import { InventoryFormDialog } from './InventoryFormDialog';
 import { InventoryAdjustDialog } from './InventoryAdjustDialog';
@@ -41,7 +40,7 @@ export function DotationInventoryTab() {
     return inventory.filter(item => {
       const matchesSearch = item.item_name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCenter = centerFilter === 'all' || (item.operation_centers?.name || 'General') === centerFilter;
-      const matchesType = typeFilter === 'all' || item.item_type === typeFilter;
+      const matchesType = typeFilter === 'all' || item.item_name === typeFilter;
       return matchesSearch && matchesCenter && matchesType;
     });
   }, [inventory, searchQuery, centerFilter, typeFilter]);
@@ -102,8 +101,8 @@ export function DotationInventoryTab() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
-              {Object.entries(dotationItemTypeLabels).map(([v, l]) => (
-                <SelectItem key={v} value={v}>{l}</SelectItem>
+              {[...new Set(inventory.map((i) => i.item_name))].sort().map((name) => (
+                <SelectItem key={name} value={name}>{name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -146,7 +145,7 @@ export function DotationInventoryTab() {
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.item_name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {dotationItemTypeLabels[item.item_type as keyof typeof dotationItemTypeLabels] || item.item_type}
+                      {item.item_name}
                     </TableCell>
                     <TableCell className="text-sm">
                       {item.operation_centers?.name || 'General'}
