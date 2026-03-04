@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Stethoscope, Calendar, FileText, CheckCircle, AlertTriangle, PenTool, MapPin, User, Upload, Paperclip, ExternalLink, Trash2 } from 'lucide-react';
+import { Stethoscope, Calendar, FileText, CheckCircle, AlertTriangle, PenTool, MapPin, User, Upload, Paperclip, ExternalLink, Trash2, FileDown } from 'lucide-react';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
