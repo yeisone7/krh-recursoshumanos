@@ -158,9 +158,8 @@ export async function generateExamOrderPdf(options: ExamOrderOptions): Promise<v
     xPos = margin + 2;
     const row = [
       String(idx + 1),
-      item.exam_name.substring(0, 35),
+      item.exam_name.substring(0, 45),
       resultLabels[item.result] || item.result,
-      item.expiration_date ? format(new Date(item.expiration_date), 'dd/MM/yyyy') : '—',
     ];
     for (let i = 0; i < row.length; i++) {
       doc.text(row[i], xPos, y);
