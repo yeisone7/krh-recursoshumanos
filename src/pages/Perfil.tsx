@@ -27,6 +27,7 @@ import {
   Volume2,
   Laptop,
   LogOut,
+  BookOpen,
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
