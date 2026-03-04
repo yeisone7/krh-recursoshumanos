@@ -254,6 +254,15 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
         positionName={positionName}
         existingData={profile}
       />
+
+      {profile && (
+        <ClonePositionProfileDialog
+          open={showClone}
+          onOpenChange={setShowClone}
+          sourceProfile={profile}
+          sourcePositionName={positionName}
+        />
+      )}
     </>
   );
 }
