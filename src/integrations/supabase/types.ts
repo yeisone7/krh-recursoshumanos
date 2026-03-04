@@ -4882,6 +4882,102 @@ export type Database = {
           },
         ]
       }
+      position_profiles: {
+        Row: {
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          education_detail: string | null
+          education_level: string | null
+          effective_date: string | null
+          elaborated_by: string | null
+          experience: string | null
+          functions: Json | null
+          id: string
+          is_current: boolean
+          num_positions: number | null
+          position_id: string
+          purpose: string | null
+          reports_to: string | null
+          responsibilities: Json | null
+          reviewed_by: string | null
+          skills: Json | null
+          specific_knowledge: Json | null
+          supervises: string | null
+          updated_at: string
+          version: number
+          working_conditions: Json | null
+        }
+        Insert: {
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          education_detail?: string | null
+          education_level?: string | null
+          effective_date?: string | null
+          elaborated_by?: string | null
+          experience?: string | null
+          functions?: Json | null
+          id?: string
+          is_current?: boolean
+          num_positions?: number | null
+          position_id: string
+          purpose?: string | null
+          reports_to?: string | null
+          responsibilities?: Json | null
+          reviewed_by?: string | null
+          skills?: Json | null
+          specific_knowledge?: Json | null
+          supervises?: string | null
+          updated_at?: string
+          version?: number
+          working_conditions?: Json | null
+        }
+        Update: {
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          education_detail?: string | null
+          education_level?: string | null
+          effective_date?: string | null
+          elaborated_by?: string | null
+          experience?: string | null
+          functions?: Json | null
+          id?: string
+          is_current?: boolean
+          num_positions?: number | null
+          position_id?: string
+          purpose?: string | null
+          reports_to?: string | null
+          responsibilities?: Json | null
+          reviewed_by?: string | null
+          skills?: Json | null
+          specific_knowledge?: Json | null
+          supervises?: string | null
+          updated_at?: string
+          version?: number
+          working_conditions?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "position_profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "position_profiles_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       positions: {
         Row: {
           area_id: string | null
