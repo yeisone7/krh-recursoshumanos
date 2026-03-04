@@ -6,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronDown, Plus, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ChevronDown, Plus, Trash2, Briefcase, GraduationCap, ListChecks, Shield, HardHat, Stamp } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreatePositionProfile, usePositionProfiles } from '@/hooks/usePositionProfiles';
 import type { PositionProfileFormData, SpecificKnowledge, Skill } from '@/types/positionProfile';
@@ -38,6 +38,15 @@ const defaultForm: PositionProfileFormData = {
   approved_by: '',
   effective_date: new Date().toISOString().split('T')[0],
 };
+
+const sectionConfig = [
+  { key: 'identification', label: 'Identificación del Cargo', icon: Briefcase, num: 1, defaultOpen: true },
+  { key: 'profile', label: 'Perfil del Cargo', icon: GraduationCap, num: 2, defaultOpen: true },
+  { key: 'functions', label: 'Funciones del Cargo', icon: ListChecks, num: 3, defaultOpen: true },
+  { key: 'responsibilities', label: 'Responsabilidades', icon: Shield, num: 4, defaultOpen: false },
+  { key: 'conditions', label: 'Condiciones de Trabajo', icon: HardHat, num: 5, defaultOpen: false },
+  { key: 'approvals', label: 'Aprobaciones', icon: Stamp, num: 6, defaultOpen: false },
+];
 
 export function PositionProfileFormDialog({ open, onOpenChange, positionId, positionName, existingData }: Props) {
   const [form, setForm] = useState<PositionProfileFormData>(defaultForm);
@@ -81,7 +90,6 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
     setForm(prev => ({ ...prev, working_conditions: { ...prev.working_conditions, [key]: value } }));
   };
 
-  // Functions list
   const addFunction = () => updateField('functions', [...form.functions, '']);
   const removeFunction = (i: number) => updateField('functions', form.functions.filter((_, idx) => idx !== i));
   const updateFunction = (i: number, val: string) => {
@@ -90,7 +98,6 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
     updateField('functions', copy);
   };
 
-  // Knowledge list
   const addKnowledge = () => updateField('specific_knowledge', [...form.specific_knowledge, { topic: '', level: 'básico' as const }]);
   const removeKnowledge = (i: number) => updateField('specific_knowledge', form.specific_knowledge.filter((_, idx) => idx !== i));
   const updateKnowledge = (i: number, field: keyof SpecificKnowledge, val: string) => {
@@ -99,7 +106,6 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
     updateField('specific_knowledge', copy);
   };
 
-  // Skills list
   const addSkill = () => updateField('skills', [...form.skills, { name: '', level: 'medio' as const }]);
   const removeSkill = (i: number) => updateField('skills', form.skills.filter((_, idx) => idx !== i));
   const updateSkill = (i: number, field: keyof Skill, val: string) => {
@@ -127,50 +133,92 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
     }
   };
 
-  const SectionHeader = ({ children }: { children: React.ReactNode }) => (
-    <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md bg-muted px-3 py-2 text-sm font-semibold text-foreground hover:bg-muted/80">
-      {children}
-      <ChevronDown className="h-4 w-4" />
+  const SectionHeader = ({ icon: Icon, num, label, count }: { icon: any; num: number; label: string; count?: number }) => (
+    <CollapsibleTrigger className="group flex w-full items-center gap-3 rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted/70">
+      <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" />
+      </div>
+      <span className="flex-1 text-left">{num}. {label}</span>
+      {count !== undefined && count > 0 && (
+        <Badge variant="secondary" className="text-xs font-normal">{count}</Badge>
+      )}
+      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
     </CollapsibleTrigger>
+  );
+
+  const FieldLabel = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
+    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+      {children} {required && <span className="text-destructive">*</span>}
+    </Label>
   );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0">
-        <DialogHeader className="px-6 pt-6">
-          <DialogTitle>{existingData ? 'Nueva versión' : 'Crear'} Perfil — {positionName}</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0 rounded-xl overflow-hidden">
+        {/* Header */}
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <Briefcase className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <DialogTitle className="text-base font-semibold">
+                {existingData ? 'Nueva versión del Perfil' : 'Crear Perfil de Cargo'}
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground mt-0.5">{positionName}</p>
+            </div>
+          </div>
         </DialogHeader>
-        <ScrollArea className="max-h-[65vh] px-6">
-          <div className="space-y-4 pb-4">
 
-            {/* Identificación */}
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5">
+          <div className="space-y-5">
+
+            {/* 1. Identificación */}
             <Collapsible defaultOpen>
-              <SectionHeader>1. Identificación del Cargo</SectionHeader>
-              <CollapsibleContent className="space-y-3 pt-3">
+              <SectionHeader icon={Briefcase} num={1} label="Identificación del Cargo" />
+              <CollapsibleContent className="space-y-4 pt-4 pl-1">
                 <div>
-                  <Label>Objetivo del Cargo *</Label>
-                  <Textarea value={form.purpose} onChange={e => updateField('purpose', e.target.value)} />
+                  <FieldLabel required>Objetivo del Cargo</FieldLabel>
+                  <Textarea
+                    className="mt-1.5 min-h-[80px] resize-y"
+                    placeholder="Describa el objetivo principal del cargo..."
+                    value={form.purpose}
+                    onChange={e => updateField('purpose', e.target.value)}
+                  />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Reporta a</Label><Input value={form.reports_to} onChange={e => updateField('reports_to', e.target.value)} /></div>
-                  <div><Label>Supervisa a</Label><Input value={form.supervises} onChange={e => updateField('supervises', e.target.value)} /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <FieldLabel>Reporta a</FieldLabel>
+                    <Input className="mt-1.5" placeholder="Cargo del jefe inmediato" value={form.reports_to} onChange={e => updateField('reports_to', e.target.value)} />
+                  </div>
+                  <div>
+                    <FieldLabel>Supervisa a</FieldLabel>
+                    <Input className="mt-1.5" placeholder="Cargos bajo supervisión" value={form.supervises} onChange={e => updateField('supervises', e.target.value)} />
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>N° de Cargos</Label><Input type="number" min={1} value={form.num_positions} onChange={e => updateField('num_positions', parseInt(e.target.value) || 1)} /></div>
-                  <div><Label>Fecha vigencia</Label><Input type="date" value={form.effective_date} onChange={e => updateField('effective_date', e.target.value)} /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <FieldLabel>N° de Cargos</FieldLabel>
+                    <Input className="mt-1.5" type="number" min={1} value={form.num_positions} onChange={e => updateField('num_positions', parseInt(e.target.value) || 1)} />
+                  </div>
+                  <div>
+                    <FieldLabel>Fecha vigencia</FieldLabel>
+                    <Input className="mt-1.5" type="date" value={form.effective_date} onChange={e => updateField('effective_date', e.target.value)} />
+                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Perfil */}
+            {/* 2. Perfil */}
             <Collapsible defaultOpen>
-              <SectionHeader>2. Perfil del Cargo</SectionHeader>
-              <CollapsibleContent className="space-y-3 pt-3">
-                <div className="grid grid-cols-2 gap-3">
+              <SectionHeader icon={GraduationCap} num={2} label="Perfil del Cargo" count={form.specific_knowledge.length + form.skills.length} />
+              <CollapsibleContent className="space-y-4 pt-4 pl-1">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Nivel de Educación</Label>
+                    <FieldLabel>Nivel de Educación</FieldLabel>
                     <Select value={form.education_level} onValueChange={v => updateField('education_level', v)}>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                      <SelectTrigger className="mt-1.5"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                       <SelectContent>
                         {['Bachiller', 'Técnico', 'Tecnólogo', 'Profesional', 'Especialización', 'Maestría', 'Doctorado'].map(l => (
                           <SelectItem key={l} value={l}>{l}</SelectItem>
@@ -178,75 +226,107 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                       </SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Detalle Formación</Label><Input value={form.education_detail} onChange={e => updateField('education_detail', e.target.value)} /></div>
+                  <div>
+                    <FieldLabel>Detalle Formación</FieldLabel>
+                    <Input className="mt-1.5" placeholder="Ej: Ingeniería Industrial" value={form.education_detail} onChange={e => updateField('education_detail', e.target.value)} />
+                  </div>
                 </div>
-                <div><Label>Experiencia</Label><Input value={form.experience} onChange={e => updateField('experience', e.target.value)} /></div>
+                <div>
+                  <FieldLabel>Experiencia</FieldLabel>
+                  <Input className="mt-1.5" placeholder="Ej: 2 años en cargos similares" value={form.experience} onChange={e => updateField('experience', e.target.value)} />
+                </div>
 
                 {/* Conocimientos */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label>Conocimientos Específicos</Label>
-                    <Button size="sm" variant="outline" onClick={addKnowledge}><Plus className="w-3 h-3 mr-1" />Agregar</Button>
+                <div className="rounded-lg border border-border/50 p-4 bg-muted/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-foreground">Conocimientos Específicos</span>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={addKnowledge}>
+                      <Plus className="w-3 h-3 mr-1" />Agregar
+                    </Button>
                   </div>
-                  {form.specific_knowledge.map((k, i) => (
-                    <div key={i} className="flex gap-2 mb-2">
-                      <Input className="flex-1" placeholder="Tema" value={k.topic} onChange={e => updateKnowledge(i, 'topic', e.target.value)} />
-                      <Select value={k.level} onValueChange={v => updateKnowledge(i, 'level', v)}>
-                        <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="básico">Básico</SelectItem>
-                          <SelectItem value="intermedio">Intermedio</SelectItem>
-                          <SelectItem value="avanzado">Avanzado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button size="icon" variant="ghost" onClick={() => removeKnowledge(i)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                    </div>
-                  ))}
+                  {form.specific_knowledge.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic">Sin conocimientos agregados</p>
+                  )}
+                  <div className="space-y-2">
+                    {form.specific_knowledge.map((k, i) => (
+                      <div key={i} className="flex gap-2 items-center">
+                        <Input className="flex-1" placeholder="Tema" value={k.topic} onChange={e => updateKnowledge(i, 'topic', e.target.value)} />
+                        <Select value={k.level} onValueChange={v => updateKnowledge(i, 'level', v)}>
+                          <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="básico">Básico</SelectItem>
+                            <SelectItem value="intermedio">Intermedio</SelectItem>
+                            <SelectItem value="avanzado">Avanzado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => removeKnowledge(i)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Competencias */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label>Competencias / Habilidades</Label>
-                    <Button size="sm" variant="outline" onClick={addSkill}><Plus className="w-3 h-3 mr-1" />Agregar</Button>
+                <div className="rounded-lg border border-border/50 p-4 bg-muted/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-foreground">Competencias / Habilidades</span>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={addSkill}>
+                      <Plus className="w-3 h-3 mr-1" />Agregar
+                    </Button>
                   </div>
-                  {form.skills.map((s, i) => (
-                    <div key={i} className="flex gap-2 mb-2">
-                      <Input className="flex-1" placeholder="Competencia" value={s.name} onChange={e => updateSkill(i, 'name', e.target.value)} />
-                      <Select value={s.level} onValueChange={v => updateSkill(i, 'level', v)}>
-                        <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="bajo">Bajo</SelectItem>
-                          <SelectItem value="medio">Medio</SelectItem>
-                          <SelectItem value="alto">Alto</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button size="icon" variant="ghost" onClick={() => removeSkill(i)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                    </div>
-                  ))}
+                  {form.skills.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic">Sin competencias agregadas</p>
+                  )}
+                  <div className="space-y-2">
+                    {form.skills.map((s, i) => (
+                      <div key={i} className="flex gap-2 items-center">
+                        <Input className="flex-1" placeholder="Competencia" value={s.name} onChange={e => updateSkill(i, 'name', e.target.value)} />
+                        <Select value={s.level} onValueChange={v => updateSkill(i, 'level', v)}>
+                          <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="bajo">Bajo</SelectItem>
+                            <SelectItem value="medio">Medio</SelectItem>
+                            <SelectItem value="alto">Alto</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => removeSkill(i)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Funciones */}
+            {/* 3. Funciones */}
             <Collapsible defaultOpen>
-              <SectionHeader>3. Funciones del Cargo</SectionHeader>
-              <CollapsibleContent className="space-y-2 pt-3">
+              <SectionHeader icon={ListChecks} num={3} label="Funciones del Cargo" count={form.functions.filter(f => f.trim()).length} />
+              <CollapsibleContent className="space-y-3 pt-4 pl-1">
                 {form.functions.map((f, i) => (
-                  <div key={i} className="flex gap-2">
-                    <span className="text-xs text-muted-foreground mt-3 w-6">{i + 1}.</span>
+                  <div key={i} className="flex gap-2 items-center">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary">
+                      {i + 1}
+                    </span>
                     <Input className="flex-1" value={f} onChange={e => updateFunction(i, e.target.value)} placeholder="Descripción de la función" />
-                    {form.functions.length > 1 && <Button size="icon" variant="ghost" onClick={() => removeFunction(i)}><Trash2 className="w-4 h-4 text-destructive" /></Button>}
+                    {form.functions.length > 1 && (
+                      <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => removeFunction(i)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                   </div>
                 ))}
-                <Button size="sm" variant="outline" onClick={addFunction}><Plus className="w-3 h-3 mr-1" />Agregar función</Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={addFunction}>
+                  <Plus className="w-3 h-3 mr-1" />Agregar función
+                </Button>
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Responsabilidades */}
+            {/* 4. Responsabilidades */}
             <Collapsible>
-              <SectionHeader>4. Responsabilidades</SectionHeader>
-              <CollapsibleContent className="space-y-3 pt-3">
+              <SectionHeader icon={Shield} num={4} label="Responsabilidades" />
+              <CollapsibleContent className="space-y-3 pt-4 pl-1">
                 {[
                   ['equipment', 'Equipos'],
                   ['materials', 'Materiales'],
@@ -256,17 +336,17 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                   ['external_relationships', 'Relaciones externas'],
                 ].map(([key, label]) => (
                   <div key={key}>
-                    <Label>{label}</Label>
-                    <Input value={(form.responsibilities as any)[key] || ''} onChange={e => updateResponsibility(key, e.target.value)} />
+                    <FieldLabel>{label}</FieldLabel>
+                    <Input className="mt-1.5" value={(form.responsibilities as any)[key] || ''} onChange={e => updateResponsibility(key, e.target.value)} />
                   </div>
                 ))}
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Condiciones de Trabajo */}
+            {/* 5. Condiciones de Trabajo */}
             <Collapsible>
-              <SectionHeader>5. Condiciones de Trabajo</SectionHeader>
-              <CollapsibleContent className="space-y-3 pt-3">
+              <SectionHeader icon={HardHat} num={5} label="Condiciones de Trabajo" />
+              <CollapsibleContent className="space-y-3 pt-4 pl-1">
                 {[
                   ['physical_effort', 'Esfuerzo Físico'],
                   ['mental_effort', 'Esfuerzo Mental'],
@@ -274,27 +354,38 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                   ['risks', 'Riesgos'],
                 ].map(([key, label]) => (
                   <div key={key}>
-                    <Label>{label}</Label>
-                    <Input value={(form.working_conditions as any)[key] || ''} onChange={e => updateCondition(key, e.target.value)} />
+                    <FieldLabel>{label}</FieldLabel>
+                    <Input className="mt-1.5" value={(form.working_conditions as any)[key] || ''} onChange={e => updateCondition(key, e.target.value)} />
                   </div>
                 ))}
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Aprobaciones */}
+            {/* 6. Aprobaciones */}
             <Collapsible>
-              <SectionHeader>6. Aprobaciones</SectionHeader>
-              <CollapsibleContent className="space-y-3 pt-3">
+              <SectionHeader icon={Stamp} num={6} label="Aprobaciones" />
+              <CollapsibleContent className="space-y-3 pt-4 pl-1">
                 <div className="grid grid-cols-3 gap-3">
-                  <div><Label>Elaborado por</Label><Input value={form.elaborated_by} onChange={e => updateField('elaborated_by', e.target.value)} /></div>
-                  <div><Label>Revisado por</Label><Input value={form.reviewed_by} onChange={e => updateField('reviewed_by', e.target.value)} /></div>
-                  <div><Label>Aprobado por</Label><Input value={form.approved_by} onChange={e => updateField('approved_by', e.target.value)} /></div>
+                  <div>
+                    <FieldLabel>Elaborado por</FieldLabel>
+                    <Input className="mt-1.5" value={form.elaborated_by} onChange={e => updateField('elaborated_by', e.target.value)} />
+                  </div>
+                  <div>
+                    <FieldLabel>Revisado por</FieldLabel>
+                    <Input className="mt-1.5" value={form.reviewed_by} onChange={e => updateField('reviewed_by', e.target.value)} />
+                  </div>
+                  <div>
+                    <FieldLabel>Aprobado por</FieldLabel>
+                    <Input className="mt-1.5" value={form.approved_by} onChange={e => updateField('approved_by', e.target.value)} />
+                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
           </div>
-        </ScrollArea>
-        <DialogFooter className="px-6 pb-6">
+        </div>
+
+        {/* Footer */}
+        <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/30">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={createProfile.isPending}>
             {createProfile.isPending ? 'Guardando...' : 'Guardar Perfil'}
