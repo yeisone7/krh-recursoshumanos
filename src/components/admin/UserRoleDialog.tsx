@@ -11,19 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAssignRole, useRemoveRole, type AdminUser } from '@/hooks/useAdminUsers';
+import { useCustomRoles, useAssignUserRole, useRemoveUserRole } from '@/hooks/useRolesPermissions';
 import { toast } from 'sonner';
-import type { Database } from '@/integrations/supabase/types';
-
-type AppRole = Database['public']['Enums']['app_role'];
-
-const AVAILABLE_ROLES: { value: AppRole; label: string; description: string }[] = [
-  { value: 'admin', label: 'Administrador', description: 'Acceso total al sistema' },
-  { value: 'rrhh', label: 'RRHH', description: 'Gestión de empleados y contratos' },
-  { value: 'psicologo', label: 'Psicólogo', description: 'Gestión de exámenes médicos' },
-  { value: 'jefe_area', label: 'Jefe de Área', description: 'Supervisión de equipos' },
-  { value: 'auditor', label: 'Auditor', description: 'Solo lectura para auditoría' },
-];
 
 interface UserRoleDialogProps {
   user: AdminUser | null;
