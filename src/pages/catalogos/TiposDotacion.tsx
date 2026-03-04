@@ -404,26 +404,6 @@ export default function CatalogosTiposDotacion() {
         </DialogContent>
       </Dialog>
 
-      {/* Toggle active/inactive confirmation */}
-      <AlertDialog open={!!toggleItem} onOpenChange={(open) => !open && setToggleItem(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{toggleItem?.is_active ? '¿Desactivar tipo de dotación?' : '¿Activar tipo de dotación?'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {toggleItem?.is_active
-                ? <>Estás a punto de desactivar <strong>{toggleItem?.name}</strong>. No aparecerá en nuevos procesos pero se conservará el historial.</>
-                : <>Estás a punto de activar <strong>{toggleItem?.name}</strong>. Volverá a estar disponible para asignación.</>}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={toggleLoading}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleToggleActive} disabled={toggleLoading}>
-              {toggleLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {toggleItem?.is_active ? 'Desactivar' : 'Activar'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteItem} onOpenChange={(open) => !open && setDeleteItem(null)}>
