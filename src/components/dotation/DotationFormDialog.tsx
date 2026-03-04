@@ -33,6 +33,7 @@ import { DOTATION_PERIOD_MONTHS } from '@/types/dotation';
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
 import { useCreateDotationDelivery, useDotationDeliveries } from '@/hooks/useDotation';
+import { useCreateDotationTransaction } from '@/hooks/useDotationTransactions';
 import { useProfesiogramaByEmployee } from '@/hooks/useDotationProfesiograma';
 import { useDotationItemTypes, useSystemConfig } from '@/hooks/useSystemConfig';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
@@ -65,6 +66,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
   const { data: inventory = [] } = useDotationInventory();
   const { data: systemConfig } = useSystemConfig();
   const createDelivery = useCreateDotationDelivery();
+  const createTransaction = useCreateDotationTransaction();
 
   const inventoryEnabled = systemConfig?.dotation_inventory_enabled?.enabled !== false;
   const blockNoStock = inventoryEnabled && systemConfig?.dotation_block_no_stock?.enabled === true;
@@ -183,6 +185,15 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
     setIsSubmitting(true);
     try {
+      // Create transaction header first
+      const transaction = await createTransaction.mutateAsync({
+        employee_id: employeeId,
+        delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
+        delivered_by: deliveredBy,
+        observations: notes || null,
+      });
+
+      // Create delivery items linked to the transaction
       for (const item of selectedItems) {
         await createDelivery.mutateAsync({
           employee_id: employeeId,
@@ -195,6 +206,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
           delivered_by: deliveredBy,
           observations: notes || null,
           signature_url: null,
+          transaction_id: transaction.id,
         });
       }
 
