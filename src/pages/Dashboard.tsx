@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function Dashboard() {
   const { data: kpis, isLoading: kpisLoading } = useEmployeeKPIs();
   const { data: alerts = [] } = useDashboardAlerts();
+  const { isAdmin } = useAuth();
 
   const criticalAlerts = alerts.filter(a => a.level === 'critical').length;
 
