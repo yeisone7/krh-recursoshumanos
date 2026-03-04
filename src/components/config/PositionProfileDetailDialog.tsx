@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileText, History, Download, Plus, Loader2 } from 'lucide-react';
+import { FileText, History, Download, Plus, Loader2, Copy } from 'lucide-react';
 import { usePositionProfiles } from '@/hooks/usePositionProfiles';
 import { generatePositionProfilePdf } from '@/lib/positionProfilePdfGenerator';
 import { PositionProfileFormDialog } from './PositionProfileFormDialog';
+import { ClonePositionProfileDialog } from './ClonePositionProfileDialog';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -24,6 +25,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
   const { data: versions = [] } = usePositionProfiles(positionId);
   const [selectedVersion, setSelectedVersion] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showClone, setShowClone] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const current = versions.find((v: any) => v.is_current) || versions[0];
@@ -122,8 +124,11 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
               <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => setShowForm(true)}>
                 <Plus className="w-3 h-3 mr-1" />Nueva versión
               </Button>
-              <Button size="sm" variant="outline" className="w-full text-xs" onClick={handleExportPdf}>
-                <Download className="w-3 h-3 mr-1" />Exportar PDF
+              <Button size="sm" variant="outline" className="w-full text-xs" onClick={handleExportPdf} disabled={exporting}>
+                {exporting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Download className="w-3 h-3 mr-1" />}Exportar PDF
+              </Button>
+              <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => setShowClone(true)}>
+                <Copy className="w-3 h-3 mr-1" />Clonar a otro cargo
               </Button>
             </div>
 
@@ -249,6 +254,15 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
         positionName={positionName}
         existingData={profile}
       />
+
+      {profile && (
+        <ClonePositionProfileDialog
+          open={showClone}
+          onOpenChange={setShowClone}
+          sourceProfile={profile}
+          sourcePositionName={positionName}
+        />
+      )}
     </>
   );
 }
