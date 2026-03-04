@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileText, History, Download, Plus, Loader2, Copy } from 'lucide-react';
+import { FileText, History, Download, Plus, Loader2, Copy, Pencil } from 'lucide-react';
 import { usePositionProfiles } from '@/hooks/usePositionProfiles';
 import { generatePositionProfilePdf } from '@/lib/positionProfilePdfGenerator';
 import { PositionProfileFormDialog } from './PositionProfileFormDialog';
@@ -27,6 +27,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
   const [showForm, setShowForm] = useState(false);
   const [showClone, setShowClone] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [formMode, setFormMode] = useState<'create' | 'new_version' | 'edit'>('create');
 
   const current = versions.find((v: any) => v.is_current) || versions[0];
   const profile = selectedVersion || current;
@@ -39,6 +40,16 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
     } finally {
       setExporting(false);
     }
+  };
+
+  const handleNewVersion = () => {
+    setFormMode('new_version');
+    setShowForm(true);
+  };
+
+  const handleEdit = () => {
+    setFormMode('edit');
+    setShowForm(true);
   };
 
   const SectionTitle = ({ children }: { children: React.ReactNode }) => (
@@ -62,7 +73,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
           <div className="text-center py-8 space-y-4">
             <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
             <p className="text-muted-foreground">Este cargo aún no tiene un perfil configurado.</p>
-            <Button onClick={() => setShowForm(true)}>
+            <Button onClick={() => { setFormMode('create'); setShowForm(true); }}>
               <Plus className="w-4 h-4 mr-2" />Crear Perfil
             </Button>
           </div>
@@ -71,6 +82,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
             onOpenChange={setShowForm}
             positionId={positionId}
             positionName={positionName}
+            mode="create"
           />
         </DialogContent>
       </Dialog>
@@ -121,7 +133,10 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                 </button>
               ))}
               <Separator className="my-2" />
-              <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => setShowForm(true)}>
+              <Button size="sm" variant="outline" className="w-full text-xs" onClick={handleEdit}>
+                <Pencil className="w-3 h-3 mr-1" />Editar perfil
+              </Button>
+              <Button size="sm" variant="outline" className="w-full text-xs" onClick={handleNewVersion}>
                 <Plus className="w-3 h-3 mr-1" />Nueva versión
               </Button>
               <Button size="sm" variant="outline" className="w-full text-xs" onClick={handleExportPdf} disabled={exporting}>
@@ -253,6 +268,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
         positionId={positionId}
         positionName={positionName}
         existingData={profile}
+        mode={formMode}
       />
 
       {profile && (
