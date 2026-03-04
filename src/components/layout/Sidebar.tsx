@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompanies, useCompany } from '@/hooks/useCompanies';
+import { useUnifiedAlerts } from '@/hooks/useUnifiedAlerts';
 import {
   Tooltip,
   TooltipContent,
@@ -142,11 +143,10 @@ const catalogosItem: NavItem = {
 
 };
 
-const toolsNavItems: NavItem[] = [
+const toolsNavItemsBase: NavItem[] = [
 { label: 'Calendario', icon: <Calendar className="w-5 h-5" />, href: '/calendario' },
 { label: 'Reportes', icon: <FileBarChart className="w-5 h-5" />, href: '/reportes' },
-{ label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama' },
-{ label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', badge: 5 }];
+{ label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama' }];
 
 
 const payrollNavItems: NavItem[] = [
@@ -167,6 +167,13 @@ export function Sidebar() {
   const [capacitacionesOpen, setCapacitacionesOpen] = useState(false);
   const [evaluacionesOpen, setEvaluacionesOpen] = useState(false);
   const location = useLocation();
+  const { data: unifiedAlerts } = useUnifiedAlerts();
+  const alertCount = unifiedAlerts?.length || 0;
+
+  const toolsNavItems = useMemo<NavItem[]>(() => [
+    ...toolsNavItemsBase,
+    { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', badge: alertCount > 0 ? alertCount : undefined },
+  ], [alertCount]);
 
   // Auto-open catalogos menu if on a catalogos route or centros
   const isCatalogosRoute = location.pathname.startsWith('/catalogos') || location.pathname === '/centros';
