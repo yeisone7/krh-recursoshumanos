@@ -177,12 +177,19 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAction, setFilterAction] = useState<string>('all');
   const [filterEntity, setFilterEntity] = useState<string>(entityType || 'all');
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = compact ? 20 : 25;
 
-  const { data: logs = [], isLoading, error } = useAuditLogs({
+  const { data: result, isLoading, error } = useAuditLogs({
     entityType: filterEntity !== 'all' ? filterEntity : undefined,
     action: filterAction !== 'all' ? filterAction : undefined,
-    limit: compact ? 20 : 100,
+    limit: pageSize,
+    page: currentPage,
   });
+
+  const logs = result?.data || [];
+  const totalCount = result?.total || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const filteredLogs = useMemo(() => {
     if (!searchQuery) return logs;
@@ -195,6 +202,12 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
       log.entity_type.toLowerCase().includes(query)
     );
   }, [logs, searchQuery]);
+
+  // Reset page when filters change
+  const handleFilterChange = (setter: (v: string) => void) => (value: string) => {
+    setter(value);
+    setCurrentPage(0);
+  };
 
   if (error) {
     return (
