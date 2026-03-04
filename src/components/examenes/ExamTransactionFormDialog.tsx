@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { es } from 'date-fns/locale';
 import { CalendarIcon, Stethoscope, User, FileText, Plus, Trash2, Sparkles, History } from 'lucide-react';
 
 import {
