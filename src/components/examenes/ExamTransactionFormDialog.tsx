@@ -295,7 +295,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                         {item.fromProfesiograma ? (
                           <div className="flex-1 flex items-center gap-2 min-w-0">
                             <span className="font-medium text-sm truncate">{item.exam_name}</span>
-                            <Badge variant="outline" className="text-xs gap-1 bg-amber-50 text-amber-700 border-amber-200 shrink-0">
+                            <Badge variant="outline" className="text-xs gap-1 bg-warning/10 text-warning-foreground border-warning/20 shrink-0">
                               <Sparkles className="w-3 h-3" /> Sugerido
                             </Badge>
                           </div>
@@ -319,6 +319,18 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
+                      {item.selected && (
+                        <div className="flex items-center gap-2 ml-8">
+                          <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          <Label className="text-xs text-muted-foreground whitespace-nowrap">Vencimiento:</Label>
+                          <Input
+                            type="date"
+                            value={item.expiration_date}
+                            onChange={(e) => updateItem(idx, 'expiration_date', e.target.value)}
+                            className="h-7 text-xs flex-1"
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
