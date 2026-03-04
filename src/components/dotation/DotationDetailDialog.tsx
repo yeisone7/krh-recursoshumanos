@@ -60,8 +60,11 @@ export function DotationDetailDialog({ open, onOpenChange, delivery }: DotationD
 
   if (!delivery) return null;
 
-  const status = getDotationStatus(delivery) as DotationStatus;
-  const daysRemaining = getDaysRemaining(delivery.expiration_date);
+  const hasValidDates = delivery.delivery_date && delivery.expiration_date &&
+    !isNaN(new Date(delivery.delivery_date).getTime()) && !isNaN(new Date(delivery.expiration_date).getTime());
+
+  const status = hasValidDates ? (getDotationStatus(delivery) as DotationStatus) : 'vigente';
+  const daysRemaining = hasValidDates ? getDaysRemaining(delivery.expiration_date) : 0;
   const sc = statusConfig[status];
   const StatusIcon = sc.icon;
 
@@ -147,28 +150,30 @@ export function DotationDetailDialog({ open, onOpenChange, delivery }: DotationD
           </div>
 
           {/* Dates */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-muted/40 rounded-xl p-4 text-center">
-              <Calendar className="w-4 h-4 text-primary mx-auto mb-1" />
-              <p className="text-xs text-muted-foreground">Entrega</p>
-              <p className="font-semibold text-sm">{format(new Date(delivery.delivery_date), 'PPP', { locale: es })}</p>
+          {hasValidDates && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-muted/40 rounded-xl p-4 text-center">
+                <Calendar className="w-4 h-4 text-primary mx-auto mb-1" />
+                <p className="text-xs text-muted-foreground">Entrega</p>
+                <p className="font-semibold text-sm">{format(new Date(delivery.delivery_date), 'PPP', { locale: es })}</p>
+              </div>
+              <div className={cn(
+                'rounded-xl p-4 text-center',
+                status === 'vencida' ? 'bg-destructive/10' : status === 'por_vencer' ? 'bg-warning/10' : 'bg-muted/40'
+              )}>
+                <Clock className="w-4 h-4 text-primary mx-auto mb-1" />
+                <p className="text-xs text-muted-foreground">Vencimiento</p>
+                <p className="font-semibold text-sm">{format(new Date(delivery.expiration_date), 'PPP', { locale: es })}</p>
+                <p className={cn('text-xs mt-1', sc.text)}>
+                  {daysRemaining > 0
+                    ? `${daysRemaining} días restantes`
+                    : daysRemaining === 0
+                      ? 'Vence hoy'
+                      : `Venció hace ${Math.abs(daysRemaining)} días`}
+                </p>
+              </div>
             </div>
-            <div className={cn(
-              'rounded-xl p-4 text-center',
-              status === 'vencida' ? 'bg-destructive/10' : status === 'por_vencer' ? 'bg-warning/10' : 'bg-muted/40'
-            )}>
-              <Clock className="w-4 h-4 text-primary mx-auto mb-1" />
-              <p className="text-xs text-muted-foreground">Vencimiento</p>
-              <p className="font-semibold text-sm">{format(new Date(delivery.expiration_date), 'PPP', { locale: es })}</p>
-              <p className={cn('text-xs mt-1', sc.text)}>
-                {daysRemaining > 0
-                  ? `${daysRemaining} días restantes`
-                  : daysRemaining === 0
-                    ? 'Vence hoy'
-                    : `Venció hace ${Math.abs(daysRemaining)} días`}
-              </p>
-            </div>
-          </div>
+          )}
 
           {/* Delivery info */}
           <div className="bg-muted/40 rounded-xl p-4 space-y-2">
