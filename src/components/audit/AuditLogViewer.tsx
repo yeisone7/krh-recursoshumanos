@@ -296,58 +296,59 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
             </p>
           </div>
         ) : (
-          <ScrollArea className={compact ? 'h-[400px]' : 'h-[600px]'}>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[140px]">Fecha</TableHead>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead className="w-[140px]">Acción</TableHead>
-                    <TableHead>Entidad</TableHead>
-                    <TableHead className="w-[100px]">Detalles</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredLogs.map((log) => (
-                    <LogDetailsRow key={log.id} log={log} />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </ScrollArea>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 pt-4 border-t">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {currentPage * pageSize + 1}–{Math.min((currentPage + 1) * pageSize, totalCount)} de {totalCount} registros
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => p - 1)}
-                  disabled={currentPage === 0}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
-                  Anterior
-                </Button>
-                <span className="text-sm text-muted-foreground px-2">
-                  {currentPage + 1} / {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => p + 1)}
-                  disabled={currentPage >= totalPages - 1}
-                >
-                  Siguiente
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
+          <>
+            <ScrollArea className={compact ? 'h-[400px]' : 'h-[600px]'}>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[140px]">Fecha</TableHead>
+                      <TableHead>Usuario</TableHead>
+                      <TableHead className="w-[140px]">Acción</TableHead>
+                      <TableHead>Entidad</TableHead>
+                      <TableHead className="w-[100px]">Detalles</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredLogs.map((log) => (
+                      <LogDetailsRow key={log.id} log={log} />
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            </div>
-          )}
+            </ScrollArea>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Mostrando {currentPage * pageSize + 1}–{Math.min((currentPage + 1) * pageSize, totalCount)} de {totalCount} registros
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => p - 1)}
+                    disabled={currentPage === 0}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-muted-foreground px-2">
+                    {currentPage + 1} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => p + 1)}
+                    disabled={currentPage >= totalPages - 1}
+                  >
+                    Siguiente
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
