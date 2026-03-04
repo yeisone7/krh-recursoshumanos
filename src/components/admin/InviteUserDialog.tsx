@@ -22,20 +22,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Database } from '@/integrations/supabase/types';
-
-type AppRole = Database['public']['Enums']['app_role'];
-
-const AVAILABLE_ROLES: { value: AppRole; label: string }[] = [
-  { value: 'admin', label: 'Administrador' },
-  { value: 'rrhh', label: 'RRHH' },
-  { value: 'psicologo', label: 'Psicólogo' },
-  { value: 'jefe_area', label: 'Jefe de Área' },
-  { value: 'auditor', label: 'Auditor' },
-];
+import { useCustomRoles } from '@/hooks/useRolesPermissions';
 
 const inviteSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
@@ -52,6 +43,9 @@ interface InviteUserDialogProps {
 export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) {
   const { currentCompanyId } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const { data: roles = [], isLoading: rolesLoading } = useCustomRoles();
+
+  const activeRoles = roles.filter(r => r.is_active);
 
   const form = useForm<InviteFormData>({
     resolver: zodResolver(inviteSchema),
@@ -66,7 +60,6 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
 
     setIsLoading(true);
     try {
-      // Call edge function to invite user
       const { data: result, error } = await supabase.functions.invoke('invite-user', {
         body: {
           email: data.email,
@@ -132,31 +125,44 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
                     Selecciona los roles que tendrá el usuario.
                   </FormDescription>
                   <div className="space-y-2 mt-2">
-                    {AVAILABLE_ROLES.map(role => (
-                      <FormField
-                        key={role.value}
-                        control={form.control}
-                        name="roles"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(role.value)}
-                                onCheckedChange={(checked) => {
-                                  const updated = checked
-                                    ? [...field.value, role.value]
-                                    : field.value.filter(v => v !== role.value);
-                                  field.onChange(updated);
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal cursor-pointer">
-                              {role.label}
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    ))}
+                    {rolesLoading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="h-6 w-40" />
+                      ))
+                    ) : activeRoles.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No hay roles activos configurados.</p>
+                    ) : (
+                      activeRoles.map(role => (
+                        <FormField
+                          key={role.id}
+                          control={form.control}
+                          name="roles"
+                          render={({ field }) => (
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(role.id)}
+                                  onCheckedChange={(checked) => {
+                                    const updated = checked
+                                      ? [...field.value, role.id]
+                                      : field.value.filter(v => v !== role.id);
+                                    field.onChange(updated);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">
+                                {role.name}
+                                {role.description && (
+                                  <span className="text-muted-foreground text-xs ml-2">
+                                    — {role.description}
+                                  </span>
+                                )}
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
+                      ))
+                    )}
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -167,7 +173,7 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || activeRoles.length === 0}>
                 {isLoading ? 'Enviando...' : 'Enviar Invitación'}
               </Button>
             </DialogFooter>
