@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { ClipboardList, Plus, Pencil, Trash2, Loader2, Search, ChevronDown, ChevronRight, Eye } from 'lucide-react';
+import { ClipboardList, Plus, Pencil, Trash2, Loader2, Search, ChevronDown, ChevronRight, Download } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,6 +18,7 @@ import { toast } from 'sonner';
 
 import { useExamProfesiogramas, useDeleteExamProfesiograma, type ExamProfesiograma } from '@/hooks/useExamProfesiograma';
 import { ExamProfesiogramaFormDialog } from './ExamProfesiogramaFormDialog';
+import { ImportFromDotacionDialog } from './ImportFromDotacionDialog';
 
 interface Props {
   centers: { id: string; name: string }[];
@@ -34,6 +36,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [collapsedCenters, setCollapsedCenters] = useState<Set<string>>(new Set());
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [centerFilter, setCenterFilter] = useState('all');
@@ -146,6 +149,9 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
               <Trash2 className="w-4 h-4" /> Eliminar ({selectedIds.size})
             </Button>
           )}
+          <Button variant="outline" onClick={() => setIsImportOpen(true)} className="gap-2">
+            <Download className="w-4 h-4" /> Importar desde Dotaciones
+          </Button>
           <Button onClick={handleNew} className="gap-2">
             <Plus className="w-4 h-4" /> Nuevo
           </Button>
@@ -332,6 +338,13 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ImportFromDotacionDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        centers={centers}
+        positions={positions}
+      />
     </div>
   );
 }
