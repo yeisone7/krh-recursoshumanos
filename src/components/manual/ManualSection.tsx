@@ -1,5 +1,4 @@
 import type { ManualContentItem } from '@/data/manualContent';
-import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Info } from 'lucide-react';
 
 interface Props {
@@ -105,14 +104,14 @@ function AlertBlock({ data }: { data: { variant: string; title: string; message:
     <div
       className={`flex gap-3 rounded-lg border p-3 ${
         isWarning
-          ? 'border-yellow-500/30 bg-yellow-500/5'
-          : 'border-blue-500/30 bg-blue-500/5'
+          ? 'border-destructive/30 bg-destructive/5'
+          : 'border-primary/30 bg-primary/5'
       }`}
     >
       {isWarning ? (
-        <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
+        <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
       ) : (
-        <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
       )}
       <div>
         <p className="text-sm font-medium text-foreground">{data.title}</p>

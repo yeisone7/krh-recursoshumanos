@@ -9,11 +9,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   Search,
   Download,
-  ChevronRight,
   BookOpen,
   LogIn,
   Shield,
@@ -45,6 +43,11 @@ import {
   Settings,
   FolderOpen,
   User,
+  CheckCircle2,
+  AlertTriangle,
+  Lock,
+  FileCheck,
+  Zap,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { MANUAL_SECTIONS, MODULE_DOCS, MODULES_SECTION_ID } from '@/data/manualContent';
@@ -64,6 +67,61 @@ function getIcon(name: string) {
   return ICON_MAP[name] || BookOpen;
 }
 
+// ─── Section illustration configs ───
+interface SectionIllustration {
+  icons: React.ElementType[];
+  gradient: string;
+  label: string;
+}
+
+const SECTION_ILLUSTRATIONS: Record<string, SectionIllustration> = {
+  introduccion: {
+    icons: [BookOpen, Users, FileCheck],
+    gradient: 'from-primary/15 to-primary/5',
+    label: 'Sistema integral de gestión de RRHH',
+  },
+  acceso: {
+    icons: [LogIn, Lock, CheckCircle2],
+    gradient: 'from-emerald-500/15 to-emerald-500/5',
+    label: 'Registro → Activación → Acceso',
+  },
+  roles: {
+    icons: [Shield, Users, Zap],
+    gradient: 'from-violet-500/15 to-violet-500/5',
+    label: 'Control granular de acceso por módulo',
+  },
+  modulos: {
+    icons: [Layers, LayoutDashboard, Target],
+    gradient: 'from-sky-500/15 to-sky-500/5',
+    label: 'Módulos funcionales del sistema',
+  },
+  'alertas-sistema': {
+    icons: [Bell, AlertTriangle, CheckCircle2],
+    gradient: 'from-amber-500/15 to-amber-500/5',
+    label: 'Tipos de notificaciones y mensajes',
+  },
+  'reglas-negocio': {
+    icons: [Scale, Lock, FileCheck],
+    gradient: 'from-rose-500/15 to-rose-500/5',
+    label: 'Validaciones y restricciones del sistema',
+  },
+  formulas: {
+    icons: [Calculator, BarChart3, FileText],
+    gradient: 'from-teal-500/15 to-teal-500/5',
+    label: 'Cálculos de nómina y prestaciones',
+  },
+  auditoria: {
+    icons: [ShieldCheck, FileBarChart, Lock],
+    gradient: 'from-indigo-500/15 to-indigo-500/5',
+    label: 'Trazabilidad y protección de datos',
+  },
+  faq: {
+    icons: [HelpCircle, CheckCircle2, Zap],
+    gradient: 'from-orange-500/15 to-orange-500/5',
+    label: 'Respuestas a dudas comunes',
+  },
+};
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -74,13 +132,11 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
   const [activeSection, setActiveSection] = useState('introduccion');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter module docs by permissions
   const visibleModuleDocs = useMemo(
     () => MODULE_DOCS.filter((m) => isAdmin || canView(m.moduleCode)),
     [isAdmin, canView],
   );
 
-  // Build all sections including the dynamic modules section
   const allSections = useMemo(() => {
     const before = MANUAL_SECTIONS.slice(0, 3);
     const after = MANUAL_SECTIONS.slice(3);
@@ -106,7 +162,6 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
     return [...before, modulesSection, ...after];
   }, [visibleModuleDocs]);
 
-  // Search filter
   const filteredSections = useMemo(() => {
     if (!searchQuery.trim()) return allSections;
     const q = searchQuery.toLowerCase();
@@ -119,9 +174,7 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
     });
   }, [allSections, searchQuery]);
 
-  // Get current section
   const currentSection = useMemo(() => {
-    // Check if it's a module subsection
     if (activeSection.startsWith('mod-')) {
       for (const s of allSections) {
         const sub = s.subsections?.find((ss) => ss.id === activeSection);
@@ -134,6 +187,14 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
   const handleExportPdf = () => {
     exportManualToPdf(MANUAL_SECTIONS, visibleModuleDocs);
   };
+
+  // Determine illustration for current section
+  const illustration = SECTION_ILLUSTRATIONS[currentSection?.id || ''] || null;
+  // For module subsections, build an inline illustration
+  const isModuleSubsection = activeSection.startsWith('mod-');
+  const moduleDoc = isModuleSubsection
+    ? visibleModuleDocs.find((m) => `mod-${m.moduleCode}` === activeSection)
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -196,7 +257,6 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
                         </Badge>
                       )}
                     </button>
-                    {/* Subsections */}
                     {hasChildren && (isActive || childActive) && (
                       <div className="ml-4 mt-0.5 space-y-0.5 border-l pl-2">
                         {section.subsections!.map((sub) => {
@@ -249,13 +309,74 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
           <div className="flex-1 overflow-y-auto p-6 min-h-0">
             {currentSection && (
               <div>
-                <div className="flex items-center gap-2 mb-4">
-                  {(() => {
-                    const Icon = getIcon(currentSection.icon);
-                    return <Icon className="w-5 h-5 text-primary" />;
-                  })()}
-                  <h2 className="text-xl font-semibold text-foreground">{currentSection.title}</h2>
-                </div>
+                {/* Section illustration / hero card */}
+                {illustration && !isModuleSubsection && (
+                  <div className={cn('rounded-xl bg-gradient-to-r p-5 mb-6 border', illustration.gradient)}>
+                    <div className="flex items-center gap-4">
+                      <div className="flex -space-x-2">
+                        {illustration.icons.map((Ic, i) => (
+                          <div
+                            key={i}
+                            className="w-10 h-10 rounded-full bg-background border-2 border-background flex items-center justify-center shadow-sm"
+                          >
+                            <Ic className="w-5 h-5 text-foreground/70" />
+                          </div>
+                        ))}
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-semibold text-foreground">{currentSection.title}</h2>
+                        <p className="text-xs text-muted-foreground">{illustration.label}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Module subsection hero */}
+                {isModuleSubsection && moduleDoc && (
+                  <div className="rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 p-5 mb-6 border">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        {(() => {
+                          const ModIcon = getIcon(moduleDoc.icon);
+                          return <ModIcon className="w-6 h-6 text-primary" />;
+                        })()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-semibold text-foreground">{moduleDoc.title}</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{moduleDoc.description}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {moduleDoc.actions.length > 0 && (
+                            <Badge variant="secondary" className="text-[10px]">
+                              {moduleDoc.actions.length} acciones
+                            </Badge>
+                          )}
+                          {moduleDoc.alerts.length > 0 && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {moduleDoc.alerts.length} alertas
+                            </Badge>
+                          )}
+                          {moduleDoc.dependencies.length > 0 && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {moduleDoc.dependencies.length} dependencias
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Non-illustrated section title */}
+                {!illustration && !isModuleSubsection && (
+                  <div className="flex items-center gap-2 mb-4">
+                    {(() => {
+                      const Icon = getIcon(currentSection.icon);
+                      return <Icon className="w-5 h-5 text-primary" />;
+                    })()}
+                    <h2 className="text-xl font-semibold text-foreground">{currentSection.title}</h2>
+                  </div>
+                )}
+
                 <ManualSectionRenderer content={currentSection.content} />
               </div>
             )}
