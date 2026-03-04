@@ -87,8 +87,19 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [deactivateReason, setDeactivateReason] = useState('');
   const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const removeCompany = useRemoveCompanyAssignment();
   const toggleStatus = useToggleUserStatus();
+
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return users;
+    const q = searchQuery.toLowerCase();
+    return users.filter(u => 
+      getUserDisplayName(u).toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.roles.some(r => r.toLowerCase().includes(q))
+    );
+  }, [users, searchQuery]);
 
   const handleManageRoles = (user: AdminUser) => {
     setSelectedUser(user);
