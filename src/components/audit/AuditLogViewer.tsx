@@ -10,6 +10,8 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   AlertCircle,
 } from 'lucide-react';
 

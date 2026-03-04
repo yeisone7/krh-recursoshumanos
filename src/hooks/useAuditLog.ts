@@ -47,15 +47,18 @@ export function useAuditLogs(filters?: {
   startDate?: Date;
   endDate?: Date;
   limit?: number;
+  page?: number;
 }) {
   const { currentCompanyId } = useAuth();
+  const pageSize = filters?.limit || 25;
+  const page = filters?.page || 0;
 
   return useQuery({
     queryKey: ['audit_logs', currentCompanyId, filters],
     queryFn: async () => {
       let query = supabase
         .from('audit_logs')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
       if (currentCompanyId) {
@@ -78,11 +81,11 @@ export function useAuditLogs(filters?: {
         query = query.lte('created_at', filters.endDate.toISOString());
       }
 
-      query = query.limit(filters?.limit || 100);
+      query = query.range(page * pageSize, (page + 1) * pageSize - 1);
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       if (error) throw error;
-      return data as AuditLogEntry[];
+      return { data: data as AuditLogEntry[], total: count || 0 };
     },
     enabled: !!currentCompanyId,
   });
