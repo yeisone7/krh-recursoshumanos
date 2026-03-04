@@ -149,6 +149,9 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
               <Trash2 className="w-4 h-4" /> Eliminar ({selectedIds.size})
             </Button>
           )}
+          <Button variant="outline" onClick={() => setIsImportOpen(true)} className="gap-2">
+            <Download className="w-4 h-4" /> Importar desde Dotaciones
+          </Button>
           <Button onClick={handleNew} className="gap-2">
             <Plus className="w-4 h-4" /> Nuevo
           </Button>
