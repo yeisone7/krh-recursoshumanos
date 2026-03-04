@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import {
   Stethoscope, Plus, Search, Eye, Calendar, Loader2,
   ClipboardList, ShieldCheck, Trash2, CheckCircle, AlertTriangle, XCircle, Clock,
+  FileDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -31,11 +32,12 @@ import { ExamAlertsCard } from '@/components/examenes/ExamAlertsCard';
 import type { ExamAlert } from '@/components/examenes/ExamAlertsCard';
 import { useExamTransactions, useDeleteExamTransaction } from '@/hooks/useExamTransactions';
 import type { ExamTransaction } from '@/hooks/useExamTransactions';
-import { useOperationCenters } from '@/hooks/useCompanies';
+import { useOperationCenters, useCompanies } from '@/hooks/useCompanies';
 import { usePositions } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { examTypeLabels } from '@/types/medicalExam';
 import type { ExamType } from '@/types/medicalExam';
+import { generateExamOrderPdf } from '@/lib/examPdfGenerator';
 
 const resultLabels: Record<string, string> = {
   apto: 'Apto', apto_restricciones: 'Apto c/ Restricciones', no_apto: 'No Apto', pendiente: 'Pendiente',
@@ -66,6 +68,22 @@ export default function Examenes() {
   const deleteMutation = useDeleteExamTransaction();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: positionsData = [] } = usePositions();
+  const { data: companies = [] } = useCompanies();
+
+  const currentCompany = companies.find(c => c.id === currentCompanyId);
+
+  const handleExportPdf = async (tx: ExamTransaction) => {
+    try {
+      await generateExamOrderPdf({
+        companyName: currentCompany?.name || '',
+        companyNit: currentCompany?.nit || '',
+        transaction: tx,
+      });
+      toast.success('Orden de exámenes exportada');
+    } catch {
+      toast.error('Error al exportar la orden');
+    }
+  };
 
   // Deep link
   useEffect(() => {
@@ -289,6 +307,9 @@ export default function Examenes() {
                           <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="sm" onClick={() => handleView(tx.id)}>
                               <Eye className="w-4 h-4 mr-1" /> Ver
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleExportPdf(tx)} title="Exportar orden">
+                              <FileDown className="w-4 h-4" />
                             </Button>
                             <Button
                               variant="ghost" size="sm"
