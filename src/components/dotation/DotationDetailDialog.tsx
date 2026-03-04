@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Package, Calendar, FileText, AlertTriangle, CheckCircle, FileDown, PenTool, MapPin, User } from 'lucide-react';
 
 import {
@@ -55,9 +57,21 @@ interface DotationDetailDialogProps {
 export function DotationDetailDialog({ open, onOpenChange, transaction }: DotationDetailDialogProps) {
   const { currentCompanyId } = useAuth();
   const { data: company } = useCompany(currentCompanyId || undefined);
+  const queryClient = useQueryClient();
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [showSignature, setShowSignature] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSavingSignature, setIsSavingSignature] = useState(false);
+
+  // Load existing signature when dialog opens
+  useEffect(() => {
+    if (transaction?.signature_url) {
+      setSignatureDataUrl(transaction.signature_url);
+    } else {
+      setSignatureDataUrl(null);
+    }
+    setShowSignature(false);
+  }, [transaction?.id, transaction?.signature_url]);
 
   if (!transaction) return null;
 
@@ -82,6 +96,44 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
   const overallStatus = getWorstStatus();
   const sc = statusConfig[overallStatus];
   const StatusIcon = sc.icon;
+
+  const handleSaveSignature = async (dataUrl: string) => {
+    setSignatureDataUrl(dataUrl);
+    setIsSavingSignature(true);
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const fileName = `signatures/${transaction.id}_${Date.now()}.png`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('dotation-images')
+        .upload(fileName, blob, { contentType: 'image/png', upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('dotation-images')
+        .getPublicUrl(fileName);
+
+      const publicUrl = urlData.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from('dotation_delivery_transactions')
+        .update({ signature_url: publicUrl })
+        .eq('id', transaction.id);
+
+      if (updateError) throw updateError;
+
+      setSignatureDataUrl(publicUrl);
+      queryClient.invalidateQueries({ queryKey: ['dotation_transactions'] });
+      toast.success('Firma guardada correctamente');
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      toast.error('Error al guardar la firma');
+    } finally {
+      setIsSavingSignature(false);
+    }
+  };
 
   const handleExportPdf = async () => {
     const deliveries = transaction.items.map(item => ({
@@ -232,30 +284,35 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
           </div>
 
           {/* Signature capture */}
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => setShowSignature(!showSignature)}
-              className="flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
-            >
-              <PenTool className="w-4 h-4" />
-              {signatureDataUrl ? 'Firma capturada ✓ — Cambiar' : 'Capturar firma del empleado para el acta'}
-            </button>
-            {showSignature && (
-              <div className="border border-primary/20 rounded-lg p-3 bg-card">
-                {signatureDataUrl ? (
-                  <div className="space-y-2">
-                    <img src={signatureDataUrl} alt="Firma" className="w-full max-h-[100px] object-contain" />
-                    <Button variant="outline" size="sm" onClick={() => setSignatureDataUrl(null)}>
-                      Volver a firmar
-                    </Button>
-                  </div>
-                ) : (
-                  <SignatureCanvas
-                    onSave={(dataUrl) => setSignatureDataUrl(dataUrl)}
-                    width={440}
-                    height={120}
-                  />
+          <div className="border border-border rounded-xl p-4 space-y-3">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <PenTool className="w-4 h-4 text-primary" />
+              Firma del Empleado
+              {signatureDataUrl && !showSignature && (
+                <Badge variant="outline" className="text-xs bg-success-light text-success border-0 ml-1">
+                  <CheckCircle className="w-3 h-3 mr-1" /> Guardada
+                </Badge>
+              )}
+            </p>
+
+            {signatureDataUrl && !showSignature ? (
+              <div className="space-y-2">
+                <div className="bg-muted/30 rounded-lg p-3">
+                  <img src={signatureDataUrl} alt="Firma" className="w-full max-h-[100px] object-contain" />
+                </div>
+                <Button variant="outline" size="sm" onClick={() => { setSignatureDataUrl(null); setShowSignature(true); }}>
+                  Volver a firmar
+                </Button>
+              </div>
+            ) : (
+              <div className="bg-card rounded-lg p-3 border border-primary/20">
+                <SignatureCanvas
+                  onSave={handleSaveSignature}
+                  width={440}
+                  height={120}
+                />
+                {isSavingSignature && (
+                  <p className="text-xs text-muted-foreground mt-2 animate-pulse">Guardando firma...</p>
                 )}
               </div>
             )}
