@@ -133,8 +133,8 @@ export async function generateExamOrderPdf(options: ExamOrderOptions): Promise<v
   doc.text('EXÁMENES REALIZADOS', margin, y);
   y += 6;
 
-  const colWidths = [10, contentW * 0.4, contentW * 0.2, contentW * 0.2];
-  const headers = ['#', 'Examen', 'Resultado', 'Vencimiento'];
+  const colWidths = [10, contentW * 0.5, contentW * 0.3];
+  const headers = ['#', 'Examen', 'Resultado'];
 
   doc.setFillColor(30, 41, 59);
   doc.rect(margin, y - 4, contentW, 7, 'F');
@@ -158,9 +158,8 @@ export async function generateExamOrderPdf(options: ExamOrderOptions): Promise<v
     xPos = margin + 2;
     const row = [
       String(idx + 1),
-      item.exam_name.substring(0, 35),
+      item.exam_name.substring(0, 45),
       resultLabels[item.result] || item.result,
-      item.expiration_date ? format(new Date(item.expiration_date), 'dd/MM/yyyy') : '—',
     ];
     for (let i = 0; i < row.length; i++) {
       doc.text(row[i], xPos, y);
