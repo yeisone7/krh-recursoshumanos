@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -59,36 +59,37 @@ interface NavItem {
   icon: React.ReactNode;
   href: string;
   badge?: number;
+  moduleCode?: string; // maps to modules.code for permission filtering
   children?: NavItem[];
 }
 
 // Reorganized: Grouped by workflow logic
 const coreNavItems: NavItem[] = [
-{ label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
-{ label: 'Analítica RRHH', icon: <BarChart3 className="w-5 h-5" />, href: '/analitica' }];
-
+  { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/', moduleCode: 'dashboard' },
+  { label: 'Analítica RRHH', icon: <BarChart3 className="w-5 h-5" />, href: '/analitica', moduleCode: 'analitica' },
+];
 
 const personnelNavItems: NavItem[] = [
-{ label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados' },
-{ label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos' }];
-
+  { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados', moduleCode: 'empleados' },
+  { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos', moduleCode: 'contratos' },
+];
 
 const seleccionNavItems: NavItem[] = [
-{ label: 'Requisiciones', icon: <ClipboardList className="w-5 h-5" />, href: '/requisiciones' },
-{ label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion' }];
-
+  { label: 'Requisiciones', icon: <ClipboardList className="w-5 h-5" />, href: '/requisiciones', moduleCode: 'requisiciones' },
+  { label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion', moduleCode: 'seleccion' },
+];
 
 const timeManagementNavItems: NavItem[] = [
-{ label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones' },
-{ label: 'Permisos', icon: <ClipboardList className="w-5 h-5" />, href: '/permisos' },
-
-{ label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades' }];
-
+  { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones', moduleCode: 'vacaciones' },
+  { label: 'Permisos', icon: <ClipboardList className="w-5 h-5" />, href: '/permisos', moduleCode: 'permisos' },
+  { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades', moduleCode: 'incapacidades' },
+];
 
 const capacitacionesItem: NavItem = {
   label: 'Capacitaciones',
   icon: <GraduationCap className="w-5 h-5" />,
   href: '/capacitaciones',
+  moduleCode: 'capacitaciones',
   children: [
     { label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, href: '/capacitaciones' },
     { label: 'Nueva con IA', icon: <Sparkles className="w-4 h-4" />, href: '/capacitaciones/crear' },
@@ -105,6 +106,7 @@ const evaluacionesItem: NavItem = {
   label: 'Evaluaciones Desempeño',
   icon: <Target className="w-5 h-5" />,
   href: '/evaluaciones',
+  moduleCode: 'evaluaciones',
   children: [
     { label: 'Evaluaciones', icon: <Target className="w-4 h-4" />, href: '/evaluaciones' },
     { label: 'Analíticas', icon: <BarChart3 className="w-4 h-4" />, href: '/evaluaciones/analiticas' },
@@ -112,53 +114,55 @@ const evaluacionesItem: NavItem = {
 };
 
 const developmentNavItems: NavItem[] = [
-{ label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios' }];
-
+  { label: 'Disciplinarios', icon: <Gavel className="w-5 h-5" />, href: '/disciplinarios', moduleCode: 'disciplinarios' },
+];
 
 const benefitsNavItems: NavItem[] = [
-{ label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion' },
-{ label: 'Cesantías', icon: <Landmark className="w-5 h-5" />, href: '/cesantias' },
-{ label: 'Exámenes Médicos', icon: <Stethoscope className="w-5 h-5" />, href: '/examenes' }];
-
+  { label: 'Dotación', icon: <Package className="w-5 h-5" />, href: '/dotacion', moduleCode: 'dotacion' },
+  { label: 'Cesantías', icon: <Landmark className="w-5 h-5" />, href: '/cesantias', moduleCode: 'cesantias' },
+  { label: 'Exámenes Médicos', icon: <Stethoscope className="w-5 h-5" />, href: '/examenes', moduleCode: 'examenes' },
+];
 
 const catalogosItem: NavItem = {
   label: 'Catálogos',
   icon: <FolderOpen className="w-5 h-5" />,
   href: '/catalogos',
+  moduleCode: 'catalogos',
   children: [
-  { label: 'Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros' },
-  { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
-  { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
-  { label: 'Tipos de Contrato', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-contrato' },
-  { label: 'Tipos de Dotación', icon: <Shirt className="w-4 h-4" />, href: '/catalogos/tipos-dotacion' },
-  { label: 'Días Festivos', icon: <Calendar className="w-4 h-4" />, href: '/catalogos/festivos' },
-  { label: 'ARL', icon: <ShieldCheck className="w-4 h-4" />, href: '/catalogos/arl' },
-  { label: 'EPS', icon: <HeartPulse className="w-4 h-4" />, href: '/catalogos/eps' },
-  { label: 'AFP', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afp' },
-  { label: 'Caja Compensación', icon: <Users className="w-4 h-4" />, href: '/catalogos/ccf' },
-  { label: 'AFC', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afc' },
-  { label: 'IPS', icon: <Stethoscope className="w-4 h-4" />, href: '/catalogos/ips' },
-  { label: 'Bancos', icon: <BanknoteIcon className="w-4 h-4" />, href: '/catalogos/bancos' },
-  { label: 'Motivos Novedad', icon: <ClipboardList className="w-4 h-4" />, href: '/catalogos/motivos-novedad' }]
-
+    { label: 'Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros' },
+    { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
+    { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
+    { label: 'Tipos de Contrato', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-contrato' },
+    { label: 'Tipos de Dotación', icon: <Shirt className="w-4 h-4" />, href: '/catalogos/tipos-dotacion' },
+    { label: 'Días Festivos', icon: <Calendar className="w-4 h-4" />, href: '/catalogos/festivos' },
+    { label: 'ARL', icon: <ShieldCheck className="w-4 h-4" />, href: '/catalogos/arl' },
+    { label: 'EPS', icon: <HeartPulse className="w-4 h-4" />, href: '/catalogos/eps' },
+    { label: 'AFP', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afp' },
+    { label: 'Caja Compensación', icon: <Users className="w-4 h-4" />, href: '/catalogos/ccf' },
+    { label: 'AFC', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afc' },
+    { label: 'IPS', icon: <Stethoscope className="w-4 h-4" />, href: '/catalogos/ips' },
+    { label: 'Bancos', icon: <BanknoteIcon className="w-4 h-4" />, href: '/catalogos/bancos' },
+    { label: 'Motivos Novedad', icon: <ClipboardList className="w-4 h-4" />, href: '/catalogos/motivos-novedad' },
+  ],
 };
 
 const toolsNavItemsBase: NavItem[] = [
-{ label: 'Calendario', icon: <Calendar className="w-5 h-5" />, href: '/calendario' },
-{ label: 'Reportes', icon: <FileBarChart className="w-5 h-5" />, href: '/reportes' },
-{ label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama' }];
-
+  { label: 'Calendario', icon: <Calendar className="w-5 h-5" />, href: '/calendario', moduleCode: 'calendario' },
+  { label: 'Reportes', icon: <FileBarChart className="w-5 h-5" />, href: '/reportes', moduleCode: 'reportes' },
+  { label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama', moduleCode: 'organigrama' },
+];
 
 const payrollNavItems: NavItem[] = [
-{ label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas' },
-{ label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades' },
-{ label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion' },
-{ label: 'Configuración Laboral', icon: <Settings className="w-5 h-5" />, href: '/configuracion-laboral' }];
-
+  { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas', moduleCode: 'jornadas' },
+  { label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades', moduleCode: 'novedades' },
+  { label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion', moduleCode: 'pre_liquidacion' },
+  { label: 'Configuración Laboral', icon: <Settings className="w-5 h-5" />, href: '/configuracion-laboral', moduleCode: 'config_laboral' },
+];
 
 const adminNavItems: NavItem[] = [
-{ label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad' },
-{ label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion' }];
+  { label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad', moduleCode: 'seguridad' },
+  { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion', moduleCode: 'configuracion' },
+];
 
 
 export function Sidebar() {
@@ -169,11 +173,43 @@ export function Sidebar() {
   const location = useLocation();
   const { data: unifiedAlerts } = useUnifiedAlerts();
   const alertCount = unifiedAlerts?.length || 0;
+  const { canView, isAdmin, permissionsLoaded } = useAuth();
+
+  // Filter nav items based on permissions
+  const filterItems = useCallback((items: NavItem[]): NavItem[] => {
+    if (isAdmin || !permissionsLoaded) return items;
+    return items.filter(item => {
+      if (!item.moduleCode) return true;
+      return canView(item.moduleCode);
+    });
+  }, [canView, isAdmin, permissionsLoaded]);
+
+  const canViewItem = useCallback((item: NavItem): boolean => {
+    if (isAdmin || !permissionsLoaded) return true;
+    if (!item.moduleCode) return true;
+    return canView(item.moduleCode);
+  }, [canView, isAdmin, permissionsLoaded]);
+
+  const filteredCoreNavItems = useMemo(() => filterItems(coreNavItems), [filterItems]);
+  const filteredPersonnelNavItems = useMemo(() => filterItems(personnelNavItems), [filterItems]);
+  const filteredSeleccionNavItems = useMemo(() => filterItems(seleccionNavItems), [filterItems]);
+  const filteredTimeManagementNavItems = useMemo(() => filterItems(timeManagementNavItems), [filterItems]);
+  const filteredDevelopmentNavItems = useMemo(() => filterItems(developmentNavItems), [filterItems]);
+  const filteredBenefitsNavItems = useMemo(() => filterItems(benefitsNavItems), [filterItems]);
+  const filteredPayrollNavItems = useMemo(() => filterItems(payrollNavItems), [filterItems]);
+  const filteredAdminNavItems = useMemo(() => filterItems(adminNavItems), [filterItems]);
+  const filteredToolsNavItemsBase = useMemo(() => filterItems(toolsNavItemsBase), [filterItems]);
 
   const toolsNavItems = useMemo<NavItem[]>(() => [
-    ...toolsNavItemsBase,
-    { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', badge: alertCount > 0 ? alertCount : undefined },
-  ], [alertCount]);
+    ...filteredToolsNavItemsBase,
+    ...(canViewItem({ label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', moduleCode: 'alertas' })
+      ? [{ label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined }]
+      : []),
+  ], [alertCount, filteredToolsNavItemsBase, canViewItem]);
+
+  const showCapacitaciones = canViewItem(capacitacionesItem);
+  const showEvaluaciones = canViewItem(evaluacionesItem);
+  const showCatalogos = canViewItem(catalogosItem);
 
   // Auto-open catalogos menu if on a catalogos route or centros
   const isCatalogosRoute = location.pathname.startsWith('/catalogos') || location.pathname === '/centros';
@@ -428,14 +464,13 @@ export function Sidebar() {
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className="h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative">
 
-      {/* Collapse/Expand Toggle Button - Floating on edge near company selector */}
+      {/* Collapse/Expand Toggle Button */}
       <button
           onClick={() => setCollapsed(!collapsed)}
           className="absolute top-20 -right-3 z-50 w-6 h-6 rounded-full bg-secondary text-secondary-foreground shadow-lg flex items-center justify-center hover:bg-secondary/90 transition-colors">
 
         {collapsed ?
           <ChevronRight className="w-3.5 h-3.5" /> :
-
           <ChevronLeft className="w-3.5 h-3.5" />
           }
       </button>
@@ -476,93 +511,131 @@ export function Sidebar() {
       {/* Company Selector */}
       <CompanySelector collapsed={collapsed} />
 
-      {/* Navigation - Hidden scrollbar */}
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-2 px-3 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Core */}
-        <div className="space-y-0.5">
-          {coreNavItems.map((item) =>
-            <NavLink key={item.href} item={item} />
+        {filteredCoreNavItems.length > 0 && (
+          <div className="space-y-0.5">
+            {filteredCoreNavItems.map((item) =>
+              <NavLink key={item.href} item={item} />
             )}
-        </div>
+          </div>
+        )}
 
         {/* Personnel */}
-        <SectionLabel label="Personal" />
-        <div className="space-y-0.5">
-          {personnelNavItems.map((item) =>
-            <NavLink key={item.href} item={item} />
-            )}
-        </div>
+        {filteredPersonnelNavItems.length > 0 && (
+          <>
+            <SectionLabel label="Personal" />
+            <div className="space-y-0.5">
+              {filteredPersonnelNavItems.map((item) =>
+                <NavLink key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
 
         {/* Selección */}
-        <SectionLabel label="Selección" />
-        <div className="space-y-0.5">
-          {seleccionNavItems.map((item) =>
-            <NavLink key={item.href} item={item} />
-            )}
-        </div>
+        {filteredSeleccionNavItems.length > 0 && (
+          <>
+            <SectionLabel label="Selección" />
+            <div className="space-y-0.5">
+              {filteredSeleccionNavItems.map((item) =>
+                <NavLink key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
 
         {/* Payroll */}
-        <SectionLabel label="Nómina" />
-        <div className="space-y-0.5">
-          {payrollNavItems.map((item) =>
-            <NavLink key={item.href} item={item} />
-            )}
-        </div>
+        {filteredPayrollNavItems.length > 0 && (
+          <>
+            <SectionLabel label="Nómina" />
+            <div className="space-y-0.5">
+              {filteredPayrollNavItems.map((item) =>
+                <NavLink key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
 
         {/* Time Management */}
-        <SectionLabel label="Tiempo" />
-        <div className="space-y-0.5">
-          {timeManagementNavItems.map((item) =>
-            <NavLink key={item.href} item={item} />
-            )}
-        </div>
+        {filteredTimeManagementNavItems.length > 0 && (
+          <>
+            <SectionLabel label="Tiempo" />
+            <div className="space-y-0.5">
+              {filteredTimeManagementNavItems.map((item) =>
+                <NavLink key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
 
         {/* Development */}
-        <SectionLabel label="Desarrollo" />
-        <div className="space-y-0.5">
-          <ExpandableMenu
-            item={capacitacionesItem}
-            isOpen={capacitacionesOpen}
-            setIsOpen={setCapacitacionesOpen}
-            collapsed={collapsed}
-            location={location}
-          />
-          <ExpandableMenu
-            item={evaluacionesItem}
-            isOpen={evaluacionesOpen}
-            setIsOpen={setEvaluacionesOpen}
-            collapsed={collapsed}
-            location={location}
-          />
-          {developmentNavItems.map((item) =>
-            <NavLink key={item.href} item={item} />
-            )}
-        </div>
+        {(showCapacitaciones || showEvaluaciones || filteredDevelopmentNavItems.length > 0) && (
+          <>
+            <SectionLabel label="Desarrollo" />
+            <div className="space-y-0.5">
+              {showCapacitaciones && (
+                <ExpandableMenu
+                  item={capacitacionesItem}
+                  isOpen={capacitacionesOpen}
+                  setIsOpen={setCapacitacionesOpen}
+                  collapsed={collapsed}
+                  location={location}
+                />
+              )}
+              {showEvaluaciones && (
+                <ExpandableMenu
+                  item={evaluacionesItem}
+                  isOpen={evaluacionesOpen}
+                  setIsOpen={setEvaluacionesOpen}
+                  collapsed={collapsed}
+                  location={location}
+                />
+              )}
+              {filteredDevelopmentNavItems.map((item) =>
+                <NavLink key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
 
         {/* Benefits */}
-        <SectionLabel label="Beneficios" />
-        <div className="space-y-0.5">
-          {benefitsNavItems.map((item) =>
-            <NavLink key={item.href} item={item} />
-            )}
-        </div>
+        {filteredBenefitsNavItems.length > 0 && (
+          <>
+            <SectionLabel label="Beneficios" />
+            <div className="space-y-0.5">
+              {filteredBenefitsNavItems.map((item) =>
+                <NavLink key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
 
         {/* Tools */}
-        <SectionLabel label="Herramientas" />
-        <div className="space-y-0.5">
-          {toolsNavItems.map((item) =>
-            <NavLink key={item.href} item={item} />
-            )}
-        </div>
+        {toolsNavItems.length > 0 && (
+          <>
+            <SectionLabel label="Herramientas" />
+            <div className="space-y-0.5">
+              {toolsNavItems.map((item) =>
+                <NavLink key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
 
         {/* Admin */}
-        <SectionLabel label="Administración" />
-        <div className="space-y-0.5">
-          <CatalogosMenu />
-          {adminNavItems.map((item) =>
-            <NavLink key={item.href} item={item} />
-            )}
-        </div>
+        {(showCatalogos || filteredAdminNavItems.length > 0) && (
+          <>
+            <SectionLabel label="Administración" />
+            <div className="space-y-0.5">
+              {showCatalogos && <CatalogosMenu />}
+              {filteredAdminNavItems.map((item) =>
+                <NavLink key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
       </nav>
 
       {/* User section */}
@@ -578,7 +651,6 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
   const { data: currentCompany } = useCompany(currentCompanyId || undefined);
   const [open, setOpen] = useState(false);
 
-  // Only admins can switch companies
   const canSwitchCompany = roles.includes('admin');
   const hasMultipleCompanies = companies && companies.length > 1;
 
@@ -591,7 +663,6 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
           </div>
         </div>
       </div>);
-
   }
 
   return (
@@ -605,7 +676,6 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
               "hover:bg-sidebar-accent/50 cursor-pointer" :
               "cursor-default"
             )}>
-
             <Building2 className="w-4 h-4 text-sidebar-foreground/60 shrink-0" />
             <span className="text-sm font-medium text-sidebar-foreground truncate flex-1">
               {currentCompany?.name || 'Seleccionar empresa'}
@@ -620,7 +690,6 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
           align="start"
           className="w-56 p-1 bg-popover border border-border shadow-lg"
           sideOffset={4}>
-
           <div className="space-y-0.5">
             {companies?.map((company) =>
             <button
@@ -635,7 +704,6 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
                 "bg-primary/10 text-primary" :
                 "text-foreground hover:bg-accent"
               )}>
-
                 <Building2 className="w-4 h-4 shrink-0" />
                 <span className="truncate flex-1 text-left">{company.name}</span>
                 {currentCompanyId === company.id &&
@@ -647,7 +715,6 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
         </PopoverContent>
       </Popover>
     </div>);
-
 }
 
 function UserSection({ collapsed }: {collapsed: boolean;}) {
@@ -677,11 +744,9 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
               "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-sidebar-accent/50 transition-colors",
               collapsed ? "justify-center" : ""
             )}>
-
             <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
               {avatarUrl ?
               <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" /> :
-
               <span className="text-sm font-semibold text-white">{userInitials}</span>
               }
             </div>
@@ -701,7 +766,6 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
           align="start"
           className="w-64 p-0 bg-popover border border-border shadow-lg"
           sideOffset={8}>
-
           <div className="p-4 border-b border-border">
             <p className="text-sm font-medium text-foreground">{userEmail}</p>
             <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
@@ -712,21 +776,18 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
             <button
               onClick={() => navigate('/perfil')}
               className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors">
-
               <Users className="w-4 h-4" />
               Mi Perfil
             </button>
             <button
               onClick={() => navigate('/configuracion')}
               className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors">
-
               <Settings className="w-4 h-4" />
               Configuración
             </button>
             <button
               onClick={() => signOut()}
               className="w-full flex items-center gap-3 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors">
-
               <LogOut className="w-4 h-4" />
               Cerrar sesión
             </button>
@@ -734,5 +795,4 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
         </PopoverContent>
       </Popover>
     </div>);
-
 }
