@@ -6,13 +6,16 @@ import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { VacanciesOverview } from '@/components/dashboard/VacanciesOverview';
 import { ActiveTerminationsPanel } from '@/components/dashboard/ActiveTerminationsPanel';
 import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
+import { PendingActivationPanel } from '@/components/dashboard/PendingActivationPanel';
 import { useEmployeeKPIs } from '@/hooks/useEmployeeKPIs';
 import { useDashboardAlerts } from '@/hooks/useDashboardAlerts';
+import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Dashboard() {
   const { data: kpis, isLoading: kpisLoading } = useEmployeeKPIs();
   const { data: alerts = [] } = useDashboardAlerts();
+  const { isAdmin } = useAuth();
 
   const criticalAlerts = alerts.filter(a => a.level === 'critical').length;
 
@@ -152,7 +155,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Active Terminations and Alerts Row */}
+      {/* Admin: Pending Activation + Terminations + Alerts Row */}
+      {isAdmin && <PendingActivationPanel />}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ActiveTerminationsPanel />
         <AlertsPanel />
