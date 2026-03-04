@@ -103,20 +103,15 @@ export default function CatalogosTiposDotacion() {
     }
   };
 
-  const handleToggleActive = async () => {
-    if (!toggleItem) return;
-    setToggleLoading(true);
+  const handleToggleActive = async (item: DotationItemType) => {
     try {
       await updateMutation.mutateAsync({
-        id: toggleItem.id,
-        is_active: !toggleItem.is_active,
+        id: item.id,
+        is_active: !item.is_active,
       });
-      toast.success(toggleItem.is_active ? 'Tipo desactivado' : 'Tipo activado');
+      toast.success(item.is_active ? 'Tipo desactivado' : 'Tipo activado');
     } catch (error: any) {
       toast.error('Error al cambiar estado', { description: error.message });
-    } finally {
-      setToggleItem(null);
-      setToggleLoading(false);
     }
   };
 
