@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,9 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAssignRole, useRemoveRole, type AdminUser } from '@/hooks/useAdminUsers';
-import { useCustomRoles, useAssignUserRole, useRemoveUserRole } from '@/hooks/useRolesPermissions';
+import { useCustomRoles, useUserCustomRoles, useAssignUserRole, useRemoveUserRole } from '@/hooks/useRolesPermissions';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import type { AdminUser } from '@/hooks/useAdminUsers';
 
 interface UserRoleDialogProps {
   user: AdminUser | null;
@@ -23,34 +24,55 @@ interface UserRoleDialogProps {
 }
 
 export function UserRoleDialog({ user, open, onOpenChange }: UserRoleDialogProps) {
-  const [selectedRoles, setSelectedRoles] = useState<AppRole[]>(user?.roles || []);
-  const assignRole = useAssignRole();
-  const removeRole = useRemoveRole();
+  const { user: authUser } = useAuth();
+  const { data: allRoles = [], isLoading: rolesLoading } = useCustomRoles();
+  const { data: userCustomRoles = [], isLoading: userRolesLoading } = useUserCustomRoles(user?.id);
+  const assignRole = useAssignUserRole();
+  const removeRole = useRemoveUserRole();
 
-  const handleRoleToggle = (role: AppRole, checked: boolean) => {
-    setSelectedRoles(prev =>
-      checked ? [...prev, role] : prev.filter(r => r !== role)
+  const activeRoles = allRoles.filter(r => r.is_active);
+  const currentRoleIds = userCustomRoles.map((ur: any) => ur.role_id as string);
+
+  const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (open && !userRolesLoading) {
+      setSelectedRoleIds(currentRoleIds);
+    }
+  }, [open, userRolesLoading, JSON.stringify(currentRoleIds)]);
+
+  const handleToggle = (roleId: string, checked: boolean) => {
+    setSelectedRoleIds(prev =>
+      checked ? [...prev, roleId] : prev.filter(id => id !== roleId)
     );
   };
 
   const handleSave = async () => {
     if (!user) return;
 
-    const currentRoles = user.roles;
-    const rolesToAdd = selectedRoles.filter(r => !currentRoles.includes(r));
-    const rolesToRemove = currentRoles.filter(r => !selectedRoles.includes(r));
+    const toAdd = selectedRoleIds.filter(id => !currentRoleIds.includes(id));
+    const toRemove = currentRoleIds.filter(id => !selectedRoleIds.includes(id));
 
     try {
-      // Add new roles
-      for (const role of rolesToAdd) {
-        await assignRole.mutateAsync({ userId: user.id, role });
+      for (const roleId of toAdd) {
+        const role = activeRoles.find(r => r.id === roleId);
+        await assignRole.mutateAsync({
+          userId: user.id,
+          roleId,
+          assignedBy: authUser?.id,
+          roleName: role?.name,
+          userEmail: user.email,
+        });
       }
-
-      // Remove old roles
-      for (const role of rolesToRemove) {
-        await removeRole.mutateAsync({ userId: user.id, role });
+      for (const roleId of toRemove) {
+        const role = activeRoles.find(r => r.id === roleId);
+        await removeRole.mutateAsync({
+          userId: user.id,
+          roleId,
+          roleName: role?.name,
+          userEmail: user.email,
+        });
       }
-
       toast.success('Roles actualizados correctamente');
       onOpenChange(false);
     } catch (error) {
@@ -59,10 +81,8 @@ export function UserRoleDialog({ user, open, onOpenChange }: UserRoleDialogProps
     }
   };
 
-  // Reset selected roles when user changes
-  if (user && selectedRoles !== user.roles && !assignRole.isPending && !removeRole.isPending) {
-    setSelectedRoles(user.roles);
-  }
+  const isLoading = rolesLoading || userRolesLoading;
+  const isSaving = assignRole.isPending || removeRole.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,39 +90,51 @@ export function UserRoleDialog({ user, open, onOpenChange }: UserRoleDialogProps
         <DialogHeader>
           <DialogTitle>Gestionar Roles</DialogTitle>
           <DialogDescription>
-            Usuario: <span className="font-medium">{user?.id.slice(0, 8)}...</span>
+            Usuario: <span className="font-medium">{user?.display_name || user?.email || user?.id.slice(0, 8) + '...'}</span>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="text-sm text-muted-foreground">Roles actuales:</span>
-            {user?.roles.length === 0 && (
+            {!isLoading && currentRoleIds.length === 0 && (
               <span className="text-sm text-muted-foreground italic">Sin roles asignados</span>
             )}
-            {user?.roles.map(role => (
-              <Badge key={role} variant="secondary">
-                {AVAILABLE_ROLES.find(r => r.value === role)?.label || role}
+            {userCustomRoles.map((ur: any) => (
+              <Badge key={ur.role_id} variant="secondary">
+                {ur.role?.name || ur.role_id}
               </Badge>
             ))}
           </div>
 
           <div className="space-y-3">
-            {AVAILABLE_ROLES.map(role => (
-              <div key={role.value} className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                <Checkbox
-                  id={role.value}
-                  checked={selectedRoles.includes(role.value)}
-                  onCheckedChange={(checked) => handleRoleToggle(role.value, !!checked)}
-                />
-                <div className="flex-1">
-                  <Label htmlFor={role.value} className="font-medium cursor-pointer">
-                    {role.label}
-                  </Label>
-                  <p className="text-sm text-muted-foreground">{role.description}</p>
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-lg" />
+              ))
+            ) : activeRoles.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No hay roles configurados. Crea roles en la pestaña "Roles" primero.
+              </p>
+            ) : (
+              activeRoles.map(role => (
+                <div key={role.id} className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                  <Checkbox
+                    id={`role-${role.id}`}
+                    checked={selectedRoleIds.includes(role.id)}
+                    onCheckedChange={(checked) => handleToggle(role.id, !!checked)}
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor={`role-${role.id}`} className="font-medium cursor-pointer">
+                      {role.name}
+                    </Label>
+                    {role.description && (
+                      <p className="text-sm text-muted-foreground">{role.description}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -110,11 +142,8 @@ export function UserRoleDialog({ user, open, onOpenChange }: UserRoleDialogProps
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button 
-            onClick={handleSave}
-            disabled={assignRole.isPending || removeRole.isPending}
-          >
-            {assignRole.isPending || removeRole.isPending ? 'Guardando...' : 'Guardar Cambios'}
+          <Button onClick={handleSave} disabled={isSaving || isLoading}>
+            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
           </Button>
         </DialogFooter>
       </DialogContent>
