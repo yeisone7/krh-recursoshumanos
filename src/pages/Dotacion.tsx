@@ -224,6 +224,7 @@ export default function Dotacion() {
         companyName: company?.name || 'Empresa',
         companyNit: company?.nit || '',
         deliveries,
+        signatureDataUrl: tx.signature_url || null,
       });
       toast.success('Acta de entrega generada');
     } catch (error) {
