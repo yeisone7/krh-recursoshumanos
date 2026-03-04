@@ -88,6 +88,41 @@ export default function Examenes() {
     return { total: transactions.length, totalExams };
   }, [transactions]);
 
+  // Alerts from expiration dates
+  const examAlerts = useMemo<ExamAlert[]>(() => {
+    if (!transactions) return [];
+    const alerts: ExamAlert[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (const tx of transactions) {
+      for (const item of tx.items) {
+        if (!item.expiration_date) continue;
+        const expDate = new Date(item.expiration_date);
+        expDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays > 30) continue;
+
+        let level: 'info' | 'warning' | 'critical' = 'info';
+        if (diffDays <= 0) level = 'critical';
+        else if (diffDays <= 15) level = 'warning';
+
+        alerts.push({
+          id: `${tx.id}-${item.id}`,
+          examId: item.id,
+          employeeId: tx.employee_id,
+          employeeName: `${tx.employees?.first_name || ''} ${tx.employees?.last_name || ''}`.trim(),
+          examType: tx.exam_type,
+          expirationDate: item.expiration_date,
+          daysRemaining: diffDays,
+          level,
+        });
+      }
+    }
+
+    return alerts.sort((a, b) => a.daysRemaining - b.daysRemaining);
+  }, [transactions]);
+
   // Filter
   const filteredTransactions = useMemo(() => {
     if (!transactions) return [];
