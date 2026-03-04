@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Package, Calendar, FileText, AlertTriangle, CheckCircle, FileDown, PenTool, MapPin, User } from 'lucide-react';
+import { Package, Calendar, FileText, AlertTriangle, CheckCircle, FileDown, PenTool, MapPin, User, Upload, Paperclip, ExternalLink, Trash2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -62,16 +62,20 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
   const [showSignature, setShowSignature] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isSavingSignature, setIsSavingSignature] = useState(false);
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load existing signature when dialog opens
+  // Load existing data when dialog opens
   useEffect(() => {
     if (transaction?.signature_url) {
       setSignatureDataUrl(transaction.signature_url);
     } else {
       setSignatureDataUrl(null);
     }
+    setDocumentUrl(transaction?.document_url || null);
     setShowSignature(false);
-  }, [transaction?.id, transaction?.signature_url]);
+  }, [transaction?.id, transaction?.signature_url, transaction?.document_url]);
 
   if (!transaction) return null;
 
@@ -164,6 +168,63 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
       toast.error('Error al generar el PDF');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleUploadPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      toast.error('Solo se permiten archivos PDF');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('El archivo no debe superar 10 MB');
+      return;
+    }
+
+    setIsUploadingPdf(true);
+    try {
+      const fileName = `documents/${transaction.id}_${Date.now()}.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from('dotation-images')
+        .upload(fileName, file, { contentType: 'application/pdf', upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('dotation-images').getPublicUrl(fileName);
+      const publicUrl = urlData.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from('dotation_delivery_transactions')
+        .update({ document_url: publicUrl })
+        .eq('id', transaction.id);
+      if (updateError) throw updateError;
+
+      setDocumentUrl(publicUrl);
+      queryClient.invalidateQueries({ queryKey: ['dotation_transactions'] });
+      toast.success('Documento adjuntado correctamente');
+    } catch (error) {
+      console.error('Error uploading PDF:', error);
+      toast.error('Error al subir el documento');
+    } finally {
+      setIsUploadingPdf(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveDocument = async () => {
+    try {
+      const { error } = await supabase
+        .from('dotation_delivery_transactions')
+        .update({ document_url: null })
+        .eq('id', transaction.id);
+      if (error) throw error;
+      setDocumentUrl(null);
+      queryClient.invalidateQueries({ queryKey: ['dotation_transactions'] });
+      toast.success('Documento eliminado');
+    } catch (error) {
+      console.error('Error removing document:', error);
+      toast.error('Error al eliminar el documento');
     }
   };
 
@@ -280,6 +341,61 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
                   <p className="text-foreground">{transaction.observations}</p>
                 </div>
               </>
+            )}
+          </div>
+
+          {/* PDF Document attachment */}
+          <div className="border border-border rounded-xl p-4 space-y-3">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Paperclip className="w-4 h-4 text-primary" />
+              Documento Adjunto
+              {documentUrl && (
+                <Badge variant="outline" className="text-xs bg-success-light text-success border-0 ml-1">
+                  <CheckCircle className="w-3 h-3 mr-1" /> Adjunto
+                </Badge>
+              )}
+            </p>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf"
+              className="hidden"
+              onChange={handleUploadPdf}
+            />
+
+            {documentUrl ? (
+              <div className="flex items-center gap-3 rounded-lg border border-border p-3 bg-muted/30">
+                <FileText className="w-5 h-5 text-destructive shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">Documento PDF</p>
+                  <p className="text-xs text-muted-foreground">Archivo adjunto a esta entrega</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                    <a href={documentUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Ver
+                    </a>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPdf}>
+                    <Upload className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleRemoveDocument} className="text-destructive hover:text-destructive">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full gap-2 border-dashed"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingPdf}
+              >
+                <Upload className="w-4 h-4" />
+                {isUploadingPdf ? 'Subiendo...' : 'Adjuntar PDF'}
+              </Button>
             )}
           </div>
 
