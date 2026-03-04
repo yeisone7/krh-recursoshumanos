@@ -103,18 +103,37 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  const infoLines = [
+
+  // Left column: employee info
+  const leftInfoLines = [
     ['Nombre:', employeeName],
     ['Documento:', employee.document_number],
     ['Centro de Operación:', centerName],
   ];
-  for (const [label, value] of infoLines) {
+  const infoStartY = y;
+  for (const [label, value] of leftInfoLines) {
     doc.setFont('helvetica', 'bold');
     doc.text(label, margin, y);
     doc.setFont('helvetica', 'normal');
     doc.text(value, margin + 45, y);
     y += 5;
   }
+
+  // Right column: dates
+  const rightX = pageW / 2 + 15;
+  let rightY = infoStartY;
+  const deliveryDate = first.delivery_date ? format(new Date(first.delivery_date), 'dd/MM/yyyy') : '';
+  const expirationDate = first.expiration_date ? format(new Date(first.expiration_date), 'dd/MM/yyyy') : '';
+  doc.setFont('helvetica', 'bold');
+  doc.text('Fecha de Entrega:', rightX, rightY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(deliveryDate, rightX + 38, rightY);
+  rightY += 5;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Fecha de vencimiento:', rightX, rightY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(expirationDate, rightX + 42, rightY);
+
   y += 6;
 
   // Items table header
@@ -123,9 +142,9 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
   doc.text('ARTÍCULOS ENTREGADOS', margin, y);
   y += 6;
 
-  // Table
-  const colWidths = [10, contentW * 0.35, 20, 20, contentW * 0.2 - 5, contentW * 0.2 - 5];
-  const headers = ['#', 'Artículo', 'Cant.', 'Talla', 'Entrega', 'Vencimiento'];
+  // Table (without Entrega/Vencimiento columns)
+  const colWidths = [10, contentW * 0.45, 25, 25];
+  const headers = ['#', 'Artículo', 'Cant.', 'Talla'];
 
   doc.setFillColor(30, 41, 59);
   doc.rect(margin, y - 4, contentW, 7, 'F');
@@ -152,8 +171,6 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
       d.item_name,
       String(d.quantity),
       d.size || '—',
-      format(new Date(d.delivery_date), 'dd/MM/yyyy'),
-      format(new Date(d.expiration_date), 'dd/MM/yyyy'),
     ];
     for (let i = 0; i < row.length; i++) {
       doc.text(row[i].substring(0, 30), xPos, y);
