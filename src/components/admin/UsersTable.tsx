@@ -384,6 +384,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       <UserRoleDialog
