@@ -220,7 +220,19 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
 
   return (
     <>
+      {/* Search bar */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar por nombre, email o rol..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       <div className="rounded-lg border border-border overflow-hidden">
+        <div className="overflow-auto max-h-[600px]">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
@@ -233,7 +245,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map(user => (
+            {filteredUsers.map(user => (
               <TableRow key={user.id} className={!user.is_active ? 'opacity-60' : ''}>
                 <TableCell>
                   <div className="flex items-center gap-3">
