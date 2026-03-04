@@ -1,0 +1,761 @@
+// ====================================================================
+// Manual de Usuario – datos estructurados
+// Para agregar documentación de un módulo nuevo, agregue una entrada
+// en MODULE_DOCS con el moduleCode correspondiente.
+// ====================================================================
+
+export interface ManualContentItem {
+  type: 'paragraph' | 'list' | 'table' | 'formula' | 'alert' | 'heading';
+  data: any;
+}
+
+export interface ManualSection {
+  id: string;
+  title: string;
+  icon: string; // lucide icon name
+  moduleCode?: string; // si está ligado a un módulo específico
+  content: ManualContentItem[];
+  subsections?: ManualSection[];
+}
+
+// ─────────────── 1. Introducción General ───────────────
+
+const introSection: ManualSection = {
+  id: 'introduccion',
+  title: 'Introducción General',
+  icon: 'BookOpen',
+  content: [
+    { type: 'heading', data: '¿Qué es esta plataforma?' },
+    {
+      type: 'paragraph',
+      data: 'Esta aplicación es un sistema integral de Gestión de Recursos Humanos (HRMS) diseñado para centralizar y automatizar todos los procesos relacionados con la administración de personal, contratos, dotación, capacitaciones, evaluaciones, nómina y más.',
+    },
+    { type: 'heading', data: 'Alcance' },
+    {
+      type: 'paragraph',
+      data: 'Cubre el ciclo de vida completo del empleado: desde la requisición de personal y selección, pasando por la contratación, gestión diaria (vacaciones, permisos, incapacidades, dotación, exámenes médicos), desarrollo (capacitaciones, evaluaciones de desempeño), procesos disciplinarios, hasta la terminación del contrato y liquidación.',
+    },
+    { type: 'heading', data: 'Público objetivo' },
+    {
+      type: 'list',
+      data: [
+        'Administradores del sistema',
+        'Personal de Recursos Humanos',
+        'Jefes de área y supervisores',
+        'Auditores',
+        'Empleados (a través del Portal del Empleado)',
+      ],
+    },
+    { type: 'heading', data: 'Requisitos básicos de uso' },
+    {
+      type: 'list',
+      data: [
+        'Navegador web moderno (Chrome, Firefox, Edge, Safari)',
+        'Conexión a Internet estable',
+        'Cuenta de usuario activa con rol asignado',
+        'Resolución de pantalla mínima recomendada: 1280×720',
+      ],
+    },
+  ],
+};
+
+// ─────────────── 2. Acceso al Sistema ───────────────
+
+const accessSection: ManualSection = {
+  id: 'acceso',
+  title: 'Acceso al Sistema',
+  icon: 'LogIn',
+  content: [
+    { type: 'heading', data: 'Registro de usuario' },
+    {
+      type: 'paragraph',
+      data: 'El registro se realiza mediante invitación por correo electrónico enviada por un Administrador. Al recibir el correo, el usuario debe hacer clic en el enlace de confirmación y establecer su contraseña.',
+    },
+    {
+      type: 'alert',
+      data: {
+        variant: 'warning',
+        title: 'Importante',
+        message: 'Después de registrarse, el usuario NO podrá acceder a la aplicación hasta que un Administrador le asigne un rol activo. Mientras tanto verá un mensaje indicando que su cuenta está pendiente de activación.',
+      },
+    },
+    { type: 'heading', data: '¿Qué ocurre al registrarse?' },
+    {
+      type: 'list',
+      data: [
+        'Se crea la cuenta de autenticación.',
+        'El usuario aparece en el panel de "Usuarios Pendientes" del Dashboard del Administrador.',
+        'El Administrador asigna un rol al usuario.',
+        'El usuario ya puede iniciar sesión y acceder a los módulos permitidos por su rol.',
+      ],
+    },
+    { type: 'heading', data: 'Proceso de activación por el Administrador' },
+    {
+      type: 'list',
+      data: [
+        'Ir a Seguridad y Roles → pestaña Usuarios.',
+        'Localizar al usuario pendiente.',
+        'Asignar uno o más roles activos.',
+        'El usuario podrá acceder de inmediato en su próximo inicio de sesión.',
+      ],
+    },
+    { type: 'heading', data: 'Recuperación de contraseña' },
+    {
+      type: 'paragraph',
+      data: 'En la pantalla de inicio de sesión, haga clic en "¿Olvidaste tu contraseña?" e ingrese su correo electrónico. Recibirá un enlace para restablecer su contraseña. También puede cambiar su contraseña desde la sección Mi Perfil.',
+    },
+  ],
+};
+
+// ─────────────── 3. Roles y Permisos ───────────────
+
+const rolesSection: ManualSection = {
+  id: 'roles',
+  title: 'Roles y Permisos',
+  icon: 'Shield',
+  content: [
+    { type: 'heading', data: '¿Qué es un rol?' },
+    {
+      type: 'paragraph',
+      data: 'Un rol es un perfil de acceso que agrupa un conjunto de permisos. Los roles son dinámicos y configurables por el Administrador. Cada usuario puede tener uno o varios roles asignados.',
+    },
+    { type: 'heading', data: '¿Qué son los permisos?' },
+    {
+      type: 'paragraph',
+      data: 'Los permisos definen las acciones específicas que un usuario puede realizar en cada módulo. Se manejan cuatro tipos de permisos por módulo:',
+    },
+    {
+      type: 'table',
+      data: {
+        headers: ['Permiso', 'Descripción'],
+        rows: [
+          ['Ver', 'Permite visualizar la información del módulo'],
+          ['Crear', 'Permite agregar nuevos registros'],
+          ['Modificar', 'Permite editar registros existentes'],
+          ['Eliminar', 'Permite eliminar registros'],
+        ],
+      },
+    },
+    { type: 'heading', data: 'Comportamiento especial' },
+    {
+      type: 'list',
+      data: [
+        'El rol Administrador tiene acceso total a todos los módulos (bypass de permisos).',
+        'Si un usuario no tiene ningún rol asignado, verá una pantalla de bloqueo indicando que su cuenta está pendiente de activación.',
+        'Si un rol es desactivado, los usuarios que solo tenían ese rol perderán acceso a los módulos correspondientes.',
+        'Los permisos se evalúan en tiempo real: cualquier cambio en roles se refleja sin necesidad de cerrar sesión.',
+      ],
+    },
+    {
+      type: 'alert',
+      data: {
+        variant: 'info',
+        title: 'Matriz de Permisos',
+        message: 'La configuración de permisos se realiza desde Seguridad y Roles → pestaña Roles, donde se muestra una matriz visual que permite activar o desactivar cada permiso por módulo.',
+      },
+    },
+  ],
+};
+
+// ─────────────── 4. Descripción de Módulos ───────────────
+
+export interface ModuleDoc {
+  moduleCode: string;
+  title: string;
+  icon: string;
+  description: string;
+  actions: string[];
+  validations: string[];
+  restrictions: string[];
+  alerts: string[];
+  dependencies: string[];
+}
+
+export const MODULE_DOCS: ModuleDoc[] = [
+  {
+    moduleCode: 'dashboard',
+    title: 'Dashboard',
+    icon: 'LayoutDashboard',
+    description: 'Panel principal que muestra un resumen ejecutivo del estado de RRHH: KPIs clave, alertas pendientes, actividad reciente, distribución de empleados y contratos próximos a vencer.',
+    actions: ['Ver indicadores clave (total empleados, contratos activos, vacaciones pendientes)', 'Revisar alertas del sistema', 'Acceder a acciones rápidas', 'Ver actividad reciente'],
+    validations: ['Los datos se calculan en tiempo real a partir de los registros del sistema'],
+    restrictions: ['Solo lectura; las acciones se redirigen a los módulos correspondientes'],
+    alerts: ['Contratos próximos a vencer', 'Exámenes médicos por vencer', 'Dotación pendiente', 'Usuarios pendientes de activación'],
+    dependencies: ['Empleados', 'Contratos', 'Vacaciones', 'Incapacidades'],
+  },
+  {
+    moduleCode: 'empleados',
+    title: 'Empleados',
+    icon: 'Users',
+    description: 'Gestión centralizada de toda la información de los empleados: datos personales, documentos, información laboral, historial de cambios. Incluye la vista Empleado 360° para un panorama completo.',
+    actions: ['Crear nuevo empleado', 'Editar información personal y laboral', 'Subir documentos y foto', 'Registrar vacunaciones y certificaciones', 'Ver historial de cambios laborales', 'Acceder a vista 360°'],
+    validations: ['Documento de identidad único por empresa', 'Campos obligatorios: nombre, apellido, tipo y número de documento', 'Formato de email válido', 'Centro de operación y cargo obligatorios'],
+    restrictions: ['No se puede eliminar un empleado con contratos activos', 'El número de documento no se puede duplicar'],
+    alerts: ['Certificaciones próximas a vencer', 'Documentos obligatorios faltantes'],
+    dependencies: ['Contratos', 'Centros de operación', 'Cargos', 'Áreas'],
+  },
+  {
+    moduleCode: 'contratos',
+    title: 'Contratos',
+    icon: 'FileText',
+    description: 'Administración completa del ciclo de vida contractual: creación, prórrogas, terminación, generación de documentos y control del límite de 4 años para contratos a término fijo.',
+    actions: ['Crear contrato', 'Registrar prórrogas', 'Terminar contrato', 'Generar documento de contrato', 'Ver detalle y historial de prórrogas', 'Exportar acta de terminación'],
+    validations: ['Un empleado no puede tener dos contratos activos simultáneamente', 'El salario debe ser mayor a cero', 'La fecha de inicio no puede ser posterior a la fecha de fin', 'El período de prueba no puede exceder los límites legales'],
+    restrictions: ['Contratos a término fijo: máximo 3 años de duración, con prórrogas que no excedan 4 años acumulados', 'Solo se puede terminar un contrato activo'],
+    alerts: ['Contratos que vencen en 30, 60 y 90 días', 'Preaviso de no renovación requerido', 'Límite de 4 años próximo a alcanzarse'],
+    dependencies: ['Empleados', 'Tipos de contrato', 'Centros de operación'],
+  },
+  {
+    moduleCode: 'vacaciones',
+    title: 'Vacaciones',
+    icon: 'Palmtree',
+    description: 'Control de vacaciones: saldos acumulados, solicitudes, aprobaciones y calendario visual. Calcula automáticamente los días disponibles según la antigüedad del empleado.',
+    actions: ['Solicitar vacaciones', 'Aprobar/rechazar solicitudes', 'Consultar saldo de vacaciones', 'Ajustar saldos manualmente', 'Ver calendario de vacaciones'],
+    validations: ['No se pueden solicitar más días de los disponibles', 'Las fechas no pueden solaparse con otras vacaciones aprobadas', 'No se permite solicitar vacaciones en fechas pasadas'],
+    restrictions: ['Solo empleados con contrato activo pueden solicitar vacaciones', 'El saldo se calcula a partir de la fecha de ingreso'],
+    alerts: ['Empleados con más de 2 períodos acumulados sin disfrutar', 'Solicitudes pendientes de aprobación'],
+    dependencies: ['Empleados', 'Contratos', 'Días Festivos'],
+  },
+  {
+    moduleCode: 'permisos',
+    title: 'Permisos y Licencias',
+    icon: 'ClipboardList',
+    description: 'Gestión de permisos laborales (licencias remuneradas, no remuneradas, calamidad doméstica, licencia de maternidad/paternidad, etc.).',
+    actions: ['Crear solicitud de permiso', 'Aprobar/rechazar permisos', 'Configurar tipos de permiso', 'Ver calendario de permisos'],
+    validations: ['Los días solicitados no pueden exceder el máximo del tipo de permiso', 'Se valida solapamiento con vacaciones e incapacidades'],
+    restrictions: ['Solo empleados con contrato activo', 'Algunos tipos de permiso requieren soporte documental'],
+    alerts: ['Permisos pendientes de aprobación', 'Permisos que exceden el cupo anual'],
+    dependencies: ['Empleados', 'Contratos', 'Vacaciones'],
+  },
+  {
+    moduleCode: 'incapacidades',
+    title: 'Incapacidades',
+    icon: 'HeartPulse',
+    description: 'Registro y seguimiento de incapacidades médicas: origen (común, laboral, maternidad), días, transcripción a EPS/ARL, recuperación de dinero.',
+    actions: ['Registrar incapacidad', 'Registrar prórroga', 'Marcar como transcrita', 'Registrar recuperación de dinero', 'Exportar reporte'],
+    validations: ['Fechas coherentes (inicio ≤ fin)', 'Diagnóstico y tipo de origen obligatorios', 'Número de días se calcula automáticamente'],
+    restrictions: ['Solo empleados activos', 'Las prórrogas deben ser consecutivas'],
+    alerts: ['Incapacidades no transcritas', 'Dinero pendiente de recuperar', 'Incapacidades de larga duración (>180 días)'],
+    dependencies: ['Empleados', 'EPS', 'ARL'],
+  },
+  {
+    moduleCode: 'dotacion',
+    title: 'Dotación',
+    icon: 'Package',
+    description: 'Administración de entregas de dotación a empleados: catálogo de artículos, profesiograma por centro y cargo, registro de entregas con firma digital, inventario y cumplimiento.',
+    actions: ['Registrar entrega de dotación', 'Gestionar catálogo de artículos', 'Configurar profesiograma', 'Consultar cumplimiento', 'Gestionar inventario', 'Exportar acta de entrega en PDF'],
+    validations: ['El profesiograma define qué artículos corresponden a cada centro+cargo', 'La firma digital es obligatoria para confirmar la entrega', 'Las tallas deben seleccionarse de opciones válidas'],
+    restrictions: ['Solo empleados activos pueden recibir dotación', 'El inventario no puede quedar en negativo'],
+    alerts: ['Artículos con stock bajo', 'Empleados sin dotación completa según profesiograma', 'Dotación próxima a vencer'],
+    dependencies: ['Empleados', 'Centros de operación', 'Cargos', 'Tipos de dotación'],
+  },
+  {
+    moduleCode: 'examenes',
+    title: 'Exámenes Médicos',
+    icon: 'Stethoscope',
+    description: 'Control de exámenes médicos ocupacionales: catálogo de exámenes, profesiograma por centro y cargo, registro de aplicaciones con resultados, firma y documentos adjuntos.',
+    actions: ['Registrar aplicación de exámenes', 'Gestionar catálogo de exámenes', 'Configurar profesiograma', 'Ver detalle con resultados', 'Exportar acta en PDF'],
+    validations: ['El profesiograma define qué exámenes corresponden por centro+cargo', 'El resultado de cada examen es obligatorio', 'La fecha de examen no puede ser futura'],
+    restrictions: ['Solo empleados activos', 'Los exámenes con concepto "No Apto" generan alertas'],
+    alerts: ['Exámenes próximos a vencer', 'Empleados sin exámenes completos según profesiograma', 'Exámenes con concepto No Apto'],
+    dependencies: ['Empleados', 'Centros de operación', 'Cargos'],
+  },
+  {
+    moduleCode: 'capacitaciones',
+    title: 'Capacitaciones',
+    icon: 'GraduationCap',
+    description: 'Plataforma completa de capacitación: creación de cursos (manual o asistida por IA), biblioteca de contenidos, sesiones, evaluaciones, evidencias con firma, cumplimiento y analíticas.',
+    actions: ['Crear capacitación (manual o con IA)', 'Gestionar biblioteca de cursos', 'Crear y gestionar sesiones', 'Registrar asistencia con firma y evidencias', 'Configurar evaluaciones', 'Generar enlaces de acceso público', 'Consultar cumplimiento', 'Ver analíticas'],
+    validations: ['Nombre del curso obligatorio', 'Al menos un módulo por curso', 'Firma obligatoria para registro de asistencia'],
+    restrictions: ['El acceso público requiere un enlace generado', 'Las evaluaciones solo se pueden responder una vez por sesión'],
+    alerts: ['Certificaciones próximas a vencer', 'Sesiones sin evidencia cargada', 'Empleados con capacitaciones obligatorias pendientes'],
+    dependencies: ['Empleados', 'Centros de operación'],
+  },
+  {
+    moduleCode: 'evaluaciones',
+    title: 'Evaluaciones de Desempeño',
+    icon: 'Target',
+    description: 'Sistema de evaluación por competencias: plantillas configurables, ciclos de evaluación, aplicación con rúbricas, metas, seguimiento y analíticas.',
+    actions: ['Crear plantillas de evaluación', 'Crear ciclos de evaluación', 'Aplicar evaluaciones', 'Registrar metas', 'Ver resultados y analíticas', 'Exportar evaluación en PDF'],
+    validations: ['La plantilla debe tener al menos un criterio', 'Los pesos de los criterios deben sumar 100%', 'La calificación debe estar en el rango definido por la rúbrica'],
+    restrictions: ['Solo se puede evaluar empleados activos', 'Un empleado solo puede ser evaluado una vez por ciclo'],
+    alerts: ['Evaluaciones pendientes de completar', 'Ciclos próximos a cerrar'],
+    dependencies: ['Empleados', 'Contratos'],
+  },
+  {
+    moduleCode: 'disciplinarios',
+    title: 'Procesos Disciplinarios',
+    icon: 'Gavel',
+    description: 'Gestión completa de procesos disciplinarios según la legislación colombiana: apertura, notificación, descargos, evidencias, decisión, apelación y cierre.',
+    actions: ['Abrir proceso disciplinario', 'Registrar evidencias', 'Generar enlace de descargos', 'Registrar decisión', 'Registrar apelación', 'Exportar documentos en PDF'],
+    validations: ['El empleado debe tener contrato activo', 'La fecha de la falta es obligatoria', 'La descripción de los hechos es obligatoria'],
+    restrictions: ['El flujo sigue un orden estricto: apertura → notificación → descargos → decisión → apelación', 'Los descargos pueden ser presentados por el empleado vía enlace público'],
+    alerts: ['Procesos sin descargos registrados', 'Procesos pendientes de decisión', 'Plazos legales próximos a vencer'],
+    dependencies: ['Empleados', 'Contratos'],
+  },
+  {
+    moduleCode: 'cesantias',
+    title: 'Cesantías',
+    icon: 'Landmark',
+    description: 'Control de consignaciones de cesantías, pago de intereses y retiros parciales conforme a la legislación colombiana.',
+    actions: ['Registrar consignación de cesantías', 'Registrar pago de intereses', 'Registrar retiro parcial', 'Importar masivamente', 'Consultar histórico por empleado'],
+    validations: ['El monto de cesantías se calcula sobre salario base y días trabajados', 'Los intereses se calculan al 12% anual proporcional', 'La fecha límite de consignación es el 14 de febrero del año siguiente'],
+    restrictions: ['Solo empleados con contrato activo', 'Los retiros parciales requieren justificación y documentación'],
+    alerts: ['Consignaciones con mora', 'Intereses no pagados antes del 31 de enero', 'Retiros parciales pendientes de aprobación'],
+    dependencies: ['Empleados', 'Contratos'],
+  },
+  {
+    moduleCode: 'requisiciones',
+    title: 'Requisiciones de Personal',
+    icon: 'ClipboardList',
+    description: 'Flujo de solicitud de personal nuevo: creación de requisición, aprobación por niveles, publicación de vacante y seguimiento.',
+    actions: ['Crear requisición', 'Aprobar/rechazar requisición', 'Ver línea de tiempo del proceso', 'Exportar requisición en PDF'],
+    validations: ['El cargo y centro de operación son obligatorios', 'La justificación es obligatoria', 'El salario propuesto debe estar dentro del rango del cargo'],
+    restrictions: ['Requiere aprobación según el flujo configurado', 'No se puede modificar una requisición ya aprobada'],
+    alerts: ['Requisiciones pendientes de aprobación', 'Requisiciones vencidas sin cubrir'],
+    dependencies: ['Cargos', 'Centros de operación', 'Áreas'],
+  },
+  {
+    moduleCode: 'seleccion',
+    title: 'Selección y Vacantes',
+    icon: 'UserSearch',
+    description: 'Gestión del proceso de selección: publicación de vacantes, registro de candidatos, evaluación por etapas (Kanban), y vinculación del candidato seleccionado como empleado.',
+    actions: ['Crear vacante', 'Registrar candidatos', 'Avanzar candidatos por etapas', 'Registrar resultados de cada etapa', 'Vincular candidato seleccionado como empleado'],
+    validations: ['El candidato debe tener documento de identidad único por vacante', 'Cada etapa requiere evaluación antes de avanzar'],
+    restrictions: ['Solo vacantes activas permiten agregar candidatos', 'Un candidato solo puede ser seleccionado una vez por vacante'],
+    alerts: ['Vacantes abiertas sin candidatos', 'Candidatos estancados en una etapa por más de 15 días'],
+    dependencies: ['Requisiciones', 'Cargos', 'Centros de operación'],
+  },
+  {
+    moduleCode: 'jornadas',
+    title: 'Jornadas y Turnos',
+    icon: 'Briefcase',
+    description: 'Configuración de jornadas laborales, turnos rotativos, ciclos de trabajo y asignación de horarios a empleados.',
+    actions: ['Crear turnos de trabajo', 'Crear jornadas laborales', 'Configurar ciclos rotativos', 'Asignar turnos a empleados', 'Generar calendario de turnos', 'Exportar reporte de turnos'],
+    validations: ['Los turnos no pueden solaparse para un mismo empleado', 'Las horas del turno deben ser coherentes', 'El ciclo debe cubrir al menos una semana'],
+    restrictions: ['Los turnos asignados afectan el cálculo de horas extras y recargos'],
+    alerts: ['Empleados sin turno asignado', 'Conflictos de horario'],
+    dependencies: ['Empleados', 'Centros de operación'],
+  },
+  {
+    moduleCode: 'novedades',
+    title: 'Novedades de Nómina',
+    icon: 'Clock',
+    description: 'Registro de novedades que afectan la nómina: horas extras, recargos, bonificaciones, deducciones y demás conceptos variables.',
+    actions: ['Registrar novedad', 'Editar novedad pendiente', 'Eliminar novedad', 'Filtrar por período y empleado'],
+    validations: ['El concepto y valor son obligatorios', 'El período de la novedad no puede estar cerrado', 'Las horas extras se validan contra el turno asignado'],
+    restrictions: ['No se pueden modificar novedades de períodos cerrados', 'Las novedades aprobadas no se pueden eliminar'],
+    alerts: ['Novedades pendientes de aprobación', 'Novedades duplicadas para el mismo concepto y período'],
+    dependencies: ['Empleados', 'Jornadas', 'Pre-Liquidación'],
+  },
+  {
+    moduleCode: 'pre_liquidacion',
+    title: 'Pre-Liquidación',
+    icon: 'Calculator',
+    description: 'Generación de la pre-liquidación de nómina: consolida todas las novedades, devengos y deducciones del período para su revisión antes del cierre.',
+    actions: ['Generar pre-liquidación del período', 'Revisar detalle por empleado', 'Exportar a Excel', 'Configurar parámetros de liquidación'],
+    validations: ['Todas las novedades del período deben estar registradas', 'Los porcentajes de seguridad social se aplican según la normativa vigente'],
+    restrictions: ['No se puede generar si el período anterior no está cerrado', 'Los cambios en novedades requieren regenerar la pre-liquidación'],
+    alerts: ['Empleados sin novedades en el período', 'Diferencias significativas respecto al período anterior'],
+    dependencies: ['Novedades', 'Empleados', 'Contratos', 'Configuración Laboral'],
+  },
+  {
+    moduleCode: 'config_laboral',
+    title: 'Configuración Laboral',
+    icon: 'Settings',
+    description: 'Parámetros generales para el cálculo de nómina: salario mínimo, auxilio de transporte, porcentajes de seguridad social, horas extras y recargos.',
+    actions: ['Configurar salario mínimo vigente', 'Configurar auxilio de transporte', 'Configurar porcentajes de aportes', 'Configurar valores de horas extras y recargos'],
+    validations: ['Los porcentajes deben estar en rangos válidos', 'El salario mínimo debe ser mayor a cero'],
+    restrictions: ['Solo el Administrador puede modificar estos parámetros', 'Los cambios aplican para liquidaciones futuras'],
+    alerts: ['Parámetros desactualizados para el año en curso'],
+    dependencies: ['Pre-Liquidación', 'Novedades'],
+  },
+  {
+    moduleCode: 'calendario',
+    title: 'Calendario Unificado',
+    icon: 'Calendar',
+    description: 'Vista consolidada de todos los eventos del sistema: vacaciones aprobadas, permisos, incapacidades, sesiones de capacitación, vencimientos de contratos y días festivos.',
+    actions: ['Ver calendario mensual/semanal', 'Filtrar por tipo de evento', 'Filtrar por empleado o centro'],
+    validations: [],
+    restrictions: ['Solo lectura; los eventos se gestionan desde sus módulos correspondientes'],
+    alerts: [],
+    dependencies: ['Vacaciones', 'Permisos', 'Incapacidades', 'Capacitaciones', 'Días Festivos'],
+  },
+  {
+    moduleCode: 'reportes',
+    title: 'Reportes',
+    icon: 'FileBarChart',
+    description: 'Centro de reportes con informes predefinidos para cada módulo: empleados, contratos, vacaciones, incapacidades, dotación, capacitaciones, horas extras, y más. Exportables a Excel.',
+    actions: ['Generar reportes por módulo', 'Filtrar por rango de fechas, centro, área', 'Exportar a Excel'],
+    validations: ['El rango de fechas es obligatorio para reportes temporales'],
+    restrictions: ['Los reportes muestran solo datos de la empresa del usuario'],
+    alerts: [],
+    dependencies: ['Todos los módulos'],
+  },
+  {
+    moduleCode: 'organigrama',
+    title: 'Organigrama',
+    icon: 'Network',
+    description: 'Visualización jerárquica de la estructura organizacional: áreas, sub-áreas, cargos y empleados en formato de árbol interactivo.',
+    actions: ['Visualizar organigrama completo', 'Expandir/colapsar áreas', 'Filtrar por centro de operación'],
+    validations: [],
+    restrictions: ['Solo lectura; la estructura se gestiona desde Áreas y Cargos'],
+    alerts: ['Áreas sin responsable asignado'],
+    dependencies: ['Áreas', 'Cargos', 'Empleados'],
+  },
+  {
+    moduleCode: 'analitica',
+    title: 'Analítica RRHH',
+    icon: 'BarChart3',
+    description: 'Panel analítico con indicadores clave de gestión humana: rotación, ausentismo, distribución demográfica, cumplimiento de dotación y capacitaciones.',
+    actions: ['Ver KPIs de rotación y ausentismo', 'Ver distribución por género, área, centro', 'Ver gráficos de cumplimiento', 'Filtrar por período y centro'],
+    validations: [],
+    restrictions: ['Solo lectura; los datos provienen de los módulos operativos'],
+    alerts: [],
+    dependencies: ['Empleados', 'Contratos', 'Vacaciones', 'Incapacidades', 'Permisos'],
+  },
+  {
+    moduleCode: 'catalogos',
+    title: 'Catálogos',
+    icon: 'FolderOpen',
+    description: 'Configuración de datos maestros del sistema: centros de operación, áreas, cargos, tipos de contrato, tipos de dotación, entidades de seguridad social (EPS, ARL, AFP, CCF, AFC, IPS), bancos, días festivos y motivos de novedad.',
+    actions: ['Crear, editar y desactivar registros de cada catálogo', 'Importar datos', 'Gestionar perfiles de cargo (profesiograma)'],
+    validations: ['Nombres únicos por empresa', 'Códigos únicos cuando aplica'],
+    restrictions: ['No se pueden eliminar registros en uso por otros módulos', 'La desactivación no elimina los registros existentes'],
+    alerts: ['Catálogos vacíos que bloquean funcionalidad de otros módulos'],
+    dependencies: ['Todos los módulos que referencian datos maestros'],
+  },
+  {
+    moduleCode: 'alertas',
+    title: 'Centro de Alertas',
+    icon: 'Bell',
+    description: 'Consolidación de todas las alertas y notificaciones del sistema: vencimientos, pendientes, advertencias y recordatorios.',
+    actions: ['Ver todas las alertas activas', 'Filtrar por tipo y prioridad', 'Marcar como leída', 'Navegar al módulo relacionado'],
+    validations: [],
+    restrictions: ['Las alertas se generan automáticamente; no se pueden crear manualmente'],
+    alerts: [],
+    dependencies: ['Todos los módulos'],
+  },
+  {
+    moduleCode: 'seguridad',
+    title: 'Seguridad y Roles',
+    icon: 'ShieldCheck',
+    description: 'Administración de usuarios, roles dinámicos, permisos granulares, vinculación de empleados, invitaciones y auditoría del sistema.',
+    actions: ['Gestionar usuarios (invitar, asignar roles, vincular empleado)', 'Crear y configurar roles con permisos por módulo', 'Ver log de auditoría con paginación', 'Filtrar auditoría por acción, entidad y usuario'],
+    validations: ['El nombre del rol debe ser único', 'Al menos un permiso debe estar activo por rol', 'El email de invitación debe ser válido'],
+    restrictions: ['Solo el Administrador puede gestionar usuarios y roles', 'El rol Administrador no se puede eliminar ni desactivar', 'No se puede eliminar un rol asignado a usuarios activos'],
+    alerts: ['Usuarios sin rol asignado', 'Roles sin permisos configurados'],
+    dependencies: ['Todos los módulos (control de acceso)'],
+  },
+  {
+    moduleCode: 'portal',
+    title: 'Portal del Empleado',
+    icon: 'User',
+    description: 'Vista de autoservicio para empleados: información personal, documentos, vacaciones y permisos, incapacidades y solicitudes de cambio.',
+    actions: ['Ver información personal', 'Descargar documentos propios', 'Consultar saldo de vacaciones', 'Solicitar cambios de datos'],
+    validations: ['El empleado debe estar vinculado a un usuario del sistema'],
+    restrictions: ['Solo puede ver su propia información', 'Las solicitudes de cambio requieren aprobación de RRHH'],
+    alerts: ['Documentos pendientes de firma', 'Solicitudes de cambio sin respuesta'],
+    dependencies: ['Empleados', 'Vinculación de usuario-empleado'],
+  },
+];
+
+// ─────────────── 5. Alertas y Mensajes del Sistema ───────────────
+
+const alertsSection: ManualSection = {
+  id: 'alertas-sistema',
+  title: 'Alertas y Mensajes del Sistema',
+  icon: 'Bell',
+  content: [
+    { type: 'heading', data: 'Tipos de alertas' },
+    {
+      type: 'table',
+      data: {
+        headers: ['Tipo', 'Color', 'Descripción', 'Ejemplo'],
+        rows: [
+          ['Informativa', '🔵 Azul', 'Notifica una acción exitosa o información relevante', 'Registro guardado correctamente'],
+          ['Advertencia', '🟡 Amarillo', 'Indica una situación que requiere atención', 'El contrato vence en 30 días'],
+          ['Error', '🔴 Rojo', 'Indica un problema que impide completar la acción', 'No se pudo guardar: campos obligatorios vacíos'],
+          ['Confirmación', '⚪ Neutral', 'Solicita confirmación antes de una acción destructiva', '¿Está seguro de eliminar este registro?'],
+        ],
+      },
+    },
+    { type: 'heading', data: 'Bloqueos por permisos' },
+    {
+      type: 'paragraph',
+      data: 'Cuando un usuario intenta acceder a un módulo o realizar una acción para la cual no tiene permisos, el sistema mostrará un mensaje indicando "No tiene permisos para realizar esta acción" o el botón/opción simplemente no estará visible.',
+    },
+    { type: 'heading', data: 'Mensaje de cuenta sin rol' },
+    {
+      type: 'alert',
+      data: {
+        variant: 'warning',
+        title: 'Cuenta pendiente de activación',
+        message: 'Si ve este mensaje al iniciar sesión, significa que su cuenta aún no tiene un rol asignado. Contacte al Administrador del sistema para que le asigne los permisos correspondientes.',
+      },
+    },
+  ],
+};
+
+// ─────────────── 6. Reglas de Negocio ───────────────
+
+const businessRulesSection: ManualSection = {
+  id: 'reglas-negocio',
+  title: 'Reglas de Negocio y Restricciones',
+  icon: 'Scale',
+  content: [
+    { type: 'heading', data: 'Restricciones de acceso' },
+    {
+      type: 'list',
+      data: [
+        'Todo acceso está controlado por el sistema de roles y permisos dinámicos.',
+        'Los usuarios sin rol asignado quedan bloqueados en una pantalla de espera.',
+        'Los módulos no visibles en el menú lateral no son accesibles ni por URL directa.',
+        'Las acciones de escritura (crear, editar, eliminar) requieren permisos explícitos.',
+      ],
+    },
+    { type: 'heading', data: 'Validaciones de formularios' },
+    {
+      type: 'list',
+      data: [
+        'Los campos marcados con asterisco (*) son obligatorios.',
+        'Las fechas se validan para coherencia (inicio ≤ fin).',
+        'Los valores numéricos (salarios, montos) deben ser positivos.',
+        'Los documentos de identidad deben ser únicos por empresa.',
+        'Los correos electrónicos deben tener formato válido.',
+      ],
+    },
+    { type: 'heading', data: 'Restricciones de eliminación' },
+    {
+      type: 'list',
+      data: [
+        'No se pueden eliminar registros que están referenciados por otros módulos.',
+        'Antes de eliminar, el sistema solicita confirmación explícita.',
+        'Los registros eliminados no son recuperables.',
+        'Los catálogos en uso solo se pueden desactivar, no eliminar.',
+      ],
+    },
+    { type: 'heading', data: 'Estados y ciclos de vida' },
+    {
+      type: 'list',
+      data: [
+        'Los registros desactivados dejan de aparecer en listas de selección pero se conservan en el histórico.',
+        'Los procesos con flujo (disciplinarios, requisiciones) siguen un orden estricto de estados.',
+        'Los contratos terminados no permiten operaciones adicionales.',
+      ],
+    },
+  ],
+};
+
+// ─────────────── 7. Fórmulas y Cálculos ───────────────
+
+const formulasSection: ManualSection = {
+  id: 'formulas',
+  title: 'Fórmulas y Cálculos',
+  icon: 'Calculator',
+  content: [
+    { type: 'heading', data: 'Vacaciones' },
+    {
+      type: 'formula',
+      data: {
+        name: 'Días de vacaciones acumulados',
+        formula: 'Días = (Días trabajados × 15) ÷ 360',
+        variables: [
+          'Días trabajados: desde la fecha de ingreso hasta la fecha de corte',
+          '15: días hábiles de vacaciones por año según la ley colombiana',
+          '360: base anual de cálculo',
+        ],
+        example: 'Un empleado con 180 días trabajados: (180 × 15) ÷ 360 = 7.5 días acumulados',
+      },
+    },
+    { type: 'heading', data: 'Cesantías' },
+    {
+      type: 'formula',
+      data: {
+        name: 'Cesantías del período',
+        formula: 'Cesantías = (Salario mensual × Días trabajados) ÷ 360',
+        variables: [
+          'Salario mensual: salario base + auxilio de transporte (si aplica)',
+          'Días trabajados: días del período de cálculo',
+        ],
+        example: 'Salario $1,300,000 + transporte $162,000, 360 días: ($1,462,000 × 360) ÷ 360 = $1,462,000',
+      },
+    },
+    {
+      type: 'formula',
+      data: {
+        name: 'Intereses sobre cesantías',
+        formula: 'Intereses = Cesantías × Días × 0.12 ÷ 360',
+        variables: [
+          'Cesantías: monto de cesantías acumuladas',
+          'Días: días del período de causación',
+          '0.12: tasa del 12% anual',
+        ],
+        example: 'Cesantías $1,462,000, 360 días: $1,462,000 × 360 × 0.12 ÷ 360 = $175,440',
+      },
+    },
+    { type: 'heading', data: 'Horas Extras y Recargos' },
+    {
+      type: 'table',
+      data: {
+        headers: ['Concepto', 'Recargo', 'Fórmula'],
+        rows: [
+          ['Hora extra diurna', '25%', 'Valor hora × 1.25'],
+          ['Hora extra nocturna', '75%', 'Valor hora × 1.75'],
+          ['Hora extra dominical/festiva diurna', '100%', 'Valor hora × 2.00'],
+          ['Hora extra dominical/festiva nocturna', '150%', 'Valor hora × 2.50'],
+          ['Recargo nocturno', '35%', 'Valor hora × 0.35'],
+          ['Recargo dominical/festivo', '75%', 'Valor hora × 1.75'],
+        ],
+      },
+    },
+    {
+      type: 'formula',
+      data: {
+        name: 'Valor hora ordinaria',
+        formula: 'Valor hora = Salario mensual ÷ 240',
+        variables: ['Salario mensual: salario base del contrato', '240: horas laborales mensuales (30 días × 8 horas)'],
+        example: 'Salario $2,400,000: $2,400,000 ÷ 240 = $10,000 por hora',
+      },
+    },
+    { type: 'heading', data: 'Seguridad Social (aportes del empleador)' },
+    {
+      type: 'table',
+      data: {
+        headers: ['Concepto', 'Porcentaje empleador', 'Base de cálculo'],
+        rows: [
+          ['Salud (EPS)', '8.5%', 'Salario base'],
+          ['Pensión (AFP)', '12%', 'Salario base'],
+          ['ARL', '0.522% - 6.960%', 'Salario base (varía según nivel de riesgo)'],
+          ['Caja Compensación (CCF)', '4%', 'Salario base'],
+          ['SENA', '2%', 'Salario base'],
+          ['ICBF', '3%', 'Salario base'],
+        ],
+      },
+    },
+  ],
+};
+
+// ─────────────── 8. Auditoría y Seguridad ───────────────
+
+const auditSection: ManualSection = {
+  id: 'auditoria',
+  title: 'Auditoría y Seguridad',
+  icon: 'ShieldCheck',
+  content: [
+    { type: 'heading', data: 'Registro de auditoría' },
+    {
+      type: 'paragraph',
+      data: 'El sistema registra automáticamente todas las acciones relevantes realizadas por los usuarios: creación, modificación y eliminación de registros en todos los módulos.',
+    },
+    { type: 'heading', data: '¿Qué se registra?' },
+    {
+      type: 'list',
+      data: [
+        'Usuario que realizó la acción',
+        'Tipo de acción (crear, actualizar, eliminar)',
+        'Módulo y entidad afectada',
+        'Valores anteriores y nuevos (cuando aplica)',
+        'Fecha y hora exacta',
+        'Dirección IP y navegador',
+      ],
+    },
+    { type: 'heading', data: 'Protecciones del sistema' },
+    {
+      type: 'list',
+      data: [
+        'Autenticación obligatoria para todas las operaciones.',
+        'Políticas de seguridad a nivel de base de datos (Row Level Security) que garantizan que cada usuario solo accede a datos de su empresa.',
+        'Los tokens de sesión expiran automáticamente.',
+        'Las contraseñas se almacenan con encriptación segura.',
+        'Los archivos subidos se almacenan en infraestructura segura con acceso controlado.',
+        'El log de auditoría es inmutable: no se puede editar ni eliminar.',
+      ],
+    },
+    {
+      type: 'alert',
+      data: {
+        variant: 'info',
+        title: 'Acceso al log de auditoría',
+        message: 'El log de auditoría está disponible en Seguridad y Roles → pestaña Auditoría. Soporta paginación, filtrado por acción, tipo de entidad, usuario y rango de fechas.',
+      },
+    },
+  ],
+};
+
+// ─────────────── 9. FAQ ───────────────
+
+const faqSection: ManualSection = {
+  id: 'faq',
+  title: 'Preguntas Frecuentes (FAQ)',
+  icon: 'HelpCircle',
+  content: [
+    { type: 'heading', data: '¿Por qué no puedo acceder a la aplicación después de registrarme?' },
+    {
+      type: 'paragraph',
+      data: 'Su cuenta necesita un rol asignado por el Administrador. Contacte al administrador del sistema para que active su acceso.',
+    },
+    { type: 'heading', data: '¿Por qué no veo ciertos módulos en el menú?' },
+    {
+      type: 'paragraph',
+      data: 'Los módulos visibles dependen de los permisos de su rol. Solo verá los módulos para los cuales tiene al menos permiso de visualización.',
+    },
+    { type: 'heading', data: '¿Puedo tener más de un rol?' },
+    {
+      type: 'paragraph',
+      data: 'Sí, un usuario puede tener múltiples roles. Los permisos se combinan: tendrá acceso a todos los módulos y acciones que cualquiera de sus roles permita.',
+    },
+    { type: 'heading', data: '¿Qué pasa si mi rol es desactivado?' },
+    {
+      type: 'paragraph',
+      data: 'Si su único rol es desactivado, perderá acceso a los módulos correspondientes. Si tiene otros roles activos, conservará los permisos de esos roles.',
+    },
+    { type: 'heading', data: '¿Cómo cambio mi contraseña?' },
+    {
+      type: 'paragraph',
+      data: 'Vaya a Mi Perfil → sección "Cambiar Contraseña". Ingrese la nueva contraseña y confírmela.',
+    },
+    { type: 'heading', data: '¿Por qué no puedo eliminar un registro?' },
+    {
+      type: 'paragraph',
+      data: 'Puede deberse a: (1) No tiene permiso de eliminación en ese módulo, (2) El registro está siendo referenciado por otros módulos, (3) El registro tiene un estado que no permite eliminación.',
+    },
+    { type: 'heading', data: '¿Cómo funciona la vinculación de empleado?' },
+    {
+      type: 'paragraph',
+      data: 'La vinculación conecta un usuario del sistema (cuenta de login) con un registro de empleado. Esto permite al empleado acceder al Portal del Empleado para ver su información personal, documentos, vacaciones y más.',
+    },
+    { type: 'heading', data: '¿Los datos se respaldan automáticamente?' },
+    {
+      type: 'paragraph',
+      data: 'Sí, la infraestructura del sistema realiza respaldos automáticos de la base de datos. Los archivos subidos también se almacenan de forma segura y redundante.',
+    },
+    { type: 'heading', data: '¿Puedo exportar información del sistema?' },
+    {
+      type: 'paragraph',
+      data: 'Sí, la mayoría de módulos permiten exportar información a Excel o PDF. Utilice la sección de Reportes para informes consolidados o los botones de exportación dentro de cada módulo.',
+    },
+    { type: 'heading', data: '¿Qué navegadores son compatibles?' },
+    {
+      type: 'paragraph',
+      data: 'La aplicación es compatible con las últimas versiones de Google Chrome, Mozilla Firefox, Microsoft Edge y Safari. Se recomienda mantener el navegador actualizado.',
+    },
+  ],
+};
+
+// ─────────────── Exportar todas las secciones ───────────────
+
+export const MANUAL_SECTIONS: ManualSection[] = [
+  introSection,
+  accessSection,
+  rolesSection,
+  // La sección de módulos se genera dinámicamente en el componente
+  alertsSection,
+  businessRulesSection,
+  formulasSection,
+  auditSection,
+  faqSection,
+];
+
+// Sección especial que se inyecta como #4 con contenido dinámico
+export const MODULES_SECTION_ID = 'modulos';
