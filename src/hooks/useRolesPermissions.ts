@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useLogAction } from '@/hooks/useAuditLog';
 
 // Types
 export interface Module {
@@ -236,17 +237,26 @@ export function useUserCustomRoles(userId?: string) {
 
 export function useAssignUserRole() {
   const qc = useQueryClient();
+  const logAction = useLogAction();
   return useMutation({
-    mutationFn: async ({ userId, roleId, assignedBy }: { userId: string; roleId: string; assignedBy?: string }) => {
+    mutationFn: async ({ userId, roleId, assignedBy, roleName, userEmail }: { userId: string; roleId: string; assignedBy?: string; roleName?: string; userEmail?: string }) => {
       const { error } = await supabase
         .from('user_custom_roles')
         .insert({ user_id: userId, role_id: roleId, assigned_by: assignedBy });
       if (error) throw error;
+      return { userId, roleId, roleName, userEmail };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['user-custom-roles'] });
       qc.invalidateQueries({ queryKey: ['custom-roles'] });
       toast.success('Rol asignado');
+      logAction.mutate({
+        action: 'assign_role',
+        entityType: 'user',
+        entityId: data.userId,
+        entityName: data.userEmail || data.userId,
+        newValues: { role_id: data.roleId, role_name: data.roleName },
+      });
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -254,19 +264,28 @@ export function useAssignUserRole() {
 
 export function useRemoveUserRole() {
   const qc = useQueryClient();
+  const logAction = useLogAction();
   return useMutation({
-    mutationFn: async ({ userId, roleId }: { userId: string; roleId: string }) => {
+    mutationFn: async ({ userId, roleId, roleName, userEmail }: { userId: string; roleId: string; roleName?: string; userEmail?: string }) => {
       const { error } = await supabase
         .from('user_custom_roles')
         .delete()
         .eq('user_id', userId)
         .eq('role_id', roleId);
       if (error) throw error;
+      return { userId, roleId, roleName, userEmail };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['user-custom-roles'] });
       qc.invalidateQueries({ queryKey: ['custom-roles'] });
       toast.success('Rol removido');
+      logAction.mutate({
+        action: 'remove_role',
+        entityType: 'user',
+        entityId: data.userId,
+        entityName: data.userEmail || data.userId,
+        oldValues: { role_id: data.roleId, role_name: data.roleName },
+      });
     },
     onError: (e: any) => toast.error(e.message),
   });
