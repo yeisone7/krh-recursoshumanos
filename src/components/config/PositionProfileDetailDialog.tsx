@@ -24,13 +24,19 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
   const { data: versions = [] } = usePositionProfiles(positionId);
   const [selectedVersion, setSelectedVersion] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const current = versions.find((v: any) => v.is_current) || versions[0];
   const profile = selectedVersion || current;
 
-  const handleExportPdf = () => {
+  const handleExportPdf = async () => {
     if (!profile) return;
-    generatePositionProfilePdf(profile, positionName, areaName);
+    setExporting(true);
+    try {
+      await generatePositionProfilePdf(profile, positionName, areaName);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const SectionTitle = ({ children }: { children: React.ReactNode }) => (
