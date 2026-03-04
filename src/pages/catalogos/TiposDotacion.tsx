@@ -40,7 +40,6 @@ export default function CatalogosTiposDotacion() {
   const [selectedDotationItem, setSelectedDotationItem] = useState<DotationItemType | null>(null);
   const [deleteItem, setDeleteItem] = useState<DotationItemType | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [toggleItem, setToggleItem] = useState<DotationItemType | null>(null);
   const [toggleLoading, setToggleLoading] = useState(false);
   const [zoomImage, setZoomImage] = useState<{ url: string; name: string } | null>(null);
 
