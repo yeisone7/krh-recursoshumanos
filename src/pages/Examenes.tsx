@@ -39,6 +39,16 @@ const resultLabels: Record<string, string> = {
   apto: 'Apto', apto_restricciones: 'Apto c/ Restricciones', no_apto: 'No Apto', pendiente: 'Pendiente',
 };
 
+const examTypeBadgeStyles: Record<string, { bg: string; text: string; border: string }> = {
+  ingreso: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/20' },
+  periodico: { bg: 'bg-info/10', text: 'text-info', border: 'border-info/20' },
+  egreso: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },
+  reintegro: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/20' },
+  post_incapacidad: { bg: 'bg-warning/10', text: 'text-warning-foreground', border: 'border-warning/20' },
+  cambio_cargo: { bg: 'bg-secondary/10', text: 'text-secondary', border: 'border-secondary/20' },
+  seguimiento: { bg: 'bg-tertiary/10', text: 'text-tertiary', border: 'border-tertiary/20' },
+};
+
 export default function Examenes() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFormOpen, setIsFormOpen] = useState(false);
