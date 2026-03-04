@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -31,7 +31,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, UserMinus, AlertTriangle } from 'lucide-react';
+import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, UserMinus, AlertTriangle, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { UserRoleDialog } from './UserRoleDialog';
 import { UserCenterDialog } from './UserCenterDialog';
 import { LinkEmployeeDialog } from './LinkEmployeeDialog';
@@ -86,8 +87,19 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [deactivateReason, setDeactivateReason] = useState('');
   const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const removeCompany = useRemoveCompanyAssignment();
   const toggleStatus = useToggleUserStatus();
+
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return users;
+    const q = searchQuery.toLowerCase();
+    return users.filter(u => 
+      getUserDisplayName(u).toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.roles.some(r => r.toLowerCase().includes(q))
+    );
+  }, [users, searchQuery]);
 
   const handleManageRoles = (user: AdminUser) => {
     setSelectedUser(user);
@@ -208,7 +220,19 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
 
   return (
     <>
+      {/* Search bar */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar por nombre, email o rol..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       <div className="rounded-lg border border-border overflow-hidden">
+        <div className="overflow-auto max-h-[600px]">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
@@ -221,7 +245,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map(user => (
+            {filteredUsers.map(user => (
               <TableRow key={user.id} className={!user.is_active ? 'opacity-60' : ''}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -360,6 +384,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       <UserRoleDialog
@@ -378,6 +403,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         open={linkDialogOpen}
         onOpenChange={setLinkDialogOpen}
         userId={selectedUser?.id || ''}
+        userEmail={selectedUser?.email}
       />
 
       {/* Deactivation Confirmation Dialog */}
