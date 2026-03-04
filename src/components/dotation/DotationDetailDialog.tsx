@@ -124,19 +124,18 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-0 overflow-hidden max-h-[90vh]">
-        {/* Styled header */}
-        <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-5 text-white">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 border-b border-border">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-white flex items-center gap-2">
-              <Package className="w-5 h-5" />
+            <DialogTitle className="font-display text-lg flex items-center gap-2 text-foreground">
+              <Package className="w-5 h-5 text-primary" />
               Detalle de Entrega
             </DialogTitle>
           </DialogHeader>
-          <div className="flex items-center justify-between mt-3">
+          <div className="flex items-center justify-between mt-4">
             <div>
-              <p className="text-white/80 text-sm">Empleado</p>
-              <p className="font-semibold text-lg">{employeeName}</p>
-              <p className="text-white/70 text-sm">C.C. {transaction.employees?.document_number}</p>
+              <p className="font-semibold text-base text-foreground">{employeeName}</p>
+              <p className="text-muted-foreground text-sm">C.C. {transaction.employees?.document_number}</p>
             </div>
             <Badge className={cn('gap-1 text-sm px-3 py-1', sc.bg, sc.text, 'border-0')}>
               <StatusIcon className="w-3.5 h-3.5" />
