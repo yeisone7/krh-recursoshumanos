@@ -6518,7 +6518,14 @@ export type Database = {
         | "approved"
       evaluation_type: "self" | "manager" | "peer" | "360"
       exam_result: "apto" | "apto_restricciones" | "no_apto" | "pendiente"
-      exam_type: "ingreso" | "periodico" | "egreso" | "reintegro"
+      exam_type:
+        | "ingreso"
+        | "periodico"
+        | "egreso"
+        | "reintegro"
+        | "post_incapacidad"
+        | "cambio_cargo"
+        | "seguimiento"
       fault_type: "leve" | "grave" | "gravisima"
       gender_type: "M" | "F" | "O"
       incapacity_origin: "comun" | "laboral"
@@ -6893,7 +6900,15 @@ export const Constants = {
       ],
       evaluation_type: ["self", "manager", "peer", "360"],
       exam_result: ["apto", "apto_restricciones", "no_apto", "pendiente"],
-      exam_type: ["ingreso", "periodico", "egreso", "reintegro"],
+      exam_type: [
+        "ingreso",
+        "periodico",
+        "egreso",
+        "reintegro",
+        "post_incapacidad",
+        "cambio_cargo",
+        "seguimiento",
+      ],
       fault_type: ["leve", "grave", "gravisima"],
       gender_type: ["M", "F", "O"],
       incapacity_origin: ["comun", "laboral"],

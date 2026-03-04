@@ -52,6 +52,9 @@ const examTypeLabels: Record<ExamType, string> = {
   periodico: 'Periódico',
   egreso: 'Egreso',
   reintegro: 'Reintegro',
+  post_incapacidad: 'Post incapacidad',
+  cambio_cargo: 'Cambio de cargo',
+  seguimiento: 'Seguimiento',
 };
 
 const examResultLabels: Record<ExamResult, string> = {
@@ -479,7 +482,7 @@ export default function Examenes() {
             employeeId: selectedExam.employee_id,
             employeeName: `${selectedExam.employees?.first_name} ${selectedExam.employees?.last_name}`,
             employeeDocument: selectedExam.employees?.document_number || '',
-            examType: selectedExam.exam_type,
+            examType: selectedExam.exam_type as any,
             examDate: new Date(selectedExam.exam_date),
             expirationDate: selectedExam.expiration_date ? new Date(selectedExam.expiration_date) : null,
             result: selectedExam.result,
