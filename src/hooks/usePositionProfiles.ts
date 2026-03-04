@@ -92,6 +92,45 @@ export function useCreatePositionProfile() {
   });
 }
 
+export function useUpdatePositionProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ profileId, data }: { profileId: string; data: PositionProfileFormData }) => {
+      const { data: result, error } = await supabase
+        .from('position_profiles')
+        .update({
+          purpose: data.purpose,
+          reports_to: data.reports_to,
+          supervises: data.supervises,
+          num_positions: data.num_positions,
+          education_level: data.education_level,
+          education_detail: data.education_detail,
+          experience: data.experience,
+          specific_knowledge: data.specific_knowledge as any,
+          skills: data.skills as any,
+          functions: data.functions as any,
+          responsibilities: data.responsibilities as any,
+          working_conditions: data.working_conditions as any,
+          elaborated_by: data.elaborated_by,
+          reviewed_by: data.reviewed_by,
+          approved_by: data.approved_by,
+          effective_date: data.effective_date || new Date().toISOString().split('T')[0],
+        })
+        .eq('id', profileId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['position_profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['position_profile_current'] });
+    },
+  });
+}
+
 export function useDeletePositionProfile() {
   const queryClient = useQueryClient();
 
