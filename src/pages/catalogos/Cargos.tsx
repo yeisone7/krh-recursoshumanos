@@ -30,7 +30,7 @@ export default function CatalogosCargos() {
   const [showPositionForm, setShowPositionForm] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [profileTarget, setProfileTarget] = useState<{ id: string; name: string; area?: string } | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [viewMode, setViewMode] = useState<ViewMode>('agenda');
 
   // Filters
   const [search, setSearch] = useState('');
