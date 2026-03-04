@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileText, History, Download, Plus, Loader2 } from 'lucide-react';
+import { FileText, History, Download, Plus, Loader2, Copy } from 'lucide-react';
 import { usePositionProfiles } from '@/hooks/usePositionProfiles';
 import { generatePositionProfilePdf } from '@/lib/positionProfilePdfGenerator';
 import { PositionProfileFormDialog } from './PositionProfileFormDialog';
+import { ClonePositionProfileDialog } from './ClonePositionProfileDialog';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
