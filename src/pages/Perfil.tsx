@@ -498,7 +498,28 @@ export default function Perfil() {
         </Card>
       </motion.div>
 
-      {/* Account Actions */}
+      {/* User Manual */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-primary" />
+              Manual de Usuario
+            </CardTitle>
+            <CardDescription>Guía completa del sistema adaptada a sus permisos y rol</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => setManualOpen(true)}>
+              <BookOpen className="w-4 h-4 mr-2" />
+              Abrir Manual de Usuario
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <UserManualDialog open={manualOpen} onOpenChange={setManualOpen} />
+
+
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
         <Card className="border-destructive/20">
           <CardHeader>
