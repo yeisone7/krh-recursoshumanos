@@ -73,7 +73,7 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
   // Header logo — use the same watermark image (full color) for the header
   try {
     const logoImg = await loadImage('/images/petrocasinos-watermark.png');
-    doc.addImage(logoImg, 'PNG', margin, y, 36, 20);
+    doc.addImage(logoImg, 'PNG', margin, y, 36, 18);
   } catch { /* logo optional */ }
 
   // Header
