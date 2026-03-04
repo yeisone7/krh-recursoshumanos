@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -47,7 +47,9 @@ import { DotationInventoryTab } from '@/components/dotation/DotationInventoryTab
 import { ProfesiogramaTab } from '@/components/dotation/ProfesiogramaTab';
 import { DotationComplianceTab } from '@/components/dotation/DotationComplianceTab';
 import { BulkDeliveryDialog } from '@/components/dotation/BulkDeliveryDialog';
-import { useDotationDeliveries, useDeleteDotationDelivery, getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
+import { getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
+import { useDotationTransactions, useDeleteDotationTransaction } from '@/hooks/useDotationTransactions';
+import type { DotationTransaction } from '@/hooks/useDotationTransactions';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { usePositions, useSystemConfig, useUpdateSystemConfig } from '@/hooks/useSystemConfig';
@@ -55,26 +57,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCompany } from '@/hooks/useCompanies';
 import { generateActaEntregaPdf } from '@/lib/dotationPdfGenerator';
 import { toast } from 'sonner';
-import type { Database } from '@/integrations/supabase/types';
-
-type DotationItemType = Database['public']['Enums']['dotation_item_type'];
-
-const dotationItemTypeLabels: Record<DotationItemType, string> = {
-  uniforme_camisa: 'Camisa',
-  uniforme_pantalon: 'Pantalón',
-  uniforme_conjunto: 'Conjunto',
-  calzado_seguridad: 'Calzado Seguridad',
-  calzado_dielectrico: 'Calzado Dieléctrico',
-  casco: 'Casco',
-  guantes: 'Guantes',
-  gafas_seguridad: 'Gafas Seguridad',
-  protector_auditivo: 'Protector Auditivo',
-  arnes: 'Arnés',
-  overol: 'Overol',
-  chaleco_reflectivo: 'Chaleco Reflectivo',
-  impermeable: 'Impermeable',
-  otros: 'Otros',
-};
 
 type DotationStatus = 'vigente' | 'por_vencer' | 'vencida';
 
@@ -99,6 +81,17 @@ const statusStyles: Record<DotationStatus, { bg: string; text: string; icon: typ
   },
 };
 
+function getTransactionStatus(transaction: DotationTransaction): DotationStatus {
+  let worst: DotationStatus = 'vigente';
+  for (const item of transaction.items) {
+    if (!item.expiration_date) continue;
+    const s = getDotationStatus({ delivery_date: item.delivery_date, expiration_date: item.expiration_date }) as DotationStatus;
+    if (s === 'vencida') return 'vencida';
+    if (s === 'por_vencer') worst = 'por_vencer';
+  }
+  return worst;
+}
+
 function getAlertLevel(daysRemaining: number): 'info' | 'warning' | 'critical' {
   if (daysRemaining <= 7) return 'critical';
   if (daysRemaining <= 15) return 'warning';
@@ -110,17 +103,16 @@ export default function Dotacion() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [itemTypeFilter, setItemTypeFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('entregas');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const { currentCompanyId } = useAuth();
   const { data: company } = useCompany(currentCompanyId || undefined);
-  const { data: deliveries, isLoading } = useDotationDeliveries();
-  const deleteMutation = useDeleteDotationDelivery();
+  const { data: transactions, isLoading } = useDotationTransactions();
+  const deleteMutation = useDeleteDotationTransaction();
   const { data: inventory = [] } = useDotationInventory();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: positionsData = [] } = usePositions();
@@ -132,90 +124,106 @@ export default function Dotacion() {
   // Handle deep link from dashboard alerts
   useEffect(() => {
     const detailId = searchParams.get('detail');
-    if (detailId && deliveries) {
-      const deliveryExists = deliveries.some(d => d.id === detailId);
-      if (deliveryExists) {
-        setSelectedDeliveryId(detailId);
+    if (detailId && transactions) {
+      // Try to find by transaction ID or by item ID
+      const tx = transactions.find(t => t.id === detailId || t.items.some(i => i.id === detailId));
+      if (tx) {
+        setSelectedTransactionId(tx.id);
         setIsDetailOpen(true);
-        // Clear the query param after opening
         setSearchParams({}, { replace: true });
       }
     }
-  }, [searchParams, deliveries, setSearchParams]);
+  }, [searchParams, transactions, setSearchParams]);
 
-  // Generate alerts from deliveries
+  // Generate alerts from transaction items
   const alerts = useMemo(() => {
-    if (!deliveries) return [];
+    if (!transactions) return [];
     
-    return deliveries
-      .filter(d => {
-        const status = getDotationStatus(d);
-        return status === 'por_vencer' || status === 'vencida';
-      })
-      .map(d => {
-        const daysRemaining = getDaysRemaining(d.expiration_date);
-        return {
-          id: `alert-${d.id}`,
-          deliveryId: d.id,
-          employeeId: d.employee_id,
-          employeeName: `${d.employees?.first_name} ${d.employees?.last_name}`,
-          itemName: d.item_name,
-          expirationDate: d.expiration_date,
-          daysRemaining: Math.max(0, daysRemaining),
-          level: getAlertLevel(daysRemaining),
-        };
-      })
-      .sort((a, b) => a.daysRemaining - b.daysRemaining);
-  }, [deliveries]);
+    const alertList: any[] = [];
+    for (const tx of transactions) {
+      for (const item of tx.items) {
+        if (!item.expiration_date) continue;
+        const status = getDotationStatus({ delivery_date: item.delivery_date, expiration_date: item.expiration_date });
+        if (status === 'por_vencer' || status === 'vencida') {
+          const daysRemaining = getDaysRemaining(item.expiration_date);
+          alertList.push({
+            id: `alert-${item.id}`,
+            deliveryId: tx.id,
+            employeeId: tx.employee_id,
+            employeeName: `${tx.employees?.first_name} ${tx.employees?.last_name}`,
+            itemName: item.item_name,
+            expirationDate: item.expiration_date,
+            daysRemaining: Math.max(0, daysRemaining),
+            level: getAlertLevel(daysRemaining),
+          });
+        }
+      }
+    }
+    return alertList.sort((a, b) => a.daysRemaining - b.daysRemaining);
+  }, [transactions]);
 
-  // Stats
-  const lowStockCount = inventoryEnabled ? inventory.filter(i => i.minimum_stock > 0 && i.quantity_available <= i.minimum_stock).length : 0;
+  // Stats (count total items across all transactions)
+  const lowStockCount = inventoryEnabled ? inventory.filter((i: any) => i.minimum_stock > 0 && i.quantity_available <= i.minimum_stock).length : 0;
   const stats = useMemo(() => {
-    if (!deliveries) return { total: 0, vigentes: 0, porVencer: 0, vencidas: 0 };
+    if (!transactions) return { totalTransactions: 0, totalItems: 0, vigentes: 0, porVencer: 0, vencidas: 0 };
     
-    return {
-      total: deliveries.length,
-      vigentes: deliveries.filter(d => getDotationStatus(d) === 'vigente').length,
-      porVencer: deliveries.filter(d => getDotationStatus(d) === 'por_vencer').length,
-      vencidas: deliveries.filter(d => getDotationStatus(d) === 'vencida').length,
-    };
-  }, [deliveries]);
+    let totalItems = 0, vigentes = 0, porVencer = 0, vencidas = 0;
+    for (const tx of transactions) {
+      for (const item of tx.items) {
+        totalItems++;
+        if (!item.expiration_date) { vigentes++; continue; }
+        const s = getDotationStatus({ delivery_date: item.delivery_date, expiration_date: item.expiration_date });
+        if (s === 'vigente') vigentes++;
+        else if (s === 'por_vencer') porVencer++;
+        else vencidas++;
+      }
+    }
+    return { totalTransactions: transactions.length, totalItems, vigentes, porVencer, vencidas };
+  }, [transactions]);
 
-  // Filter deliveries
-  const filteredDeliveries = useMemo(() => {
-    if (!deliveries) return [];
+  // Filter transactions
+  const filteredTransactions = useMemo(() => {
+    if (!transactions) return [];
     
-    return deliveries.filter(d => {
-      const employeeName = `${d.employees?.first_name} ${d.employees?.last_name}`.toLowerCase();
+    return transactions.filter(tx => {
+      const employeeName = `${tx.employees?.first_name} ${tx.employees?.last_name}`.toLowerCase();
+      const itemNames = tx.items.map(i => i.item_name.toLowerCase()).join(' ');
       const matchesSearch = 
         employeeName.includes(searchQuery.toLowerCase()) ||
-        d.item_name.toLowerCase().includes(searchQuery.toLowerCase());
+        itemNames.includes(searchQuery.toLowerCase());
       
-      const status = getDotationStatus(d);
-      const matchesStatus = statusFilter === 'all' || status === statusFilter;
-      const matchesType = itemTypeFilter === 'all' || d.item_type === itemTypeFilter;
+      const txStatus = getTransactionStatus(tx);
+      const matchesStatus = statusFilter === 'all' || txStatus === statusFilter;
       
-      return matchesSearch && matchesStatus && matchesType;
+      return matchesSearch && matchesStatus;
     });
-  }, [deliveries, searchQuery, statusFilter, itemTypeFilter]);
+  }, [transactions, searchQuery, statusFilter]);
 
-  const handleViewDelivery = (deliveryId: string) => {
-    setSelectedDeliveryId(deliveryId);
+  const handleViewTransaction = (txId: string) => {
+    setSelectedTransactionId(txId);
     setIsDetailOpen(true);
   };
 
-  const handleExportPdf = async (delivery: any) => {
-    // Find all deliveries for the same employee on the same date
-    const sameBatch = deliveries?.filter(d =>
-      d.employee_id === delivery.employee_id &&
-      d.delivery_date === delivery.delivery_date
-    ) || [delivery];
+  const handleExportPdf = async (tx: DotationTransaction) => {
+    const deliveries = tx.items.map(item => ({
+      id: item.id,
+      employee_id: tx.employee_id,
+      item_type: item.item_type,
+      item_name: item.item_name,
+      quantity: item.quantity,
+      size: item.size,
+      delivery_date: item.delivery_date,
+      expiration_date: item.expiration_date,
+      delivered_by: tx.delivered_by,
+      observations: tx.observations,
+      employees: tx.employees,
+    }));
 
     try {
       await generateActaEntregaPdf({
         companyName: company?.name || 'Empresa',
         companyNit: company?.nit || '',
-        deliveries: sameBatch,
+        deliveries,
       });
       toast.success('Acta de entrega generada');
     } catch (error) {
@@ -224,7 +232,7 @@ export default function Dotacion() {
     }
   };
 
-  const selectedDelivery = deliveries?.find(d => d.id === selectedDeliveryId);
+  const selectedTransaction = transactions?.find(t => t.id === selectedTransactionId) || null;
 
   if (!currentCompanyId) {
     return (
@@ -314,8 +322,8 @@ export default function Dotacion() {
             <Package className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.total}</p>
-            <p className="text-sm text-muted-foreground">Total Entregas</p>
+            <p className="text-2xl font-display font-bold text-foreground">{stats.totalTransactions}</p>
+            <p className="text-sm text-muted-foreground">Entregas ({stats.totalItems} artículos)</p>
           </div>
         </motion.div>
         
@@ -376,11 +384,11 @@ export default function Dotacion() {
         >
           <DotationAlertsCard 
             alerts={alerts} 
-            onAlertClick={(alert) => handleViewDelivery(alert.deliveryId)}
+            onAlertClick={(alert) => handleViewTransaction(alert.deliveryId)}
           />
         </motion.div>
 
-        {/* Deliveries Table */}
+        {/* Transactions Table */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -413,17 +421,6 @@ export default function Dotacion() {
                       <SelectItem value="vencida">Vencidas</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={itemTypeFilter} onValueChange={setItemTypeFilter}>
-                    <SelectTrigger className="w-[140px] h-10 text-sm border-border">
-                      <SelectValue placeholder="Tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {Object.entries(dotationItemTypeLabels).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <Button variant="outline" size="icon" className="h-10 w-10">
                     <Filter className="w-4 h-4" />
                   </Button>
@@ -432,15 +429,15 @@ export default function Dotacion() {
             </div>
 
             {/* Table */}
-            {filteredDeliveries.length === 0 ? (
+            {filteredTransactions.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>
-                  {searchQuery || statusFilter !== 'all' || itemTypeFilter !== 'all'
+                  {searchQuery || statusFilter !== 'all'
                     ? 'No se encontraron entregas con los filtros seleccionados'
                     : 'No hay entregas de dotación registradas'}
                 </p>
-                {!searchQuery && statusFilter === 'all' && itemTypeFilter === 'all' && (
+                {!searchQuery && statusFilter === 'all' && (
                   <Button onClick={() => setIsFormOpen(true)} className="mt-4">
                     <Plus className="w-4 h-4 mr-2" />
                     Nueva Entrega
@@ -452,65 +449,57 @@ export default function Dotacion() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Empleado</TableHead>
-                    <TableHead>Artículo</TableHead>
-                    <TableHead>Entrega</TableHead>
-                    <TableHead>Vencimiento</TableHead>
+                    <TableHead>Artículos</TableHead>
+                    <TableHead>Fecha Entrega</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredDeliveries.map((delivery) => {
-                    const hasValidDates = delivery.delivery_date && delivery.expiration_date &&
-                      !isNaN(new Date(delivery.delivery_date).getTime()) && !isNaN(new Date(delivery.expiration_date).getTime());
-                    const status = hasValidDates ? (getDotationStatus(delivery) as DotationStatus) : 'vigente';
-                    const statusConfig = statusStyles[status];
-                    const StatusIcon = statusConfig.icon;
-                    const daysRemaining = hasValidDates ? getDaysRemaining(delivery.expiration_date) : 0;
+                  {filteredTransactions.map((tx) => {
+                    const hasValidDate = tx.delivery_date && !isNaN(new Date(tx.delivery_date).getTime());
+                    const txStatus = getTransactionStatus(tx);
+                    const sc = statusStyles[txStatus];
+                    const StatusIcon = sc.icon;
+
+                    // Build items summary
+                    const itemsSummary = tx.items.length <= 2
+                      ? tx.items.map(i => i.item_name).join(', ')
+                      : `${tx.items[0].item_name}, ${tx.items[1].item_name} +${tx.items.length - 2} más`;
 
                     return (
-                      <TableRow key={delivery.id}>
+                      <TableRow key={tx.id}>
                         <TableCell>
                           <div>
                             <p className="font-medium">
-                              {delivery.employees?.first_name} {delivery.employees?.last_name}
+                              {tx.employees?.first_name} {tx.employees?.last_name}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              {delivery.employees?.operation_centers?.name || 'Sin centro'}
+                              {tx.employees?.operation_centers?.name || 'Sin centro'}
                             </p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{delivery.item_name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {dotationItemTypeLabels[delivery.item_type]}
-                              {delivery.size && ` • Talla: ${delivery.size}`}
+                            <p className="font-medium text-sm">{itemsSummary}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {tx.items.length} artículo(s)
                             </p>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2 text-sm">
                             <Calendar className="w-4 h-4 text-muted-foreground" />
-                            {hasValidDates ? format(new Date(delivery.delivery_date), 'dd/MM/yyyy') : '—'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Clock className="w-4 h-4 text-muted-foreground" />
-                            {hasValidDates ? format(new Date(delivery.expiration_date), 'dd/MM/yyyy') : '—'}
+                            {hasValidDate ? format(new Date(tx.delivery_date), 'dd/MM/yyyy') : '—'}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge 
                             variant="outline" 
-                            className={cn("gap-1", statusConfig.bg, statusConfig.text)}
+                            className={cn("gap-1", sc.bg, sc.text)}
                           >
                             <StatusIcon className="w-3 h-3" />
-                            {statusConfig.label}
-                            {status === 'por_vencer' && daysRemaining > 0 && (
-                              <span className="ml-1">({daysRemaining}d)</span>
-                            )}
+                            {sc.label}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -518,7 +507,7 @@ export default function Dotacion() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleViewDelivery(delivery.id)}
+                              onClick={() => handleViewTransaction(tx.id)}
                             >
                               <Eye className="w-4 h-4 mr-1" />
                               Ver
@@ -526,7 +515,7 @@ export default function Dotacion() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleExportPdf(delivery)}
+                              onClick={() => handleExportPdf(tx)}
                               title="Exportar acta de entrega"
                             >
                               <FileDown className="w-4 h-4" />
@@ -535,8 +524,8 @@ export default function Dotacion() {
                               variant="ghost"
                               size="sm"
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => setDeleteConfirmId(delivery.id)}
-                              title="Eliminar registro"
+                              onClick={() => setDeleteConfirmId(tx.id)}
+                              title="Eliminar entrega"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -662,31 +651,11 @@ export default function Dotacion() {
         onOpenChange={setIsFormOpen}
       />
       
-      {selectedDelivery && (
-        <DotationDetailDialog
-          open={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
-          delivery={{
-            id: selectedDelivery.id,
-            employeeId: selectedDelivery.employee_id,
-            employeeName: `${selectedDelivery.employees?.first_name} ${selectedDelivery.employees?.last_name}`,
-            employeeDocument: selectedDelivery.employees?.document_number || '',
-            operationCenter: selectedDelivery.employees?.operation_centers?.name || '',
-            itemType: selectedDelivery.item_type.replace('uniforme_', 'uniform_').replace('calzado_seguridad', 'boots').replace('casco', 'helmet').replace('guantes', 'gloves') as any,
-            itemName: selectedDelivery.item_name,
-            quantity: selectedDelivery.quantity,
-            size: selectedDelivery.size || undefined,
-            deliveryDate: new Date(selectedDelivery.delivery_date),
-            expirationDate: new Date(selectedDelivery.expiration_date),
-            status: getDotationStatus(selectedDelivery) === 'vigente' ? 'delivered' : 
-                   getDotationStatus(selectedDelivery) === 'por_vencer' ? 'expiring' : 'expired',
-            deliveredBy: selectedDelivery.delivered_by || undefined,
-            notes: selectedDelivery.observations || undefined,
-            createdAt: new Date(selectedDelivery.created_at),
-            updatedAt: new Date(selectedDelivery.updated_at),
-          }}
-        />
-      )}
+      <DotationDetailDialog
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        transaction={selectedTransaction}
+      />
 
       <BulkDeliveryDialog
         open={isBulkOpen}
@@ -696,9 +665,9 @@ export default function Dotacion() {
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar registro de entrega</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar entrega de dotación</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de que deseas eliminar este registro de entrega de dotación? Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas eliminar esta entrega y todos sus artículos? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -708,7 +677,7 @@ export default function Dotacion() {
               onClick={() => {
                 if (deleteConfirmId) {
                   deleteMutation.mutate(deleteConfirmId, {
-                    onSuccess: () => toast.success('Registro eliminado'),
+                    onSuccess: () => toast.success('Entrega eliminada'),
                     onError: () => toast.error('Error al eliminar'),
                   });
                   setDeleteConfirmId(null);
