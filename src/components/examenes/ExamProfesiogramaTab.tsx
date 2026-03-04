@@ -338,6 +338,13 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ImportFromDotacionDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        centers={centers}
+        positions={positions}
+      />
     </div>
   );
 }
