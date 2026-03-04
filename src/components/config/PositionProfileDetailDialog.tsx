@@ -25,6 +25,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
   const { data: versions = [] } = usePositionProfiles(positionId);
   const [selectedVersion, setSelectedVersion] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showClone, setShowClone] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   const current = versions.find((v: any) => v.is_current) || versions[0];
