@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -9,6 +9,11 @@ interface UserCompany {
   id: string;
   name: string;
   nit: string;
+}
+
+interface PermissionEntry {
+  module_code: string;
+  action: string;
 }
 
 interface AuthContextType {
@@ -24,6 +29,16 @@ interface AuthContextType {
   isAuditor: boolean;
   isPsicologo: boolean;
   hasRole: (role: AppRole) => boolean;
+  // New permission system
+  permissions: PermissionEntry[];
+  permissionsLoaded: boolean;
+  hasPermission: (moduleCode: string, action?: string) => boolean;
+  canView: (moduleCode: string) => boolean;
+  canCreate: (moduleCode: string) => boolean;
+  canUpdate: (moduleCode: string) => boolean;
+  canDelete: (moduleCode: string) => boolean;
+  hasAnyRole: boolean;
+  refreshPermissions: () => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -38,9 +53,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [companies, setCompanies] = useState<UserCompany[]>([]);
   const [currentCompanyId, setCurrentCompanyId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [permissions, setPermissions] = useState<PermissionEntry[]>([]);
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
+  const [hasAnyRole, setHasAnyRole] = useState(true); // default true to avoid flash
+
+  const fetchPermissions = async (userId: string) => {
+    try {
+      const { data, error } = await supabase.rpc('get_user_permissions', { _user_id: userId });
+      if (error) {
+        console.error('Error fetching permissions:', error);
+        setPermissions([]);
+      } else {
+        setPermissions((data || []) as PermissionEntry[]);
+      }
+
+      // Check if user has any custom role assigned
+      const { data: userRoles } = await supabase
+        .from('user_custom_roles')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
+      
+      setHasAnyRole((userRoles && userRoles.length > 0) || false);
+    } catch {
+      setPermissions([]);
+    } finally {
+      setPermissionsLoaded(true);
+    }
+  };
 
   const fetchUserData = async (userId: string) => {
-    // Fetch user roles
+    // Fetch user roles (legacy)
     const { data: rolesData } = await supabase
       .from('user_roles')
       .select('role')
@@ -69,16 +112,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setCurrentCompanyId(userCompanies[0].id);
       }
     }
+
+    // Fetch dynamic permissions
+    await fetchPermissions(userId);
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer data fetching with setTimeout to avoid deadlock
         if (session?.user) {
           setTimeout(() => {
             fetchUserData(session.user.id);
@@ -87,11 +131,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRoles([]);
           setCompanies([]);
           setCurrentCompanyId(null);
+          setPermissions([]);
+          setPermissionsLoaded(false);
+          setHasAnyRole(true);
         }
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -105,17 +151,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const hasRole = (role: AppRole): boolean => roles.includes(role);
-  const isAdmin = hasRole('admin');
-  const isRRHH = hasRole('rrhh');
-  const isAuditor = hasRole('auditor');
-  const isPsicologo = hasRole('psicologo');
+  const hasRoleFn = (role: AppRole): boolean => roles.includes(role);
+  const isAdmin = hasRoleFn('admin');
+  const isRRHH = hasRoleFn('rrhh');
+  const isAuditor = hasRoleFn('auditor');
+  const isPsicologo = hasRoleFn('psicologo');
+
+  // New permission helpers
+  const hasPermission = useCallback((moduleCode: string, action: string = 'view'): boolean => {
+    // Legacy admin bypass
+    if (isAdmin) return true;
+    return permissions.some(p => p.module_code === moduleCode && p.action === action);
+  }, [permissions, isAdmin]);
+
+  const canView = useCallback((m: string) => hasPermission(m, 'view'), [hasPermission]);
+  const canCreate = useCallback((m: string) => hasPermission(m, 'create'), [hasPermission]);
+  const canUpdate = useCallback((m: string) => hasPermission(m, 'update'), [hasPermission]);
+  const canDelete = useCallback((m: string) => hasPermission(m, 'delete'), [hasPermission]);
+
+  const refreshPermissions = useCallback(() => {
+    if (user) fetchPermissions(user.id);
+  }, [user]);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
 
@@ -124,9 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: redirectUrl,
-      },
+      options: { emailRedirectTo: redirectUrl },
     });
     return { error };
   };
@@ -149,7 +206,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isRRHH,
         isAuditor,
         isPsicologo,
-        hasRole,
+        hasRole: hasRoleFn,
+        permissions,
+        permissionsLoaded,
+        hasPermission,
+        canView,
+        canCreate,
+        canUpdate,
+        canDelete,
+        hasAnyRole,
+        refreshPermissions,
         signIn,
         signUp,
         signOut,
