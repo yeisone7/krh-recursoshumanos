@@ -368,7 +368,6 @@ export default function CatalogosTiposDotacion() {
                       <TooltipProvider delayDuration={200}>
                         <div className="flex justify-end gap-1">
                           <Tooltip><TooltipTrigger asChild><Button size="sm" variant="ghost" onClick={() => handleEdit(item)}><Edit2 className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>Editar completo</TooltipContent></Tooltip>
-                          <Tooltip><TooltipTrigger asChild><Button size="sm" variant="ghost" className={item.is_active ? 'text-amber-600 hover:text-amber-700' : 'text-emerald-600 hover:text-emerald-700'} onClick={() => setToggleItem(item)}><Power className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>{item.is_active ? 'Desactivar' : 'Activar'}</TooltipContent></Tooltip>
                           <Tooltip><TooltipTrigger asChild><Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteItem(item)}><Trash2 className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>Eliminar</TooltipContent></Tooltip>
                         </div>
                       </TooltipProvider>
