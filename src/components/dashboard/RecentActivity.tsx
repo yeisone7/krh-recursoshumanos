@@ -143,7 +143,7 @@ export function RecentActivity() {
     );
   }
 
-  const activities = logs || [];
+  const activities = (logs as any)?.data || logs || [];
 
   return (
     <div className="card-elevated p-6">

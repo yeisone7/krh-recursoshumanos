@@ -10,6 +10,8 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   AlertCircle,
 } from 'lucide-react';
 
@@ -175,12 +177,19 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
   const [searchQuery, setSearchQuery] = useState('');
   const [filterAction, setFilterAction] = useState<string>('all');
   const [filterEntity, setFilterEntity] = useState<string>(entityType || 'all');
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = compact ? 20 : 25;
 
-  const { data: logs = [], isLoading, error } = useAuditLogs({
+  const { data: result, isLoading, error } = useAuditLogs({
     entityType: filterEntity !== 'all' ? filterEntity : undefined,
     action: filterAction !== 'all' ? filterAction : undefined,
-    limit: compact ? 20 : 100,
+    limit: pageSize,
+    page: currentPage,
   });
+
+  const logs = result?.data || [];
+  const totalCount = result?.total || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const filteredLogs = useMemo(() => {
     if (!searchQuery) return logs;
@@ -193,6 +202,12 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
       log.entity_type.toLowerCase().includes(query)
     );
   }, [logs, searchQuery]);
+
+  // Reset page when filters change
+  const handleFilterChange = (setter: (v: string) => void) => (value: string) => {
+    setter(value);
+    setCurrentPage(0);
+  };
 
   if (error) {
     return (
@@ -236,7 +251,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Select value={filterAction} onValueChange={setFilterAction}>
+          <Select value={filterAction} onValueChange={handleFilterChange(setFilterAction)}>
             <SelectTrigger className="w-full sm:w-40">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Acción" />
@@ -249,7 +264,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
             </SelectContent>
           </Select>
           {!entityType && (
-            <Select value={filterEntity} onValueChange={setFilterEntity}>
+            <Select value={filterEntity} onValueChange={handleFilterChange(setFilterEntity)}>
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Entidad" />
               </SelectTrigger>
@@ -281,26 +296,59 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
             </p>
           </div>
         ) : (
-          <ScrollArea className={compact ? 'h-[400px]' : 'h-[600px]'}>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[140px]">Fecha</TableHead>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead className="w-[140px]">Acción</TableHead>
-                    <TableHead>Entidad</TableHead>
-                    <TableHead className="w-[100px]">Detalles</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredLogs.map((log) => (
-                    <LogDetailsRow key={log.id} log={log} />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </ScrollArea>
+          <>
+            <ScrollArea className={compact ? 'h-[400px]' : 'h-[600px]'}>
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[140px]">Fecha</TableHead>
+                      <TableHead>Usuario</TableHead>
+                      <TableHead className="w-[140px]">Acción</TableHead>
+                      <TableHead>Entidad</TableHead>
+                      <TableHead className="w-[100px]">Detalles</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredLogs.map((log) => (
+                      <LogDetailsRow key={log.id} log={log} />
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Mostrando {currentPage * pageSize + 1}–{Math.min((currentPage + 1) * pageSize, totalCount)} de {totalCount} registros
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => p - 1)}
+                    disabled={currentPage === 0}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-muted-foreground px-2">
+                    {currentPage + 1} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => p + 1)}
+                    disabled={currentPage >= totalPages - 1}
+                  >
+                    Siguiente
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
