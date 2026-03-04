@@ -563,3 +563,297 @@ export function useContractsExpiringSoonReport(daysRange: number = 30) {
     enabled: !!currentCompanyId,
   });
 }
+
+// ============ VACATION REPORT ============
+
+export interface VacationReportRow {
+  empleado: string;
+  documento: string;
+  tipo: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  dias_habiles: number;
+  estado: string;
+}
+
+export function useVacationReport(startDate?: Date, endDate?: Date) {
+  const { currentCompanyId } = useAuth();
+  return useQuery({
+    queryKey: ['report-vacations', currentCompanyId, startDate, endDate],
+    queryFn: async (): Promise<VacationReportRow[]> => {
+      if (!currentCompanyId) return [];
+      let query = supabase
+        .from('vacation_requests')
+        .select(`*, employees_v2!inner(first_name, last_name, document_number)`)
+        .eq('company_id', currentCompanyId)
+        .order('start_date', { ascending: false });
+      if (startDate) query = query.gte('start_date', format(startDate, 'yyyy-MM-dd'));
+      if (endDate) query = query.lte('start_date', format(endDate, 'yyyy-MM-dd'));
+      const { data, error } = await query;
+      if (error) throw error;
+      const typeLabels: Record<string, string> = { disfrute: 'Disfrute', compensacion: 'Compensación' };
+      const statusLabels: Record<string, string> = { pendiente: 'Pendiente', aprobado: 'Aprobado', rechazado: 'Rechazado', en_curso: 'En Curso', completado: 'Completado', cancelado: 'Cancelado', interrumpido: 'Interrumpido' };
+      return (data || []).map(v => ({
+        empleado: `${v.employees_v2.first_name} ${v.employees_v2.last_name}`,
+        documento: v.employees_v2.document_number,
+        tipo: typeLabels[v.request_type] || v.request_type,
+        fecha_inicio: format(new Date(v.start_date), 'dd/MM/yyyy'),
+        fecha_fin: format(new Date(v.end_date), 'dd/MM/yyyy'),
+        dias_habiles: v.business_days,
+        estado: statusLabels[v.status] || v.status,
+      }));
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+// ============ LEAVES REPORT ============
+
+export interface LeavesReportRow {
+  empleado: string;
+  documento: string;
+  tipo_permiso: string;
+  motivo: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  dias: number;
+  estado: string;
+}
+
+export function useLeavesReport(startDate?: Date, endDate?: Date) {
+  const { currentCompanyId } = useAuth();
+  return useQuery({
+    queryKey: ['report-leaves', currentCompanyId, startDate, endDate],
+    queryFn: async (): Promise<LeavesReportRow[]> => {
+      if (!currentCompanyId) return [];
+      let query = supabase
+        .from('leave_requests')
+        .select(`*, employees_v2!inner(first_name, last_name, document_number)`)
+        .eq('company_id', currentCompanyId)
+        .order('start_date', { ascending: false });
+      if (startDate) query = query.gte('start_date', format(startDate, 'yyyy-MM-dd'));
+      if (endDate) query = query.lte('start_date', format(endDate, 'yyyy-MM-dd'));
+      const { data, error } = await query;
+      if (error) throw error;
+      const typeLabels: Record<string, string> = {
+        calamidad_domestica: 'Calamidad Doméstica', cita_medica: 'Cita Médica',
+        licencia_maternidad: 'Maternidad', licencia_paternidad: 'Paternidad',
+        licencia_luto: 'Luto', permiso_sindical: 'Sindical',
+        licencia_no_remunerada: 'No Remunerada', otro: 'Otro',
+      };
+      const statusLabels: Record<string, string> = { pendiente: 'Pendiente', aprobado: 'Aprobado', rechazado: 'Rechazado', cancelado: 'Cancelado' };
+      return (data || []).map(l => ({
+        empleado: `${l.employees_v2.first_name} ${l.employees_v2.last_name}`,
+        documento: l.employees_v2.document_number,
+        tipo_permiso: typeLabels[l.leave_type] || l.leave_type,
+        motivo: l.reason || '-',
+        fecha_inicio: format(new Date(l.start_date), 'dd/MM/yyyy'),
+        fecha_fin: format(new Date(l.end_date), 'dd/MM/yyyy'),
+        dias: l.total_days,
+        estado: statusLabels[l.status] || l.status,
+      }));
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+// ============ OVERTIME REPORT ============
+
+export interface OvertimeReportRow {
+  empleado: string;
+  documento: string;
+  fecha: string;
+  tipo: string;
+  horas: number;
+  recargo: number;
+  valor: number;
+  estado: string;
+}
+
+export function useOvertimeReport(startDate?: Date, endDate?: Date) {
+  const { currentCompanyId } = useAuth();
+  return useQuery({
+    queryKey: ['report-overtime', currentCompanyId, startDate, endDate],
+    queryFn: async (): Promise<OvertimeReportRow[]> => {
+      if (!currentCompanyId) return [];
+      let query = supabase
+        .from('overtime_records')
+        .select(`*, employees_v2!inner(first_name, last_name, document_number)`)
+        .eq('company_id', currentCompanyId)
+        .order('work_date', { ascending: false });
+      if (startDate) query = query.gte('work_date', format(startDate, 'yyyy-MM-dd'));
+      if (endDate) query = query.lte('work_date', format(endDate, 'yyyy-MM-dd'));
+      const { data, error } = await query;
+      if (error) throw error;
+      const typeLabels: Record<string, string> = {
+        diurna: 'Diurna', nocturna: 'Nocturna',
+        dominical_diurna: 'Dominical Diurna', dominical_nocturna: 'Dominical Nocturna',
+        festiva_diurna: 'Festiva Diurna', festiva_nocturna: 'Festiva Nocturna',
+      };
+      const statusLabels: Record<string, string> = { pendiente: 'Pendiente', aprobado: 'Aprobado', rechazado: 'Rechazado' };
+      return (data || []).map(o => ({
+        empleado: `${o.employees_v2.first_name} ${o.employees_v2.last_name}`,
+        documento: o.employees_v2.document_number,
+        fecha: format(new Date(o.work_date), 'dd/MM/yyyy'),
+        tipo: typeLabels[o.overtime_type] || o.overtime_type,
+        horas: o.total_hours,
+        recargo: o.surcharge_percentage,
+        valor: Number(o.total_value) || 0,
+        estado: statusLabels[o.status] || o.status,
+      }));
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+// ============ TRAINING REPORT ============
+
+export interface TrainingReportRow {
+  curso: string;
+  codigo: string;
+  instructor: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  ubicacion: string;
+  cupo_max: number;
+  estado: string;
+}
+
+export function useTrainingReport() {
+  const { currentCompanyId } = useAuth();
+  return useQuery({
+    queryKey: ['report-training', currentCompanyId],
+    queryFn: async (): Promise<TrainingReportRow[]> => {
+      if (!currentCompanyId) return [];
+      const { data, error } = await supabase
+        .from('training_sessions')
+        .select(`*, course:training_courses(name)`)
+        .eq('company_id', currentCompanyId)
+        .order('start_date', { ascending: false });
+      if (error) throw error;
+      const statusLabels: Record<string, string> = { programado: 'Programado', en_curso: 'En Curso', completado: 'Completado', cancelado: 'Cancelado' };
+      return (data || []).map(t => ({
+        curso: (t.course as any)?.name || '-',
+        codigo: t.session_code || '-',
+        instructor: t.instructor_name || '-',
+        fecha_inicio: format(new Date(t.start_date), 'dd/MM/yyyy'),
+        fecha_fin: format(new Date(t.end_date), 'dd/MM/yyyy'),
+        ubicacion: t.location || '-',
+        cupo_max: t.max_participants || 0,
+        estado: statusLabels[t.status] || t.status,
+      }));
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+// ============ DISCIPLINARY REPORT ============
+
+export interface DisciplinaryReportRow {
+  caso: string;
+  empleado: string;
+  documento: string;
+  tipo_falta: string;
+  fecha_falta: string;
+  fecha_apertura: string;
+  sancion: string;
+  dias_sancion: number;
+  estado: string;
+}
+
+export function useDisciplinaryReport() {
+  const { currentCompanyId } = useAuth();
+  return useQuery({
+    queryKey: ['report-disciplinary', currentCompanyId],
+    queryFn: async (): Promise<DisciplinaryReportRow[]> => {
+      if (!currentCompanyId) return [];
+      const { data, error } = await supabase
+        .from('disciplinary_processes')
+        .select(`*, employees_v2!inner(first_name, last_name, document_number)`)
+        .eq('company_id', currentCompanyId)
+        .order('opening_date', { ascending: false });
+      if (error) throw error;
+      const faultLabels: Record<string, string> = { leve: 'Leve', grave: 'Grave', gravisima: 'Gravísima' };
+      const sanctionLabels: Record<string, string> = { amonestacion_verbal: 'Amonestación Verbal', amonestacion_escrita: 'Amonestación Escrita', suspension: 'Suspensión', terminacion: 'Terminación', absuelto: 'Absuelto' };
+      const statusLabels: Record<string, string> = { apertura: 'Apertura', notificado: 'Notificado', descargos: 'Descargos', investigacion: 'Investigación', decision: 'Decisión', apelacion: 'Apelación', cerrado: 'Cerrado' };
+      return (data || []).map(d => ({
+        caso: d.case_number,
+        empleado: `${d.employees_v2.first_name} ${d.employees_v2.last_name}`,
+        documento: d.employees_v2.document_number,
+        tipo_falta: faultLabels[d.fault_type] || d.fault_type,
+        fecha_falta: format(new Date(d.fault_date), 'dd/MM/yyyy'),
+        fecha_apertura: format(new Date(d.opening_date), 'dd/MM/yyyy'),
+        sancion: d.sanction_type ? (sanctionLabels[d.sanction_type] || d.sanction_type) : 'Pendiente',
+        dias_sancion: d.sanction_days || 0,
+        estado: statusLabels[d.status] || d.status,
+      }));
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+// ============ MEDICAL EXAMS REPORT ============
+
+export interface MedicalExamsReportRow {
+  empleado: string;
+  documento: string;
+  tipo_examen: string;
+  fecha_examen: string;
+  proveedor: string;
+  medico: string;
+  concepto: string;
+  resultado: string;
+  vencimiento: string;
+  estado: string;
+}
+
+export function useMedicalExamsReport() {
+  const { currentCompanyId } = useAuth();
+  return useQuery({
+    queryKey: ['report-medical-exams', currentCompanyId],
+    queryFn: async (): Promise<MedicalExamsReportRow[]> => {
+      if (!currentCompanyId) return [];
+      // medical_exams references old employees table, need to get company employees first
+      const { data: employees } = await supabase
+        .from('employees')
+        .select('id, first_name, last_name, document_number')
+        .eq('company_id', currentCompanyId);
+      if (!employees?.length) return [];
+      const empIds = employees.map(e => e.id);
+      const empMap = new Map(employees.map(e => [e.id, e]));
+      const { data, error } = await supabase
+        .from('medical_exams')
+        .select('*')
+        .in('employee_id', empIds)
+        .order('exam_date', { ascending: false });
+      if (error) throw error;
+      const typeLabels: Record<string, string> = { ingreso: 'Ingreso', periodico: 'Periódico', retiro: 'Retiro', reintegro: 'Reintegro', post_incapacidad: 'Post Incapacidad' };
+      const resultLabels: Record<string, string> = { apto: 'Apto', apto_con_restricciones: 'Apto con Restricciones', no_apto: 'No Apto' };
+      const today = new Date();
+      return (data || []).map(e => {
+        const emp = empMap.get(e.employee_id);
+        let estado = 'Vigente';
+        if (e.expiration_date) {
+          const exp = new Date(e.expiration_date);
+          const daysToExp = Math.ceil((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysToExp < 0) estado = 'Vencido';
+          else if (daysToExp <= 30) estado = 'Por Vencer';
+        }
+        return {
+          empleado: emp ? `${emp.first_name} ${emp.last_name}` : '-',
+          documento: emp?.document_number || '-',
+          tipo_examen: typeLabels[e.exam_type] || e.exam_type,
+          fecha_examen: format(new Date(e.exam_date), 'dd/MM/yyyy'),
+          proveedor: e.provider,
+          medico: e.doctor_name,
+          concepto: e.concept,
+          resultado: resultLabels[e.result] || e.result,
+          vencimiento: e.expiration_date ? format(new Date(e.expiration_date), 'dd/MM/yyyy') : 'N/A',
+          estado,
+        };
+      });
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
