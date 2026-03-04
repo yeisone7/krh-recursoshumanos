@@ -17,6 +17,9 @@ import { toast } from 'sonner';
 import type { ExamTransaction } from '@/hooks/useExamTransactions';
 import { examTypeLabels } from '@/types/medicalExam';
 import type { ExamType } from '@/types/medicalExam';
+import { useCompanies } from '@/hooks/useCompanies';
+import { useAuth } from '@/contexts/AuthContext';
+import { generateExamOrderPdf } from '@/lib/examPdfGenerator';
 
 const resultLabels: Record<string, string> = {
   apto: 'Apto',
