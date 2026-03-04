@@ -264,7 +264,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
             </SelectContent>
           </Select>
           {!entityType && (
-            <Select value={filterEntity} onValueChange={setFilterEntity}>
+            <Select value={filterEntity} onValueChange={handleFilterChange(setFilterEntity)}>
               <SelectTrigger className="w-full sm:w-40">
                 <SelectValue placeholder="Entidad" />
               </SelectTrigger>
