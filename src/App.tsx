@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OnboardingGuard } from "@/components/auth/OnboardingGuard";
+import { NoRoleGuard } from "@/components/auth/NoRoleGuard";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Empleados from "./pages/Empleados";
@@ -93,6 +94,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <OnboardingGuard>
+                    <NoRoleGuard>
                     <AppLayout>
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
@@ -147,6 +149,7 @@ const App = () => (
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </AppLayout>
+                    </NoRoleGuard>
                   </OnboardingGuard>
                 </ProtectedRoute>
               }
