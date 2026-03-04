@@ -133,8 +133,8 @@ export async function generateExamOrderPdf(options: ExamOrderOptions): Promise<v
   doc.text('EXÁMENES REALIZADOS', margin, y);
   y += 6;
 
-  const colWidths = [10, contentW * 0.4, contentW * 0.2, contentW * 0.2];
-  const headers = ['#', 'Examen', 'Resultado', 'Vencimiento'];
+  const colWidths = [10, contentW * 0.5, contentW * 0.3];
+  const headers = ['#', 'Examen', 'Resultado'];
 
   doc.setFillColor(30, 41, 59);
   doc.rect(margin, y - 4, contentW, 7, 'F');
