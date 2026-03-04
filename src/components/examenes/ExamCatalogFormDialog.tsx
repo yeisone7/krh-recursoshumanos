@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -37,17 +37,22 @@ export function ExamCatalogFormDialog({ open, onOpenChange, item }: Props) {
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: item ? {
-      name: item.name,
-      code: item.code || '',
-      description: item.description || '',
-    } : {
+    defaultValues: {
       name: '',
       code: '',
       description: '',
     },
   });
 
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: item?.name || '',
+        code: item?.code || '',
+        description: item?.description || '',
+      });
+    }
+  }, [open, item]);
   const onSubmit = async (data: FormData) => {
     try {
       const payload = { name: data.name, code: data.code, description: data.description };
