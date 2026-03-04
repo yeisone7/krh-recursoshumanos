@@ -7,10 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, Plus, Trash2, Briefcase, GraduationCap, ListChecks, Shield, HardHat, Stamp } from 'lucide-react';
+import { ChevronDown, Plus, Trash2, Briefcase, GraduationCap, ListChecks, Shield, HardHat, Stamp, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCreatePositionProfile, usePositionProfiles } from '@/hooks/usePositionProfiles';
+import { useCreatePositionProfile, useUpdatePositionProfile, usePositionProfiles } from '@/hooks/usePositionProfiles';
 import type { PositionProfileFormData, SpecificKnowledge, Skill } from '@/types/positionProfile';
+
+type DialogMode = 'create' | 'new_version' | 'edit';
 
 interface Props {
   open: boolean;
@@ -18,6 +20,7 @@ interface Props {
   positionId: string;
   positionName: string;
   existingData?: any;
+  mode?: DialogMode;
 }
 
 const defaultForm: PositionProfileFormData = {
@@ -39,19 +42,14 @@ const defaultForm: PositionProfileFormData = {
   effective_date: new Date().toISOString().split('T')[0],
 };
 
-const sectionConfig = [
-  { key: 'identification', label: 'Identificación del Cargo', icon: Briefcase, num: 1, defaultOpen: true },
-  { key: 'profile', label: 'Perfil del Cargo', icon: GraduationCap, num: 2, defaultOpen: true },
-  { key: 'functions', label: 'Funciones del Cargo', icon: ListChecks, num: 3, defaultOpen: true },
-  { key: 'responsibilities', label: 'Responsabilidades', icon: Shield, num: 4, defaultOpen: false },
-  { key: 'conditions', label: 'Condiciones de Trabajo', icon: HardHat, num: 5, defaultOpen: false },
-  { key: 'approvals', label: 'Aprobaciones', icon: Stamp, num: 6, defaultOpen: false },
-];
-
-export function PositionProfileFormDialog({ open, onOpenChange, positionId, positionName, existingData }: Props) {
+export function PositionProfileFormDialog({ open, onOpenChange, positionId, positionName, existingData, mode = 'create' }: Props) {
   const [form, setForm] = useState<PositionProfileFormData>(defaultForm);
   const createProfile = useCreatePositionProfile();
+  const updateProfile = useUpdatePositionProfile();
   const { data: allVersions = [] } = usePositionProfiles(positionId);
+
+  const resolvedMode: DialogMode = mode === 'create' && existingData ? 'new_version' : mode;
+  const isEditing = resolvedMode === 'edit';
 
   useEffect(() => {
     if (existingData) {
@@ -119,19 +117,40 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
       toast.error('El objetivo del cargo es requerido');
       return;
     }
-    const nextVersion = allVersions.length > 0 ? Math.max(...allVersions.map((v: any) => v.version)) + 1 : 1;
+    const cleanedData = { ...form, functions: form.functions.filter(f => f.trim()) };
+
     try {
-      await createProfile.mutateAsync({
-        positionId,
-        data: { ...form, functions: form.functions.filter(f => f.trim()) },
-        nextVersion,
-      });
-      toast.success(`Perfil v${nextVersion} creado exitosamente`);
+      if (isEditing && existingData?.id) {
+        await updateProfile.mutateAsync({
+          profileId: existingData.id,
+          data: cleanedData,
+        });
+        toast.success('Perfil actualizado exitosamente');
+      } else {
+        const nextVersion = allVersions.length > 0 ? Math.max(...allVersions.map((v: any) => v.version)) + 1 : 1;
+        await createProfile.mutateAsync({
+          positionId,
+          data: cleanedData,
+          nextVersion,
+        });
+        toast.success(`Perfil v${nextVersion} creado exitosamente`);
+      }
       onOpenChange(false);
     } catch (e: any) {
       toast.error(e.message);
     }
   };
+
+  const isPending = createProfile.isPending || updateProfile.isPending;
+
+  const titleText = isEditing
+    ? `Editar Perfil v${existingData?.version || ''}`
+    : existingData
+      ? 'Nueva versión del Perfil'
+      : 'Crear Perfil de Cargo';
+
+  const titleIcon = isEditing ? Pencil : Briefcase;
+  const TitleIcon = titleIcon;
 
   const SectionHeader = ({ icon: Icon, num, label, count }: { icon: any; num: number; label: string; count?: number }) => (
     <CollapsibleTrigger className="group flex w-full items-center gap-3 rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted/70">
@@ -158,13 +177,11 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
         {/* Header */}
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Briefcase className="h-5 w-5 text-primary" />
+            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isEditing ? 'bg-secondary/10' : 'bg-primary/10'}`}>
+              <TitleIcon className={`h-5 w-5 ${isEditing ? 'text-secondary' : 'text-primary'}`} />
             </div>
             <div>
-              <DialogTitle className="text-base font-semibold">
-                {existingData ? 'Nueva versión del Perfil' : 'Crear Perfil de Cargo'}
-              </DialogTitle>
+              <DialogTitle className="text-base font-semibold">{titleText}</DialogTitle>
               <p className="text-sm text-muted-foreground mt-0.5">{positionName}</p>
             </div>
           </div>
@@ -387,8 +404,8 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
         {/* Footer */}
         <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/30">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={createProfile.isPending}>
-            {createProfile.isPending ? 'Guardando...' : 'Guardar Perfil'}
+          <Button onClick={handleSubmit} disabled={isPending}>
+            {isPending ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Guardar Perfil'}
           </Button>
         </DialogFooter>
       </DialogContent>
