@@ -1,101 +1,88 @@
 
 
-# Plan: Manual de Usuario Integrado en la Aplicación
+## Plan: Catálogo de Exámenes + Profesiograma + Transacción-Detalle para Exámenes Médicos
 
-## Resumen
+### Resumen
 
-Crear un manual de usuario completo, dinámico y navegable accesible desde la vista de Perfil. El manual se genera desde datos estructurados en código (no hardcodeado como texto plano) y se adapta a los permisos del usuario, mostrando solo los módulos a los que tiene acceso.
+Replicar la arquitectura completa de Dotaciones para el módulo de Exámenes Médicos: un catálogo CRUD de tipos de examen, un profesiograma por centro+cargo, y un sistema de entregas transacción-detalle con firma, archivos adjuntos, exportación PDF y eliminación.
 
-## Arquitectura
+---
 
-El manual se implementa como un **componente client-side** que construye su contenido a partir de:
-1. Un archivo de datos estructurados (`src/data/manualContent.ts`) con toda la documentación organizada por secciones
-2. Los módulos reales del sistema (tabla `modules`) para la sección de descripción de módulos
-3. Los permisos del usuario (`canView`) para filtrar contenido visible
+### 1. Base de datos (migración SQL)
 
-No requiere cambios en la base de datos.
+**Nuevas tablas:**
 
-## Componentes a crear
+- **`exam_catalog`** — Catálogo de exámenes aplicables (equivalente a `dotation_item_types`)
+  - `id`, `company_id`, `name`, `code`, `description`, `is_active`, `created_by`, `created_at`, `updated_at`
+  - UNIQUE(company_id, name)
+  - RLS: misma política que `dotation_item_types`
 
-### 1. `src/data/manualContent.ts`
-Archivo de datos que contiene toda la documentación estructurada:
-- Introducción general, acceso al sistema, roles y permisos
-- Descripción funcional de cada módulo (keyed por `moduleCode`) con: descripción, acciones, validaciones, restricciones, alertas, dependencias
-- Alertas y mensajes del sistema
-- Reglas de negocio y restricciones
-- Fórmulas y cálculos (vacaciones, cesantías, pre-liquidación, horas extras)
-- Auditoría y seguridad
-- FAQ
+- **`exam_profesiograma`** — Perfiles de exámenes por centro+cargo (clon de `dotation_profesiograma`)
+  - `id`, `company_id`, `operation_center_id`, `position_id`, `created_by`, `created_at`, `updated_at`
+  - UNIQUE(company_id, operation_center_id, position_id)
 
-Cuando se agreguen módulos nuevos al sidebar, solo se necesita agregar la entrada correspondiente en este archivo.
+- **`exam_profesiograma_items`** — Ítems del profesiograma (clon de `dotation_profesiograma_items`)
+  - `id`, `profesiograma_id` → FK `exam_profesiograma`, `exam_catalog_id` → FK `exam_catalog`, `is_required`, `notes`, `created_at`
+  - UNIQUE(profesiograma_id, exam_catalog_id)
 
-### 2. `src/components/manual/UserManualDialog.tsx`
-Componente principal - un Dialog de ancho completo (max-w-5xl) con:
-- **Panel izquierdo**: Índice navegable con secciones expandibles (Accordion)
-- **Panel derecho**: Contenido de la sección seleccionada con scroll
-- **Barra de búsqueda**: Filtra secciones y contenido por palabra clave
-- **Botón exportar PDF**: Genera PDF del manual completo usando jsPDF
-- Responsive: en móvil el índice se colapsa como un dropdown
+- **`exam_delivery_transactions`** — Cabecera de transacciones (clon de `dotation_delivery_transactions`)
+  - `id`, `employee_id` → FK `employees_v2`, `exam_date` (DATE), `provider`, `doctor_name`, `signature_url`, `document_url`, `observations`, `created_by`, `created_at`, `updated_at`
 
-### 3. `src/components/manual/ManualSection.tsx`
-Componente reutilizable para renderizar cada sección del manual con formato consistente (headings, listas, tablas de fórmulas, badges para alertas).
+- **`exam_delivery_items`** — Detalle de exámenes aplicados por transacción
+  - `id`, `transaction_id` → FK `exam_delivery_transactions`, `exam_catalog_id` → FK `exam_catalog`, `exam_name` (TEXT), `result` (enum `exam_result`), `concept`, `restrictions`, `expiration_date`, `document_url`
 
-### 4. Modificación: `src/pages/Perfil.tsx`
-Agregar una nueva Card "Manual de Usuario" con un botón que abre el dialog. Se ubica antes de la sección de cerrar sesión.
+**RLS:** Replicar las políticas de dotación: `is_admin_or_rrhh()` + `has_employee_v2_access()` para escritura, `has_employee_v2_access()` para lectura.
 
-## Filtrado por permisos
+**Datos iniciales:** Insertar los 11 registros del catálogo para la empresa actual del usuario usando el insert tool.
 
-- El hook `useAuth().canView(moduleCode)` determina qué módulos se muestran en la sección "Descripción de Módulos"
-- Admins ven todo el manual completo
-- Usuarios sin rol no pueden acceder (ya bloqueados por NoRoleGuard)
-- Las secciones generales (Introducción, Acceso, Roles, FAQ) son visibles para todos
+**RPC:** Crear `get_exam_profesiogramas_with_items(_company_id)` análogo a `get_profesiogramas_with_items`.
 
-## Búsqueda
+---
 
-Búsqueda client-side que filtra:
-- Títulos de secciones
-- Contenido de texto dentro de cada sección
-- Resalta las secciones que coinciden en el índice
+### 2. Hooks (lógica de datos)
 
-## Exportación a PDF
+- **`useExamCatalog.ts`** — CRUD del catálogo (listar, crear, actualizar, eliminar). Patrón idéntico a tipos de dotación.
+- **`useExamProfesiograma.ts`** — CRUD de profesiogramas de exámenes. Clonar `useDotationProfesiograma.ts` adaptando nombres de tabla.
+- **`useExamTransactions.ts`** — Transacciones con detalle. Clonar `useDotationTransactions.ts` adaptando a las tablas de exámenes.
 
-Se usa la librería `jsPDF` (ya instalada) para generar un PDF con:
-- Portada con logo y título
-- Tabla de contenido
-- Contenido formateado por secciones
+---
 
-## Estructura de datos del manual
+### 3. Interfaz de usuario
 
-```typescript
-interface ManualSection {
-  id: string;
-  title: string;
-  icon: string; // lucide icon name
-  moduleCode?: string; // if tied to a specific module
-  content: ManualContent[];
-  subsections?: ManualSection[];
-}
+Reestructurar la página `/examenes` para usar **Tabs** como en Dotación:
 
-interface ManualContent {
-  type: 'paragraph' | 'list' | 'table' | 'formula' | 'alert' | 'heading';
-  data: any;
-}
-```
+- **Tab "Aplicaciones"** — Vista transacción-detalle (tabla con empleado, exámenes aplicados, fecha, estado, acciones: ver, exportar PDF, eliminar)
+- **Tab "Catálogo"** — CRUD de tipos de examen (tabla con nombre, código, estado activo/inactivo, botones crear/editar/eliminar)
+- **Tab "Profesiograma"** — Perfiles de exámenes por centro+cargo (clonar `ProfesiogramaTab` de dotación adaptado a exámenes)
+- **Tab "Cumplimiento"** — Cruce profesiograma vs aplicaciones reales (fase posterior, se puede dejar placeholder)
 
-## Archivos
+**Componentes nuevos:**
+- `ExamCatalogTab.tsx` — Tabla CRUD del catálogo
+- `ExamCatalogFormDialog.tsx` — Formulario crear/editar tipo de examen
+- `ExamProfesiogramaTab.tsx` — Clon de `ProfesiogramaTab` para exámenes
+- `ExamProfesiogramaFormDialog.tsx` — Formulario del profesiograma
+- `ExamTransactionFormDialog.tsx` — Formulario de aplicación (3 pasos: empleado → exámenes con sugerencias del profesiograma → datos de entrega con firma)
+- `ExamTransactionDetailDialog.tsx` — Vista detalle con firma, archivos adjuntos, exportación PDF
 
-| Acción | Archivo |
-|--------|---------|
-| Crear | `src/data/manualContent.ts` |
-| Crear | `src/components/manual/UserManualDialog.tsx` |
-| Crear | `src/components/manual/ManualSection.tsx` |
-| Crear | `src/components/manual/ManualPdfExporter.ts` |
-| Editar | `src/pages/Perfil.tsx` (agregar botón + dialog) |
+---
 
-## Actualización automática
+### 4. Funcionalidades clave
 
-El manual se considera "auto-actualizable" porque:
-- Los módulos se leen dinámicamente de la tabla `modules`
-- El filtrado usa `canView` en tiempo real
-- Para agregar documentación de un nuevo módulo, solo se agrega una entrada en `manualContent.ts` con el `moduleCode` correspondiente
+- **Firma digital:** Reutilizar `SignatureCanvas` existente
+- **Archivos adjuntos:** Almacenar en bucket `documents` o `dotation-images`
+- **Exportación PDF:** Generar acta de aplicación de exámenes similar al acta de entrega de dotación
+- **Eliminación:** Confirmación con AlertDialog, cascade delete de ítems
+- **Profesiograma → Sugerencias:** Al seleccionar empleado en el formulario, autosugerir exámenes del profesiograma configurado para su centro+cargo
+
+---
+
+### 5. Orden de implementación
+
+1. Migración de base de datos (tablas + RLS + RPC)
+2. Insertar datos iniciales del catálogo
+3. Hooks de datos (catálogo, profesiograma, transacciones)
+4. Tab Catálogo con CRUD
+5. Tab Profesiograma
+6. Tab Aplicaciones (transacción-detalle) con formulario, detalle, firma, exportación y eliminación
+7. Actualizar página Examenes.tsx con la nueva estructura de tabs
 
