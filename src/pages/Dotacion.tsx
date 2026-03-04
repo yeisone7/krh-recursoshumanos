@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -28,6 +28,16 @@ import {
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { DotationFormDialog } from '@/components/dotation/DotationFormDialog';
@@ -105,6 +115,7 @@ export default function Dotacion() {
   const [itemTypeFilter, setItemTypeFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('entregas');
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const { currentCompanyId } = useAuth();
   const { data: company } = useCompany(currentCompanyId || undefined);
@@ -524,14 +535,7 @@ export default function Dotacion() {
                               variant="ghost"
                               size="sm"
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => {
-                                if (window.confirm('¿Estás seguro de eliminar este registro de entrega?')) {
-                                  deleteMutation.mutate(delivery.id, {
-                                    onSuccess: () => toast.success('Registro eliminado'),
-                                    onError: () => toast.error('Error al eliminar'),
-                                  });
-                                }
-                              }}
+                              onClick={() => setDeleteConfirmId(delivery.id)}
                               title="Eliminar registro"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -688,6 +692,34 @@ export default function Dotacion() {
         open={isBulkOpen}
         onOpenChange={setIsBulkOpen}
       />
+
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar registro de entrega</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar este registro de entrega de dotación? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteConfirmId) {
+                  deleteMutation.mutate(deleteConfirmId, {
+                    onSuccess: () => toast.success('Registro eliminado'),
+                    onError: () => toast.error('Error al eliminar'),
+                  });
+                  setDeleteConfirmId(null);
+                }
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
