@@ -6,8 +6,10 @@ import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { VacanciesOverview } from '@/components/dashboard/VacanciesOverview';
 import { ActiveTerminationsPanel } from '@/components/dashboard/ActiveTerminationsPanel';
 import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
+import { PendingActivationPanel } from '@/components/dashboard/PendingActivationPanel';
 import { useEmployeeKPIs } from '@/hooks/useEmployeeKPIs';
 import { useDashboardAlerts } from '@/hooks/useDashboardAlerts';
+import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Dashboard() {
