@@ -96,15 +96,33 @@ export function useDotationCompliance() {
       const empIds = relevantEmployees.map(e => e.employee_id);
       const { data: deliveries } = await supabase
         .from('dotation_deliveries')
-        .select('employee_id, dotation_item_type_id')
+        .select('employee_id, item_name')
         .in('employee_id', empIds);
 
-      // Count deliveries per employee per item type
+      // Build a reverse map: item name -> item type IDs (from profesiograma)
+      const nameToTypeIds = new Map<string, Set<string>>();
+      for (const items of profMap.values()) {
+        for (const item of items) {
+          const normalizedName = item.itemName.trim().toLowerCase();
+          if (!nameToTypeIds.has(normalizedName)) {
+            nameToTypeIds.set(normalizedName, new Set());
+          }
+          nameToTypeIds.get(normalizedName)!.add(item.itemTypeId);
+        }
+      }
+
+      // Count deliveries per employee per item type (matched by name)
       const deliveryMap = new Map<string, number>();
       for (const d of (deliveries || []) as any[]) {
-        if (!d.dotation_item_type_id) continue;
-        const key = `${d.employee_id}|${d.dotation_item_type_id}`;
-        deliveryMap.set(key, (deliveryMap.get(key) || 0) + 1);
+        if (!d.item_name) continue;
+        const normalizedName = (d.item_name as string).trim().toLowerCase();
+        const typeIds = nameToTypeIds.get(normalizedName);
+        if (typeIds) {
+          for (const typeId of typeIds) {
+            const key = `${d.employee_id}|${typeId}`;
+            deliveryMap.set(key, (deliveryMap.get(key) || 0) + 1);
+          }
+        }
       }
 
       // 4. Get center and position names
