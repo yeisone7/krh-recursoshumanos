@@ -36,6 +36,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [collapsedCenters, setCollapsedCenters] = useState<Set<string>>(new Set());
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [centerFilter, setCenterFilter] = useState('all');
