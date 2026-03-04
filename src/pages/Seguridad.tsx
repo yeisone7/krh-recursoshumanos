@@ -20,6 +20,7 @@ import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { UsersTable } from '@/components/admin/UsersTable';
 import { InviteUserDialog } from '@/components/admin/InviteUserDialog';
 import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
+import { RolesManager } from '@/components/roles/RolesManager';
 
 export default function Seguridad() {
   const { isAdmin, roles, companies } = useAuth();
