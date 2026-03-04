@@ -69,6 +69,7 @@ export default function Perfil() {
   const { user, roles, signOut } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: preferences, isLoading: loadingPreferences } = useUserPreferences();
