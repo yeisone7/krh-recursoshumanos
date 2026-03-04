@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Briefcase, Plus, Edit2 } from 'lucide-react';
+import { Briefcase, Plus, Edit2, FileText } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -16,14 +17,19 @@ import {
 } from '@/components/ui/table';
 
 import { usePositions } from '@/hooks/useSystemConfig';
-import { PositionFormDialog } from '@/components/config';
+import { usePositionProfiles } from '@/hooks/usePositionProfiles';
+import { PositionFormDialog, PositionProfileDetailDialog } from '@/components/config';
 import type { Position } from '@/types/config';
 
 export default function CatalogosCargos() {
   const [showPositionForm, setShowPositionForm] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
+  const [profileTarget, setProfileTarget] = useState<{ id: string; name: string; area?: string } | null>(null);
 
   const { data: positions = [], isLoading } = usePositions();
+  const { data: allProfiles = [] } = usePositionProfiles();
+
+  const hasProfile = (posId: string) => allProfiles.some((p: any) => p.position_id === posId && p.is_current);
 
   return (
     <div className="space-y-6">
@@ -64,6 +70,7 @@ export default function CatalogosCargos() {
                   <TableHead>Código</TableHead>
                   <TableHead>Área</TableHead>
                   <TableHead>Nivel</TableHead>
+                  <TableHead>Perfil</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -78,19 +85,46 @@ export default function CatalogosCargos() {
                     <TableCell>
                       <Badge 
                         variant="outline" 
+                        className={hasProfile(pos.id) ? 'bg-success/10 text-success border-success/20' : 'bg-muted text-muted-foreground'}
+                      >
+                        {hasProfile(pos.id) ? 'Configurado' : 'Sin perfil'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant="outline" 
                         className={pos.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-muted'}
                       >
                         {pos.is_active ? 'Activo' : 'Inactivo'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        onClick={() => { setSelectedPosition(pos); setShowPositionForm(true); }}
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => setProfileTarget({ id: pos.id, name: pos.name, area: pos.areas?.name })}
+                            >
+                              <FileText className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Ver/Crear Perfil</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => { setSelectedPosition(pos); setShowPositionForm(true); }}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Editar Cargo</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -105,6 +139,16 @@ export default function CatalogosCargos() {
         onOpenChange={setShowPositionForm} 
         position={selectedPosition} 
       />
+
+      {profileTarget && (
+        <PositionProfileDetailDialog
+          open={!!profileTarget}
+          onOpenChange={(open) => { if (!open) setProfileTarget(null); }}
+          positionId={profileTarget.id}
+          positionName={profileTarget.name}
+          areaName={profileTarget.area}
+        />
+      )}
     </div>
   );
 }
