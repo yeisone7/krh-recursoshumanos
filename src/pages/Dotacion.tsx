@@ -450,10 +450,12 @@ export default function Dotacion() {
                 </TableHeader>
                 <TableBody>
                   {filteredDeliveries.map((delivery) => {
-                    const status = getDotationStatus(delivery) as DotationStatus;
+                    const hasValidDates = delivery.delivery_date && delivery.expiration_date &&
+                      !isNaN(new Date(delivery.delivery_date).getTime()) && !isNaN(new Date(delivery.expiration_date).getTime());
+                    const status = hasValidDates ? (getDotationStatus(delivery) as DotationStatus) : 'vigente';
                     const statusConfig = statusStyles[status];
                     const StatusIcon = statusConfig.icon;
-                    const daysRemaining = getDaysRemaining(delivery.expiration_date);
+                    const daysRemaining = hasValidDates ? getDaysRemaining(delivery.expiration_date) : 0;
 
                     return (
                       <TableRow key={delivery.id}>
@@ -479,13 +481,13 @@ export default function Dotacion() {
                         <TableCell>
                           <div className="flex items-center gap-2 text-sm">
                             <Calendar className="w-4 h-4 text-muted-foreground" />
-                            {format(new Date(delivery.delivery_date), 'dd/MM/yyyy')}
+                            {hasValidDates ? format(new Date(delivery.delivery_date), 'dd/MM/yyyy') : '—'}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2 text-sm">
                             <Clock className="w-4 h-4 text-muted-foreground" />
-                            {format(new Date(delivery.expiration_date), 'dd/MM/yyyy')}
+                            {hasValidDates ? format(new Date(delivery.expiration_date), 'dd/MM/yyyy') : '—'}
                           </div>
                         </TableCell>
                         <TableCell>
