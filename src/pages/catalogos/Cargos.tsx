@@ -321,10 +321,10 @@ export default function CatalogosCargos() {
                               {prof.reports_to && (
                                 <Badge variant="outline" className="text-[10px]">Reporta a: {prof.reports_to}</Badge>
                               )}
-                              {prof.functions?.length > 0 && (
+                              {Array.isArray(prof.functions) && prof.functions.length > 0 && (
                                 <Badge variant="outline" className="text-[10px]">{prof.functions.length} funciones</Badge>
                               )}
-                              {prof.skills?.length > 0 && (
+                              {Array.isArray(prof.skills) && prof.skills.length > 0 && (
                                 <Badge variant="outline" className="text-[10px]">{prof.skills.length} competencias</Badge>
                               )}
                             </div>
