@@ -78,6 +78,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
         exam_name: pi.exam_catalog?.name || 'Examen',
         result: 'pendiente',
         fromProfesiograma: true,
+        expiration_date: format(addMonths(new Date(), 12), 'yyyy-MM-dd'),
       })));
     } else if (!loadingProf) {
       setItems([]);
