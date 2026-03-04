@@ -77,7 +77,7 @@ interface UnifiedCalendarProps {
   defaultView?: 'month' | 'week' | 'agenda';
 }
 
-export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps) {
+export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps) {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'agenda'>(defaultView);
