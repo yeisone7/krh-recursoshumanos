@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Briefcase, Plus, Edit2, FileText } from 'lucide-react';
+import { Briefcase, Plus, Edit2, FileText, Search, Filter, TableIcon, LayoutList, X, GraduationCap, Shield, Users } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
@@ -16,34 +19,143 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { usePositions } from '@/hooks/useSystemConfig';
-import { usePositionProfiles } from '@/hooks/usePositionProfiles';
+import { usePositions, useAreas } from '@/hooks/useSystemConfig';
+import { usePositionProfiles, useCurrentPositionProfile } from '@/hooks/usePositionProfiles';
 import { PositionFormDialog, PositionProfileDetailDialog } from '@/components/config';
 import type { Position } from '@/types/config';
+
+type ViewMode = 'table' | 'agenda';
 
 export default function CatalogosCargos() {
   const [showPositionForm, setShowPositionForm] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null);
   const [profileTarget, setProfileTarget] = useState<{ id: string; name: string; area?: string } | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
+
+  // Filters
+  const [search, setSearch] = useState('');
+  const [filterArea, setFilterArea] = useState('all');
+  const [filterProfile, setFilterProfile] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const { data: positions = [], isLoading } = usePositions();
+  const { data: areas = [] } = useAreas();
   const { data: allProfiles = [] } = usePositionProfiles();
 
   const hasProfile = (posId: string) => allProfiles.some((p: any) => p.position_id === posId && p.is_current);
+  const getProfile = (posId: string) => allProfiles.find((p: any) => p.position_id === posId && p.is_current);
+
+  const activeAreas = useMemo(() => areas.filter((a: any) => a.is_active), [areas]);
+
+  const filteredPositions = useMemo(() => {
+    return positions.filter((pos: any) => {
+      const matchSearch = !search || 
+        pos.name.toLowerCase().includes(search.toLowerCase()) ||
+        (pos.code && pos.code.toLowerCase().includes(search.toLowerCase())) ||
+        (pos.areas?.name && pos.areas.name.toLowerCase().includes(search.toLowerCase()));
+      
+      const matchArea = filterArea === 'all' || pos.area_id === filterArea;
+      const matchProfile = filterProfile === 'all' || 
+        (filterProfile === 'with' && hasProfile(pos.id)) ||
+        (filterProfile === 'without' && !hasProfile(pos.id));
+      const matchStatus = filterStatus === 'all' ||
+        (filterStatus === 'active' && pos.is_active) ||
+        (filterStatus === 'inactive' && !pos.is_active);
+      
+      return matchSearch && matchArea && matchProfile && matchStatus;
+    });
+  }, [positions, search, filterArea, filterProfile, filterStatus, allProfiles]);
+
+  const hasActiveFilters = search || filterArea !== 'all' || filterProfile !== 'all' || filterStatus !== 'all';
+
+  const clearFilters = () => {
+    setSearch('');
+    setFilterArea('all');
+    setFilterProfile('all');
+    setFilterStatus('all');
+  };
+
+  const profileCount = positions.filter((p: any) => hasProfile(p.id)).length;
 
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Briefcase className="w-6 h-6 text-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Briefcase className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-bold text-foreground">Cargos</h1>
+              <p className="text-muted-foreground mt-1">Gestiona los cargos y perfiles de la organización</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Cargos</h1>
-            <p className="text-muted-foreground mt-1">Gestiona los cargos de la organización</p>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs gap-1">
+              <Users className="w-3 h-3" />{positions.length} cargos
+            </Badge>
+            <Badge variant="outline" className="text-xs gap-1 bg-success/10 text-success border-success/20">
+              <FileText className="w-3 h-3" />{profileCount} perfiles
+            </Badge>
           </div>
         </div>
       </motion.div>
+
+      {/* Search & Filters */}
+      <Card>
+        <CardContent className="pt-4 pb-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nombre, código o área..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={filterArea} onValueChange={setFilterArea}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Área" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las áreas</SelectItem>
+                {activeAreas.map((a: any) => (
+                  <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterProfile} onValueChange={setFilterProfile}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Perfil" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="with">Con perfil</SelectItem>
+                <SelectItem value="without">Sin perfil</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Activos</SelectItem>
+                <SelectItem value="inactive">Inactivos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs text-muted-foreground">{filteredPositions.length} de {positions.length} cargos</span>
+              <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={clearFilters}>
+                <X className="w-3 h-3 mr-1" />Limpiar filtros
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -51,18 +163,51 @@ export default function CatalogosCargos() {
             <CardTitle>Listado de Cargos</CardTitle>
             <CardDescription>Cargos y posiciones disponibles</CardDescription>
           </div>
-          <Button onClick={() => { setSelectedPosition(null); setShowPositionForm(true); }}>
-            <Plus className="w-4 h-4 mr-2" />Nuevo Cargo
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* View mode toggle */}
+            <div className="flex items-center border rounded-md">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant={viewMode === 'table' ? 'default' : 'ghost'} 
+                      className="h-8 px-2 rounded-r-none"
+                      onClick={() => setViewMode('table')}
+                    >
+                      <TableIcon className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Vista tabla</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant={viewMode === 'agenda' ? 'default' : 'ghost'} 
+                      className="h-8 px-2 rounded-l-none"
+                      onClick={() => setViewMode('agenda')}
+                    >
+                      <LayoutList className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Vista agenda</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <Button onClick={() => { setSelectedPosition(null); setShowPositionForm(true); }}>
+              <Plus className="w-4 h-4 mr-2" />Nuevo Cargo
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <Skeleton className="h-32 w-full" />
-          ) : positions.length === 0 ? (
+          ) : filteredPositions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No hay cargos registrados. Crea el primero.
+              {positions.length === 0 ? 'No hay cargos registrados. Crea el primero.' : 'No se encontraron cargos con los filtros aplicados.'}
             </div>
-          ) : (
+          ) : viewMode === 'table' ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -76,7 +221,7 @@ export default function CatalogosCargos() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {positions.map((pos: any) => (
+                {filteredPositions.map((pos: any) => (
                   <TableRow key={pos.id}>
                     <TableCell className="font-medium">{pos.name}</TableCell>
                     <TableCell>{pos.code || '-'}</TableCell>
@@ -130,6 +275,84 @@ export default function CatalogosCargos() {
                 ))}
               </TableBody>
             </Table>
+          ) : (
+            /* Agenda / List View */
+            <div className="space-y-3">
+              {filteredPositions.map((pos: any) => {
+                const prof = getProfile(pos.id);
+                return (
+                  <motion.div
+                    key={pos.id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="border rounded-lg p-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                    onClick={() => setProfileTarget({ id: pos.id, name: pos.name, area: pos.areas?.name })}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-foreground truncate">{pos.name}</h3>
+                          {pos.code && <Badge variant="outline" className="text-[10px] shrink-0">{pos.code}</Badge>}
+                          <Badge 
+                            variant="outline" 
+                            className={`text-[10px] shrink-0 ${pos.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-muted'}`}
+                          >
+                            {pos.is_active ? 'Activo' : 'Inactivo'}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+                          {pos.areas?.name && <span>📁 {pos.areas.name}</span>}
+                          {pos.level && <span>📊 Nivel {pos.level}</span>}
+                        </div>
+                        {prof ? (
+                          <div className="space-y-1">
+                            <p className="text-sm text-foreground/80 line-clamp-2">{prof.purpose}</p>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {prof.education_level && (
+                                <Badge variant="secondary" className="text-[10px] gap-1">
+                                  <GraduationCap className="w-3 h-3" />{prof.education_level}
+                                </Badge>
+                              )}
+                              {prof.experience && (
+                                <Badge variant="secondary" className="text-[10px] gap-1">
+                                  <Shield className="w-3 h-3" />{prof.experience}
+                                </Badge>
+                              )}
+                              {prof.reports_to && (
+                                <Badge variant="outline" className="text-[10px]">Reporta a: {prof.reports_to}</Badge>
+                              )}
+                              {Array.isArray(prof.functions) && prof.functions.length > 0 && (
+                                <Badge variant="outline" className="text-[10px]">{prof.functions.length} funciones</Badge>
+                              )}
+                              {Array.isArray(prof.skills) && prof.skills.length > 0 && (
+                                <Badge variant="outline" className="text-[10px]">{prof.skills.length} competencias</Badge>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground italic">Sin perfil configurado</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 ml-3 shrink-0">
+                        <Badge 
+                          variant="outline" 
+                          className={hasProfile(pos.id) ? 'bg-success/10 text-success border-success/20' : 'bg-muted text-muted-foreground'}
+                        >
+                          {hasProfile(pos.id) ? '✓ Perfil' : 'Sin perfil'}
+                        </Badge>
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={e => { e.stopPropagation(); setSelectedPosition(pos); setShowPositionForm(true); }}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>
