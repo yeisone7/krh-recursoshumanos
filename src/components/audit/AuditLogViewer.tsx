@@ -251,7 +251,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Select value={filterAction} onValueChange={setFilterAction}>
+          <Select value={filterAction} onValueChange={handleFilterChange(setFilterAction)}>
             <SelectTrigger className="w-full sm:w-40">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Acción" />
