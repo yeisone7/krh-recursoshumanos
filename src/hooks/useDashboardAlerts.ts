@@ -400,13 +400,23 @@ export function useDashboardAlerts() {
                 const relEmpIds = relevantEmps.map(e => e.employee_id);
                 const { data: empDeliveries } = await supabase
                   .from('dotation_deliveries')
-                  .select('employee_id, dotation_item_type_id')
+                  .select('employee_id, item_name')
                   .in('employee_id', relEmpIds);
+
+                // Build reverse map: item name -> typeIds
+                const nameToTypeId = new Map<string, string>();
+                for (const items of profRequiredMap.values()) {
+                  for (const item of items) {
+                    nameToTypeId.set(item.name.trim().toLowerCase(), item.typeId);
+                  }
+                }
 
                 const delMap = new Map<string, number>();
                 for (const d of (empDeliveries || []) as any[]) {
-                  if (!d.dotation_item_type_id) continue;
-                  const k = `${d.employee_id}|${d.dotation_item_type_id}`;
+                  if (!d.item_name) continue;
+                  const typeId = nameToTypeId.get((d.item_name as string).trim().toLowerCase());
+                  if (!typeId) continue;
+                  const k = `${d.employee_id}|${typeId}`;
                   delMap.set(k, (delMap.get(k) || 0) + 1);
                 }
 
