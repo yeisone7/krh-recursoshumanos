@@ -3529,6 +3529,251 @@ export type Database = {
           },
         ]
       }
+      exam_catalog: {
+        Row: {
+          code: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_catalog_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_delivery_items: {
+        Row: {
+          concept: string | null
+          created_at: string
+          document_url: string | null
+          exam_catalog_id: string | null
+          exam_name: string
+          expiration_date: string | null
+          id: string
+          restrictions: string | null
+          result: string
+          transaction_id: string
+        }
+        Insert: {
+          concept?: string | null
+          created_at?: string
+          document_url?: string | null
+          exam_catalog_id?: string | null
+          exam_name: string
+          expiration_date?: string | null
+          id?: string
+          restrictions?: string | null
+          result?: string
+          transaction_id: string
+        }
+        Update: {
+          concept?: string | null
+          created_at?: string
+          document_url?: string | null
+          exam_catalog_id?: string | null
+          exam_name?: string
+          expiration_date?: string | null
+          id?: string
+          restrictions?: string | null
+          result?: string
+          transaction_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_delivery_items_exam_catalog_id_fkey"
+            columns: ["exam_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "exam_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_delivery_items_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "exam_delivery_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_delivery_transactions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          doctor_name: string | null
+          document_url: string | null
+          employee_id: string
+          exam_date: string
+          exam_type: string
+          id: string
+          observations: string | null
+          provider: string | null
+          signature_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          doctor_name?: string | null
+          document_url?: string | null
+          employee_id: string
+          exam_date?: string
+          exam_type?: string
+          id?: string
+          observations?: string | null
+          provider?: string | null
+          signature_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          doctor_name?: string | null
+          document_url?: string | null
+          employee_id?: string
+          exam_date?: string
+          exam_type?: string
+          id?: string
+          observations?: string | null
+          provider?: string | null
+          signature_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_delivery_transactions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_profesiograma: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          operation_center_id: string
+          position_id: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          operation_center_id: string
+          position_id: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          operation_center_id?: string
+          position_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_profesiograma_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_profesiograma_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_profesiograma_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_profesiograma_items: {
+        Row: {
+          created_at: string
+          exam_catalog_id: string
+          id: string
+          is_required: boolean | null
+          notes: string | null
+          profesiograma_id: string
+        }
+        Insert: {
+          created_at?: string
+          exam_catalog_id: string
+          id?: string
+          is_required?: boolean | null
+          notes?: string | null
+          profesiograma_id: string
+        }
+        Update: {
+          created_at?: string
+          exam_catalog_id?: string
+          id?: string
+          is_required?: boolean | null
+          notes?: string | null
+          profesiograma_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_profesiograma_items_exam_catalog_id_fkey"
+            columns: ["exam_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "exam_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_profesiograma_items_profesiograma_id_fkey"
+            columns: ["profesiograma_id"]
+            isOneToOne: false
+            referencedRelation: "exam_profesiograma"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leave_balances: {
         Row: {
           available_days: number | null
@@ -6380,6 +6625,10 @@ export type Database = {
           p_start_date: string
         }
         Returns: number
+      }
+      get_exam_profesiogramas_with_items: {
+        Args: { _company_id: string }
+        Returns: Json
       }
       get_my_employee_id: { Args: never; Returns: string }
       get_next_contract_number: {
