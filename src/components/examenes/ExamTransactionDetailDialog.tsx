@@ -198,6 +198,9 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
                 </span>
               </p>
             </div>
+            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={handleExportPdf}>
+              <FileDown className="w-4 h-4" /> Exportar
+            </Button>
           </DialogHeader>
         </div>
 
