@@ -196,6 +196,9 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
                         {watchExamType === 'periodico' && 'Examen de seguimiento durante la vigencia del contrato'}
                         {watchExamType === 'egreso' && 'Examen al finalizar el contrato laboral'}
                         {watchExamType === 'reintegro' && 'Examen posterior a una incapacidad prolongada'}
+                        {watchExamType === 'post_incapacidad' && 'Examen posterior a una incapacidad'}
+                        {watchExamType === 'cambio_cargo' && 'Examen por cambio de cargo o funciones'}
+                        {watchExamType === 'seguimiento' && 'Examen de seguimiento a condiciones de salud'}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

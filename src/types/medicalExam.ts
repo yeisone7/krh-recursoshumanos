@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export type ExamType = 'ingreso' | 'periodico' | 'egreso' | 'reintegro';
+export type ExamType = 'ingreso' | 'periodico' | 'egreso' | 'reintegro' | 'post_incapacidad' | 'cambio_cargo' | 'seguimiento';
 export type ExamResult = 'apto' | 'apto_restricciones' | 'no_apto' | 'pendiente';
 export type ExamStatus = 'vigente' | 'por_vencer' | 'vencido' | 'no_aplica';
 
@@ -42,6 +42,9 @@ export const examTypeLabels: Record<ExamType, string> = {
   periodico: 'Periódico',
   egreso: 'Egreso',
   reintegro: 'Reintegro',
+  post_incapacidad: 'Post incapacidad',
+  cambio_cargo: 'Cambio de cargo',
+  seguimiento: 'Seguimiento',
 };
 
 export const examResultLabels: Record<ExamResult, string> = {
@@ -99,7 +102,7 @@ export const examStatusConfig: Record<ExamStatus, { label: string; bg: string; t
 
 export const medicalExamFormSchema = z.object({
   employeeId: z.string().min(1, 'El empleado es requerido'),
-  examType: z.enum(['ingreso', 'periodico', 'egreso', 'reintegro'], {
+  examType: z.enum(['ingreso', 'periodico', 'egreso', 'reintegro', 'post_incapacidad', 'cambio_cargo', 'seguimiento'], {
     required_error: 'El tipo de examen es requerido',
   }),
   examDate: z.date({
