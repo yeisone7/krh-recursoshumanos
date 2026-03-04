@@ -74,13 +74,13 @@ const EVENT_ICONS: Record<CalendarEventType, React.ReactNode> = {
 };
 
 interface UnifiedCalendarProps {
-  defaultView?: 'month' | 'week';
+  defaultView?: 'month' | 'week' | 'agenda';
 }
 
 export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps) {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week'>(defaultView);
+  const [view, setView] = useState<'month' | 'week' | 'agenda'>(defaultView);
   const [selectedDay, setSelectedDay] = useState<Date>(new Date());
   const [enabledTypes, setEnabledTypes] = useState<CalendarEventType[]>([
     'vacation', 'leave', 'incapacity', 'contract', 'training',
@@ -170,8 +170,8 @@ export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps)
               className={cn(
                 'flex items-center gap-3 rounded-xl border px-4 py-3 transition-all text-left',
                 isActive
-                  ? 'bg-background shadow-sm border-border'
-                  : 'bg-muted/40 border-transparent opacity-60',
+                  ? 'bg-white shadow-sm border-border dark:bg-background'
+                  : 'bg-white/60 border-transparent opacity-60 dark:bg-muted/40',
               )}
             >
               <div className={cn('rounded-lg p-2', EVENT_STYLES[type].bgColor, EVENT_STYLES[type].color)}>
@@ -210,15 +210,19 @@ export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps)
             </div>
 
             <div className="flex items-center gap-2">
-              <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week')}>
+              <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week' | 'agenda')}>
                 <TabsList className="h-8">
                   <TabsTrigger value="month" className="text-xs px-3 gap-1">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Mes
                   </TabsTrigger>
                   <TabsTrigger value="week" className="text-xs px-3 gap-1">
-                    <List className="h-3.5 w-3.5" />
+                    <CalendarIcon className="h-3.5 w-3.5" />
                     Semana
+                  </TabsTrigger>
+                  <TabsTrigger value="agenda" className="text-xs px-3 gap-1">
+                    <List className="h-3.5 w-3.5" />
+                    Agenda
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -268,6 +272,91 @@ export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps)
               <div className="h-full flex items-center justify-center text-muted-foreground">
                 Cargando eventos...
               </div>
+            ) : view === 'agenda' ? (
+              /* ───── Agenda / List View ───── */
+              <ScrollArea className="h-full">
+                <div className="space-y-1">
+                  {events.length === 0 ? (
+                    <div className="py-16 text-center text-muted-foreground">
+                      <List className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                      <p className="text-sm">Sin eventos en este periodo</p>
+                    </div>
+                  ) : (
+                    (() => {
+                      // Group events by date
+                      const grouped: Record<string, CalendarEvent[]> = {};
+                      const sortedEvents = [...events].sort(
+                        (a, b) => a.startDate.getTime() - b.startDate.getTime(),
+                      );
+                      sortedEvents.forEach((event) => {
+                        const key = format(event.startDate, 'yyyy-MM-dd');
+                        if (!grouped[key]) grouped[key] = [];
+                        grouped[key].push(event);
+                      });
+                      return Object.entries(grouped).map(([dateKey, dayEvents]) => {
+                        const date = new Date(dateKey);
+                        return (
+                          <div key={dateKey} className="mb-4">
+                            <div className="flex items-center gap-2 mb-2 sticky top-0 bg-card z-10 py-1">
+                              <div
+                                className={cn(
+                                  'flex items-center justify-center w-10 h-10 rounded-lg text-sm font-bold',
+                                  isToday(date)
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted text-muted-foreground',
+                                )}
+                              >
+                                {format(date, 'd')}
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold capitalize">
+                                  {format(date, 'EEEE', { locale: es })}
+                                </p>
+                                <p className="text-[11px] text-muted-foreground capitalize">
+                                  {format(date, "d 'de' MMMM yyyy", { locale: es })}
+                                </p>
+                              </div>
+                              <Badge variant="secondary" className="ml-auto text-[10px]">
+                                {dayEvents.length} {dayEvents.length === 1 ? 'evento' : 'eventos'}
+                              </Badge>
+                            </div>
+                            <div className="space-y-1.5 pl-2 border-l-2 border-muted ml-5">
+                              {dayEvents.map((event) => (
+                                <button
+                                  key={event.id}
+                                  onClick={() => handleEventClick(event)}
+                                  className="w-full text-left rounded-lg border p-3 transition-all hover:shadow-sm hover:border-primary/30 group flex items-start gap-3"
+                                >
+                                  <div className={cn('rounded-md p-1.5 mt-0.5 shrink-0', event.bgColor, event.color)}>
+                                    {EVENT_ICONS[event.type]}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-medium truncate">{event.title}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                      {event.description}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                        {EVENT_TYPE_LABELS[event.type]}
+                                      </Badge>
+                                      {!isSameDay(event.startDate, event.endDate) && (
+                                        <span className="text-[10px] text-muted-foreground">
+                                          {format(event.startDate, 'dd/MM')} – {format(event.endDate, 'dd/MM')}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()
+                  )}
+                </div>
+              </ScrollArea>
             ) : (
               <div className="h-full flex flex-col">
                 {/* Weekday header */}
