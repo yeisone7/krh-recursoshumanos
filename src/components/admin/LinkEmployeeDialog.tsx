@@ -85,7 +85,7 @@ export function LinkEmployeeDialog({ open, onOpenChange, userId, userEmail }: Li
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Link className="h-5 w-5" />
@@ -95,6 +95,9 @@ export function LinkEmployeeDialog({ open, onOpenChange, userId, userEmail }: Li
             {userEmail && (
               <span>Usuario: <strong>{userEmail}</strong></span>
             )}
+            <span className="block mt-1 text-xs">
+              Al vincular un empleado, este usuario podrá acceder al Portal del Empleado y ver su información personal, documentos, vacaciones e incapacidades.
+            </span>
           </DialogDescription>
         </DialogHeader>
 
