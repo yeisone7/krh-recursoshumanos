@@ -68,6 +68,22 @@ export default function Examenes() {
   const deleteMutation = useDeleteExamTransaction();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: positionsData = [] } = usePositions();
+  const { data: companies = [] } = useCompanies();
+
+  const currentCompany = companies.find(c => c.id === currentCompanyId);
+
+  const handleExportPdf = async (tx: ExamTransaction) => {
+    try {
+      await generateExamOrderPdf({
+        companyName: currentCompany?.name || '',
+        companyNit: currentCompany?.nit || '',
+        transaction: tx,
+      });
+      toast.success('Orden de exámenes exportada');
+    } catch {
+      toast.error('Error al exportar la orden');
+    }
+  };
 
   // Deep link
   useEffect(() => {
