@@ -124,8 +124,11 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
               <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => setShowForm(true)}>
                 <Plus className="w-3 h-3 mr-1" />Nueva versión
               </Button>
-              <Button size="sm" variant="outline" className="w-full text-xs" onClick={handleExportPdf}>
-                <Download className="w-3 h-3 mr-1" />Exportar PDF
+              <Button size="sm" variant="outline" className="w-full text-xs" onClick={handleExportPdf} disabled={exporting}>
+                {exporting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Download className="w-3 h-3 mr-1" />}Exportar PDF
+              </Button>
+              <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => setShowClone(true)}>
+                <Copy className="w-3 h-3 mr-1" />Clonar a otro cargo
               </Button>
             </div>
 
