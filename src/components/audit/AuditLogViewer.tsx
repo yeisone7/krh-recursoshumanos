@@ -63,6 +63,12 @@ const actionStyles: Record<string, string> = {
   deliver_dotation: 'bg-primary/10 text-primary',
 };
 
+// Detect UUIDs to replace with friendly text
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isUUID(value: string): boolean {
+  return UUID_REGEX.test(value);
+}
+
 function LogDetailsRow({ log }: { log: AuditLogEntry }) {
   const [isOpen, setIsOpen] = useState(false);
   const hasDetails = log.old_values || log.new_values;
