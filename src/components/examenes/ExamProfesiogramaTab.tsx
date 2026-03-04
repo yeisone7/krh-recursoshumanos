@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 
 import { useExamProfesiogramas, useDeleteExamProfesiograma, type ExamProfesiograma } from '@/hooks/useExamProfesiograma';
 import { ExamProfesiogramaFormDialog } from './ExamProfesiogramaFormDialog';
+import { ImportFromDotacionDialog } from './ImportFromDotacionDialog';
 
 interface Props {
   centers: { id: string; name: string }[];
