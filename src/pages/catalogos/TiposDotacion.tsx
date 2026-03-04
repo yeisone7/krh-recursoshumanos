@@ -359,9 +359,10 @@ export default function CatalogosTiposDotacion() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={item.is_active ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}>
-                        {item.is_active ? 'Activo' : 'Inactivo'}
-                      </Badge>
+                      <Switch
+                        checked={item.is_active}
+                        onCheckedChange={() => handleToggleActive(item)}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <TooltipProvider delayDuration={200}>
