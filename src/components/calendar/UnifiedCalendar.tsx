@@ -77,7 +77,7 @@ interface UnifiedCalendarProps {
   defaultView?: 'month' | 'week' | 'agenda';
 }
 
-export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps) {
+export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps) {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'agenda'>(defaultView);
@@ -212,6 +212,10 @@ export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps)
             <div className="flex items-center gap-2">
               <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week' | 'agenda')}>
                 <TabsList className="h-8">
+                  <TabsTrigger value="agenda" className="text-xs px-3 gap-1">
+                    <List className="h-3.5 w-3.5" />
+                    Agenda
+                  </TabsTrigger>
                   <TabsTrigger value="month" className="text-xs px-3 gap-1">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Mes
@@ -219,10 +223,6 @@ export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps)
                   <TabsTrigger value="week" className="text-xs px-3 gap-1">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Semana
-                  </TabsTrigger>
-                  <TabsTrigger value="agenda" className="text-xs px-3 gap-1">
-                    <List className="h-3.5 w-3.5" />
-                    Agenda
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -325,7 +325,7 @@ export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps)
                                 <button
                                   key={event.id}
                                   onClick={() => handleEventClick(event)}
-                                  className="w-full text-left rounded-lg border p-3 transition-all hover:shadow-sm hover:border-primary/30 group flex items-start gap-3"
+                                  className="w-[calc(100%-12px)] text-left rounded-lg border p-3 transition-all hover:shadow-sm hover:border-primary/30 group flex items-start gap-3"
                                 >
                                   <div className={cn('rounded-md p-1.5 mt-0.5 shrink-0', event.bgColor, event.color)}>
                                     {EVENT_ICONS[event.type]}
