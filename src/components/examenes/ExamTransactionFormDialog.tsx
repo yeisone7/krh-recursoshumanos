@@ -151,7 +151,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
           exam_catalog_id: item.exam_catalog_id,
           exam_name: item.exam_name,
           result: item.result,
-          expiration_date: format(addMonths(examDate, 12), 'yyyy-MM-dd'),
+          expiration_date: item.expiration_date || format(addMonths(examDate, 12), 'yyyy-MM-dd'),
         });
       }
 
