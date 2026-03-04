@@ -43,12 +43,30 @@ interface Props {
 
 export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }: Props) {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
+  const { data: companies = [] } = useCompanies();
+  const currentCompany = companies.find(c => c.id === currentCompanyId);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [showSignature, setShowSignature] = useState(false);
   const [isSavingSignature, setIsSavingSignature] = useState(false);
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportPdf = async () => {
+    if (!transaction) return;
+    try {
+      await generateExamOrderPdf({
+        companyName: currentCompany?.name || '',
+        companyNit: currentCompany?.nit || '',
+        transaction,
+        signatureDataUrl,
+      });
+      toast.success('Orden exportada');
+    } catch {
+      toast.error('Error al exportar');
+    }
+  };
 
   useEffect(() => {
     if (transaction?.signature_url) {
