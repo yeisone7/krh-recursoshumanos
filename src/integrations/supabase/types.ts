@@ -1589,6 +1589,7 @@ export type Database = {
           received_by: string | null
           signature_url: string | null
           size: string | null
+          transaction_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1608,6 +1609,7 @@ export type Database = {
           received_by?: string | null
           signature_url?: string | null
           size?: string | null
+          transaction_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1627,11 +1629,69 @@ export type Database = {
           received_by?: string | null
           signature_url?: string | null
           size?: string | null
+          transaction_id?: string | null
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "dotation_deliveries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dotation_deliveries_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "dotation_delivery_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dotation_delivery_transactions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          delivered_by: string | null
+          delivery_date: string
+          document_url: string | null
+          employee_id: string
+          id: string
+          observations: string | null
+          received_by: string | null
+          signature_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          delivered_by?: string | null
+          delivery_date: string
+          document_url?: string | null
+          employee_id: string
+          id?: string
+          observations?: string | null
+          received_by?: string | null
+          signature_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          delivered_by?: string | null
+          delivery_date?: string
+          document_url?: string | null
+          employee_id?: string
+          id?: string
+          observations?: string | null
+          received_by?: string | null
+          signature_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dotation_delivery_transactions_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees_v2"
