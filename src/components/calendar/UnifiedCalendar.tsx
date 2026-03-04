@@ -170,8 +170,8 @@ export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps)
               className={cn(
                 'flex items-center gap-3 rounded-xl border px-4 py-3 transition-all text-left',
                 isActive
-                  ? 'bg-background shadow-sm border-border'
-                  : 'bg-muted/40 border-transparent opacity-60',
+                  ? 'bg-white shadow-sm border-border dark:bg-background'
+                  : 'bg-white/60 border-transparent opacity-60 dark:bg-muted/40',
               )}
             >
               <div className={cn('rounded-lg p-2', EVENT_STYLES[type].bgColor, EVENT_STYLES[type].color)}>
