@@ -74,13 +74,13 @@ const EVENT_ICONS: Record<CalendarEventType, React.ReactNode> = {
 };
 
 interface UnifiedCalendarProps {
-  defaultView?: 'month' | 'week';
+  defaultView?: 'month' | 'week' | 'agenda';
 }
 
 export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps) {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week'>(defaultView);
+  const [view, setView] = useState<'month' | 'week' | 'agenda'>(defaultView);
   const [selectedDay, setSelectedDay] = useState<Date>(new Date());
   const [enabledTypes, setEnabledTypes] = useState<CalendarEventType[]>([
     'vacation', 'leave', 'incapacity', 'contract', 'training',
