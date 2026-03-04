@@ -105,6 +105,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
         exam_name: available[0].name,
         result: 'pendiente',
         fromProfesiograma: false,
+        expiration_date: format(addMonths(new Date(), 12), 'yyyy-MM-dd'),
       }]);
     } else {
       setItems([...items, {
@@ -113,6 +114,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
         exam_name: '',
         result: 'pendiente',
         fromProfesiograma: false,
+        expiration_date: format(addMonths(new Date(), 12), 'yyyy-MM-dd'),
       }]);
     }
   };
