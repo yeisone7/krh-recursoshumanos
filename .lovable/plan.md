@@ -1,88 +1,143 @@
 
 
-## Plan: Catálogo de Exámenes + Profesiograma + Transacción-Detalle para Exámenes Médicos
+# Plan: Sistema de Roles y Permisos Dinámico
 
-### Resumen
+## Estado Actual
 
-Replicar la arquitectura completa de Dotaciones para el módulo de Exámenes Médicos: un catálogo CRUD de tipos de examen, un profesiograma por centro+cargo, y un sistema de entregas transacción-detalle con firma, archivos adjuntos, exportación PDF y eliminación.
+El sistema usa un enum `app_role` fijo con 5 valores (`admin`, `rrhh`, `psicologo`, `jefe_area`, `auditor`) y una tabla `user_roles` simple. Los permisos están hardcodeados en el frontend con checks como `isAdmin`, `isRRHH`. No existe parametrización de permisos granulares.
 
 ---
 
-### 1. Base de datos (migración SQL)
+## Arquitectura Propuesta
+
+```text
+┌──────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│   roles      │───▶│  role_permissions │◀───│   permissions    │
+│  (catálogo)  │    │   (asignación)   │    │  (catálogo CRUD) │
+└──────┬───────┘    └──────────────────┘    └──────────────────┘
+       │                                          │
+       ▼                                          │
+┌──────────────┐                           ┌──────┴─────────┐
+│ user_roles_v2│                           │    modules     │
+│ (user↔role)  │                           │  (catálogo)    │
+└──────────────┘                           └────────────────┘
+```
+
+---
+
+## Fase 1 — Modelo de Datos (Migración SQL)
 
 **Nuevas tablas:**
 
-- **`exam_catalog`** — Catálogo de exámenes aplicables (equivalente a `dotation_item_types`)
-  - `id`, `company_id`, `name`, `code`, `description`, `is_active`, `created_by`, `created_at`, `updated_at`
-  - UNIQUE(company_id, name)
-  - RLS: misma política que `dotation_item_types`
+1. **`modules`** — Catálogo de módulos/submódulos del sistema
+   - `id`, `code` (único), `name`, `parent_id` (self-ref para submódulos), `icon`, `sort_order`, `is_active`
 
-- **`exam_profesiograma`** — Perfiles de exámenes por centro+cargo (clon de `dotation_profesiograma`)
-  - `id`, `company_id`, `operation_center_id`, `position_id`, `created_by`, `created_at`, `updated_at`
-  - UNIQUE(company_id, operation_center_id, position_id)
+2. **`permissions`** — Permisos parametrizados (módulo + acción)
+   - `id`, `module_id` (FK → modules), `action` (enum: `view`, `create`, `update`, `delete`), `description`
+   - Unique constraint en `(module_id, action)`
 
-- **`exam_profesiograma_items`** — Ítems del profesiograma (clon de `dotation_profesiograma_items`)
-  - `id`, `profesiograma_id` → FK `exam_profesiograma`, `exam_catalog_id` → FK `exam_catalog`, `is_required`, `notes`, `created_at`
-  - UNIQUE(profesiograma_id, exam_catalog_id)
+3. **`roles`** — Catálogo dinámico de roles (reemplaza el enum)
+   - `id`, `company_id`, `name` (único por empresa), `description`, `is_active`, `is_system` (para el rol Administrador no eliminable), `created_by`, `created_at`, `updated_at`
 
-- **`exam_delivery_transactions`** — Cabecera de transacciones (clon de `dotation_delivery_transactions`)
-  - `id`, `employee_id` → FK `employees_v2`, `exam_date` (DATE), `provider`, `doctor_name`, `signature_url`, `document_url`, `observations`, `created_by`, `created_at`, `updated_at`
+4. **`role_permissions`** — Tabla pivote roles ↔ permisos
+   - `id`, `role_id` (FK → roles), `permission_id` (FK → permissions)
+   - Unique constraint en `(role_id, permission_id)`
 
-- **`exam_delivery_items`** — Detalle de exámenes aplicados por transacción
-  - `id`, `transaction_id` → FK `exam_delivery_transactions`, `exam_catalog_id` → FK `exam_catalog`, `exam_name` (TEXT), `result` (enum `exam_result`), `concept`, `restrictions`, `expiration_date`, `document_url`
+5. **`user_roles_v2`** — Asignación usuario ↔ rol dinámico
+   - `id`, `user_id` (FK → auth.users), `role_id` (FK → roles), `assigned_by`, `assigned_at`
+   - Unique constraint en `(user_id, role_id)`
 
-**RLS:** Replicar las políticas de dotación: `is_admin_or_rrhh()` + `has_employee_v2_access()` para escritura, `has_employee_v2_access()` para lectura.
+**Datos semilla:**
+- Insertar todos los módulos del sistema (~25 módulos según el sidebar actual): Dashboard, Empleados, Contratos, Incapacidades, Dotación, Exámenes, Selección, Requisiciones, Centros, Jornadas, Disciplinarios, Vacaciones, Permisos, Novedades, Pre-liquidación, Capacitaciones, Evaluaciones, Organigrama, Cesantías, Calendario, Reportes, Analítica, Catálogos, Seguridad, Configuración.
+- Generar permisos automáticos (4 acciones × N módulos).
+- Crear el rol "Administrador" como `is_system = true` con todos los permisos.
 
-**Datos iniciales:** Insertar los 11 registros del catálogo para la empresa actual del usuario usando el insert tool.
+**RLS:** Policies usando `has_role` function adaptada + company_id filtering.
 
-**RPC:** Crear `get_exam_profesiogramas_with_items(_company_id)` análogo a `get_profesiogramas_with_items`.
-
----
-
-### 2. Hooks (lógica de datos)
-
-- **`useExamCatalog.ts`** — CRUD del catálogo (listar, crear, actualizar, eliminar). Patrón idéntico a tipos de dotación.
-- **`useExamProfesiograma.ts`** — CRUD de profesiogramas de exámenes. Clonar `useDotationProfesiograma.ts` adaptando nombres de tabla.
-- **`useExamTransactions.ts`** — Transacciones con detalle. Clonar `useDotationTransactions.ts` adaptando a las tablas de exámenes.
+**Función DB:** `check_user_permission(user_id, module_code, action)` — SECURITY DEFINER que verifica si el usuario tiene el permiso dado a través de alguno de sus roles activos.
 
 ---
 
-### 3. Interfaz de usuario
+## Fase 2 — Backend: Función de Verificación
 
-Reestructurar la página `/examenes` para usar **Tabs** como en Dotación:
-
-- **Tab "Aplicaciones"** — Vista transacción-detalle (tabla con empleado, exámenes aplicados, fecha, estado, acciones: ver, exportar PDF, eliminar)
-- **Tab "Catálogo"** — CRUD de tipos de examen (tabla con nombre, código, estado activo/inactivo, botones crear/editar/eliminar)
-- **Tab "Profesiograma"** — Perfiles de exámenes por centro+cargo (clonar `ProfesiogramaTab` de dotación adaptado a exámenes)
-- **Tab "Cumplimiento"** — Cruce profesiograma vs aplicaciones reales (fase posterior, se puede dejar placeholder)
-
-**Componentes nuevos:**
-- `ExamCatalogTab.tsx` — Tabla CRUD del catálogo
-- `ExamCatalogFormDialog.tsx` — Formulario crear/editar tipo de examen
-- `ExamProfesiogramaTab.tsx` — Clon de `ProfesiogramaTab` para exámenes
-- `ExamProfesiogramaFormDialog.tsx` — Formulario del profesiograma
-- `ExamTransactionFormDialog.tsx` — Formulario de aplicación (3 pasos: empleado → exámenes con sugerencias del profesiograma → datos de entrega con firma)
-- `ExamTransactionDetailDialog.tsx` — Vista detalle con firma, archivos adjuntos, exportación PDF
+Crear función SQL `check_user_permission(_user_id uuid, _module_code text, _action text)`:
+- Busca en `user_roles_v2` → `roles` (activos) → `role_permissions` → `permissions` → `modules`
+- Si el rol tiene `is_system = true`, retorna `true` siempre (Administrador)
+- Si el rol está inactivo, ignora sus permisos
 
 ---
 
-### 4. Funcionalidades clave
+## Fase 3 — Hook y Context de Permisos
 
-- **Firma digital:** Reutilizar `SignatureCanvas` existente
-- **Archivos adjuntos:** Almacenar en bucket `documents` o `dotation-images`
-- **Exportación PDF:** Generar acta de aplicación de exámenes similar al acta de entrega de dotación
-- **Eliminación:** Confirmación con AlertDialog, cascade delete de ítems
-- **Profesiograma → Sugerencias:** Al seleccionar empleado en el formulario, autosugerir exámenes del profesiograma configurado para su centro+cargo
+1. **`usePermissions` hook** — Al login, carga todos los permisos efectivos del usuario (unión de todos sus roles activos) y los cachea en el AuthContext.
+   - Expone: `hasPermission(moduleCode, action)`, `canView(module)`, `canCreate(module)`, `canUpdate(module)`, `canDelete(module)`
+   - Se refresca al cambiar roles
+
+2. **Actualizar `AuthContext`** — Agregar `permissions` al contexto, reemplazar gradualmente `isAdmin`/`isRRHH` con `hasPermission()`
 
 ---
 
-### 5. Orden de implementación
+## Fase 4 — UI: Módulo de Roles (pestaña en Seguridad)
 
-1. Migración de base de datos (tablas + RLS + RPC)
-2. Insertar datos iniciales del catálogo
-3. Hooks de datos (catálogo, profesiograma, transacciones)
-4. Tab Catálogo con CRUD
-5. Tab Profesiograma
-6. Tab Aplicaciones (transacción-detalle) con formulario, detalle, firma, exportación y eliminación
-7. Actualizar página Examenes.tsx con la nueva estructura de tabs
+Reemplazar la pestaña "Roles" estática actual en `Seguridad.tsx` con:
+
+1. **Lista de Roles** — Tabla/cards con nombre, descripción, estado, # usuarios, fecha creación. Botones: Crear, Editar, Eliminar (con validación de asignaciones), Activar/Desactivar. El rol "Administrador" solo permite editar descripción.
+
+2. **Dialog Crear/Editar Rol** — Formulario con nombre, descripción.
+
+3. **Vista de Permisos (Matriz)** — Al hacer clic en "Configurar Permisos" de un rol:
+   - Tabla con módulos como filas (expandibles si tienen submódulos) y columnas: Ver, Crear, Modificar, Eliminar.
+   - Checkboxes en cada celda.
+   - Checkbox "Todos" por fila (módulo completo).
+   - Deshabilitado para el rol Administrador (todos marcados).
+   - Collapsible sections por categoría de módulos.
+
+---
+
+## Fase 5 — UI: Control de Acceso en Frontend
+
+1. **Componente `<PermissionGate>`** — Wrapper que muestra/oculta children según permisos:
+   ```tsx
+   <PermissionGate module="empleados" action="create">
+     <Button>Nuevo Empleado</Button>
+   </PermissionGate>
+   ```
+
+2. **Sidebar dinámico** — Filtrar items del menú según `canView(module)`.
+
+3. **Bloqueo de login sin rol** — Si el usuario no tiene roles en `user_roles_v2`, mostrar pantalla de "Cuenta pendiente de activación" en vez de la app.
+
+---
+
+## Fase 6 — Auditoría
+
+Registrar en la tabla `audit_logs` existente:
+- Creación/edición/eliminación de roles
+- Cambios en permisos de un rol
+- Asignación/remoción de roles a usuarios
+
+---
+
+## Archivos Principales a Crear/Modificar
+
+| Archivo | Acción |
+|---------|--------|
+| Migración SQL (tables + seed + functions) | Crear |
+| `src/hooks/useRoles.ts` | Crear |
+| `src/hooks/usePermissions.ts` | Crear |
+| `src/components/roles/RolesManager.tsx` | Crear |
+| `src/components/roles/RoleFormDialog.tsx` | Crear |
+| `src/components/roles/PermissionMatrix.tsx` | Crear |
+| `src/components/auth/PermissionGate.tsx` | Crear |
+| `src/contexts/AuthContext.tsx` | Modificar (agregar permisos) |
+| `src/pages/Seguridad.tsx` | Modificar (nueva pestaña Roles) |
+| `src/components/layout/Sidebar.tsx` | Modificar (filtrar por permisos) |
+
+---
+
+## Consideraciones
+
+- La migración del enum `app_role` existente se hará de forma gradual: el nuevo sistema coexistirá inicialmente. Una vez estable, se puede deprecar el enum antiguo.
+- Los permisos se cargan una vez al login y se refrescan solo al cambiar roles, optimizando rendimiento.
+- El rol Administrador con `is_system = true` garantiza acceso total sin depender de permisos individuales.
 
