@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Shirt, Plus, Edit2, Trash2, Loader2, Power, Check, X, Filter, FileSpreadsheet, FileText, ZoomIn } from 'lucide-react';
+import { Shirt, Plus, Edit2, Trash2, Loader2, Check, X, Filter, FileSpreadsheet, FileText, ZoomIn } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
