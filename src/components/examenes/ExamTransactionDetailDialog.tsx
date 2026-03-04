@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Stethoscope, Calendar, FileText, CheckCircle, AlertTriangle, PenTool, MapPin, User, Upload, Paperclip, ExternalLink, Trash2 } from 'lucide-react';
+import { Stethoscope, Calendar, FileText, CheckCircle, AlertTriangle, PenTool, MapPin, User, Upload, Paperclip, ExternalLink, Trash2, FileDown } from 'lucide-react';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -17,6 +17,9 @@ import { toast } from 'sonner';
 import type { ExamTransaction } from '@/hooks/useExamTransactions';
 import { examTypeLabels } from '@/types/medicalExam';
 import type { ExamType } from '@/types/medicalExam';
+import { useCompanies } from '@/hooks/useCompanies';
+import { useAuth } from '@/contexts/AuthContext';
+import { generateExamOrderPdf } from '@/lib/examPdfGenerator';
 
 const resultLabels: Record<string, string> = {
   apto: 'Apto',
@@ -40,12 +43,30 @@ interface Props {
 
 export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }: Props) {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
+  const { data: companies = [] } = useCompanies();
+  const currentCompany = companies.find(c => c.id === currentCompanyId);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const [showSignature, setShowSignature] = useState(false);
   const [isSavingSignature, setIsSavingSignature] = useState(false);
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportPdf = async () => {
+    if (!transaction) return;
+    try {
+      await generateExamOrderPdf({
+        companyName: currentCompany?.name || '',
+        companyNit: currentCompany?.nit || '',
+        transaction,
+        signatureDataUrl,
+      });
+      toast.success('Orden exportada');
+    } catch {
+      toast.error('Error al exportar');
+    }
+  };
 
   useEffect(() => {
     if (transaction?.signature_url) {
@@ -177,6 +198,9 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
                 </span>
               </p>
             </div>
+            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={handleExportPdf}>
+              <FileDown className="w-4 h-4" /> Exportar
+            </Button>
           </DialogHeader>
         </div>
 
