@@ -102,7 +102,9 @@ function LogDetailsRow({ log }: { log: AuditLogEntry }) {
                 {entityTypeLabels[log.entity_type] || log.entity_type}
               </p>
               {log.entity_name && (
-                <p className="text-xs text-muted-foreground">{log.entity_name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {isUUID(log.entity_name) ? '(ID interno)' : log.entity_name}
+                </p>
               )}
             </div>
           </div>
