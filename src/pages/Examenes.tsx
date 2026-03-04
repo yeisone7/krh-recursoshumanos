@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import {
   Stethoscope, Plus, Search, Eye, Calendar, Loader2,
   ClipboardList, ShieldCheck, Trash2, CheckCircle, AlertTriangle, XCircle, Clock,
+  FileDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
