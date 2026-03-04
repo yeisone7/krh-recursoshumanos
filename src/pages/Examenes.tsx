@@ -186,8 +186,8 @@ export default function Examenes() {
         </TabsList>
 
         <TabsContent value="aplicaciones" className="mt-6 space-y-6">
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+          {/* Stats + Alerts */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary-light flex items-center justify-center">
                 <Stethoscope className="w-5 h-5 text-primary" />
@@ -197,6 +197,15 @@ export default function Examenes() {
                 <p className="text-sm text-muted-foreground">Aplicaciones ({stats.totalExams} exámenes)</p>
               </div>
             </motion.div>
+            <div className="lg:col-span-2">
+              <ExamAlertsCard
+                alerts={examAlerts}
+                onAlertClick={(alert) => {
+                  const tx = transactions?.find(t => t.items.some(i => i.id === alert.examId));
+                  if (tx) handleView(tx.id);
+                }}
+              />
+            </div>
           </div>
 
           {/* Filters + Table */}
@@ -249,6 +258,7 @@ export default function Examenes() {
                     const itemsSummary = tx.items.length <= 2
                       ? tx.items.map(i => i.exam_name).join(', ')
                       : `${tx.items[0].exam_name}, ${tx.items[1].exam_name} +${tx.items.length - 2} más`;
+                    const badgeStyle = examTypeBadgeStyles[tx.exam_type] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
 
                     return (
                       <TableRow key={tx.id}>
@@ -265,7 +275,7 @@ export default function Examenes() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className={cn('text-xs border', badgeStyle.bg, badgeStyle.text, badgeStyle.border)}>
                             {examTypeLabels[tx.exam_type as ExamType] || tx.exam_type}
                           </Badge>
                         </TableCell>
