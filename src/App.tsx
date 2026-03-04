@@ -94,6 +94,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <OnboardingGuard>
+                    <NoRoleGuard>
                     <AppLayout>
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
