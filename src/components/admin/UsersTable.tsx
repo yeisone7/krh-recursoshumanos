@@ -403,6 +403,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         open={linkDialogOpen}
         onOpenChange={setLinkDialogOpen}
         userId={selectedUser?.id || ''}
+        userEmail={selectedUser?.email}
       />
 
       {/* Deactivation Confirmation Dialog */}
