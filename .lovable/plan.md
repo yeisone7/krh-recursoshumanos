@@ -1,77 +1,88 @@
 
-# Integracion de Avatar HeyGen en Capacitaciones
 
-## Resumen
+## Plan: Catálogo de Exámenes + Profesiograma + Transacción-Detalle para Exámenes Médicos
 
-Agregar soporte para generar videos con avatar IA usando HeyGen. Incluye un campo para la API Key de HeyGen en la configuracion de IA, una nueva Edge Function para comunicarse con la API de HeyGen, y una tarjeta "Avatar Presentador" en la seccion de multimedia de capacitaciones.
+### Resumen
 
-## Paso 1: Campo de HeyGen API Key en Configuracion IA
+Replicar la arquitectura completa de Dotaciones para el módulo de Exámenes Médicos: un catálogo CRUD de tipos de examen, un profesiograma por centro+cargo, y un sistema de entregas transacción-detalle con firma, archivos adjuntos, exportación PDF y eliminación.
 
-En `src/pages/Configuracion.tsx`, dentro de la pestana "IA", agregar una tercera tarjeta (independiente de la seleccion Gemini/OpenAI) para la API Key de HeyGen:
+---
 
-- Tarjeta con icono de video/usuario, titulo "HeyGen - Avatar IA"
-- Campo de API Key con toggle de visibilidad (Eye/EyeOff) y boton "Probar"
-- La key se persiste en `system_config` dentro del objeto `ai_config` como `heygen_api_key`
-- El boton "Probar" llamara a la API de HeyGen para listar avatares disponibles y confirmar que la key funciona
+### 1. Base de datos (migración SQL)
 
-**Estado en el componente:**
-- `heygenApiKey` / `setHeygenApiKey`
-- `showHeygenKey` / `setShowHeygenKey`
-- `testingHeygen` / `setTestingHeygen`
+**Nuevas tablas:**
 
-**Persistencia:** Se agrega `heygen_api_key` al objeto que ya se guarda en `handleSaveAiConfig`.
+- **`exam_catalog`** — Catálogo de exámenes aplicables (equivalente a `dotation_item_types`)
+  - `id`, `company_id`, `name`, `code`, `description`, `is_active`, `created_by`, `created_at`, `updated_at`
+  - UNIQUE(company_id, name)
+  - RLS: misma política que `dotation_item_types`
 
-## Paso 2: Edge Function `generate-training-avatar`
+- **`exam_profesiograma`** — Perfiles de exámenes por centro+cargo (clon de `dotation_profesiograma`)
+  - `id`, `company_id`, `operation_center_id`, `position_id`, `created_by`, `created_at`, `updated_at`
+  - UNIQUE(company_id, operation_center_id, position_id)
 
-Crear `supabase/functions/generate-training-avatar/index.ts` que:
+- **`exam_profesiograma_items`** — Ítems del profesiograma (clon de `dotation_profesiograma_items`)
+  - `id`, `profesiograma_id` → FK `exam_profesiograma`, `exam_catalog_id` → FK `exam_catalog`, `is_required`, `notes`, `created_at`
+  - UNIQUE(profesiograma_id, exam_catalog_id)
 
-1. Recibe: `courseId`, `companyId`, `script` (guion de texto), `avatarId` (opcional, usa uno por defecto)
-2. Lee la `heygen_api_key` de `system_config` para la empresa
-3. Llama a la API de HeyGen:
-   - `POST https://api.heygen.com/v2/video/generate` con el guion y avatar seleccionado
-   - Retorna un `video_id` para polling
-4. Endpoint secundario para consultar estado: `GET https://api.heygen.com/v1/video_status.get?video_id=XXX`
-5. Cuando el video esta listo, descarga y sube al bucket `training-media`
-6. Inserta registro en `training_media` con `type = 'avatar'`
+- **`exam_delivery_transactions`** — Cabecera de transacciones (clon de `dotation_delivery_transactions`)
+  - `id`, `employee_id` → FK `employees_v2`, `exam_date` (DATE), `provider`, `doctor_name`, `signature_url`, `document_url`, `observations`, `created_by`, `created_at`, `updated_at`
 
-**Endpoints de HeyGen utilizados:**
-- `GET /v2/avatars` - Listar avatares disponibles
-- `POST /v2/video/generate` - Crear video
-- `GET /v1/video_status.get` - Consultar estado
+- **`exam_delivery_items`** — Detalle de exámenes aplicados por transacción
+  - `id`, `transaction_id` → FK `exam_delivery_transactions`, `exam_catalog_id` → FK `exam_catalog`, `exam_name` (TEXT), `result` (enum `exam_result`), `concept`, `restrictions`, `expiration_date`, `document_url`
 
-## Paso 3: Tarjeta "Avatar Presentador" en Multimedia
+**RLS:** Replicar las políticas de dotación: `is_admin_or_rrhh()` + `has_employee_v2_access()` para escritura, `has_employee_v2_access()` para lectura.
 
-En `src/pages/capacitaciones/CrearCapacitacion.tsx`, agregar una nueva tarjeta despues del Storyboard:
+**Datos iniciales:** Insertar los 11 registros del catálogo para la empresa actual del usuario usando el insert tool.
 
-- Icono de usuario/video, titulo "Avatar Presentador"
-- Selector de avatar (dropdown con avatares disponibles de HeyGen)
-- Boton "Generar Video con Avatar"
-- Indicador de progreso (polling cada 10 segundos hasta que el video este listo)
-- Reproductor de video cuando este completo
+**RPC:** Crear `get_exam_profesiogramas_with_items(_company_id)` análogo a `get_profesiogramas_with_items`.
 
-## Paso 4: Visualizacion en Vista Previa y Link Publico
+---
 
-- En `TrainingPreviewDialog.tsx`: Agregar seccion para mostrar videos de avatar (`type === 'avatar'`) con reproductor HTML5
-- En `AccesoPublico.tsx`: Mostrar el video del avatar como reproductor integrado en la capacitacion publica
+### 2. Hooks (lógica de datos)
 
-## Paso 5: Componente AvatarVideoPlayer
+- **`useExamCatalog.ts`** — CRUD del catálogo (listar, crear, actualizar, eliminar). Patrón idéntico a tipos de dotación.
+- **`useExamProfesiograma.ts`** — CRUD de profesiogramas de exámenes. Clonar `useDotationProfesiograma.ts` adaptando nombres de tabla.
+- **`useExamTransactions.ts`** — Transacciones con detalle. Clonar `useDotationTransactions.ts` adaptando a las tablas de exámenes.
 
-Crear `src/components/training/AvatarVideoPlayer.tsx`:
-- Reproductor de video HTML5 con controles
-- Estado de generacion con polling visual (barra de progreso o spinner)
-- Mensaje informativo sobre el tiempo estimado de generacion (2-10 min)
+---
 
-## Archivos a modificar/crear
+### 3. Interfaz de usuario
 
-| Archivo | Accion |
-|---------|--------|
-| `src/pages/Configuracion.tsx` | Agregar campo HeyGen API Key en tab IA |
-| `supabase/functions/generate-training-avatar/index.ts` | Crear Edge Function |
-| `src/pages/capacitaciones/CrearCapacitacion.tsx` | Agregar tarjeta Avatar Presentador |
-| `src/components/training/TrainingPreviewDialog.tsx` | Mostrar video avatar |
-| `src/pages/capacitaciones/AccesoPublico.tsx` | Mostrar video avatar en link publico |
-| `src/components/training/AvatarVideoPlayer.tsx` | Crear componente reproductor |
+Reestructurar la página `/examenes` para usar **Tabs** como en Dotación:
 
-## Nota sobre la API Key
+- **Tab "Aplicaciones"** — Vista transacción-detalle (tabla con empleado, exámenes aplicados, fecha, estado, acciones: ver, exportar PDF, eliminar)
+- **Tab "Catálogo"** — CRUD de tipos de examen (tabla con nombre, código, estado activo/inactivo, botones crear/editar/eliminar)
+- **Tab "Profesiograma"** — Perfiles de exámenes por centro+cargo (clonar `ProfesiogramaTab` de dotación adaptado a exámenes)
+- **Tab "Cumplimiento"** — Cruce profesiograma vs aplicaciones reales (fase posterior, se puede dejar placeholder)
 
-La API Key que proporcionaste (`sk_V2_hgu_...`) se almacenara de forma segura en la base de datos dentro de `system_config` (tabla ya existente), accesible solo desde las Edge Functions del servidor. No se hardcodeara en el codigo fuente.
+**Componentes nuevos:**
+- `ExamCatalogTab.tsx` — Tabla CRUD del catálogo
+- `ExamCatalogFormDialog.tsx` — Formulario crear/editar tipo de examen
+- `ExamProfesiogramaTab.tsx` — Clon de `ProfesiogramaTab` para exámenes
+- `ExamProfesiogramaFormDialog.tsx` — Formulario del profesiograma
+- `ExamTransactionFormDialog.tsx` — Formulario de aplicación (3 pasos: empleado → exámenes con sugerencias del profesiograma → datos de entrega con firma)
+- `ExamTransactionDetailDialog.tsx` — Vista detalle con firma, archivos adjuntos, exportación PDF
+
+---
+
+### 4. Funcionalidades clave
+
+- **Firma digital:** Reutilizar `SignatureCanvas` existente
+- **Archivos adjuntos:** Almacenar en bucket `documents` o `dotation-images`
+- **Exportación PDF:** Generar acta de aplicación de exámenes similar al acta de entrega de dotación
+- **Eliminación:** Confirmación con AlertDialog, cascade delete de ítems
+- **Profesiograma → Sugerencias:** Al seleccionar empleado en el formulario, autosugerir exámenes del profesiograma configurado para su centro+cargo
+
+---
+
+### 5. Orden de implementación
+
+1. Migración de base de datos (tablas + RLS + RPC)
+2. Insertar datos iniciales del catálogo
+3. Hooks de datos (catálogo, profesiograma, transacciones)
+4. Tab Catálogo con CRUD
+5. Tab Profesiograma
+6. Tab Aplicaciones (transacción-detalle) con formulario, detalle, firma, exportación y eliminación
+7. Actualizar página Examenes.tsx con la nueva estructura de tabs
+
