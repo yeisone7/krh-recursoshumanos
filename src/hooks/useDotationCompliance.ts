@@ -44,20 +44,23 @@ export function useDotationCompliance() {
     queryFn: async () => {
       if (!currentCompanyId) return [];
 
-      // 1. Get all profesiogramas with items
-      const { data: profs } = await supabase
-        .from('dotation_profesiograma' as any)
-        .select('id, operation_center_id, position_id')
-        .eq('company_id', currentCompanyId);
-
-      if (!profs || profs.length === 0) return [];
-
-      const profIds = (profs as any[]).map((p: any) => p.id);
-
+      // 1. Get profesiograma items first (usually few), then fetch only the profesiogramas that have items
       const { data: profItems } = await supabase
         .from('dotation_profesiograma_items' as any)
         .select('profesiograma_id, dotation_item_type_id, quantity, is_required, dotation_item_types(id, name)')
-        .in('profesiograma_id', profIds);
+
+      if (!profItems || (profItems as any[]).length === 0) return [];
+
+      // Get unique profesiograma IDs that have items
+      const profIdsWithItems = [...new Set((profItems as any[]).map((i: any) => i.profesiograma_id))];
+
+      const { data: profs } = await supabase
+        .from('dotation_profesiograma' as any)
+        .select('id, operation_center_id, position_id')
+        .eq('company_id', currentCompanyId)
+        .in('id', profIdsWithItems);
+
+      if (!profs || profs.length === 0) return [];
 
       // Build profesiograma map: centerId|positionId -> items[]
       const profMap = new Map<string, { itemTypeId: string; itemName: string; quantity: number; isRequired: boolean }[]>();
