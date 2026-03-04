@@ -308,6 +308,9 @@ export default function Examenes() {
                             <Button variant="ghost" size="sm" onClick={() => handleView(tx.id)}>
                               <Eye className="w-4 h-4 mr-1" /> Ver
                             </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleExportPdf(tx)} title="Exportar orden">
+                              <FileDown className="w-4 h-4" />
+                            </Button>
                             <Button
                               variant="ghost" size="sm"
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
