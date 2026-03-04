@@ -32,7 +32,7 @@ const EVENT_STYLES: Record<CalendarEventType, { color: string; bgColor: string; 
 export function useUnifiedCalendar(
   year: number,
   month: number,
-  view: 'month' | 'week' = 'month',
+  view: 'month' | 'week' | 'agenda' = 'month',
   selectedDate: Date = new Date(),
   enabledTypes: CalendarEventType[] = ['vacation', 'leave', 'incapacity', 'contract', 'training']
 ) {
