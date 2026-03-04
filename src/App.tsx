@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OnboardingGuard } from "@/components/auth/OnboardingGuard";
 import { NoRoleGuard } from "@/components/auth/NoRoleGuard";
+import { PermissionRoute } from "@/components/auth/PermissionRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Empleados from "./pages/Empleados";
@@ -68,6 +69,11 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Helper to wrap a page with permission check
+const P = ({ module, children }: { module: string; children: React.ReactNode }) => (
+  <PermissionRoute moduleCode={module}>{children}</PermissionRoute>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -97,55 +103,55 @@ const App = () => (
                     <NoRoleGuard>
                     <AppLayout>
                       <Routes>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/empleados/:id/360" element={<Empleado360 />} />
-                        <Route path="/empleados" element={<Empleados />} />
-                        <Route path="/contratos" element={<Contratos />} />
-                        <Route path="/incapacidades" element={<Incapacidades />} />
-                        <Route path="/alertas" element={<Alertas />} />
-                        <Route path="/dotacion" element={<Dotacion />} />
-                        <Route path="/examenes" element={<Examenes />} />
-                        <Route path="/seleccion" element={<Seleccion />} />
-                        <Route path="/requisiciones" element={<Requisiciones />} />
-                        <Route path="/centros" element={<Centros />} />
-                        <Route path="/jornadas" element={<Jornadas />} />
-                        <Route path="/disciplinarios" element={<Disciplinarios />} />
-                        <Route path="/vacaciones" element={<Vacaciones />} />
-                        <Route path="/permisos" element={<Permisos />} />
-                        <Route path="/novedades" element={<Novedades />} />
-                        <Route path="/pre-liquidacion" element={<PreLiquidacion />} />
-                        <Route path="/configuracion-laboral" element={<ConfiguracionLaboral />} />
-                        <Route path="/capacitaciones" element={<Capacitaciones />} />
-                        <Route path="/capacitaciones/crear" element={<CrearCapacitacion />} />
-                        <Route path="/capacitaciones/crear-manual" element={<CrearManual />} />
-                        <Route path="/capacitaciones/biblioteca" element={<BibliotecaCapacitaciones />} />
-                        <Route path="/capacitaciones/acceso/generar" element={<GenerarAcceso />} />
-                        <Route path="/capacitaciones/evidencias" element={<EvidenciasCapacitaciones />} />
-                        <Route path="/capacitaciones/analiticas" element={<AnaliticasCapacitaciones />} />
-                        <Route path="/capacitaciones/cumplimiento" element={<CumplimientoCapacitaciones />} />
-                        <Route path="/evaluaciones" element={<Evaluaciones />} />
-                        <Route path="/evaluaciones/analiticas" element={<AnaliticasEvaluaciones />} />
-                        <Route path="/organigrama" element={<Organigrama />} />
-                        <Route path="/cesantias" element={<Cesantias />} />
-                        <Route path="/calendario" element={<Calendario />} />
-                        <Route path="/reportes" element={<Reportes />} />
-                        <Route path="/analitica" element={<Analitica />} />
-                        <Route path="/catalogos/areas" element={<CatalogosAreas />} />
-                        <Route path="/catalogos/cargos" element={<CatalogosCargos />} />
-                        <Route path="/catalogos/tipos-dotacion" element={<CatalogosTiposDotacion />} />
-                        <Route path="/catalogos/arl" element={<CatalogosARL />} />
-                        <Route path="/catalogos/eps" element={<CatalogosEPS />} />
-                        <Route path="/catalogos/afp" element={<CatalogosAFP />} />
-                        <Route path="/catalogos/ccf" element={<CatalogosCCF />} />
-                        <Route path="/catalogos/afc" element={<CatalogosAFC />} />
-                        <Route path="/catalogos/ips" element={<CatalogosIPS />} />
-                        <Route path="/catalogos/bancos" element={<CatalogosBancos />} />
-                        <Route path="/catalogos/tipos-contrato" element={<CatalogosTiposContrato />} />
-                        <Route path="/catalogos/festivos" element={<CatalogosFestivos />} />
-                        <Route path="/catalogos/motivos-novedad" element={<CatalogosMotivosNovedad />} />
+                        <Route path="/" element={<P module="dashboard"><Dashboard /></P>} />
+                        <Route path="/empleados/:id/360" element={<P module="empleados"><Empleado360 /></P>} />
+                        <Route path="/empleados" element={<P module="empleados"><Empleados /></P>} />
+                        <Route path="/contratos" element={<P module="contratos"><Contratos /></P>} />
+                        <Route path="/incapacidades" element={<P module="incapacidades"><Incapacidades /></P>} />
+                        <Route path="/alertas" element={<P module="alertas"><Alertas /></P>} />
+                        <Route path="/dotacion" element={<P module="dotacion"><Dotacion /></P>} />
+                        <Route path="/examenes" element={<P module="examenes"><Examenes /></P>} />
+                        <Route path="/seleccion" element={<P module="seleccion"><Seleccion /></P>} />
+                        <Route path="/requisiciones" element={<P module="requisiciones"><Requisiciones /></P>} />
+                        <Route path="/centros" element={<P module="centros"><Centros /></P>} />
+                        <Route path="/jornadas" element={<P module="jornadas"><Jornadas /></P>} />
+                        <Route path="/disciplinarios" element={<P module="disciplinarios"><Disciplinarios /></P>} />
+                        <Route path="/vacaciones" element={<P module="vacaciones"><Vacaciones /></P>} />
+                        <Route path="/permisos" element={<P module="permisos"><Permisos /></P>} />
+                        <Route path="/novedades" element={<P module="novedades"><Novedades /></P>} />
+                        <Route path="/pre-liquidacion" element={<P module="pre_liquidacion"><PreLiquidacion /></P>} />
+                        <Route path="/configuracion-laboral" element={<P module="config_laboral"><ConfiguracionLaboral /></P>} />
+                        <Route path="/capacitaciones" element={<P module="capacitaciones"><Capacitaciones /></P>} />
+                        <Route path="/capacitaciones/crear" element={<P module="capacitaciones"><CrearCapacitacion /></P>} />
+                        <Route path="/capacitaciones/crear-manual" element={<P module="capacitaciones"><CrearManual /></P>} />
+                        <Route path="/capacitaciones/biblioteca" element={<P module="capacitaciones"><BibliotecaCapacitaciones /></P>} />
+                        <Route path="/capacitaciones/acceso/generar" element={<P module="capacitaciones"><GenerarAcceso /></P>} />
+                        <Route path="/capacitaciones/evidencias" element={<P module="capacitaciones"><EvidenciasCapacitaciones /></P>} />
+                        <Route path="/capacitaciones/analiticas" element={<P module="capacitaciones"><AnaliticasCapacitaciones /></P>} />
+                        <Route path="/capacitaciones/cumplimiento" element={<P module="capacitaciones"><CumplimientoCapacitaciones /></P>} />
+                        <Route path="/evaluaciones" element={<P module="evaluaciones"><Evaluaciones /></P>} />
+                        <Route path="/evaluaciones/analiticas" element={<P module="evaluaciones"><AnaliticasEvaluaciones /></P>} />
+                        <Route path="/organigrama" element={<P module="organigrama"><Organigrama /></P>} />
+                        <Route path="/cesantias" element={<P module="cesantias"><Cesantias /></P>} />
+                        <Route path="/calendario" element={<P module="calendario"><Calendario /></P>} />
+                        <Route path="/reportes" element={<P module="reportes"><Reportes /></P>} />
+                        <Route path="/analitica" element={<P module="analitica"><Analitica /></P>} />
+                        <Route path="/catalogos/areas" element={<P module="catalogos"><CatalogosAreas /></P>} />
+                        <Route path="/catalogos/cargos" element={<P module="catalogos"><CatalogosCargos /></P>} />
+                        <Route path="/catalogos/tipos-dotacion" element={<P module="catalogos"><CatalogosTiposDotacion /></P>} />
+                        <Route path="/catalogos/arl" element={<P module="catalogos"><CatalogosARL /></P>} />
+                        <Route path="/catalogos/eps" element={<P module="catalogos"><CatalogosEPS /></P>} />
+                        <Route path="/catalogos/afp" element={<P module="catalogos"><CatalogosAFP /></P>} />
+                        <Route path="/catalogos/ccf" element={<P module="catalogos"><CatalogosCCF /></P>} />
+                        <Route path="/catalogos/afc" element={<P module="catalogos"><CatalogosAFC /></P>} />
+                        <Route path="/catalogos/ips" element={<P module="catalogos"><CatalogosIPS /></P>} />
+                        <Route path="/catalogos/bancos" element={<P module="catalogos"><CatalogosBancos /></P>} />
+                        <Route path="/catalogos/tipos-contrato" element={<P module="catalogos"><CatalogosTiposContrato /></P>} />
+                        <Route path="/catalogos/festivos" element={<P module="catalogos"><CatalogosFestivos /></P>} />
+                        <Route path="/catalogos/motivos-novedad" element={<P module="catalogos"><CatalogosMotivosNovedad /></P>} />
                         <Route path="/perfil" element={<Perfil />} />
-                        <Route path="/seguridad" element={<Seguridad />} />
-                        <Route path="/configuracion" element={<Configuracion />} />
+                        <Route path="/seguridad" element={<P module="seguridad"><Seguridad /></P>} />
+                        <Route path="/configuracion" element={<P module="configuracion"><Configuracion /></P>} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </AppLayout>

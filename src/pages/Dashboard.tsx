@@ -155,7 +155,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Active Terminations and Alerts Row */}
+      {/* Admin: Pending Activation + Terminations + Alerts Row */}
+      {isAdmin && <PendingActivationPanel />}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ActiveTerminationsPanel />
         <AlertsPanel />
