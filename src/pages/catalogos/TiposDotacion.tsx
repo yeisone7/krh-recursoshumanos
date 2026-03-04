@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Shirt, Plus, Edit2, Trash2, Loader2, Power, Check, X, Filter, FileSpreadsheet, FileText, ZoomIn } from 'lucide-react';
+import { Shirt, Plus, Edit2, Trash2, Loader2, Check, X, Filter, FileSpreadsheet, FileText, ZoomIn } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -39,7 +40,6 @@ export default function CatalogosTiposDotacion() {
   const [selectedDotationItem, setSelectedDotationItem] = useState<DotationItemType | null>(null);
   const [deleteItem, setDeleteItem] = useState<DotationItemType | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [toggleItem, setToggleItem] = useState<DotationItemType | null>(null);
   const [toggleLoading, setToggleLoading] = useState(false);
   const [zoomImage, setZoomImage] = useState<{ url: string; name: string } | null>(null);
 
@@ -103,20 +103,15 @@ export default function CatalogosTiposDotacion() {
     }
   };
 
-  const handleToggleActive = async () => {
-    if (!toggleItem) return;
-    setToggleLoading(true);
+  const handleToggleActive = async (item: DotationItemType) => {
     try {
       await updateMutation.mutateAsync({
-        id: toggleItem.id,
-        is_active: !toggleItem.is_active,
+        id: item.id,
+        is_active: !item.is_active,
       });
-      toast.success(toggleItem.is_active ? 'Tipo desactivado' : 'Tipo activado');
+      toast.success(item.is_active ? 'Tipo desactivado' : 'Tipo activado');
     } catch (error: any) {
       toast.error('Error al cambiar estado', { description: error.message });
-    } finally {
-      setToggleItem(null);
-      setToggleLoading(false);
     }
   };
 
@@ -364,15 +359,15 @@ export default function CatalogosTiposDotacion() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={item.is_active ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400' : 'bg-muted text-muted-foreground'}>
-                        {item.is_active ? 'Activo' : 'Inactivo'}
-                      </Badge>
+                      <Switch
+                        checked={item.is_active}
+                        onCheckedChange={() => handleToggleActive(item)}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <TooltipProvider delayDuration={200}>
                         <div className="flex justify-end gap-1">
                           <Tooltip><TooltipTrigger asChild><Button size="sm" variant="ghost" onClick={() => handleEdit(item)}><Edit2 className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>Editar completo</TooltipContent></Tooltip>
-                          <Tooltip><TooltipTrigger asChild><Button size="sm" variant="ghost" className={item.is_active ? 'text-amber-600 hover:text-amber-700' : 'text-emerald-600 hover:text-emerald-700'} onClick={() => setToggleItem(item)}><Power className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>{item.is_active ? 'Desactivar' : 'Activar'}</TooltipContent></Tooltip>
                           <Tooltip><TooltipTrigger asChild><Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteItem(item)}><Trash2 className="w-4 h-4" /></Button></TooltipTrigger><TooltipContent>Eliminar</TooltipContent></Tooltip>
                         </div>
                       </TooltipProvider>
@@ -409,26 +404,6 @@ export default function CatalogosTiposDotacion() {
         </DialogContent>
       </Dialog>
 
-      {/* Toggle active/inactive confirmation */}
-      <AlertDialog open={!!toggleItem} onOpenChange={(open) => !open && setToggleItem(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{toggleItem?.is_active ? '¿Desactivar tipo de dotación?' : '¿Activar tipo de dotación?'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {toggleItem?.is_active
-                ? <>Estás a punto de desactivar <strong>{toggleItem?.name}</strong>. No aparecerá en nuevos procesos pero se conservará el historial.</>
-                : <>Estás a punto de activar <strong>{toggleItem?.name}</strong>. Volverá a estar disponible para asignación.</>}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={toggleLoading}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleToggleActive} disabled={toggleLoading}>
-              {toggleLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {toggleItem?.is_active ? 'Desactivar' : 'Activar'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteItem} onOpenChange={(open) => !open && setDeleteItem(null)}>
