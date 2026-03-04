@@ -27,6 +27,8 @@ import { ExamCatalogTab } from '@/components/examenes/ExamCatalogTab';
 import { ExamProfesiogramaTab } from '@/components/examenes/ExamProfesiogramaTab';
 import { ExamTransactionFormDialog } from '@/components/examenes/ExamTransactionFormDialog';
 import { ExamTransactionDetailDialog } from '@/components/examenes/ExamTransactionDetailDialog';
+import { ExamAlertsCard } from '@/components/examenes/ExamAlertsCard';
+import type { ExamAlert } from '@/components/examenes/ExamAlertsCard';
 import { useExamTransactions, useDeleteExamTransaction } from '@/hooks/useExamTransactions';
 import type { ExamTransaction } from '@/hooks/useExamTransactions';
 import { useOperationCenters } from '@/hooks/useCompanies';
