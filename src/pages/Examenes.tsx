@@ -27,6 +27,8 @@ import { ExamCatalogTab } from '@/components/examenes/ExamCatalogTab';
 import { ExamProfesiogramaTab } from '@/components/examenes/ExamProfesiogramaTab';
 import { ExamTransactionFormDialog } from '@/components/examenes/ExamTransactionFormDialog';
 import { ExamTransactionDetailDialog } from '@/components/examenes/ExamTransactionDetailDialog';
+import { ExamAlertsCard } from '@/components/examenes/ExamAlertsCard';
+import type { ExamAlert } from '@/components/examenes/ExamAlertsCard';
 import { useExamTransactions, useDeleteExamTransaction } from '@/hooks/useExamTransactions';
 import type { ExamTransaction } from '@/hooks/useExamTransactions';
 import { useOperationCenters } from '@/hooks/useCompanies';
@@ -37,6 +39,16 @@ import type { ExamType } from '@/types/medicalExam';
 
 const resultLabels: Record<string, string> = {
   apto: 'Apto', apto_restricciones: 'Apto c/ Restricciones', no_apto: 'No Apto', pendiente: 'Pendiente',
+};
+
+const examTypeBadgeStyles: Record<string, { bg: string; text: string; border: string }> = {
+  ingreso: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/20' },
+  periodico: { bg: 'bg-info/10', text: 'text-info', border: 'border-info/20' },
+  egreso: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },
+  reintegro: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/20' },
+  post_incapacidad: { bg: 'bg-warning/10', text: 'text-warning-foreground', border: 'border-warning/20' },
+  cambio_cargo: { bg: 'bg-secondary/10', text: 'text-secondary', border: 'border-secondary/20' },
+  seguimiento: { bg: 'bg-tertiary/10', text: 'text-tertiary', border: 'border-tertiary/20' },
 };
 
 export default function Examenes() {
@@ -74,6 +86,41 @@ export default function Examenes() {
     let totalExams = 0;
     for (const tx of transactions) totalExams += tx.items.length;
     return { total: transactions.length, totalExams };
+  }, [transactions]);
+
+  // Alerts from expiration dates
+  const examAlerts = useMemo<ExamAlert[]>(() => {
+    if (!transactions) return [];
+    const alerts: ExamAlert[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (const tx of transactions) {
+      for (const item of tx.items) {
+        if (!item.expiration_date) continue;
+        const expDate = new Date(item.expiration_date);
+        expDate.setHours(0, 0, 0, 0);
+        const diffDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays > 30) continue;
+
+        let level: 'info' | 'warning' | 'critical' = 'info';
+        if (diffDays <= 0) level = 'critical';
+        else if (diffDays <= 15) level = 'warning';
+
+        alerts.push({
+          id: `${tx.id}-${item.id}`,
+          examId: item.id,
+          employeeId: tx.employee_id,
+          employeeName: `${tx.employees?.first_name || ''} ${tx.employees?.last_name || ''}`.trim(),
+          examType: tx.exam_type,
+          expirationDate: item.expiration_date,
+          daysRemaining: diffDays,
+          level,
+        });
+      }
+    }
+
+    return alerts.sort((a, b) => a.daysRemaining - b.daysRemaining);
   }, [transactions]);
 
   // Filter
@@ -139,8 +186,8 @@ export default function Examenes() {
         </TabsList>
 
         <TabsContent value="aplicaciones" className="mt-6 space-y-6">
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+          {/* Stats + Alerts */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary-light flex items-center justify-center">
                 <Stethoscope className="w-5 h-5 text-primary" />
@@ -150,6 +197,15 @@ export default function Examenes() {
                 <p className="text-sm text-muted-foreground">Aplicaciones ({stats.totalExams} exámenes)</p>
               </div>
             </motion.div>
+            <div className="lg:col-span-2">
+              <ExamAlertsCard
+                alerts={examAlerts}
+                onAlertClick={(alert) => {
+                  const tx = transactions?.find(t => t.items.some(i => i.id === alert.examId));
+                  if (tx) handleView(tx.id);
+                }}
+              />
+            </div>
           </div>
 
           {/* Filters + Table */}
@@ -202,6 +258,7 @@ export default function Examenes() {
                     const itemsSummary = tx.items.length <= 2
                       ? tx.items.map(i => i.exam_name).join(', ')
                       : `${tx.items[0].exam_name}, ${tx.items[1].exam_name} +${tx.items.length - 2} más`;
+                    const badgeStyle = examTypeBadgeStyles[tx.exam_type] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
 
                     return (
                       <TableRow key={tx.id}>
@@ -218,7 +275,7 @@ export default function Examenes() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className={cn('text-xs border', badgeStyle.bg, badgeStyle.text, badgeStyle.border)}>
                             {examTypeLabels[tx.exam_type as ExamType] || tx.exam_type}
                           </Badge>
                         </TableCell>
