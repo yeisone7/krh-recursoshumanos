@@ -32,11 +32,12 @@ import { ExamAlertsCard } from '@/components/examenes/ExamAlertsCard';
 import type { ExamAlert } from '@/components/examenes/ExamAlertsCard';
 import { useExamTransactions, useDeleteExamTransaction } from '@/hooks/useExamTransactions';
 import type { ExamTransaction } from '@/hooks/useExamTransactions';
-import { useOperationCenters } from '@/hooks/useCompanies';
+import { useOperationCenters, useCompanies } from '@/hooks/useCompanies';
 import { usePositions } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { examTypeLabels } from '@/types/medicalExam';
 import type { ExamType } from '@/types/medicalExam';
+import { generateExamOrderPdf } from '@/lib/examPdfGenerator';
 
 const resultLabels: Record<string, string> = {
   apto: 'Apto', apto_restricciones: 'Apto c/ Restricciones', no_apto: 'No Apto', pendiente: 'Pendiente',
