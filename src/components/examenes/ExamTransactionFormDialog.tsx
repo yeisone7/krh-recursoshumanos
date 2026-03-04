@@ -45,6 +45,7 @@ interface ExamItem {
   exam_name: string;
   result: string;
   fromProfesiograma: boolean;
+  expiration_date: string;
 }
 
 export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Props) {
