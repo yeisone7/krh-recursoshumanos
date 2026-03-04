@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
-import { Download, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Download, Loader2, CheckCircle2, AlertTriangle, Search, Filter } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useProfesiogramas, type Profesiograma } from '@/hooks/useDotationProfesiograma';
 import { useExamProfesiogramas, useCreateExamProfesiograma } from '@/hooks/useExamProfesiograma';
@@ -25,6 +27,9 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isImporting, setIsImporting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [centerFilter, setCenterFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'existing'>('all');
 
   const existingExamKeys = useMemo(() => {
     return new Set(
@@ -40,7 +45,25 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
     }));
   }, [dotacionProfs, existingExamKeys]);
 
-  const selectableProfs = availableProfs.filter(p => !p.alreadyExists);
+  const usedCenters = useMemo(() => {
+    if (!availableProfs.length) return [];
+    const ids = [...new Set(availableProfs.map(p => p.operation_center_id))];
+    return centers.filter(c => ids.includes(c.id));
+  }, [availableProfs, centers]);
+
+  const filteredProfs = useMemo(() => {
+    return availableProfs.filter(p => {
+      const cName = (p.operation_centers?.name || centers.find(c => c.id === p.operation_center_id)?.name || '').toLowerCase();
+      const pName = (p.positions?.name || positions.find(pos => pos.id === p.position_id)?.name || '').toLowerCase();
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = !query || cName.includes(query) || pName.includes(query);
+      const matchesCenter = centerFilter === 'all' || p.operation_center_id === centerFilter;
+      const matchesStatus = statusFilter === 'all' || (statusFilter === 'existing' ? p.alreadyExists : !p.alreadyExists);
+      return matchesSearch && matchesCenter && matchesStatus;
+    });
+  }, [availableProfs, searchQuery, centerFilter, statusFilter, centers, positions]);
+
+  const selectableFiltered = filteredProfs.filter(p => !p.alreadyExists);
 
   const getCenterName = (id: string) =>
     centers.find(c => c.id === id)?.name || 'Desconocido';
@@ -53,16 +76,20 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
     setSelectedIds(next);
   };
 
-  const toggleAll = () => {
-    if (selectedIds.size === selectableProfs.length) {
-      setSelectedIds(new Set());
+  const toggleAllFiltered = () => {
+    if (selectableFiltered.every(p => selectedIds.has(p.id))) {
+      const next = new Set(selectedIds);
+      selectableFiltered.forEach(p => next.delete(p.id));
+      setSelectedIds(next);
     } else {
-      setSelectedIds(new Set(selectableProfs.map(p => p.id)));
+      const next = new Set(selectedIds);
+      selectableFiltered.forEach(p => next.add(p.id));
+      setSelectedIds(next);
     }
   };
 
   const handleImport = async () => {
-    const toImport = selectableProfs.filter(p => selectedIds.has(p.id));
+    const toImport = availableProfs.filter(p => selectedIds.has(p.id) && !p.alreadyExists);
     if (toImport.length === 0) return;
 
     setIsImporting(true);
@@ -74,7 +101,7 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
         await createMutation.mutateAsync({
           operation_center_id: prof.operation_center_id,
           position_id: prof.position_id,
-          items: [], // Empty items - user will add exam catalog items later
+          items: [],
         });
         success++;
       } catch {
@@ -105,7 +132,7 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
             Importar desde Dotaciones
           </DialogTitle>
           <DialogDescription>
-            Clona las combinaciones Centro + Cargo de los profesiogramas de Dotación para crear profesiogramas de Exámenes. Los exámenes se configuran después.
+            Clona las combinaciones Centro + Cargo de los profesiogramas de Dotación para crear profesiogramas de Exámenes.
           </DialogDescription>
         </DialogHeader>
 
@@ -120,14 +147,52 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
           </div>
         ) : (
           <>
-            {selectableProfs.length > 0 && (
+            {/* Filters */}
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar por centro o cargo..."
+                  className="w-full h-9 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Select value={centerFilter} onValueChange={setCenterFilter}>
+                  <SelectTrigger className="flex-1 h-8 text-xs">
+                    <SelectValue placeholder="Centro" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los centros</SelectItem>
+                    {usedCenters.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+                  <SelectTrigger className="flex-1 h-8 text-xs">
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="available">Disponibles</SelectItem>
+                    <SelectItem value="existing">Ya importados</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Select all + count */}
+            {selectableFiltered.length > 0 && (
               <div className="flex items-center justify-between px-1">
                 <label className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground">
                   <Checkbox
-                    checked={selectedIds.size === selectableProfs.length && selectableProfs.length > 0}
-                    onCheckedChange={toggleAll}
+                    checked={selectableFiltered.length > 0 && selectableFiltered.every(p => selectedIds.has(p.id))}
+                    onCheckedChange={toggleAllFiltered}
                   />
-                  Seleccionar todos ({selectableProfs.length})
+                  Seleccionar todos ({selectableFiltered.length})
                 </label>
                 <Badge variant="secondary" className="text-xs">
                   {selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}
@@ -135,9 +200,15 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
               </div>
             )}
 
-            <ScrollArea className="flex-1 max-h-[400px]">
-              <div className="space-y-2 pr-2">
-                {availableProfs.map((prof) => {
+            {/* Scrollable list */}
+            <div className="flex-1 min-h-0 overflow-y-auto max-h-[400px] space-y-2 pr-1">
+              {filteredProfs.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Sin resultados para los filtros seleccionados</p>
+                </div>
+              ) : (
+                filteredProfs.map((prof) => {
                   const centerName = prof.operation_centers?.name || getCenterName(prof.operation_center_id);
                   const positionName = prof.positions?.name || getPositionName(prof.position_id);
                   const disabled = prof.alreadyExists;
@@ -173,9 +244,9 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
                       )}
                     </div>
                   );
-                })}
-              </div>
-            </ScrollArea>
+                })
+              )}
+            </div>
           </>
         )}
 
