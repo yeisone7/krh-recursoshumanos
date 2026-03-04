@@ -210,15 +210,19 @@ export function UnifiedCalendar({ defaultView = 'month' }: UnifiedCalendarProps)
             </div>
 
             <div className="flex items-center gap-2">
-              <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week')}>
+              <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week' | 'agenda')}>
                 <TabsList className="h-8">
                   <TabsTrigger value="month" className="text-xs px-3 gap-1">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Mes
                   </TabsTrigger>
                   <TabsTrigger value="week" className="text-xs px-3 gap-1">
-                    <List className="h-3.5 w-3.5" />
+                    <CalendarIcon className="h-3.5 w-3.5" />
                     Semana
+                  </TabsTrigger>
+                  <TabsTrigger value="agenda" className="text-xs px-3 gap-1">
+                    <List className="h-3.5 w-3.5" />
+                    Agenda
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
