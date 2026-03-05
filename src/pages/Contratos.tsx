@@ -30,8 +30,11 @@ import { cn } from '@/lib/utils';
 import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { ContractDetailDialog } from '@/components/contracts/ContractDetailDialog';
 import { MobileCardList } from '@/components/shared/MobileCardList';
+import { PullToRefresh } from '@/components/shared/PullToRefresh';
+import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
