@@ -50,6 +50,7 @@ import Requisiciones from "./pages/Requisiciones";
 import Perfil from "./pages/Perfil";
 import PreLiquidacion from "./pages/PreLiquidacion";
 import ConfiguracionLaboral from "./pages/ConfiguracionLaboral";
+import Install from "./pages/Install";
 import { 
   CatalogosAreas, 
   CatalogosCargos, 
@@ -85,6 +86,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/capacitacion" element={<AccesoPublico />} />
             <Route path="/descargos" element={<DescargosPublico />} />
+            <Route path="/install" element={<Install />} />
             <Route path="/portal" element={
               <ProtectedRoute>
                 <Portal />
