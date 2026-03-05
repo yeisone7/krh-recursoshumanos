@@ -489,7 +489,7 @@ export default function Dotacion() {
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className="flex items-center gap-2 text-sm">
                             <Calendar className="w-4 h-4 text-muted-foreground" />
                             {hasValidDate ? format(new Date(tx.delivery_date), 'dd/MM/yyyy') : '—'}
