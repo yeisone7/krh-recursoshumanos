@@ -217,9 +217,9 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
         </div>
 
         {/* Body */}
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-col sm:flex-row flex-1 min-h-0">
           {/* Sidebar / Index */}
-          <div className="w-64 border-r flex flex-col shrink-0 max-md:hidden">
+          <div className="w-64 border-r flex flex-col shrink-0 hidden md:flex">
             <div className="p-3">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
