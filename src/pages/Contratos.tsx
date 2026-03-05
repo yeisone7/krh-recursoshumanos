@@ -346,7 +346,7 @@ export default function Contratos() {
         transition={{ duration: 0.3, delay: 0.1 }}
         className="card-elevated p-4"
       >
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -357,35 +357,38 @@ export default function Contratos() {
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
             />
           </div>
-          <div className="flex gap-3">
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[200px] h-10 text-sm border-border">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent className="bg-background">
-                <SelectItem value="all">Todos los tipos</SelectItem>
-                {contractTypesConfig?.filter(ct => ct.is_active).map((ct) => (
-                  <SelectItem key={ct.contract_type} value={ct.contract_type}>
-                    {ct.display_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px] h-10 text-sm border-border">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent className="bg-background">
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Vigentes</SelectItem>
-                <SelectItem value="expiring">Por vencer</SelectItem>
-                <SelectItem value="expired">Vencidos</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <Filter className="w-4 h-4" />
-            </Button>
-          </div>
+          <CollapsibleFilters
+            activeCount={
+              (typeFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0)
+            }
+          >
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full sm:w-[200px] h-10 text-sm border-border">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  <SelectItem value="all">Todos los tipos</SelectItem>
+                  {contractTypesConfig?.filter(ct => ct.is_active).map((ct) => (
+                    <SelectItem key={ct.contract_type} value={ct.contract_type}>
+                      {ct.display_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[150px] h-10 text-sm border-border">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="active">Vigentes</SelectItem>
+                  <SelectItem value="expiring">Por vencer</SelectItem>
+                  <SelectItem value="expired">Vencidos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CollapsibleFilters>
         </div>
       </motion.div>
 
