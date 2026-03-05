@@ -286,7 +286,7 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
           </div>
 
           {/* Mobile section selector */}
-          <div className="md:hidden px-4 pt-3">
+          <div className="md:hidden px-3 pt-3 shrink-0 border-b pb-3">
             <select
               value={activeSection}
               onChange={(e) => setActiveSection(e.target.value)}
@@ -306,7 +306,7 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 min-h-0">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 min-h-0">
             {currentSection && (
               <div>
                 {/* Section illustration / hero card */}
