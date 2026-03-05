@@ -17,6 +17,7 @@ import { NoveltyFormDialog } from '@/components/payroll';
 import { usePayrollNovelties, useDeletePayrollNovelty } from '@/hooks/usePayrollNovelties';
 import { usePayrollConfig } from '@/hooks/usePayrollConfig';
 import { NOVELTY_TYPE_LABELS, type NoveltyType, type PayrollNovelty } from '@/types/payroll';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import { toast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 
