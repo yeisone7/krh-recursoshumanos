@@ -521,7 +521,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+      <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
         <div className="flex items-center gap-1">
           <div className="w-4 h-4 bg-indigo-100 border border-indigo-400 rounded text-[8px] font-bold text-indigo-700 flex items-center justify-center">H</div>
           <span>Horario Admin</span>
@@ -558,6 +558,16 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
         </div>
         <span>|</span>
         <span>{totalEmployees} empleados</span>
+      </div>
+      {/* Mobile legend - compact */}
+      <div className="flex sm:hidden items-center gap-2 text-[10px] text-muted-foreground overflow-x-auto">
+        <span className="shrink-0">{totalEmployees} empleados</span>
+        <span className="shrink-0">·</span>
+        <span className="shrink-0 text-indigo-600 font-medium">H=Admin</span>
+        <span className="shrink-0 text-green-600 font-medium">V=Vac</span>
+        <span className="shrink-0 text-blue-600 font-medium">P=Perm</span>
+        <span className="shrink-0 text-orange-600 font-medium">I=Inc</span>
+        <span className="shrink-0 text-emerald-600 font-medium">D=Desc</span>
       </div>
 
       {/* Calendar Grid */}
