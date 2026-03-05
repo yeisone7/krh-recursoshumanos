@@ -57,6 +57,7 @@ import {
   REQUEST_TYPE_COLORS,
 } from '@/types/vacation';
 import { cn } from '@/lib/utils';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 export default function Vacaciones() {
   const [formOpen, setFormOpen] = useState(false);
