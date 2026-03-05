@@ -32,6 +32,7 @@ interface HeaderProps {
 export function Header({ onMobileMenuToggle }: HeaderProps) {
   const { user, companies, currentCompanyId, setCurrentCompanyId, roles, signOut } = useAuth();
   const [manualOpen, setManualOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'U';
