@@ -13,6 +13,8 @@ import {
   Filter,
   Download
 } from 'lucide-react';
+import { PullToRefresh } from '@/components/shared/PullToRefresh';
+import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -197,8 +199,8 @@ export default function Vacaciones() {
         {/* Requests Tab */}
         <TabsContent value="requests" className="space-y-4">
           {/* Filters */}
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-col gap-3">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por nombre o documento..."
@@ -208,29 +210,37 @@ export default function Vacaciones() {
               />
             </div>
             
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los tipos</SelectItem>
-                {Object.entries(REQUEST_TYPE_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CollapsibleFilters
+              activeCount={
+                (statusFilter !== 'all' ? 1 : 0) + (typeFilter !== 'all' ? 1 : 0)
+              }
+            >
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los estados</SelectItem>
+                    {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los tipos</SelectItem>
+                    {Object.entries(REQUEST_TYPE_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CollapsibleFilters>
           </div>
 
           {/* Table */}
@@ -241,26 +251,28 @@ export default function Vacaciones() {
                   {requestsLoading ? (
                     <div className="text-center py-8 text-muted-foreground">Cargando...</div>
                   ) : (
-                    <MobileCardList
-                      items={filteredRequests.map((request) => ({
-                        id: request.id,
-                        title: `${request.employee?.first_name} ${request.employee?.last_name}`,
-                        subtitle: request.employee?.document_number,
-                        badge: (
-                          <Badge className={STATUS_COLORS[request.status]}>
-                            {STATUS_LABELS[request.status]}
-                          </Badge>
-                        ),
-                        fields: [
-                          { label: 'Tipo', value: <Badge className={REQUEST_TYPE_COLORS[request.request_type]}>{REQUEST_TYPE_LABELS[request.request_type]}</Badge> },
-                          { label: 'Días', value: `${request.business_days} días` },
-                          { label: 'Desde', value: format(new Date(request.start_date), 'dd/MM/yyyy', { locale: es }) },
-                          { label: 'Hasta', value: format(new Date(request.end_date), 'dd/MM/yyyy', { locale: es }) },
-                        ],
-                        onClick: () => handleRequestClick(request),
-                      }))}
-                      emptyMessage="No se encontraron solicitudes"
-                    />
+                    <PullToRefresh onRefresh={async () => { await new Promise(r => setTimeout(r, 800)); }}>
+                      <MobileCardList
+                        items={filteredRequests.map((request) => ({
+                          id: request.id,
+                          title: `${request.employee?.first_name} ${request.employee?.last_name}`,
+                          subtitle: request.employee?.document_number,
+                          badge: (
+                            <Badge className={STATUS_COLORS[request.status]}>
+                              {STATUS_LABELS[request.status]}
+                            </Badge>
+                          ),
+                          fields: [
+                            { label: 'Tipo', value: <Badge className={REQUEST_TYPE_COLORS[request.request_type]}>{REQUEST_TYPE_LABELS[request.request_type]}</Badge> },
+                            { label: 'Días', value: `${request.business_days} días` },
+                            { label: 'Desde', value: format(new Date(request.start_date), 'dd/MM/yyyy', { locale: es }) },
+                            { label: 'Hasta', value: format(new Date(request.end_date), 'dd/MM/yyyy', { locale: es }) },
+                          ],
+                          onClick: () => handleRequestClick(request),
+                        }))}
+                        emptyMessage="No se encontraron solicitudes"
+                      />
+                    </PullToRefresh>
                   )}
                 </div>
               ) : (
