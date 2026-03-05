@@ -32,6 +32,7 @@ import {
 } from '@/components/leaves';
 import { useLeaveRequests, useLeaveTypeConfigs, usePendingLeavesCount } from '@/hooks/useLeaves';
 import { LeaveRequest, LeaveTypeConfig, LEAVE_TYPE_LABELS, LEAVE_STATUS_LABELS, LeaveRequestStatus } from '@/types/leave';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 export default function Permisos() {
   const [activeTab, setActiveTab] = useState('solicitudes');
