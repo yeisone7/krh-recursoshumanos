@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { UserManualDialog } from '@/components/manual/UserManualDialog';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,6 +46,7 @@ import {
   Sparkles,
   PenLine,
   Library,
+  BookOpen,
   Link2,
   FileSignature,
   ClipboardCheck } from
@@ -720,6 +722,7 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
 function UserSection({ collapsed }: {collapsed: boolean;}) {
   const { user, roles, signOut } = useAuth();
   const navigate = useNavigate();
+  const [manualOpen, setManualOpen] = useState(false);
 
   const roleLabels: Record<string, string> = {
     admin: 'Administrador',
@@ -735,7 +738,7 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
   const avatarUrl = user?.user_metadata?.avatar_url;
   const primaryRole = roles[0] ? roleLabels[roles[0]] || roles[0] : 'Usuario';
 
-  return (
+  return (<>
     <div className="border-t border-sidebar-border p-3">
       <Popover>
         <PopoverTrigger asChild>
@@ -786,6 +789,12 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
               Configuración
             </button>
             <button
+              onClick={() => setManualOpen(true)}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors">
+              <BookOpen className="w-4 h-4" />
+              Manual de Usuario
+            </button>
+            <button
               onClick={() => signOut()}
               className="w-full flex items-center gap-3 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors">
               <LogOut className="w-4 h-4" />
@@ -794,5 +803,7 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
           </div>
         </PopoverContent>
       </Popover>
-    </div>);
+    </div>
+    <UserManualDialog open={manualOpen} onOpenChange={setManualOpen} />
+    </>);
 }
