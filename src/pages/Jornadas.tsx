@@ -143,7 +143,7 @@ export default function Jornadas() {
           <h2 className="font-display text-lg font-bold text-foreground">Calendario de Turnos</h2>
           <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsFullscreen(false)}>
             <Minimize2 className="w-3.5 h-3.5 mr-1" />
-            Restaurar
+            <span className="hidden sm:inline">Restaurar</span>
           </Button>
         </div>
         <div className="flex-1 min-h-0 flex flex-col">
@@ -156,23 +156,23 @@ export default function Jornadas() {
   return (
     <div className="flex flex-col gap-2 h-[calc(100vh-3rem)]">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <h1 className="font-display text-lg font-bold text-foreground">Horarios y Turnos</h1>
-          <p className="text-muted-foreground text-xs">Gestiona horarios administrativos, turnos operativos y ciclos de rotación</p>
+          <p className="text-muted-foreground text-xs hidden sm:block">Gestiona horarios administrativos, turnos operativos y ciclos de rotación</p>
         </div>
         <div className="flex flex-wrap gap-1.5">
           <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowGeneratorDialog(true)}>
-            <Zap className="w-3.5 h-3.5 mr-1" />
-            Generar Ciclo
+            <Zap className="w-3.5 h-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">Generar Ciclo</span>
           </Button>
           <Button size="sm" className="h-7 text-xs" onClick={() => setShowBulkGeneratorDialog(true)}>
-            <Users className="w-3.5 h-3.5 mr-1" />
-            Generar Todos
+            <Users className="w-3.5 h-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">Generar Todos</span>
           </Button>
           <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowExportDialog(true)}>
-            <FileSpreadsheet className="w-3.5 h-3.5 mr-1" />
-            Exportar
+            <FileSpreadsheet className="w-3.5 h-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">Exportar</span>
           </Button>
         </div>
       </div>
@@ -181,28 +181,28 @@ export default function Jornadas() {
       <Card className="flex-1 min-h-0 flex flex-col">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-2 flex-1 min-h-0 flex flex-col">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-              <TabsList className="h-8">
+              <TabsList className="h-8 w-full sm:w-auto overflow-x-auto">
                 <TabsTrigger value="calendar" className="gap-1.5 text-xs h-7 px-2.5">
                   <Calendar className="w-3.5 h-3.5" />
-                  Calendario
+                  <span className="hidden sm:inline">Calendario</span>
                 </TabsTrigger>
                 <TabsTrigger value="schedules" className="gap-1.5 text-xs h-7 px-2.5">
                   <Briefcase className="w-3.5 h-3.5" />
-                  Horarios
+                  <span className="hidden sm:inline">Horarios</span>
                 </TabsTrigger>
                 <TabsTrigger value="shifts" className="gap-1.5 text-xs h-7 px-2.5">
                   <Clock className="w-3.5 h-3.5" />
-                  Turnos
+                  <span className="hidden sm:inline">Turnos</span>
                 </TabsTrigger>
                 <TabsTrigger value="cycles" className="gap-1.5 text-xs h-7 px-2.5">
                   <RotateCcw className="w-3.5 h-3.5" />
-                  Ciclos
+                  <span className="hidden sm:inline">Ciclos</span>
                 </TabsTrigger>
               </TabsList>
 
               {activeTab !== 'calendar' && (
-                <div className="flex gap-2">
-                  <div className="relative w-64">
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:flex-none sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="Buscar..."
@@ -211,40 +211,52 @@ export default function Jornadas() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <Button onClick={() => {
+                  <Button size="sm" onClick={() => {
                     if (activeTab === 'schedules') { setSelectedSchedule(null); setShowScheduleForm(true); }
                     else if (activeTab === 'shifts') { setSelectedShift(null); setShowShiftForm(true); }
                     else if (activeTab === 'cycles') { setSelectedCycle(null); setShowCycleForm(true); }
                   }}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nuevo
+                    <Plus className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Nuevo</span>
                   </Button>
                 </div>
               )}
             </div>
 
             {/* Horarios Administrativos */}
-            <TabsContent value="schedules">
+            <TabsContent value="schedules" className="overflow-auto">
               {loadingSchedules ? (
                 <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
               ) : (
-                <div className="rounded-md border">
+                <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nombre</TableHead>
-                        <TableHead>Días</TableHead>
+                        <TableHead className="hidden sm:table-cell">Días</TableHead>
                         <TableHead>Horario</TableHead>
-                        <TableHead>Descanso</TableHead>
-                        <TableHead>Estado</TableHead>
+                        <TableHead className="hidden md:table-cell">Descanso</TableHead>
+                        <TableHead className="hidden sm:table-cell">Estado</TableHead>
                         <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {workSchedules.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).map((schedule) => (
                         <TableRow key={schedule.id}>
-                          <TableCell className="font-medium">{schedule.name}</TableCell>
                           <TableCell>
+                            <div>
+                              <span className="font-medium">{schedule.name}</span>
+                              <div className="sm:hidden flex gap-0.5 mt-1">
+                                {schedule.days_of_week.map(d => (
+                                  <Badge key={d} variant="outline" className="text-[10px] px-0.5 h-4">{DAY_NAMES_SHORT[d]}</Badge>
+                                ))}
+                              </div>
+                              <div className="sm:hidden text-xs text-muted-foreground mt-0.5">
+                                {schedule.is_active ? '● Activo' : '○ Inactivo'}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell">
                             <div className="flex gap-1">
                               {schedule.days_of_week.map(d => (
                                 <Badge key={d} variant="outline" className="text-xs px-1">{DAY_NAMES_SHORT[d]}</Badge>
@@ -252,8 +264,8 @@ export default function Jornadas() {
                             </div>
                           </TableCell>
                           <TableCell>{formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}</TableCell>
-                          <TableCell>{schedule.break_minutes} min</TableCell>
-                          <TableCell>
+                          <TableCell className="hidden md:table-cell">{schedule.break_minutes} min</TableCell>
+                          <TableCell className="hidden sm:table-cell">
                             <Badge variant={schedule.is_active ? 'default' : 'secondary'}>
                               {schedule.is_active ? 'Activo' : 'Inactivo'}
                             </Badge>
@@ -275,18 +287,18 @@ export default function Jornadas() {
             </TabsContent>
 
             {/* Turnos */}
-            <TabsContent value="shifts">
+            <TabsContent value="shifts" className="overflow-auto">
               {loadingShifts ? (
                 <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
               ) : (
-                <div className="rounded-md border">
+                <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Turno</TableHead>
                         <TableHead>Horario</TableHead>
-                        <TableHead>Descripción</TableHead>
-                        <TableHead>Estado</TableHead>
+                        <TableHead className="hidden sm:table-cell">Descripción</TableHead>
+                        <TableHead className="hidden sm:table-cell">Estado</TableHead>
                         <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -295,18 +307,23 @@ export default function Jornadas() {
                         <TableRow key={shift.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: shift.color }} />
-                              <span className="font-medium">{shift.name}</span>
-                              {shift.code && <span className="text-muted-foreground">({shift.code})</span>}
+                              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: shift.color }} />
+                              <div>
+                                <span className="font-medium">{shift.name}</span>
+                                {shift.code && <span className="text-muted-foreground ml-1">({shift.code})</span>}
+                                <div className="sm:hidden text-xs text-muted-foreground mt-0.5">
+                                  {shift.is_active ? '● Activo' : '○ Inactivo'}
+                                </div>
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell>{formatTime(shift.start_time)} - {formatTime(shift.end_time)}</TableCell>
-                          <TableCell>
+                          <TableCell className="hidden sm:table-cell">
                             <span className="text-muted-foreground text-sm">
                               {shift.description || '—'}
                             </span>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="hidden sm:table-cell">
                             <Badge variant={shift.is_active ? 'default' : 'secondary'}>
                               {shift.is_active ? 'Activo' : 'Inactivo'}
                             </Badge>
@@ -328,18 +345,18 @@ export default function Jornadas() {
             </TabsContent>
 
             {/* Ciclos */}
-            <TabsContent value="cycles">
+            <TabsContent value="cycles" className="overflow-auto">
               {loadingCycles ? (
                 <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
               ) : (
-                <div className="rounded-md border">
+                <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Ciclo</TableHead>
                         <TableHead>Duración</TableHead>
-                        <TableHead>Descripción</TableHead>
-                        <TableHead>Estado</TableHead>
+                        <TableHead className="hidden sm:table-cell">Descripción</TableHead>
+                        <TableHead className="hidden sm:table-cell">Estado</TableHead>
                         <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -347,12 +364,17 @@ export default function Jornadas() {
                       {shiftCycles.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((cycle) => (
                         <TableRow key={cycle.id}>
                           <TableCell>
-                            <span className="font-medium">{cycle.name}</span>
-                            {cycle.code && <span className="text-muted-foreground ml-2">({cycle.code})</span>}
+                            <div>
+                              <span className="font-medium">{cycle.name}</span>
+                              {cycle.code && <span className="text-muted-foreground ml-2">({cycle.code})</span>}
+                              <div className="sm:hidden text-xs text-muted-foreground mt-0.5">
+                                {cycle.is_active ? '● Activo' : '○ Inactivo'}
+                              </div>
+                            </div>
                           </TableCell>
                           <TableCell>{cycle.total_days} días</TableCell>
-                          <TableCell className="text-muted-foreground max-w-[200px] truncate">{cycle.description || '-'}</TableCell>
-                          <TableCell>
+                          <TableCell className="hidden sm:table-cell text-muted-foreground max-w-[200px] truncate">{cycle.description || '-'}</TableCell>
+                          <TableCell className="hidden sm:table-cell">
                             <Badge variant={cycle.is_active ? 'default' : 'secondary'}>
                               {cycle.is_active ? 'Activo' : 'Inactivo'}
                             </Badge>
@@ -377,8 +399,8 @@ export default function Jornadas() {
             <TabsContent value="calendar" className="mt-1 flex-1 min-h-0 flex flex-col">
               <div className="flex justify-end mb-1">
                 <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsFullscreen(true)}>
-                  <Maximize2 className="w-3.5 h-3.5 mr-1" />
-                  Pantalla completa
+                  <Maximize2 className="w-3.5 h-3.5 sm:mr-1" />
+                  <span className="hidden sm:inline">Pantalla completa</span>
                 </Button>
               </div>
               <ShiftCalendar />
