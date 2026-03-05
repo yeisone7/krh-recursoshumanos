@@ -961,8 +961,9 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       </div>
 
       {/* Instructions */}
-      <p className="text-sm text-muted-foreground">
-        💡 <strong>Click derecho</strong> para asignar, cambiar o eliminar turnos (operativos). <strong>Arrastre</strong> para selección múltiple. Los horarios administrativos se proyectan automáticamente según la configuración del empleado.
+      <p className="text-xs sm:text-sm text-muted-foreground">
+        💡 <span className="hidden sm:inline"><strong>Click derecho</strong> para asignar, cambiar o eliminar turnos (operativos). <strong>Arrastre</strong> para selección múltiple. Los horarios administrativos se proyectan automáticamente según la configuración del empleado.</span>
+        <span className="sm:hidden">Mantén presionado para opciones de turno. Horarios admin se proyectan automáticamente.</span>
       </p>
 
       {/* Assign Dialog */}
