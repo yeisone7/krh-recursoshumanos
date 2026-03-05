@@ -35,6 +35,7 @@ export default function Novedades() {
   });
   const { data: config } = usePayrollConfig();
   const deleteNovelty = useDeletePayrollNovelty();
+  const isMobile = useIsMobile();
 
   // Filter
   const filtered = novelties.filter(n => {
