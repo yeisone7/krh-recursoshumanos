@@ -411,14 +411,14 @@ export default function Contratos() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Nº Contrato</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden md:table-cell">Nº Contrato</th>
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Empleado</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Tipo</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Fecha Inicio</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Vigencia Actual</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Salario</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Prórrogas</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Aprobación</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden sm:table-cell">Tipo</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden lg:table-cell">Fecha Inicio</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden sm:table-cell">Vigencia Actual</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden md:table-cell">Salario</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden lg:table-cell">Prórrogas</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden lg:table-cell">Aprobación</th>
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Estado</th>
                   <th className="text-right p-4 font-medium text-muted-foreground text-sm"></th>
                 </tr>
@@ -440,7 +440,7 @@ export default function Contratos() {
                       onClick={() => handleContractClick(contract.id)}
                       className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer group"
                     >
-                      <td className="p-4">
+                      <td className="p-4 hidden md:table-cell">
                         <span className="text-sm font-mono text-primary font-medium">
                           {contract.contract_number || '-'}
                         </span>
@@ -458,16 +458,16 @@ export default function Contratos() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden sm:table-cell">
                         <span className="text-sm text-foreground">{getContractTypeLabel(contract.contract_type)}</span>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden lg:table-cell">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="w-4 h-4" />
                           {new Date(contract.start_date).toLocaleDateString('es-CO')}
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden sm:table-cell">
                         <span className="text-sm text-foreground">
                           {effectiveEndDate
                             ? new Date(effectiveEndDate).toLocaleDateString('es-CO')
@@ -477,10 +477,10 @@ export default function Contratos() {
                           <p className="text-xs text-accent">Extendido</p>
                         )}
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden md:table-cell">
                         <span className="text-sm font-medium text-foreground">{formatCurrency(Number(contract.salary))}</span>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden lg:table-cell">
                         {extensionsCount > 0 ? (
                           <Badge variant="outline" className="bg-accent-light text-accent border-accent/20">
                             {extensionsCount} prórroga{extensionsCount > 1 ? 's' : ''}
@@ -489,7 +489,7 @@ export default function Contratos() {
                           <span className="text-sm text-muted-foreground">-</span>
                         )}
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden lg:table-cell">
                         {contract.is_approved ? (
                           <Badge variant="outline" className="bg-success-light text-success border-success/20 gap-1">
                             <CheckCircle2 className="w-3 h-3" />

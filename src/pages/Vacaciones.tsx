@@ -232,16 +232,16 @@ export default function Vacaciones() {
 
           {/* Table */}
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Empleado</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Fechas</TableHead>
+                    <TableHead className="hidden sm:table-cell">Tipo</TableHead>
+                    <TableHead className="hidden md:table-cell">Fechas</TableHead>
                     <TableHead className="text-center">Días</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -274,12 +274,12 @@ export default function Vacaciones() {
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <Badge className={REQUEST_TYPE_COLORS[request.request_type]}>
                             {REQUEST_TYPE_LABELS[request.request_type]}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className="text-sm">
                             <p>{format(new Date(request.start_date), 'dd/MM/yyyy', { locale: es })}</p>
                             <p className="text-muted-foreground">
@@ -295,7 +295,7 @@ export default function Vacaciones() {
                             {STATUS_LABELS[request.status]}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right hidden sm:table-cell">
                           <Button 
                             variant="ghost" 
                             size="sm"
