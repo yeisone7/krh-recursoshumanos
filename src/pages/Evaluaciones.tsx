@@ -415,7 +415,7 @@ export default function Evaluaciones() {
                       return (
                       <TableRow key={cycle.id}>
                         <TableCell className="font-medium">{cycle.name}</TableCell>
-                        <TableCell>{cycle.template?.name || '-'}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{cycle.template?.name || '-'}</TableCell>
                         <TableCell>
                           {format(new Date(cycle.start_date), 'dd MMM', { locale: es })} -{' '}
                           {format(new Date(cycle.end_date), 'dd MMM yyyy', { locale: es })}
