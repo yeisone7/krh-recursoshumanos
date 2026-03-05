@@ -24,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NotificationsPanel } from '@/components/notifications/NotificationsPanel';
 import { UserManualDialog } from '@/components/manual/UserManualDialog';
 import { useTheme } from '@/hooks/useTheme';
+import { GlobalSearch } from '@/components/layout/GlobalSearch';
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
