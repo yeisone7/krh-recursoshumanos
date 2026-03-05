@@ -738,7 +738,7 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
   const avatarUrl = user?.user_metadata?.avatar_url;
   const primaryRole = roles[0] ? roleLabels[roles[0]] || roles[0] : 'Usuario';
 
-  return (
+  return (<>
     <div className="border-t border-sidebar-border p-3">
       <Popover>
         <PopoverTrigger asChild>
