@@ -281,15 +281,16 @@ export default function Incapacidades() {
                   ))}
                 </div>
               ) : filteredIncapacities && filteredIncapacities.length > 0 ? (
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Empleado</TableHead>
-                      <TableHead>Período</TableHead>
+                      <TableHead className="hidden sm:table-cell">Período</TableHead>
                       <TableHead>Días</TableHead>
                       <TableHead>Origen</TableHead>
-                      <TableHead>Diagnóstico</TableHead>
-                      <TableHead>Valor</TableHead>
+                      <TableHead className="hidden md:table-cell">Diagnóstico</TableHead>
+                      <TableHead className="hidden lg:table-cell">Valor</TableHead>
                       <TableHead>Recobro</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -315,7 +316,7 @@ export default function Incapacidades() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <p className="text-sm">
                             {format(new Date(inc.start_date), 'dd/MM/yyyy')}
                           </p>
@@ -338,7 +339,7 @@ export default function Incapacidades() {
                             {inc.origin === 'laboral' ? 'Laboral' : 'Común'}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <p className="text-sm line-clamp-1 max-w-[200px]">
                             {inc.diagnosis}
                           </p>
@@ -346,7 +347,7 @@ export default function Incapacidades() {
                             <p className="text-xs text-muted-foreground">{inc.cie10_code}</p>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <p className="font-medium">{formatCurrency(inc.total_amount)}</p>
                         </TableCell>
                         <TableCell>
@@ -358,6 +359,7 @@ export default function Incapacidades() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               ) : (
                 <div className="text-center py-12">
                   <Stethoscope className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

@@ -230,19 +230,19 @@ export default function Novedades() {
 
       {/* Table */}
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Empleado</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead>Hora inicio</TableHead>
+                <TableHead className="hidden sm:table-cell">Hora inicio</TableHead>
                 <TableHead>Horas</TableHead>
-                <TableHead>Hora final</TableHead>
-                <TableHead>Motivo</TableHead>
-                <TableHead>Fuente</TableHead>
-                <TableHead>Observaciones</TableHead>
+                <TableHead className="hidden sm:table-cell">Hora final</TableHead>
+                <TableHead className="hidden md:table-cell">Motivo</TableHead>
+                <TableHead className="hidden lg:table-cell">Fuente</TableHead>
+                <TableHead className="hidden lg:table-cell">Observaciones</TableHead>
                 <TableHead className="w-[80px]">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -271,18 +271,18 @@ export default function Novedades() {
                         {NOVELTY_TYPE_LABELS[n.novelty_type] || n.novelty_type}
                       </Badge>
                     </TableCell>
-                    <TableCell className="font-semibold">{(n as any).start_time ? (n as any).start_time.slice(0, 5) : '—'}</TableCell>
+                    <TableCell className="font-semibold hidden sm:table-cell">{(n as any).start_time ? (n as any).start_time.slice(0, 5) : '—'}</TableCell>
                     <TableCell className="font-semibold">{n.hours}h</TableCell>
-                    <TableCell className="font-semibold">{(n as any).end_time ? (n as any).end_time.slice(0, 5) : '—'}</TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell className="font-semibold hidden sm:table-cell">{(n as any).end_time ? (n as any).end_time.slice(0, 5) : '—'}</TableCell>
+                    <TableCell className="text-sm hidden md:table-cell">
                       {(n as any).novelty_reasons ? `${(n as any).novelty_reasons.item_number}. ${(n as any).novelty_reasons.name}` : '—'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <Badge variant={n.source === 'manual' ? 'secondary' : 'default'} className="text-xs">
                         {n.source === 'manual' ? 'Manual' : 'Auto'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
+                    <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate hidden lg:table-cell">
                       {n.notes || '—'}
                     </TableCell>
                     <TableCell>

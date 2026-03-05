@@ -1,10 +1,9 @@
 import { ReactNode, useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { Menu } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -13,6 +12,12 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useIsMobile();
+
+  useSwipeGesture({
+    onSwipeRight: () => setMobileOpen(true),
+    onSwipeLeft: () => setMobileOpen(false),
+    enabled: isMobile,
+  });
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
