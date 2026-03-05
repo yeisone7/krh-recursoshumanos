@@ -467,7 +467,7 @@ export default function Contratos() {
                           {new Date(contract.start_date).toLocaleDateString('es-CO')}
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden sm:table-cell">
                         <span className="text-sm text-foreground">
                           {effectiveEndDate
                             ? new Date(effectiveEndDate).toLocaleDateString('es-CO')
