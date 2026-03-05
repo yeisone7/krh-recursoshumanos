@@ -396,13 +396,14 @@ export default function Evaluaciones() {
                   No hay ciclos de evaluación configurados
                 </p>
               ) : (
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nombre</TableHead>
-                      <TableHead>Plantilla</TableHead>
-                      <TableHead>Periodo</TableHead>
-                      <TableHead>Progreso</TableHead>
+                      <TableHead className="hidden sm:table-cell">Plantilla</TableHead>
+                      <TableHead className="hidden md:table-cell">Periodo</TableHead>
+                      <TableHead className="hidden sm:table-cell">Progreso</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
