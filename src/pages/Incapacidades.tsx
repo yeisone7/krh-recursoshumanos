@@ -65,6 +65,7 @@ export default function Incapacidades() {
   
   const { data: incapacities, isLoading } = useIncapacities();
   const { data: stats } = useIncapacityStats();
+  const isMobile = useIsMobile();
   
   // Handle deep linking from dashboard
   useEffect(() => {
