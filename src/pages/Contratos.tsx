@@ -550,8 +550,8 @@ export default function Contratos() {
               </tbody>
             </table>
           </div>
-          )}
-        )}
+          )
+        }
       </motion.div>
     </div>
   );

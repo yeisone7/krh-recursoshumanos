@@ -284,7 +284,7 @@ export default function Incapacidades() {
                   ))}
                 </div>
               ) : filteredIncapacities && filteredIncapacities.length > 0 ? (
-                {isMobile ? (
+                isMobile ? (
                 <MobileCardList
                   items={filteredIncapacities.map((inc) => ({
                     id: inc.id,
@@ -385,7 +385,7 @@ export default function Incapacidades() {
                   </TableBody>
                 </Table>
                 </div>
-                )}
+                )
               ) : (
                 <div className="text-center py-12">
                   <Stethoscope className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
