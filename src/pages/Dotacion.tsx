@@ -481,7 +481,7 @@ export default function Dotacion() {
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <div>
                             <p className="font-medium text-sm">{itemsSummary}</p>
                             <p className="text-xs text-muted-foreground">
