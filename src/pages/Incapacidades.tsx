@@ -52,6 +52,7 @@ import {
   recoveryStatusColors,
   getTotalChainDays,
 } from '@/types/incapacity';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 export default function Incapacidades() {
   const [searchParams, setSearchParams] = useSearchParams();
