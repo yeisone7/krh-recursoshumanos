@@ -19,6 +19,7 @@ import { usePayrollConfig } from '@/hooks/usePayrollConfig';
 import { NOVELTY_TYPE_LABELS, type NoveltyType, type PayrollNovelty } from '@/types/payroll';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 
 export default function Novedades() {
