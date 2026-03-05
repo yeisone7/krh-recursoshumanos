@@ -479,7 +479,7 @@ export default function Evaluaciones() {
                     })}
                   </TableBody>
                 </Table>
-              )}
+                </div>
             </CardContent>
           </Card>
         </TabsContent>

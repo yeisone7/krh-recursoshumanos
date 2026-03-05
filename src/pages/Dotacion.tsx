@@ -538,6 +538,7 @@ export default function Dotacion() {
                   })}
                 </TableBody>
               </Table>
+              </div>
             )}
           </div>
         </motion.div>
