@@ -723,6 +723,7 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
 function UserSection({ collapsed }: {collapsed: boolean;}) {
   const { user, roles, signOut } = useAuth();
   const navigate = useNavigate();
+  const [manualOpen, setManualOpen] = useState(false);
 
   const roleLabels: Record<string, string> = {
     admin: 'Administrador',
