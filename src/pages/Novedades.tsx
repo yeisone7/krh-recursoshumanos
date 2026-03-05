@@ -18,6 +18,8 @@ import { usePayrollNovelties, useDeletePayrollNovelty } from '@/hooks/usePayroll
 import { usePayrollConfig } from '@/hooks/usePayrollConfig';
 import { NOVELTY_TYPE_LABELS, type NoveltyType, type PayrollNovelty } from '@/types/payroll';
 import { MobileCardList } from '@/components/shared/MobileCardList';
+import { PullToRefresh } from '@/components/shared/PullToRefresh';
+import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
@@ -195,8 +197,8 @@ export default function Novedades() {
       )}
 
       {/* Filters */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col gap-3">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por empleado..."
@@ -205,31 +207,39 @@ export default function Novedades() {
             className="pl-9"
           />
         </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[220px]">
-            <SelectValue placeholder="Tipo de novedad" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los tipos</SelectItem>
-            {noveltyTypeOptions.map(o => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          type="date"
-          value={startDate}
-          onChange={e => setStartDate(e.target.value)}
-          className="w-[160px]"
-          placeholder="Desde"
-        />
-        <Input
-          type="date"
-          value={endDate}
-          onChange={e => setEndDate(e.target.value)}
-          className="w-[160px]"
-          placeholder="Hasta"
-        />
+        <CollapsibleFilters
+          activeCount={
+            (typeFilter !== 'all' ? 1 : 0) + (startDate ? 1 : 0) + (endDate ? 1 : 0)
+          }
+        >
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-[220px]">
+                <SelectValue placeholder="Tipo de novedad" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los tipos</SelectItem>
+                {noveltyTypeOptions.map(o => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={e => setStartDate(e.target.value)}
+              className="w-full sm:w-[160px]"
+              placeholder="Desde"
+            />
+            <Input
+              type="date"
+              value={endDate}
+              onChange={e => setEndDate(e.target.value)}
+              className="w-full sm:w-[160px]"
+              placeholder="Hasta"
+            />
+          </div>
+        </CollapsibleFilters>
       </div>
 
       {/* Table */}
@@ -240,33 +250,35 @@ export default function Novedades() {
               {isLoading ? (
                 <div className="text-center py-8 text-muted-foreground">Cargando...</div>
               ) : (
-                <MobileCardList
-                  items={filtered.map(n => ({
-                    id: n.id,
-                    title: n.employees_v2 ? `${n.employees_v2.first_name} ${n.employees_v2.last_name}` : 'N/A',
-                    subtitle: format(new Date(n.novelty_date), 'dd MMM yyyy', { locale: es }),
-                    badge: (
-                      <Badge variant="outline" className="text-xs">
-                        {NOVELTY_TYPE_LABELS[n.novelty_type] || n.novelty_type}
-                      </Badge>
-                    ),
-                    fields: [
-                      { label: 'Horas', value: `${n.hours}h` },
-                      { label: 'Fuente', value: n.source === 'manual' ? 'Manual' : 'Auto' },
-                    ],
-                    actions: (
-                      <>
-                        <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleEdit(n); }}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </>
-                    ),
-                  }))}
-                  emptyMessage="No se encontraron novedades"
-                />
+                <PullToRefresh onRefresh={async () => { await new Promise(r => setTimeout(r, 800)); }}>
+                  <MobileCardList
+                    items={filtered.map(n => ({
+                      id: n.id,
+                      title: n.employees_v2 ? `${n.employees_v2.first_name} ${n.employees_v2.last_name}` : 'N/A',
+                      subtitle: format(new Date(n.novelty_date), 'dd MMM yyyy', { locale: es }),
+                      badge: (
+                        <Badge variant="outline" className="text-xs">
+                          {NOVELTY_TYPE_LABELS[n.novelty_type] || n.novelty_type}
+                        </Badge>
+                      ),
+                      fields: [
+                        { label: 'Horas', value: `${n.hours}h` },
+                        { label: 'Fuente', value: n.source === 'manual' ? 'Manual' : 'Auto' },
+                      ],
+                      actions: (
+                        <>
+                          <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleEdit(n); }}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </>
+                      ),
+                    }))}
+                    emptyMessage="No se encontraron novedades"
+                  />
+                </PullToRefresh>
               )}
             </div>
           ) : (

@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { es } from 'date-fns/locale';
 import { Plus, Calendar, List, Settings, Filter, Search } from 'lucide-react';
+import { PullToRefresh } from '@/components/shared/PullToRefresh';
+import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -193,8 +195,8 @@ export default function Permisos() {
         {/* Solicitudes Tab */}
         <TabsContent value="solicitudes" className="space-y-4">
           {/* Filters */}
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-col gap-3">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por empleado o tipo..."
@@ -203,18 +205,20 @@ export default function Permisos() {
                 className="pl-9"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="pendiente">Pendiente</SelectItem>
-                <SelectItem value="aprobado">Aprobado</SelectItem>
-                <SelectItem value="rechazado">Rechazado</SelectItem>
-                <SelectItem value="cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
+            <CollapsibleFilters activeCount={statusFilter !== 'all' ? 1 : 0}>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="pendiente">Pendiente</SelectItem>
+                  <SelectItem value="aprobado">Aprobado</SelectItem>
+                  <SelectItem value="rechazado">Rechazado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </CollapsibleFilters>
           </div>
 
           {/* Requests Table */}
@@ -225,24 +229,26 @@ export default function Permisos() {
                   {isLoading ? (
                     <div className="text-center py-8 text-muted-foreground">Cargando...</div>
                   ) : (
-                    <MobileCardList
-                      items={filteredRequests.map((request) => ({
-                        id: request.id,
-                        title: request.employees_v2 ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}` : 'N/A',
-                        subtitle: LEAVE_TYPE_LABELS[request.leave_type],
-                        badge: (
-                          <Badge variant={getStatusBadgeVariant(request.status)}>
-                            {LEAVE_STATUS_LABELS[request.status]}
-                          </Badge>
-                        ),
-                        fields: [
-                          { label: 'Días', value: `${request.total_days}` },
-                          { label: 'Fechas', value: `${format(new Date(request.start_date), 'dd MMM', { locale: es })} - ${format(new Date(request.end_date), 'dd MMM', { locale: es })}` },
-                        ],
-                        onClick: () => handleViewRequest(request),
-                      }))}
-                      emptyMessage="No se encontraron solicitudes"
-                    />
+                    <PullToRefresh onRefresh={async () => { await new Promise(r => setTimeout(r, 800)); }}>
+                      <MobileCardList
+                        items={filteredRequests.map((request) => ({
+                          id: request.id,
+                          title: request.employees_v2 ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}` : 'N/A',
+                          subtitle: LEAVE_TYPE_LABELS[request.leave_type],
+                          badge: (
+                            <Badge variant={getStatusBadgeVariant(request.status)}>
+                              {LEAVE_STATUS_LABELS[request.status]}
+                            </Badge>
+                          ),
+                          fields: [
+                            { label: 'Días', value: `${request.total_days}` },
+                            { label: 'Fechas', value: `${format(new Date(request.start_date), 'dd MMM', { locale: es })} - ${format(new Date(request.end_date), 'dd MMM', { locale: es })}` },
+                          ],
+                          onClick: () => handleViewRequest(request),
+                        }))}
+                        emptyMessage="No se encontraron solicitudes"
+                      />
+                    </PullToRefresh>
                   )}
                 </div>
               ) : (

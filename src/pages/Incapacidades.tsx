@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { PullToRefresh } from '@/components/shared/PullToRefresh';
+import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -243,36 +245,44 @@ export default function Incapacidades() {
                   </CardDescription>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative">
+                  <div className="relative flex-1 min-w-[150px]">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Buscar..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8 w-[200px]"
+                      className="pl-8 w-full"
                     />
                   </div>
-                  <Select value={originFilter} onValueChange={setOriginFilter}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Origen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="comun">Común</SelectItem>
-                      <SelectItem value="laboral">Laboral</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Estado Recobro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {Object.entries(recoveryStatusLabels).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CollapsibleFilters
+                    activeCount={
+                      (originFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0)
+                    }
+                  >
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Select value={originFilter} onValueChange={setOriginFilter}>
+                        <SelectTrigger className="w-full sm:w-[140px]">
+                          <SelectValue placeholder="Origen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          <SelectItem value="comun">Común</SelectItem>
+                          <SelectItem value="laboral">Laboral</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-full sm:w-[160px]">
+                          <SelectValue placeholder="Estado Recobro" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          {Object.entries(recoveryStatusLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CollapsibleFilters>
                 </div>
               </div>
             </CardHeader>
@@ -285,26 +295,28 @@ export default function Incapacidades() {
                 </div>
               ) : filteredIncapacities && filteredIncapacities.length > 0 ? (
                 isMobile ? (
-                <MobileCardList
-                  items={filteredIncapacities.map((inc) => ({
-                    id: inc.id,
-                    title: `${inc.employee?.first_name} ${inc.employee?.last_name}`,
-                    subtitle: inc.employee?.document_number,
-                    badge: (
-                      <Badge className={recoveryStatusColors[inc.recovery_status]}>
-                        {recoveryStatusLabels[inc.recovery_status]}
-                      </Badge>
-                    ),
-                    fields: [
-                      { label: 'Días', value: `${inc.total_days} días` },
-                      { label: 'Origen', value: inc.origin === 'laboral' ? 'Laboral' : 'Común' },
-                      { label: 'Período', value: `${format(new Date(inc.start_date), 'dd/MM')} - ${format(new Date(inc.end_date), 'dd/MM')}` },
-                      { label: 'Valor', value: formatCurrency(inc.total_amount) },
-                    ],
-                    onClick: () => handleOpenDetail(inc.id),
-                  }))}
-                  emptyMessage="No se encontraron incapacidades"
-                />
+                <PullToRefresh onRefresh={async () => { await new Promise(r => setTimeout(r, 800)); }}>
+                  <MobileCardList
+                    items={filteredIncapacities.map((inc) => ({
+                      id: inc.id,
+                      title: `${inc.employee?.first_name} ${inc.employee?.last_name}`,
+                      subtitle: inc.employee?.document_number,
+                      badge: (
+                        <Badge className={recoveryStatusColors[inc.recovery_status]}>
+                          {recoveryStatusLabels[inc.recovery_status]}
+                        </Badge>
+                      ),
+                      fields: [
+                        { label: 'Días', value: `${inc.total_days} días` },
+                        { label: 'Origen', value: inc.origin === 'laboral' ? 'Laboral' : 'Común' },
+                        { label: 'Período', value: `${format(new Date(inc.start_date), 'dd/MM')} - ${format(new Date(inc.end_date), 'dd/MM')}` },
+                        { label: 'Valor', value: formatCurrency(inc.total_amount) },
+                      ],
+                      onClick: () => handleOpenDetail(inc.id),
+                    }))}
+                    emptyMessage="No se encontraron incapacidades"
+                  />
+                </PullToRefresh>
                 ) : (
                 <div className="overflow-x-auto">
                 <Table>

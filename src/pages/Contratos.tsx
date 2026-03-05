@@ -30,8 +30,11 @@ import { cn } from '@/lib/utils';
 import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { ContractDetailDialog } from '@/components/contracts/ContractDetailDialog';
 import { MobileCardList } from '@/components/shared/MobileCardList';
+import { PullToRefresh } from '@/components/shared/PullToRefresh';
+import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -343,7 +346,7 @@ export default function Contratos() {
         transition={{ duration: 0.3, delay: 0.1 }}
         className="card-elevated p-4"
       >
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -354,35 +357,38 @@ export default function Contratos() {
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
             />
           </div>
-          <div className="flex gap-3">
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[200px] h-10 text-sm border-border">
-                <SelectValue placeholder="Tipo" />
-              </SelectTrigger>
-              <SelectContent className="bg-background">
-                <SelectItem value="all">Todos los tipos</SelectItem>
-                {contractTypesConfig?.filter(ct => ct.is_active).map((ct) => (
-                  <SelectItem key={ct.contract_type} value={ct.contract_type}>
-                    {ct.display_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px] h-10 text-sm border-border">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent className="bg-background">
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Vigentes</SelectItem>
-                <SelectItem value="expiring">Por vencer</SelectItem>
-                <SelectItem value="expired">Vencidos</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <Filter className="w-4 h-4" />
-            </Button>
-          </div>
+          <CollapsibleFilters
+            activeCount={
+              (typeFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0)
+            }
+          >
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-full sm:w-[200px] h-10 text-sm border-border">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  <SelectItem value="all">Todos los tipos</SelectItem>
+                  {contractTypesConfig?.filter(ct => ct.is_active).map((ct) => (
+                    <SelectItem key={ct.contract_type} value={ct.contract_type}>
+                      {ct.display_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[150px] h-10 text-sm border-border">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="active">Vigentes</SelectItem>
+                  <SelectItem value="expiring">Por vencer</SelectItem>
+                  <SelectItem value="expired">Vencidos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CollapsibleFilters>
         </div>
       </motion.div>
 
@@ -411,32 +417,34 @@ export default function Contratos() {
           </div>
         ) : isMobile ? (
           <div className="p-3">
-            <MobileCardList
-              items={filteredContracts.map((contract) => {
-                const status = getContractStatus(contract);
-                const effectiveEndDate = getEffectiveEndDate(contract);
-                const StatusIcon = statusConfig[status].icon;
-                return {
-                  id: contract.id,
-                  title: `${contract.employees?.first_name} ${contract.employees?.last_name}`,
-                  subtitle: contract.employees?.document_number,
-                  badge: (
-                    <Badge variant="outline" className={cn("gap-1", statusConfig[status].class)}>
-                      <StatusIcon className="w-3 h-3" />
-                      {statusConfig[status].label}
-                    </Badge>
-                  ),
-                  fields: [
-                    { label: 'Tipo', value: getContractTypeLabel(contract.contract_type) },
-                    { label: 'Salario', value: formatCurrency(Number(contract.salary)) },
-                    { label: 'Inicio', value: new Date(contract.start_date).toLocaleDateString('es-CO') },
-                    { label: 'Vigencia', value: effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido' },
-                  ],
-                  onClick: () => handleContractClick(contract.id),
-                };
-              })}
-              emptyMessage="No se encontraron contratos"
-            />
+            <PullToRefresh onRefresh={async () => { /* refetch is automatic via react-query */ await new Promise(r => setTimeout(r, 800)); }}>
+              <MobileCardList
+                items={filteredContracts.map((contract) => {
+                  const status = getContractStatus(contract);
+                  const effectiveEndDate = getEffectiveEndDate(contract);
+                  const StatusIcon = statusConfig[status].icon;
+                  return {
+                    id: contract.id,
+                    title: `${contract.employees?.first_name} ${contract.employees?.last_name}`,
+                    subtitle: contract.employees?.document_number,
+                    badge: (
+                      <Badge variant="outline" className={cn("gap-1", statusConfig[status].class)}>
+                        <StatusIcon className="w-3 h-3" />
+                        {statusConfig[status].label}
+                      </Badge>
+                    ),
+                    fields: [
+                      { label: 'Tipo', value: getContractTypeLabel(contract.contract_type) },
+                      { label: 'Salario', value: formatCurrency(Number(contract.salary)) },
+                      { label: 'Inicio', value: new Date(contract.start_date).toLocaleDateString('es-CO') },
+                      { label: 'Vigencia', value: effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido' },
+                    ],
+                    onClick: () => handleContractClick(contract.id),
+                  };
+                })}
+                emptyMessage="No se encontraron contratos"
+              />
+            </PullToRefresh>
           </div>
         ) : (
           <div className="overflow-x-auto">
