@@ -803,5 +803,7 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
           </div>
         </PopoverContent>
       </Popover>
-    </div>);
+    </div>
+    <UserManualDialog open={manualOpen} onOpenChange={setManualOpen} />
+    </>);
 }
