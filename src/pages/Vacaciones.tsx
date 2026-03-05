@@ -72,6 +72,7 @@ export default function Vacaciones() {
   const { data: balances, isLoading: balancesLoading } = useVacationBalances();
   const { data: stats } = useVacationStats();
   const { data: config } = useVacationConfig();
+  const isMobile = useIsMobile();
 
   const handleRequestClick = (request: VacationRequest) => {
     setSelectedRequestId(request.id);
