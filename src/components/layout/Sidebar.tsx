@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { UserManualDialog } from '@/components/manual/UserManualDialog';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
