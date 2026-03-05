@@ -630,7 +630,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                       </Badge>
                     </div>
                     {daysInPeriod.map((day) => (
-                      <div key={format(day, 'yyyy-MM-dd')} className="w-10 border-r shrink-0" />
+                      <div key={format(day, 'yyyy-MM-dd')} className="w-8 sm:w-10 border-r shrink-0" />
                     ))}
                   </div>
 
