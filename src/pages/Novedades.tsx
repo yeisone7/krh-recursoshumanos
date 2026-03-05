@@ -197,8 +197,8 @@ export default function Novedades() {
       )}
 
       {/* Filters */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col gap-3">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por empleado..."
@@ -207,31 +207,39 @@ export default function Novedades() {
             className="pl-9"
           />
         </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[220px]">
-            <SelectValue placeholder="Tipo de novedad" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los tipos</SelectItem>
-            {noveltyTypeOptions.map(o => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          type="date"
-          value={startDate}
-          onChange={e => setStartDate(e.target.value)}
-          className="w-[160px]"
-          placeholder="Desde"
-        />
-        <Input
-          type="date"
-          value={endDate}
-          onChange={e => setEndDate(e.target.value)}
-          className="w-[160px]"
-          placeholder="Hasta"
-        />
+        <CollapsibleFilters
+          activeCount={
+            (typeFilter !== 'all' ? 1 : 0) + (startDate ? 1 : 0) + (endDate ? 1 : 0)
+          }
+        >
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-[220px]">
+                <SelectValue placeholder="Tipo de novedad" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los tipos</SelectItem>
+                {noveltyTypeOptions.map(o => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={e => setStartDate(e.target.value)}
+              className="w-full sm:w-[160px]"
+              placeholder="Desde"
+            />
+            <Input
+              type="date"
+              value={endDate}
+              onChange={e => setEndDate(e.target.value)}
+              className="w-full sm:w-[160px]"
+              placeholder="Hasta"
+            />
+          </div>
+        </CollapsibleFilters>
       </div>
 
       {/* Table */}
