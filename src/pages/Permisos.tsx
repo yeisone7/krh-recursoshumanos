@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { es } from 'date-fns/locale';
 import { Plus, Calendar, List, Settings, Filter, Search } from 'lucide-react';
+import { PullToRefresh } from '@/components/shared/PullToRefresh';
+import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
