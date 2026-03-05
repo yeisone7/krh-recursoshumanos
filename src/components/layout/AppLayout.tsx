@@ -1,9 +1,10 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -11,6 +12,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
   const isMobile = useIsMobile();
 
   useSwipeGesture({
@@ -19,8 +21,48 @@ export function AppLayout({ children }: AppLayoutProps) {
     enabled: isMobile,
   });
 
+  // Show swipe hint briefly on first mobile load
+  useEffect(() => {
+    if (!isMobile) return;
+    const key = 'swipe-hint-shown';
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    setShowSwipeHint(true);
+    const timer = setTimeout(() => setShowSwipeHint(false), 3000);
+    return () => clearTimeout(timer);
+  }, [isMobile]);
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
+      {/* Mobile swipe indicator */}
+      {isMobile && !mobileOpen && (
+        <AnimatePresence>
+          {showSwipeHint && (
+            <motion.div
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -4 }}
+              transition={{ duration: 0.4 }}
+              className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex items-center gap-1"
+            >
+              <div className="w-1 h-16 rounded-r-full bg-primary/40" />
+              <motion.div
+                animate={{ x: [0, 6, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+                className="text-xs text-primary/60 font-medium"
+              >
+                ›
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+      {/* Persistent subtle edge indicator */}
+      {isMobile && !mobileOpen && !showSwipeHint && (
+        <div className="fixed left-0 top-1/2 -translate-y-1/2 z-40 w-0.5 h-10 rounded-r-full bg-primary/20" />
+      )}
+
       {/* Desktop sidebar */}
       {!isMobile && <Sidebar />}
 

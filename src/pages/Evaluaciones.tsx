@@ -396,13 +396,14 @@ export default function Evaluaciones() {
                   No hay ciclos de evaluación configurados
                 </p>
               ) : (
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nombre</TableHead>
-                      <TableHead>Plantilla</TableHead>
-                      <TableHead>Periodo</TableHead>
-                      <TableHead>Progreso</TableHead>
+                      <TableHead className="hidden sm:table-cell">Plantilla</TableHead>
+                      <TableHead className="hidden md:table-cell">Periodo</TableHead>
+                      <TableHead className="hidden sm:table-cell">Progreso</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
@@ -414,12 +415,12 @@ export default function Evaluaciones() {
                       return (
                       <TableRow key={cycle.id}>
                         <TableCell className="font-medium">{cycle.name}</TableCell>
-                        <TableCell>{cycle.template?.name || '-'}</TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">{cycle.template?.name || '-'}</TableCell>
+                        <TableCell className="hidden md:table-cell">
                           {format(new Date(cycle.start_date), 'dd MMM', { locale: es })} -{' '}
                           {format(new Date(cycle.end_date), 'dd MMM yyyy', { locale: es })}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           {stats.total > 0 ? (
                             <div className="space-y-1 min-w-[100px]">
                               <div className="flex justify-between text-xs text-muted-foreground">
@@ -478,6 +479,7 @@ export default function Evaluaciones() {
                     })}
                   </TableBody>
                 </Table>
+                </div>
               )}
             </CardContent>
           </Card>
