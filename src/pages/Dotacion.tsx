@@ -446,12 +446,13 @@ export default function Dotacion() {
                 )}
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Empleado</TableHead>
-                    <TableHead>Artículos</TableHead>
-                    <TableHead>Fecha Entrega</TableHead>
+                    <TableHead className="hidden sm:table-cell">Artículos</TableHead>
+                    <TableHead className="hidden md:table-cell">Fecha Entrega</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -480,7 +481,7 @@ export default function Dotacion() {
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <div>
                             <p className="font-medium text-sm">{itemsSummary}</p>
                             <p className="text-xs text-muted-foreground">
@@ -488,7 +489,7 @@ export default function Dotacion() {
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className="flex items-center gap-2 text-sm">
                             <Calendar className="w-4 h-4 text-muted-foreground" />
                             {hasValidDate ? format(new Date(tx.delivery_date), 'dd/MM/yyyy') : '—'}
@@ -537,6 +538,7 @@ export default function Dotacion() {
                   })}
                 </TableBody>
               </Table>
+              </div>
             )}
           </div>
         </motion.div>
