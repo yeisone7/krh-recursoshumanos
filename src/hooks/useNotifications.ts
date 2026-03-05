@@ -94,6 +94,14 @@ export function useNotifications() {
               description: newNotification.message,
               variant: newNotification.type === 'error' ? 'destructive' : 'default',
             });
+
+            // Send browser push notification
+            if (newNotification.type === 'error' || newNotification.type === 'warning') {
+              sendNotification(newNotification.title, {
+                body: newNotification.message,
+                tag: newNotification.id,
+              });
+            }
           } else if (payload.eventType === 'UPDATE') {
             const updatedNotification = payload.new as Notification;
             setNotifications(prev =>
