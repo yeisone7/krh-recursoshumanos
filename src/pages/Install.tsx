@@ -61,7 +61,10 @@ const Install = () => {
             <CardContent className="flex items-center gap-3 p-4">
               <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0" />
               <p className="text-sm text-foreground font-medium">
-                ¡KRH ya está instalada en tu dispositivo!</p>
+                ¡KRH ya está instalada en tu dispositivo!
+              </p>
+            </CardContent>
+          </Card>
                 ¡KRH ya está instalada en tu dispositivo!
               </p>
             </CardContent>
