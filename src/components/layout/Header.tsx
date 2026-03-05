@@ -56,17 +56,8 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           </Button>
         )}
 
-        {/* Search - hidden on very small screens, shown from sm */}
-        <div className="flex-1 max-w-md hidden sm:block">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Buscar empleados, contratos, vacantes..."
-              className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
-            />
-          </div>
-        </div>
+        {/* Global Search */}
+        <GlobalSearch />
 
         {/* Spacer for mobile when search is hidden */}
         <div className="flex-1 sm:hidden" />
