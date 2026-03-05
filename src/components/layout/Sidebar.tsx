@@ -61,8 +61,13 @@ interface NavItem {
   icon: React.ReactNode;
   href: string;
   badge?: number;
-  moduleCode?: string; // maps to modules.code for permission filtering
+  moduleCode?: string;
   children?: NavItem[];
+}
+
+interface SidebarProps {
+  isMobileDrawer?: boolean;
+  onNavigate?: () => void;
 }
 
 // Reorganized: Grouped by workflow logic
@@ -167,7 +172,7 @@ const adminNavItems: NavItem[] = [
 ];
 
 
-export function Sidebar() {
+export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [catalogosOpen, setCatalogosOpen] = useState(false);
   const [capacitacionesOpen, setCapacitacionesOpen] = useState(false);
@@ -176,6 +181,9 @@ export function Sidebar() {
   const { data: unifiedAlerts } = useUnifiedAlerts();
   const alertCount = unifiedAlerts?.length || 0;
   const { canView, isAdmin, permissionsLoaded } = useAuth();
+
+  // In mobile drawer mode, never collapse - always show full sidebar
+  const isCollapsed = isMobileDrawer ? false : collapsed;
 
   // Filter nav items based on permissions
   const filterItems = useCallback((items: NavItem[]): NavItem[] => {
@@ -231,11 +239,15 @@ export function Sidebar() {
     setEvaluacionesOpen(true);
   }
 
-  const NavLink = ({ item }: {item: NavItem;}) => {
+  const handleNavClick = () => {
+    if (onNavigate) onNavigate();
+  };
+
+  const NavLinkItem = ({ item }: {item: NavItem;}) => {
     const isActive = location.pathname === item.href;
 
     const linkContent =
-    <Link to={item.href}>
+    <Link to={item.href} onClick={handleNavClick}>
         <motion.div
         whileHover={{ x: 4 }}
         whileTap={{ scale: 0.98 }}
@@ -253,7 +265,7 @@ export function Sidebar() {
             {item.icon}
           </span>
           <AnimatePresence>
-            {!collapsed &&
+            {!isCollapsed &&
           <motion.span
             initial={{ opacity: 0, width: 0 }}
             animate={{ opacity: 1, width: 'auto' }}
@@ -264,12 +276,12 @@ export function Sidebar() {
               </motion.span>
           }
           </AnimatePresence>
-          {item.badge && !collapsed &&
+          {item.badge && !isCollapsed &&
         <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-0.5 rounded-full">
               {item.badge}
             </span>
         }
-          {item.badge && collapsed &&
+          {item.badge && isCollapsed &&
         <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-semibold w-5 h-5 rounded-full flex items-center justify-center">
               {item.badge}
             </span>
@@ -278,7 +290,7 @@ export function Sidebar() {
       </Link>;
 
 
-    if (collapsed) {
+    if (isCollapsed) {
       return (
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
@@ -307,7 +319,7 @@ export function Sidebar() {
 
   const SectionLabel = ({ label }: {label: string;}) =>
   <AnimatePresence>
-      {!collapsed &&
+      {!isCollapsed &&
     <motion.p
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -320,14 +332,12 @@ export function Sidebar() {
     </AnimatePresence>;
 
 
-  const ExpandableMenu = ({ item, isOpen, setIsOpen, collapsed: isCollapsed, location: loc }: {
+  const ExpandableMenu = ({ item, isOpen, setIsOpen }: {
     item: NavItem;
     isOpen: boolean;
     setIsOpen: (v: boolean) => void;
-    collapsed: boolean;
-    location: ReturnType<typeof useLocation>;
   }) => {
-    const isAnyChildActive = item.children?.some((child) => loc.pathname === child.href);
+    const isAnyChildActive = item.children?.some((child) => location.pathname === child.href);
 
     const menuButton =
     <motion.div
@@ -385,9 +395,9 @@ export function Sidebar() {
                   {item.label}
                 </p>
                 {item.children?.map((child) => {
-                const isActive = loc.pathname === child.href;
+                const isActive = location.pathname === child.href;
                 return (
-                  <Link key={child.href} to={child.href}>
+                  <Link key={child.href} to={child.href} onClick={handleNavClick}>
                       <div className={cn(
                       "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
                       isActive ?
@@ -416,9 +426,9 @@ export function Sidebar() {
             className="ml-4 pl-3 border-l border-sidebar-border space-y-1 mt-1">
 
               {item.children?.map((child) => {
-              const isActive = loc.pathname === child.href;
+              const isActive = location.pathname === child.href;
               return (
-                <Link key={child.href} to={child.href}>
+                <Link key={child.href} to={child.href} onClick={handleNavClick}>
                     <motion.div
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
@@ -452,8 +462,6 @@ export function Sidebar() {
       item={catalogosItem}
       isOpen={catalogosOpen}
       setIsOpen={setCatalogosOpen}
-      collapsed={collapsed}
-      location={location}
     />
   );
 
@@ -462,25 +470,29 @@ export function Sidebar() {
     <TooltipProvider>
       <motion.aside
         initial={false}
-        animate={{ width: collapsed ? 80 : 260 }}
+        animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? 80 : 260) }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative">
+        className={cn(
+          "h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative",
+          isMobileDrawer && "h-full"
+        )}>
 
-      {/* Collapse/Expand Toggle Button */}
-      <button
+      {/* Collapse/Expand Toggle Button - hidden in mobile drawer */}
+      {!isMobileDrawer && (
+        <button
           onClick={() => setCollapsed(!collapsed)}
           className="absolute top-20 -right-3 z-50 w-6 h-6 rounded-full bg-secondary text-secondary-foreground shadow-lg flex items-center justify-center hover:bg-secondary/90 transition-colors">
-
-        {collapsed ?
-          <ChevronRight className="w-3.5 h-3.5" /> :
-          <ChevronLeft className="w-3.5 h-3.5" />
+          {collapsed ?
+            <ChevronRight className="w-3.5 h-3.5" /> :
+            <ChevronLeft className="w-3.5 h-3.5" />
           }
-      </button>
+        </button>
+      )}
 
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
         <AnimatePresence mode="wait">
-          {!collapsed ?
+          {!isCollapsed ?
             <motion.div
               key="full-logo"
               initial={{ opacity: 0 }}
@@ -511,7 +523,7 @@ export function Sidebar() {
       </div>
 
       {/* Company Selector */}
-      <CompanySelector collapsed={collapsed} />
+      <CompanySelector collapsed={isCollapsed} />
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-2 px-3 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -519,7 +531,7 @@ export function Sidebar() {
         {filteredCoreNavItems.length > 0 && (
           <div className="space-y-0.5">
             {filteredCoreNavItems.map((item) =>
-              <NavLink key={item.href} item={item} />
+              <NavLinkItem key={item.href} item={item} />
             )}
           </div>
         )}
@@ -530,7 +542,7 @@ export function Sidebar() {
             <SectionLabel label="Personal" />
             <div className="space-y-0.5">
               {filteredPersonnelNavItems.map((item) =>
-                <NavLink key={item.href} item={item} />
+                <NavLinkItem key={item.href} item={item} />
               )}
             </div>
           </>
@@ -542,7 +554,7 @@ export function Sidebar() {
             <SectionLabel label="Selección" />
             <div className="space-y-0.5">
               {filteredSeleccionNavItems.map((item) =>
-                <NavLink key={item.href} item={item} />
+                <NavLinkItem key={item.href} item={item} />
               )}
             </div>
           </>
@@ -554,7 +566,7 @@ export function Sidebar() {
             <SectionLabel label="Nómina" />
             <div className="space-y-0.5">
               {filteredPayrollNavItems.map((item) =>
-                <NavLink key={item.href} item={item} />
+                <NavLinkItem key={item.href} item={item} />
               )}
             </div>
           </>
@@ -566,7 +578,7 @@ export function Sidebar() {
             <SectionLabel label="Tiempo" />
             <div className="space-y-0.5">
               {filteredTimeManagementNavItems.map((item) =>
-                <NavLink key={item.href} item={item} />
+                <NavLinkItem key={item.href} item={item} />
               )}
             </div>
           </>
@@ -582,8 +594,6 @@ export function Sidebar() {
                   item={capacitacionesItem}
                   isOpen={capacitacionesOpen}
                   setIsOpen={setCapacitacionesOpen}
-                  collapsed={collapsed}
-                  location={location}
                 />
               )}
               {showEvaluaciones && (
@@ -591,12 +601,10 @@ export function Sidebar() {
                   item={evaluacionesItem}
                   isOpen={evaluacionesOpen}
                   setIsOpen={setEvaluacionesOpen}
-                  collapsed={collapsed}
-                  location={location}
                 />
               )}
               {filteredDevelopmentNavItems.map((item) =>
-                <NavLink key={item.href} item={item} />
+                <NavLinkItem key={item.href} item={item} />
               )}
             </div>
           </>
@@ -608,7 +616,7 @@ export function Sidebar() {
             <SectionLabel label="Beneficios" />
             <div className="space-y-0.5">
               {filteredBenefitsNavItems.map((item) =>
-                <NavLink key={item.href} item={item} />
+                <NavLinkItem key={item.href} item={item} />
               )}
             </div>
           </>
@@ -620,7 +628,7 @@ export function Sidebar() {
             <SectionLabel label="Herramientas" />
             <div className="space-y-0.5">
               {toolsNavItems.map((item) =>
-                <NavLink key={item.href} item={item} />
+                <NavLinkItem key={item.href} item={item} />
               )}
             </div>
           </>
@@ -633,7 +641,7 @@ export function Sidebar() {
             <div className="space-y-0.5">
               {showCatalogos && <CatalogosMenu />}
               {filteredAdminNavItems.map((item) =>
-                <NavLink key={item.href} item={item} />
+                <NavLinkItem key={item.href} item={item} />
               )}
             </div>
           </>
@@ -641,7 +649,7 @@ export function Sidebar() {
       </nav>
 
       {/* User section */}
-      <UserSection collapsed={collapsed} />
+      <UserSection collapsed={isCollapsed} onNavigate={onNavigate} />
     </motion.aside>
     </TooltipProvider>);
 
@@ -719,7 +727,7 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
     </div>);
 }
 
-function UserSection({ collapsed }: {collapsed: boolean;}) {
+function UserSection({ collapsed, onNavigate }: {collapsed: boolean; onNavigate?: () => void;}) {
   const { user, roles, signOut } = useAuth();
   const navigate = useNavigate();
   const [manualOpen, setManualOpen] = useState(false);
@@ -737,6 +745,11 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
   const userInitials = userEmail.substring(0, 2).toUpperCase();
   const avatarUrl = user?.user_metadata?.avatar_url;
   const primaryRole = roles[0] ? roleLabels[roles[0]] || roles[0] : 'Usuario';
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    if (onNavigate) onNavigate();
+  };
 
   return (<>
     <div className="border-t border-sidebar-border p-3">
@@ -777,13 +790,13 @@ function UserSection({ collapsed }: {collapsed: boolean;}) {
           </div>
           <div className="p-2">
             <button
-              onClick={() => navigate('/perfil')}
+              onClick={() => handleNavigate('/perfil')}
               className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors">
               <Users className="w-4 h-4" />
               Mi Perfil
             </button>
             <button
-              onClick={() => navigate('/configuracion')}
+              onClick={() => handleNavigate('/configuracion')}
               className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors">
               <Settings className="w-4 h-4" />
               Configuración

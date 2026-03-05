@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Building2, LogOut, User, Settings, BookOpen } from 'lucide-react';
+import { Search, Building2, LogOut, User, Settings, BookOpen, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +24,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NotificationsPanel } from '@/components/notifications/NotificationsPanel';
 import { UserManualDialog } from '@/components/manual/UserManualDialog';
 
-export function Header() {
+interface HeaderProps {
+  onMobileMenuToggle?: () => void;
+}
+
+export function Header({ onMobileMenuToggle }: HeaderProps) {
   const { user, companies, currentCompanyId, setCurrentCompanyId, roles, signOut } = useAuth();
   const [manualOpen, setManualOpen] = useState(false);
 
@@ -41,9 +45,16 @@ export function Header() {
 
   return (
     <>
-      <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
-        {/* Search */}
-        <div className="flex-1 max-w-md">
+      <header className="h-14 sm:h-16 bg-card border-b border-border flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4">
+        {/* Mobile menu button */}
+        {onMobileMenuToggle && (
+          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 md:hidden" onClick={onMobileMenuToggle}>
+            <Menu className="w-5 h-5" />
+          </Button>
+        )}
+
+        {/* Search - hidden on very small screens, shown from sm */}
+        <div className="flex-1 max-w-md hidden sm:block">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -54,11 +65,14 @@ export function Header() {
           </div>
         </div>
 
+        {/* Spacer for mobile when search is hidden */}
+        <div className="flex-1 sm:hidden" />
+
         {/* Right section */}
-        <div className="flex items-center gap-4">
-          {/* Company selector */}
+        <div className="flex items-center gap-1 sm:gap-4">
+          {/* Company selector - hidden on mobile, shown from md */}
           {companies.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               <Building2 className="w-4 h-4 text-muted-foreground" />
               <Select 
                 value={currentCompanyId || undefined} 
@@ -80,19 +94,19 @@ export function Header() {
 
           {/* No company message */}
           {companies.length === 0 && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
               <Building2 className="w-4 h-4" />
               <span>Sin empresa asignada</span>
             </div>
           )}
 
-          {/* Manual shortcut */}
+          {/* Manual shortcut - hidden on mobile */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9"
+                className="h-9 w-9 hidden sm:inline-flex"
                 onClick={() => setManualOpen(true)}
               >
                 <BookOpen className="w-4 h-4 text-muted-foreground" />
@@ -119,7 +133,7 @@ export function Header() {
             <DropdownMenuContent className="w-64" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-2">
-                  <p className="text-sm font-medium leading-none">{user?.email}</p>
+                  <p className="text-sm font-medium leading-none truncate">{user?.email}</p>
                   <div className="flex flex-wrap gap-1">
                     {roles.map((role) => (
                       <Badge key={role} variant="secondary" className="text-xs">
