@@ -218,7 +218,33 @@ export default function Permisos() {
 
           {/* Requests Table */}
           <Card>
-            <CardContent className="p-0 overflow-x-auto">
+            <CardContent className={cn("p-0", !isMobile && "overflow-x-auto")}>
+              {isMobile ? (
+                <div className="p-3">
+                  {isLoading ? (
+                    <div className="text-center py-8 text-muted-foreground">Cargando...</div>
+                  ) : (
+                    <MobileCardList
+                      items={filteredRequests.map((request) => ({
+                        id: request.id,
+                        title: request.employees_v2 ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}` : 'N/A',
+                        subtitle: LEAVE_TYPE_LABELS[request.leave_type],
+                        badge: (
+                          <Badge variant={getStatusBadgeVariant(request.status)}>
+                            {LEAVE_STATUS_LABELS[request.status]}
+                          </Badge>
+                        ),
+                        fields: [
+                          { label: 'Días', value: `${request.total_days}` },
+                          { label: 'Fechas', value: `${format(new Date(request.start_date), 'dd MMM', { locale: es })} - ${format(new Date(request.end_date), 'dd MMM', { locale: es })}` },
+                        ],
+                        onClick: () => handleViewRequest(request),
+                      }))}
+                      emptyMessage="No se encontraron solicitudes"
+                    />
+                  )}
+                </div>
+              ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -287,6 +313,7 @@ export default function Permisos() {
                   )}
                 </TableBody>
               </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

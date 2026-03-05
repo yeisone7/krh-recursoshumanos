@@ -284,6 +284,28 @@ export default function Incapacidades() {
                   ))}
                 </div>
               ) : filteredIncapacities && filteredIncapacities.length > 0 ? (
+                {isMobile ? (
+                <MobileCardList
+                  items={filteredIncapacities.map((inc) => ({
+                    id: inc.id,
+                    title: `${inc.employee?.first_name} ${inc.employee?.last_name}`,
+                    subtitle: inc.employee?.document_number,
+                    badge: (
+                      <Badge className={recoveryStatusColors[inc.recovery_status]}>
+                        {recoveryStatusLabels[inc.recovery_status]}
+                      </Badge>
+                    ),
+                    fields: [
+                      { label: 'Días', value: `${inc.total_days} días` },
+                      { label: 'Origen', value: inc.origin === 'laboral' ? 'Laboral' : 'Común' },
+                      { label: 'Período', value: `${format(new Date(inc.start_date), 'dd/MM')} - ${format(new Date(inc.end_date), 'dd/MM')}` },
+                      { label: 'Valor', value: formatCurrency(inc.total_amount) },
+                    ],
+                    onClick: () => handleOpenDetail(inc.id),
+                  }))}
+                  emptyMessage="No se encontraron incapacidades"
+                />
+                ) : (
                 <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -363,6 +385,7 @@ export default function Incapacidades() {
                   </TableBody>
                 </Table>
                 </div>
+                )}
               ) : (
                 <div className="text-center py-12">
                   <Stethoscope className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

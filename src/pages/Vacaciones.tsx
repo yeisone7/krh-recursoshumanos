@@ -235,7 +235,35 @@ export default function Vacaciones() {
 
           {/* Table */}
           <Card>
-            <CardContent className="p-0 overflow-x-auto">
+            <CardContent className={cn("p-0", !isMobile && "overflow-x-auto")}>
+              {isMobile ? (
+                <div className="p-3">
+                  {requestsLoading ? (
+                    <div className="text-center py-8 text-muted-foreground">Cargando...</div>
+                  ) : (
+                    <MobileCardList
+                      items={filteredRequests.map((request) => ({
+                        id: request.id,
+                        title: `${request.employee?.first_name} ${request.employee?.last_name}`,
+                        subtitle: request.employee?.document_number,
+                        badge: (
+                          <Badge className={STATUS_COLORS[request.status]}>
+                            {STATUS_LABELS[request.status]}
+                          </Badge>
+                        ),
+                        fields: [
+                          { label: 'Tipo', value: <Badge className={REQUEST_TYPE_COLORS[request.request_type]}>{REQUEST_TYPE_LABELS[request.request_type]}</Badge> },
+                          { label: 'Días', value: `${request.business_days} días` },
+                          { label: 'Desde', value: format(new Date(request.start_date), 'dd/MM/yyyy', { locale: es }) },
+                          { label: 'Hasta', value: format(new Date(request.end_date), 'dd/MM/yyyy', { locale: es }) },
+                        ],
+                        onClick: () => handleRequestClick(request),
+                      }))}
+                      emptyMessage="No se encontraron solicitudes"
+                    />
+                  )}
+                </div>
+              ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -315,6 +343,7 @@ export default function Vacaciones() {
                   )}
                 </TableBody>
               </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
