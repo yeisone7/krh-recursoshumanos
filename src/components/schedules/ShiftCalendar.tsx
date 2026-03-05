@@ -646,7 +646,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                           className="flex border-t bg-slate-50 cursor-pointer hover:bg-slate-100"
                           onClick={() => toggleArea(areaKey)}
                         >
-                          <div className="w-56 px-3 py-1.5 pl-6 border-r font-medium flex items-center gap-2 shrink-0 text-xs sticky left-0 bg-slate-50 z-10">
+                          <div className="w-32 sm:w-56 px-2 sm:px-3 py-1.5 pl-4 sm:pl-6 border-r font-medium flex items-center gap-1.5 shrink-0 text-xs sticky left-0 bg-slate-50 z-10">
                             {isAreaExpanded ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronUp className="w-2.5 h-2.5" />}
                             <span className="truncate">{area.areaName}</span>
                             <Badge variant="outline" className="ml-auto text-[10px] h-4 px-1">
