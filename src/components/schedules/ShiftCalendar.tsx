@@ -694,7 +694,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                   <ContextMenuTrigger>
                                     <div
                                       className={cn(
-                                        'w-10 px-0.5 py-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
+                                        'w-8 sm:w-10 px-0.5 py-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
                                         sunday && !absence && 'bg-red-50',
                                         holiday && !absence && 'bg-amber-50',
                                         absence && !hasConflict && absence.type === 'vacation' && 'bg-green-50',
