@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
