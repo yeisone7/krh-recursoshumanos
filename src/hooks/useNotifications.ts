@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 export interface Notification {
   id: string;
@@ -22,9 +23,17 @@ export interface Notification {
 export function useNotifications() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { sendNotification, requestPermission, permission, isSupported } = usePushNotifications();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Request push permission on first load
+  useEffect(() => {
+    if (isSupported && permission === 'default' && user) {
+      requestPermission();
+    }
+  }, [isSupported, permission, user, requestPermission]);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) {
@@ -85,6 +94,14 @@ export function useNotifications() {
               description: newNotification.message,
               variant: newNotification.type === 'error' ? 'destructive' : 'default',
             });
+
+            // Send browser push notification
+            if (newNotification.type === 'error' || newNotification.type === 'warning') {
+              sendNotification(newNotification.title, {
+                body: newNotification.message,
+                tag: newNotification.id,
+              });
+            }
           } else if (payload.eventType === 'UPDATE') {
             const updatedNotification = payload.new as Notification;
             setNotifications(prev =>

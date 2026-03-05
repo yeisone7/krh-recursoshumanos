@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Building2, LogOut, User, Settings, BookOpen, Menu } from 'lucide-react';
+import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +23,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useAuth } from '@/contexts/AuthContext';
 import { NotificationsPanel } from '@/components/notifications/NotificationsPanel';
 import { UserManualDialog } from '@/components/manual/UserManualDialog';
+import { useTheme } from '@/hooks/useTheme';
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -31,6 +32,7 @@ interface HeaderProps {
 export function Header({ onMobileMenuToggle }: HeaderProps) {
   const { user, companies, currentCompanyId, setCurrentCompanyId, roles, signOut } = useAuth();
   const [manualOpen, setManualOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'U';
@@ -113,6 +115,25 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Manual de Usuario</TooltipContent>
+          </Tooltip>
+
+          {/* Theme toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                onClick={toggleTheme}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <Moon className="w-4 h-4 text-muted-foreground" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</TooltipContent>
           </Tooltip>
 
           {/* Notifications */}
