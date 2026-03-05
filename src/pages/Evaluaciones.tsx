@@ -420,7 +420,7 @@ export default function Evaluaciones() {
                           {format(new Date(cycle.start_date), 'dd MMM', { locale: es })} -{' '}
                           {format(new Date(cycle.end_date), 'dd MMM yyyy', { locale: es })}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           {stats.total > 0 ? (
                             <div className="space-y-1 min-w-[100px]">
                               <div className="flex justify-between text-xs text-muted-foreground">
