@@ -621,7 +621,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                     className="flex border-t bg-slate-100 cursor-pointer hover:bg-slate-200"
                     onClick={() => toggleCenter(group.centerId)}
                   >
-                    <div className="w-56 px-3 py-1.5 border-r font-semibold flex items-center gap-2 shrink-0 text-xs sticky left-0 bg-slate-100 z-10">
+                    <div className="w-32 sm:w-56 px-2 sm:px-3 py-1.5 border-r font-semibold flex items-center gap-1.5 shrink-0 text-xs sticky left-0 bg-slate-100 z-10">
                       {isCenterExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
                       <Building2 className="w-3 h-3 text-primary" />
                       <span className="truncate">{group.centerName}</span>
