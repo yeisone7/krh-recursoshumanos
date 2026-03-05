@@ -461,7 +461,7 @@ export default function Contratos() {
                       <td className="p-4 hidden sm:table-cell">
                         <span className="text-sm text-foreground">{getContractTypeLabel(contract.contract_type)}</span>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden lg:table-cell">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="w-4 h-4" />
                           {new Date(contract.start_date).toLocaleDateString('es-CO')}
