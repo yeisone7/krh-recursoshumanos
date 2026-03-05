@@ -46,6 +46,7 @@ import {
   Sparkles,
   PenLine,
   Library,
+  BookOpen,
   Link2,
   FileSignature,
   ClipboardCheck } from
