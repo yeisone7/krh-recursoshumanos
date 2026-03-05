@@ -215,17 +215,17 @@ export default function Permisos() {
 
           {/* Requests Table */}
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Empleado</TableHead>
                     <TableHead>Tipo</TableHead>
-                    <TableHead>Fechas</TableHead>
+                    <TableHead className="hidden md:table-cell">Fechas</TableHead>
                     <TableHead>Días</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Solicitado</TableHead>
-                    <TableHead></TableHead>
+                    <TableHead className="hidden lg:table-cell">Solicitado</TableHead>
+                    <TableHead className="hidden sm:table-cell"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -262,7 +262,7 @@ export default function Permisos() {
                             {LEAVE_TYPE_LABELS[request.leave_type]}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           {format(new Date(request.start_date), 'dd MMM', { locale: es })} - {format(new Date(request.end_date), 'dd MMM', { locale: es })}
                         </TableCell>
                         <TableCell>{request.total_days}</TableCell>
@@ -271,10 +271,10 @@ export default function Permisos() {
                             {LEAVE_STATUS_LABELS[request.status]}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-muted-foreground hidden lg:table-cell">
                           {format(new Date(request.requested_at), 'dd/MM/yyyy', { locale: es })}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <Button variant="ghost" size="sm">
                             Ver
                           </Button>

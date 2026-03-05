@@ -489,7 +489,7 @@ export default function Contratos() {
                           <span className="text-sm text-muted-foreground">-</span>
                         )}
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden lg:table-cell">
                         {contract.is_approved ? (
                           <Badge variant="outline" className="bg-success-light text-success border-success/20 gap-1">
                             <CheckCircle2 className="w-3 h-3" />
