@@ -411,14 +411,14 @@ export default function Contratos() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Nº Contrato</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden md:table-cell">Nº Contrato</th>
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Empleado</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Tipo</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Fecha Inicio</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Vigencia Actual</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Salario</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Prórrogas</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Aprobación</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden sm:table-cell">Tipo</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden lg:table-cell">Fecha Inicio</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden sm:table-cell">Vigencia Actual</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden md:table-cell">Salario</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden lg:table-cell">Prórrogas</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden lg:table-cell">Aprobación</th>
                   <th className="text-left p-4 font-medium text-muted-foreground text-sm">Estado</th>
                   <th className="text-right p-4 font-medium text-muted-foreground text-sm"></th>
                 </tr>
