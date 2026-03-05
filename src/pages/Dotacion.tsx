@@ -446,12 +446,13 @@ export default function Dotacion() {
                 )}
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Empleado</TableHead>
-                    <TableHead>Artículos</TableHead>
-                    <TableHead>Fecha Entrega</TableHead>
+                    <TableHead className="hidden sm:table-cell">Artículos</TableHead>
+                    <TableHead className="hidden md:table-cell">Fecha Entrega</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
