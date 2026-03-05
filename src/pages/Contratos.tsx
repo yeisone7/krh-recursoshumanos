@@ -440,7 +440,7 @@ export default function Contratos() {
                       onClick={() => handleContractClick(contract.id)}
                       className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer group"
                     >
-                      <td className="p-4">
+                      <td className="p-4 hidden md:table-cell">
                         <span className="text-sm font-mono text-primary font-medium">
                           {contract.contract_number || '-'}
                         </span>
