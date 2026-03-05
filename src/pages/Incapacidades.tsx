@@ -245,36 +245,44 @@ export default function Incapacidades() {
                   </CardDescription>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative">
+                  <div className="relative flex-1 min-w-[150px]">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Buscar..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8 w-[200px]"
+                      className="pl-8 w-full"
                     />
                   </div>
-                  <Select value={originFilter} onValueChange={setOriginFilter}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Origen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="comun">Común</SelectItem>
-                      <SelectItem value="laboral">Laboral</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Estado Recobro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {Object.entries(recoveryStatusLabels).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <CollapsibleFilters
+                    activeCount={
+                      (originFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0)
+                    }
+                  >
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Select value={originFilter} onValueChange={setOriginFilter}>
+                        <SelectTrigger className="w-full sm:w-[140px]">
+                          <SelectValue placeholder="Origen" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          <SelectItem value="comun">Común</SelectItem>
+                          <SelectItem value="laboral">Laboral</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-full sm:w-[160px]">
+                          <SelectValue placeholder="Estado Recobro" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          {Object.entries(recoveryStatusLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CollapsibleFilters>
                 </div>
               </div>
             </CardHeader>
