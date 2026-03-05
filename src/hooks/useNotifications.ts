@@ -23,9 +23,17 @@ export interface Notification {
 export function useNotifications() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { sendNotification, requestPermission, permission, isSupported } = usePushNotifications();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Request push permission on first load
+  useEffect(() => {
+    if (isSupported && permission === 'default' && user) {
+      requestPermission();
+    }
+  }, [isSupported, permission, user, requestPermission]);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) {
