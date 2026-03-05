@@ -458,7 +458,7 @@ export default function Contratos() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden sm:table-cell">
                         <span className="text-sm text-foreground">{getContractTypeLabel(contract.contract_type)}</span>
                       </td>
                       <td className="p-4">
