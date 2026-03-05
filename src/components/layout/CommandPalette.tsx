@@ -266,30 +266,51 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         if (!emp) { setPreviewData(null); return; }
 
         // Get work info
-        const { data: workInfo } = await supabase
-          .from('employee_work_info')
-          .select('positions(name), areas(name), operation_centers(name)')
-          .eq('employee_id', result.id)
-          .eq('is_current', true)
-          .maybeSingle();
+        let position: string | null = null;
+        let area: string | null = null;
+        let center: string | null = null;
+        try {
+          const { data: workInfo } = await supabase
+            .from('employee_work_info')
+            .select('positions(name), areas(name), operation_centers(name)')
+            .eq('employee_id', result.id)
+            .eq('is_current', true)
+            .maybeSingle();
+          if (workInfo) {
+            position = (workInfo as any)?.positions?.name || null;
+            area = (workInfo as any)?.areas?.name || null;
+            center = (workInfo as any)?.operation_centers?.name || null;
+          }
+        } catch {}
 
         // Get contact info
-        const { data: contact } = await supabase
-          .from('employee_contact_info')
-          .select('personal_email, mobile_phone, city')
-          .eq('employee_id', result.id)
-          .maybeSingle();
+        let email: string | null = null;
+        let phone: string | null = null;
+        let city: string | null = null;
+        try {
+          const { data: contact } = await supabase
+            .from('employee_contact')
+            .select('personal_email, mobile, residence_city')
+            .eq('employee_id', result.id)
+            .eq('is_current', true)
+            .maybeSingle();
+          if (contact) {
+            email = contact.personal_email || null;
+            phone = contact.mobile || null;
+            city = contact.residence_city || null;
+          }
+        } catch {}
 
         setPreviewData({
           type: 'employee',
           data: {
             ...emp,
-            position: (workInfo as any)?.positions?.name || null,
-            area: (workInfo as any)?.areas?.name || null,
-            center: (workInfo as any)?.operation_centers?.name || null,
-            email: contact?.personal_email || null,
-            phone: contact?.mobile_phone || null,
-            city: contact?.city || null,
+            position,
+            area,
+            center,
+            email,
+            phone,
+            city,
           },
         });
       } catch {
