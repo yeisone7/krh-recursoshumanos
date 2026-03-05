@@ -198,21 +198,21 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[85vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-5xl h-[85vh] max-sm:h-[95vh] max-sm:max-w-[95vw] flex flex-col p-0 gap-0">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b shrink-0">
-          <DialogHeader className="space-y-0">
-            <DialogTitle className="flex items-center gap-2 text-lg">
-              <BookOpen className="w-5 h-5 text-primary" />
-              Manual de Usuario
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b shrink-0 gap-2">
+          <DialogHeader className="space-y-0 min-w-0">
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
+              <span className="truncate">Manual de Usuario</span>
             </DialogTitle>
-            <DialogDescription className="text-xs">
+            <DialogDescription className="text-xs hidden sm:block">
               Guía completa del sistema — adaptada a sus permisos
             </DialogDescription>
           </DialogHeader>
-          <Button variant="outline" size="sm" onClick={handleExportPdf} className="shrink-0">
-            <Download className="w-4 h-4 mr-1" />
-            Exportar PDF
+          <Button variant="outline" size="sm" onClick={handleExportPdf} className="shrink-0 text-xs sm:text-sm">
+            <Download className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Exportar PDF</span>
           </Button>
         </div>
 
