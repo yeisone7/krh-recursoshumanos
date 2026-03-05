@@ -437,9 +437,7 @@ export default function Contratos() {
                 })}
                 emptyMessage="No se encontraron contratos"
               />
-            </div>
           ) : (
-          <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
