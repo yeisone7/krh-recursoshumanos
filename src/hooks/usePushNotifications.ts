@@ -46,8 +46,8 @@ export function usePushNotifications() {
           reg.showNotification(title, {
             icon: '/pwa-192x192.png',
             badge: '/pwa-192x192.png',
-            vibrate: [100, 50, 100],
             ...options,
+            ...(({ vibrate: [100, 50, 100] }) as any),
           });
         });
       }
