@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Building2, LogOut, User, Settings, BookOpen, Menu } from 'lucide-react';
+import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,6 +23,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useAuth } from '@/contexts/AuthContext';
 import { NotificationsPanel } from '@/components/notifications/NotificationsPanel';
 import { UserManualDialog } from '@/components/manual/UserManualDialog';
+import { useTheme } from '@/hooks/useTheme';
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
