@@ -4,12 +4,17 @@ import {
   Search, Users, FileText, Briefcase, X, Loader2, Stethoscope, Package,
   Gavel, Palmtree, ClipboardList, GraduationCap, Target, BarChart3,
   Calendar, Bell, Building2, Settings, Network, Landmark, Clock, Calculator,
-  UserPlus, FilePlus, Moon, Sun, BookOpen, LogOut,
+  UserPlus, FilePlus, LogOut, MapPin, Phone, Mail, BadgeCheck, CalendarDays,
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { format, differenceInYears } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface SearchResult {
   id: string;
@@ -19,6 +24,37 @@ interface SearchResult {
   icon: React.ElementType;
   url?: string;
   action?: () => void;
+}
+
+// --- Preview data types ---
+interface EmployeePreview {
+  id: string;
+  first_name: string;
+  last_name: string;
+  middle_name?: string | null;
+  document_number: string;
+  document_type: string;
+  birth_date?: string | null;
+  avatar_url?: string | null;
+  is_active: boolean;
+  position?: string | null;
+  area?: string | null;
+  center?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  city?: string | null;
+}
+
+interface ContractPreview {
+  id: string;
+  contract_number: string | null;
+  contract_type: string;
+  start_date: string;
+  end_date: string | null;
+  salary: number;
+  is_terminated: boolean | null;
+  employee_name: string;
+  employee_document: string;
 }
 
 const MODULE_SHORTCUTS: SearchResult[] = [
@@ -52,6 +88,121 @@ interface CommandPaletteProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// --- Preview Panel ---
+function EmployeePreviewCard({ data }: { data: EmployeePreview }) {
+  const age = data.birth_date ? differenceInYears(new Date(), new Date(data.birth_date)) : null;
+  const initials = `${data.first_name[0]}${data.last_name[0]}`.toUpperCase();
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <Avatar className="h-12 w-12">
+          <AvatarImage src={data.avatar_url || undefined} />
+          <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">{initials}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <p className="font-semibold text-sm text-foreground truncate">
+            {data.first_name} {data.middle_name || ''} {data.last_name}
+          </p>
+          <p className="text-xs text-muted-foreground">{data.document_type} {data.document_number}</p>
+        </div>
+      </div>
+
+      <Badge variant={data.is_active ? 'default' : 'secondary'} className="text-[10px]">
+        {data.is_active ? 'Activo' : 'Inactivo'}
+      </Badge>
+
+      <Separator />
+
+      <div className="space-y-2 text-xs">
+        {data.position && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <BadgeCheck className="w-3.5 h-3.5 shrink-0 text-primary" />
+            <span className="truncate">{data.position}</span>
+          </div>
+        )}
+        {data.area && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Building2 className="w-3.5 h-3.5 shrink-0 text-primary" />
+            <span className="truncate">{data.area}</span>
+          </div>
+        )}
+        {data.center && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <MapPin className="w-3.5 h-3.5 shrink-0 text-primary" />
+            <span className="truncate">{data.center}</span>
+          </div>
+        )}
+        {data.email && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Mail className="w-3.5 h-3.5 shrink-0 text-primary" />
+            <span className="truncate">{data.email}</span>
+          </div>
+        )}
+        {data.phone && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Phone className="w-3.5 h-3.5 shrink-0 text-primary" />
+            <span>{data.phone}</span>
+          </div>
+        )}
+        {age !== null && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <CalendarDays className="w-3.5 h-3.5 shrink-0 text-primary" />
+            <span>{age} años</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContractPreviewCard({ data }: { data: ContractPreview }) {
+  const contractTypeLabels: Record<string, string> = {
+    termino_fijo: 'Término Fijo',
+    termino_indefinido: 'Término Indefinido',
+    obra_labor: 'Obra o Labor',
+    aprendizaje: 'Aprendizaje',
+    prestacion_servicios: 'Prestación de Servicios',
+  };
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <p className="font-semibold text-sm text-foreground">{data.contract_number || 'Sin número'}</p>
+        <p className="text-xs text-muted-foreground">{data.employee_name}</p>
+        <p className="text-[10px] text-muted-foreground">CC {data.employee_document}</p>
+      </div>
+
+      <Badge variant={data.is_terminated ? 'secondary' : 'default'} className="text-[10px]">
+        {data.is_terminated ? 'Terminado' : 'Vigente'}
+      </Badge>
+
+      <Separator />
+
+      <div className="space-y-2 text-xs">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Tipo</span>
+          <span className="font-medium text-foreground">{contractTypeLabels[data.contract_type] || data.contract_type}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Inicio</span>
+          <span className="font-medium text-foreground">{format(new Date(data.start_date), 'dd MMM yyyy', { locale: es })}</span>
+        </div>
+        {data.end_date && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Fin</span>
+            <span className="font-medium text-foreground">{format(new Date(data.end_date), 'dd MMM yyyy', { locale: es })}</span>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Salario</span>
+          <span className="font-medium text-foreground">${data.salary.toLocaleString('es-CO')}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate();
   const { currentCompanyId, signOut } = useAuth();
@@ -59,11 +210,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [previewData, setPreviewData] = useState<{ type: 'employee'; data: EmployeePreview } | { type: 'contract'; data: ContractPreview } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const previewDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Quick actions
   const QUICK_ACTIONS: SearchResult[] = [
     { id: 'act-new-employee', title: 'Nuevo Empleado', subtitle: 'Registrar un empleado', type: 'action', icon: UserPlus, url: '/empleados' },
     { id: 'act-new-contract', title: 'Nuevo Contrato', subtitle: 'Crear un contrato', type: 'action', icon: FilePlus, url: '/contratos' },
@@ -72,17 +225,16 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     { id: 'act-logout', title: 'Cerrar Sesión', subtitle: 'Salir del sistema', type: 'action', icon: LogOut, action: () => signOut() },
   ];
 
-  // Reset state when opening
   useEffect(() => {
     if (open) {
       setQuery('');
       setResults([]);
       setSelectedIndex(0);
+      setPreviewData(null);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
 
-  // Keyboard shortcut: Ctrl+K
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -94,12 +246,107 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     return () => document.removeEventListener('keydown', handler);
   }, [onOpenChange]);
 
-  // Scroll selected item into view
   useEffect(() => {
     if (!listRef.current) return;
     const items = listRef.current.querySelectorAll('[data-result-item]');
     items[selectedIndex]?.scrollIntoView({ block: 'nearest' });
   }, [selectedIndex]);
+
+  // Fetch preview data when selected item changes
+  const fetchPreview = useCallback(async (result: SearchResult) => {
+    if (result.type === 'employee') {
+      setPreviewLoading(true);
+      try {
+        const { data: emp } = await supabase
+          .from('employees_v2')
+          .select('id, first_name, middle_name, last_name, document_number, document_type, birth_date, avatar_url, is_active')
+          .eq('id', result.id)
+          .single();
+
+        if (!emp) { setPreviewData(null); return; }
+
+        // Get work info
+        const { data: workInfo } = await supabase
+          .from('employee_work_info')
+          .select('positions(name), areas(name), operation_centers(name)')
+          .eq('employee_id', result.id)
+          .eq('is_current', true)
+          .maybeSingle();
+
+        // Get contact info
+        const { data: contact } = await supabase
+          .from('employee_contact_info')
+          .select('personal_email, mobile_phone, city')
+          .eq('employee_id', result.id)
+          .maybeSingle();
+
+        setPreviewData({
+          type: 'employee',
+          data: {
+            ...emp,
+            position: (workInfo as any)?.positions?.name || null,
+            area: (workInfo as any)?.areas?.name || null,
+            center: (workInfo as any)?.operation_centers?.name || null,
+            email: contact?.personal_email || null,
+            phone: contact?.mobile_phone || null,
+            city: contact?.city || null,
+          },
+        });
+      } catch {
+        setPreviewData(null);
+      } finally {
+        setPreviewLoading(false);
+      }
+    } else if (result.type === 'contract') {
+      setPreviewLoading(true);
+      try {
+        const { data: contract } = await supabase
+          .from('contracts')
+          .select('id, contract_number, contract_type, start_date, end_date, salary, is_terminated, employees_v2(first_name, last_name, document_number)')
+          .eq('id', result.id)
+          .single();
+
+        if (!contract) { setPreviewData(null); return; }
+
+        setPreviewData({
+          type: 'contract',
+          data: {
+            id: contract.id,
+            contract_number: contract.contract_number,
+            contract_type: contract.contract_type,
+            start_date: contract.start_date,
+            end_date: contract.end_date,
+            salary: contract.salary,
+            is_terminated: contract.is_terminated,
+            employee_name: `${(contract.employees_v2 as any)?.first_name || ''} ${(contract.employees_v2 as any)?.last_name || ''}`.trim(),
+            employee_document: (contract.employees_v2 as any)?.document_number || '',
+          },
+        });
+      } catch {
+        setPreviewData(null);
+      } finally {
+        setPreviewLoading(false);
+      }
+    } else {
+      setPreviewData(null);
+    }
+  }, []);
+
+  // Debounced preview fetch on selection change
+  useEffect(() => {
+    const displayed = allResultsRef.current;
+    if (displayed.length === 0) { setPreviewData(null); return; }
+    const selected = displayed[selectedIndex];
+    if (!selected || (selected.type !== 'employee' && selected.type !== 'contract')) {
+      setPreviewData(null);
+      return;
+    }
+
+    if (previewDebounceRef.current) clearTimeout(previewDebounceRef.current);
+    previewDebounceRef.current = setTimeout(() => fetchPreview(selected), 150);
+
+    return () => { if (previewDebounceRef.current) clearTimeout(previewDebounceRef.current); };
+  }, [selectedIndex, results, fetchPreview]);
 
   const searchDB = useCallback(async (term: string) => {
     if (!term.trim() || !currentCompanyId) return [];
@@ -153,14 +400,16 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     return dbResults;
   }, [currentCompanyId]);
 
-  const allResults = useCallback((): SearchResult[] => {
+  const getAllResults = useCallback((): SearchResult[] => {
     if (!query.trim()) {
       return [...QUICK_ACTIONS, ...MODULE_SHORTCUTS.slice(0, 6)];
     }
     return results;
   }, [query, results, QUICK_ACTIONS]);
 
-  const displayedResults = allResults();
+  const displayedResults = getAllResults();
+  const allResultsRef = useRef(displayedResults);
+  allResultsRef.current = displayedResults;
 
   const handleSearch = useCallback((value: string) => {
     setQuery(value);
@@ -213,13 +462,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     }
   };
 
-  const typeLabels: Record<string, string> = {
-    employee: 'Empleado',
-    contract: 'Contrato',
-    module: 'Módulo',
-    action: 'Acción',
-  };
-
   const typeColors: Record<string, string> = {
     employee: 'bg-info/10 text-info',
     contract: 'bg-warning/10 text-warning',
@@ -227,7 +469,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     action: 'bg-accent/10 text-accent',
   };
 
-  // Group results by type for section headers
   const groupedSections: { type: string; label: string; items: SearchResult[] }[] = [];
   const seen = new Set<string>();
   displayedResults.forEach((r) => {
@@ -241,12 +482,15 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     }
   });
 
-  // Flat index mapping for keyboard nav
+  const hasPreviewableResult = displayedResults.some((r) => r.type === 'employee' || r.type === 'contract');
   let flatIndex = 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 gap-0 max-w-lg sm:max-w-xl overflow-hidden [&>button]:hidden">
+      <DialogContent className={cn(
+        "p-0 gap-0 overflow-hidden [&>button]:hidden transition-all",
+        hasPreviewableResult ? "max-w-2xl sm:max-w-3xl" : "max-w-lg sm:max-w-xl"
+      )}>
         {/* Search input */}
         <div className="flex items-center gap-2 px-4 border-b border-border">
           <Search className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -261,7 +505,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           />
           {isLoading && <Loader2 className="w-4 h-4 text-muted-foreground animate-spin shrink-0" />}
           {query && (
-            <button onClick={() => { setQuery(''); setResults([]); }} className="text-muted-foreground hover:text-foreground">
+            <button onClick={() => { setQuery(''); setResults([]); setPreviewData(null); }} className="text-muted-foreground hover:text-foreground">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -270,54 +514,81 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </kbd>
         </div>
 
-        {/* Results */}
-        <div ref={listRef} className="max-h-[50vh] overflow-y-auto">
-          {displayedResults.length === 0 && query.trim() && !isLoading ? (
-            <div className="p-8 text-center">
-              <Search className="w-10 h-10 mx-auto text-muted-foreground/20 mb-3" />
-              <p className="text-sm text-muted-foreground">Sin resultados para &ldquo;{query}&rdquo;</p>
-            </div>
-          ) : (
-            groupedSections.map((section) => (
-              <div key={section.type}>
-                <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30">
-                  {section.label}
-                </div>
-                {section.items.map((result) => {
-                  const currentFlatIndex = flatIndex++;
-                  const Icon = result.icon;
-                  return (
-                    <button
-                      key={result.id}
-                      data-result-item
-                      className={cn(
-                        "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
-                        currentFlatIndex === selectedIndex ? "bg-primary/5" : "hover:bg-muted/40"
-                      )}
-                      onClick={() => handleSelect(result)}
-                      onMouseEnter={() => setSelectedIndex(currentFlatIndex)}
-                    >
-                      <div className={cn("shrink-0 w-8 h-8 rounded-lg flex items-center justify-center", typeColors[result.type] || 'bg-muted')}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{result.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
-                      </div>
-                      {currentFlatIndex === selectedIndex && (
-                        <span className="hidden sm:inline-flex shrink-0 text-[10px] text-muted-foreground">
-                          ↵ Abrir
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+        {/* Body: list + preview */}
+        <div className="flex">
+          {/* Results list */}
+          <div ref={listRef} className={cn(
+            "max-h-[50vh] overflow-y-auto flex-1 min-w-0",
+            hasPreviewableResult && "sm:border-r sm:border-border"
+          )}>
+            {displayedResults.length === 0 && query.trim() && !isLoading ? (
+              <div className="p-8 text-center">
+                <Search className="w-10 h-10 mx-auto text-muted-foreground/20 mb-3" />
+                <p className="text-sm text-muted-foreground">Sin resultados para &ldquo;{query}&rdquo;</p>
               </div>
-            ))
+            ) : (
+              groupedSections.map((section) => (
+                <div key={section.type}>
+                  <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30">
+                    {section.label}
+                  </div>
+                  {section.items.map((result) => {
+                    const currentFlatIndex = flatIndex++;
+                    const Icon = result.icon;
+                    return (
+                      <button
+                        key={result.id}
+                        data-result-item
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                          currentFlatIndex === selectedIndex ? "bg-primary/5" : "hover:bg-muted/40"
+                        )}
+                        onClick={() => handleSelect(result)}
+                        onMouseEnter={() => setSelectedIndex(currentFlatIndex)}
+                      >
+                        <div className={cn("shrink-0 w-8 h-8 rounded-lg flex items-center justify-center", typeColors[result.type] || 'bg-muted')}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{result.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
+                        </div>
+                        {currentFlatIndex === selectedIndex && (
+                          <span className="hidden sm:inline-flex shrink-0 text-[10px] text-muted-foreground">
+                            ↵
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Preview panel - desktop only */}
+          {hasPreviewableResult && (
+            <div className="hidden sm:flex w-56 shrink-0 max-h-[50vh] overflow-y-auto p-4">
+              {previewLoading ? (
+                <div className="flex items-center justify-center w-full">
+                  <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                </div>
+              ) : previewData ? (
+                previewData.type === 'employee' ? (
+                  <EmployeePreviewCard data={previewData.data} />
+                ) : (
+                  <ContractPreviewCard data={previewData.data} />
+                )
+              ) : (
+                <div className="flex items-center justify-center w-full text-center">
+                  <p className="text-xs text-muted-foreground">Selecciona un empleado o contrato para ver la vista previa</p>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Footer hint */}
+        {/* Footer */}
         <div className="hidden sm:flex items-center gap-4 px-4 py-2 border-t border-border bg-muted/20 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1">
             <kbd className="inline-flex h-4 items-center rounded border border-border bg-muted px-1 text-[10px]">↑</kbd>
