@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun } from 'lucide-react';
+import { Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
