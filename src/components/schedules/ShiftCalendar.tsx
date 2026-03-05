@@ -666,7 +666,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
                           return (
                           <div key={employee.id} className="flex border-y hover:bg-muted/30 -mt-px">
-                            <div className="w-56 px-3 py-1 pl-9 border-r shrink-0 flex items-center gap-1.5 sticky left-0 bg-background z-10">
+                            <div className="w-32 sm:w-56 px-2 sm:px-3 py-1 pl-5 sm:pl-9 border-r shrink-0 flex items-center gap-1.5 sticky left-0 bg-background z-10">
                               <span className="truncate text-xs">{getEmployeeFullName(employee)}</span>
                               {isAdminMode ? (
                                 <Briefcase className="w-3 h-3 text-indigo-500 shrink-0" />
