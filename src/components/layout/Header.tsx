@@ -117,6 +117,25 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             <TooltipContent>Manual de Usuario</TooltipContent>
           </Tooltip>
 
+          {/* Theme toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                onClick={toggleTheme}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <Moon className="w-4 h-4 text-muted-foreground" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</TooltipContent>
+          </Tooltip>
+
           {/* Notifications */}
           <NotificationsPanel />
 
