@@ -57,14 +57,10 @@ const Install = () => {
         </div>
 
         {isInstalled ? (
-          <Card className="border-emerald-500/30 bg-emerald-500/10">
+          <Card className="border-accent/30 bg-accent/10">
             <CardContent className="flex items-center gap-3 p-4">
-              <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="h-6 w-6 text-accent shrink-0" />
               <p className="text-sm text-foreground font-medium">
-                ¡KRH ya está instalada en tu dispositivo!
-              </p>
-            </CardContent>
-          </Card>
                 ¡KRH ya está instalada en tu dispositivo!
               </p>
             </CardContent>
@@ -111,7 +107,7 @@ const Install = () => {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0">2</span>
-                  <span>Selecciona <strong>"Instalar aplicación"</strong> o <strong>"Agregar a pantalla de inicio"</strong></span>
+                  <span>Selecciona <strong>&quot;Instalar aplicación&quot;</strong> o <strong>&quot;Agregar a pantalla de inicio&quot;</strong></span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shrink-0">3</span>
