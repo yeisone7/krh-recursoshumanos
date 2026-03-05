@@ -19,9 +19,21 @@ export function usePushNotifications() {
     return result;
   }, [isSupported]);
 
+  const vibrate = useCallback((pattern: number | number[] = [100, 50, 100]) => {
+    try {
+      navigator?.vibrate?.(pattern);
+    } catch {
+      // Vibration API not supported
+    }
+  }, []);
+
   const sendNotification = useCallback(
     (title: string, options?: NotificationOptions) => {
       if (!isSupported || permission !== 'granted') return;
+
+      // Vibrate on mobile
+      vibrate([100, 50, 100]);
+
       try {
         new Notification(title, {
           icon: '/pwa-192x192.png',
@@ -29,17 +41,18 @@ export function usePushNotifications() {
           ...options,
         });
       } catch {
-        // SW notification fallback
+        // SW notification fallback with vibrate
         navigator.serviceWorker?.ready.then((reg) => {
           reg.showNotification(title, {
             icon: '/pwa-192x192.png',
             badge: '/pwa-192x192.png',
             ...options,
+            ...(({ vibrate: [100, 50, 100] }) as any),
           });
         });
       }
     },
-    [isSupported, permission]
+    [isSupported, permission, vibrate]
   );
 
   return { permission, isSupported, requestPermission, sendNotification };
