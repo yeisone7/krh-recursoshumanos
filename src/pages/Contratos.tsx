@@ -409,8 +409,7 @@ export default function Contratos() {
               </Button>
             )}
           </div>
-        ) : (
-          {isMobile ? (
+        ) : isMobile ? (
             <div className="p-3">
               <MobileCardList
                 items={filteredContracts.map((contract) => {
