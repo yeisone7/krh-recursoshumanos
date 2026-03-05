@@ -29,6 +29,7 @@ import {
 import { cn } from '@/lib/utils';
 import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { ContractDetailDialog } from '@/components/contracts/ContractDetailDialog';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import { useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useAuth } from '@/contexts/AuthContext';
