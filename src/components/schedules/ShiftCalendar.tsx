@@ -589,7 +589,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                 <div
                   key={dateStr}
                   className={cn(
-                    'w-10 py-1 text-center text-[10px] border-r shrink-0 leading-tight',
+                    'w-8 sm:w-10 py-1 text-center text-[10px] border-r shrink-0 leading-tight',
                     sunday && 'bg-red-50',
                     holiday && 'bg-amber-50',
                     today && 'ring-2 ring-inset ring-primary'
