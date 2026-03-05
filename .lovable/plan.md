@@ -1,88 +1,23 @@
 
 
-## Plan: Catálogo de Exámenes + Profesiograma + Transacción-Detalle para Exámenes Médicos
+## Plan: Hacer Jornadas Responsivo para Móvil
 
-### Resumen
+### Archivos a modificar
 
-Replicar la arquitectura completa de Dotaciones para el módulo de Exámenes Médicos: un catálogo CRUD de tipos de examen, un profesiograma por centro+cargo, y un sistema de entregas transacción-detalle con firma, archivos adjuntos, exportación PDF y eliminación.
+#### 1. `src/pages/Jornadas.tsx`
+- **Header**: Botones de acción con solo íconos en móvil (ocultar texto con `hidden sm:inline`)
+- **TabsList**: Mostrar solo íconos en móvil, texto completo en desktop
+- **Barra de búsqueda**: `w-full sm:w-64`
+- **Tablas de Horarios/Turnos/Ciclos**: Envolver en `overflow-x-auto`, ocultar columnas menos importantes en móvil con `hidden sm:table-cell`
+- **Altura del contenedor**: Ajustar `h-[calc(100vh-3rem)]` para mobile
 
----
+#### 2. `src/components/schedules/ShiftCalendar.tsx`
+- **Filtros superiores**: Apilar verticalmente en móvil — navegación de periodo en una fila, filtros (modo, vista, centro) en la siguiente, cada uno `w-full sm:w-auto`
+- **Leyenda**: Ocultar en móvil con `hidden sm:flex`, o mostrar versión compacta
+- **Grid del calendario**: Ya tiene `overflow-auto` y columna sticky `left-0` — solo reducir el ancho de la columna de empleado de `w-56` a `w-32 sm:w-56` y truncar nombres
+- **Celdas**: Reducir ancho de `w-10` a `w-8 sm:w-10` en móvil
+- **Select de centro**: `w-full sm:w-48`
 
-### 1. Base de datos (migración SQL)
-
-**Nuevas tablas:**
-
-- **`exam_catalog`** — Catálogo de exámenes aplicables (equivalente a `dotation_item_types`)
-  - `id`, `company_id`, `name`, `code`, `description`, `is_active`, `created_by`, `created_at`, `updated_at`
-  - UNIQUE(company_id, name)
-  - RLS: misma política que `dotation_item_types`
-
-- **`exam_profesiograma`** — Perfiles de exámenes por centro+cargo (clon de `dotation_profesiograma`)
-  - `id`, `company_id`, `operation_center_id`, `position_id`, `created_by`, `created_at`, `updated_at`
-  - UNIQUE(company_id, operation_center_id, position_id)
-
-- **`exam_profesiograma_items`** — Ítems del profesiograma (clon de `dotation_profesiograma_items`)
-  - `id`, `profesiograma_id` → FK `exam_profesiograma`, `exam_catalog_id` → FK `exam_catalog`, `is_required`, `notes`, `created_at`
-  - UNIQUE(profesiograma_id, exam_catalog_id)
-
-- **`exam_delivery_transactions`** — Cabecera de transacciones (clon de `dotation_delivery_transactions`)
-  - `id`, `employee_id` → FK `employees_v2`, `exam_date` (DATE), `provider`, `doctor_name`, `signature_url`, `document_url`, `observations`, `created_by`, `created_at`, `updated_at`
-
-- **`exam_delivery_items`** — Detalle de exámenes aplicados por transacción
-  - `id`, `transaction_id` → FK `exam_delivery_transactions`, `exam_catalog_id` → FK `exam_catalog`, `exam_name` (TEXT), `result` (enum `exam_result`), `concept`, `restrictions`, `expiration_date`, `document_url`
-
-**RLS:** Replicar las políticas de dotación: `is_admin_or_rrhh()` + `has_employee_v2_access()` para escritura, `has_employee_v2_access()` para lectura.
-
-**Datos iniciales:** Insertar los 11 registros del catálogo para la empresa actual del usuario usando el insert tool.
-
-**RPC:** Crear `get_exam_profesiogramas_with_items(_company_id)` análogo a `get_profesiogramas_with_items`.
-
----
-
-### 2. Hooks (lógica de datos)
-
-- **`useExamCatalog.ts`** — CRUD del catálogo (listar, crear, actualizar, eliminar). Patrón idéntico a tipos de dotación.
-- **`useExamProfesiograma.ts`** — CRUD de profesiogramas de exámenes. Clonar `useDotationProfesiograma.ts` adaptando nombres de tabla.
-- **`useExamTransactions.ts`** — Transacciones con detalle. Clonar `useDotationTransactions.ts` adaptando a las tablas de exámenes.
-
----
-
-### 3. Interfaz de usuario
-
-Reestructurar la página `/examenes` para usar **Tabs** como en Dotación:
-
-- **Tab "Aplicaciones"** — Vista transacción-detalle (tabla con empleado, exámenes aplicados, fecha, estado, acciones: ver, exportar PDF, eliminar)
-- **Tab "Catálogo"** — CRUD de tipos de examen (tabla con nombre, código, estado activo/inactivo, botones crear/editar/eliminar)
-- **Tab "Profesiograma"** — Perfiles de exámenes por centro+cargo (clonar `ProfesiogramaTab` de dotación adaptado a exámenes)
-- **Tab "Cumplimiento"** — Cruce profesiograma vs aplicaciones reales (fase posterior, se puede dejar placeholder)
-
-**Componentes nuevos:**
-- `ExamCatalogTab.tsx` — Tabla CRUD del catálogo
-- `ExamCatalogFormDialog.tsx` — Formulario crear/editar tipo de examen
-- `ExamProfesiogramaTab.tsx` — Clon de `ProfesiogramaTab` para exámenes
-- `ExamProfesiogramaFormDialog.tsx` — Formulario del profesiograma
-- `ExamTransactionFormDialog.tsx` — Formulario de aplicación (3 pasos: empleado → exámenes con sugerencias del profesiograma → datos de entrega con firma)
-- `ExamTransactionDetailDialog.tsx` — Vista detalle con firma, archivos adjuntos, exportación PDF
-
----
-
-### 4. Funcionalidades clave
-
-- **Firma digital:** Reutilizar `SignatureCanvas` existente
-- **Archivos adjuntos:** Almacenar en bucket `documents` o `dotation-images`
-- **Exportación PDF:** Generar acta de aplicación de exámenes similar al acta de entrega de dotación
-- **Eliminación:** Confirmación con AlertDialog, cascade delete de ítems
-- **Profesiograma → Sugerencias:** Al seleccionar empleado en el formulario, autosugerir exámenes del profesiograma configurado para su centro+cargo
-
----
-
-### 5. Orden de implementación
-
-1. Migración de base de datos (tablas + RLS + RPC)
-2. Insertar datos iniciales del catálogo
-3. Hooks de datos (catálogo, profesiograma, transacciones)
-4. Tab Catálogo con CRUD
-5. Tab Profesiograma
-6. Tab Aplicaciones (transacción-detalle) con formulario, detalle, firma, exportación y eliminación
-7. Actualizar página Examenes.tsx con la nueva estructura de tabs
+### Resumen de cambios
+Todos los cambios son ajustes de clases Tailwind responsivas. No se modifica lógica de negocio. Tiempo estimado: ~15 minutos de implementación.
 
