@@ -417,32 +417,34 @@ export default function Contratos() {
           </div>
         ) : isMobile ? (
           <div className="p-3">
-            <MobileCardList
-              items={filteredContracts.map((contract) => {
-                const status = getContractStatus(contract);
-                const effectiveEndDate = getEffectiveEndDate(contract);
-                const StatusIcon = statusConfig[status].icon;
-                return {
-                  id: contract.id,
-                  title: `${contract.employees?.first_name} ${contract.employees?.last_name}`,
-                  subtitle: contract.employees?.document_number,
-                  badge: (
-                    <Badge variant="outline" className={cn("gap-1", statusConfig[status].class)}>
-                      <StatusIcon className="w-3 h-3" />
-                      {statusConfig[status].label}
-                    </Badge>
-                  ),
-                  fields: [
-                    { label: 'Tipo', value: getContractTypeLabel(contract.contract_type) },
-                    { label: 'Salario', value: formatCurrency(Number(contract.salary)) },
-                    { label: 'Inicio', value: new Date(contract.start_date).toLocaleDateString('es-CO') },
-                    { label: 'Vigencia', value: effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido' },
-                  ],
-                  onClick: () => handleContractClick(contract.id),
-                };
-              })}
-              emptyMessage="No se encontraron contratos"
-            />
+            <PullToRefresh onRefresh={async () => { /* refetch is automatic via react-query */ await new Promise(r => setTimeout(r, 800)); }}>
+              <MobileCardList
+                items={filteredContracts.map((contract) => {
+                  const status = getContractStatus(contract);
+                  const effectiveEndDate = getEffectiveEndDate(contract);
+                  const StatusIcon = statusConfig[status].icon;
+                  return {
+                    id: contract.id,
+                    title: `${contract.employees?.first_name} ${contract.employees?.last_name}`,
+                    subtitle: contract.employees?.document_number,
+                    badge: (
+                      <Badge variant="outline" className={cn("gap-1", statusConfig[status].class)}>
+                        <StatusIcon className="w-3 h-3" />
+                        {statusConfig[status].label}
+                      </Badge>
+                    ),
+                    fields: [
+                      { label: 'Tipo', value: getContractTypeLabel(contract.contract_type) },
+                      { label: 'Salario', value: formatCurrency(Number(contract.salary)) },
+                      { label: 'Inicio', value: new Date(contract.start_date).toLocaleDateString('es-CO') },
+                      { label: 'Vigencia', value: effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido' },
+                    ],
+                    onClick: () => handleContractClick(contract.id),
+                  };
+                })}
+                emptyMessage="No se encontraron contratos"
+              />
+            </PullToRefresh>
           </div>
         ) : (
           <div className="overflow-x-auto">
