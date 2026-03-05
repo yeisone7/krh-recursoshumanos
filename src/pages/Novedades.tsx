@@ -233,7 +233,42 @@ export default function Novedades() {
 
       {/* Table */}
       <Card>
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className={cn("p-0", !isMobile && "overflow-x-auto")}>
+          {isMobile ? (
+            <div className="p-3">
+              {isLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Cargando...</div>
+              ) : (
+                <MobileCardList
+                  items={filtered.map(n => ({
+                    id: n.id,
+                    title: n.employees_v2 ? `${n.employees_v2.first_name} ${n.employees_v2.last_name}` : 'N/A',
+                    subtitle: format(new Date(n.novelty_date), 'dd MMM yyyy', { locale: es }),
+                    badge: (
+                      <Badge variant="outline" className="text-xs">
+                        {NOVELTY_TYPE_LABELS[n.novelty_type] || n.novelty_type}
+                      </Badge>
+                    ),
+                    fields: [
+                      { label: 'Horas', value: `${n.hours}h` },
+                      { label: 'Fuente', value: n.source === 'manual' ? 'Manual' : 'Auto' },
+                    ],
+                    actions: (
+                      <>
+                        <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleEdit(n); }}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(n.id); }}>
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </>
+                    ),
+                  }))}
+                  emptyMessage="No se encontraron novedades"
+                />
+              )}
+            </div>
+          ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -303,6 +338,7 @@ export default function Novedades() {
               )}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
 
