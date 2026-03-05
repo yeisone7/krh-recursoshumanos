@@ -461,20 +461,32 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   return (
     <div className="flex flex-col flex-1 min-h-0 gap-2">
       {/* Header Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => navigatePeriod('prev')}>
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </Button>
-          <h2 className="text-sm font-semibold min-w-[180px] text-center capitalize">
-            {periodLabel}
-          </h2>
-          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => navigatePeriod('next')}>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Button>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => navigatePeriod('prev')}>
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </Button>
+            <h2 className="text-xs sm:text-sm font-semibold min-w-[120px] sm:min-w-[180px] text-center capitalize">
+              {periodLabel}
+            </h2>
+            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => navigatePeriod('next')}>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+
+          {/* View Mode Toggle - always visible */}
+          <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as ViewMode)}>
+            <ToggleGroupItem value="quincenal" aria-label="Vista quincenal" className="text-xs">
+              15d
+            </ToggleGroupItem>
+            <ToggleGroupItem value="mensual" aria-label="Vista mensual" className="text-xs">
+              Mes
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Mode Filter */}
           <ToggleGroup type="single" value={modeFilter} onValueChange={(v) => v && setModeFilter(v as any)}>
             <ToggleGroupItem value="all" aria-label="Todos" className="text-xs">
@@ -482,28 +494,18 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
             </ToggleGroupItem>
             <ToggleGroupItem value="administrative" aria-label="Administrativos" className="text-xs gap-1">
               <Briefcase className="w-3 h-3" />
-              Admin
+              <span className="hidden sm:inline">Admin</span>
             </ToggleGroupItem>
             <ToggleGroupItem value="shift" aria-label="Turnos" className="text-xs gap-1">
               <RotateCcw className="w-3 h-3" />
-              Turnos
-            </ToggleGroupItem>
-          </ToggleGroup>
-
-          {/* View Mode Toggle */}
-          <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as ViewMode)}>
-            <ToggleGroupItem value="quincenal" aria-label="Vista quincenal" className="text-xs">
-              15 días
-            </ToggleGroupItem>
-            <ToggleGroupItem value="mensual" aria-label="Vista mensual" className="text-xs">
-              Mes
+              <span className="hidden sm:inline">Turnos</span>
             </ToggleGroupItem>
           </ToggleGroup>
 
           {/* Center Filter */}
           <Select value={selectedCenterId} onValueChange={setSelectedCenterId}>
-            <SelectTrigger className="w-48">
-              <Building2 className="w-4 h-4 mr-2" />
+            <SelectTrigger className="w-full sm:w-48 flex-1 sm:flex-none">
+              <Building2 className="w-4 h-4 mr-2 shrink-0" />
               <SelectValue placeholder="Centro" />
             </SelectTrigger>
             <SelectContent className="bg-background">
