@@ -57,10 +57,11 @@ const Install = () => {
         </div>
 
         {isInstalled ? (
-          <Card className="border-green-200 bg-green-50">
+          <Card className="border-emerald-500/30 bg-emerald-500/10">
             <CardContent className="flex items-center gap-3 p-4">
-              <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
-              <p className="text-sm text-green-800 font-medium">
+              <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0" />
+              <p className="text-sm text-foreground font-medium">
+                ¡KRH ya está instalada en tu dispositivo!</p>
                 ¡KRH ya está instalada en tu dispositivo!
               </p>
             </CardContent>
