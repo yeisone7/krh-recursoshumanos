@@ -119,6 +119,7 @@ export default function Contratos() {
   const [statusFilter, setStatusFilter] = useState('all');
 
   const { currentCompanyId } = useAuth();
+  const isMobile = useIsMobile();
   const { data: contracts, isLoading } = useContracts();
   const { data: contractTypesConfig } = useContractTypes();
 
