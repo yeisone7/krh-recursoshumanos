@@ -575,8 +575,8 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
         <div className="min-w-max">
           {/* Days Header */}
           <div className="flex bg-muted sticky top-0 z-10">
-            <div className="w-56 px-3 py-1.5 border-r font-medium text-xs flex items-center gap-2 shrink-0 sticky left-0 bg-muted z-20">
-              <Users className="w-3.5 h-3.5" />
+            <div className="w-32 sm:w-56 px-2 sm:px-3 py-1.5 border-r font-medium text-xs flex items-center gap-1.5 shrink-0 sticky left-0 bg-muted z-20">
+              <Users className="w-3.5 h-3.5 hidden sm:block" />
               Empleado
             </div>
             {daysInPeriod.map((day) => {
