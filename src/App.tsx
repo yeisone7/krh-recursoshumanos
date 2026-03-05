@@ -50,6 +50,7 @@ import Requisiciones from "./pages/Requisiciones";
 import Perfil from "./pages/Perfil";
 import PreLiquidacion from "./pages/PreLiquidacion";
 import ConfiguracionLaboral from "./pages/ConfiguracionLaboral";
+import Install from "./pages/Install";
 import { 
   CatalogosAreas, 
   CatalogosCargos, 
