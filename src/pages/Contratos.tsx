@@ -477,7 +477,7 @@ export default function Contratos() {
                           <p className="text-xs text-accent">Extendido</p>
                         )}
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden md:table-cell">
                         <span className="text-sm font-medium text-foreground">{formatCurrency(Number(contract.salary))}</span>
                       </td>
                       <td className="p-4">
