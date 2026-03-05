@@ -480,7 +480,7 @@ export default function Contratos() {
                       <td className="p-4 hidden md:table-cell">
                         <span className="text-sm font-medium text-foreground">{formatCurrency(Number(contract.salary))}</span>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 hidden lg:table-cell">
                         {extensionsCount > 0 ? (
                           <Badge variant="outline" className="bg-accent-light text-accent border-accent/20">
                             {extensionsCount} prórroga{extensionsCount > 1 ? 's' : ''}
