@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun } from 'lucide-react';
+import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { NotificationsPanel } from '@/components/notifications/NotificationsPanel';
 import { UserManualDialog } from '@/components/manual/UserManualDialog';
 import { useTheme } from '@/hooks/useTheme';
-import { GlobalSearch } from '@/components/layout/GlobalSearch';
+import { CommandPalette } from '@/components/layout/CommandPalette';
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -33,6 +33,7 @@ interface HeaderProps {
 export function Header({ onMobileMenuToggle }: HeaderProps) {
   const { user, companies, currentCompanyId, setCurrentCompanyId, roles, signOut } = useAuth();
   const [manualOpen, setManualOpen] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   const currentCompany = companies.find(c => c.id === currentCompanyId);
@@ -56,10 +57,31 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           </Button>
         )}
 
-        {/* Global Search */}
-        <GlobalSearch />
+        {/* Search trigger - desktop: inline bar, mobile: icon button */}
+        <div className="flex-1 max-w-md hidden sm:block">
+          <button
+            onClick={() => setCommandOpen(true)}
+            className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent hover:border-border text-sm text-muted-foreground text-left transition-all relative"
+          >
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <span>Buscar empleados, módulos... </span>
+            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden lg:inline-flex h-5 items-center gap-1 rounded border border-border bg-background px-1.5 text-[10px] font-medium text-muted-foreground">
+              ⌘K
+            </kbd>
+          </button>
+        </div>
 
-        {/* Spacer for mobile when search is hidden */}
+        {/* Mobile search icon */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 sm:hidden"
+          onClick={() => setCommandOpen(true)}
+        >
+          <Search className="w-5 h-5 text-muted-foreground" />
+        </Button>
+
+        {/* Spacer for mobile */}
         <div className="flex-1 sm:hidden" />
 
         {/* Right section */}
@@ -186,6 +208,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         </div>
       </header>
 
+      <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
       <UserManualDialog open={manualOpen} onOpenChange={setManualOpen} />
     </>
   );
