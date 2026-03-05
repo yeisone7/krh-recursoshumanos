@@ -170,7 +170,6 @@ const adminNavItems: NavItem[] = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [catalogosOpen, setCatalogosOpen] = useState(false);
-  const [manualOpen, setManualOpen] = useState(false);
   const [capacitacionesOpen, setCapacitacionesOpen] = useState(false);
   const [evaluacionesOpen, setEvaluacionesOpen] = useState(false);
   const location = useLocation();
