@@ -49,6 +49,7 @@ export default function Permisos() {
   const { data: requests = [], isLoading } = useLeaveRequests();
   const { data: typeConfigs = [] } = useLeaveTypeConfigs();
   const { data: pendingCount = 0 } = usePendingLeavesCount();
+  const isMobile = useIsMobile();
 
   // Filter requests
   const filteredRequests = requests.filter(request => {
