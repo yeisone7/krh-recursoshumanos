@@ -246,23 +246,42 @@ export function useConvertToEmployee() {
       const hireDate = startDate || new Date().toISOString().split('T')[0];
 
       // Step 1: Create employee in new normalized model (employees_v2)
-      const { data: employee, error: createError } = await supabase
+      const employeePayload = {
+        company_id: currentCompanyId!,
+        first_name: candidate.first_name,
+        last_name: candidate.last_name,
+        document_type: candidate.document_type,
+        document_number: candidate.document_number,
+        birth_date: candidate.birth_date,
+        gender: normalizeCandidateGenderToEmployeeGender(candidate.gender),
+        is_active: true,
+        created_by: user?.id,
+      };
+
+      let employee: Database['public']['Tables']['employees_v2']['Row'];
+
+      const { data: createdEmployee, error: createError } = await supabase
         .from('employees_v2')
-        .insert({
-          company_id: currentCompanyId!,
-          first_name: candidate.first_name,
-          last_name: candidate.last_name,
-          document_type: candidate.document_type,
-          document_number: candidate.document_number,
-          birth_date: candidate.birth_date,
-          gender: normalizeCandidateGenderToEmployeeGender(candidate.gender),
-          is_active: true,
-          created_by: user?.id,
-        })
+        .insert(employeePayload)
         .select()
         .single();
 
-      if (createError) throw createError;
+      if (createError) {
+        if (createError.code !== '23505') throw createError;
+
+        const { data: existingEmployee, error: existingEmployeeError } = await supabase
+          .from('employees_v2')
+          .select('*')
+          .eq('company_id', currentCompanyId!)
+          .eq('document_type', candidate.document_type)
+          .eq('document_number', candidate.document_number)
+          .maybeSingle();
+
+        if (existingEmployeeError || !existingEmployee) throw createError;
+        employee = existingEmployee;
+      } else {
+        employee = createdEmployee;
+      }
 
       // Step 1b: Create contact record
       await supabase.from('employee_contact').insert({
