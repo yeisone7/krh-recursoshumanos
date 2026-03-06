@@ -7,9 +7,22 @@ import type { Database } from '@/integrations/supabase/types';
 type Candidate = Database['public']['Tables']['candidates']['Row'];
 type ContractType = Database['public']['Enums']['contract_type'];
 type LinkType = Database['public']['Enums']['link_type'];
+type GenderType = Database['public']['Enums']['gender_type'];
 type CandidateInsert = Database['public']['Tables']['candidates']['Insert'];
 type SelectionStep = Database['public']['Tables']['selection_steps']['Row'];
 type SelectionStepInsert = Database['public']['Tables']['selection_steps']['Insert'];
+
+function normalizeCandidateGenderToEmployeeGender(gender: string | null | undefined): GenderType | null {
+  if (!gender) return null;
+
+  const value = gender.trim().toLowerCase();
+
+  if (['m', 'masculino', 'hombre', 'male'].includes(value)) return 'M';
+  if (['f', 'femenino', 'mujer', 'female'].includes(value)) return 'F';
+  if (['o', 'otro', 'other', 'no_binario', 'no binario', 'non-binary', 'non binary'].includes(value)) return 'O';
+
+  return null;
+}
 
 export function useCandidates(vacancyId?: string) {
   const { currentCompanyId } = useAuth();
@@ -242,7 +255,7 @@ export function useConvertToEmployee() {
           document_type: candidate.document_type,
           document_number: candidate.document_number,
           birth_date: candidate.birth_date,
-          gender: candidate.gender as any,
+          gender: normalizeCandidateGenderToEmployeeGender(candidate.gender),
           is_active: true,
           created_by: user?.id,
         })
