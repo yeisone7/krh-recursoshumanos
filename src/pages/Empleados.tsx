@@ -429,7 +429,7 @@ export default function Empleados() {
                     {employee.is_active ? 'Activo' : 'Inactivo'}
                   </Badge>
                   {employee.created_at && (Date.now() - new Date(employee.created_at).getTime()) < 30 * 24 * 60 * 60 * 1000 && (
-                    <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 gap-1 animate-pulse">
+                    <Badge variant="outline" className="bg-warning-light text-warning border-warning/20 gap-1 animate-pulse">
                       ✨ Nuevo
                     </Badge>
                   )}
