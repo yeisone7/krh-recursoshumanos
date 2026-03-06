@@ -288,18 +288,21 @@ export default function Configuracion() {
       </motion.div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="company" className="gap-2">
-            <Building2 className="w-4 h-4" />Empresa
+            <Building2 className="w-4 h-4" /><span className="hidden sm:inline">Empresa</span>
           </TabsTrigger>
           <TabsTrigger value="alerts" className="gap-2">
-            <Bell className="w-4 h-4" />Alertas
+            <Bell className="w-4 h-4" /><span className="hidden sm:inline">Alertas</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="gap-2">
+            <Shield className="w-4 h-4" /><span className="hidden sm:inline">Seguridad</span>
           </TabsTrigger>
           <TabsTrigger value="ai" className="gap-2">
-            <Brain className="w-4 h-4" />IA
+            <Brain className="w-4 h-4" /><span className="hidden sm:inline">IA</span>
           </TabsTrigger>
           <TabsTrigger value="watermark" className="gap-2">
-            <Stamp className="w-4 h-4" />Marca de agua
+            <Stamp className="w-4 h-4" /><span className="hidden sm:inline">Marca de agua</span>
           </TabsTrigger>
         </TabsList>
 
