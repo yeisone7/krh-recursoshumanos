@@ -840,6 +840,12 @@ export default function Configuracion() {
             inactivityEnabled={inactivityEnabled}
             onInactivityMinutesChange={setInactivityMinutes}
             onInactivityEnabledChange={setInactivityEnabled}
+            lockoutEnabled={lockoutEnabled}
+            lockoutMaxAttempts={lockoutMaxAttempts}
+            lockoutMinutes={lockoutMinutes}
+            onLockoutEnabledChange={setLockoutEnabled}
+            onLockoutMaxAttemptsChange={setLockoutMaxAttempts}
+            onLockoutMinutesChange={setLockoutMinutes}
           />
         </TabsContent>
       </Tabs>
