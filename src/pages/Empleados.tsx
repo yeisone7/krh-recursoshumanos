@@ -27,7 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getEmployeeFullName } from '@/types/employee';
 import { useProfesiogramas } from '@/hooks/useDotationProfesiograma';
 
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
 
 export default function Empleados() {
   const navigate = useNavigate();
