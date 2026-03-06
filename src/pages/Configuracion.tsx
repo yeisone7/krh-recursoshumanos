@@ -142,6 +142,14 @@ export default function Configuracion() {
         setInactivityEnabled(timeoutConfig.enabled ?? false);
         setInactivityMinutes(timeoutConfig.minutes ?? 15);
       }
+
+      // Load account lockout config
+      const lockoutConfig = systemConfig.account_lockout;
+      if (lockoutConfig) {
+        setLockoutEnabled(lockoutConfig.enabled ?? false);
+        setLockoutMaxAttempts(lockoutConfig.max_attempts ?? 5);
+        setLockoutMinutes(lockoutConfig.lockout_minutes ?? 15);
+      }
     }
   }, [systemConfig]);
 
