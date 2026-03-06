@@ -38,6 +38,7 @@ import {
   History,
   ScrollText
 } from 'lucide-react';
+import { OnboardingChecklist } from '@/components/employees/OnboardingChecklist';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Dialog,
@@ -558,6 +559,11 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   <TabsTrigger value="family" className="text-xs rounded-md px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                     Familia
                   </TabsTrigger>
+                  {employee.created_at && (Date.now() - new Date(employee.created_at).getTime()) < 90 * 24 * 60 * 60 * 1000 && (
+                    <TabsTrigger value="onboarding" className="text-xs rounded-md px-3 py-1.5 data-[state=active]:bg-warning data-[state=active]:text-warning-foreground">
+                      ✨ Onboarding
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 {/* ── IDENTITY TAB ── */}
@@ -966,6 +972,11 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       <p className="text-sm">No hay información familiar registrada</p>
                     </div>
                   )}
+                </TabsContent>
+
+                {/* ── ONBOARDING TAB ── */}
+                <TabsContent value="onboarding" className="mt-4">
+                  <OnboardingChecklist employeeId={employee.id} />
                 </TabsContent>
               </Tabs>
             </div>
