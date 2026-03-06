@@ -27,7 +27,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getEmployeeFullName } from '@/types/employee';
 import { useProfesiogramas } from '@/hooks/useDotationProfesiograma';
 
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
 
 export default function Empleados() {
   const navigate = useNavigate();
@@ -107,7 +107,7 @@ export default function Empleados() {
       if (statusFilter === 'active') matchesStatus = emp.is_active;
       else if (statusFilter === 'inactive') matchesStatus = !emp.is_active;
       else if (statusFilter === 'new') {
-        matchesStatus = !!emp.created_at && (Date.now() - new Date(emp.created_at).getTime()) < THIRTY_DAYS_MS;
+        matchesStatus = !!emp.created_at && (Date.now() - new Date(emp.created_at).getTime()) < TEN_DAYS_MS;
       } else if (statusFilter !== 'all') matchesStatus = true;
 
       const matchesCenter = centerFilter === 'all' || emp.work_info?.operation_center_id === centerFilter;
