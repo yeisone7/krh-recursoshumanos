@@ -184,6 +184,11 @@ export default function Configuracion() {
           value: { min_days: alertTerminationPendingDays },
           description: 'Días mínimos de espera antes de notificar retiros pendientes',
         }),
+        updateConfig.mutateAsync({
+          key: 'hiring_notification_role',
+          value: { role_id: hiringNotifRoleId === 'none' ? null : hiringNotifRoleId },
+          description: 'Rol que recibe notificaciones al contratar candidatos',
+        }),
       ]);
       toast.success('Configuración de alertas guardada');
     } catch (error) {
