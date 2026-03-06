@@ -130,6 +130,13 @@ export default function Configuracion() {
         setWatermarkPosition(wmConfig.position || DEFAULT_WATERMARK_CONFIG.position);
         setWatermarkLogoUrl(wmConfig.logo_url || null);
       }
+
+      // Load inactivity timeout config
+      const timeoutConfig = systemConfig.inactivity_timeout_minutes;
+      if (timeoutConfig) {
+        setInactivityEnabled(timeoutConfig.enabled ?? false);
+        setInactivityMinutes(timeoutConfig.minutes ?? 15);
+      }
     }
   }, [systemConfig]);
 
