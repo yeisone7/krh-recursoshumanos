@@ -38,6 +38,7 @@ import {
   History,
   ScrollText
 } from 'lucide-react';
+import { OnboardingChecklist } from '@/components/employees/OnboardingChecklist';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Dialog,
