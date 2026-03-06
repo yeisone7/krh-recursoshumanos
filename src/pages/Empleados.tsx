@@ -107,7 +107,7 @@ export default function Empleados() {
       if (statusFilter === 'active') matchesStatus = emp.is_active;
       else if (statusFilter === 'inactive') matchesStatus = !emp.is_active;
       else if (statusFilter === 'new') {
-        matchesStatus = !!emp.created_at && (Date.now() - new Date(emp.created_at).getTime()) < THIRTY_DAYS_MS;
+        matchesStatus = !!emp.created_at && (Date.now() - new Date(emp.created_at).getTime()) < TEN_DAYS_MS;
       } else if (statusFilter !== 'all') matchesStatus = true;
 
       const matchesCenter = centerFilter === 'all' || emp.work_info?.operation_center_id === centerFilter;
