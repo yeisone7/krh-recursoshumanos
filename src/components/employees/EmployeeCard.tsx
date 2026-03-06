@@ -44,7 +44,7 @@ export function EmployeeCard({
 }: EmployeeCardProps) {
   const navigate = useNavigate();
 
-  const isNew = employee.created_at && (Date.now() - new Date(employee.created_at).getTime()) < 30 * 24 * 60 * 60 * 1000;
+  const isNew = employee.created_at && (Date.now() - new Date(employee.created_at).getTime()) < 10 * 24 * 60 * 60 * 1000;
 
   return (
     <motion.div
