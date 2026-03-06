@@ -255,7 +255,7 @@ export function useConvertToEmployee() {
           document_type: candidate.document_type,
           document_number: candidate.document_number,
           birth_date: candidate.birth_date,
-          gender: candidate.gender as any,
+          gender: normalizeCandidateGenderToEmployeeGender(candidate.gender),
           is_active: true,
           created_by: user?.id,
         })
