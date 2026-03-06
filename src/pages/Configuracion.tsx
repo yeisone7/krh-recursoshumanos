@@ -20,6 +20,7 @@ import {
   X,
   Stamp,
   Video,
+  Shield,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
