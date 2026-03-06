@@ -416,6 +416,56 @@ export function useConvertToEmployee() {
         });
       }
 
+      // Step 6: Send notifications to users with the configured role
+      try {
+        // Get the configured role for hiring notifications
+        const { data: configData } = await supabase
+          .from('system_config')
+          .select('config_value')
+          .eq('company_id', currentCompanyId!)
+          .eq('config_key', 'hiring_notification_role')
+          .maybeSingle();
+
+        const roleId = (configData?.config_value as any)?.role_id;
+        if (roleId) {
+          // Get all users with that role
+          const { data: roleUsers } = await supabase
+            .from('user_custom_roles')
+            .select('user_id')
+            .eq('role_id', roleId);
+
+          if (roleUsers && roleUsers.length > 0) {
+            const notifs = roleUsers.map(ru => ({
+              user_id: ru.user_id,
+              company_id: currentCompanyId,
+              title: '🎉 Nuevo empleado contratado',
+              message: `${employee.first_name} ${employee.last_name} ha sido contratado como ${vacancy?.position_title || 'nuevo empleado'}.`,
+              type: 'success' as const,
+              category: 'hiring',
+              entity_type: 'employee',
+              entity_id: employee.id,
+              action_url: `/empleados?detail=${employee.id}`,
+            }));
+            await supabase.from('notifications').insert(notifs);
+          }
+        }
+      } catch (err) {
+        console.error('Error sending hiring notifications:', err);
+      }
+
+      // Step 7: Create onboarding tasks
+      try {
+        const { PREDEFINED_TASKS } = await import('@/hooks/useOnboardingTasks');
+        const tasks = PREDEFINED_TASKS.map(t => ({
+          ...t,
+          employee_id: employee.id,
+          company_id: currentCompanyId!,
+        }));
+        await supabase.from('employee_onboarding_tasks').insert(tasks);
+      } catch (err) {
+        console.error('Error creating onboarding tasks:', err);
+      }
+
       return {
         employee,
         contract,
