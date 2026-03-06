@@ -253,7 +253,7 @@ export type Database = {
             foreignKeyName: "candidates_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: "employees"
+            referencedRelation: "employees_v2"
             referencedColumns: ["id"]
           },
           {
@@ -4132,7 +4132,7 @@ export type Database = {
             foreignKeyName: "medical_exams_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
-            referencedRelation: "employees"
+            referencedRelation: "employees_v2"
             referencedColumns: ["id"]
           },
         ]
