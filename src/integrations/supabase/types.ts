@@ -2554,6 +2554,66 @@ export type Database = {
           },
         ]
       }
+      employee_onboarding_tasks: {
+        Row: {
+          company_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string | null
+          employee_id: string
+          id: string
+          is_completed: boolean | null
+          sort_order: number | null
+          task_description: string | null
+          task_key: string
+          task_label: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          is_completed?: boolean | null
+          sort_order?: number | null
+          task_description?: string | null
+          task_key: string
+          task_label: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          is_completed?: boolean | null
+          sort_order?: number | null
+          task_description?: string | null
+          task_key?: string
+          task_label?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_onboarding_tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_onboarding_tasks_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_schedule: {
         Row: {
           created_at: string
