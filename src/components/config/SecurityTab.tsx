@@ -184,6 +184,9 @@ export function SecurityTab({
           </Button>
         </CardContent>
       </Card>
+
+      {/* Session History */}
+      <SessionHistory />
     </div>
   );
 }
