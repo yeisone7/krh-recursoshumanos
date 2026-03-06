@@ -175,11 +175,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error && data.user) {
-      logSession(data.user.id, data.user.email);
+    try {
+      // Check lockout config
+      const { data: lockoutConfig } = await supabase
+        .from('system_config')
+        .select('config_value')
+        .eq('config_key', 'account_lockout')
+        .maybeSingle();
+
+      const lockout = lockoutConfig?.config_value as any;
+      if (lockout?.enabled) {
+        const { data: lockStatus } = await supabase.rpc('check_account_locked', {
+          p_email: email,
+          p_max_attempts: lockout.max_attempts || 5,
+          p_lockout_minutes: lockout.lockout_minutes || 15,
+        });
+
+        const lockResult = lockStatus as unknown as { locked: boolean; remaining_minutes: number } | null;
+        if (lockResult?.locked) {
+          const mins = Math.ceil(lockResult.remaining_minutes || 0);
+          return {
+            error: new Error(
+              `Cuenta bloqueada por demasiados intentos fallidos. Intenta de nuevo en ${mins} minuto${mins !== 1 ? 's' : ''}.`
+            ),
+          };
+        }
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      // Record the attempt
+      await supabase.from('login_attempts').insert({
+        email,
+        success: !error,
+        user_agent: navigator.userAgent,
+      });
+
+      if (!error && data.user) {
+        logSession(data.user.id, data.user.email);
+      }
+      return { error };
+    } catch (err) {
+      return { error: err as Error };
     }
-    return { error };
   };
 
   const signUp = async (email: string, password: string) => {
