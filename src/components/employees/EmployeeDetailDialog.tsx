@@ -972,6 +972,11 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     </div>
                   )}
                 </TabsContent>
+
+                {/* ── ONBOARDING TAB ── */}
+                <TabsContent value="onboarding" className="mt-4">
+                  <OnboardingChecklist employeeId={employee.id} />
+                </TabsContent>
               </Tabs>
             </div>
           </>
