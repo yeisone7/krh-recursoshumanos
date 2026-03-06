@@ -84,6 +84,11 @@ export default function Configuracion() {
   const [inactivityEnabled, setInactivityEnabled] = useState(false);
   const [inactivityMinutes, setInactivityMinutes] = useState(15);
 
+  // Account lockout state
+  const [lockoutEnabled, setLockoutEnabled] = useState(false);
+  const [lockoutMaxAttempts, setLockoutMaxAttempts] = useState(5);
+  const [lockoutMinutes, setLockoutMinutes] = useState(15);
+
   const { currentCompanyId, user } = useAuth();
   const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
   const { data: systemConfig, isLoading: loadingConfig } = useSystemConfig();
