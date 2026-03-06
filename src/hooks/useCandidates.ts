@@ -48,7 +48,7 @@ export function useCandidate(id: string | undefined) {
         .from('candidates')
         .select(`
           *,
-          vacancies(id, position_title, operation_centers(name)),
+          vacancies(id, position_title, operation_center_id, operation_centers(name)),
           selection_steps(*)
         `)
         .eq('id', id)
