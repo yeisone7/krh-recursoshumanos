@@ -20,6 +20,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useUpdateSystemConfig } from '@/hooks/useSystemConfig';
 import { supabase } from '@/integrations/supabase/client';
+import { SessionHistory } from './SessionHistory';
 
 interface SecurityTabProps {
   inactivityMinutes: number;
