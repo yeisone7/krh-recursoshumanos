@@ -4048,6 +4048,33 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       medical_exams: {
         Row: {
           concept: string
@@ -6947,10 +6974,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_account_locked: {
+        Args: {
+          p_email: string
+          p_lockout_minutes?: number
+          p_max_attempts?: number
+        }
+        Returns: Json
+      }
       check_user_permission: {
         Args: { _action: string; _module_code: string; _user_id: string }
         Returns: boolean
       }
+      cleanup_old_login_attempts: { Args: never; Returns: undefined }
       delete_shift_assignments_for_absence: {
         Args: {
           p_employee_id: string
