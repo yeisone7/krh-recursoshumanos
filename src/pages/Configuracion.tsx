@@ -90,9 +90,13 @@ export default function Configuracion() {
   const [lockoutMaxAttempts, setLockoutMaxAttempts] = useState(5);
   const [lockoutMinutes, setLockoutMinutes] = useState(15);
 
+  // Hiring notification role state
+  const [hiringNotifRoleId, setHiringNotifRoleId] = useState<string>('none');
+
   const { currentCompanyId, user } = useAuth();
   const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
   const { data: systemConfig, isLoading: loadingConfig } = useSystemConfig();
+  const { data: customRoles } = useCustomRoles();
 
   const updateConfig = useUpdateSystemConfig();
 
