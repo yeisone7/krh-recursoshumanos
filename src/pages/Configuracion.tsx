@@ -458,6 +458,35 @@ export default function Configuracion() {
                   </p>
                 </div>
               </div>
+
+              {/* Hiring notification role */}
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="flex-1">
+                      <h4 className="font-medium flex items-center gap-2">
+                        <Users className="w-4 h-4 text-primary" />
+                        Notificación de Contratación
+                      </h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Cuando se contrata un candidato, se enviará una notificación a todos los usuarios con el rol seleccionado
+                      </p>
+                    </div>
+                    <Select value={hiringNotifRoleId} onValueChange={setHiringNotifRoleId}>
+                      <SelectTrigger className="w-[220px]">
+                        <SelectValue placeholder="Seleccionar rol" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin notificación</SelectItem>
+                        {customRoles?.map((role) => (
+                          <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
               <Button onClick={handleSaveAlertConfig} disabled={updateConfig.isPending}>
                 {updateConfig.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />Guardar Configuración
