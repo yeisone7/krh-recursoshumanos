@@ -40,6 +40,7 @@ import {
   useSystemConfig,
   useUpdateSystemConfig,
 } from '@/hooks/useSystemConfig';
+import { useCustomRoles } from '@/hooks/useRolesPermissions';
 import { supabase } from '@/integrations/supabase/client';
 import type { WatermarkPosition } from '@/lib/watermark';
 import { DEFAULT_WATERMARK_CONFIG } from '@/lib/watermark';
