@@ -819,6 +819,16 @@ export default function Configuracion() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security">
+          <SecurityTab
+            inactivityMinutes={inactivityMinutes}
+            inactivityEnabled={inactivityEnabled}
+            onInactivityMinutesChange={setInactivityMinutes}
+            onInactivityEnabledChange={setInactivityEnabled}
+          />
+        </TabsContent>
       </Tabs>
     </div>
   );
