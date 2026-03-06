@@ -191,8 +191,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           p_lockout_minutes: lockout.lockout_minutes || 15,
         });
 
-        if (lockStatus?.locked) {
-          const mins = Math.ceil(lockStatus.remaining_minutes || 0);
+        const lockResult = lockStatus as unknown as { locked: boolean; remaining_minutes: number } | null;
+        if (lockResult?.locked) {
+          const mins = Math.ceil(lockResult.remaining_minutes || 0);
           return {
             error: new Error(
               `Cuenta bloqueada por demasiados intentos fallidos. Intenta de nuevo en ${mins} minuto${mins !== 1 ? 's' : ''}.`
