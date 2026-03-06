@@ -428,6 +428,11 @@ export default function Empleados() {
                   )}>
                     {employee.is_active ? 'Activo' : 'Inactivo'}
                   </Badge>
+                  {employee.created_at && (Date.now() - new Date(employee.created_at).getTime()) < 30 * 24 * 60 * 60 * 1000 && (
+                    <Badge variant="outline" className="bg-warning-light text-warning border-warning/20 gap-1 animate-pulse">
+                      ✨ Nuevo
+                    </Badge>
+                  )}
                   {hasProfesiograma(employee) && (
                     <Badge variant="outline" className="bg-primary-light text-primary border-primary/20 gap-1">
                       <ClipboardList className="w-3 h-3" />
