@@ -5,6 +5,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -14,6 +15,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const isMobile = useIsMobile();
+  useInactivityTimeout();
 
   useSwipeGesture({
     onSwipeRight: () => setMobileOpen(true),
