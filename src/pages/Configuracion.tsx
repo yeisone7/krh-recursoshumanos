@@ -80,6 +80,10 @@ export default function Configuracion() {
   const [savingWatermark, setSavingWatermark] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Inactivity timeout state
+  const [inactivityEnabled, setInactivityEnabled] = useState(false);
+  const [inactivityMinutes, setInactivityMinutes] = useState(15);
+
   const { currentCompanyId, user } = useAuth();
   const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
   const { data: systemConfig, isLoading: loadingConfig } = useSystemConfig();
