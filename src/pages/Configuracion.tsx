@@ -84,6 +84,11 @@ export default function Configuracion() {
   const [inactivityEnabled, setInactivityEnabled] = useState(false);
   const [inactivityMinutes, setInactivityMinutes] = useState(15);
 
+  // Account lockout state
+  const [lockoutEnabled, setLockoutEnabled] = useState(false);
+  const [lockoutMaxAttempts, setLockoutMaxAttempts] = useState(5);
+  const [lockoutMinutes, setLockoutMinutes] = useState(15);
+
   const { currentCompanyId, user } = useAuth();
   const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
   const { data: systemConfig, isLoading: loadingConfig } = useSystemConfig();
@@ -136,6 +141,14 @@ export default function Configuracion() {
       if (timeoutConfig) {
         setInactivityEnabled(timeoutConfig.enabled ?? false);
         setInactivityMinutes(timeoutConfig.minutes ?? 15);
+      }
+
+      // Load account lockout config
+      const lockoutConfig = systemConfig.account_lockout;
+      if (lockoutConfig) {
+        setLockoutEnabled(lockoutConfig.enabled ?? false);
+        setLockoutMaxAttempts(lockoutConfig.max_attempts ?? 5);
+        setLockoutMinutes(lockoutConfig.lockout_minutes ?? 15);
       }
     }
   }, [systemConfig]);
@@ -827,6 +840,12 @@ export default function Configuracion() {
             inactivityEnabled={inactivityEnabled}
             onInactivityMinutesChange={setInactivityMinutes}
             onInactivityEnabledChange={setInactivityEnabled}
+            lockoutEnabled={lockoutEnabled}
+            lockoutMaxAttempts={lockoutMaxAttempts}
+            lockoutMinutes={lockoutMinutes}
+            onLockoutEnabledChange={setLockoutEnabled}
+            onLockoutMaxAttemptsChange={setLockoutMaxAttempts}
+            onLockoutMinutesChange={setLockoutMinutes}
           />
         </TabsContent>
       </Tabs>
