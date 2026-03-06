@@ -155,6 +155,12 @@ export default function Configuracion() {
         setLockoutMaxAttempts(lockoutConfig.max_attempts ?? 5);
         setLockoutMinutes(lockoutConfig.lockout_minutes ?? 15);
       }
+
+      // Load hiring notification role config
+      const hiringConfig = systemConfig.hiring_notification_role;
+      if (hiringConfig?.role_id) {
+        setHiringNotifRoleId(hiringConfig.role_id);
+      }
     }
   }, [systemConfig]);
 
