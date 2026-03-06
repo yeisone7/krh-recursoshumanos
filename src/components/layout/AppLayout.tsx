@@ -15,6 +15,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const isMobile = useIsMobile();
+  useInactivityTimeout();
 
   useSwipeGesture({
     onSwipeRight: () => setMobileOpen(true),
