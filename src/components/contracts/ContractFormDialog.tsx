@@ -101,16 +101,6 @@ export function ContractFormDialog({
     return map;
   }, [allContracts, contractToEdit]);
 
-  const selectedEmployeeId = form.watch('employeeId');
-
-  // Contract history for the selected employee
-  const selectedEmployeeContracts = useMemo(() => {
-    if (!selectedEmployeeId) return [];
-    return allContracts
-      .filter((c: any) => c.employee_id === selectedEmployeeId)
-      .sort((a: any, b: any) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
-  }, [selectedEmployeeId, allContracts]);
-
   const form = useForm<ContractFormData>({
     resolver: zodResolver(contractFormSchema),
     defaultValues: {
@@ -121,6 +111,16 @@ export function ContractFormDialog({
       trialPeriodDays: 0,
     },
   });
+
+  const selectedEmployeeId = form.watch('employeeId');
+
+  // Contract history for the selected employee
+  const selectedEmployeeContracts = useMemo(() => {
+    if (!selectedEmployeeId) return [];
+    return allContracts
+      .filter((c: any) => c.employee_id === selectedEmployeeId)
+      .sort((a: any, b: any) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
+  }, [selectedEmployeeId, allContracts]);
 
   // Set form values when editing or when dialog opens with contract to edit
   useEffect(() => {
