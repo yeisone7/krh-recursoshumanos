@@ -60,6 +60,15 @@ import { CitySelect } from '@/components/ui/city-department-select';
 // Contract type is now dynamic (text in DB) - no longer using enum
 type DbContract = Database['public']['Tables']['contracts']['Row'];
 
+export interface ContractPrefilledData {
+  employeeId: string;
+  employeeName: string;
+  operationCenterId?: string;
+  positionName?: string;
+  areaId?: string;
+  workCity?: string;
+}
+
 interface ContractFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -67,6 +76,7 @@ interface ContractFormDialogProps {
   contractToEdit?: DbContract;
   preselectedEmployeeId?: string;
   preselectedEmployeeName?: string;
+  prefilledData?: ContractPrefilledData;
 }
 
 export function ContractFormDialog({ 
