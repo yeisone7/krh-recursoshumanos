@@ -20,6 +20,7 @@ export interface SearchableSelectOption {
   value: string;
   label: string;
   disabled?: boolean;
+  suffix?: React.ReactNode;
 }
 
 interface SearchableSelectProps {
@@ -111,6 +112,7 @@ export function SearchableSelect({
                     )}
                   />
                   <span className="truncate">{option.label}</span>
+                  {option.suffix}
                 </CommandItem>
               ))}
             </CommandGroup>

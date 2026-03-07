@@ -6,6 +6,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
+import { useContractExpiryNotifications } from '@/hooks/useContractExpiryNotifications';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -16,6 +17,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const isMobile = useIsMobile();
   useInactivityTimeout();
+  useContractExpiryNotifications();
 
   useSwipeGesture({
     onSwipeRight: () => setMobileOpen(true),
