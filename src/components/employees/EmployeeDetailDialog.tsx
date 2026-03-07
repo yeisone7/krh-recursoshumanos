@@ -348,7 +348,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const [isDocFormOpen, setIsDocFormOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isContractFormOpen, setIsContractFormOpen] = useState(false);
-  const [contractPreselect, setContractPreselect] = useState<{ id: string; name: string } | null>(null);
+  const [contractPreselect, setContractPreselect] = useState<{
+    id: string;
+    name: string;
+    operationCenterId?: string;
+    positionName?: string;
+    areaId?: string;
+    workCity?: string;
+  } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
