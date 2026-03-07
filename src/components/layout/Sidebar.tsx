@@ -340,18 +340,11 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       )}>
           {item.icon}
         </span>
-        <AnimatePresence>
-          {!isCollapsed &&
-        <motion.span
-          initial={{ opacity: 0, width: 0 }}
-          animate={{ opacity: 1, width: 'auto' }}
-          exit={{ opacity: 0, width: 0 }}
-          className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1">
-
-              {item.label}
-            </motion.span>
+        {!isCollapsed &&
+          <span className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1">
+            {item.label}
+          </span>
         }
-        </AnimatePresence>
         {!isCollapsed &&
       <ChevronDown className={cn(
         "w-4 h-4 transition-transform",
