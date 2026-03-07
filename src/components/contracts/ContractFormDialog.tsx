@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, FileText, Building, DollarSign, Briefcase } from 'lucide-react';
+import { CalendarIcon, FileText, Building, DollarSign, Briefcase, AlertTriangle, History } from 'lucide-react';
 
 import {
   Dialog,
@@ -50,9 +50,10 @@ import {
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
-import { useCreateContract, useUpdateContract } from '@/hooks/useContracts';
+import { useCreateContract, useUpdateContract, useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import type { Database } from '@/integrations/supabase/types';
+import { Badge } from '@/components/ui/badge';
 import { CitySelect } from '@/components/ui/city-department-select';
 
 // Contract type is now dynamic (text in DB) - no longer using enum
@@ -79,10 +80,26 @@ export function ContractFormDialog({
   const { data: employees = [] } = useEmployees();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: contractTypes = [] } = useContractTypes();
+  const { data: allContracts = [] } = useContracts();
   const createContract = useCreateContract();
   const updateContract = useUpdateContract();
 
   const isEditMode = !!contractToEdit;
+
+  // Map of employee IDs that have active contracts
+  const employeesWithActiveContract = useMemo(() => {
+    const map = new Map<string, { contract_number: string | null; contract_type: string }>();
+    for (const c of allContracts) {
+      if (!c.is_terminated) {
+        map.set(c.employee_id, { contract_number: c.contract_number, contract_type: c.contract_type });
+      }
+    }
+    // If editing, don't block the current contract's employee
+    if (contractToEdit) {
+      map.delete(contractToEdit.employee_id);
+    }
+    return map;
+  }, [allContracts, contractToEdit]);
 
   const form = useForm<ContractFormData>({
     resolver: zodResolver(contractFormSchema),
@@ -94,6 +111,16 @@ export function ContractFormDialog({
       trialPeriodDays: 0,
     },
   });
+
+  const selectedEmployeeId = form.watch('employeeId');
+
+  // Contract history for the selected employee
+  const selectedEmployeeContracts = useMemo(() => {
+    if (!selectedEmployeeId) return [];
+    return allContracts
+      .filter((c: any) => c.employee_id === selectedEmployeeId)
+      .sort((a: any, b: any) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
+  }, [selectedEmployeeId, allContracts]);
 
   // Set form values when editing or when dialog opens with contract to edit
   useEffect(() => {
@@ -233,7 +260,7 @@ export function ContractFormDialog({
                         control={form.control}
                         name="employeeId"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="md:col-span-2">
                             <FormLabel>Empleado *</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
@@ -242,17 +269,85 @@ export function ContractFormDialog({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background max-h-[200px]">
-                                {employees.filter(e => e.is_active).map((emp) => (
-                                  <SelectItem key={emp.id} value={emp.id}>
-                                    {getEmployeeFullName(emp)} - {emp.document_number}
-                                  </SelectItem>
-                                ))}
+                                {employees.filter(e => e.is_active).map((emp) => {
+                                  const hasActive = employeesWithActiveContract.has(emp.id);
+                                  return (
+                                    <SelectItem 
+                                      key={emp.id} 
+                                      value={emp.id} 
+                                      disabled={hasActive && !isEditMode}
+                                      className={hasActive && !isEditMode ? 'opacity-50' : ''}
+                                    >
+                                      <span className="flex items-center gap-2">
+                                        {getEmployeeFullName(emp)} - {emp.document_number}
+                                        {hasActive && (
+                                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-warning text-warning bg-warning/10">
+                                            Contrato activo
+                                          </Badge>
+                                        )}
+                                      </span>
+                                    </SelectItem>
+                                  );
+                                })}
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+
+                      {/* Employee contract history */}
+                      {selectedEmployeeId && selectedEmployeeContracts.length > 0 && (
+                        <div className="md:col-span-2 rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                            <History className="w-4 h-4" />
+                            Historial de contratos ({selectedEmployeeContracts.length})
+                          </div>
+                          <div className="space-y-1.5">
+                            {selectedEmployeeContracts.slice(0, 5).map((c: any) => {
+                              const isActive = !c.is_terminated;
+                              const ctConfig = contractTypes.find(ct => ct.contract_type === c.contract_type);
+                              return (
+                                <div key={c.id} className="flex items-center justify-between text-xs bg-background rounded px-3 py-2 border border-border/50">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-muted-foreground/40'}`} />
+                                    <span className="font-mono text-muted-foreground">{c.contract_number || '—'}</span>
+                                    <span className="font-medium">{ctConfig?.display_name || c.contract_type}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-muted-foreground">
+                                      {format(new Date(c.start_date), 'dd/MM/yyyy')}
+                                      {c.end_date ? ` — ${format(new Date(c.end_date), 'dd/MM/yyyy')}` : ' — Vigente'}
+                                    </span>
+                                    {isActive && (
+                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-green-500 text-green-600 bg-green-500/10">
+                                        Activo
+                                      </Badge>
+                                    )}
+                                    {c.is_terminated && (
+                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-muted-foreground/30 text-muted-foreground">
+                                        Terminado
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {selectedEmployeeContracts.length > 5 && (
+                              <p className="text-xs text-muted-foreground text-center">
+                                +{selectedEmployeeContracts.length - 5} contratos más
+                              </p>
+                            )}
+                          </div>
+                          {employeesWithActiveContract.has(selectedEmployeeId) && !isEditMode && (
+                            <div className="flex items-center gap-2 text-xs text-warning bg-warning/10 border border-warning/20 rounded px-3 py-2 mt-2">
+                              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                              Este empleado ya tiene un contrato activo. Debe terminarlo antes de crear uno nuevo.
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <FormField
                         control={form.control}
                         name="contractType"
