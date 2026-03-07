@@ -705,7 +705,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                             operationCenterId: employee?.work_info?.operation_center_id || undefined,
                             positionName: employee?.work_info?.position_name || undefined,
                             areaId: employee?.work_info?.area_id || undefined,
-                            workCity: employee?.work_info?.operation_centers?.city || undefined,
+                            workCity: employee?.operation_centers?.city || undefined,
                           });
                           setIsContractFormOpen(true);
                         }}
