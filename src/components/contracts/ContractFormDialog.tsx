@@ -111,7 +111,7 @@ export function ContractFormDialog({
       .sort((a: any, b: any) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
   }, [selectedEmployeeId, allContracts]);
 
-  const form2 = useForm<ContractFormData>({
+  const form = useForm<ContractFormData>({
     resolver: zodResolver(contractFormSchema),
     defaultValues: {
       salaryType: 'monthly',
