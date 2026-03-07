@@ -68,7 +68,13 @@ import {
 } from "./pages/catalogos";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Helper to wrap a page with permission check
 const P = ({ module, children }: { module: string; children: React.ReactNode }) => (
