@@ -221,23 +221,19 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const showEvaluaciones = canViewItem(evaluacionesItem);
   const showCatalogos = canViewItem(catalogosItem);
 
-  // Auto-open catalogos menu if on a catalogos route or centros
-  const isCatalogosRoute = location.pathname.startsWith('/catalogos') || location.pathname === '/centros';
-  if (isCatalogosRoute && !catalogosOpen) {
-    setCatalogosOpen(true);
-  }
-
-  // Auto-open capacitaciones menu if on a capacitaciones route
-  const isCapacitacionesRoute = location.pathname.startsWith('/capacitaciones');
-  if (isCapacitacionesRoute && !capacitacionesOpen) {
-    setCapacitacionesOpen(true);
-  }
-
-  // Auto-open evaluaciones menu if on an evaluaciones route
-  const isEvaluacionesRoute = location.pathname.startsWith('/evaluaciones');
-  if (isEvaluacionesRoute && !evaluacionesOpen) {
-    setEvaluacionesOpen(true);
-  }
+  // Auto-open menus based on route (in useEffect to avoid setState during render)
+  const pathname = location.pathname;
+  React.useEffect(() => {
+    if (pathname.startsWith('/catalogos') || pathname === '/centros') {
+      setCatalogosOpen(true);
+    }
+    if (pathname.startsWith('/capacitaciones')) {
+      setCapacitacionesOpen(true);
+    }
+    if (pathname.startsWith('/evaluaciones')) {
+      setEvaluacionesOpen(true);
+    }
+  }, [pathname]);
 
   const handleNavClick = () => {
     if (onNavigate) onNavigate();
