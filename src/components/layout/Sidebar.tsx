@@ -306,19 +306,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     return linkContent;
   };
 
-  const SectionLabel = ({ label }: {label: string;}) =>
-  <AnimatePresence>
-      {!isCollapsed &&
-    <motion.p
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-3 pt-4 pb-1">
-
-          {label}
-        </motion.p>
-    }
-    </AnimatePresence>;
+  const SectionLabel = ({ label }: {label: string;}) => (
+    !isCollapsed ? (
+      <p className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-3 pt-4 pb-1">
+        {label}
+      </p>
+    ) : null
+  );
 
 
   const ExpandableMenu = ({ item, isOpen, setIsOpen }: {
