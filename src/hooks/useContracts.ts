@@ -178,6 +178,22 @@ export function useCreateContract() {
 
   return useMutation({
     mutationFn: async (contract: Omit<ContractInsert, 'created_by'>) => {
+      // Check if employee already has an active contract
+      const { data: existingContracts, error: checkError } = await supabase
+        .from('contracts')
+        .select('id, contract_number, contract_type, is_terminated')
+        .eq('employee_id', contract.employee_id)
+        .or('is_terminated.is.null,is_terminated.eq.false');
+
+      if (checkError) throw checkError;
+
+      if (existingContracts && existingContracts.length > 0) {
+        const existing = existingContracts[0];
+        throw new Error(
+          `Este empleado ya tiene un contrato activo (${existing.contract_number || existing.contract_type}). Debe terminar el contrato existente antes de crear uno nuevo.`
+        );
+      }
+
       // Generate automatic contract number using the database function
       let contractNumber: string | null = null;
       if (currentCompanyId) {
