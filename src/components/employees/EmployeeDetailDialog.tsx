@@ -1013,6 +1013,12 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
           <CertificationFormDialog open={isCertFormOpen} onOpenChange={setIsCertFormOpen} employeeId={employee.id} employeeName={employeeFullName} />
           <VaccinationFormDialog open={isVacFormOpen} onOpenChange={setIsVacFormOpen} employeeId={employee.id} employeeName={employeeFullName} />
           <DocumentFormDialog open={isDocFormOpen} onOpenChange={setIsDocFormOpen} employeeId={employee.id} companyId={employee.company_id} employeeName={employeeFullName} />
+          <ContractFormDialog 
+            open={isContractFormOpen} 
+            onOpenChange={setIsContractFormOpen} 
+            preselectedEmployeeId={contractPreselect?.id}
+            preselectedEmployeeName={contractPreselect?.name}
+          />
         </>
       )}
     </Dialog>
