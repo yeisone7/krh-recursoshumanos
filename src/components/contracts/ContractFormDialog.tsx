@@ -60,6 +60,15 @@ import { CitySelect } from '@/components/ui/city-department-select';
 // Contract type is now dynamic (text in DB) - no longer using enum
 type DbContract = Database['public']['Tables']['contracts']['Row'];
 
+export interface ContractPrefilledData {
+  employeeId: string;
+  employeeName: string;
+  operationCenterId?: string;
+  positionName?: string;
+  areaId?: string;
+  workCity?: string;
+}
+
 interface ContractFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -67,6 +76,7 @@ interface ContractFormDialogProps {
   contractToEdit?: DbContract;
   preselectedEmployeeId?: string;
   preselectedEmployeeName?: string;
+  prefilledData?: ContractPrefilledData;
 }
 
 export function ContractFormDialog({ 
@@ -76,6 +86,7 @@ export function ContractFormDialog({
   contractToEdit,
   preselectedEmployeeId,
   preselectedEmployeeName,
+  prefilledData,
 }: ContractFormDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
   const { data: employees = [] } = useEmployees();
@@ -142,6 +153,12 @@ export function ContractFormDialog({
         specialClauses: contractToEdit.special_clauses || undefined,
         workLaborDescription: contractToEdit.work_labor_description || undefined,
       });
+    } else if (open && prefilledData) {
+      form.setValue('employeeId', prefilledData.employeeId);
+      if (prefilledData.operationCenterId) form.setValue('operationCenter', prefilledData.operationCenterId);
+      if (prefilledData.positionName) form.setValue('position', prefilledData.positionName);
+      if (prefilledData.areaId) form.setValue('area', prefilledData.areaId);
+      if (prefilledData.workCity) form.setValue('workCity', prefilledData.workCity);
     } else if (open && preselectedEmployeeId) {
       form.setValue('employeeId', preselectedEmployeeId);
     } else if (!open) {
@@ -154,7 +171,7 @@ export function ContractFormDialog({
         trialPeriodDays: 0,
       });
     }
-  }, [open, contractToEdit, preselectedEmployeeId, form]);
+  }, [open, contractToEdit, preselectedEmployeeId, prefilledData, form]);
 
   const selectedContractType = form.watch('contractType');
   const contractTypeConfig = contractTypes.find(ct => ct.contract_type === selectedContractType);
