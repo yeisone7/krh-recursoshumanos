@@ -166,13 +166,13 @@
     --input: 224 20% 20%;
     --ring: 22 88% 55%;
 
-    --sidebar-background: 212 8% 32%;
-    --sidebar-foreground: 210 10% 90%;
+    --sidebar-background: 224 30% 10%;
+    --sidebar-foreground: 220 15% 85%;
     --sidebar-primary: 36 80% 55%;
-    --sidebar-primary-foreground: 212 8% 25%;
-    --sidebar-accent: 212 8% 38%;
-    --sidebar-accent-foreground: 210 10% 95%;
-    --sidebar-border: 212 8% 28%;
+    --sidebar-primary-foreground: 224 30% 10%;
+    --sidebar-accent: 224 25% 16%;
+    --sidebar-accent-foreground: 220 15% 95%;
+    --sidebar-border: 224 25% 15%;
     --sidebar-ring: 36 80% 55%;
   }
 }
