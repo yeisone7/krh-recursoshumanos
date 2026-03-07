@@ -688,7 +688,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       </div>
 
                       {/* Contracts Summary */}
-                      <ContractSummaryCard employeeId={employee.id} />
+                      <ContractSummaryCard 
+                        employeeId={employee.id} 
+                        employeeName={employeeFullName}
+                        onCreateContract={(id, name) => {
+                          setContractPreselect({ id, name });
+                          setIsContractFormOpen(true);
+                        }}
+                      />
 
                       {/* Work Info History */}
                       <WorkInfoHistoryCard employeeId={employee.id} />
