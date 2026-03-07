@@ -80,12 +80,38 @@ export function ContractFormDialog({
   const { data: employees = [] } = useEmployees();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: contractTypes = [] } = useContractTypes();
+  const { data: allContracts = [] } = useContracts();
   const createContract = useCreateContract();
   const updateContract = useUpdateContract();
 
   const isEditMode = !!contractToEdit;
 
-  const form = useForm<ContractFormData>({
+  // Map of employee IDs that have active contracts
+  const employeesWithActiveContract = useMemo(() => {
+    const map = new Map<string, { contract_number: string | null; contract_type: string }>();
+    for (const c of allContracts) {
+      if (!c.is_terminated) {
+        map.set(c.employee_id, { contract_number: c.contract_number, contract_type: c.contract_type });
+      }
+    }
+    // If editing, don't block the current contract's employee
+    if (contractToEdit) {
+      map.delete(contractToEdit.employee_id);
+    }
+    return map;
+  }, [allContracts, contractToEdit]);
+
+  const selectedEmployeeId = form.watch('employeeId');
+
+  // Contract history for the selected employee
+  const selectedEmployeeContracts = useMemo(() => {
+    if (!selectedEmployeeId) return [];
+    return allContracts
+      .filter((c: any) => c.employee_id === selectedEmployeeId)
+      .sort((a: any, b: any) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
+  }, [selectedEmployeeId, allContracts]);
+
+  const form2 = useForm<ContractFormData>({
     resolver: zodResolver(contractFormSchema),
     defaultValues: {
       salaryType: 'monthly',
