@@ -57,6 +57,7 @@ import { useDeleteCertification, useDeleteVaccination, useDeleteDocument } from 
 import { useContracts } from '@/hooks/useContracts';
 import { useWorkInfoHistory } from '@/hooks/useWorkInfoHistory';
 import { EmployeeFormDialog } from './EmployeeFormDialog';
+import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { CertificationFormDialog } from './CertificationFormDialog';
 import { VaccinationFormDialog } from './VaccinationFormDialog';
 import { DocumentFormDialog } from './DocumentFormDialog';
