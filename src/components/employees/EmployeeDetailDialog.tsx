@@ -1030,8 +1030,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
           <ContractFormDialog 
             open={isContractFormOpen} 
             onOpenChange={setIsContractFormOpen} 
-            preselectedEmployeeId={contractPreselect?.id}
-            preselectedEmployeeName={contractPreselect?.name}
+            prefilledData={contractPreselect ? {
+              employeeId: contractPreselect.id,
+              employeeName: contractPreselect.name,
+              operationCenterId: contractPreselect.operationCenterId,
+              positionName: contractPreselect.positionName,
+              areaId: contractPreselect.areaId,
+              workCity: contractPreselect.workCity,
+            } : undefined}
           />
         </>
       )}
