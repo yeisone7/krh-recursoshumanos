@@ -192,6 +192,11 @@ export function useCreateContract() {
         }
       }
 
+      // Validate contract number was generated
+      if (!contractNumber) {
+        throw new Error('No se pudo generar el consecutivo del contrato. Verifique que la empresa esté configurada correctamente e intente de nuevo.');
+      }
+
       const { data, error } = await supabase
         .from('contracts')
         .insert({ 
