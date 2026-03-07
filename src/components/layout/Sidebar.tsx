@@ -260,18 +260,11 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         )}>
             {item.icon}
           </span>
-          <AnimatePresence>
-            {!isCollapsed &&
-          <motion.span
-            initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: 'auto' }}
-            exit={{ opacity: 0, width: 0 }}
-            className="font-medium text-sm whitespace-nowrap overflow-hidden">
-
-                {item.label}
-              </motion.span>
+          {!isCollapsed &&
+            <span className="font-medium text-sm whitespace-nowrap overflow-hidden">
+              {item.label}
+            </span>
           }
-          </AnimatePresence>
           {item.badge && !isCollapsed &&
         <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-0.5 rounded-full">
               {item.badge}
@@ -313,19 +306,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     return linkContent;
   };
 
-  const SectionLabel = ({ label }: {label: string;}) =>
-  <AnimatePresence>
-      {!isCollapsed &&
-    <motion.p
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-3 pt-4 pb-1">
-
-          {label}
-        </motion.p>
-    }
-    </AnimatePresence>;
+  const SectionLabel = ({ label }: {label: string;}) => (
+    !isCollapsed ? (
+      <p className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-3 pt-4 pb-1">
+        {label}
+      </p>
+    ) : null
+  );
 
 
   const ExpandableMenu = ({ item, isOpen, setIsOpen }: {
@@ -353,18 +340,11 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       )}>
           {item.icon}
         </span>
-        <AnimatePresence>
-          {!isCollapsed &&
-        <motion.span
-          initial={{ opacity: 0, width: 0 }}
-          animate={{ opacity: 1, width: 'auto' }}
-          exit={{ opacity: 0, width: 0 }}
-          className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1">
-
-              {item.label}
-            </motion.span>
+        {!isCollapsed &&
+          <span className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1">
+            {item.label}
+          </span>
         }
-        </AnimatePresence>
         {!isCollapsed &&
       <ChevronDown className={cn(
         "w-4 h-4 transition-transform",
