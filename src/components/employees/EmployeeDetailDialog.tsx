@@ -232,7 +232,7 @@ function ExpiringItemsAlert({ employee }: { employee: any }) {
 }
 
 // ── Contract Summary Card ──
-function ContractSummaryCard({ employeeId }: { employeeId: string }) {
+function ContractSummaryCard({ employeeId, employeeName, onCreateContract }: { employeeId: string; employeeName: string; onCreateContract?: (employeeId: string, employeeName: string) => void }) {
   const { data: allContracts, isLoading } = useContracts();
 
   if (isLoading) return null;
@@ -240,11 +240,22 @@ function ContractSummaryCard({ employeeId }: { employeeId: string }) {
   const empContracts = allContracts?.filter((c: any) => c.employee_id === employeeId) || [];
   const activeContracts = empContracts.filter((c: any) => !c.is_terminated);
   const terminatedCount = empContracts.length - activeContracts.length;
-
-  if (!empContracts?.length) return null;
+  const hasActiveContract = activeContracts.length > 0;
 
   return (
-    <SectionCard title="Contratos" icon={ScrollText}>
+    <SectionCard title="Contratos" icon={ScrollText} action={
+      !hasActiveContract && onCreateContract ? (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-7 text-xs gap-1"
+          onClick={(e) => { e.stopPropagation(); onCreateContract(employeeId, employeeName); }}
+        >
+          <Plus className="w-3 h-3" />
+          Crear Contrato
+        </Button>
+      ) : undefined
+    }>
       <div className="space-y-2">
         {activeContracts.length > 0 ? (
           activeContracts.map((c: any) => {
