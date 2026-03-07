@@ -348,7 +348,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const [isDocFormOpen, setIsDocFormOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isContractFormOpen, setIsContractFormOpen] = useState(false);
-  const [contractPreselect, setContractPreselect] = useState<{ id: string; name: string } | null>(null);
+  const [contractPreselect, setContractPreselect] = useState<{
+    id: string;
+    name: string;
+    operationCenterId?: string;
+    positionName?: string;
+    areaId?: string;
+    workCity?: string;
+  } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -692,7 +699,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                         employeeId={employee.id} 
                         employeeName={employeeFullName}
                         onCreateContract={(id, name) => {
-                          setContractPreselect({ id, name });
+                          setContractPreselect({ 
+                            id, 
+                            name,
+                            operationCenterId: employee?.work_info?.operation_center_id || undefined,
+                            positionName: employee?.work_info?.position_name || undefined,
+                            areaId: employee?.work_info?.area_id || undefined,
+                            workCity: employee?.operation_centers?.city || undefined,
+                          });
                           setIsContractFormOpen(true);
                         }}
                       />
@@ -1016,8 +1030,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
           <ContractFormDialog 
             open={isContractFormOpen} 
             onOpenChange={setIsContractFormOpen} 
-            preselectedEmployeeId={contractPreselect?.id}
-            preselectedEmployeeName={contractPreselect?.name}
+            prefilledData={contractPreselect ? {
+              employeeId: contractPreselect.id,
+              employeeName: contractPreselect.name,
+              operationCenterId: contractPreselect.operationCenterId,
+              positionName: contractPreselect.positionName,
+              areaId: contractPreselect.areaId,
+              workCity: contractPreselect.workCity,
+            } : undefined}
           />
         </>
       )}
