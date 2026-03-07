@@ -50,9 +50,10 @@ import {
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
-import { useCreateContract, useUpdateContract } from '@/hooks/useContracts';
+import { useCreateContract, useUpdateContract, useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import type { Database } from '@/integrations/supabase/types';
+import { Badge } from '@/components/ui/badge';
 import { CitySelect } from '@/components/ui/city-department-select';
 
 // Contract type is now dynamic (text in DB) - no longer using enum
