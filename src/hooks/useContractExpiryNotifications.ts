@@ -67,7 +67,6 @@ export function useContractExpiryNotifications() {
         {
           body: contractAlerts.slice(0, 3).map((a) => `${a.entityName}: ${a.description}`).join('\n'),
           tag: 'contract-expiry',
-          renotify: false,
         }
       );
     }
