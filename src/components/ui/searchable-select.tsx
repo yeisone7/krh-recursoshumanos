@@ -112,6 +112,7 @@ export function SearchableSelect({
                     )}
                   />
                   <span className="truncate">{option.label}</span>
+                  {option.suffix}
                 </CommandItem>
               ))}
             </CommandGroup>
