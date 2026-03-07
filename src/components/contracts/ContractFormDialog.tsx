@@ -153,6 +153,12 @@ export function ContractFormDialog({
         specialClauses: contractToEdit.special_clauses || undefined,
         workLaborDescription: contractToEdit.work_labor_description || undefined,
       });
+    } else if (open && prefilledData) {
+      form.setValue('employeeId', prefilledData.employeeId);
+      if (prefilledData.operationCenterId) form.setValue('operationCenter', prefilledData.operationCenterId);
+      if (prefilledData.positionName) form.setValue('position', prefilledData.positionName);
+      if (prefilledData.areaId) form.setValue('area', prefilledData.areaId);
+      if (prefilledData.workCity) form.setValue('workCity', prefilledData.workCity);
     } else if (open && preselectedEmployeeId) {
       form.setValue('employeeId', preselectedEmployeeId);
     } else if (!open) {
@@ -165,7 +171,7 @@ export function ContractFormDialog({
         trialPeriodDays: 0,
       });
     }
-  }, [open, contractToEdit, preselectedEmployeeId, form]);
+  }, [open, contractToEdit, preselectedEmployeeId, prefilledData, form]);
 
   const selectedContractType = form.watch('contractType');
   const contractTypeConfig = contractTypes.find(ct => ct.contract_type === selectedContractType);
