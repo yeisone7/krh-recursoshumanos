@@ -57,6 +57,7 @@ import { useDeleteCertification, useDeleteVaccination, useDeleteDocument } from 
 import { useContracts } from '@/hooks/useContracts';
 import { useWorkInfoHistory } from '@/hooks/useWorkInfoHistory';
 import { EmployeeFormDialog } from './EmployeeFormDialog';
+import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { CertificationFormDialog } from './CertificationFormDialog';
 import { VaccinationFormDialog } from './VaccinationFormDialog';
 import { DocumentFormDialog } from './DocumentFormDialog';
@@ -232,7 +233,7 @@ function ExpiringItemsAlert({ employee }: { employee: any }) {
 }
 
 // ── Contract Summary Card ──
-function ContractSummaryCard({ employeeId }: { employeeId: string }) {
+function ContractSummaryCard({ employeeId, employeeName, onCreateContract }: { employeeId: string; employeeName: string; onCreateContract?: (employeeId: string, employeeName: string) => void }) {
   const { data: allContracts, isLoading } = useContracts();
 
   if (isLoading) return null;
@@ -240,11 +241,22 @@ function ContractSummaryCard({ employeeId }: { employeeId: string }) {
   const empContracts = allContracts?.filter((c: any) => c.employee_id === employeeId) || [];
   const activeContracts = empContracts.filter((c: any) => !c.is_terminated);
   const terminatedCount = empContracts.length - activeContracts.length;
-
-  if (!empContracts?.length) return null;
+  const hasActiveContract = activeContracts.length > 0;
 
   return (
-    <SectionCard title="Contratos" icon={ScrollText}>
+    <SectionCard title="Contratos" icon={ScrollText} action={
+      !hasActiveContract && onCreateContract ? (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-7 text-xs gap-1"
+          onClick={(e) => { e.stopPropagation(); onCreateContract(employeeId, employeeName); }}
+        >
+          <Plus className="w-3 h-3" />
+          Crear Contrato
+        </Button>
+      ) : undefined
+    }>
       <div className="space-y-2">
         {activeContracts.length > 0 ? (
           activeContracts.map((c: any) => {
@@ -335,6 +347,8 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const [isVacFormOpen, setIsVacFormOpen] = useState(false);
   const [isDocFormOpen, setIsDocFormOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [isContractFormOpen, setIsContractFormOpen] = useState(false);
+  const [contractPreselect, setContractPreselect] = useState<{ id: string; name: string } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -674,7 +688,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       </div>
 
                       {/* Contracts Summary */}
-                      <ContractSummaryCard employeeId={employee.id} />
+                      <ContractSummaryCard 
+                        employeeId={employee.id} 
+                        employeeName={employeeFullName}
+                        onCreateContract={(id, name) => {
+                          setContractPreselect({ id, name });
+                          setIsContractFormOpen(true);
+                        }}
+                      />
 
                       {/* Work Info History */}
                       <WorkInfoHistoryCard employeeId={employee.id} />
@@ -992,6 +1013,12 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
           <CertificationFormDialog open={isCertFormOpen} onOpenChange={setIsCertFormOpen} employeeId={employee.id} employeeName={employeeFullName} />
           <VaccinationFormDialog open={isVacFormOpen} onOpenChange={setIsVacFormOpen} employeeId={employee.id} employeeName={employeeFullName} />
           <DocumentFormDialog open={isDocFormOpen} onOpenChange={setIsDocFormOpen} employeeId={employee.id} companyId={employee.company_id} employeeName={employeeFullName} />
+          <ContractFormDialog 
+            open={isContractFormOpen} 
+            onOpenChange={setIsContractFormOpen} 
+            preselectedEmployeeId={contractPreselect?.id}
+            preselectedEmployeeName={contractPreselect?.name}
+          />
         </>
       )}
     </Dialog>
