@@ -263,35 +263,28 @@ export function ContractFormDialog({
                         render={({ field }) => (
                           <FormItem className="md:col-span-2">
                             <FormLabel>Empleado *</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleccionar empleado" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background max-h-[200px]">
-                                {employees.filter(e => e.is_active).map((emp) => {
+                            <FormControl>
+                              <SearchableSelect
+                                options={employees.filter(e => e.is_active).map((emp) => {
                                   const hasActive = employeesWithActiveContract.has(emp.id);
-                                  return (
-                                    <SelectItem 
-                                      key={emp.id} 
-                                      value={emp.id} 
-                                      disabled={hasActive && !isEditMode}
-                                      className={hasActive && !isEditMode ? 'opacity-50' : ''}
-                                    >
-                                      <span className="flex items-center gap-2">
-                                        {getEmployeeFullName(emp)} - {emp.document_number}
-                                        {hasActive && (
-                                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-warning text-warning bg-warning/10">
-                                            Contrato activo
-                                          </Badge>
-                                        )}
-                                      </span>
-                                    </SelectItem>
-                                  );
+                                  return {
+                                    value: emp.id,
+                                    label: `${getEmployeeFullName(emp)} - ${emp.document_number}`,
+                                    disabled: hasActive && !isEditMode,
+                                    suffix: hasActive ? (
+                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-warning text-warning bg-warning/10 ml-2 shrink-0">
+                                        Contrato activo
+                                      </Badge>
+                                    ) : undefined,
+                                  };
                                 })}
-                              </SelectContent>
-                            </Select>
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder="Buscar empleado por nombre o documento..."
+                                searchPlaceholder="Escriba nombre o cédula..."
+                                emptyMessage="No se encontraron empleados."
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
