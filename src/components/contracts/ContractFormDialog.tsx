@@ -86,6 +86,7 @@ export function ContractFormDialog({
   contractToEdit,
   preselectedEmployeeId,
   preselectedEmployeeName,
+  prefilledData,
 }: ContractFormDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
   const { data: employees = [] } = useEmployees();
