@@ -481,9 +481,16 @@ export default function Contratos() {
                       className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer group"
                     >
                       <td className="p-4 hidden md:table-cell">
-                        <span className="text-sm font-mono text-primary font-medium">
-                          {contract.contract_number || '-'}
-                        </span>
+                        {contract.contract_number ? (
+                          <span className="text-sm font-mono text-primary font-medium">
+                            {contract.contract_number}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20">
+                            <AlertTriangle className="w-3 h-3" />
+                            Sin consecutivo
+                          </span>
+                        )}
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
