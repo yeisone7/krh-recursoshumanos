@@ -20,6 +20,7 @@ export interface SearchableSelectOption {
   value: string;
   label: string;
   disabled?: boolean;
+  suffix?: React.ReactNode;
 }
 
 interface SearchableSelectProps {
