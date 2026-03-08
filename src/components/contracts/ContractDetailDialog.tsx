@@ -123,8 +123,9 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   
   // Check if there's a pending termination process (initiated but not completed)
   const hasPendingTermination = terminationProcess && !terminationProcess.isCompleted;
-  // Show termination button if contract is not fully terminated OR if there's a pending process
-  const canTerminate = status !== 'terminated' || hasPendingTermination;
+  const hasCompletedTermination = terminationProcess && terminationProcess.isCompleted;
+  // Show termination button if contract is not fully terminated OR if there's a pending process (but not if already completed)
+  const canTerminate = !hasCompletedTermination && (status !== 'terminated' || hasPendingTermination);
   
   // Approval status
   const isApproved = contract.isApproved;
