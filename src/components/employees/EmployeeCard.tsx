@@ -103,15 +103,26 @@ export function EmployeeCard({
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onOpenDetail(employee.id); }}>
                 Ver perfil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(employee); }}>
-                Editar
-              </DropdownMenuItem>
+              {!isRetired && (
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(employee); }}>
+                  Editar
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewContract(employee.id); }}>
                 Ver contrato
               </DropdownMenuItem>
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDocuments(employee.id); }}>
                 Documentos
               </DropdownMenuItem>
+              {isRetired && onRehire && (
+                <DropdownMenuItem 
+                  onClick={(e) => { e.stopPropagation(); onRehire(employee); }}
+                  className="text-primary font-medium"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Recontratar
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
