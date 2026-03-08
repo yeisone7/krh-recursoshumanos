@@ -118,11 +118,12 @@ export default function Empleados() {
   }, [employees, searchQuery, statusFilter, centerFilter]);
 
   const stats = useMemo(() => {
-    if (!employees) return { total: 0, active: 0, inactive: 0 };
+    if (!employees) return { total: 0, active: 0, inactive: 0, retired: 0 };
     return {
       total: employees.length,
-      active: employees.filter(e => e.is_active).length,
-      inactive: employees.filter(e => !e.is_active).length,
+      active: employees.filter(e => e.is_active && e.status !== 'retired' && e.status !== 'en_retiro').length,
+      inactive: employees.filter(e => !e.is_active && e.status !== 'retired' && e.status !== 'en_retiro').length,
+      retired: employees.filter(e => e.status === 'retired' || e.status === 'en_retiro').length,
     };
   }, [employees]);
 
