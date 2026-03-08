@@ -21,6 +21,7 @@ import { EmployeeFormDialog } from '@/components/employees/EmployeeFormDialog';
 import { EmployeeDetailDialog } from '@/components/employees/EmployeeDetailDialog';
 import { CertificationAlertsPanel } from '@/components/employees/CertificationAlertsPanel';
 import { EmployeeCard } from '@/components/employees/EmployeeCard';
+import { RehireEmployeeDialog } from '@/components/employees/RehireEmployeeDialog';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,6 +40,8 @@ export default function Empleados() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
+  const [rehireEmployee, setRehireEmployee] = useState<any>(null);
+  const [isRehireOpen, setIsRehireOpen] = useState(false);
 
   const { currentCompanyId } = useAuth();
   const { data: employees, isLoading } = useEmployees();
@@ -94,6 +97,11 @@ export default function Empleados() {
     navigate(`/empleados/${employeeId}/360?tab=documentos`);
   };
 
+  const handleRehire = (employee: any) => {
+    setRehireEmployee(employee);
+    setIsRehireOpen(true);
+  };
+
   const filteredEmployees = useMemo(() => {
     if (!employees) return [];
     return employees.filter((emp) => {
@@ -104,8 +112,10 @@ export default function Empleados() {
         position.includes(searchQuery.toLowerCase());
       
       let matchesStatus = true;
-      if (statusFilter === 'active') matchesStatus = emp.is_active;
-      else if (statusFilter === 'inactive') matchesStatus = !emp.is_active;
+      if (statusFilter === 'active') matchesStatus = emp.is_active && emp.status !== 'retired' && emp.status !== 'en_retiro';
+      else if (statusFilter === 'inactive') matchesStatus = !emp.is_active && emp.status !== 'retired' && emp.status !== 'en_retiro';
+      else if (statusFilter === 'retired') matchesStatus = emp.status === 'retired' || emp.status === 'en_retiro';
+      else if (statusFilter === 'en_retiro') matchesStatus = emp.status === 'en_retiro';
       else if (statusFilter === 'new') {
         matchesStatus = !!emp.created_at && (Date.now() - new Date(emp.created_at).getTime()) < TEN_DAYS_MS;
       } else if (statusFilter !== 'all') matchesStatus = true;
@@ -116,11 +126,12 @@ export default function Empleados() {
   }, [employees, searchQuery, statusFilter, centerFilter]);
 
   const stats = useMemo(() => {
-    if (!employees) return { total: 0, active: 0, inactive: 0 };
+    if (!employees) return { total: 0, active: 0, inactive: 0, retired: 0 };
     return {
       total: employees.length,
-      active: employees.filter(e => e.is_active).length,
-      inactive: employees.filter(e => !e.is_active).length,
+      active: employees.filter(e => e.is_active && e.status !== 'retired' && e.status !== 'en_retiro').length,
+      inactive: employees.filter(e => !e.is_active && e.status !== 'retired' && e.status !== 'en_retiro').length,
+      retired: employees.filter(e => e.status === 'retired' || e.status === 'en_retiro').length,
     };
   }, [employees]);
 
@@ -179,6 +190,15 @@ export default function Empleados() {
         employeeId={selectedEmployeeId}
       />
 
+      <RehireEmployeeDialog
+        open={isRehireOpen}
+        onOpenChange={(open) => {
+          setIsRehireOpen(open);
+          if (!open) setRehireEmployee(null);
+        }}
+        employee={rehireEmployee}
+      />
+
       {/* Filters */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -206,6 +226,8 @@ export default function Empleados() {
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="active">Activos</SelectItem>
                 <SelectItem value="inactive">Inactivos</SelectItem>
+                <SelectItem value="retired">🚪 Retirados</SelectItem>
+                <SelectItem value="en_retiro">⏳ En Retiro</SelectItem>
                 <SelectItem value="new">✨ Nuevos</SelectItem>
               </SelectContent>
             </Select>
@@ -237,6 +259,7 @@ export default function Empleados() {
             { label: 'Total empleados', value: stats.total, color: 'secondary' },
             { label: 'Activos', value: stats.active, color: 'success' },
             { label: 'Inactivos', value: stats.inactive, color: 'rose' },
+            { label: 'Retirados', value: stats.retired, color: 'warning' },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -294,6 +317,7 @@ export default function Empleados() {
               onEdit={handleEdit}
               onViewContract={handleViewContract}
               onViewDocuments={handleViewDocuments}
+              onRehire={handleRehire}
             />
           ))}
         </div>
