@@ -190,6 +190,15 @@ export default function Empleados() {
         employeeId={selectedEmployeeId}
       />
 
+      <RehireEmployeeDialog
+        open={isRehireOpen}
+        onOpenChange={(open) => {
+          setIsRehireOpen(open);
+          if (!open) setRehireEmployee(null);
+        }}
+        employee={rehireEmployee}
+      />
+
       {/* Filters */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
