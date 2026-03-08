@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import type { EmployeeFullFormData, EmployeeV2WithRelations } from '@/types/employee';
+import { PREDEFINED_TASKS } from '@/hooks/useOnboardingTasks';
 
 // =====================================================
 // AUDIT HELPER
@@ -300,6 +301,19 @@ export function useCreateEmployee() {
         }
       }
 
+      // Generate onboarding tasks automatically
+      const onboardingTasks = PREDEFINED_TASKS.map(t => ({
+        ...t,
+        employee_id: employeeId,
+        company_id: currentCompanyId,
+      }));
+      const { error: onboardingError } = await supabase
+        .from('employee_onboarding_tasks')
+        .insert(onboardingTasks);
+      if (onboardingError) {
+        console.error('Error creating onboarding tasks:', onboardingError);
+      }
+
       // Audit log
       await logAuditEvent(
         user.id,
@@ -318,6 +332,7 @@ export function useCreateEmployee() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
       queryClient.invalidateQueries({ queryKey: ['employee_time_configs'] });
+      queryClient.invalidateQueries({ queryKey: ['onboarding-tasks'] });
     },
   });
 }
