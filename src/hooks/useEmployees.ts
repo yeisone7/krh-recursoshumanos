@@ -50,15 +50,16 @@ export function useEmployees() {
       if (!currentCompanyId) return [];
 
       // Get employees with their current related data
+      // Use left joins so retired employees (without is_current records) still appear
       const { data: employees, error } = await supabase
         .from('employees_v2')
         .select(`
           *,
-          employee_contact!inner(
+          employee_contact(
             id, email, mobile, phone, residence_city, residence_department,
             residence_address, emergency_contact_name, emergency_contact_phone
           ),
-          employee_work_info!inner(
+          employee_work_info(
             id, operation_center_id, position_id, position_name, hire_date, link_type, area_id,
             operation_centers(id, name, city)
           )
