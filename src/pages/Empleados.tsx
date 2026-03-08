@@ -97,6 +97,11 @@ export default function Empleados() {
     navigate(`/empleados/${employeeId}/360?tab=documentos`);
   };
 
+  const handleRehire = (employee: any) => {
+    setRehireEmployee(employee);
+    setIsRehireOpen(true);
+  };
+
   const filteredEmployees = useMemo(() => {
     if (!employees) return [];
     return employees.filter((emp) => {
