@@ -5,11 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileText, History, Download, Plus, Loader2, Copy, Pencil } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileText, History, Download, Plus, Loader2, Copy, Pencil, ListChecks } from 'lucide-react';
 import { usePositionProfiles } from '@/hooks/usePositionProfiles';
 import { generatePositionProfilePdf } from '@/lib/positionProfilePdfGenerator';
 import { PositionProfileFormDialog } from './PositionProfileFormDialog';
 import { ClonePositionProfileDialog } from './ClonePositionProfileDialog';
+import { PositionOnboardingTemplates } from '@/components/positions/PositionOnboardingTemplates';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
