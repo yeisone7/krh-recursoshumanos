@@ -90,7 +90,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
 
   const course = session.course;
   const enrolledIds = new Set(attendance?.map(a => a.employee_id) || []);
-  const availableEmployees = employees?.filter(e => !enrolledIds.has(e.id)) || [];
+  const availableEmployees = employees?.filter(e => e.is_active && !enrolledIds.has(e.id)) || [];
 
   async function handleEnroll() {
     if (!selectedEmployeeId) return;

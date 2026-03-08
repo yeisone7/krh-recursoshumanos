@@ -150,7 +150,7 @@ export function OvertimeFormDialog({ open, onOpenChange }: OvertimeFormDialogPro
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {employees.map((emp) => (
+                      {employees.filter(e => e.is_active).map((emp) => (
                         <SelectItem key={emp.id} value={emp.id}>
                           {emp.first_name} {emp.last_name} - {emp.document_number}
                         </SelectItem>
