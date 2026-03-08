@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import type { EmployeeFullFormData, EmployeeV2WithRelations } from '@/types/employee';
+import { PREDEFINED_TASKS } from '@/hooks/useOnboardingTasks';
 
 // =====================================================
 // AUDIT HELPER
