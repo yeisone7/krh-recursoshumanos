@@ -1,7 +1,9 @@
-import { CheckCircle2, Circle, Loader2, ListChecks } from 'lucide-react';
+import { CheckCircle2, Circle, Loader2, ListChecks, Plus } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { useOnboardingTasks, useToggleOnboardingTask } from '@/hooks/useOnboardingTasks';
+import { Button } from '@/components/ui/button';
+import { useOnboardingTasks, useToggleOnboardingTask, useCreateOnboardingTasks } from '@/hooks/useOnboardingTasks';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface OnboardingChecklistProps {
   employeeId: string;
@@ -10,6 +12,7 @@ interface OnboardingChecklistProps {
 export function OnboardingChecklist({ employeeId }: OnboardingChecklistProps) {
   const { data: tasks, isLoading } = useOnboardingTasks(employeeId);
   const toggleTask = useToggleOnboardingTask();
+  const createTasks = useCreateOnboardingTasks();
 
   if (isLoading) {
     return (
@@ -19,7 +22,30 @@ export function OnboardingChecklist({ employeeId }: OnboardingChecklistProps) {
     );
   }
 
-  if (!tasks || tasks.length === 0) return null;
+  if (!tasks || tasks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <ListChecks className="w-12 h-12 text-muted-foreground mb-3" />
+        <h3 className="font-semibold text-foreground mb-1">Sin checklist de onboarding</h3>
+        <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+          Este empleado no tiene tareas de onboarding asignadas. Puedes generar el checklist predeterminado de 8 tareas.
+        </p>
+        <Button
+          onClick={() => {
+            createTasks.mutate(employeeId, {
+              onSuccess: () => toast.success('Checklist de onboarding creado'),
+              onError: (err) => toast.error('Error al crear checklist', { description: err.message }),
+            });
+          }}
+          disabled={createTasks.isPending}
+          className="gap-2"
+        >
+          {createTasks.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          Generar Checklist
+        </Button>
+      </div>
+    );
+  }
 
   const completed = tasks.filter(t => t.is_completed).length;
   const percentage = Math.round((completed / tasks.length) * 100);
