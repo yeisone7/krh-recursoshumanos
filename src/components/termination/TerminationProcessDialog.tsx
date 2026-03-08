@@ -185,18 +185,18 @@ export function TerminationProcessDialog({
     if (!company || !termination) return;
 
     const documentData: TerminationDocumentData = {
-      companyName: company.name,
-      companyNit: company.nit,
+      companyName: company.name || 'Empresa',
+      companyNit: company.nit || '',
       companyAddress: company.address,
       companyCity: 'Bucaramanga',
       companyPhone: company.phone,
-      employeeFullName: contract.employeeName,
+      employeeFullName: contract.employeeName || 'Sin nombre',
       employeeDocumentType: 'C.C.',
-      employeeDocumentNumber: '---', // Would come from employee data
-      employeePosition: contract.position,
-      employeeArea: contract.area,
-      employeeOperationCenter: contract.operationCenter,
-      contractType: contractTypeLabels[contract.contractType],
+      employeeDocumentNumber: '---',
+      employeePosition: contract.position || 'Sin cargo',
+      employeeArea: contract.area || '',
+      employeeOperationCenter: contract.operationCenter || '',
+      contractType: contractTypeLabels[contract.contractType] || contract.contractType || 'No especificado',
       contractStartDate: contract.startDate,
       contractEndDate: contract.originalEndDate || undefined,
       salary: contract.salary,
