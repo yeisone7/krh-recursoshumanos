@@ -151,6 +151,14 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
 
             {/* Content */}
             <ScrollArea className="flex-1 max-h-[70vh]">
+              <Tabs defaultValue="profile" className="w-full">
+                <div className="px-5 pt-4 pb-0">
+                  <TabsList className="h-8">
+                    <TabsTrigger value="profile" className="text-xs gap-1"><FileText className="w-3 h-3" />Perfil</TabsTrigger>
+                    <TabsTrigger value="onboarding" className="text-xs gap-1"><ListChecks className="w-3 h-3" />Onboarding</TabsTrigger>
+                  </TabsList>
+                </div>
+                <TabsContent value="profile">
               {profile && (
                 <div className="p-5 space-y-5">
                   {/* Identificación */}
