@@ -317,6 +317,7 @@ export default function Empleados() {
               onEdit={handleEdit}
               onViewContract={handleViewContract}
               onViewDocuments={handleViewDocuments}
+              onRehire={handleRehire}
             />
           ))}
         </div>
