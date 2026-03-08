@@ -21,6 +21,7 @@ import { EmployeeFormDialog } from '@/components/employees/EmployeeFormDialog';
 import { EmployeeDetailDialog } from '@/components/employees/EmployeeDetailDialog';
 import { CertificationAlertsPanel } from '@/components/employees/CertificationAlertsPanel';
 import { EmployeeCard } from '@/components/employees/EmployeeCard';
+import { RehireEmployeeDialog } from '@/components/employees/RehireEmployeeDialog';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
