@@ -208,6 +208,8 @@ export default function Empleados() {
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="active">Activos</SelectItem>
                 <SelectItem value="inactive">Inactivos</SelectItem>
+                <SelectItem value="retired">🚪 Retirados</SelectItem>
+                <SelectItem value="en_retiro">⏳ En Retiro</SelectItem>
                 <SelectItem value="new">✨ Nuevos</SelectItem>
               </SelectContent>
             </Select>
