@@ -301,15 +301,23 @@ export function useCreateEmployee() {
         }
       }
 
-      // Generate onboarding tasks automatically
-      const onboardingTasks = PREDEFINED_TASKS.map(t => ({
-        ...t,
+      // Generate onboarding tasks: use position template if available, else predefined
+      const { fetchPositionTemplates } = await import('@/hooks/useOnboardingTemplates');
+      let taskSource: { task_key: string; task_label: string; task_description: string | null; sort_order: number }[] | null = null;
+      if (data.positionId) {
+        taskSource = await fetchPositionTemplates(currentCompanyId, data.positionId);
+      }
+      const finalTasks = (taskSource || PREDEFINED_TASKS).map(t => ({
+        task_key: t.task_key,
+        task_label: t.task_label,
+        task_description: t.task_description,
+        sort_order: t.sort_order,
         employee_id: employeeId,
         company_id: currentCompanyId,
       }));
       const { error: onboardingError } = await supabase
         .from('employee_onboarding_tasks')
-        .insert(onboardingTasks);
+        .insert(finalTasks);
       if (onboardingError) {
         console.error('Error creating onboarding tasks:', onboardingError);
       }

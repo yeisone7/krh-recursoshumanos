@@ -5,11 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileText, History, Download, Plus, Loader2, Copy, Pencil } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileText, History, Download, Plus, Loader2, Copy, Pencil, ListChecks } from 'lucide-react';
 import { usePositionProfiles } from '@/hooks/usePositionProfiles';
 import { generatePositionProfilePdf } from '@/lib/positionProfilePdfGenerator';
 import { PositionProfileFormDialog } from './PositionProfileFormDialog';
 import { ClonePositionProfileDialog } from './ClonePositionProfileDialog';
+import { PositionOnboardingTemplates } from '@/components/positions/PositionOnboardingTemplates';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -149,6 +151,14 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
 
             {/* Content */}
             <ScrollArea className="flex-1 max-h-[70vh]">
+              <Tabs defaultValue="profile" className="w-full">
+                <div className="px-5 pt-4 pb-0">
+                  <TabsList className="h-8">
+                    <TabsTrigger value="profile" className="text-xs gap-1"><FileText className="w-3 h-3" />Perfil</TabsTrigger>
+                    <TabsTrigger value="onboarding" className="text-xs gap-1"><ListChecks className="w-3 h-3" />Onboarding</TabsTrigger>
+                  </TabsList>
+                </div>
+                <TabsContent value="profile">
               {profile && (
                 <div className="p-5 space-y-5">
                   {/* Identificación */}
@@ -257,6 +267,13 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                   </Card>
                 </div>
               )}
+                </TabsContent>
+                <TabsContent value="onboarding">
+                  <div className="p-5">
+                    <PositionOnboardingTemplates positionId={positionId} positionName={positionName} />
+                  </div>
+                </TabsContent>
+              </Tabs>
             </ScrollArea>
           </div>
         </DialogContent>
