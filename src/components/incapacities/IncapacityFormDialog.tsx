@@ -199,7 +199,7 @@ export function IncapacityFormDialog({
                           {loadingEmployees ? (
                             <SelectItem value="__loading__" disabled>Cargando...</SelectItem>
                           ) : (
-                            employees?.map((emp) => (
+                            employees?.filter(e => e.is_active).map((emp) => (
                               <SelectItem key={emp.id} value={emp.id}>
                                 {emp.first_name} {emp.last_name} - {emp.document_number}
                               </SelectItem>
