@@ -307,6 +307,7 @@ export interface EmployeeV2 {
   gender: GenderType | null;
   blood_type: BloodType | null;
   marital_status: MaritalStatusType | null;
+  status?: 'active' | 'suspended' | 'retired' | 'en_retiro';
   is_active: boolean;
   avatar_url: string | null;
   created_by: string | null;
