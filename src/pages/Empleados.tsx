@@ -40,6 +40,8 @@ export default function Empleados() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
+  const [rehireEmployee, setRehireEmployee] = useState<any>(null);
+  const [isRehireOpen, setIsRehireOpen] = useState(false);
 
   const { currentCompanyId } = useAuth();
   const { data: employees, isLoading } = useEmployees();
