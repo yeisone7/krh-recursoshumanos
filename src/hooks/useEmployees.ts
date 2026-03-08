@@ -332,6 +332,7 @@ export function useCreateEmployee() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
       queryClient.invalidateQueries({ queryKey: ['employee_time_configs'] });
+      queryClient.invalidateQueries({ queryKey: ['onboarding-tasks'] });
     },
   });
 }
