@@ -154,11 +154,15 @@ export function EmployeeCard({
       <div className="flex items-center justify-between pt-4 border-t border-border">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className={cn(
-            employee.is_active 
-              ? 'bg-success-light text-success border-success/20'
-              : 'bg-rose-light text-rose border-rose/20'
+            isRetired
+              ? isEnRetiro
+                ? 'bg-warning-light text-warning border-warning/20'
+                : 'bg-muted text-muted-foreground border-muted-foreground/20'
+              : employee.is_active 
+                ? 'bg-success-light text-success border-success/20'
+                : 'bg-rose-light text-rose border-rose/20'
           )}>
-            {employee.is_active ? 'Activo' : 'Inactivo'}
+            {isEnRetiro ? '⏳ En Retiro' : isRetired ? '🚪 Retirado' : employee.is_active ? 'Activo' : 'Inactivo'}
           </Badge>
           {isNew && (
             <Badge variant="outline" className="bg-warning-light text-warning border-warning/20 gap-1">
