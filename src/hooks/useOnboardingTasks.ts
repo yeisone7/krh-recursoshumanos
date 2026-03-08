@@ -77,6 +77,59 @@ export function useToggleOnboardingTask() {
   });
 }
 
+export function useAddCustomOnboardingTask() {
+  const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ employeeId, label, description }: { employeeId: string; label: string; description?: string }) => {
+      // Get max sort_order for this employee
+      const { data: existing } = await supabase
+        .from('employee_onboarding_tasks')
+        .select('sort_order')
+        .eq('employee_id', employeeId)
+        .order('sort_order', { ascending: false })
+        .limit(1);
+      
+      const nextOrder = (existing?.[0]?.sort_order || 0) + 1;
+
+      const { error } = await supabase
+        .from('employee_onboarding_tasks')
+        .insert({
+          employee_id: employeeId,
+          company_id: currentCompanyId!,
+          task_key: `custom_${Date.now()}`,
+          task_label: label,
+          task_description: description || null,
+          sort_order: nextOrder,
+        });
+      if (error) throw error;
+      return employeeId;
+    },
+    onSuccess: (employeeId) => {
+      queryClient.invalidateQueries({ queryKey: ['onboarding-tasks', employeeId] });
+    },
+  });
+}
+
+export function useDeleteOnboardingTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ taskId, employeeId }: { taskId: string; employeeId: string }) => {
+      const { error } = await supabase
+        .from('employee_onboarding_tasks')
+        .delete()
+        .eq('id', taskId);
+      if (error) throw error;
+      return employeeId;
+    },
+    onSuccess: (employeeId) => {
+      queryClient.invalidateQueries({ queryKey: ['onboarding-tasks', employeeId] });
+    },
+  });
+}
+
 export function useOnboardingProgress(employeeId: string | null) {
   const { data: tasks } = useOnboardingTasks(employeeId);
   if (!tasks || tasks.length === 0) return null;
