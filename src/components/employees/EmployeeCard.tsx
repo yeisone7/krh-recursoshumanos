@@ -32,6 +32,7 @@ interface EmployeeCardProps {
   onEdit: (employee: any) => void;
   onViewContract: (id: string) => void;
   onViewDocuments: (id: string) => void;
+  onRehire?: (employee: any) => void;
 }
 
 export function EmployeeCard({
