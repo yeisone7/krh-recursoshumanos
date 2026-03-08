@@ -267,6 +267,13 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                   </Card>
                 </div>
               )}
+                </TabsContent>
+                <TabsContent value="onboarding">
+                  <div className="p-5">
+                    <PositionOnboardingTemplates positionId={positionId} positionName={positionName} />
+                  </div>
+                </TabsContent>
+              </Tabs>
             </ScrollArea>
           </div>
         </DialogContent>
