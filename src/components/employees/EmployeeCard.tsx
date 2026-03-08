@@ -43,6 +43,7 @@ export function EmployeeCard({
   onEdit,
   onViewContract,
   onViewDocuments,
+  onRehire,
 }: EmployeeCardProps) {
   const navigate = useNavigate();
 
