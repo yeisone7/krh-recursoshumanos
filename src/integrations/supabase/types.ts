@@ -4338,6 +4338,57 @@ export type Database = {
           },
         ]
       }
+      onboarding_task_templates: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          position_id: string
+          sort_order: number
+          task_description: string | null
+          task_key: string
+          task_label: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          position_id: string
+          sort_order?: number
+          task_description?: string | null
+          task_key: string
+          task_label: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          position_id?: string
+          sort_order?: number
+          task_description?: string | null
+          task_key?: string
+          task_label?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_task_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_task_templates_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operation_centers: {
         Row: {
           address: string | null
