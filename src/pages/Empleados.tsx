@@ -104,8 +104,10 @@ export default function Empleados() {
         position.includes(searchQuery.toLowerCase());
       
       let matchesStatus = true;
-      if (statusFilter === 'active') matchesStatus = emp.is_active;
-      else if (statusFilter === 'inactive') matchesStatus = !emp.is_active;
+      if (statusFilter === 'active') matchesStatus = emp.is_active && emp.status !== 'retired' && emp.status !== 'en_retiro';
+      else if (statusFilter === 'inactive') matchesStatus = !emp.is_active && emp.status !== 'retired' && emp.status !== 'en_retiro';
+      else if (statusFilter === 'retired') matchesStatus = emp.status === 'retired' || emp.status === 'en_retiro';
+      else if (statusFilter === 'en_retiro') matchesStatus = emp.status === 'en_retiro';
       else if (statusFilter === 'new') {
         matchesStatus = !!emp.created_at && (Date.now() - new Date(emp.created_at).getTime()) < TEN_DAYS_MS;
       } else if (statusFilter !== 'all') matchesStatus = true;
