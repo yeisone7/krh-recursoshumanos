@@ -242,6 +242,7 @@ export default function Empleados() {
             { label: 'Total empleados', value: stats.total, color: 'secondary' },
             { label: 'Activos', value: stats.active, color: 'success' },
             { label: 'Inactivos', value: stats.inactive, color: 'rose' },
+            { label: 'Retirados', value: stats.retired, color: 'warning' },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
