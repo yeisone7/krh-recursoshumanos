@@ -141,14 +141,16 @@ export function EmployeeCard({
           </div>
           <span className="text-foreground">{employee.operation_centers?.name || 'Sin centro asignado'}</span>
         </div>
-        {employee.work_info?.hire_date && (
-          <div className="flex items-center gap-2 text-sm">
-            <div className="w-6 h-6 rounded-md bg-violet-light flex items-center justify-center">
-              <Calendar className="w-3.5 h-3.5 text-violet" />
-            </div>
-            <span className="text-foreground">Desde {new Date(employee.work_info.hire_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'short' })}</span>
+        <div className="flex items-center gap-2 text-sm">
+          <div className="w-6 h-6 rounded-md bg-violet-light flex items-center justify-center">
+            <Calendar className="w-3.5 h-3.5 text-violet" />
           </div>
-        )}
+          <span className="text-foreground">
+            {employee.work_info?.hire_date 
+              ? `Desde ${new Date(employee.work_info.hire_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'short' })}`
+              : 'Sin fecha de ingreso'}
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-border">
