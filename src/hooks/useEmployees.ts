@@ -301,6 +301,19 @@ export function useCreateEmployee() {
         }
       }
 
+      // Generate onboarding tasks automatically
+      const onboardingTasks = PREDEFINED_TASKS.map(t => ({
+        ...t,
+        employee_id: employeeId,
+        company_id: currentCompanyId,
+      }));
+      const { error: onboardingError } = await supabase
+        .from('employee_onboarding_tasks')
+        .insert(onboardingTasks);
+      if (onboardingError) {
+        console.error('Error creating onboarding tasks:', onboardingError);
+      }
+
       // Audit log
       await logAuditEvent(
         user.id,
