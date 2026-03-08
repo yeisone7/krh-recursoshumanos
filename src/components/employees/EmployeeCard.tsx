@@ -10,6 +10,7 @@ import {
   Phone,
   ClipboardList,
   Eye,
+  RotateCcw,
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ interface EmployeeCardProps {
   onEdit: (employee: any) => void;
   onViewContract: (id: string) => void;
   onViewDocuments: (id: string) => void;
+  onRehire?: (employee: any) => void;
 }
 
 export function EmployeeCard({
@@ -41,10 +43,13 @@ export function EmployeeCard({
   onEdit,
   onViewContract,
   onViewDocuments,
+  onRehire,
 }: EmployeeCardProps) {
   const navigate = useNavigate();
 
   const isNew = employee.created_at && (Date.now() - new Date(employee.created_at).getTime()) < 10 * 24 * 60 * 60 * 1000;
+  const isRetired = employee.status === 'retired' || employee.status === 'en_retiro';
+  const isEnRetiro = employee.status === 'en_retiro';
 
   return (
     <motion.div
@@ -98,15 +103,26 @@ export function EmployeeCard({
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onOpenDetail(employee.id); }}>
                 Ver perfil
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(employee); }}>
-                Editar
-              </DropdownMenuItem>
+              {!isRetired && (
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(employee); }}>
+                  Editar
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewContract(employee.id); }}>
                 Ver contrato
               </DropdownMenuItem>
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDocuments(employee.id); }}>
                 Documentos
               </DropdownMenuItem>
+              {isRetired && onRehire && (
+                <DropdownMenuItem 
+                  onClick={(e) => { e.stopPropagation(); onRehire(employee); }}
+                  className="text-primary font-medium"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Recontratar
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -138,11 +154,15 @@ export function EmployeeCard({
       <div className="flex items-center justify-between pt-4 border-t border-border">
         <div className="flex items-center gap-2">
           <Badge variant="outline" className={cn(
-            employee.is_active 
-              ? 'bg-success-light text-success border-success/20'
-              : 'bg-rose-light text-rose border-rose/20'
+            isRetired
+              ? isEnRetiro
+                ? 'bg-warning-light text-warning border-warning/20'
+                : 'bg-muted text-muted-foreground border-muted-foreground/20'
+              : employee.is_active 
+                ? 'bg-success-light text-success border-success/20'
+                : 'bg-rose-light text-rose border-rose/20'
           )}>
-            {employee.is_active ? 'Activo' : 'Inactivo'}
+            {isEnRetiro ? '⏳ En Retiro' : isRetired ? '🚪 Retirado' : employee.is_active ? 'Activo' : 'Inactivo'}
           </Badge>
           {isNew && (
             <Badge variant="outline" className="bg-warning-light text-warning border-warning/20 gap-1">
