@@ -64,7 +64,7 @@ export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmp
       // 2. Create new work_info record
       const { error: workError } = await supabase
         .from('employee_work_info')
-        .insert({
+        .insert([{
           employee_id: employee.id,
           company_id: currentCompanyId,
           operation_center_id: operationCenterId || null,
@@ -72,10 +72,10 @@ export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmp
           position_name: finalPositionName,
           area_id: areaId || null,
           hire_date: hireDate,
-          link_type: linkType,
+          link_type: linkType as any,
           is_current: true,
           created_by: user.id,
-        });
+        }]);
       if (workError) throw workError;
 
       // 3. Recreate current contact record if none exists
