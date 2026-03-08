@@ -453,11 +453,21 @@ export function useConvertToEmployee() {
         console.error('Error sending hiring notifications:', err);
       }
 
-      // Step 7: Create onboarding tasks
+      // Step 7: Create onboarding tasks (use position template if available)
       try {
         const { PREDEFINED_TASKS } = await import('@/hooks/useOnboardingTasks');
-        const tasks = PREDEFINED_TASKS.map(t => ({
-          ...t,
+        const { fetchPositionTemplates } = await import('@/hooks/useOnboardingTemplates');
+        
+        let taskSource: any[] | null = null;
+        if (vacancy?.position_id) {
+          taskSource = await fetchPositionTemplates(currentCompanyId!, vacancy.position_id);
+        }
+        
+        const tasks = (taskSource || PREDEFINED_TASKS).map(t => ({
+          task_key: t.task_key,
+          task_label: t.task_label,
+          task_description: t.task_description,
+          sort_order: t.sort_order,
           employee_id: employee.id,
           company_id: currentCompanyId!,
         }));
