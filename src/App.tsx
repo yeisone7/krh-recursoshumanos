@@ -158,6 +158,7 @@ const App = () => (
                         <Route path="/catalogos/tipos-contrato" element={<P module="catalogos"><CatalogosTiposContrato /></P>} />
                         <Route path="/catalogos/festivos" element={<P module="catalogos"><CatalogosFestivos /></P>} />
                         <Route path="/catalogos/motivos-novedad" element={<P module="catalogos"><CatalogosMotivosNovedad /></P>} />
+                        <Route path="/catalogos/plataformas-publicacion" element={<P module="catalogos"><CatalogosPlataformasPublicacion /></P>} />
                         <Route path="/perfil" element={<Perfil />} />
                         <Route path="/seguridad" element={<P module="seguridad"><Seguridad /></P>} />
                         <Route path="/configuracion" element={<P module="configuracion"><Configuracion /></P>} />
