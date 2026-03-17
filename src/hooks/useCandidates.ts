@@ -460,8 +460,9 @@ export function useConvertToEmployee() {
         const { fetchPositionTemplates } = await import('@/hooks/useOnboardingTemplates');
         
         let taskSource: any[] | null = null;
-        if (vacancy?.position_id) {
-          taskSource = await fetchPositionTemplates(currentCompanyId!, vacancy.position_id);
+        const posId = vacancy?.position_id;
+        if (posId) {
+          taskSource = await fetchPositionTemplates(currentCompanyId!, posId);
         }
         
         const tasks = (taskSource || PREDEFINED_TASKS).map(t => ({
