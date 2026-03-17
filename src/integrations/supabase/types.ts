@@ -4979,7 +4979,9 @@ export type Database = {
           seleccion_fecha_aprobacion: string | null
           seleccion_fecha_inicio_proceso: string | null
           seleccion_observaciones: string | null
+          seleccion_perfil_cargo_creado: boolean | null
           seleccion_quien_aprobo: string | null
+          seleccion_tipo_mano_obra: string | null
           solicitante_id: string | null
           solicitante_nombre: string
           tipo_contrato_solicitado: string | null
@@ -5048,7 +5050,9 @@ export type Database = {
           seleccion_fecha_aprobacion?: string | null
           seleccion_fecha_inicio_proceso?: string | null
           seleccion_observaciones?: string | null
+          seleccion_perfil_cargo_creado?: boolean | null
           seleccion_quien_aprobo?: string | null
+          seleccion_tipo_mano_obra?: string | null
           solicitante_id?: string | null
           solicitante_nombre: string
           tipo_contrato_solicitado?: string | null
@@ -5117,7 +5121,9 @@ export type Database = {
           seleccion_fecha_aprobacion?: string | null
           seleccion_fecha_inicio_proceso?: string | null
           seleccion_observaciones?: string | null
+          seleccion_perfil_cargo_creado?: boolean | null
           seleccion_quien_aprobo?: string | null
+          seleccion_tipo_mano_obra?: string | null
           solicitante_id?: string | null
           solicitante_nombre?: string
           tipo_contrato_solicitado?: string | null
@@ -5324,6 +5330,7 @@ export type Database = {
           created_at: string
           entidad_origen: string | null
           id: string
+          platform_id: string | null
           requisition_id: string
         }
         Insert: {
@@ -5331,6 +5338,7 @@ export type Database = {
           created_at?: string
           entidad_origen?: string | null
           id?: string
+          platform_id?: string | null
           requisition_id: string
         }
         Update: {
@@ -5338,9 +5346,17 @@ export type Database = {
           created_at?: string
           entidad_origen?: string | null
           id?: string
+          platform_id?: string | null
           requisition_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "requisition_vacancy_codes_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "vacancy_publication_platforms"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "requisition_vacancy_codes_requisition_id_fkey"
             columns: ["requisition_id"]
@@ -6845,6 +6861,50 @@ export type Database = {
             columns: ["requisition_id"]
             isOneToOne: false
             referencedRelation: "personnel_requisitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vacancy_publication_platforms: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacancy_publication_platforms_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
