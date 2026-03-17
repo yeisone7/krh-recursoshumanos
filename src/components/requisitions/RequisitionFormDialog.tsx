@@ -42,6 +42,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOperationCenters } from '@/hooks/useCompanies';
+import { useShifts } from '@/hooks/useSchedules';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useContractTypes } from '@/hooks/useContractTypes';
@@ -72,6 +73,7 @@ export function RequisitionFormDialog({
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: employees = [] } = useEmployees();
   const { data: contractTypes = [] } = useContractTypes();
+  const { data: shifts = [] } = useShifts();
   
   // Fetch user profile to get full name
   const { data: userProfile } = useQuery({
@@ -102,6 +104,8 @@ export function RequisitionFormDialog({
       cantidad_vacantes_requeridas: 1,
       cargo_solicitado: '',
       requiere_herramienta_trabajo: false,
+      incluye_alimentacion: false,
+      incluye_desplazamiento: false,
       motivo_solicitud: 'nuevo_cargo',
       solicitante_nombre: '',
     },
@@ -123,6 +127,10 @@ export function RequisitionFormDialog({
         dia_descanso_obligatorio: requisition.dia_descanso_obligatorio as DayOfWeek | undefined,
         salario_propuesto: requisition.salario_propuesto || undefined,
         tipo_contrato_solicitado: requisition.tipo_contrato_solicitado || undefined,
+        turno_trabajo_id: requisition.turno_trabajo_id || undefined,
+        incluye_alimentacion: requisition.incluye_alimentacion || false,
+        incluye_desplazamiento: requisition.incluye_desplazamiento || false,
+        trayecto_desplazamiento: requisition.trayecto_desplazamiento || undefined,
         motivo_solicitud: requisition.motivo_solicitud as RequisitionReason,
         observaciones_motivo_solicitud: requisition.observaciones_motivo_solicitud || undefined,
         solicitante_nombre: requisition.solicitante_nombre,
@@ -134,6 +142,8 @@ export function RequisitionFormDialog({
         cantidad_vacantes_requeridas: 1,
         cargo_solicitado: '',
         requiere_herramienta_trabajo: false,
+        incluye_alimentacion: false,
+        incluye_desplazamiento: false,
         motivo_solicitud: 'nuevo_cargo',
         solicitante_nombre: defaultRequesterName,
       });
@@ -155,6 +165,10 @@ export function RequisitionFormDialog({
       dia_descanso_obligatorio: data.dia_descanso_obligatorio || null,
       salario_propuesto: data.salario_propuesto || null,
       tipo_contrato_solicitado: data.tipo_contrato_solicitado || null,
+      turno_trabajo_id: data.turno_trabajo_id || null,
+      incluye_alimentacion: data.incluye_alimentacion,
+      incluye_desplazamiento: data.incluye_desplazamiento,
+      trayecto_desplazamiento: data.trayecto_desplazamiento || null,
       motivo_solicitud: data.motivo_solicitud,
       observaciones_motivo_solicitud: data.observaciones_motivo_solicitud || null,
       solicitante_nombre: data.solicitante_nombre,
@@ -475,6 +489,88 @@ export function RequisitionFormDialog({
                   </FormItem>
                 )}
               />
+
+              {/* Turno de trabajo */}
+              <FormField
+                control={form.control}
+                name="turno_trabajo_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Turno de Trabajo</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar turno" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-background">
+                        {shifts
+                          .filter((s: any) => s.is_active !== false)
+                          .map((shift: any) => (
+                            <SelectItem key={shift.id} value={shift.id}>
+                              {shift.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="incluye_alimentacion"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Incluye Alimentación</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          ¿Durante el turno de trabajo?
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="incluye_desplazamiento"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Incluye Desplazamiento</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          ¿Se incluye transporte?
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {form.watch('incluye_desplazamiento') && (
+                <FormField
+                  control={form.control}
+                  name="trayecto_desplazamiento"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Indique el Trayecto</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej: Bogotá - Yopal" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {/* Salary and Contract Type - New fields */}
               <div className="grid grid-cols-2 gap-4">
