@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Plus, Trash2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
 import {
@@ -32,10 +32,16 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApproveRequisitionStep, PersonnelRequisition } from '@/hooks/useRequisitions';
 import { useContractTypes } from '@/hooks/useContractTypes';
+import { useVacancyPlatforms } from '@/hooks/useVacancyPlatforms';
 import { recruitmentTypeLabels, RecruitmentType } from '@/types/requisition';
 import { supabase } from '@/integrations/supabase/client';
 
 type ApprovalStep = 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia';
+
+interface VacancyCodeEntry {
+  platformId: string;
+  code: string;
+}
 
 interface RequisitionApprovalDialogProps {
   open: boolean;
@@ -61,8 +67,8 @@ export function RequisitionApprovalDialog({
   const { user } = useAuth();
   const approveStep = useApproveRequisitionStep();
   const { data: contractTypes = [] } = useContractTypes();
+  const { data: platforms = [] } = useVacancyPlatforms();
   
-  // Fetch user profile for full_name
   const { data: userProfile } = useQuery({
     queryKey: ['user-profile-name', user?.id],
     queryFn: async () => {
@@ -77,7 +83,6 @@ export function RequisitionApprovalDialog({
     enabled: !!user?.id,
   });
   
-  // Determine default name: profile full_name > email prefix
   const defaultApproverName = userProfile?.full_name || user?.email?.split('@')[0] || '';
   
   // All state declarations
@@ -91,15 +96,17 @@ export function RequisitionApprovalDialog({
   const [tipoContrato, setTipoContrato] = useState('');
   const [duracion, setDuracion] = useState('');
   const [fechaInicioProceso, setFechaInicioProceso] = useState<Date | undefined>();
+  // New seleccion fields
+  const [perfilCargoCreado, setPerfilCargoCreado] = useState(false);
+  const [tipoManoObra, setTipoManoObra] = useState('');
+  const [vacancyCodes, setVacancyCodes] = useState<VacancyCodeEntry[]>([]);
   
-  // Update approverName when profile loads
   useEffect(() => {
     if (defaultApproverName && !approverName) {
       setApproverName(defaultApproverName);
     }
   }, [defaultApproverName]);
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setApproverName(defaultApproverName);
@@ -112,30 +119,26 @@ export function RequisitionApprovalDialog({
       setTipoContrato('');
       setDuracion('');
       setFechaInicioProceso(undefined);
+      setPerfilCargoCreado(false);
+      setTipoManoObra('');
+      setVacancyCodes([]);
     }
   }, [open, defaultApproverName]);
 
-  // Validation: check if required fields are filled for the current step
   const isStepValid = (): boolean => {
-    // Approver name is always required
     if (!approverName.trim()) return false;
-
-    // If rejecting, no additional fields required
     if (!approved) return true;
 
-    // Step-specific required fields (excluding observations)
     switch (step) {
       case 'operaciones':
-        // salarioAprobado is a boolean, always has a value
         return true;
       case 'rrhh':
         return !!(asignacionSalarial && asignacionSalarial > 0 && tipoConvocatoria);
       case 'juridico':
         return !!(tipoContrato && duracion.trim());
       case 'seleccion':
-        return !!fechaInicioProceso;
+        return !!(fechaInicioProceso && tipoManoObra);
       case 'gerencia':
-        // gerencia_aprobado_salario is a boolean, always has a value
         return true;
       default:
         return true;
@@ -143,6 +146,18 @@ export function RequisitionApprovalDialog({
   };
 
   const canSubmit = isStepValid();
+
+  const addVacancyCode = () => {
+    setVacancyCodes(prev => [...prev, { platformId: '', code: '' }]);
+  };
+
+  const removeVacancyCode = (index: number) => {
+    setVacancyCodes(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateVacancyCode = (index: number, field: keyof VacancyCodeEntry, value: string) => {
+    setVacancyCodes(prev => prev.map((entry, i) => i === index ? { ...entry, [field]: value } : entry));
+  };
 
   const onSubmit = async () => {
     if (!requisition) return;
@@ -152,7 +167,6 @@ export function RequisitionApprovalDialog({
       [`${step}_observaciones`]: observations,
     };
 
-    // Add step-specific data
     if (step === 'operaciones') {
       data.operaciones_aprobado_salario = salarioAprobado;
     } else if (step === 'rrhh') {
@@ -164,6 +178,8 @@ export function RequisitionApprovalDialog({
       data.juridico_duracion = duracion || null;
     } else if (step === 'seleccion') {
       data.seleccion_fecha_inicio_proceso = fechaInicioProceso ? format(fechaInicioProceso, 'yyyy-MM-dd') : null;
+      data.seleccion_perfil_cargo_creado = perfilCargoCreado;
+      data.seleccion_tipo_mano_obra = tipoManoObra || null;
     } else if (step === 'gerencia') {
       data.gerencia_aprobado_salario = salarioAprobado;
     }
@@ -175,10 +191,29 @@ export function RequisitionApprovalDialog({
       data,
     });
 
+    // Save vacancy codes if any
+    if (step === 'seleccion' && approved && vacancyCodes.length > 0) {
+      const validCodes = vacancyCodes.filter(vc => vc.platformId && vc.code.trim());
+      if (validCodes.length > 0) {
+        await (supabase as any)
+          .from('requisition_vacancy_codes')
+          .insert(
+            validCodes.map(vc => ({
+              requisition_id: requisition.id,
+              platform_id: vc.platformId,
+              codigo_vacante_externa: vc.code.trim(),
+              entidad_origen: platforms.find(p => p.id === vc.platformId)?.name || '',
+            }))
+          );
+      }
+    }
+
     onOpenChange(false);
   };
 
   if (!requisition) return null;
+
+  const activePlatforms = platforms.filter(p => p.is_active);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -298,33 +333,120 @@ export function RequisitionApprovalDialog({
           )}
 
           {step === 'seleccion' && approved && (
-            <div className="space-y-2">
-              <Label>
-                Fecha Inicio del Proceso <span className="text-destructive">*</span>
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full pl-3 text-left font-normal',
-                      !fechaInicioProceso && 'text-muted-foreground border-destructive/50'
-                    )}
-                  >
-                    {fechaInicioProceso ? format(fechaInicioProceso, 'dd/MM/yyyy') : 'Seleccionar fecha'}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+            <>
+              <div className="space-y-2">
+                <Label>
+                  Fecha Inicio del Proceso <span className="text-destructive">*</span>
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'w-full pl-3 text-left font-normal',
+                        !fechaInicioProceso && 'text-muted-foreground border-destructive/50'
+                      )}
+                    >
+                      {fechaInicioProceso ? format(fechaInicioProceso, 'dd/MM/yyyy') : 'Seleccionar fecha'}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-background" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={fechaInicioProceso}
+                      onSelect={setFechaInicioProceso}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Creación del Perfil de Cargo */}
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Creación del Perfil de Cargo</Label>
+                  <p className="text-sm text-muted-foreground">
+                    ¿Se creó el perfil de cargo?
+                  </p>
+                </div>
+                <Switch checked={perfilCargoCreado} onCheckedChange={setPerfilCargoCreado} />
+              </div>
+
+              {/* Tipo Mano de Obra */}
+              <div className="space-y-2">
+                <Label>
+                  Tipo Mano de Obra <span className="text-destructive">*</span>
+                </Label>
+                <Select value={tipoManoObra} onValueChange={setTipoManoObra}>
+                  <SelectTrigger className={!tipoManoObra ? 'border-destructive/50' : ''}>
+                    <SelectValue placeholder="Seleccionar tipo" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background">
+                    <SelectItem value="calificada">Calificada</SelectItem>
+                    <SelectItem value="no_calificada">No Calificada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Códigos de la Vacante */}
+              <div className="space-y-3 rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base">Códigos de la Vacante</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addVacancyCode}>
+                    <Plus className="h-4 w-4 mr-1" /> Agregar
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-background" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={fechaInicioProceso}
-                    onSelect={setFechaInicioProceso}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+                </div>
+                {vacancyCodes.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Sin códigos de vacante agregados.
+                  </p>
+                )}
+                {vacancyCodes.map((entry, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <div className="flex-1 space-y-1">
+                      <Select
+                        value={entry.platformId}
+                        onValueChange={(val) => updateVacancyCode(index, 'platformId', val)}
+                      >
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue placeholder="Plataforma" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background">
+                          {activePlatforms.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        className="h-9 text-sm"
+                        placeholder="Código"
+                        value={entry.code}
+                        onChange={(e) => updateVacancyCode(index, 'code', e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-destructive hover:text-destructive"
+                      onClick={() => removeVacancyCode(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {activePlatforms.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No hay plataformas configuradas. Agrégalas desde el catálogo de Plataformas de Publicación.
+                  </p>
+                )}
+              </div>
+            </>
           )}
 
           {step === 'gerencia' && (
