@@ -183,6 +183,11 @@ export const requisitionFormSchema = z.object({
   // New fields: salary and contract type
   salario_propuesto: z.number().optional(),
   tipo_contrato_solicitado: z.string().optional(),
+  // Turno y condiciones
+  turno_trabajo_id: z.string().optional(),
+  incluye_alimentacion: z.boolean().default(false),
+  incluye_desplazamiento: z.boolean().default(false),
+  trayecto_desplazamiento: z.string().optional(),
   motivo_solicitud: z.enum([
     'renuncia', 'vacaciones', 'incapacidad', 'rotacion',
     'movimiento_interno', 'nuevo_cargo', 'nuevo_puesto',
