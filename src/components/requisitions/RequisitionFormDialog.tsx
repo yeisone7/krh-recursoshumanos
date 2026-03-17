@@ -471,6 +471,10 @@ export function RequisitionFormDialog({
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="requiere_herramienta_trabajo"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
@@ -485,6 +489,88 @@ export function RequisitionFormDialog({
                   </FormItem>
                 )}
               />
+
+              {/* Turno de trabajo */}
+              <FormField
+                control={form.control}
+                name="turno_trabajo_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Turno de Trabajo</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar turno" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-background">
+                        {shifts
+                          .filter((s: any) => s.is_active !== false)
+                          .map((shift: any) => (
+                            <SelectItem key={shift.id} value={shift.id}>
+                              {shift.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="incluye_alimentacion"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Incluye Alimentación</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          ¿Durante el turno de trabajo?
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="incluye_desplazamiento"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Incluye Desplazamiento</FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          ¿Se incluye transporte?
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {form.watch('incluye_desplazamiento') && (
+                <FormField
+                  control={form.control}
+                  name="trayecto_desplazamiento"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Indique el Trayecto</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ej: Bogotá - Yopal" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )
 
               {/* Salary and Contract Type - New fields */}
               <div className="grid grid-cols-2 gap-4">
