@@ -1,0 +1,1 @@
+ALTER TABLE public.vacancies ADD COLUMN position_id UUID REFERENCES public.positions(id) ON DELETE SET NULL;
