@@ -150,6 +150,7 @@ const catalogosItem: NavItem = {
     { label: 'IPS', icon: <Stethoscope className="w-4 h-4" />, href: '/catalogos/ips' },
     { label: 'Bancos', icon: <BanknoteIcon className="w-4 h-4" />, href: '/catalogos/bancos' },
     { label: 'Motivos Novedad', icon: <ClipboardList className="w-4 h-4" />, href: '/catalogos/motivos-novedad' },
+    { label: 'Plataformas Publicación', icon: <Globe className="w-4 h-4" />, href: '/catalogos/plataformas-publicacion' },
   ],
 };
 
