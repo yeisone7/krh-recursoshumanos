@@ -53,7 +53,7 @@ import {
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateVacancy } from '@/hooks/useVacancies';
 import { useApprovedRequisitions } from '@/hooks/useRequisitions';
-import { useAreas } from '@/hooks/useSystemConfig';
+import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 
 interface VacancyFormDialogProps {
   open: boolean;
