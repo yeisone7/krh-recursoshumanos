@@ -66,8 +66,8 @@ export function useVacancyPlatforms() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...item }: Partial<VacancyPublicationPlatform> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('vacancy_publication_platforms' as any)
+      const { data, error } = await (supabase as any)
+        .from('vacancy_publication_platforms')
         .update({
           name: item.name,
           description: item.description,
