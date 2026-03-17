@@ -37,8 +37,8 @@ export function useVacancyPlatforms() {
   const createMutation = useMutation({
     mutationFn: async (item: Partial<VacancyPublicationPlatform>) => {
       if (!currentCompanyId) throw new Error('No company');
-      const { data, error } = await supabase
-        .from('vacancy_publication_platforms' as any)
+      const { data, error } = await (supabase as any)
+        .from('vacancy_publication_platforms')
         .insert({
           name: item.name!,
           description: item.description || null,
