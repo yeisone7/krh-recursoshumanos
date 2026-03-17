@@ -79,6 +79,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: approvedRequisitions = [], isLoading: loadingRequisitions } = useApprovedRequisitions();
   const { data: areas = [] } = useAreas();
+  const { data: positions = [] } = usePositions();
   const createVacancy = useCreateVacancy();
 
   const form = useForm<VacancyFormData>({
