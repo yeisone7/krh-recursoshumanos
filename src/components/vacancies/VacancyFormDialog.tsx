@@ -253,7 +253,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
 
                 {/* General Tab */}
                 <TabsContent value="general" className="mt-0 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="positionTitle"
@@ -267,6 +267,36 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="positionId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cargo del Catálogo</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Vincular a cargo (opcional)" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              {positions.filter(p => p.is_active).map((pos) => (
+                                <SelectItem key={pos.id} value={pos.id}>
+                                  {pos.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Vincular al catálogo permite usar plantillas de onboarding del cargo.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="operationCenterId"
