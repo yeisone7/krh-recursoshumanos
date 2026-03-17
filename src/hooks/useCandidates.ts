@@ -228,6 +228,7 @@ export function useConvertToEmployee() {
           vacancies(
             id,
             operation_center_id,
+            position_id,
             position_title,
             department_area,
             shift_type,
