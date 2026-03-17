@@ -4941,6 +4941,8 @@ export type Database = {
           gerencia_quien_aprobo: string | null
           horario_trabajo: string | null
           id: string
+          incluye_alimentacion: boolean | null
+          incluye_desplazamiento: boolean | null
           juridico_aprobado: boolean | null
           juridico_aprobador_id: string | null
           juridico_duracion: string | null
@@ -4981,6 +4983,8 @@ export type Database = {
           solicitante_id: string | null
           solicitante_nombre: string
           tipo_contrato_solicitado: string | null
+          trayecto_desplazamiento: string | null
+          turno_trabajo_id: string | null
           updated_at: string
         }
         Insert: {
@@ -5006,6 +5010,8 @@ export type Database = {
           gerencia_quien_aprobo?: string | null
           horario_trabajo?: string | null
           id?: string
+          incluye_alimentacion?: boolean | null
+          incluye_desplazamiento?: boolean | null
           juridico_aprobado?: boolean | null
           juridico_aprobador_id?: string | null
           juridico_duracion?: string | null
@@ -5046,6 +5052,8 @@ export type Database = {
           solicitante_id?: string | null
           solicitante_nombre: string
           tipo_contrato_solicitado?: string | null
+          trayecto_desplazamiento?: string | null
+          turno_trabajo_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -5071,6 +5079,8 @@ export type Database = {
           gerencia_quien_aprobo?: string | null
           horario_trabajo?: string | null
           id?: string
+          incluye_alimentacion?: boolean | null
+          incluye_desplazamiento?: boolean | null
           juridico_aprobado?: boolean | null
           juridico_aprobador_id?: string | null
           juridico_duracion?: string | null
@@ -5111,6 +5121,8 @@ export type Database = {
           solicitante_id?: string | null
           solicitante_nombre?: string
           tipo_contrato_solicitado?: string | null
+          trayecto_desplazamiento?: string | null
+          turno_trabajo_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -5133,6 +5145,13 @@ export type Database = {
             columns: ["operation_center_id"]
             isOneToOne: false
             referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personnel_requisitions_turno_trabajo_id_fkey"
+            columns: ["turno_trabajo_id"]
+            isOneToOne: false
+            referencedRelation: "shifts"
             referencedColumns: ["id"]
           },
         ]
