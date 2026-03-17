@@ -142,6 +142,8 @@ export function RequisitionFormDialog({
         cantidad_vacantes_requeridas: 1,
         cargo_solicitado: '',
         requiere_herramienta_trabajo: false,
+        incluye_alimentacion: false,
+        incluye_desplazamiento: false,
         motivo_solicitud: 'nuevo_cargo',
         solicitante_nombre: defaultRequesterName,
       });
