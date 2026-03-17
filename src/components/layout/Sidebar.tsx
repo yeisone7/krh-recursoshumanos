@@ -49,7 +49,8 @@ import {
   BookOpen,
   Link2,
   FileSignature,
-  ClipboardCheck } from
+  ClipboardCheck,
+  Globe } from
 'lucide-react';
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
