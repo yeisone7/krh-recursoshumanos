@@ -65,6 +65,7 @@ import {
   CatalogosTiposContrato,
   CatalogosFestivos,
   CatalogosMotivosNovedad,
+  CatalogosPlataformasPublicacion,
 } from "./pages/catalogos";
 import NotFound from "./pages/NotFound";
 
