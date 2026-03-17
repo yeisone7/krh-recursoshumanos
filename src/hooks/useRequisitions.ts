@@ -58,6 +58,8 @@ export interface PersonnelRequisition {
   juridico_fecha_aprobacion: string | null;
   // Selección
   seleccion_fecha_inicio_proceso: string | null;
+  seleccion_perfil_cargo_creado: boolean | null;
+  seleccion_tipo_mano_obra: string | null;
   seleccion_observaciones: string | null;
   seleccion_aprobado: boolean | null;
   seleccion_quien_aprobo: string | null;
