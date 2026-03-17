@@ -42,6 +42,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useOperationCenters } from '@/hooks/useCompanies';
+import { useShifts } from '@/hooks/useSchedules';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useContractTypes } from '@/hooks/useContractTypes';
