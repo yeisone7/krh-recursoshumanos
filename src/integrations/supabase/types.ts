@@ -6710,6 +6710,7 @@ export type Database = {
           open_date: string
           operation_center_id: string | null
           other_benefits: string | null
+          position_id: string | null
           position_title: string
           positions_count: number
           priority: string | null
@@ -6744,6 +6745,7 @@ export type Database = {
           open_date?: string
           operation_center_id?: string | null
           other_benefits?: string | null
+          position_id?: string | null
           position_title: string
           positions_count?: number
           priority?: string | null
@@ -6778,6 +6780,7 @@ export type Database = {
           open_date?: string
           operation_center_id?: string | null
           other_benefits?: string | null
+          position_id?: string | null
           position_title?: string
           positions_count?: number
           priority?: string | null
@@ -6809,6 +6812,13 @@ export type Database = {
             columns: ["operation_center_id"]
             isOneToOne: false
             referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vacancies_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
             referencedColumns: ["id"]
           },
           {
