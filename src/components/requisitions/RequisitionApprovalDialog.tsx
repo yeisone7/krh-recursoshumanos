@@ -334,6 +334,11 @@ export function RequisitionApprovalDialog({
                 <p className="text-sm text-muted-foreground">
                   ¿Gerencia aprueba el salario asignado?
                 </p>
+                {requisition.rrhh_asignacion_salarial && (
+                  <p className="text-sm font-semibold text-primary mt-1">
+                    ${requisition.rrhh_asignacion_salarial.toLocaleString('es-CO')}
+                  </p>
+                )}
               </div>
               <Switch checked={salarioAprobado} onCheckedChange={setSalarioAprobado} />
             </div>
