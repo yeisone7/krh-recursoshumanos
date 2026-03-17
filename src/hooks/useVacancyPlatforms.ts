@@ -23,8 +23,8 @@ export function useVacancyPlatforms() {
     queryKey: ['vacancy_platforms', currentCompanyId],
     queryFn: async () => {
       if (!currentCompanyId) return [];
-      const { data, error } = await supabase
-        .from('vacancy_publication_platforms' as any)
+      const { data, error } = await (supabase as any)
+        .from('vacancy_publication_platforms')
         .select('*')
         .eq('company_id', currentCompanyId)
         .order('name', { ascending: true });
