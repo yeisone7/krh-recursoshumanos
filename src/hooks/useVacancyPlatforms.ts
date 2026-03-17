@@ -89,8 +89,8 @@ export function useVacancyPlatforms() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('vacancy_publication_platforms' as any)
+      const { error } = await (supabase as any)
+        .from('vacancy_publication_platforms')
         .delete()
         .eq('id', id);
       if (error) throw error;
