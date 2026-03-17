@@ -20,6 +20,11 @@ export interface PersonnelRequisition {
   // New fields for salary and contract type
   salario_propuesto: number | null;
   tipo_contrato_solicitado: string | null;
+  // Turno y condiciones
+  turno_trabajo_id: string | null;
+  incluye_alimentacion: boolean;
+  incluye_desplazamiento: boolean;
+  trayecto_desplazamiento: string | null;
   motivo_solicitud: string;
   observaciones_motivo_solicitud: string | null;
   solicitante_id: string | null;
