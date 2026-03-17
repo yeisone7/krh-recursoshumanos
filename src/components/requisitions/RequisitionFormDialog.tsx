@@ -73,6 +73,7 @@ export function RequisitionFormDialog({
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: employees = [] } = useEmployees();
   const { data: contractTypes = [] } = useContractTypes();
+  const { data: shifts = [] } = useShifts();
   
   // Fetch user profile to get full name
   const { data: userProfile } = useQuery({
