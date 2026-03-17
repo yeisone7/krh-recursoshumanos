@@ -53,7 +53,7 @@ import {
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateVacancy } from '@/hooks/useVacancies';
 import { useApprovedRequisitions } from '@/hooks/useRequisitions';
-import { useAreas } from '@/hooks/useSystemConfig';
+import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 
 interface VacancyFormDialogProps {
   open: boolean;
@@ -79,6 +79,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: approvedRequisitions = [], isLoading: loadingRequisitions } = useApprovedRequisitions();
   const { data: areas = [] } = useAreas();
+  const { data: positions = [] } = usePositions();
   const createVacancy = useCreateVacancy();
 
   const form = useForm<VacancyFormData>({
@@ -122,6 +123,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
       await createVacancy.mutateAsync({
         requisition_id: data.requisitionId,
         operation_center_id: data.operationCenterId || null,
+        position_id: data.positionId || null,
         position_title: data.positionTitle,
         department_area: data.departmentArea || null,
         shift_type: data.shiftType,
@@ -251,7 +253,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
 
                 {/* General Tab */}
                 <TabsContent value="general" className="mt-0 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="positionTitle"
@@ -265,6 +267,36 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      control={form.control}
+                      name="positionId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cargo del Catálogo</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Vincular a cargo (opcional)" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              {positions.filter(p => p.is_active).map((pos) => (
+                                <SelectItem key={pos.id} value={pos.id}>
+                                  {pos.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            Vincular al catálogo permite usar plantillas de onboarding del cargo.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="operationCenterId"
