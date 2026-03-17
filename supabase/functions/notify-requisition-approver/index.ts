@@ -119,7 +119,6 @@ serve(async (req: Request): Promise<Response> => {
       entity_type: 'requisition',
       entity_id: requisitionId,
       action_url: `/requisiciones?id=${requisitionId}`,
-      priority: 'high',
       is_read: false,
     }));
 
