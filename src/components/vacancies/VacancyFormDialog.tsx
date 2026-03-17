@@ -123,6 +123,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
       await createVacancy.mutateAsync({
         requisition_id: data.requisitionId,
         operation_center_id: data.operationCenterId || null,
+        position_id: data.positionId || null,
         position_title: data.positionTitle,
         department_area: data.departmentArea || null,
         shift_type: data.shiftType,
