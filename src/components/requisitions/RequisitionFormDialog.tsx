@@ -570,7 +570,7 @@ export function RequisitionFormDialog({
                     </FormItem>
                   )}
                 />
-              }
+              )}
 
               {/* Salary and Contract Type - New fields */}
               <div className="grid grid-cols-2 gap-4">
