@@ -511,6 +511,15 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     </ToggleGroup>
                     <Button
                       size="sm"
+                      variant="outline"
+                      onClick={() => setShowGenerateLink(true)}
+                      disabled={vacancy?.status !== 'in_process'}
+                    >
+                      <Link2 className="w-4 h-4 mr-2" />
+                      Generar Enlace
+                    </Button>
+                    <Button
+                      size="sm"
                       onClick={() => setShowCandidateForm(true)}
                       disabled={vacancy?.status !== 'in_process'}
                       title={vacancy?.status !== 'in_process' ? 'Solo se pueden agregar candidatos cuando la vacante está En Proceso' : undefined}
