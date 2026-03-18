@@ -80,7 +80,9 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
         target_type: targetType,
         vacancy_id: vacancyId,
         enabled_fields: selectedFields,
-        expires_at: addDays(new Date(), parseInt(expirationDays)).toISOString(),
+        expires_at: expirationDays === '0' 
+          ? addDays(new Date(), 365 * 10).toISOString() 
+          : addDays(new Date(), parseInt(expirationDays)).toISOString(),
       });
       const baseUrl = window.location.origin;
       setGeneratedLink(`${baseUrl}/registro?token=${(token as any).token}`);
@@ -167,6 +169,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
+                    <SelectItem value="0">Un solo uso (sin expiración)</SelectItem>
                     <SelectItem value="1">1 día</SelectItem>
                     <SelectItem value="3">3 días</SelectItem>
                     <SelectItem value="7">7 días</SelectItem>
@@ -194,7 +197,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Vigencia: {expirationDays} día{parseInt(expirationDays) > 1 ? 's' : ''} • Uso único
+                Vigencia: {expirationDays === '0' ? 'Un solo uso (sin expiración)' : `${expirationDays} día${parseInt(expirationDays) > 1 ? 's' : ''}`} • Uso único
               </p>
             </div>
             <DialogFooter>

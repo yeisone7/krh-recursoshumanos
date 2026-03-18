@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -89,11 +90,29 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const navigate = useNavigate();
   const { user, currentCompanyId } = useAuth();
+  const queryClient = useQueryClient();
   
   const { data: vacancy, isLoading } = useVacancy(vacancyId);
   const updateVacancy = useUpdateVacancy();
   const updateCandidate = useUpdateCandidate();
   const convertToEmployee = useConvertToEmployee();
+
+  // Realtime: auto-refresh when a new candidate is added to this vacancy
+  useEffect(() => {
+    if (!open || !vacancyId) return;
+    const channel = supabase
+      .channel(`vacancy-candidates-${vacancyId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'candidates', filter: `vacancy_id=eq.${vacancyId}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['vacancy', vacancyId] });
+          queryClient.invalidateQueries({ queryKey: ['registration-tokens'] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [open, vacancyId, queryClient]);
 
   const fetchDocuments = useCallback(async () => {
     if (!vacancyId) return;
