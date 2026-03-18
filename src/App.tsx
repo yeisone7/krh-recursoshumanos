@@ -94,6 +94,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/capacitacion" element={<AccesoPublico />} />
             <Route path="/descargos" element={<DescargosPublico />} />
+            <Route path="/registro" element={<RegistroPublico />} />
             <Route path="/install" element={<Install />} />
             <Route path="/portal" element={
               <ProtectedRoute>
