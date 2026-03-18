@@ -167,6 +167,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
+                    <SelectItem value="0">Un solo uso (sin expiración)</SelectItem>
                     <SelectItem value="1">1 día</SelectItem>
                     <SelectItem value="3">3 días</SelectItem>
                     <SelectItem value="7">7 días</SelectItem>
