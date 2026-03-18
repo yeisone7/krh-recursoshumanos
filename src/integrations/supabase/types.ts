@@ -4920,6 +4920,7 @@ export type Database = {
       personnel_requisitions: {
         Row: {
           area_id: string | null
+          autoriza: string | null
           cantidad_vacantes_requeridas: number
           cargo_a_reemplazar: string | null
           cargo_solicitado: string
@@ -4991,6 +4992,7 @@ export type Database = {
         }
         Insert: {
           area_id?: string | null
+          autoriza?: string | null
           cantidad_vacantes_requeridas?: number
           cargo_a_reemplazar?: string | null
           cargo_solicitado: string
@@ -5062,6 +5064,7 @@ export type Database = {
         }
         Update: {
           area_id?: string | null
+          autoriza?: string | null
           cantidad_vacantes_requeridas?: number
           cargo_a_reemplazar?: string | null
           cargo_solicitado?: string

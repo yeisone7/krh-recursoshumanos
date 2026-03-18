@@ -43,7 +43,7 @@ interface TimelineStepData {
   extraData?: Record<string, any>;
 }
 
-function getTimelineSteps(requisition: PersonnelRequisition): TimelineStepData[] {
+function getTimelineSteps(requisition: PersonnelRequisition, autoriza: string | null): TimelineStepData[] {
   const estado = requisition.estado_requisicion;
 
   const steps: TimelineStepData[] = [
@@ -156,7 +156,12 @@ function getTimelineSteps(requisition: PersonnelRequisition): TimelineStepData[]
     },
   ];
 
-  return steps;
+  // Filter steps based on autoriza
+  return steps.filter(step => {
+    if (step.key === 'gerencia' && autoriza === 'gerencia_operaciones') return false;
+    if (step.key === 'operaciones' && autoriza === 'gerencia_administrativa') return false;
+    return true;
+  });
 }
 
 function StatusIcon({ status }: { status: TimelineStepData['status'] }) {
@@ -189,9 +194,7 @@ function StatusIcon({ status }: { status: TimelineStepData['status'] }) {
 }
 
 export function RequisitionTimeline({ requisition, vacancies = [] }: RequisitionTimelineProps) {
-  const steps = getTimelineSteps(requisition);
-  const showGerencia = requisition.gerencia_aprobado !== null || 
-    ['en_gerencia', 'en_seleccion', 'aprobada', 'cerrada'].includes(requisition.estado_requisicion);
+  const steps = getTimelineSteps(requisition, requisition.autoriza);
 
   return (
     <div className="space-y-6">
@@ -201,9 +204,6 @@ export function RequisitionTimeline({ requisition, vacancies = [] }: Requisition
 
         <div className="space-y-8">
           {steps.map((step, index) => {
-            // Conditional visibility for gerencia
-            if (step.key === 'gerencia' && !showGerencia) return null;
-
             const Icon = step.icon;
 
             return (
