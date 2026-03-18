@@ -227,6 +227,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         birthCity: employee.birth_city || undefined,
         birthDate: employee.birth_date ? new Date(employee.birth_date) : undefined,
         gender: employee.gender as any,
+        genderIdentity: (employee as any).gender_identity || undefined,
+        genderIdentityOther: (employee as any).gender_identity_other || undefined,
         bloodType: employee.blood_type as any,
         maritalStatus: employee.marital_status as any,
         
