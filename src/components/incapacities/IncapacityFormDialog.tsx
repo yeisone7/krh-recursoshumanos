@@ -383,7 +383,6 @@ export function IncapacityFormDialog({
                           readOnly
                           {...field}
                         />
-                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
