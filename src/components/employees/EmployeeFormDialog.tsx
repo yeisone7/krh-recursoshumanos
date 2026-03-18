@@ -1801,10 +1801,13 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                <SelectItem value="domingo">Domingo</SelectItem>
-                                <SelectItem value="sabado">Sábado</SelectItem>
                                 <SelectItem value="lunes">Lunes</SelectItem>
-                                <SelectItem value="rotativo">Rotativo</SelectItem>
+                                <SelectItem value="martes">Martes</SelectItem>
+                                <SelectItem value="miercoles">Miércoles</SelectItem>
+                                <SelectItem value="jueves">Jueves</SelectItem>
+                                <SelectItem value="viernes">Viernes</SelectItem>
+                                <SelectItem value="sabado">Sábado</SelectItem>
+                                <SelectItem value="domingo">Domingo</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
