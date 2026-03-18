@@ -23,6 +23,9 @@ import {
   ExternalLink,
   LayoutGrid,
   LayoutList,
+  Upload,
+  Trash2,
+  Paperclip,
 } from 'lucide-react';
 import {
   Dialog,
