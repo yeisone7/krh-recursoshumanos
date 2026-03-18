@@ -13,6 +13,7 @@ interface Props {
 export function RegistrationTokensList({ vacancyId }: Props) {
   const { data: tokens = [], isLoading } = useRegistrationTokens(vacancyId);
   const deactivate = useDeactivateRegistrationToken();
+  const deleteToken = useDeleteRegistrationToken();
 
   const getStatus = (token: typeof tokens[0]) => {
     if (token.is_used) return 'used';
