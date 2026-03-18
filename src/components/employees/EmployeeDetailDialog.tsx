@@ -727,7 +727,9 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                               <div className="divide-y divide-border">
                                 <InfoItem label="Tipo de Nómina" value={payrollTypeLabels[employee.schedule.payroll_type]} />
                                 <InfoItem label="Horario" value={employee.schedule.is_office_schedule ? 'Oficina' : 'Turnos'} />
-                                <InfoItem label="Día de Descanso" value={employee.schedule.rest_day} />
+                                <InfoItem label="Día de Descanso" value={
+                                  { lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo' }[employee.schedule.rest_day] || employee.schedule.rest_day
+                                } />
                               </div>
                             </SectionCard>
                           )}
