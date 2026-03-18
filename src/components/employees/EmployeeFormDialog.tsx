@@ -43,7 +43,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -475,7 +475,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 </TabsList>
               </div>
 
-              <ScrollArea className="flex-1 min-h-0 px-6 py-4" style={{ maxHeight: 'calc(90vh - 260px)' }}>
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 scrollbar-themed" style={{ maxHeight: 'calc(90vh - 260px)' }}>
                 {/* A. IDENTITY TAB */}
                 <TabsContent value="identity" className="mt-0 space-y-6">
                   {/* Photo Section */}
@@ -1829,7 +1829,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     />
                   </div>
                 </TabsContent>
-              </ScrollArea>
+              </div>
 
               {/* Footer */}
               <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30">
