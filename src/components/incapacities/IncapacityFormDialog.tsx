@@ -7,6 +7,7 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
 import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
 import { toast } from 'sonner';
+import { Cie10SearchInput } from './Cie10SearchInput';
 
 import {
   Dialog,
@@ -395,9 +396,15 @@ export function IncapacityFormDialog({
                       <FormItem>
                         <FormLabel>Código CIE-10</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: J06.9" {...field} />
+                          <Cie10SearchInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            onDiagnosisFound={(diagnosis: string) => {
+                              form.setValue('diagnosis', diagnosis);
+                            }}
+                          />
                         </FormControl>
-                        <FormDescription>Clasificación internacional de enfermedades</FormDescription>
+                        <FormDescription>Busque por código o descripción</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
