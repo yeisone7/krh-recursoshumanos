@@ -395,7 +395,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         menuButton
         }
         
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {isOpen && !isCollapsed &&
           <motion.div
             initial={{ opacity: 0, height: 0 }}
