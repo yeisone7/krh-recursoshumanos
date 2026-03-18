@@ -226,8 +226,18 @@ export function CandidateDetailDialog({
                     )}
                     {candidate.gender && (
                       <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Género</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Sexo biológico</p>
                         <p className="font-medium capitalize">{candidate.gender}</p>
+                      </div>
+                    )}
+                    {(candidate as any).gender_identity && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Sexo de identificación</p>
+                        <p className="font-medium capitalize">
+                          {(candidate as any).gender_identity === 'otro'
+                            ? `Otro: ${(candidate as any).gender_identity_other || ''}`
+                            : (candidate as any).gender_identity}
+                        </p>
                       </div>
                     )}
                   </div>
