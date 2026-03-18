@@ -145,6 +145,25 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             <TooltipContent>Manual de Usuario</TooltipContent>
           </Tooltip>
 
+          {/* Fullscreen toggle - desktop only */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 hidden sm:inline-flex"
+                onClick={toggleFullscreen}
+              >
+                {isFullscreen ? (
+                  <Minimize className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <Maximize className="w-4 h-4 text-muted-foreground" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}</TooltipContent>
+          </Tooltip>
+
           {/* Theme toggle */}
           <Tooltip>
             <TooltipTrigger asChild>
