@@ -416,7 +416,12 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                         Lista
                       </ToggleGroupItem>
                     </ToggleGroup>
-                    <Button size="sm" onClick={() => setShowCandidateForm(true)}>
+                    <Button
+                      size="sm"
+                      onClick={() => setShowCandidateForm(true)}
+                      disabled={vacancy?.status !== 'in_process'}
+                      title={vacancy?.status !== 'in_process' ? 'Solo se pueden agregar candidatos cuando la vacante está En Proceso' : undefined}
+                    >
                       <UserPlus className="w-4 h-4 mr-2" />
                       Agregar Candidato
                     </Button>
