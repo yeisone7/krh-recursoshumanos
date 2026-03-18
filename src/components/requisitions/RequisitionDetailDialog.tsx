@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Send, 
   Edit, 
@@ -25,10 +26,11 @@ import {
   FileCheck,
   FileDown,
   Loader2,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-import { useRequisitionWithVacancies, useSubmitRequisition } from '@/hooks/useRequisitions';
+import { useRequisitionWithVacancies, useSubmitRequisition, useUpdateRequisition } from '@/hooks/useRequisitions';
 import { useAuth } from '@/contexts/AuthContext';
 import { RequisitionTimeline } from './RequisitionTimeline';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
@@ -41,6 +43,8 @@ import {
   RequisitionStatus,
   RequisitionReason,
   DayOfWeek,
+  autorizaLabels,
+  AutorizaType,
 } from '@/types/requisition';
 
 interface RequisitionDetailDialogProps {
@@ -61,6 +65,7 @@ export function RequisitionDetailDialog({
   const { data: requisition, isLoading } = useRequisitionWithVacancies(requisitionId || undefined);
   const { companies, currentCompanyId } = useAuth();
   const currentCompany = companies.find(c => c.id === currentCompanyId);
+  const updateRequisition = useUpdateRequisition();
   const submitRequisition = useSubmitRequisition();
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
@@ -69,7 +74,21 @@ export function RequisitionDetailDialog({
 
   const handleSubmit = async () => {
     if (requisition) {
+      if (!requisition.autoriza) {
+        toast({
+          title: 'Campo requerido',
+          description: 'Debe seleccionar quién autoriza antes de enviar la requisición.',
+          variant: 'destructive',
+        });
+        return;
+      }
       await submitRequisition.mutateAsync(requisition.id);
+    }
+  };
+
+  const handleAutorizaChange = async (value: string) => {
+    if (requisition) {
+      await updateRequisition.mutateAsync({ id: requisition.id, autoriza: value } as any);
     }
   };
 
@@ -132,7 +151,37 @@ export function RequisitionDetailDialog({
               <TabsTrigger value="details">Detalles</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="timeline" className="mt-4">
+            <TabsContent value="timeline" className="mt-4 space-y-4">
+              {/* Autoriza field */}
+              <Card className="border-primary/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium mb-1">Autoriza</p>
+                      {canEdit ? (
+                        <Select
+                          value={requisition.autoriza || ''}
+                          onValueChange={handleAutorizaChange}
+                        >
+                          <SelectTrigger className="w-full max-w-xs">
+                            <SelectValue placeholder="Seleccionar quién autoriza..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="gerencia_administrativa">Gerencia Administrativa</SelectItem>
+                            <SelectItem value="gerencia_operaciones">Gerencia de Operaciones</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                          {requisition.autoriza ? autorizaLabels[requisition.autoriza as AutorizaType] : 'No seleccionado'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <RequisitionTimeline 
                 requisition={requisition} 
                 vacancies={requisition.vacancies}

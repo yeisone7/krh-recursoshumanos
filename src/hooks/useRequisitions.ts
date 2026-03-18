@@ -72,6 +72,8 @@ export interface PersonnelRequisition {
   gerencia_quien_aprobo: string | null;
   gerencia_aprobador_id: string | null;
   gerencia_fecha_aprobacion: string | null;
+  // Autoriza
+  autoriza: string | null;
   // Estado
   estado_requisicion: string;
   created_by: string | null;
@@ -266,14 +268,40 @@ export function useApproveRequisitionStep() {
         [`${step}_fecha_aprobacion`]: new Date().toISOString(),
       };
 
-      // Determine next status (new order: RRHH → Jurídico → Operaciones → Gerencia → Selección)
-      const statusMap: Record<string, string> = {
-        rrhh: approved ? 'en_juridico' : 'rechazada',
-        juridico: approved ? 'en_operaciones' : 'rechazada',
-        operaciones: approved ? 'en_gerencia' : 'rechazada',
-        gerencia: approved ? 'en_seleccion' : 'rechazada',
-        seleccion: approved ? 'aprobada' : 'rechazada',
-      };
+      // First fetch the requisition to get autoriza value
+      const { data: reqData } = await supabase
+        .from('personnel_requisitions')
+        .select('autoriza')
+        .eq('id', id)
+        .single();
+
+      const autoriza = (reqData as any)?.autoriza;
+
+      // Determine next status dynamically based on autoriza
+      let statusMap: Record<string, string>;
+      if (autoriza === 'gerencia_administrativa') {
+        statusMap = {
+          rrhh: approved ? 'en_juridico' : 'rechazada',
+          juridico: approved ? 'en_gerencia' : 'rechazada',
+          gerencia: approved ? 'en_seleccion' : 'rechazada',
+          seleccion: approved ? 'aprobada' : 'rechazada',
+        };
+      } else if (autoriza === 'gerencia_operaciones') {
+        statusMap = {
+          rrhh: approved ? 'en_juridico' : 'rechazada',
+          juridico: approved ? 'en_operaciones' : 'rechazada',
+          operaciones: approved ? 'en_seleccion' : 'rechazada',
+          seleccion: approved ? 'aprobada' : 'rechazada',
+        };
+      } else {
+        statusMap = {
+          rrhh: approved ? 'en_juridico' : 'rechazada',
+          juridico: approved ? 'en_operaciones' : 'rechazada',
+          operaciones: approved ? 'en_gerencia' : 'rechazada',
+          gerencia: approved ? 'en_seleccion' : 'rechazada',
+          seleccion: approved ? 'aprobada' : 'rechazada',
+        };
+      }
 
       updates.estado_requisicion = statusMap[step];
 
