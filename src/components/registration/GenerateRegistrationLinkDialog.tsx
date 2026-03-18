@@ -197,7 +197,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Vigencia: {expirationDays} día{parseInt(expirationDays) > 1 ? 's' : ''} • Uso único
+                Vigencia: {expirationDays === '0' ? 'Un solo uso (sin expiración)' : `${expirationDays} día${parseInt(expirationDays) > 1 ? 's' : ''}`} • Uso único
               </p>
             </div>
             <DialogFooter>
