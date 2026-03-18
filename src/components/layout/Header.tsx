@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun, Maximize, Minimize } from 'lucide-react';
+import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun, Maximize, Minimize, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
