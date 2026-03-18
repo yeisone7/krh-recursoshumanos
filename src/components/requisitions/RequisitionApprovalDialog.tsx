@@ -41,6 +41,8 @@ type ApprovalStep = 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerenci
 interface VacancyCodeEntry {
   platformId: string;
   code: string;
+  fechaCreacion: string;
+  fechaCierre: string;
 }
 
 interface RequisitionApprovalDialogProps {
