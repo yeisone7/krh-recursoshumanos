@@ -4,7 +4,7 @@ import { Copy, Ban, Link2, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { useRegistrationTokens, useDeactivateRegistrationToken } from '@/hooks/useRegistrationTokens';
+import { useRegistrationTokens, useDeactivateRegistrationToken, useDeleteRegistrationToken } from '@/hooks/useRegistrationTokens';
 
 interface Props {
   vacancyId?: string;
