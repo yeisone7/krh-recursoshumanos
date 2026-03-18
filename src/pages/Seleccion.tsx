@@ -389,6 +389,8 @@ export default function Seleccion() {
                                     setCandidateFormVacancyId(vacancy.id);
                                     setShowCandidateForm(true);
                                   }}
+                                  disabled={vacancy.status !== 'in_process'}
+                                  title={vacancy.status !== 'in_process' ? 'Solo se pueden agregar candidatos cuando la vacante está En Proceso' : undefined}
                                   aria-label={`Agregar candidato a vacante ${vacancy.position_title}`}
                                   data-testid={`add-candidate-${vacancy.id}`}
                                 >
