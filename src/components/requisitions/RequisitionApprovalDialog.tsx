@@ -150,7 +150,7 @@ export function RequisitionApprovalDialog({
   const canSubmit = isStepValid();
 
   const addVacancyCode = () => {
-    setVacancyCodes(prev => [...prev, { platformId: '', code: '' }]);
+    setVacancyCodes(prev => [...prev, { platformId: '', code: '', fechaCreacion: '', fechaCierre: '' }]);
   };
 
   const removeVacancyCode = (index: number) => {
