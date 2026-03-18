@@ -194,9 +194,7 @@ function StatusIcon({ status }: { status: TimelineStepData['status'] }) {
 }
 
 export function RequisitionTimeline({ requisition, vacancies = [] }: RequisitionTimelineProps) {
-  const steps = getTimelineSteps(requisition);
-  const showGerencia = requisition.gerencia_aprobado !== null || 
-    ['en_gerencia', 'en_seleccion', 'aprobada', 'cerrada'].includes(requisition.estado_requisicion);
+  const steps = getTimelineSteps(requisition, requisition.autoriza);
 
   return (
     <div className="space-y-6">
