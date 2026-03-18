@@ -183,6 +183,7 @@ export default function Requisiciones() {
                 <TableHead>Motivo</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Progreso</TableHead>
+                <TableHead>Autoriza</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
