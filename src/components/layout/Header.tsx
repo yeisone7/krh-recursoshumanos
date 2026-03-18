@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun, Maximize, Minimize } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,7 +35,21 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const [manualOpen, setManualOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
 
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'U';
 
@@ -129,6 +143,25 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Manual de Usuario</TooltipContent>
+          </Tooltip>
+
+          {/* Fullscreen toggle - desktop only */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 hidden sm:inline-flex"
+                onClick={toggleFullscreen}
+              >
+                {isFullscreen ? (
+                  <Minimize className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <Maximize className="w-4 h-4 text-muted-foreground" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}</TooltipContent>
           </Tooltip>
 
           {/* Theme toggle */}
