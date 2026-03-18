@@ -7432,6 +7432,43 @@ export type Database = {
         Args: { p_content: string; p_defense_type?: string; p_token: string }
         Returns: Json
       }
+      submit_employee_registration: {
+        Args: {
+          p_birth_city?: string
+          p_birth_country?: string
+          p_birth_date?: string
+          p_birth_department?: string
+          p_blood_type?: string
+          p_children_count?: number
+          p_document_issue_city?: string
+          p_document_issue_date?: string
+          p_document_number?: string
+          p_document_type?: string
+          p_email?: string
+          p_emergency_contact_name?: string
+          p_emergency_contact_phone?: string
+          p_emergency_contact_relationship?: string
+          p_first_name: string
+          p_gender?: string
+          p_gender_identity?: string
+          p_gender_identity_other?: string
+          p_last_name: string
+          p_marital_status?: string
+          p_middle_name?: string
+          p_mobile?: string
+          p_personal_email?: string
+          p_phone?: string
+          p_residence_address?: string
+          p_residence_city?: string
+          p_residence_department?: string
+          p_residence_neighborhood?: string
+          p_second_last_name?: string
+          p_spouse_birth_date?: string
+          p_spouse_name?: string
+          p_token: string
+        }
+        Returns: Json
+      }
       verify_employee_cedula: {
         Args: { p_cedula: string; p_company_id: string }
         Returns: {

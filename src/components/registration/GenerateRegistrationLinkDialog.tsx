@@ -43,10 +43,45 @@ const CANDIDATE_FIELDS = [
   { key: 'generalNotes', label: 'Notas', section: 'Profesional' },
 ];
 
-const SECTIONS = ['Personal', 'Contacto', 'Profesional'];
+const EMPLOYEE_FIELDS = [
+  { key: 'firstName', label: 'Primer Nombre', section: 'Identidad', required: true },
+  { key: 'middleName', label: 'Segundo Nombre', section: 'Identidad' },
+  { key: 'lastName', label: 'Primer Apellido', section: 'Identidad', required: true },
+  { key: 'secondLastName', label: 'Segundo Apellido', section: 'Identidad' },
+  { key: 'documentType', label: 'Tipo de Documento', section: 'Identidad', required: true },
+  { key: 'documentNumber', label: 'Número de Documento', section: 'Identidad', required: true },
+  { key: 'birthDate', label: 'Fecha de Nacimiento', section: 'Identidad' },
+  { key: 'birthCity', label: 'Ciudad de Nacimiento', section: 'Identidad' },
+  { key: 'birthDepartment', label: 'Departamento de Nacimiento', section: 'Identidad' },
+  { key: 'birthCountry', label: 'País de Nacimiento', section: 'Identidad' },
+  { key: 'gender', label: 'Sexo Biológico', section: 'Identidad' },
+  { key: 'genderIdentity', label: 'Sexo de Identificación', section: 'Identidad' },
+  { key: 'maritalStatus', label: 'Estado Civil', section: 'Identidad' },
+  { key: 'bloodType', label: 'Tipo de Sangre', section: 'Identidad' },
+  { key: 'documentIssueDate', label: 'Fecha de Expedición Documento', section: 'Identidad' },
+  { key: 'documentIssueCity', label: 'Ciudad de Expedición', section: 'Identidad' },
+  { key: 'email', label: 'Email Corporativo', section: 'Contacto' },
+  { key: 'personalEmail', label: 'Email Personal', section: 'Contacto' },
+  { key: 'mobile', label: 'Celular', section: 'Contacto' },
+  { key: 'phone', label: 'Teléfono Fijo', section: 'Contacto' },
+  { key: 'residenceAddress', label: 'Dirección de Residencia', section: 'Contacto' },
+  { key: 'residenceCity', label: 'Ciudad de Residencia', section: 'Contacto' },
+  { key: 'residenceDepartment', label: 'Departamento de Residencia', section: 'Contacto' },
+  { key: 'residenceNeighborhood', label: 'Barrio', section: 'Contacto' },
+  { key: 'emergencyContactName', label: 'Nombre Contacto de Emergencia', section: 'Contacto' },
+  { key: 'emergencyContactPhone', label: 'Teléfono Contacto de Emergencia', section: 'Contacto' },
+  { key: 'emergencyContactRelationship', label: 'Parentesco Contacto de Emergencia', section: 'Contacto' },
+  { key: 'spouseName', label: 'Nombre del Cónyuge', section: 'Familia' },
+  { key: 'spouseBirthDate', label: 'Fecha Nacimiento Cónyuge', section: 'Familia' },
+  { key: 'childrenCount', label: 'Número de Hijos', section: 'Familia' },
+];
+
+const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional'];
+const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia'];
 
 export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType, vacancyId }: Props) {
-  const fields = CANDIDATE_FIELDS; // For now, candidate only
+  const fields = targetType === 'employee' ? EMPLOYEE_FIELDS : CANDIDATE_FIELDS;
+  const sections = targetType === 'employee' ? EMPLOYEE_SECTIONS : CANDIDATE_SECTIONS;
   const requiredKeys = fields.filter(f => f.required).map(f => f.key);
   const optionalKeys = fields.filter(f => !f.required).map(f => f.key);
 
@@ -124,7 +159,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
         {!generatedLink ? (
           <>
             <div className="space-y-4">
-              {SECTIONS.map(section => {
+              {sections.map(section => {
                 const sectionFields = fields.filter(f => f.section === section);
                 const optionalInSection = sectionFields.filter(f => !f.required);
                 const allOptionalSelected = optionalInSection.length > 0 && optionalInSection.every(f => selectedFields.includes(f.key));
