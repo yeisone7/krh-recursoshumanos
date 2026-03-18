@@ -203,6 +203,12 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
       accountRegistered: false,
       timeMode: 'administrative',
       timeModeStartDate: new Date(),
+      isFirstJob: false,
+      isHeadOfHousehold: false,
+      disabilityType: 'ninguna',
+      ethnicGroup: 'ninguno',
+      isConflictVictim: false,
+      isDemobilized: false,
     },
   });
 
