@@ -205,6 +205,19 @@ export async function generateRequisitionPDF(
   doc.setFont('helvetica', 'bold');
   doc.text(statusLabel.toUpperCase(), margin + 6, y + 5);
 
+  // Autoriza badge (next to status)
+  if (requisition.autoriza) {
+    const autorizaLabel = autorizaLabels[requisition.autoriza as AutorizaType] || requisition.autoriza;
+    const autorizaX = margin + badgeWidth + 4;
+    doc.setFillColor(...NAVY_PRIMARY);
+    const autorizaBadgeWidth = doc.getTextWidth(autorizaLabel.toUpperCase()) + 12;
+    doc.roundedRect(autorizaX, y, autorizaBadgeWidth, 7, 2, 2, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(autorizaLabel.toUpperCase(), autorizaX + 6, y + 5);
+  }
+
   y += 15;
 
   // Main position info box
