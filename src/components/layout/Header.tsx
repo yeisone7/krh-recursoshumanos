@@ -48,6 +48,13 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
