@@ -732,18 +732,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         control={form.control}
                         name="isFirstJob"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Primer Empleo</FormLabel>
-                            <Select onValueChange={(v) => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
-                              <FormControl>
-                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                <SelectItem value="true">Sí</SelectItem>
-                                <SelectItem value="false">No</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                            <FormLabel className="text-sm font-medium cursor-pointer">Primer Empleo</FormLabel>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
                           </FormItem>
                         )}
                       />
@@ -751,18 +744,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         control={form.control}
                         name="isHeadOfHousehold"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Madre Cabeza de Familia</FormLabel>
-                            <Select onValueChange={(v) => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
-                              <FormControl>
-                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                <SelectItem value="true">Sí</SelectItem>
-                                <SelectItem value="false">No</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                            <FormLabel className="text-sm font-medium cursor-pointer">Madre Cabeza de Familia</FormLabel>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
                           </FormItem>
                         )}
                       />
