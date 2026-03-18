@@ -11,8 +11,9 @@ interface Props {
   targetType?: 'candidate' | 'employee';
 }
 
-export function RegistrationTokensList({ vacancyId }: Props) {
-  const { data: tokens = [], isLoading } = useRegistrationTokens(vacancyId);
+export function RegistrationTokensList({ vacancyId, targetType }: Props) {
+  const { data: allTokens = [], isLoading } = useRegistrationTokens(vacancyId);
+  const tokens = targetType ? allTokens.filter(t => t.target_type === targetType) : allTokens;
   const deactivate = useDeactivateRegistrationToken();
   const deleteToken = useDeleteRegistrationToken();
 
