@@ -396,9 +396,15 @@ export function IncapacityFormDialog({
                       <FormItem>
                         <FormLabel>Código CIE-10</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: J06.9" {...field} />
+                          <Cie10SearchInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            onDiagnosisFound={useCallback((diagnosis: string) => {
+                              form.setValue('diagnosis', diagnosis);
+                            }, [form])}
+                          />
                         </FormControl>
-                        <FormDescription>Clasificación internacional de enfermedades</FormDescription>
+                        <FormDescription>Busque por código o descripción</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
