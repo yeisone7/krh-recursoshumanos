@@ -38,6 +38,7 @@ export type RequisitionStatus =
   | 'en_gerencia'
   | 'aprobada' 
   | 'rechazada' 
+  | 'cerrada';
 
 // Labels
 export const dayOfWeekLabels: Record<DayOfWeek, string> = {
