@@ -26,6 +26,7 @@ import {
   Upload,
   Trash2,
   Paperclip,
+  Link2,
 } from 'lucide-react';
 import {
   Dialog,
