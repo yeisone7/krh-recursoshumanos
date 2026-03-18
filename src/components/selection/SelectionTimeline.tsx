@@ -259,7 +259,7 @@ export function SelectionTimeline({
               <div className="p-4 rounded-lg border border-dashed hover:border-primary/50 transition-colors">
                 <p className="text-sm text-muted-foreground mb-2">Agregar etapa</p>
                 <div className="flex flex-wrap gap-2">
-                  {missingSteps.slice(0, 3).map((stepType) => {
+                  {missingSteps.map((stepType) => {
                     const Icon = stepIcons[stepType];
                     return (
                       <Button
@@ -274,11 +274,6 @@ export function SelectionTimeline({
                       </Button>
                     );
                   })}
-                  {missingSteps.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{missingSteps.length - 3} más
-                    </Badge>
-                  )}
                 </div>
               </div>
             </div>

@@ -160,7 +160,7 @@ export function SelectionStepFormDialog({
                     <Select
                       onValueChange={field.onChange}
                       value={field.value}
-                      disabled={isEditing}
+                      disabled={isEditing || !!defaultStepType}
                     >
                       <FormControl>
                         <SelectTrigger>
