@@ -655,6 +655,15 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     </div>
                   )}
                 </div>
+
+                {/* Generated Links */}
+                <div className="pt-4 border-t border-border">
+                  <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Link2 className="w-4 h-4 text-primary" />
+                    Enlaces de Registro Generados
+                  </h4>
+                  <RegistrationTokensList vacancyId={vacancyId} />
+                </div>
               </TabsContent>
 
               {/* Documents Tab */}
