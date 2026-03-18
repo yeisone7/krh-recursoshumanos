@@ -54,6 +54,8 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateVacancy } from '@/hooks/useVacancies';
 import { useApprovedRequisitions } from '@/hooks/useRequisitions';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface VacancyFormDialogProps {
   open: boolean;
