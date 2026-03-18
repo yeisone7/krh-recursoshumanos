@@ -431,12 +431,12 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-          <DialogTitle className="font-display text-xl flex items-center gap-2">
-            <Building className="w-5 h-5 text-primary" />
+        <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-t-lg">
+          <DialogTitle className="font-display text-xl flex items-center gap-2 text-primary-foreground">
+            <Building className="w-5 h-5" />
             {isEditMode ? 'Editar Empleado' : 'Nuevo Empleado'}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-primary-foreground/75">
             {isEditMode 
               ? 'Modifique la información del empleado según sea necesario.'
               : 'Complete la información del empleado en cada una de las secciones.'
