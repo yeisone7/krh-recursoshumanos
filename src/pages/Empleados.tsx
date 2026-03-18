@@ -222,6 +222,23 @@ export default function Empleados() {
         employee={rehireEmployee}
       />
 
+      <GenerateRegistrationLinkDialog
+        open={showGenerateLink}
+        onOpenChange={setShowGenerateLink}
+        targetType="employee"
+      />
+
+      {showTokensList && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="bg-card rounded-lg border p-4"
+        >
+          <h3 className="text-sm font-semibold mb-3">Enlaces de Auto-registro de Empleados</h3>
+          <RegistrationTokensList targetType="employee" />
+        </motion.div>
+      )}
+
       {/* Filters */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}

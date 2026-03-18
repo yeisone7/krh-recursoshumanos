@@ -159,7 +159,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
         {!generatedLink ? (
           <>
             <div className="space-y-4">
-              {SECTIONS.map(section => {
+              {sections.map(section => {
                 const sectionFields = fields.filter(f => f.section === section);
                 const optionalInSection = sectionFields.filter(f => !f.required);
                 const allOptionalSelected = optionalInSection.length > 0 && optionalInSection.every(f => selectedFields.includes(f.key));
