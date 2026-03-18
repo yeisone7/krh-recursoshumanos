@@ -445,8 +445,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={handleFormSubmit}>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
               <div className="px-6 pt-2">
                 <TabsList className="w-full h-auto flex-wrap gap-1 bg-primary/5 border border-primary/10 p-1.5 rounded-lg">
                   {tabItems.map((tab) => {
