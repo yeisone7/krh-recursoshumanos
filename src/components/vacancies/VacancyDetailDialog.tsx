@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -360,20 +361,34 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   </>
                 )}
 
-                {/* Publication Platforms */}
-                {vacancy.publication_platforms && vacancy.publication_platforms.length > 0 && (
-                  <>
-                    <Separator />
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-3">Plataformas de Publicación</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {vacancy.publication_platforms.map((platform) => (
-                          <Badge key={platform} variant="outline">{platform}</Badge>
-                        ))}
+                {/* Colocado Document */}
+                <Separator />
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-primary" />
+                    Colocado
+                  </h3>
+                  {vacancy.colocado_url ? (
+                    <div className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                      <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
+                        <FileText className="h-5 w-5" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">Documento adjunto</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(vacancy.colocado_url!, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        Ver
+                      </Button>
                     </div>
-                  </>
-                )}
+                  ) : (
+                    <ColocadoUpload vacancyId={vacancy.id} />
+                  )}
+                </div>
               </TabsContent>
 
               {/* Candidates Tab */}
@@ -589,5 +604,57 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
         />
       )}
     </>
+  );
+}
+
+function ColocadoUpload({ vacancyId }: { vacancyId: string }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const updateVacancy = useUpdateVacancy();
+
+  const handleUpload = async () => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `vacancies/colocado_${vacancyId}_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('documents').upload(filePath, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+      await updateVacancy.mutateAsync({ id: vacancyId, colocado_url: urlData.publicUrl });
+      toast.success('Documento de colocado subido');
+      setFile(null);
+    } catch (err) {
+      toast.error('Error al subir documento');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div
+        className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+        onClick={() => document.getElementById(`colocado-detail-${vacancyId}`)?.click()}
+      >
+        <input
+          id={`colocado-detail-${vacancyId}`}
+          type="file"
+          className="hidden"
+          accept=".pdf,.jpg,.jpeg,.png,.webp"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        />
+        {file ? (
+          <p className="text-sm font-medium text-foreground">{file.name}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground">Haz clic para adjuntar documento</p>
+        )}
+      </div>
+      {file && (
+        <Button size="sm" onClick={handleUpload} disabled={uploading}>
+          {uploading ? 'Subiendo...' : 'Subir documento'}
+        </Button>
+      )}
+    </div>
   );
 }
