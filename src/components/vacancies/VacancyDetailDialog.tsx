@@ -26,6 +26,7 @@ import {
   Upload,
   Trash2,
   Paperclip,
+  Link2,
 } from 'lucide-react';
 import {
   Dialog,
@@ -49,6 +50,8 @@ import { useUpdateCandidate, useConvertToEmployee } from '@/hooks/useCandidates'
 import { CandidateFormDialog } from './CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
 import { CandidateKanban } from '@/components/selection/CandidateKanban';
+import { GenerateRegistrationLinkDialog } from '@/components/registration/GenerateRegistrationLinkDialog';
+import { RegistrationTokensList } from '@/components/registration/RegistrationTokensList';
 import {
   VacancyStatus,
   vacancyStatusLabels,
@@ -80,6 +83,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const [showCandidateForm, setShowCandidateForm] = useState(false);
   const [showCandidateDetail, setShowCandidateDetail] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [showGenerateLink, setShowGenerateLink] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
@@ -508,6 +512,15 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     </ToggleGroup>
                     <Button
                       size="sm"
+                      variant="outline"
+                      onClick={() => setShowGenerateLink(true)}
+                      disabled={vacancy?.status !== 'in_process'}
+                    >
+                      <Link2 className="w-4 h-4 mr-2" />
+                      Generar Enlace
+                    </Button>
+                    <Button
+                      size="sm"
                       onClick={() => setShowCandidateForm(true)}
                       disabled={vacancy?.status !== 'in_process'}
                       title={vacancy?.status !== 'in_process' ? 'Solo se pueden agregar candidatos cuando la vacante está En Proceso' : undefined}
@@ -642,6 +655,15 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     </div>
                   )}
                 </div>
+
+                {/* Generated Links */}
+                <div className="pt-4 border-t border-border">
+                  <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Link2 className="w-4 h-4 text-primary" />
+                    Enlaces de Registro Generados
+                  </h4>
+                  <RegistrationTokensList vacancyId={vacancyId} />
+                </div>
               </TabsContent>
 
               {/* Documents Tab */}
@@ -766,6 +788,14 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
       <CandidateFormDialog
         open={showCandidateForm}
         onOpenChange={setShowCandidateForm}
+        vacancyId={vacancyId}
+      />
+
+      {/* Generate Registration Link Dialog */}
+      <GenerateRegistrationLinkDialog
+        open={showGenerateLink}
+        onOpenChange={setShowGenerateLink}
+        targetType="candidate"
         vacancyId={vacancyId}
       />
 
