@@ -143,7 +143,9 @@ export const employeeCoreSchema = z.object({
   birthDate: z.date({ required_error: 'La fecha de nacimiento es requerida' }),
   
   // Characteristics
-  gender: z.enum(['M', 'F', 'O'], { required_error: 'Seleccione el género' }),
+  gender: z.enum(['M', 'F', 'O'], { required_error: 'Seleccione el sexo biológico' }),
+  genderIdentity: z.string().optional(),
+  genderIdentityOther: z.string().max(100).optional(),
   bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
   maritalStatus: z.enum(['soltero', 'casado', 'union_libre', 'divorciado', 'viudo'], { required_error: 'Seleccione el estado civil' }),
 });

@@ -646,21 +646,54 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         name="gender"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Género</FormLabel>
+                            <FormLabel>Sexo biológico</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {Object.entries(genderLabels).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
+                                <SelectItem value="M">Masculino</SelectItem>
+                                <SelectItem value="F">Femenino</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name="genderIdentity"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Sexo de identificación</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="femenino">Femenino</SelectItem>
+                                <SelectItem value="masculino">Masculino</SelectItem>
+                                <SelectItem value="trans">Trans</SelectItem>
+                                <SelectItem value="otro">Otro</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {form.watch('genderIdentity') === 'otro' && (
+                        <FormField
+                          control={form.control}
+                          name="genderIdentityOther"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>¿Cuál?</FormLabel>
+                              <FormControl><Input placeholder="Especifique" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
                       <FormField
                         control={form.control}
                         name="bloodType"

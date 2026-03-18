@@ -607,7 +607,17 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                         <InfoItem label="Lugar de Nacimiento" value={
                           [employee.birth_city, employee.birth_department, employee.birth_country !== 'Colombia' ? employee.birth_country : null].filter(Boolean).join(', ') || null
                         } />
-                        {employee.gender && <InfoItem label="Género" value={genderLabels[employee.gender]} />}
+                        {employee.gender && <InfoItem label="Sexo biológico" value={genderLabels[employee.gender]} />}
+                        {(employee as any).gender_identity && (
+                          <InfoItem 
+                            label="Sexo de identificación" 
+                            value={
+                              (employee as any).gender_identity === 'otro'
+                                ? `Otro: ${(employee as any).gender_identity_other || ''}`
+                                : (employee as any).gender_identity.charAt(0).toUpperCase() + (employee as any).gender_identity.slice(1)
+                            } 
+                          />
+                        )}
                         {employee.blood_type && <InfoItem label="Tipo de Sangre" value={employee.blood_type} />}
                         {employee.marital_status && <InfoItem label="Estado Civil" value={maritalStatusLabels[employee.marital_status]} />}
                       </div>
