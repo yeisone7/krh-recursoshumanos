@@ -65,6 +65,8 @@ const fieldToTabMap: Record<string, string> = {
   birthCity: 'identity',
   birthDate: 'identity',
   gender: 'identity',
+  genderIdentity: 'identity',
+  genderIdentityOther: 'identity',
   bloodType: 'identity',
   maritalStatus: 'identity',
   // Contact tab
