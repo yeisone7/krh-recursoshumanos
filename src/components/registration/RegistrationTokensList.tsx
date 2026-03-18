@@ -1,10 +1,10 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Copy, Ban, Link2, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Copy, Ban, Link2, CheckCircle, Clock, XCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { useRegistrationTokens, useDeactivateRegistrationToken } from '@/hooks/useRegistrationTokens';
+import { useRegistrationTokens, useDeactivateRegistrationToken, useDeleteRegistrationToken } from '@/hooks/useRegistrationTokens';
 
 interface Props {
   vacancyId?: string;
@@ -13,6 +13,7 @@ interface Props {
 export function RegistrationTokensList({ vacancyId }: Props) {
   const { data: tokens = [], isLoading } = useRegistrationTokens(vacancyId);
   const deactivate = useDeactivateRegistrationToken();
+  const deleteToken = useDeleteRegistrationToken();
 
   const getStatus = (token: typeof tokens[0]) => {
     if (token.is_used) return 'used';
@@ -99,6 +100,22 @@ export function RegistrationTokensList({ vacancyId }: Props) {
                   </Button>
                 </>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={async () => {
+                  try {
+                    await deleteToken.mutateAsync(token.id);
+                    toast.success('Enlace eliminado');
+                  } catch {
+                    toast.error('Error al eliminar');
+                  }
+                }}
+                title="Eliminar"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         );

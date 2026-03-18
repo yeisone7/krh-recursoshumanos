@@ -91,3 +91,20 @@ export function useDeactivateRegistrationToken() {
     },
   });
 }
+
+export function useDeleteRegistrationToken() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (tokenId: string) => {
+      const { error } = await supabase
+        .from('self_registration_tokens')
+        .delete()
+        .eq('id', tokenId) as any;
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['registration-tokens'] });
+    },
+  });
+}
