@@ -8,6 +8,7 @@ import { useRegistrationTokens, useDeactivateRegistrationToken, useDeleteRegistr
 
 interface Props {
   vacancyId?: string;
+  targetType?: 'candidate' | 'employee';
 }
 
 export function RegistrationTokensList({ vacancyId }: Props) {
