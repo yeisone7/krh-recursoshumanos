@@ -95,6 +95,15 @@ export function CandidateDetailDialog({
     setShowStepForm(true);
   };
 
+  const handleStepFormOpenChange = (nextOpen: boolean) => {
+    setShowStepForm(nextOpen);
+
+    if (!nextOpen) {
+      setSelectedStep(undefined);
+      setDefaultStepType(undefined);
+    }
+  };
+
   const handleUpdateStepStatus = async (stepId: string, newStatus: SelectionStepStatus) => {
     try {
       await updateStep.mutateAsync({
