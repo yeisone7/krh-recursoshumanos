@@ -43,7 +43,7 @@ interface TimelineStepData {
   extraData?: Record<string, any>;
 }
 
-function getTimelineSteps(requisition: PersonnelRequisition): TimelineStepData[] {
+function getTimelineSteps(requisition: PersonnelRequisition, autoriza: string | null): TimelineStepData[] {
   const estado = requisition.estado_requisicion;
 
   const steps: TimelineStepData[] = [
