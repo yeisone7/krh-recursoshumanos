@@ -417,36 +417,7 @@ export function RequisitionApprovalDialog({
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                    <div className="grid grid-cols-2 gap-2 pr-8">
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Plataforma</Label>
-                        <Select
-                          value={entry.platformId}
-                          onValueChange={(val) => updateVacancyCode(index, 'platformId', val)}
-                        >
-                          <SelectTrigger className="h-9 text-sm">
-                            <SelectValue placeholder="Plataforma" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-background">
-                            {activePlatforms.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Código</Label>
-                        <Input
-                          className="h-9 text-sm"
-                          placeholder="Código"
-                          value={entry.code}
-                          onChange={(e) => updateVacancyCode(index, 'code', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-4 gap-2 pr-8">
                       <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">Fecha de Creación</Label>
                         <Input
