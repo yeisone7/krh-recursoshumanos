@@ -64,17 +64,8 @@ interface VacancyFormDialogProps {
   preselectedRequisitionId?: string;
 }
 
-const publicationPlatformOptions = [
-  'LinkedIn',
-  'Computrabajo',
-  'elempleo.com',
-  'Indeed',
-  'Glassdoor',
-  'Portal interno',
-  'Referidos',
-  'Universidades',
-  'Redes sociales',
-];
+const COLOCADO_ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+const COLOCADO_MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRequisitionId }: VacancyFormDialogProps) {
   const [activeTab, setActiveTab] = useState('requisition');
