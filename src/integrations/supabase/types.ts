@@ -5506,6 +5506,66 @@ export type Database = {
           },
         ]
       }
+      self_registration_tokens: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          enabled_fields: Json
+          expires_at: string
+          id: string
+          is_used: boolean
+          target_type: string
+          token: string
+          updated_at: string
+          used_at: string | null
+          vacancy_id: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          enabled_fields?: Json
+          expires_at: string
+          id?: string
+          is_used?: boolean
+          target_type?: string
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+          vacancy_id?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          enabled_fields?: Json
+          expires_at?: string
+          id?: string
+          is_used?: boolean
+          target_type?: string
+          token?: string
+          updated_at?: string
+          used_at?: string | null
+          vacancy_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "self_registration_tokens_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "self_registration_tokens_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_logs: {
         Row: {
           browser: string | null
@@ -7341,6 +7401,33 @@ export type Database = {
       is_company_member: { Args: { _company_id: string }; Returns: boolean }
       is_psicologo: { Args: never; Returns: boolean }
       is_user_active: { Args: { _user_id: string }; Returns: boolean }
+      submit_candidate_registration: {
+        Args: {
+          p_address?: string
+          p_birth_date?: string
+          p_city?: string
+          p_current_company?: string
+          p_current_position?: string
+          p_department?: string
+          p_document_number?: string
+          p_document_type?: string
+          p_education_level?: string
+          p_email?: string
+          p_experience_years?: number
+          p_first_name: string
+          p_gender?: string
+          p_gender_identity?: string
+          p_gender_identity_other?: string
+          p_general_notes?: string
+          p_last_name: string
+          p_mobile?: string
+          p_phone?: string
+          p_profession?: string
+          p_salary_expectation?: number
+          p_token: string
+        }
+        Returns: Json
+      }
       submit_defense_via_token: {
         Args: { p_content: string; p_defense_type?: string; p_token: string }
         Returns: Json
