@@ -270,6 +270,13 @@ const baseFormSchema = z.object({
   cycleStartDate: z.date().optional(),
   timeModeStartDate: z.date({ required_error: 'Fecha de vigencia requerida' }),
   timeModeNotes: z.string().max(500).optional(),
+  // L. Person Specifications
+  isFirstJob: z.boolean().default(false),
+  isHeadOfHousehold: z.boolean().default(false),
+  disabilityType: z.string().optional(),
+  ethnicGroup: z.string().optional(),
+  isConflictVictim: z.boolean().default(false),
+  isDemobilized: z.boolean().default(false),
 });
 
 export const employeeFullFormSchema = baseFormSchema.refine((data) => {
