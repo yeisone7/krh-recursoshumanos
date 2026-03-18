@@ -361,20 +361,34 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   </>
                 )}
 
-                {/* Publication Platforms */}
-                {vacancy.publication_platforms && vacancy.publication_platforms.length > 0 && (
-                  <>
-                    <Separator />
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-3">Plataformas de Publicación</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {vacancy.publication_platforms.map((platform) => (
-                          <Badge key={platform} variant="outline">{platform}</Badge>
-                        ))}
+                {/* Colocado Document */}
+                <Separator />
+                <div>
+                  <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-primary" />
+                    Colocado
+                  </h3>
+                  {vacancy.colocado_url ? (
+                    <div className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                      <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
+                        <FileText className="h-5 w-5" />
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">Documento adjunto</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(vacancy.colocado_url!, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        Ver
+                      </Button>
                     </div>
-                  </>
-                )}
+                  ) : (
+                    <ColocadoUpload vacancyId={vacancy.id} />
+                  )}
+                </div>
               </TabsContent>
 
               {/* Candidates Tab */}
