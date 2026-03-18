@@ -152,6 +152,8 @@ export type Database = {
           final_score: number | null
           first_name: string
           gender: string | null
+          gender_identity: string | null
+          gender_identity_other: string | null
           general_notes: string | null
           id: string
           is_selected: boolean | null
@@ -192,6 +194,8 @@ export type Database = {
           final_score?: number | null
           first_name: string
           gender?: string | null
+          gender_identity?: string | null
+          gender_identity_other?: string | null
           general_notes?: string | null
           id?: string
           is_selected?: boolean | null
@@ -232,6 +236,8 @@ export type Database = {
           final_score?: number | null
           first_name?: string
           gender?: string | null
+          gender_identity?: string | null
+          gender_identity_other?: string | null
           general_notes?: string | null
           id?: string
           is_selected?: boolean | null
