@@ -8,6 +8,7 @@ import {
   Filter,
   Download,
   Loader2,
+  Link2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +23,8 @@ import { EmployeeDetailDialog } from '@/components/employees/EmployeeDetailDialo
 import { CertificationAlertsPanel } from '@/components/employees/CertificationAlertsPanel';
 import { EmployeeCard } from '@/components/employees/EmployeeCard';
 import { RehireEmployeeDialog } from '@/components/employees/RehireEmployeeDialog';
+import { GenerateRegistrationLinkDialog } from '@/components/registration/GenerateRegistrationLinkDialog';
+import { RegistrationTokensList } from '@/components/registration/RegistrationTokensList';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,6 +45,8 @@ export default function Empleados() {
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
   const [rehireEmployee, setRehireEmployee] = useState<any>(null);
   const [isRehireOpen, setIsRehireOpen] = useState(false);
+  const [showGenerateLink, setShowGenerateLink] = useState(false);
+  const [showTokensList, setShowTokensList] = useState(false);
 
   const { currentCompanyId } = useAuth();
   const { data: employees, isLoading } = useEmployees();
@@ -166,13 +171,31 @@ export default function Empleados() {
           <h1 className="font-display text-2xl font-bold text-foreground">Empleados</h1>
           <p className="text-muted-foreground mt-1">Gestiona la información de todos los empleados</p>
         </div>
-        <Button 
-          onClick={() => setIsFormOpen(true)}
-          className="gradient-primary text-primary-foreground hover:opacity-90 gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Nuevo Empleado
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowTokensList(!showTokensList)}
+            className="gap-2"
+          >
+            <Link2 className="w-4 h-4" />
+            Enlaces de Registro
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowGenerateLink(true)}
+            className="gap-2"
+          >
+            <Link2 className="w-4 h-4" />
+            Generar Enlace
+          </Button>
+          <Button 
+            onClick={() => setIsFormOpen(true)}
+            className="gradient-primary text-primary-foreground hover:opacity-90 gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nuevo Empleado
+          </Button>
+        </div>
       </motion.div>
 
       <EmployeeFormDialog 
@@ -198,6 +221,23 @@ export default function Empleados() {
         }}
         employee={rehireEmployee}
       />
+
+      <GenerateRegistrationLinkDialog
+        open={showGenerateLink}
+        onOpenChange={setShowGenerateLink}
+        targetType="employee"
+      />
+
+      {showTokensList && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="bg-card rounded-lg border p-4"
+        >
+          <h3 className="text-sm font-semibold mb-3">Enlaces de Auto-registro de Empleados</h3>
+          <RegistrationTokensList targetType="employee" />
+        </motion.div>
+      )}
 
       {/* Filters */}
       <motion.div
