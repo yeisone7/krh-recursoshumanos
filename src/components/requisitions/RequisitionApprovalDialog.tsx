@@ -419,7 +419,34 @@ export function RequisitionApprovalDialog({
                     </Button>
                     <div className="grid grid-cols-4 gap-2 pr-8">
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Fecha de Creación</Label>
+                        <Label className="text-xs text-muted-foreground">Plataforma</Label>
+                        <Select
+                          value={entry.platformId}
+                          onValueChange={(val) => updateVacancyCode(index, 'platformId', val)}
+                        >
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder="Plataforma" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background">
+                            {activePlatforms.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Código</Label>
+                        <Input
+                          className="h-9 text-sm"
+                          placeholder="Código"
+                          value={entry.code}
+                          onChange={(e) => updateVacancyCode(index, 'code', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">F. Creación</Label>
                         <Input
                           type="date"
                           className="h-9 text-sm"
@@ -428,7 +455,7 @@ export function RequisitionApprovalDialog({
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Fecha de Cierre</Label>
+                        <Label className="text-xs text-muted-foreground">F. Cierre</Label>
                         <Input
                           type="date"
                           className={cn("h-9 text-sm", entry.fechaCreacion && entry.fechaCierre && entry.fechaCierre < entry.fechaCreacion && "border-destructive")}
