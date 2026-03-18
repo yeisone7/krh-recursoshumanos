@@ -118,8 +118,44 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
     }
   }, [selectedRequisitionId, approvedRequisitions, operationCenters, positions, form]);
 
+  const handleColocadoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!COLOCADO_ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Tipo de archivo no permitido', { description: 'Solo PDF, JPG, PNG o WebP' });
+      return;
+    }
+    if (file.size > COLOCADO_MAX_SIZE) {
+      toast.error('Archivo muy grande', { description: 'Máximo 10MB' });
+      return;
+    }
+    setColocadoFile(file);
+  };
+
+  const clearColocadoFile = () => {
+    setColocadoFile(null);
+    const input = document.getElementById('colocado-file-input') as HTMLInputElement;
+    if (input) input.value = '';
+  };
+
   const handleSubmit = async (data: VacancyFormData) => {
     try {
+      let colocadoUrl: string | null = null;
+
+      // Upload colocado file if selected
+      if (colocadoFile && currentCompanyId) {
+        setUploadingColocado(true);
+        const fileExt = colocadoFile.name.split('.').pop();
+        const filePath = `${currentCompanyId}/vacancies/colocado_${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, colocadoFile);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+        colocadoUrl = urlData.publicUrl;
+        setUploadingColocado(false);
+      }
+
       await createVacancy.mutateAsync({
         requisition_id: data.requisitionId,
         operation_center_id: data.operationCenterId || null,
@@ -144,6 +180,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
         publication_platforms: data.publicationPlatforms,
         priority: data.priority,
         observations: data.observations || null,
+        colocado_url: colocadoUrl,
       });
 
       toast.success('Vacante creada', {
@@ -152,9 +189,11 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
 
       onOpenChange(false);
       form.reset();
+      setColocadoFile(null);
       onSuccess?.();
     } catch (error: any) {
       console.error('Error creating vacancy:', error);
+      setUploadingColocado(false);
       toast.error('Error al crear vacante', {
         description: error.message || 'Por favor intenta de nuevo',
       });
