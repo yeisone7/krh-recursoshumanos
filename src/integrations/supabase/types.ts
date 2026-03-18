@@ -5329,6 +5329,8 @@ export type Database = {
           codigo_vacante_externa: string
           created_at: string
           entidad_origen: string | null
+          fecha_cierre: string | null
+          fecha_creacion: string | null
           id: string
           platform_id: string | null
           requisition_id: string
@@ -5337,6 +5339,8 @@ export type Database = {
           codigo_vacante_externa: string
           created_at?: string
           entidad_origen?: string | null
+          fecha_cierre?: string | null
+          fecha_creacion?: string | null
           id?: string
           platform_id?: string | null
           requisition_id: string
@@ -5345,6 +5349,8 @@ export type Database = {
           codigo_vacante_externa?: string
           created_at?: string
           entidad_origen?: string | null
+          fecha_cierre?: string | null
+          fecha_creacion?: string | null
           id?: string
           platform_id?: string | null
           requisition_id?: string
