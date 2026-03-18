@@ -65,6 +65,7 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   bloodType: { label: 'Tipo de Sangre', type: 'select-blood', section: 'Identidad' },
   documentIssueDate: { label: 'Fecha de Expedición', type: 'date', section: 'Identidad' },
   documentIssueCity: { label: 'Ciudad de Expedición', type: 'text', section: 'Identidad' },
+  // Contacto
   email: { label: 'Email Corporativo', type: 'email', section: 'Contacto' },
   personalEmail: { label: 'Email Personal', type: 'email', section: 'Contacto' },
   mobile: { label: 'Celular', type: 'tel', section: 'Contacto' },
@@ -76,16 +77,36 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   emergencyContactName: { label: 'Nombre Contacto de Emergencia', type: 'text', section: 'Contacto' },
   emergencyContactPhone: { label: 'Teléfono Contacto de Emergencia', type: 'tel', section: 'Contacto' },
   emergencyContactRelationship: { label: 'Parentesco', type: 'text', section: 'Contacto' },
+  // Familia
   spouseName: { label: 'Nombre del Cónyuge', type: 'text', section: 'Familia' },
   spouseBirthDate: { label: 'Fecha Nacimiento Cónyuge', type: 'date', section: 'Familia' },
   childrenCount: { label: 'Número de Hijos', type: 'number', section: 'Familia' },
+  // Seguridad Social
+  eps: { label: 'EPS', type: 'text', section: 'Seguridad Social' },
+  afp: { label: 'Fondo de Pensiones (AFP)', type: 'text', section: 'Seguridad Social' },
+  arl: { label: 'ARL', type: 'text', section: 'Seguridad Social' },
+  ccf: { label: 'Caja de Compensación', type: 'text', section: 'Seguridad Social' },
+  afc: { label: 'AFC', type: 'text', section: 'Seguridad Social' },
+  ips: { label: 'IPS de Atención', type: 'text', section: 'Seguridad Social' },
+  riskLevel: { label: 'Nivel de Riesgo ARL', type: 'select-risk-level', section: 'Seguridad Social' },
+  // Información Bancaria
+  bankName: { label: 'Nombre del Banco', type: 'text', section: 'Información Bancaria' },
+  accountType: { label: 'Tipo de Cuenta', type: 'select-account-type', section: 'Información Bancaria' },
+  accountNumber: { label: 'Número de Cuenta', type: 'text', section: 'Información Bancaria' },
+  // Especificaciones
+  isFirstJob: { label: 'Primer Empleo', type: 'select-yes-no', section: 'Especificaciones' },
+  isHeadOfHousehold: { label: 'Cabeza de Familia', type: 'select-yes-no', section: 'Especificaciones' },
+  disabilityType: { label: 'Tipo de Discapacidad', type: 'select-disability', section: 'Especificaciones' },
+  ethnicGroup: { label: 'Grupo Étnico', type: 'select-ethnic', section: 'Especificaciones' },
+  isConflictVictim: { label: 'Víctima del Conflicto', type: 'select-yes-no', section: 'Especificaciones' },
+  isDemobilized: { label: 'Desmovilizado', type: 'select-yes-no', section: 'Especificaciones' },
 };
 
 const CANDIDATE_REQUIRED = ['firstName', 'lastName', 'documentType', 'documentNumber'];
 const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'documentType', 'documentNumber'];
 
 const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional'];
-const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia'];
+const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Especificaciones'];
 
 export default function RegistroPublico() {
   const [searchParams] = useSearchParams();
