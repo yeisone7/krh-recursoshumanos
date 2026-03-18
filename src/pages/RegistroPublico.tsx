@@ -238,6 +238,25 @@ export default function RegistroPublico() {
           p_spouse_name: formData.spouseName || null,
           p_spouse_birth_date: formData.spouseBirthDate || null,
           p_children_count: formData.childrenCount ? parseInt(formData.childrenCount) : null,
+          // Social Security
+          p_eps: formData.eps || null,
+          p_afp: formData.afp || null,
+          p_arl: formData.arl || null,
+          p_ccf: formData.ccf || null,
+          p_afc: formData.afc || null,
+          p_ips: formData.ips || null,
+          p_risk_level: formData.riskLevel || null,
+          // Bank Info
+          p_bank_name: formData.bankName || null,
+          p_account_type: formData.accountType || null,
+          p_account_number: formData.accountNumber || null,
+          // Specifications
+          p_is_first_job: formData.isFirstJob === 'true' ? true : formData.isFirstJob === 'false' ? false : null,
+          p_is_head_of_household: formData.isHeadOfHousehold === 'true' ? true : formData.isHeadOfHousehold === 'false' ? false : null,
+          p_disability_type: formData.disabilityType || null,
+          p_ethnic_group: formData.ethnicGroup || null,
+          p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
+          p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
         });
         result = data;
       } else {
