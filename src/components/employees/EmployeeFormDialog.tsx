@@ -694,6 +694,143 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                           )}
                         />
                       )}
+                  </div>
+                  </div>
+
+                  {/* Especificaciones de la Persona */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Especificaciones de la Persona</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="isFirstJob"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Primer Empleo</FormLabel>
+                            <Select onValueChange={(v) => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="true">Sí</SelectItem>
+                                <SelectItem value="false">No</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="isHeadOfHousehold"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Madre Cabeza de Familia</FormLabel>
+                            <Select onValueChange={(v) => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="true">Sí</SelectItem>
+                                <SelectItem value="false">No</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="disabilityType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Discapacidad</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || 'ninguna'}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="ninguna">Ninguna</SelectItem>
+                                <SelectItem value="fisica">Discapacidad Física</SelectItem>
+                                <SelectItem value="auditiva">Discapacidad Auditiva</SelectItem>
+                                <SelectItem value="visual">Discapacidad Visual</SelectItem>
+                                <SelectItem value="sordoceguera">Sordoceguera</SelectItem>
+                                <SelectItem value="intelectual">Discapacidad Intelectual</SelectItem>
+                                <SelectItem value="psicosocial">Discapacidad Psicosocial (mental)</SelectItem>
+                                <SelectItem value="multiple">Discapacidad Múltiple</SelectItem>
+                                <SelectItem value="otra">Otra Discapacidad</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="ethnicGroup"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Grupo Étnico</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || 'ninguno'}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="ninguno">Ninguno</SelectItem>
+                                <SelectItem value="afrodescendiente">Afrodescendiente</SelectItem>
+                                <SelectItem value="indigena">Indígena</SelectItem>
+                                <SelectItem value="otros">Otros grupos étnicos</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="isConflictVictim"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Víctima del Conflicto Armado</FormLabel>
+                            <Select onValueChange={(v) => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="true">Sí</SelectItem>
+                                <SelectItem value="false">No</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="isDemobilized"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Desmovilizado / Reinsertado</FormLabel>
+                            <Select onValueChange={(v) => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
+                              <FormControl>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="true">Sí</SelectItem>
+                                <SelectItem value="false">No</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Blood Type & Marital Status */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-foreground border-b pb-2">Otros Datos</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
                         name="bloodType"
