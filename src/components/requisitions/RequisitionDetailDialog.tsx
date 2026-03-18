@@ -74,7 +74,21 @@ export function RequisitionDetailDialog({
 
   const handleSubmit = async () => {
     if (requisition) {
+      if (!requisition.autoriza) {
+        toast({
+          title: 'Campo requerido',
+          description: 'Debe seleccionar quién autoriza antes de enviar la requisición.',
+          variant: 'destructive',
+        });
+        return;
+      }
       await submitRequisition.mutateAsync(requisition.id);
+    }
+  };
+
+  const handleAutorizaChange = async (value: string) => {
+    if (requisition) {
+      await updateRequisition.mutateAsync({ id: requisition.id, autoriza: value } as any);
     }
   };
 
