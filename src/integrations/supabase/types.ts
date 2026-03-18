@@ -6907,6 +6907,69 @@ export type Database = {
           },
         ]
       }
+      vacancy_documents: {
+        Row: {
+          company_id: string
+          created_at: string
+          document_name: string
+          document_type: string
+          file_name: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          observations: string | null
+          updated_at: string
+          uploaded_by: string | null
+          vacancy_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          document_name: string
+          document_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          observations?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          vacancy_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          document_name?: string
+          document_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          observations?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          vacancy_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacancy_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vacancy_documents_vacancy_id_fkey"
+            columns: ["vacancy_id"]
+            isOneToOne: false
+            referencedRelation: "vacancies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vacancy_publication_platforms: {
         Row: {
           company_id: string
