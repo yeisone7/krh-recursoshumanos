@@ -480,7 +480,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 <TabsContent value="identity" className="mt-0 space-y-6">
                   {/* Photo Section */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Foto del Empleado</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Foto del Empleado</h3>
                     <div className="flex justify-center">
                       <AvatarUpload
                         currentAvatarUrl={avatarUrl}
@@ -494,7 +494,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
                   {/* Document Section */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Documento de Identidad</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Documento de Identidad</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <FormField
                         control={form.control}
@@ -551,7 +551,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
                   {/* Names Section */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Nombres y Apellidos</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Nombres y Apellidos</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -602,7 +602,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
                   {/* Birth & Personal Section */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Nacimiento y Datos Personales</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Nacimiento y Datos Personales</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
@@ -726,7 +726,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
                   {/* Especificaciones de la Persona */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Especificaciones de la Persona</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Especificaciones de la Persona</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -828,7 +828,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
                   {/* Blood Type & Marital Status */}
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Otros Datos</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Otros Datos</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
@@ -877,7 +877,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 {/* B. CONTACT TAB */}
                 <TabsContent value="contact" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Dirección de Residencia</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Dirección de Residencia</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <CityDepartmentSelect
                         departmentValue={form.watch('residenceDepartment') || ''}
@@ -914,7 +914,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Datos de Contacto</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Datos de Contacto</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -964,7 +964,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Contacto de Emergencia</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Contacto de Emergencia</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
@@ -1006,7 +1006,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 {/* C. FAMILY TAB */}
                 <TabsContent value="family" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Cónyuge / Pareja</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Cónyuge / Pareja</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
@@ -1087,7 +1087,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Hijos</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Hijos</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -1115,7 +1115,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 {/* D. LABOR TAB */}
                 <TabsContent value="labor" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Ubicación Organizacional</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Ubicación Organizacional</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -1221,7 +1221,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Vinculación</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Vinculación</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
@@ -1294,7 +1294,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 {/* K. TIME MODE TAB - Modalidad de Tiempo */}
                 <TabsContent value="timemode" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Modalidad de Tiempo *</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Modalidad de Tiempo *</h3>
                     <p className="text-sm text-muted-foreground">
                       Seleccione cómo se gestionará el horario de este empleado. Este campo es obligatorio.
                     </p>
@@ -1547,7 +1547,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 {/* E. SOCIAL SECURITY TAB */}
                 <TabsContent value="security" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Seguridad Social y Riesgo</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Seguridad Social y Riesgo</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
@@ -1696,7 +1696,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 {/* F. BANK TAB */}
                 <TabsContent value="bank" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Información Bancaria</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Información Bancaria</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
@@ -1768,7 +1768,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 {/* J. SCHEDULE TAB */}
                 <TabsContent value="schedule" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-foreground border-b pb-2">Jornada y Nómina</h3>
+                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Jornada y Nómina</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
