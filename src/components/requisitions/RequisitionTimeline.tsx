@@ -156,7 +156,12 @@ function getTimelineSteps(requisition: PersonnelRequisition, autoriza: string | 
     },
   ];
 
-  return steps;
+  // Filter steps based on autoriza
+  return steps.filter(step => {
+    if (step.key === 'gerencia' && autoriza === 'gerencia_operaciones') return false;
+    if (step.key === 'operaciones' && autoriza === 'gerencia_administrativa') return false;
+    return true;
+  });
 }
 
 function StatusIcon({ status }: { status: TimelineStepData['status'] }) {
