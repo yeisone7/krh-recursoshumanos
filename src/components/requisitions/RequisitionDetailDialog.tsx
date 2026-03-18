@@ -65,6 +65,7 @@ export function RequisitionDetailDialog({
   const { data: requisition, isLoading } = useRequisitionWithVacancies(requisitionId || undefined);
   const { companies, currentCompanyId } = useAuth();
   const currentCompany = companies.find(c => c.id === currentCompanyId);
+  const updateRequisition = useUpdateRequisition();
   const submitRequisition = useSubmitRequisition();
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
