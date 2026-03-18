@@ -3317,16 +3317,22 @@ export type Database = {
           company_id: string
           created_at: string
           created_by: string | null
+          disability_type: string | null
           document_issue_city: string | null
           document_issue_date: string | null
           document_number: string
           document_type: Database["public"]["Enums"]["document_type"]
+          ethnic_group: string | null
           first_name: string
           gender: Database["public"]["Enums"]["gender_type"] | null
           gender_identity: string | null
           gender_identity_other: string | null
           id: string
           is_active: boolean
+          is_conflict_victim: boolean | null
+          is_demobilized: boolean | null
+          is_first_job: boolean | null
+          is_head_of_household: boolean | null
           last_name: string
           marital_status:
             | Database["public"]["Enums"]["marital_status_type"]
@@ -3345,16 +3351,22 @@ export type Database = {
           company_id: string
           created_at?: string
           created_by?: string | null
+          disability_type?: string | null
           document_issue_city?: string | null
           document_issue_date?: string | null
           document_number: string
           document_type?: Database["public"]["Enums"]["document_type"]
+          ethnic_group?: string | null
           first_name: string
           gender?: Database["public"]["Enums"]["gender_type"] | null
           gender_identity?: string | null
           gender_identity_other?: string | null
           id?: string
           is_active?: boolean
+          is_conflict_victim?: boolean | null
+          is_demobilized?: boolean | null
+          is_first_job?: boolean | null
+          is_head_of_household?: boolean | null
           last_name: string
           marital_status?:
             | Database["public"]["Enums"]["marital_status_type"]
@@ -3373,16 +3385,22 @@ export type Database = {
           company_id?: string
           created_at?: string
           created_by?: string | null
+          disability_type?: string | null
           document_issue_city?: string | null
           document_issue_date?: string | null
           document_number?: string
           document_type?: Database["public"]["Enums"]["document_type"]
+          ethnic_group?: string | null
           first_name?: string
           gender?: Database["public"]["Enums"]["gender_type"] | null
           gender_identity?: string | null
           gender_identity_other?: string | null
           id?: string
           is_active?: boolean
+          is_conflict_victim?: boolean | null
+          is_demobilized?: boolean | null
+          is_first_job?: boolean | null
+          is_head_of_household?: boolean | null
           last_name?: string
           marital_status?:
             | Database["public"]["Enums"]["marital_status_type"]
