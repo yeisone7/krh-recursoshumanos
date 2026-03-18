@@ -293,6 +293,13 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         // K. Time Mode (will be loaded from employee_time_config if exists)
         timeMode: 'administrative',
         timeModeStartDate: new Date(),
+        // L. Person Specifications
+        isFirstJob: (employee as any).is_first_job || false,
+        isHeadOfHousehold: (employee as any).is_head_of_household || false,
+        disabilityType: (employee as any).disability_type || 'ninguna',
+        ethnicGroup: (employee as any).ethnic_group || 'ninguno',
+        isConflictVictim: (employee as any).is_conflict_victim || false,
+        isDemobilized: (employee as any).is_demobilized || false,
       });
     } else if (!employee && open) {
       form.reset({
@@ -305,6 +312,12 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         accountRegistered: false,
         timeMode: 'administrative',
         timeModeStartDate: new Date(),
+        isFirstJob: false,
+        isHeadOfHousehold: false,
+        disabilityType: 'ninguna',
+        ethnicGroup: 'ninguno',
+        isConflictVictim: false,
+        isDemobilized: false,
       });
     }
   }, [employee, open, form]);
