@@ -171,13 +171,31 @@ export default function Empleados() {
           <h1 className="font-display text-2xl font-bold text-foreground">Empleados</h1>
           <p className="text-muted-foreground mt-1">Gestiona la información de todos los empleados</p>
         </div>
-        <Button 
-          onClick={() => setIsFormOpen(true)}
-          className="gradient-primary text-primary-foreground hover:opacity-90 gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Nuevo Empleado
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowTokensList(!showTokensList)}
+            className="gap-2"
+          >
+            <Link2 className="w-4 h-4" />
+            Enlaces de Registro
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowGenerateLink(true)}
+            className="gap-2"
+          >
+            <Link2 className="w-4 h-4" />
+            Generar Enlace
+          </Button>
+          <Button 
+            onClick={() => setIsFormOpen(true)}
+            className="gradient-primary text-primary-foreground hover:opacity-90 gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nuevo Empleado
+          </Button>
+        </div>
       </motion.div>
 
       <EmployeeFormDialog 
