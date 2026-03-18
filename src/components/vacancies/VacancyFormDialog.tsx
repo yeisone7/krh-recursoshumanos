@@ -69,6 +69,9 @@ const COLOCADO_MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRequisitionId }: VacancyFormDialogProps) {
   const [activeTab, setActiveTab] = useState('requisition');
+  const [colocadoFile, setColocadoFile] = useState<File | null>(null);
+  const [uploadingColocado, setUploadingColocado] = useState(false);
+  const { currentCompanyId } = useAuth();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: approvedRequisitions = [], isLoading: loadingRequisitions } = useApprovedRequisitions();
   const { data: areas = [] } = useAreas();
