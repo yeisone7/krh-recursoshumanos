@@ -99,6 +99,21 @@ export function SelectionStepFormDialog({
     },
   });
 
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        stepType: step?.step_type || defaultStepType || '',
+        status: step?.status || 'pending',
+        scheduledDate: step?.scheduled_date ? new Date(step.scheduled_date) : undefined,
+        completedDate: step?.completed_date ? new Date(step.completed_date) : undefined,
+        evaluatorName: step?.evaluator_name || '',
+        score: step?.score?.toString() || '',
+        result: step?.result || '',
+        notes: step?.notes || '',
+      });
+    }
+  }, [open, step, defaultStepType]);
+
   const handleSubmit = async (data: StepFormData) => {
     try {
       const stepData = {
