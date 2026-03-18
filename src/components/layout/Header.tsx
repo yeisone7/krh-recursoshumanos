@@ -110,6 +110,12 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
         {/* Right section */}
         <div className="flex items-center gap-1 sm:gap-4">
+          {/* Date & Time - desktop only */}
+          <div className="hidden lg:flex items-center gap-1.5 text-xs text-muted-foreground mr-1">
+            <Clock className="w-3.5 h-3.5" />
+            <span className="capitalize">{formattedDate}</span>
+            <span className="font-mono font-medium text-foreground">{formattedTime}</span>
+          </div>
           {/* Company selector - hidden on mobile, shown from md */}
           {companies.length > 0 && (
             <div className="hidden md:flex items-center gap-2">
