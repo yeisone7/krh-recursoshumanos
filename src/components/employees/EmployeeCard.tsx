@@ -11,10 +11,6 @@ import {
   ClipboardList,
   Eye,
   RotateCcw,
-  CreditCard,
-  Building,
-  Link2,
-  Droplets,
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -26,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { getEmployeeFullName, documentTypeLabels, linkTypeLabels } from '@/types/employee';
+import { getEmployeeFullName } from '@/types/employee';
 
 interface EmployeeCardProps {
   employee: any;
@@ -64,8 +60,7 @@ export function EmployeeCard({
       className="card-elevated p-5 group cursor-pointer hover:border-primary/30"
       onClick={() => onOpenDetail(employee.id)}
     >
-      {/* Header: Avatar + Name + Actions */}
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="relative">
             <Avatar className="w-12 h-12">
@@ -81,14 +76,14 @@ export function EmployeeCard({
               </span>
             )}
           </div>
-          <div className="min-w-0">
-            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+          <div>
+            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
               {getEmployeeFullName(employee)}
             </h3>
-            <p className="text-sm text-muted-foreground truncate">{employee.work_info?.position_name || 'Sin cargo'}</p>
+            <p className="text-sm text-muted-foreground">{employee.work_info?.position_name || 'Sin cargo'}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1">
           <Button
             variant="outline"
             size="sm"
@@ -133,32 +128,21 @@ export function EmployeeCard({
         </div>
       </div>
 
-      {/* Document Number */}
-      {employee.document_number && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 px-1">
-          <CreditCard className="w-3.5 h-3.5 shrink-0" />
-          <span className="truncate">
-            {documentTypeLabels[employee.document_type as keyof typeof documentTypeLabels] || employee.document_type}: {employee.document_number}
-          </span>
-        </div>
-      )}
-
-      {/* Info Grid */}
-      <div className="space-y-1.5 mb-3">
+      <div className="space-y-2 mb-4">
         <div className="flex items-center gap-2 text-sm">
-          <div className="w-6 h-6 rounded-md bg-secondary-light flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-md bg-secondary-light flex items-center justify-center">
             <Briefcase className="w-3.5 h-3.5 text-secondary" />
           </div>
-          <span className="text-foreground truncate">{employee.areas?.name || 'Sin área'}</span>
+          <span className="text-foreground">{employee.areas?.name || 'Sin área'}</span>
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <div className="w-6 h-6 rounded-md bg-tertiary-light flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-md bg-tertiary-light flex items-center justify-center">
             <MapPin className="w-3.5 h-3.5 text-tertiary" />
           </div>
-          <span className="text-foreground truncate">{employee.operation_centers?.name || 'Sin centro asignado'}</span>
+          <span className="text-foreground">{employee.operation_centers?.name || 'Sin centro asignado'}</span>
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <div className="w-6 h-6 rounded-md bg-violet-light flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-md bg-violet-light flex items-center justify-center">
             <Calendar className="w-3.5 h-3.5 text-violet" />
           </div>
           <span className="text-foreground">
@@ -167,41 +151,11 @@ export function EmployeeCard({
               : 'Sin fecha de ingreso'}
           </span>
         </div>
-        {employee.work_info?.link_type && (
-          <div className="flex items-center gap-2 text-sm">
-            <div className="w-6 h-6 rounded-md bg-primary-light flex items-center justify-center shrink-0">
-              <Link2 className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <span className="text-foreground">
-              {linkTypeLabels[employee.work_info.link_type as keyof typeof linkTypeLabels] || employee.work_info.link_type}
-            </span>
-          </div>
-        )}
       </div>
 
-      {/* Contact Info */}
-      {(employee.contact?.email || employee.contact?.mobile || employee.contact?.phone) && (
-        <div className="space-y-1 mb-3 px-1">
-          {employee.contact?.email && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Mail className="w-3.5 h-3.5 shrink-0 text-indigo" />
-              <span className="truncate">{employee.contact.email}</span>
-            </div>
-          )}
-          {(employee.contact?.mobile || employee.contact?.phone) && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Phone className="w-3.5 h-3.5 shrink-0 text-teal" />
-              <span className="truncate">{employee.contact.mobile || employee.contact.phone}</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Footer: Badges */}
-      <div className="flex items-center justify-between pt-3 border-t border-border">
-        <div className="flex items-center gap-1.5 flex-wrap">
+      <div className="flex items-center justify-between pt-4 border-t border-border">
+        <div className="flex items-center gap-2">
           <Badge variant="outline" className={cn(
-            "text-[11px]",
             isRetired
               ? isEnRetiro
                 ? 'bg-warning-light text-warning border-warning/20'
@@ -213,24 +167,30 @@ export function EmployeeCard({
             {isEnRetiro ? '⏳ En Retiro' : isRetired ? '🚪 Retirado' : employee.is_active ? 'Activo' : 'Inactivo'}
           </Badge>
           {isNew && (
-            <Badge variant="outline" className="bg-warning-light text-warning border-warning/20 gap-1 text-[11px]">
+            <Badge variant="outline" className="bg-warning-light text-warning border-warning/20 gap-1">
               ✨ Nuevo
             </Badge>
           )}
           {hasProfesiograma && (
-            <Badge variant="outline" className="bg-primary-light text-primary border-primary/20 gap-1 text-[11px]">
+            <Badge variant="outline" className="bg-primary-light text-primary border-primary/20 gap-1">
               <ClipboardList className="w-3 h-3" />
               Dotación
             </Badge>
           )}
-          {employee.blood_type && (
-            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 text-[11px]">
-              <Droplets className="w-3 h-3" />
-              {employee.blood_type}
-            </Badge>
-          )}
         </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+        <div className="flex items-center gap-2">
+          {employee.contact?.email && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 bg-indigo-light text-indigo hover:bg-indigo/20">
+              <Mail className="w-4 h-4" />
+            </Button>
+          )}
+          {employee.contact?.phone && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 bg-teal-light text-teal hover:bg-teal/20">
+              <Phone className="w-4 h-4" />
+            </Button>
+          )}
+          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        </div>
       </div>
     </motion.div>
   );
