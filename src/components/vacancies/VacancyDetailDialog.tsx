@@ -82,6 +82,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const [showCandidateForm, setShowCandidateForm] = useState(false);
   const [showCandidateDetail, setShowCandidateDetail] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [showGenerateLink, setShowGenerateLink] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
