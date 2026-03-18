@@ -151,7 +151,37 @@ export function RequisitionDetailDialog({
               <TabsTrigger value="details">Detalles</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="timeline" className="mt-4">
+            <TabsContent value="timeline" className="mt-4 space-y-4">
+              {/* Autoriza field */}
+              <Card className="border-primary/20">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium mb-1">Autoriza</p>
+                      {canEdit ? (
+                        <Select
+                          value={requisition.autoriza || ''}
+                          onValueChange={handleAutorizaChange}
+                        >
+                          <SelectTrigger className="w-full max-w-xs">
+                            <SelectValue placeholder="Seleccionar quién autoriza..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="gerencia_administrativa">Gerencia Administrativa</SelectItem>
+                            <SelectItem value="gerencia_operaciones">Gerencia de Operaciones</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                          {requisition.autoriza ? autorizaLabels[requisition.autoriza as AutorizaType] : 'No seleccionado'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <RequisitionTimeline 
                 requisition={requisition} 
                 vacancies={requisition.vacancies}
