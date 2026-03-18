@@ -100,6 +100,22 @@ export function RegistrationTokensList({ vacancyId }: Props) {
                   </Button>
                 </>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={async () => {
+                  try {
+                    await deleteToken.mutateAsync(token.id);
+                    toast.success('Enlace eliminado');
+                  } catch {
+                    toast.error('Error al eliminar');
+                  }
+                }}
+                title="Eliminar"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         );
