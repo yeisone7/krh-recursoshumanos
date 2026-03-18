@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun, Maximize, Minimize } from 'lucide-react';
+import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun, Maximize, Minimize, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,6 +50,16 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
     document.addEventListener('fullscreenchange', handler);
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
+
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedDate = now.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+  const formattedTime = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'U';
 
@@ -100,6 +110,12 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
         {/* Right section */}
         <div className="flex items-center gap-1 sm:gap-4">
+          {/* Date & Time - desktop only */}
+          <div className="hidden lg:flex items-center gap-1.5 text-xs text-muted-foreground mr-1">
+            <Clock className="w-3.5 h-3.5" />
+            <span className="capitalize">{formattedDate}</span>
+            <span className="font-mono font-medium text-foreground">{formattedTime}</span>
+          </div>
           {/* Company selector - hidden on mobile, shown from md */}
           {companies.length > 0 && (
             <div className="hidden md:flex items-center gap-2">
