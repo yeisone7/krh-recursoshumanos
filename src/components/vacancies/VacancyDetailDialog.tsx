@@ -44,6 +44,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 import { useVacancy, useUpdateVacancy } from '@/hooks/useVacancies';
+import { useAuth } from '@/hooks/useAuth';
 import { useUpdateCandidate, useConvertToEmployee } from '@/hooks/useCandidates';
 import { CandidateFormDialog } from './CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
