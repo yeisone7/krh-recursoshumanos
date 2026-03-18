@@ -1,0 +1,1 @@
+ALTER TABLE public.vacancies ADD COLUMN IF NOT EXISTS colocado_url text;
