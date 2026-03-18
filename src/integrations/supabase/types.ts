@@ -6740,6 +6740,7 @@ export type Database = {
       vacancies: {
         Row: {
           actual_close_date: string | null
+          colocado_url: string | null
           company_id: string
           created_at: string
           created_by: string | null
@@ -6775,6 +6776,7 @@ export type Database = {
         }
         Insert: {
           actual_close_date?: string | null
+          colocado_url?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -6810,6 +6812,7 @@ export type Database = {
         }
         Update: {
           actual_close_date?: string | null
+          colocado_url?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Briefcase, DollarSign, FileText, Settings, AlertCircle, FileCheck } from 'lucide-react';
+import { CalendarIcon, Briefcase, DollarSign, FileText, Settings, AlertCircle, FileCheck, Upload, X, Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -54,6 +54,8 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateVacancy } from '@/hooks/useVacancies';
 import { useApprovedRequisitions } from '@/hooks/useRequisitions';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface VacancyFormDialogProps {
   open: boolean;
@@ -62,20 +64,14 @@ interface VacancyFormDialogProps {
   preselectedRequisitionId?: string;
 }
 
-const publicationPlatformOptions = [
-  'LinkedIn',
-  'Computrabajo',
-  'elempleo.com',
-  'Indeed',
-  'Glassdoor',
-  'Portal interno',
-  'Referidos',
-  'Universidades',
-  'Redes sociales',
-];
+const COLOCADO_ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+const COLOCADO_MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRequisitionId }: VacancyFormDialogProps) {
   const [activeTab, setActiveTab] = useState('requisition');
+  const [colocadoFile, setColocadoFile] = useState<File | null>(null);
+  const [uploadingColocado, setUploadingColocado] = useState(false);
+  const { currentCompanyId } = useAuth();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: approvedRequisitions = [], isLoading: loadingRequisitions } = useApprovedRequisitions();
   const { data: areas = [] } = useAreas();
@@ -122,8 +118,44 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
     }
   }, [selectedRequisitionId, approvedRequisitions, operationCenters, positions, form]);
 
+  const handleColocadoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!COLOCADO_ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Tipo de archivo no permitido', { description: 'Solo PDF, JPG, PNG o WebP' });
+      return;
+    }
+    if (file.size > COLOCADO_MAX_SIZE) {
+      toast.error('Archivo muy grande', { description: 'Máximo 10MB' });
+      return;
+    }
+    setColocadoFile(file);
+  };
+
+  const clearColocadoFile = () => {
+    setColocadoFile(null);
+    const input = document.getElementById('colocado-file-input') as HTMLInputElement;
+    if (input) input.value = '';
+  };
+
   const handleSubmit = async (data: VacancyFormData) => {
     try {
+      let colocadoUrl: string | null = null;
+
+      // Upload colocado file if selected
+      if (colocadoFile && currentCompanyId) {
+        setUploadingColocado(true);
+        const fileExt = colocadoFile.name.split('.').pop();
+        const filePath = `${currentCompanyId}/vacancies/colocado_${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, colocadoFile);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+        colocadoUrl = urlData.publicUrl;
+        setUploadingColocado(false);
+      }
+
       await createVacancy.mutateAsync({
         requisition_id: data.requisitionId,
         operation_center_id: data.operationCenterId || null,
@@ -148,6 +180,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
         publication_platforms: data.publicationPlatforms,
         priority: data.priority,
         observations: data.observations || null,
+        colocado_url: colocadoUrl,
       });
 
       toast.success('Vacante creada', {
@@ -156,9 +189,11 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
 
       onOpenChange(false);
       form.reset();
+      setColocadoFile(null);
       onSuccess?.();
     } catch (error: any) {
       console.error('Error creating vacancy:', error);
+      setUploadingColocado(false);
       toast.error('Error al crear vacante', {
         description: error.message || 'Por favor intenta de nuevo',
       });
@@ -670,43 +705,43 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="publicationPlatforms"
-                    render={() => (
-                      <FormItem>
-                        <FormLabel>Plataformas de Publicación</FormLabel>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                          {publicationPlatformOptions.map((platform) => (
-                            <FormField
-                              key={platform}
-                              control={form.control}
-                              name="publicationPlatforms"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-2 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(platform)}
-                                      onCheckedChange={(checked) => {
-                                        const current = field.value || [];
-                                        field.onChange(
-                                          checked
-                                            ? [...current, platform]
-                                            : current.filter((v) => v !== platform)
-                                        );
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-sm font-normal">{platform}</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                          ))}
+                  {/* Colocado - File Upload */}
+                  <div className="space-y-2">
+                    <FormLabel>Colocado</FormLabel>
+                    {colocadoFile ? (
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FileText className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                          <span className="text-sm truncate">{colocadoFile.name}</span>
+                          <span className="text-xs text-muted-foreground flex-shrink-0">
+                            ({(colocadoFile.size / 1024 / 1024).toFixed(2)} MB)
+                          </span>
                         </div>
-                        <FormMessage />
-                      </FormItem>
+                        <Button type="button" variant="ghost" size="icon" onClick={clearColocadoFile}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
+                        <input
+                          id="colocado-file-input"
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png,.webp"
+                          onChange={handleColocadoFileSelect}
+                          className="hidden"
+                        />
+                        <label htmlFor="colocado-file-input" className="cursor-pointer">
+                          <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm text-muted-foreground">
+                            Clic para adjuntar documento de colocado
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            PDF, JPG, PNG o WebP (máx. 10MB)
+                          </p>
+                        </label>
+                      </div>
                     )}
-                  />
+                  </div>
 
                   <FormField
                     control={form.control}
