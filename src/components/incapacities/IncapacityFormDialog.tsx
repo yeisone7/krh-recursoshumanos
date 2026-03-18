@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -7,6 +7,7 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
 import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
 import { toast } from 'sonner';
+import { Cie10SearchInput } from './Cie10SearchInput';
 
 import {
   Dialog,
