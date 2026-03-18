@@ -80,12 +80,94 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const [showCandidateForm, setShowCandidateForm] = useState(false);
   const [showCandidateDetail, setShowCandidateDetail] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const navigate = useNavigate();
+  const { user, currentCompanyId } = useAuth();
   
   const { data: vacancy, isLoading } = useVacancy(vacancyId);
   const updateVacancy = useUpdateVacancy();
   const updateCandidate = useUpdateCandidate();
   const convertToEmployee = useConvertToEmployee();
+
+  const fetchDocuments = useCallback(async () => {
+    if (!vacancyId) return;
+    setLoadingDocs(true);
+    try {
+      const { data, error } = await supabase
+        .from('vacancy_documents')
+        .select('*')
+        .eq('vacancy_id', vacancyId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch {
+      // silent
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [vacancyId]);
+
+  useEffect(() => {
+    if (open && vacancyId) {
+      fetchDocuments();
+    }
+  }, [open, vacancyId, fetchDocuments]);
+
+  const handleDocUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !currentCompanyId) return;
+    setUploadingDoc(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} excede 10MB`);
+          continue;
+        }
+        const ext = file.name.split('.').pop();
+        const filePath = `vacancies/docs_${vacancyId}_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+
+        const { error: insertError } = await supabase.from('vacancy_documents').insert({
+          vacancy_id: vacancyId,
+          company_id: currentCompanyId,
+          document_name: file.name,
+          file_url: urlData.publicUrl,
+          file_name: file.name,
+          file_size: file.size,
+          mime_type: file.type,
+          uploaded_by: user?.id,
+        });
+        if (insertError) throw insertError;
+      }
+      toast.success('Documento(s) subido(s) exitosamente');
+      fetchDocuments();
+    } catch (err) {
+      toast.error('Error al subir documento');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleDeleteDoc = async (docId: string) => {
+    try {
+      const { error } = await supabase.from('vacancy_documents').delete().eq('id', docId);
+      if (error) throw error;
+      toast.success('Documento eliminado');
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    } catch {
+      toast.error('Error al eliminar documento');
+    }
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
   
   const openCandidateDetail = (candidateId: string) => {
     setSelectedCandidateId(candidateId);
