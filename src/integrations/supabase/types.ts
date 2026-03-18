@@ -3323,6 +3323,8 @@ export type Database = {
           document_type: Database["public"]["Enums"]["document_type"]
           first_name: string
           gender: Database["public"]["Enums"]["gender_type"] | null
+          gender_identity: string | null
+          gender_identity_other: string | null
           id: string
           is_active: boolean
           last_name: string
@@ -3349,6 +3351,8 @@ export type Database = {
           document_type?: Database["public"]["Enums"]["document_type"]
           first_name: string
           gender?: Database["public"]["Enums"]["gender_type"] | null
+          gender_identity?: string | null
+          gender_identity_other?: string | null
           id?: string
           is_active?: boolean
           last_name: string
@@ -3375,6 +3379,8 @@ export type Database = {
           document_type?: Database["public"]["Enums"]["document_type"]
           first_name?: string
           gender?: Database["public"]["Enums"]["gender_type"] | null
+          gender_identity?: string | null
+          gender_identity_other?: string | null
           id?: string
           is_active?: boolean
           last_name?: string
