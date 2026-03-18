@@ -397,6 +397,94 @@ export default function RegistroPublico() {
       );
     }
 
+    if (type === 'select-risk-level') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="I">Nivel I - Mínimo</SelectItem>
+              <SelectItem value="II">Nivel II - Bajo</SelectItem>
+              <SelectItem value="III">Nivel III - Medio</SelectItem>
+              <SelectItem value="IV">Nivel IV - Alto</SelectItem>
+              <SelectItem value="V">Nivel V - Máximo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === 'select-account-type') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="ahorros">Ahorros</SelectItem>
+              <SelectItem value="corriente">Corriente</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === 'select-yes-no') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="true">Sí</SelectItem>
+              <SelectItem value="false">No</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === 'select-disability') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="ninguna">Ninguna</SelectItem>
+              <SelectItem value="fisica">Física</SelectItem>
+              <SelectItem value="auditiva">Auditiva</SelectItem>
+              <SelectItem value="visual">Visual</SelectItem>
+              <SelectItem value="cognitiva">Cognitiva</SelectItem>
+              <SelectItem value="mental">Mental</SelectItem>
+              <SelectItem value="multiple">Múltiple</SelectItem>
+              <SelectItem value="sordoceguera">Sordoceguera</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === 'select-ethnic') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="ninguno">Ninguno</SelectItem>
+              <SelectItem value="indigena">Indígena</SelectItem>
+              <SelectItem value="rom_gitano">Rom / Gitano</SelectItem>
+              <SelectItem value="raizal">Raizal</SelectItem>
+              <SelectItem value="palenquero">Palenquero</SelectItem>
+              <SelectItem value="negro_afrocolombiano">Negro / Afrocolombiano</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
     return null;
   };
 
