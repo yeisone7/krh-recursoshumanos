@@ -281,6 +281,10 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   <Users className="w-4 h-4" />
                   Candidatos ({candidates.length})
                 </TabsTrigger>
+                <TabsTrigger value="documents" className="gap-2">
+                  <Paperclip className="w-4 h-4" />
+                  Documentos ({documents.length})
+                </TabsTrigger>
               </TabsList>
             </div>
 
