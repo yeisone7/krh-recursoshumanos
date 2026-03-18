@@ -448,7 +448,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
           <form onSubmit={handleFormSubmit}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="px-6 pt-2">
-                <TabsList className="w-full h-auto flex-wrap gap-1 bg-muted/50 p-1">
+                <TabsList className="w-full h-auto flex-wrap gap-1 bg-primary/5 border border-primary/10 p-1.5 rounded-lg">
                   {tabItems.map((tab) => {
                     const errorCount = getTabErrorCount(tab.value);
                     const hasErrors = tabsWithErrors.has(tab.value);
@@ -458,8 +458,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         key={tab.value}
                         value={tab.value}
                         className={cn(
-                          "flex-1 min-w-[90px] gap-1.5 text-xs data-[state=active]:bg-background relative",
-                          hasErrors && "text-destructive data-[state=active]:text-destructive"
+                          "flex-1 min-w-[90px] gap-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all relative",
+                          hasErrors && "text-destructive data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground"
                         )}
                       >
                         <tab.icon className={cn("w-3.5 h-3.5", hasErrors && "text-destructive")} />
