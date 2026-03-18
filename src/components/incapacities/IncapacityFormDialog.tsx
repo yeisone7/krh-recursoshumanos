@@ -378,9 +378,11 @@ export function IncapacityFormDialog({
                       <FormLabel>Diagnóstico *</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Describa el diagnóstico médico"
-                          className="resize-none"
+                          placeholder="Se completa automáticamente con el código CIE-10"
+                          className="resize-none bg-muted"
+                          readOnly
                           {...field}
+                        />
                         />
                       </FormControl>
                       <FormMessage />
