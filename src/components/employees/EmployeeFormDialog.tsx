@@ -1829,7 +1829,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     />
                   </div>
                 </TabsContent>
-              </ScrollArea>
+              </div>
 
               {/* Footer */}
               <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30">
