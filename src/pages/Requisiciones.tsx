@@ -269,15 +269,6 @@ export default function Requisiciones() {
                         </div>
                       </TooltipProvider>
                     </TableCell>
-                    <TableCell>
-                      {req.autoriza ? (
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
-                          {autorizaLabels[req.autoriza as AutorizaType]}
-                        </Badge>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
                     <TableCell><Badge variant="outline" className={cn(cfg.bg, cfg.text, cfg.border)}>{requisitionStatusLabels[status]}</Badge></TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
