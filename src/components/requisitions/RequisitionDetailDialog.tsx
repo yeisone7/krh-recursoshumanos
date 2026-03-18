@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Send, 
   Edit, 
@@ -25,10 +26,11 @@ import {
   FileCheck,
   FileDown,
   Loader2,
+  ShieldCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-import { useRequisitionWithVacancies, useSubmitRequisition } from '@/hooks/useRequisitions';
+import { useRequisitionWithVacancies, useSubmitRequisition, useUpdateRequisition } from '@/hooks/useRequisitions';
 import { useAuth } from '@/contexts/AuthContext';
 import { RequisitionTimeline } from './RequisitionTimeline';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
@@ -41,6 +43,8 @@ import {
   RequisitionStatus,
   RequisitionReason,
   DayOfWeek,
+  autorizaLabels,
+  AutorizaType,
 } from '@/types/requisition';
 
 interface RequisitionDetailDialogProps {
