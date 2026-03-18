@@ -1829,14 +1829,14 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
               </ScrollArea>
 
               {/* Footer */}
-              <div className="flex justify-end gap-3 p-6 border-t border-border">
+              <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={createEmployee.isPending || updateEmployee.isPending}
-                  className="gradient-primary text-primary-foreground"
+                  className="gradient-primary text-primary-foreground shadow-md"
                 >
                   {createEmployee.isPending || updateEmployee.isPending ? 'Guardando...' : (isEditMode ? 'Guardar Cambios' : 'Crear Empleado')}
                 </Button>
