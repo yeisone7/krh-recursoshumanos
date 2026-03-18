@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -23,6 +23,9 @@ import {
   ExternalLink,
   LayoutGrid,
   LayoutList,
+  Upload,
+  Trash2,
+  Paperclip,
 } from 'lucide-react';
 import {
   Dialog,
@@ -41,6 +44,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
 import { useVacancy, useUpdateVacancy } from '@/hooks/useVacancies';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUpdateCandidate, useConvertToEmployee } from '@/hooks/useCandidates';
 import { CandidateFormDialog } from './CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
@@ -76,12 +80,94 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const [showCandidateForm, setShowCandidateForm] = useState(false);
   const [showCandidateDetail, setShowCandidateDetail] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const navigate = useNavigate();
+  const { user, currentCompanyId } = useAuth();
   
   const { data: vacancy, isLoading } = useVacancy(vacancyId);
   const updateVacancy = useUpdateVacancy();
   const updateCandidate = useUpdateCandidate();
   const convertToEmployee = useConvertToEmployee();
+
+  const fetchDocuments = useCallback(async () => {
+    if (!vacancyId) return;
+    setLoadingDocs(true);
+    try {
+      const { data, error } = await supabase
+        .from('vacancy_documents')
+        .select('*')
+        .eq('vacancy_id', vacancyId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch {
+      // silent
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [vacancyId]);
+
+  useEffect(() => {
+    if (open && vacancyId) {
+      fetchDocuments();
+    }
+  }, [open, vacancyId, fetchDocuments]);
+
+  const handleDocUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !currentCompanyId) return;
+    setUploadingDoc(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} excede 10MB`);
+          continue;
+        }
+        const ext = file.name.split('.').pop();
+        const filePath = `vacancies/docs_${vacancyId}_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+
+        const { error: insertError } = await supabase.from('vacancy_documents').insert({
+          vacancy_id: vacancyId,
+          company_id: currentCompanyId,
+          document_name: file.name,
+          file_url: urlData.publicUrl,
+          file_name: file.name,
+          file_size: file.size,
+          mime_type: file.type,
+          uploaded_by: user?.id,
+        });
+        if (insertError) throw insertError;
+      }
+      toast.success('Documento(s) subido(s) exitosamente');
+      fetchDocuments();
+    } catch (err) {
+      toast.error('Error al subir documento');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleDeleteDoc = async (docId: string) => {
+    try {
+      const { error } = await supabase.from('vacancy_documents').delete().eq('id', docId);
+      if (error) throw error;
+      toast.success('Documento eliminado');
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    } catch {
+      toast.error('Error al eliminar documento');
+    }
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
   
   const openCandidateDetail = (candidateId: string) => {
     setSelectedCandidateId(candidateId);
@@ -194,6 +280,10 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                 <TabsTrigger value="candidates" className="gap-2">
                   <Users className="w-4 h-4" />
                   Candidatos ({candidates.length})
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="gap-2">
+                  <Paperclip className="w-4 h-4" />
+                  Documentos ({documents.length})
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -552,6 +642,88 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     </div>
                   )}
                 </div>
+              </TabsContent>
+
+              {/* Documents Tab */}
+              <TabsContent value="documents" className="mt-0 p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+                      <Paperclip className="w-4 h-4 text-primary" />
+                    </div>
+                    Documentos de la Vacante
+                  </h3>
+                  <div>
+                    <input
+                      id={`vacancy-doc-upload-${vacancyId}`}
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
+                      onChange={(e) => handleDocUpload(e.target.files)}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => document.getElementById(`vacancy-doc-upload-${vacancyId}`)?.click()}
+                      disabled={uploadingDoc}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {uploadingDoc ? 'Subiendo...' : 'Subir Documento'}
+                    </Button>
+                  </div>
+                </div>
+
+                {loadingDocs ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                  </div>
+                ) : documents.length === 0 ? (
+                  <div
+                    className="text-center py-10 bg-muted/30 rounded-lg border-2 border-dashed cursor-pointer hover:border-primary/40 transition-colors"
+                    onClick={() => document.getElementById(`vacancy-doc-upload-${vacancyId}`)?.click()}
+                  >
+                    <Paperclip className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-muted-foreground">No hay documentos adjuntos</p>
+                    <p className="text-xs text-muted-foreground mt-1">Haz clic para subir archivos (PDF, imágenes, Word, Excel — máx 10MB)</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {documents.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary shrink-0">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{doc.document_name || doc.file_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatFileSize(doc.file_size)}
+                            {doc.created_at && ` • ${format(new Date(doc.created_at), 'dd MMM yyyy', { locale: es })}`}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.open(doc.file_url, '_blank')}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteDoc(doc.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </TabsContent>
             </div>
           </Tabs>
