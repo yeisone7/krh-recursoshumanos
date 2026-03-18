@@ -159,6 +159,8 @@ export const candidateFormSchema = z.object({
   department: z.string().optional(),
   birthDate: z.date().optional(),
   gender: z.string().optional(),
+  genderIdentity: z.string().optional(),
+  genderIdentityOther: z.string().optional(),
   educationLevel: z.string().optional(),
   profession: z.string().optional(),
   experienceYears: z.number().min(0).default(0),
