@@ -430,8 +430,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-t-lg">
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+        <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shrink-0">
           <DialogTitle className="font-display text-xl flex items-center gap-2 text-primary-foreground">
             <Building className="w-5 h-5" />
             {isEditMode ? 'Editar Empleado' : 'Nuevo Empleado'}
@@ -475,7 +475,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 </TabsList>
               </div>
 
-              <ScrollArea className="h-[calc(90vh-220px)] px-6 py-4">
+              <ScrollArea className="flex-1 min-h-0 px-6 py-4" style={{ maxHeight: 'calc(90vh - 260px)' }}>
                 {/* A. IDENTITY TAB */}
                 <TabsContent value="identity" className="mt-0 space-y-6">
                   {/* Photo Section */}
