@@ -205,6 +205,8 @@ export function RequisitionApprovalDialog({
               platform_id: vc.platformId,
               codigo_vacante_externa: vc.code.trim(),
               entidad_origen: platforms.find(p => p.id === vc.platformId)?.name || '',
+              fecha_creacion: vc.fechaCreacion || null,
+              fecha_cierre: vc.fechaCierre || null,
             }))
           );
       }
