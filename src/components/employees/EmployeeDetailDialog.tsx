@@ -622,6 +622,38 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                         {employee.marital_status && <InfoItem label="Estado Civil" value={maritalStatusLabels[employee.marital_status]} />}
                       </div>
                     </SectionCard>
+
+                    <SectionCard title="Especificaciones de la Persona" icon={UsersIcon}>
+                      <div className="divide-y divide-border">
+                        <InfoItem label="Primer Empleo" value={(employee as any).is_first_job ? 'Sí' : 'No'} />
+                        <InfoItem label="Madre Cabeza de Familia" value={(employee as any).is_head_of_household ? 'Sí' : 'No'} />
+                        <InfoItem label="Discapacidad" value={
+                          (employee as any).disability_type
+                            ? {
+                                fisica: 'Discapacidad Física',
+                                auditiva: 'Discapacidad Auditiva',
+                                visual: 'Discapacidad Visual',
+                                sordoceguera: 'Sordoceguera',
+                                intelectual: 'Discapacidad Intelectual',
+                                psicosocial: 'Discapacidad Psicosocial (mental)',
+                                multiple: 'Discapacidad Múltiple',
+                                otra: 'Otra Discapacidad',
+                              }[(employee as any).disability_type] || (employee as any).disability_type
+                            : 'Ninguna'
+                        } />
+                        <InfoItem label="Grupo Étnico" value={
+                          (employee as any).ethnic_group
+                            ? {
+                                afrodescendiente: 'Afrodescendiente',
+                                indigena: 'Indígena',
+                                otros: 'Otros grupos étnicos',
+                              }[(employee as any).ethnic_group] || (employee as any).ethnic_group
+                            : 'Ninguno'
+                        } />
+                        <InfoItem label="Víctima del Conflicto Armado" value={(employee as any).is_conflict_victim ? 'Sí' : 'No'} />
+                        <InfoItem label="Desmovilizado / Reinsertado" value={(employee as any).is_demobilized ? 'Sí' : 'No'} />
+                      </div>
+                    </SectionCard>
                   </div>
 
                   {/* Contact Info */}

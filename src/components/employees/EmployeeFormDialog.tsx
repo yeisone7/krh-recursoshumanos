@@ -122,6 +122,13 @@ const fieldToTabMap: Record<string, string> = {
   cycleStartDate: 'timemode',
   timeModeStartDate: 'timemode',
   timeModeNotes: 'timemode',
+  // Person Specifications
+  isFirstJob: 'identity',
+  isHeadOfHousehold: 'identity',
+  disabilityType: 'identity',
+  ethnicGroup: 'identity',
+  isConflictVictim: 'identity',
+  isDemobilized: 'identity',
 };
 
 import {
