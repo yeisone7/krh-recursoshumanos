@@ -221,7 +221,7 @@ export function RequisitionApprovalDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{stepTitles[step]}</DialogTitle>
           <DialogDescription>
@@ -417,7 +417,7 @@ export function RequisitionApprovalDialog({
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                    <div className="grid grid-cols-2 gap-2 pr-8">
+                    <div className="grid grid-cols-4 gap-2 pr-8">
                       <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">Plataforma</Label>
                         <Select
@@ -445,10 +445,8 @@ export function RequisitionApprovalDialog({
                           onChange={(e) => updateVacancyCode(index, 'code', e.target.value)}
                         />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Fecha de Creación</Label>
+                        <Label className="text-xs text-muted-foreground">F. Creación</Label>
                         <Input
                           type="date"
                           className="h-9 text-sm"
@@ -457,7 +455,7 @@ export function RequisitionApprovalDialog({
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Fecha de Cierre</Label>
+                        <Label className="text-xs text-muted-foreground">F. Cierre</Label>
                         <Input
                           type="date"
                           className={cn("h-9 text-sm", entry.fechaCreacion && entry.fechaCierre && entry.fechaCierre < entry.fechaCreacion && "border-destructive")}
