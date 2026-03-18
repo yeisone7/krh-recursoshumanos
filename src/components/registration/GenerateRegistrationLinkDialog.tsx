@@ -80,7 +80,9 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
         target_type: targetType,
         vacancy_id: vacancyId,
         enabled_fields: selectedFields,
-        expires_at: addDays(new Date(), parseInt(expirationDays)).toISOString(),
+        expires_at: expirationDays === '0' 
+          ? addDays(new Date(), 365 * 10).toISOString() 
+          : addDays(new Date(), parseInt(expirationDays)).toISOString(),
       });
       const baseUrl = window.location.origin;
       setGeneratedLink(`${baseUrl}/registro?token=${(token as any).token}`);
