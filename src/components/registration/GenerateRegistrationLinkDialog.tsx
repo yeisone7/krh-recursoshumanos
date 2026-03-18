@@ -44,6 +44,7 @@ const CANDIDATE_FIELDS = [
 ];
 
 const EMPLOYEE_FIELDS = [
+  // Identidad
   { key: 'firstName', label: 'Primer Nombre', section: 'Identidad', required: true },
   { key: 'middleName', label: 'Segundo Nombre', section: 'Identidad' },
   { key: 'lastName', label: 'Primer Apellido', section: 'Identidad', required: true },
@@ -60,6 +61,7 @@ const EMPLOYEE_FIELDS = [
   { key: 'bloodType', label: 'Tipo de Sangre', section: 'Identidad' },
   { key: 'documentIssueDate', label: 'Fecha de Expedición Documento', section: 'Identidad' },
   { key: 'documentIssueCity', label: 'Ciudad de Expedición', section: 'Identidad' },
+  // Contacto
   { key: 'email', label: 'Email Corporativo', section: 'Contacto' },
   { key: 'personalEmail', label: 'Email Personal', section: 'Contacto' },
   { key: 'mobile', label: 'Celular', section: 'Contacto' },
@@ -71,13 +73,33 @@ const EMPLOYEE_FIELDS = [
   { key: 'emergencyContactName', label: 'Nombre Contacto de Emergencia', section: 'Contacto' },
   { key: 'emergencyContactPhone', label: 'Teléfono Contacto de Emergencia', section: 'Contacto' },
   { key: 'emergencyContactRelationship', label: 'Parentesco Contacto de Emergencia', section: 'Contacto' },
+  // Familia
   { key: 'spouseName', label: 'Nombre del Cónyuge', section: 'Familia' },
   { key: 'spouseBirthDate', label: 'Fecha Nacimiento Cónyuge', section: 'Familia' },
   { key: 'childrenCount', label: 'Número de Hijos', section: 'Familia' },
+  // Seguridad Social
+  { key: 'eps', label: 'EPS', section: 'Seguridad Social' },
+  { key: 'afp', label: 'Fondo de Pensiones (AFP)', section: 'Seguridad Social' },
+  { key: 'arl', label: 'ARL', section: 'Seguridad Social' },
+  { key: 'ccf', label: 'Caja de Compensación', section: 'Seguridad Social' },
+  { key: 'afc', label: 'AFC', section: 'Seguridad Social' },
+  { key: 'ips', label: 'IPS de Atención', section: 'Seguridad Social' },
+  { key: 'riskLevel', label: 'Nivel de Riesgo ARL', section: 'Seguridad Social' },
+  // Información Bancaria
+  { key: 'bankName', label: 'Nombre del Banco', section: 'Información Bancaria' },
+  { key: 'accountType', label: 'Tipo de Cuenta', section: 'Información Bancaria' },
+  { key: 'accountNumber', label: 'Número de Cuenta', section: 'Información Bancaria' },
+  // Especificaciones de la Persona
+  { key: 'isFirstJob', label: 'Primer Empleo', section: 'Especificaciones' },
+  { key: 'isHeadOfHousehold', label: 'Cabeza de Familia', section: 'Especificaciones' },
+  { key: 'disabilityType', label: 'Tipo de Discapacidad', section: 'Especificaciones' },
+  { key: 'ethnicGroup', label: 'Grupo Étnico', section: 'Especificaciones' },
+  { key: 'isConflictVictim', label: 'Víctima del Conflicto', section: 'Especificaciones' },
+  { key: 'isDemobilized', label: 'Desmovilizado', section: 'Especificaciones' },
 ];
 
 const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional'];
-const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia'];
+const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Especificaciones'];
 
 export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType, vacancyId }: Props) {
   const fields = targetType === 'employee' ? EMPLOYEE_FIELDS : CANDIDATE_FIELDS;

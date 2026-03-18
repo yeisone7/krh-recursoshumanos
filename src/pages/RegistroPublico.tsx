@@ -65,6 +65,7 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   bloodType: { label: 'Tipo de Sangre', type: 'select-blood', section: 'Identidad' },
   documentIssueDate: { label: 'Fecha de Expedición', type: 'date', section: 'Identidad' },
   documentIssueCity: { label: 'Ciudad de Expedición', type: 'text', section: 'Identidad' },
+  // Contacto
   email: { label: 'Email Corporativo', type: 'email', section: 'Contacto' },
   personalEmail: { label: 'Email Personal', type: 'email', section: 'Contacto' },
   mobile: { label: 'Celular', type: 'tel', section: 'Contacto' },
@@ -76,16 +77,36 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   emergencyContactName: { label: 'Nombre Contacto de Emergencia', type: 'text', section: 'Contacto' },
   emergencyContactPhone: { label: 'Teléfono Contacto de Emergencia', type: 'tel', section: 'Contacto' },
   emergencyContactRelationship: { label: 'Parentesco', type: 'text', section: 'Contacto' },
+  // Familia
   spouseName: { label: 'Nombre del Cónyuge', type: 'text', section: 'Familia' },
   spouseBirthDate: { label: 'Fecha Nacimiento Cónyuge', type: 'date', section: 'Familia' },
   childrenCount: { label: 'Número de Hijos', type: 'number', section: 'Familia' },
+  // Seguridad Social
+  eps: { label: 'EPS', type: 'text', section: 'Seguridad Social' },
+  afp: { label: 'Fondo de Pensiones (AFP)', type: 'text', section: 'Seguridad Social' },
+  arl: { label: 'ARL', type: 'text', section: 'Seguridad Social' },
+  ccf: { label: 'Caja de Compensación', type: 'text', section: 'Seguridad Social' },
+  afc: { label: 'AFC', type: 'text', section: 'Seguridad Social' },
+  ips: { label: 'IPS de Atención', type: 'text', section: 'Seguridad Social' },
+  riskLevel: { label: 'Nivel de Riesgo ARL', type: 'select-risk-level', section: 'Seguridad Social' },
+  // Información Bancaria
+  bankName: { label: 'Nombre del Banco', type: 'text', section: 'Información Bancaria' },
+  accountType: { label: 'Tipo de Cuenta', type: 'select-account-type', section: 'Información Bancaria' },
+  accountNumber: { label: 'Número de Cuenta', type: 'text', section: 'Información Bancaria' },
+  // Especificaciones
+  isFirstJob: { label: 'Primer Empleo', type: 'select-yes-no', section: 'Especificaciones' },
+  isHeadOfHousehold: { label: 'Cabeza de Familia', type: 'select-yes-no', section: 'Especificaciones' },
+  disabilityType: { label: 'Tipo de Discapacidad', type: 'select-disability', section: 'Especificaciones' },
+  ethnicGroup: { label: 'Grupo Étnico', type: 'select-ethnic', section: 'Especificaciones' },
+  isConflictVictim: { label: 'Víctima del Conflicto', type: 'select-yes-no', section: 'Especificaciones' },
+  isDemobilized: { label: 'Desmovilizado', type: 'select-yes-no', section: 'Especificaciones' },
 };
 
 const CANDIDATE_REQUIRED = ['firstName', 'lastName', 'documentType', 'documentNumber'];
 const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'documentType', 'documentNumber'];
 
 const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional'];
-const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia'];
+const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Especificaciones'];
 
 export default function RegistroPublico() {
   const [searchParams] = useSearchParams();
@@ -217,6 +238,25 @@ export default function RegistroPublico() {
           p_spouse_name: formData.spouseName || null,
           p_spouse_birth_date: formData.spouseBirthDate || null,
           p_children_count: formData.childrenCount ? parseInt(formData.childrenCount) : null,
+          // Social Security
+          p_eps: formData.eps || null,
+          p_afp: formData.afp || null,
+          p_arl: formData.arl || null,
+          p_ccf: formData.ccf || null,
+          p_afc: formData.afc || null,
+          p_ips: formData.ips || null,
+          p_risk_level: formData.riskLevel || null,
+          // Bank Info
+          p_bank_name: formData.bankName || null,
+          p_account_type: formData.accountType || null,
+          p_account_number: formData.accountNumber || null,
+          // Specifications
+          p_is_first_job: formData.isFirstJob === 'true' ? true : formData.isFirstJob === 'false' ? false : null,
+          p_is_head_of_household: formData.isHeadOfHousehold === 'true' ? true : formData.isHeadOfHousehold === 'false' ? false : null,
+          p_disability_type: formData.disabilityType || null,
+          p_ethnic_group: formData.ethnicGroup || null,
+          p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
+          p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
         });
         result = data;
       } else {
@@ -370,6 +410,94 @@ export default function RegistroPublico() {
               <SelectItem value="B-">B-</SelectItem>
               <SelectItem value="AB+">AB+</SelectItem>
               <SelectItem value="AB-">AB-</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === 'select-risk-level') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="I">Nivel I - Mínimo</SelectItem>
+              <SelectItem value="II">Nivel II - Bajo</SelectItem>
+              <SelectItem value="III">Nivel III - Medio</SelectItem>
+              <SelectItem value="IV">Nivel IV - Alto</SelectItem>
+              <SelectItem value="V">Nivel V - Máximo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === 'select-account-type') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="ahorros">Ahorros</SelectItem>
+              <SelectItem value="corriente">Corriente</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === 'select-yes-no') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="true">Sí</SelectItem>
+              <SelectItem value="false">No</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === 'select-disability') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="ninguna">Ninguna</SelectItem>
+              <SelectItem value="fisica">Física</SelectItem>
+              <SelectItem value="auditiva">Auditiva</SelectItem>
+              <SelectItem value="visual">Visual</SelectItem>
+              <SelectItem value="cognitiva">Cognitiva</SelectItem>
+              <SelectItem value="mental">Mental</SelectItem>
+              <SelectItem value="multiple">Múltiple</SelectItem>
+              <SelectItem value="sordoceguera">Sordoceguera</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === 'select-ethnic') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              <SelectItem value="ninguno">Ninguno</SelectItem>
+              <SelectItem value="indigena">Indígena</SelectItem>
+              <SelectItem value="rom_gitano">Rom / Gitano</SelectItem>
+              <SelectItem value="raizal">Raizal</SelectItem>
+              <SelectItem value="palenquero">Palenquero</SelectItem>
+              <SelectItem value="negro_afrocolombiano">Negro / Afrocolombiano</SelectItem>
             </SelectContent>
           </Select>
         </div>
