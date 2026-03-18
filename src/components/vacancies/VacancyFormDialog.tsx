@@ -108,15 +108,19 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
         form.setValue('positionTitle', selectedReq.cargo_solicitado);
         form.setValue('positionsCount', selectedReq.cantidad_vacantes_requeridas);
         if (selectedReq.operation_centers?.name) {
-          // Find matching operation center
           const center = operationCenters.find(c => c.name === selectedReq.operation_centers?.name);
           if (center) {
             form.setValue('operationCenterId', center.id);
           }
         }
+        // Auto-link position from catalog by matching cargo name
+        const matchedPosition = positions.find(
+          p => p.is_active && p.name.toLowerCase() === selectedReq.cargo_solicitado.toLowerCase()
+        );
+        form.setValue('positionId', matchedPosition?.id || undefined);
       }
     }
-  }, [selectedRequisitionId, approvedRequisitions, operationCenters, form]);
+  }, [selectedRequisitionId, approvedRequisitions, operationCenters, positions, form]);
 
   const handleSubmit = async (data: VacancyFormData) => {
     try {
@@ -259,37 +263,10 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                       name="positionTitle"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Título del Cargo *</FormLabel>
+                          <FormLabel>Cargo *</FormLabel>
                           <FormControl>
                             <Input placeholder="Ej: Analista de Recursos Humanos" {...field} />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="positionId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cargo del Catálogo</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ''}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Vincular a cargo (opcional)" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-background">
-                              {positions.filter(p => p.is_active).map((pos) => (
-                                <SelectItem key={pos.id} value={pos.id}>
-                                  {pos.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Vincular al catálogo permite usar plantillas de onboarding del cargo.
-                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
