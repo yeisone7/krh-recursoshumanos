@@ -146,20 +146,8 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             </div>
           )}
 
-          {/* Manual shortcut - hidden on mobile */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 hidden sm:inline-flex"
-                onClick={() => setManualOpen(true)}
-              >
-                <BookOpen className="w-4 h-4 text-muted-foreground" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Manual de Usuario</TooltipContent>
-          </Tooltip>
+
+
 
           {/* Fullscreen toggle - desktop only */}
           <Tooltip>
