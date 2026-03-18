@@ -35,7 +35,21 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const [manualOpen, setManualOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
 
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'U';
 
