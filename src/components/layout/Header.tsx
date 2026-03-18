@@ -45,8 +45,6 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
     }
   }, []);
 
-  const [now, setNow] = useState(new Date());
-
   useEffect(() => {
     const handler = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handler);
