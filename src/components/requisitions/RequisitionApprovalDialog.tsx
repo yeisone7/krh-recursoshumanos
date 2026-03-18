@@ -460,10 +460,14 @@ export function RequisitionApprovalDialog({
                         <Label className="text-xs text-muted-foreground">Fecha de Cierre</Label>
                         <Input
                           type="date"
-                          className="h-9 text-sm"
+                          className={cn("h-9 text-sm", entry.fechaCreacion && entry.fechaCierre && entry.fechaCierre < entry.fechaCreacion && "border-destructive")}
                           value={entry.fechaCierre}
+                          min={entry.fechaCreacion || undefined}
                           onChange={(e) => updateVacancyCode(index, 'fechaCierre', e.target.value)}
                         />
+                        {entry.fechaCreacion && entry.fechaCierre && entry.fechaCierre < entry.fechaCreacion && (
+                          <p className="text-[11px] text-destructive">No puede ser anterior a la fecha de creación</p>
+                        )}
                       </div>
                     </div>
                   </div>
