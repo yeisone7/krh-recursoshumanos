@@ -35,6 +35,7 @@ import AnaliticasCapacitaciones from "./pages/capacitaciones/Analiticas";
 import CumplimientoCapacitaciones from "./pages/capacitaciones/Cumplimiento";
 import AccesoPublico from "./pages/capacitaciones/AccesoPublico";
 import DescargosPublico from "./pages/DescargosPublico";
+import RegistroPublico from "./pages/RegistroPublico";
 import Evaluaciones from "./pages/Evaluaciones";
 import AnaliticasEvaluaciones from "./pages/evaluaciones/AnaliticasEvaluaciones";
 import Organigrama from "./pages/Organigrama";
