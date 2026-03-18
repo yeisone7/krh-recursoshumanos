@@ -45,11 +45,16 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
     }
   }, []);
 
+  const [now, setNow] = useState(new Date());
+
   useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
   }, []);
+
+  const formattedDate = now.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+  const formattedTime = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'U';
 
