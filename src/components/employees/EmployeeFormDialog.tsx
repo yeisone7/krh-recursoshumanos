@@ -803,18 +803,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         control={form.control}
                         name="isConflictVictim"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Víctima del Conflicto Armado</FormLabel>
-                            <Select onValueChange={(v) => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
-                              <FormControl>
-                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                <SelectItem value="true">Sí</SelectItem>
-                                <SelectItem value="false">No</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                            <FormLabel className="text-sm font-medium cursor-pointer">Víctima del Conflicto Armado</FormLabel>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
                           </FormItem>
                         )}
                       />
@@ -822,18 +815,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         control={form.control}
                         name="isDemobilized"
                         render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Desmovilizado / Reinsertado</FormLabel>
-                            <Select onValueChange={(v) => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
-                              <FormControl>
-                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                <SelectItem value="true">Sí</SelectItem>
-                                <SelectItem value="false">No</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                            <FormLabel className="text-sm font-medium cursor-pointer">Desmovilizado / Reinsertado</FormLabel>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
                           </FormItem>
                         )}
                       />
