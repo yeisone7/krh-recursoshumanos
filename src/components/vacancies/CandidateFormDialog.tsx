@@ -288,7 +288,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                       name="gender"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel>Género</FormLabel>
+                          <FormLabel>Sexo biológico</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -296,8 +296,38 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-background">
-                              <SelectItem value="masculino">Masculino</SelectItem>
                               <SelectItem value="femenino">Femenino</SelectItem>
+                              <SelectItem value="masculino">Masculino</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="genderIdentity"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Sexo de identificación</FormLabel>
+                          <Select onValueChange={(value) => {
+                            field.onChange(value);
+                            if (value !== 'otro') {
+                              form.setValue('genderIdentityOther', '');
+                            }
+                          }} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              <SelectItem value="femenino">Femenino</SelectItem>
+                              <SelectItem value="masculino">Masculino</SelectItem>
+                              <SelectItem value="trans">Trans</SelectItem>
                               <SelectItem value="otro">Otro</SelectItem>
                             </SelectContent>
                           </Select>
@@ -305,6 +335,21 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                         </FormItem>
                       )}
                     />
+                    {form.watch('genderIdentity') === 'otro' && (
+                      <FormField
+                        control={form.control}
+                        name="genderIdentityOther"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>¿Cuál?</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Especifique" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
                 </TabsContent>
 
