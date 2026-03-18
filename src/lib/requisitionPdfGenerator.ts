@@ -7,10 +7,12 @@ import {
   requisitionReasonLabels,
   dayOfWeekLabels,
   recruitmentTypeLabels,
+  autorizaLabels,
   RequisitionStatus,
   RequisitionReason,
   DayOfWeek,
   RecruitmentType,
+  AutorizaType,
 } from '@/types/requisition';
 
 // Import white logo for dark header background
