@@ -113,7 +113,13 @@ export default function PlataformasPublicacion() {
               <TableBody>
                 {filtered.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {item.url ? (
+                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          {item.name}
+                        </a>
+                      ) : item.name}
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{item.description || '—'}</TableCell>
                     <TableCell className="text-sm">
                       {item.url ? (
