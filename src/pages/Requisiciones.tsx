@@ -95,14 +95,19 @@ export default function Requisiciones() {
   // Helper to get approval progress for timeline
   // Order: RRHH → Jurídico → Operaciones → Gerencia → Selección
   const getApprovalProgress = (req: PersonnelRequisition) => {
-    const steps = [
+    const allSteps = [
       { key: 'rrhh', label: 'RH', approved: req.rrhh_aprobado },
       { key: 'juridico', label: 'JU', approved: req.juridico_aprobado },
       { key: 'operaciones', label: 'OP', approved: req.operaciones_aprobado },
       { key: 'gerencia', label: 'GE', approved: req.gerencia_aprobado },
       { key: 'seleccion', label: 'SE', approved: req.seleccion_aprobado },
     ];
-    return steps;
+    
+    return allSteps.filter(s => {
+      if (s.key === 'operaciones' && req.autoriza === 'gerencia_administrativa') return false;
+      if (s.key === 'gerencia' && req.autoriza === 'gerencia_operaciones') return false;
+      return true;
+    });
   };
 
   const statusOptions = [
