@@ -399,9 +399,9 @@ export function IncapacityFormDialog({
                           <Cie10SearchInput
                             value={field.value}
                             onChange={field.onChange}
-                            onDiagnosisFound={useCallback((diagnosis: string) => {
+                            onDiagnosisFound={(diagnosis: string) => {
                               form.setValue('diagnosis', diagnosis);
-                            }, [form])}
+                            }}
                           />
                         </FormControl>
                         <FormDescription>Busque por código o descripción</FormDescription>
