@@ -705,43 +705,43 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="publicationPlatforms"
-                    render={() => (
-                      <FormItem>
-                        <FormLabel>Plataformas de Publicación</FormLabel>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                          {publicationPlatformOptions.map((platform) => (
-                            <FormField
-                              key={platform}
-                              control={form.control}
-                              name="publicationPlatforms"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-2 space-y-0">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(platform)}
-                                      onCheckedChange={(checked) => {
-                                        const current = field.value || [];
-                                        field.onChange(
-                                          checked
-                                            ? [...current, platform]
-                                            : current.filter((v) => v !== platform)
-                                        );
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-sm font-normal">{platform}</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                          ))}
+                  {/* Colocado - File Upload */}
+                  <div className="space-y-2">
+                    <FormLabel>Colocado</FormLabel>
+                    {colocadoFile ? (
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FileText className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
+                          <span className="text-sm truncate">{colocadoFile.name}</span>
+                          <span className="text-xs text-muted-foreground flex-shrink-0">
+                            ({(colocadoFile.size / 1024 / 1024).toFixed(2)} MB)
+                          </span>
                         </div>
-                        <FormMessage />
-                      </FormItem>
+                        <Button type="button" variant="ghost" size="icon" onClick={clearColocadoFile}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
+                        <input
+                          id="colocado-file-input"
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png,.webp"
+                          onChange={handleColocadoFileSelect}
+                          className="hidden"
+                        />
+                        <label htmlFor="colocado-file-input" className="cursor-pointer">
+                          <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm text-muted-foreground">
+                            Clic para adjuntar documento de colocado
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            PDF, JPG, PNG o WebP (máx. 10MB)
+                          </p>
+                        </label>
+                      </div>
                     )}
-                  />
+                  </div>
 
                   <FormField
                     control={form.control}
