@@ -28,6 +28,8 @@ import {
   requisitionStatusConfig,
   requisitionReasonLabels,
   RequisitionReason,
+  autorizaLabels,
+  AutorizaType,
 } from '@/types/requisition';
 
 export default function Requisiciones() {
