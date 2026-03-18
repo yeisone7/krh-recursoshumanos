@@ -420,8 +420,9 @@ export function CandidateDetailDialog({
 
       {/* Step Form Dialog */}
       <SelectionStepFormDialog
+        key={`${selectedStep?.id ?? 'new'}-${defaultStepType ?? 'none'}-${showStepForm ? 'open' : 'closed'}`}
         open={showStepForm}
-        onOpenChange={setShowStepForm}
+        onOpenChange={handleStepFormOpenChange}
         candidateId={candidateId}
         step={selectedStep}
         defaultStepType={defaultStepType}
