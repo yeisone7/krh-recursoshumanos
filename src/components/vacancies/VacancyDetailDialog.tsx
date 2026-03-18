@@ -791,6 +791,14 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
         vacancyId={vacancyId}
       />
 
+      {/* Generate Registration Link Dialog */}
+      <GenerateRegistrationLinkDialog
+        open={showGenerateLink}
+        onOpenChange={setShowGenerateLink}
+        targetType="candidate"
+        vacancyId={vacancyId}
+      />
+
       {/* Candidate Detail Dialog */}
       {selectedCandidateId && (
         <CandidateDetailDialog
