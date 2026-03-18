@@ -263,37 +263,10 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                       name="positionTitle"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Título del Cargo *</FormLabel>
+                          <FormLabel>Cargo *</FormLabel>
                           <FormControl>
                             <Input placeholder="Ej: Analista de Recursos Humanos" {...field} />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="positionId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cargo del Catálogo</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || ''}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Vincular a cargo (opcional)" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-background">
-                              {positions.filter(p => p.is_active).map((pos) => (
-                                <SelectItem key={pos.id} value={pos.id}>
-                                  {pos.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Vincular al catálogo permite usar plantillas de onboarding del cargo.
-                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
