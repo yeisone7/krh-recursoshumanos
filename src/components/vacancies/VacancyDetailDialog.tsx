@@ -643,6 +643,88 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   )}
                 </div>
               </TabsContent>
+
+              {/* Documents Tab */}
+              <TabsContent value="documents" className="mt-0 p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+                      <Paperclip className="w-4 h-4 text-primary" />
+                    </div>
+                    Documentos de la Vacante
+                  </h3>
+                  <div>
+                    <input
+                      id={`vacancy-doc-upload-${vacancyId}`}
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
+                      onChange={(e) => handleDocUpload(e.target.files)}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => document.getElementById(`vacancy-doc-upload-${vacancyId}`)?.click()}
+                      disabled={uploadingDoc}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {uploadingDoc ? 'Subiendo...' : 'Subir Documento'}
+                    </Button>
+                  </div>
+                </div>
+
+                {loadingDocs ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                  </div>
+                ) : documents.length === 0 ? (
+                  <div
+                    className="text-center py-10 bg-muted/30 rounded-lg border-2 border-dashed cursor-pointer hover:border-primary/40 transition-colors"
+                    onClick={() => document.getElementById(`vacancy-doc-upload-${vacancyId}`)?.click()}
+                  >
+                    <Paperclip className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-muted-foreground">No hay documentos adjuntos</p>
+                    <p className="text-xs text-muted-foreground mt-1">Haz clic para subir archivos (PDF, imágenes, Word, Excel — máx 10MB)</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {documents.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary shrink-0">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{doc.document_name || doc.file_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatFileSize(doc.file_size)}
+                            {doc.created_at && ` • ${format(new Date(doc.created_at), 'dd MMM yyyy', { locale: es })}`}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.open(doc.file_url, '_blank')}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteDoc(doc.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
             </div>
           </Tabs>
 
