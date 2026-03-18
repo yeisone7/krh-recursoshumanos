@@ -500,8 +500,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         </AnimatePresence>
       </div>
 
-      {/* Company Selector */}
-      <CompanySelector collapsed={isCollapsed} />
+
+
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-2 px-3 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
