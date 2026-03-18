@@ -475,7 +475,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 </TabsList>
               </div>
 
-              <ScrollArea className="h-[calc(90vh-220px)] px-6 py-4">
+              <ScrollArea className="flex-1 min-h-0 px-6 py-4" style={{ maxHeight: 'calc(90vh - 260px)' }}>
                 {/* A. IDENTITY TAB */}
                 <TabsContent value="identity" className="mt-0 space-y-6">
                   {/* Photo Section */}
