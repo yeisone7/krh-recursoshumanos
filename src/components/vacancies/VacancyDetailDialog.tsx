@@ -49,6 +49,8 @@ import { useUpdateCandidate, useConvertToEmployee } from '@/hooks/useCandidates'
 import { CandidateFormDialog } from './CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
 import { CandidateKanban } from '@/components/selection/CandidateKanban';
+import { GenerateRegistrationLinkDialog } from '@/components/registration/GenerateRegistrationLinkDialog';
+import { RegistrationTokensList } from '@/components/registration/RegistrationTokensList';
 import {
   VacancyStatus,
   vacancyStatusLabels,
