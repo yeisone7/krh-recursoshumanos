@@ -62,24 +62,6 @@ function getTimelineSteps(requisition: PersonnelRequisition, autoriza: string | 
       },
     },
     {
-      key: 'operaciones',
-      title: 'Operaciones',
-      icon: Settings,
-      status: requisition.operaciones_aprobado === true
-        ? 'approved'
-        : requisition.operaciones_aprobado === false
-          ? 'rejected'
-          : estado === 'en_operaciones'
-            ? 'current'
-            : 'pending',
-      date: requisition.operaciones_fecha_aprobacion,
-      approver: requisition.operaciones_quien_aprobo,
-      observations: requisition.operaciones_observaciones,
-      extraData: {
-        salario_aprobado: requisition.operaciones_aprobado_salario,
-      },
-    },
-    {
       key: 'rrhh',
       title: 'Recursos Humanos',
       icon: Users,
@@ -134,6 +116,24 @@ function getTimelineSteps(requisition: PersonnelRequisition, autoriza: string | 
       observations: requisition.gerencia_observaciones,
       extraData: {
         salario_aprobado: requisition.gerencia_aprobado_salario,
+      },
+    },
+    {
+      key: 'operaciones',
+      title: 'Operaciones',
+      icon: Settings,
+      status: requisition.operaciones_aprobado === true
+        ? 'approved'
+        : requisition.operaciones_aprobado === false
+          ? 'rejected'
+          : estado === 'en_operaciones'
+            ? 'current'
+            : 'pending',
+      date: requisition.operaciones_fecha_aprobacion,
+      approver: requisition.operaciones_quien_aprobo,
+      observations: requisition.operaciones_observaciones,
+      extraData: {
+        salario_aprobado: requisition.operaciones_aprobado_salario,
       },
     },
     {
