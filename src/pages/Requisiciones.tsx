@@ -28,6 +28,8 @@ import {
   requisitionStatusConfig,
   requisitionReasonLabels,
   RequisitionReason,
+  autorizaLabels,
+  AutorizaType,
 } from '@/types/requisition';
 
 export default function Requisiciones() {
@@ -181,6 +183,7 @@ export default function Requisiciones() {
                 <TableHead>Motivo</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Progreso</TableHead>
+                <TableHead>Autoriza</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -265,6 +268,15 @@ export default function Requisiciones() {
                           ))}
                         </div>
                       </TooltipProvider>
+                    </TableCell>
+                    <TableCell>
+                      {req.autoriza ? (
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
+                          {autorizaLabels[req.autoriza as AutorizaType]}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell><Badge variant="outline" className={cn(cfg.bg, cfg.text, cfg.border)}>{requisitionStatusLabels[status]}</Badge></TableCell>
                     <TableCell className="text-right">
