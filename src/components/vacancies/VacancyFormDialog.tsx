@@ -108,15 +108,19 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
         form.setValue('positionTitle', selectedReq.cargo_solicitado);
         form.setValue('positionsCount', selectedReq.cantidad_vacantes_requeridas);
         if (selectedReq.operation_centers?.name) {
-          // Find matching operation center
           const center = operationCenters.find(c => c.name === selectedReq.operation_centers?.name);
           if (center) {
             form.setValue('operationCenterId', center.id);
           }
         }
+        // Auto-link position from catalog by matching cargo name
+        const matchedPosition = positions.find(
+          p => p.is_active && p.name.toLowerCase() === selectedReq.cargo_solicitado.toLowerCase()
+        );
+        form.setValue('positionId', matchedPosition?.id || undefined);
       }
     }
-  }, [selectedRequisitionId, approvedRequisitions, operationCenters, form]);
+  }, [selectedRequisitionId, approvedRequisitions, operationCenters, positions, form]);
 
   const handleSubmit = async (data: VacancyFormData) => {
     try {
