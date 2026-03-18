@@ -204,9 +204,6 @@ export function RequisitionTimeline({ requisition, vacancies = [] }: Requisition
 
         <div className="space-y-8">
           {steps.map((step, index) => {
-            // Conditional visibility for gerencia
-            if (step.key === 'gerencia' && !showGerencia) return null;
-
             const Icon = step.icon;
 
             return (

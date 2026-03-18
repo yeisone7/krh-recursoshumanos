@@ -20,7 +20,25 @@ export type RequisitionReason =
 export type RecruitmentType = 'externa' | 'interna' | 'mixta';
 
 // Requisition Status
+// Autoriza Type
+export type AutorizaType = 'gerencia_administrativa' | 'gerencia_operaciones';
+
+export const autorizaLabels: Record<AutorizaType, string> = {
+  gerencia_administrativa: 'Gerencia Administrativa',
+  gerencia_operaciones: 'Gerencia de Operaciones',
+};
+
 export type RequisitionStatus = 
+  | 'borrador' 
+  | 'enviada' 
+  | 'en_operaciones' 
+  | 'en_rrhh'
+  | 'en_juridico' 
+  | 'en_seleccion' 
+  | 'en_gerencia'
+  | 'aprobada' 
+  | 'rechazada' 
+  | 'cerrada';
   | 'borrador' 
   | 'enviada' 
   | 'en_operaciones' 
