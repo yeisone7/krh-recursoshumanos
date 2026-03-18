@@ -606,3 +606,55 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
     </>
   );
 }
+
+function ColocadoUpload({ vacancyId }: { vacancyId: string }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const updateVacancy = useUpdateVacancy();
+
+  const handleUpload = async () => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `vacancies/colocado_${vacancyId}_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('documents').upload(filePath, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+      await updateVacancy.mutateAsync({ id: vacancyId, colocado_url: urlData.publicUrl });
+      toast.success('Documento de colocado subido');
+      setFile(null);
+    } catch (err) {
+      toast.error('Error al subir documento');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div
+        className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+        onClick={() => document.getElementById(`colocado-detail-${vacancyId}`)?.click()}
+      >
+        <input
+          id={`colocado-detail-${vacancyId}`}
+          type="file"
+          className="hidden"
+          accept=".pdf,.jpg,.jpeg,.png,.webp"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        />
+        {file ? (
+          <p className="text-sm font-medium text-foreground">{file.name}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground">Haz clic para adjuntar documento</p>
+        )}
+      </div>
+      {file && (
+        <Button size="sm" onClick={handleUpload} disabled={uploading}>
+          {uploading ? 'Subiendo...' : 'Subir documento'}
+        </Button>
+      )}
+    </div>
+  );
+}
