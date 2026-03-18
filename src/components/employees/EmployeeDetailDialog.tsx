@@ -431,8 +431,8 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 gap-0 [&>button]:text-white [&>button]:hover:text-white/80">
-        <div className="max-h-[90vh] overflow-y-auto scrollbar-themed">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0 gap-0 [&>button]:text-white [&>button]:hover:text-white/80">
+        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-themed">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
