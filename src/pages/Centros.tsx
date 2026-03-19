@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Building2, Plus, MapPin, Phone, User, Search, Users, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { Building2, Plus, MapPin, Phone, User, Search, Users, Pencil, MoreHorizontal, Power } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
