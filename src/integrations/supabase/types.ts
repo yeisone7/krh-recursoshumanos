@@ -4425,12 +4425,14 @@ export type Database = {
           city: string | null
           code: string | null
           company_id: string
+          contract_commercial_date: string | null
           created_at: string
           created_by: string | null
           department: string | null
           id: string
           manager_name: string | null
           name: string
+          notes: string | null
           phone: string | null
           updated_at: string
         }
@@ -4439,12 +4441,14 @@ export type Database = {
           city?: string | null
           code?: string | null
           company_id: string
+          contract_commercial_date?: string | null
           created_at?: string
           created_by?: string | null
           department?: string | null
           id?: string
           manager_name?: string | null
           name: string
+          notes?: string | null
           phone?: string | null
           updated_at?: string
         }
@@ -4453,12 +4457,14 @@ export type Database = {
           city?: string | null
           code?: string | null
           company_id?: string
+          contract_commercial_date?: string | null
           created_at?: string
           created_by?: string | null
           department?: string | null
           id?: string
           manager_name?: string | null
           name?: string
+          notes?: string | null
           phone?: string | null
           updated_at?: string
         }
