@@ -310,12 +310,9 @@ export default function Centros() {
                               <Pencil className="w-4 h-4 mr-2" />
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => setDeleteTarget(center)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Eliminar
+                            <DropdownMenuItem onClick={() => setToggleTarget(center)}>
+                              <Power className="w-4 h-4 mr-2" />
+                              {(center as any).is_active === false ? 'Activar' : 'Inactivar'}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
