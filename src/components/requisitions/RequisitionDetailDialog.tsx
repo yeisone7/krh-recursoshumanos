@@ -331,9 +331,12 @@ export function RequisitionDetailDialog({
                 <div className="flex-1 space-y-1">
                   <Label className="text-sm font-medium">Líder del Proceso <span className="text-destructive">*</span></Label>
                   <Input
-                    value={requisition.lider_proceso || ''}
-                    onChange={(e) => {
-                      updateRequisition.mutate({ id: requisition.id, lider_proceso: e.target.value } as any);
+                    value={liderProceso}
+                    onChange={(e) => setLiderProceso(e.target.value)}
+                    onBlur={() => {
+                      if (liderProceso !== (requisition.lider_proceso || '')) {
+                        updateRequisition.mutate({ id: requisition.id, lider_proceso: liderProceso } as any);
+                      }
                     }}
                     placeholder="Nombre del líder del proceso"
                   />
