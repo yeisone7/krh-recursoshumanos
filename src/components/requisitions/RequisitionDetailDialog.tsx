@@ -94,6 +94,19 @@ export function RequisitionDetailDialog({
         });
         return;
       }
+      // Save lider_proceso before submitting if changed
+      const currentLider = liderProceso.trim();
+      if (!currentLider) {
+        toast({
+          title: 'Campo requerido',
+          description: 'Debe ingresar el Líder del Proceso antes de enviar la requisición.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (currentLider !== (requisition.lider_proceso || '')) {
+        await updateRequisition.mutateAsync({ id: requisition.id, lider_proceso: currentLider } as any);
+      }
       await submitRequisition.mutateAsync(requisition.id);
     }
   };
