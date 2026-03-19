@@ -280,6 +280,16 @@ export function RequisitionFormDialog({
                           />
                         </PopoverContent>
                       </Popover>
+                      <p className="text-xs text-muted-foreground">
+                        Mínimo 8 días después de la fecha de requisición
+                        {(() => {
+                          const fechaReq = form.watch('fecha_requisicion');
+                          if (!fechaReq) return '';
+                          const minDate = new Date(fechaReq);
+                          minDate.setDate(minDate.getDate() + 8);
+                          return ` (a partir del ${format(minDate, 'dd/MM/yyyy')})`;
+                        })()}
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
