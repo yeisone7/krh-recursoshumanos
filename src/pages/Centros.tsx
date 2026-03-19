@@ -85,21 +85,20 @@ export default function Centros() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
+  const handleToggleActive = async () => {
+    if (!toggleTarget) return;
+    const newStatus = !(toggleTarget.is_active ?? true);
     try {
-      await deleteCenter.mutateAsync(deleteTarget.id);
-      toast.success('Centro eliminado', {
-        description: `El centro "${deleteTarget.name}" ha sido eliminado.`,
+      await updateCenter.mutateAsync({ id: toggleTarget.id, is_active: newStatus } as any);
+      toast.success(newStatus ? 'Centro activado' : 'Centro inactivado', {
+        description: `El centro "${toggleTarget.name}" ha sido ${newStatus ? 'activado' : 'inactivado'}.`,
       });
     } catch (error: any) {
-      toast.error('Error al eliminar', {
-        description: error.message?.includes('foreign') || error.message?.includes('referenced')
-          ? 'No se puede eliminar porque tiene empleados u otros registros asociados.'
-          : error.message || 'Por favor intenta de nuevo',
+      toast.error('Error al cambiar estado', {
+        description: error.message || 'Por favor intenta de nuevo',
       });
     } finally {
-      setDeleteTarget(null);
+      setToggleTarget(null);
     }
   };
 
