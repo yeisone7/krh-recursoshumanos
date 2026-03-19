@@ -7,6 +7,7 @@ type Company = Database['public']['Tables']['companies']['Row'];
 type CompanyInsert = Database['public']['Tables']['companies']['Insert'];
 type OperationCenter = Database['public']['Tables']['operation_centers']['Row'];
 type OperationCenterInsert = Database['public']['Tables']['operation_centers']['Insert'];
+type OperationCenterUpdate = Database['public']['Tables']['operation_centers']['Update'];
 
 // Helper function to log audit events
 async function logAuditEvent(
