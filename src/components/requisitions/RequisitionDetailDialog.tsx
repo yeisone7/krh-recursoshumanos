@@ -72,6 +72,7 @@ export function RequisitionDetailDialog({
   const submitRequisition = useSubmitRequisition();
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
+  const [liderProceso, setLiderProceso] = useState('');
 
   if (!requisitionId) return null;
 
