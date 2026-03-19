@@ -249,7 +249,12 @@ export default function Centros() {
                             <Building2 className="w-4 h-4 text-primary" />
                           </div>
                           <div>
-                            <p className="font-medium">{center.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{center.name}</p>
+                              {(center as any).is_active === false && (
+                                <Badge variant="secondary" className="text-xs">Inactivo</Badge>
+                              )}
+                            </div>
                             {center.code && (
                               <Badge variant="outline" className="text-xs mt-1">
                                 {center.code}
