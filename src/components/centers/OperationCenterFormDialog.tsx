@@ -1,8 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building2, MapPin, Phone, User, CalendarIcon, StickyNote } from 'lucide-react';
+import { Building2, MapPin, Phone, User, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { useEffect } from 'react';
 
 import {
   Dialog,
@@ -31,7 +32,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-import { useCreateOperationCenter } from '@/hooks/useCompanies';
+import { useCreateOperationCenter, useUpdateOperationCenter } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { CityDepartmentSelect } from '@/components/ui/city-department-select';
 
@@ -53,11 +54,14 @@ interface OperationCenterFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  editCenter?: any | null;
 }
 
-export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: OperationCenterFormDialogProps) {
+export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editCenter }: OperationCenterFormDialogProps) {
   const { currentCompanyId } = useAuth();
   const createCenter = useCreateOperationCenter();
+  const updateCenter = useUpdateOperationCenter();
+  const isEditing = !!editCenter;
 
   const form = useForm<OperationCenterFormData>({
     resolver: zodResolver(operationCenterSchema),
@@ -74,6 +78,36 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: Ope
     },
   });
 
+  useEffect(() => {
+    if (editCenter) {
+      form.reset({
+        name: editCenter.name || '',
+        code: editCenter.code || '',
+        address: editCenter.address || '',
+        city: editCenter.city || '',
+        department: editCenter.department || '',
+        phone: editCenter.phone || '',
+        managerName: editCenter.manager_name || '',
+        contractCommercialDate: editCenter.contract_commercial_date
+          ? new Date(editCenter.contract_commercial_date + 'T00:00:00')
+          : null,
+        notes: editCenter.notes || '',
+      });
+    } else {
+      form.reset({
+        name: '',
+        code: '',
+        address: '',
+        city: '',
+        department: '',
+        phone: '',
+        managerName: '',
+        contractCommercialDate: null,
+        notes: '',
+      });
+    }
+  }, [editCenter, open]);
+
   const handleSubmit = async (data: OperationCenterFormData) => {
     if (!currentCompanyId) {
       toast.error('Error: No hay empresa seleccionada');
@@ -81,8 +115,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: Ope
     }
 
     try {
-      await createCenter.mutateAsync({
-        company_id: currentCompanyId,
+      const payload: any = {
         name: data.name,
         code: data.code || null,
         address: data.address || null,
@@ -92,22 +125,35 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: Ope
         manager_name: data.managerName || null,
         contract_commercial_date: data.contractCommercialDate ? format(data.contractCommercialDate, 'yyyy-MM-dd') : null,
         notes: data.notes || null,
-      } as any);
+      };
 
-      toast.success('Centro creado', {
-        description: `El centro "${data.name}" ha sido creado exitosamente.`,
-      });
+      if (isEditing) {
+        await updateCenter.mutateAsync({ id: editCenter.id, ...payload });
+        toast.success('Centro actualizado', {
+          description: `El centro "${data.name}" ha sido actualizado exitosamente.`,
+        });
+      } else {
+        await createCenter.mutateAsync({
+          company_id: currentCompanyId,
+          ...payload,
+        } as any);
+        toast.success('Centro creado', {
+          description: `El centro "${data.name}" ha sido creado exitosamente.`,
+        });
+      }
 
       onOpenChange(false);
       form.reset();
       onSuccess?.();
     } catch (error: any) {
-      console.error('Error creating operation center:', error);
-      toast.error('Error al crear centro', {
+      console.error('Error saving operation center:', error);
+      toast.error(isEditing ? 'Error al actualizar centro' : 'Error al crear centro', {
         description: error.message || 'Por favor intenta de nuevo',
       });
     }
   };
+
+  const isPending = createCenter.isPending || updateCenter.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -115,10 +161,10 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: Ope
         <DialogHeader>
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             <Building2 className="w-5 h-5 text-primary" />
-            Nuevo Centro de Operación
+            {isEditing ? 'Editar Centro de Operación' : 'Nuevo Centro de Operación'}
           </DialogTitle>
           <DialogDescription>
-            Crea un nuevo centro de operación para tu empresa
+            {isEditing ? 'Modifica los datos del centro de operación' : 'Crea un nuevo centro de operación para tu empresa'}
           </DialogDescription>
         </DialogHeader>
 
@@ -271,8 +317,8 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: Ope
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createCenter.isPending}>
-                {createCenter.isPending ? 'Creando...' : 'Crear Centro'}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? 'Guardando...' : isEditing ? 'Actualizar Centro' : 'Crear Centro'}
               </Button>
             </div>
           </form>

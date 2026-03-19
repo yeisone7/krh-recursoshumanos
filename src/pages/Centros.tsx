@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Building2, Plus, MapPin, Phone, User, Search, Users } from 'lucide-react';
+import { Building2, Plus, MapPin, Phone, User, Search, Users, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,19 +14,39 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
-import { useOperationCenters } from '@/hooks/useCompanies';
+import { useOperationCenters, useDeleteOperationCenter } from '@/hooks/useCompanies';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuth } from '@/contexts/AuthContext';
 import { OperationCenterFormDialog } from '@/components/centers/OperationCenterFormDialog';
 
 export default function Centros() {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editCenter, setEditCenter] = useState<any | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   const { currentCompanyId } = useAuth();
   const { data: centers = [], isLoading: loadingCenters } = useOperationCenters();
   const { data: employees = [] } = useEmployees();
+  const deleteCenter = useDeleteOperationCenter();
 
   // Calculate employee count per center
   const centerStats = useMemo(() => {
@@ -60,6 +80,34 @@ export default function Centros() {
     totalEmployees: Object.values(centerStats).reduce((a, b) => a + b, 0),
   }), [centers, centerStats]);
 
+  const handleEdit = (center: any) => {
+    setEditCenter(center);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteCenter.mutateAsync(deleteTarget.id);
+      toast.success('Centro eliminado', {
+        description: `El centro "${deleteTarget.name}" ha sido eliminado.`,
+      });
+    } catch (error: any) {
+      toast.error('Error al eliminar', {
+        description: error.message?.includes('foreign') || error.message?.includes('referenced')
+          ? 'No se puede eliminar porque tiene empleados u otros registros asociados.'
+          : error.message || 'Por favor intenta de nuevo',
+      });
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  const handleFormClose = (open: boolean) => {
+    setIsFormOpen(open);
+    if (!open) setEditCenter(null);
+  };
+
   if (!currentCompanyId) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
@@ -87,7 +135,7 @@ export default function Centros() {
             Gestiona los centros de operación de tu empresa
           </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+        <Button onClick={() => { setEditCenter(null); setIsFormOpen(true); }} className="gap-2">
           <Plus className="w-4 h-4" />
           Nuevo Centro
         </Button>
@@ -190,6 +238,7 @@ export default function Centros() {
                     <TableHead>Responsable</TableHead>
                     <TableHead>Contacto</TableHead>
                     <TableHead className="text-right">Empleados</TableHead>
+                    <TableHead className="w-[60px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -250,6 +299,28 @@ export default function Centros() {
                           {centerStats[center.id] || 0}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(center)}>
+                              <Pencil className="w-4 h-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => setDeleteTarget(center)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -262,8 +333,31 @@ export default function Centros() {
       {/* Form Dialog */}
       <OperationCenterFormDialog
         open={isFormOpen}
-        onOpenChange={setIsFormOpen}
+        onOpenChange={handleFormClose}
+        editCenter={editCenter}
       />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar centro de operación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Estás a punto de eliminar el centro <strong>"{deleteTarget?.name}"</strong>. 
+              Esta acción no se puede deshacer. Si el centro tiene empleados u otros registros asociados, no podrá ser eliminado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteCenter.isPending ? 'Eliminando...' : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
