@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
-import { useOperationCenters, useDeleteOperationCenter } from '@/hooks/useCompanies';
+import { useOperationCenters, useUpdateOperationCenter } from '@/hooks/useCompanies';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuth } from '@/contexts/AuthContext';
 import { OperationCenterFormDialog } from '@/components/centers/OperationCenterFormDialog';
