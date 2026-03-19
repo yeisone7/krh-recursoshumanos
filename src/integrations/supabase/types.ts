@@ -4430,6 +4430,7 @@ export type Database = {
           created_by: string | null
           department: string | null
           id: string
+          is_active: boolean
           manager_name: string | null
           name: string
           notes: string | null
@@ -4446,6 +4447,7 @@ export type Database = {
           created_by?: string | null
           department?: string | null
           id?: string
+          is_active?: boolean
           manager_name?: string | null
           name: string
           notes?: string | null
@@ -4462,6 +4464,7 @@ export type Database = {
           created_by?: string | null
           department?: string | null
           id?: string
+          is_active?: boolean
           manager_name?: string | null
           name?: string
           notes?: string | null
