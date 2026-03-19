@@ -163,7 +163,7 @@ export function RequisitionFormDialog({
       requiere_herramienta_trabajo: data.requiere_herramienta_trabajo,
       horario_trabajo: data.horario_trabajo || null,
       dia_descanso_obligatorio: data.dia_descanso_obligatorio || null,
-      salario_propuesto: data.salario_propuesto || null,
+      
       tipo_contrato_solicitado: data.tipo_contrato_solicitado || null,
       turno_trabajo_id: data.turno_trabajo_id || null,
       incluye_alimentacion: data.incluye_alimentacion,
