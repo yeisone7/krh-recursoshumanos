@@ -4981,6 +4981,7 @@ export type Database = {
           juridico_observaciones: string | null
           juridico_quien_aprobo: string | null
           juridico_tipo_contrato: string | null
+          lider_proceso: string | null
           motivo_solicitud: Database["public"]["Enums"]["requisition_reason"]
           observaciones_motivo_solicitud: string | null
           operaciones_aprobado: boolean | null
@@ -5053,6 +5054,7 @@ export type Database = {
           juridico_observaciones?: string | null
           juridico_quien_aprobo?: string | null
           juridico_tipo_contrato?: string | null
+          lider_proceso?: string | null
           motivo_solicitud: Database["public"]["Enums"]["requisition_reason"]
           observaciones_motivo_solicitud?: string | null
           operaciones_aprobado?: boolean | null
@@ -5125,6 +5127,7 @@ export type Database = {
           juridico_observaciones?: string | null
           juridico_quien_aprobo?: string | null
           juridico_tipo_contrato?: string | null
+          lider_proceso?: string | null
           motivo_solicitud?: Database["public"]["Enums"]["requisition_reason"]
           observaciones_motivo_solicitud?: string | null
           operaciones_aprobado?: boolean | null
