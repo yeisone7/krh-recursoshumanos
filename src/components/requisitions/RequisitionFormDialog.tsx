@@ -331,7 +331,7 @@ export function RequisitionFormDialog({
                   name="area_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Área</FormLabel>
+                      <FormLabel>Área <span className="text-destructive">*</span></FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -356,7 +356,7 @@ export function RequisitionFormDialog({
                   name="operation_center_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Centro de Operación</FormLabel>
+                      <FormLabel>Centro de Operación <span className="text-destructive">*</span></FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -451,7 +451,7 @@ export function RequisitionFormDialog({
                   name="dia_descanso_obligatorio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Día de Descanso</FormLabel>
+                      <FormLabel>Día de Descanso <span className="text-destructive">*</span></FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
