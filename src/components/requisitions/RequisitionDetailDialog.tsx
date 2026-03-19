@@ -249,15 +249,6 @@ export function RequisitionDetailDialog({
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Salario Propuesto</p>
-                    <p className="font-medium flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      {requisition.salario_propuesto
-                        ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(requisition.salario_propuesto)
-                        : 'No especificado'}
-                    </p>
-                  </div>
-                  <div>
                     <p className="text-sm text-muted-foreground">Tipo de Contrato Sugerido</p>
                     <p className="font-medium flex items-center gap-1">
                       <FileCheck className="h-4 w-4 text-muted-foreground" />
