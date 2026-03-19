@@ -203,6 +203,17 @@ export const requisitionFormSchema = z.object({
   observaciones_motivo_solicitud: z.string().optional(),
   solicitante_nombre: z.string().min(2, 'El solicitante es requerido'),
   cargo_solicitante: z.string().optional(),
+}).refine((data) => {
+  if (!data.fecha_ingreso_estimada) return true;
+  const minDate = new Date(data.fecha_requisicion);
+  minDate.setDate(minDate.getDate() + 8);
+  minDate.setHours(0, 0, 0, 0);
+  const ingreso = new Date(data.fecha_ingreso_estimada);
+  ingreso.setHours(0, 0, 0, 0);
+  return ingreso >= minDate;
+}, {
+  message: 'La fecha de ingreso estimada debe ser al menos 8 días después de la fecha de requisición',
+  path: ['fecha_ingreso_estimada'],
 });
 
 export type RequisitionFormData = z.infer<typeof requisitionFormSchema>;
