@@ -211,7 +211,7 @@ export function RequisitionFormDialog({
                   name="fecha_requisicion"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Fecha de Requisición *</FormLabel>
+                      <FormLabel>Fecha de Requisición <span className="text-orange-500">*</span></FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -283,7 +283,7 @@ export function RequisitionFormDialog({
                   name="cargo_solicitado"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cargo Solicitado *</FormLabel>
+                      <FormLabel>Cargo Solicitado <span className="text-orange-500">*</span></FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -310,7 +310,7 @@ export function RequisitionFormDialog({
                   name="cantidad_vacantes_requeridas"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cantidad de Vacantes *</FormLabel>
+                      <FormLabel>Cantidad de Vacantes <span className="text-orange-500">*</span></FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -331,7 +331,7 @@ export function RequisitionFormDialog({
                   name="area_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Área <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>Área <span className="text-orange-500">*</span></FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -356,7 +356,7 @@ export function RequisitionFormDialog({
                   name="operation_center_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Centro de Operación <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>Centro de Operación <span className="text-orange-500">*</span></FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -451,7 +451,7 @@ export function RequisitionFormDialog({
                   name="dia_descanso_obligatorio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Día de Descanso <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>Día de Descanso <span className="text-orange-500">*</span></FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -612,7 +612,7 @@ export function RequisitionFormDialog({
                 name="motivo_solicitud"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Motivo *</FormLabel>
+                    <FormLabel>Motivo <span className="text-orange-500">*</span></FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -660,7 +660,7 @@ export function RequisitionFormDialog({
                   name="solicitante_nombre"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nombre del Solicitante *</FormLabel>
+                      <FormLabel>Nombre del Solicitante <span className="text-orange-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} readOnly className="bg-muted cursor-not-allowed" />
                       </FormControl>
