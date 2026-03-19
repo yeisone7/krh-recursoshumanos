@@ -451,7 +451,7 @@ export function RequisitionFormDialog({
                   name="dia_descanso_obligatorio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Día de Descanso <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>Día de Descanso <span className="text-orange-500">*</span></FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
