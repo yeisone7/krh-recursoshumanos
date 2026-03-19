@@ -310,7 +310,7 @@ export function RequisitionFormDialog({
                   name="cantidad_vacantes_requeridas"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cantidad de Vacantes *</FormLabel>
+                      <FormLabel>Cantidad de Vacantes <span className="text-orange-500">*</span></FormLabel>
                       <FormControl>
                         <Input
                           type="number"
