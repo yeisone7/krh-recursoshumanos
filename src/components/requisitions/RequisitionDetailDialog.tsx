@@ -384,46 +384,7 @@ export function RequisitionDetailDialog({
           </p>
         )}
 
-        {/* Líder del Proceso - only in borrador */}
-        {requisition && canEdit && (
-          <Card className="border-primary/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <UserCheck className="h-5 w-5 text-primary flex-shrink-0" />
-                <div className="flex-1 space-y-1">
-                  <Label className="text-sm font-medium">Líder del Proceso <span className="text-destructive">*</span></Label>
-                  <Input
-                    value={liderProceso}
-                    onChange={(e) => setLiderProceso(e.target.value)}
-                    onBlur={() => {
-                      if (liderProceso !== (requisition.lider_proceso || '')) {
-                        updateRequisition.mutate({ id: requisition.id, lider_proceso: liderProceso } as any);
-                      }
-                    }}
-                    placeholder="Nombre del líder del proceso"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
-        {/* Show líder del proceso when not in borrador */}
-        {requisition && !canEdit && requisition.lider_proceso && (
-          <Card className="border-primary/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <UserCheck className="h-5 w-5 text-primary flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium mb-1">Líder del Proceso</p>
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                    {requisition.lider_proceso}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Actions */}
         {requisition && (
