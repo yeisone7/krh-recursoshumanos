@@ -211,7 +211,7 @@ export function RequisitionFormDialog({
                   name="fecha_requisicion"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Fecha de Requisición *</FormLabel>
+                      <FormLabel>Fecha de Requisición <span className="text-orange-500">*</span></FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
