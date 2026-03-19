@@ -74,6 +74,7 @@ export interface PersonnelRequisition {
   gerencia_fecha_aprobacion: string | null;
   // Autoriza
   autoriza: string | null;
+  lider_proceso: string | null;
   // Estado
   estado_requisicion: string;
   created_by: string | null;

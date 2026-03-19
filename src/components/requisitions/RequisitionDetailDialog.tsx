@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   Send, 
   Edit, 
@@ -27,6 +29,7 @@ import {
   FileDown,
   Loader2,
   ShieldCheck,
+  UserCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -69,6 +72,15 @@ export function RequisitionDetailDialog({
   const submitRequisition = useSubmitRequisition();
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
+  const [liderProceso, setLiderProceso] = useState('');
+
+  useEffect(() => {
+    if (requisition?.lider_proceso) {
+      setLiderProceso(requisition.lider_proceso);
+    } else {
+      setLiderProceso('');
+    }
+  }, [requisition?.lider_proceso]);
 
   if (!requisitionId) return null;
 
@@ -81,6 +93,19 @@ export function RequisitionDetailDialog({
           variant: 'destructive',
         });
         return;
+      }
+      // Save lider_proceso before submitting if changed
+      const currentLider = liderProceso.trim();
+      if (!currentLider) {
+        toast({
+          title: 'Campo requerido',
+          description: 'Debe ingresar el Líder del Proceso antes de enviar la requisición.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (currentLider !== (requisition.lider_proceso || '')) {
+        await updateRequisition.mutateAsync({ id: requisition.id, lider_proceso: currentLider } as any);
       }
       await submitRequisition.mutateAsync(requisition.id);
     }
@@ -316,6 +341,47 @@ export function RequisitionDetailDialog({
           <p className="text-center text-muted-foreground py-8">
             No se encontró la requisición.
           </p>
+        )}
+
+        {/* Líder del Proceso - only in borrador */}
+        {requisition && canEdit && (
+          <Card className="border-primary/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <UserCheck className="h-5 w-5 text-primary flex-shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <Label className="text-sm font-medium">Líder del Proceso <span className="text-destructive">*</span></Label>
+                  <Input
+                    value={liderProceso}
+                    onChange={(e) => setLiderProceso(e.target.value)}
+                    onBlur={() => {
+                      if (liderProceso !== (requisition.lider_proceso || '')) {
+                        updateRequisition.mutate({ id: requisition.id, lider_proceso: liderProceso } as any);
+                      }
+                    }}
+                    placeholder="Nombre del líder del proceso"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Show líder del proceso when not in borrador */}
+        {requisition && !canEdit && requisition.lider_proceso && (
+          <Card className="border-primary/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <UserCheck className="h-5 w-5 text-primary flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium mb-1">Líder del Proceso</p>
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                    {requisition.lider_proceso}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Actions */}

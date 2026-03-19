@@ -1,0 +1,1 @@
+ALTER TABLE public.personnel_requisitions ADD COLUMN lider_proceso TEXT NULL;
