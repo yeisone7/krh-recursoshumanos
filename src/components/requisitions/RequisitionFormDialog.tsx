@@ -125,7 +125,7 @@ export function RequisitionFormDialog({
         requiere_herramienta_trabajo: requisition.requiere_herramienta_trabajo || false,
         horario_trabajo: requisition.horario_trabajo || undefined,
         dia_descanso_obligatorio: requisition.dia_descanso_obligatorio as DayOfWeek | undefined,
-        salario_propuesto: requisition.salario_propuesto || undefined,
+        
         tipo_contrato_solicitado: requisition.tipo_contrato_solicitado || undefined,
         turno_trabajo_id: requisition.turno_trabajo_id || undefined,
         incluye_alimentacion: requisition.incluye_alimentacion || false,
