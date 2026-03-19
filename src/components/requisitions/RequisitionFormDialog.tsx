@@ -267,7 +267,16 @@ export function RequisitionFormDialog({
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
+                            disabled={(date) => {
+                              const fechaReq = form.getValues('fecha_requisicion');
+                              if (!fechaReq) return false;
+                              const minDate = new Date(fechaReq);
+                              minDate.setDate(minDate.getDate() + 8);
+                              minDate.setHours(0, 0, 0, 0);
+                              return date < minDate;
+                            }}
                             initialFocus
+                            className="p-3 pointer-events-auto"
                           />
                         </PopoverContent>
                       </Popover>
