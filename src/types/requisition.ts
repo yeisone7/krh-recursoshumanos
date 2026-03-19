@@ -181,15 +181,14 @@ export const requisitionFormSchema = z.object({
   fecha_ingreso_estimada: z.date().optional(),
   cantidad_vacantes_requeridas: z.number().min(1).default(1),
   cargo_solicitado: z.string().min(2, 'El cargo es requerido'),
-  area_id: z.string().optional(),
-  operation_center_id: z.string().optional(),
+  area_id: z.string().min(1, 'El área es requerida'),
+  operation_center_id: z.string().min(1, 'El centro de operación es requerido'),
   cargo_a_reemplazar: z.string().optional(),
   persona_a_reemplazar: z.string().optional(),
   requiere_herramienta_trabajo: z.boolean().default(false),
   horario_trabajo: z.string().optional(),
-  dia_descanso_obligatorio: z.enum(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']).optional(),
-  // New fields: salary and contract type
-  salario_propuesto: z.number().optional(),
+  dia_descanso_obligatorio: z.enum(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'], { required_error: 'El día de descanso es requerido' }),
+  // Contract type
   tipo_contrato_solicitado: z.string().optional(),
   // Turno y condiciones
   turno_trabajo_id: z.string().optional(),

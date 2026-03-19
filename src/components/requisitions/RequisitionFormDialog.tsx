@@ -125,7 +125,7 @@ export function RequisitionFormDialog({
         requiere_herramienta_trabajo: requisition.requiere_herramienta_trabajo || false,
         horario_trabajo: requisition.horario_trabajo || undefined,
         dia_descanso_obligatorio: requisition.dia_descanso_obligatorio as DayOfWeek | undefined,
-        salario_propuesto: requisition.salario_propuesto || undefined,
+        
         tipo_contrato_solicitado: requisition.tipo_contrato_solicitado || undefined,
         turno_trabajo_id: requisition.turno_trabajo_id || undefined,
         incluye_alimentacion: requisition.incluye_alimentacion || false,
@@ -163,7 +163,7 @@ export function RequisitionFormDialog({
       requiere_herramienta_trabajo: data.requiere_herramienta_trabajo,
       horario_trabajo: data.horario_trabajo || null,
       dia_descanso_obligatorio: data.dia_descanso_obligatorio || null,
-      salario_propuesto: data.salario_propuesto || null,
+      
       tipo_contrato_solicitado: data.tipo_contrato_solicitado || null,
       turno_trabajo_id: data.turno_trabajo_id || null,
       incluye_alimentacion: data.incluye_alimentacion,
@@ -572,29 +572,8 @@ export function RequisitionFormDialog({
                 />
               )}
 
-              {/* Salary and Contract Type - New fields */}
+              {/* Contract Type */}
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="salario_propuesto"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Salario Propuesto</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={0}
-                          placeholder="Ej: 2000000"
-                          {...field}
-                          value={field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <FormField
                   control={form.control}
                   name="tipo_contrato_solicitado"
