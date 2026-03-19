@@ -128,7 +128,7 @@ export function RequisitionApprovalDialog({
   }, [open, defaultApproverName]);
 
   const isStepValid = (): boolean => {
-    if (!approverName.trim()) return false;
+    if (!defaultApproverName.trim()) return false;
     if (!approved) return true;
 
     switch (step) {
