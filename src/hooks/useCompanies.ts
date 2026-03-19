@@ -7,6 +7,7 @@ type Company = Database['public']['Tables']['companies']['Row'];
 type CompanyInsert = Database['public']['Tables']['companies']['Insert'];
 type OperationCenter = Database['public']['Tables']['operation_centers']['Row'];
 type OperationCenterInsert = Database['public']['Tables']['operation_centers']['Insert'];
+type OperationCenterUpdate = Database['public']['Tables']['operation_centers']['Update'];
 
 // Helper function to log audit events
 async function logAuditEvent(
@@ -162,6 +163,73 @@ export function useCreateOperationCenter() {
       }
 
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['operation_centers'] });
+    },
+  });
+}
+
+export function useUpdateOperationCenter() {
+  const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string } & Partial<OperationCenterUpdate>) => {
+      const { data, error } = await supabase
+        .from('operation_centers')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (user) {
+        await logAuditEvent(
+          user.id,
+          user.email,
+          currentCompanyId,
+          'update',
+          'operation_center',
+          data.id,
+          data.name,
+          undefined,
+          updates
+        );
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['operation_centers'] });
+    },
+  });
+}
+
+export function useDeleteOperationCenter() {
+  const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('operation_centers')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      if (user) {
+        await logAuditEvent(
+          user.id,
+          user.email,
+          currentCompanyId,
+          'delete',
+          'operation_center',
+          id
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['operation_centers'] });
