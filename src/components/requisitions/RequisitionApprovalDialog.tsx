@@ -230,18 +230,6 @@ export function RequisitionApprovalDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Approver name */}
-          <div className="space-y-2">
-            <Label>
-              Nombre del aprobador <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              value={approverName}
-              onChange={(e) => setApproverName(e.target.value)}
-              placeholder="Tu nombre"
-              className={!approverName.trim() ? 'border-destructive/50' : ''}
-            />
-          </div>
 
           {/* Step-specific fields */}
           {step === 'operaciones' && (
