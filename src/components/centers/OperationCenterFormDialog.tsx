@@ -1,7 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building2, MapPin, Phone, User } from 'lucide-react';
+import { Building2, MapPin, Phone, User, CalendarIcon, StickyNote } from 'lucide-react';
+import { format } from 'date-fns';
 
 import {
   Dialog,
@@ -20,17 +21,19 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 import { useCreateOperationCenter } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
+import { CityDepartmentSelect } from '@/components/ui/city-department-select';
 
 const operationCenterSchema = z.object({
   name: z.string().min(2, 'El nombre es requerido'),
@@ -40,6 +43,8 @@ const operationCenterSchema = z.object({
   department: z.string().optional(),
   phone: z.string().optional(),
   managerName: z.string().optional(),
+  contractCommercialDate: z.date().optional().nullable(),
+  notes: z.string().optional(),
 });
 
 type OperationCenterFormData = z.infer<typeof operationCenterSchema>;
@@ -49,9 +54,6 @@ interface OperationCenterFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
-
-// Import city/department selector
-import { CityDepartmentSelect } from '@/components/ui/city-department-select';
 
 export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: OperationCenterFormDialogProps) {
   const { currentCompanyId } = useAuth();
@@ -67,6 +69,8 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: Ope
       department: '',
       phone: '',
       managerName: '',
+      contractCommercialDate: null,
+      notes: '',
     },
   });
 
@@ -86,7 +90,9 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: Ope
         department: data.department || null,
         phone: data.phone || null,
         manager_name: data.managerName || null,
-      });
+        contract_commercial_date: data.contractCommercialDate ? format(data.contractCommercialDate, 'yyyy-MM-dd') : null,
+        notes: data.notes || null,
+      } as any);
 
       toast.success('Centro creado', {
         description: `El centro "${data.name}" ha sido creado exitosamente.`,
@@ -200,6 +206,61 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess }: Ope
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input className="pl-9" placeholder="Nombre del responsable" {...field} />
                     </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="contractCommercialDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fecha Comercial del Contrato</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? format(field.value, 'dd/MM/yyyy') : <span>Seleccionar fecha</span>}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ?? undefined}
+                        onSelect={field.onChange}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nota</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Observaciones o notas adicionales"
+                      className="resize-none"
+                      rows={3}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
