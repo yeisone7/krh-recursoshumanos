@@ -333,23 +333,24 @@ export default function Centros() {
         editCenter={editCenter}
       />
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      {/* Toggle Active Confirmation */}
+      <AlertDialog open={!!toggleTarget} onOpenChange={(open) => !open && setToggleTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar centro de operación?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {(toggleTarget?.is_active ?? true) ? '¿Inactivar centro de operación?' : '¿Activar centro de operación?'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Estás a punto de eliminar el centro <strong>"{deleteTarget?.name}"</strong>. 
-              Esta acción no se puede deshacer. Si el centro tiene empleados u otros registros asociados, no podrá ser eliminado.
+              {(toggleTarget?.is_active ?? true)
+                ? <>Estás a punto de inactivar el centro <strong>"{toggleTarget?.name}"</strong>. No aparecerá en las listas de selección.</>
+                : <>Estás a punto de activar el centro <strong>"{toggleTarget?.name}"</strong>. Volverá a estar disponible en las listas de selección.</>
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteCenter.isPending ? 'Eliminando...' : 'Eliminar'}
+            <AlertDialogAction onClick={handleToggleActive}>
+              {updateCenter.isPending ? 'Procesando...' : (toggleTarget?.is_active ?? true) ? 'Inactivar' : 'Activar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
