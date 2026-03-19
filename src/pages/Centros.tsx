@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Building2, Plus, MapPin, Phone, User, Search, Users, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { Building2, Plus, MapPin, Phone, User, Search, Users, Pencil, MoreHorizontal, Power } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
-import { useOperationCenters, useDeleteOperationCenter } from '@/hooks/useCompanies';
+import { useOperationCenters, useUpdateOperationCenter } from '@/hooks/useCompanies';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuth } from '@/contexts/AuthContext';
 import { OperationCenterFormDialog } from '@/components/centers/OperationCenterFormDialog';
@@ -40,13 +40,13 @@ import { OperationCenterFormDialog } from '@/components/centers/OperationCenterF
 export default function Centros() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editCenter, setEditCenter] = useState<any | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [toggleTarget, setToggleTarget] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   const { currentCompanyId } = useAuth();
   const { data: centers = [], isLoading: loadingCenters } = useOperationCenters();
   const { data: employees = [] } = useEmployees();
-  const deleteCenter = useDeleteOperationCenter();
+  const updateCenter = useUpdateOperationCenter();
 
   // Calculate employee count per center
   const centerStats = useMemo(() => {
@@ -85,21 +85,20 @@ export default function Centros() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
+  const handleToggleActive = async () => {
+    if (!toggleTarget) return;
+    const newStatus = !(toggleTarget.is_active ?? true);
     try {
-      await deleteCenter.mutateAsync(deleteTarget.id);
-      toast.success('Centro eliminado', {
-        description: `El centro "${deleteTarget.name}" ha sido eliminado.`,
+      await updateCenter.mutateAsync({ id: toggleTarget.id, is_active: newStatus } as any);
+      toast.success(newStatus ? 'Centro activado' : 'Centro inactivado', {
+        description: `El centro "${toggleTarget.name}" ha sido ${newStatus ? 'activado' : 'inactivado'}.`,
       });
     } catch (error: any) {
-      toast.error('Error al eliminar', {
-        description: error.message?.includes('foreign') || error.message?.includes('referenced')
-          ? 'No se puede eliminar porque tiene empleados u otros registros asociados.'
-          : error.message || 'Por favor intenta de nuevo',
+      toast.error('Error al cambiar estado', {
+        description: error.message || 'Por favor intenta de nuevo',
       });
     } finally {
-      setDeleteTarget(null);
+      setToggleTarget(null);
     }
   };
 
@@ -250,7 +249,12 @@ export default function Centros() {
                             <Building2 className="w-4 h-4 text-primary" />
                           </div>
                           <div>
-                            <p className="font-medium">{center.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{center.name}</p>
+                              {(center as any).is_active === false && (
+                                <Badge variant="secondary" className="text-xs">Inactivo</Badge>
+                              )}
+                            </div>
                             {center.code && (
                               <Badge variant="outline" className="text-xs mt-1">
                                 {center.code}
@@ -311,12 +315,9 @@ export default function Centros() {
                               <Pencil className="w-4 h-4 mr-2" />
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => setDeleteTarget(center)}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Eliminar
+                            <DropdownMenuItem onClick={() => setToggleTarget(center)}>
+                              <Power className="w-4 h-4 mr-2" />
+                              {(center as any).is_active === false ? 'Activar' : 'Inactivar'}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -337,23 +338,24 @@ export default function Centros() {
         editCenter={editCenter}
       />
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      {/* Toggle Active Confirmation */}
+      <AlertDialog open={!!toggleTarget} onOpenChange={(open) => !open && setToggleTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar centro de operación?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {(toggleTarget?.is_active ?? true) ? '¿Inactivar centro de operación?' : '¿Activar centro de operación?'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Estás a punto de eliminar el centro <strong>"{deleteTarget?.name}"</strong>. 
-              Esta acción no se puede deshacer. Si el centro tiene empleados u otros registros asociados, no podrá ser eliminado.
+              {(toggleTarget?.is_active ?? true)
+                ? <>Estás a punto de inactivar el centro <strong>"{toggleTarget?.name}"</strong>. No aparecerá en las listas de selección.</>
+                : <>Estás a punto de activar el centro <strong>"{toggleTarget?.name}"</strong>. Volverá a estar disponible en las listas de selección.</>
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleteCenter.isPending ? 'Eliminando...' : 'Eliminar'}
+            <AlertDialogAction onClick={handleToggleActive}>
+              {updateCenter.isPending ? 'Procesando...' : (toggleTarget?.is_active ?? true) ? 'Inactivar' : 'Activar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
