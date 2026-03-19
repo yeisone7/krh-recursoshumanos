@@ -165,7 +165,7 @@ export function RequisitionApprovalDialog({
     if (!requisition) return;
 
     const data: Record<string, any> = {
-      [`${step}_quien_aprobo`]: approverName,
+      [`${step}_quien_aprobo`]: defaultApproverName,
       [`${step}_observaciones`]: observations,
     };
 
