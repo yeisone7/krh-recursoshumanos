@@ -40,13 +40,13 @@ import { OperationCenterFormDialog } from '@/components/centers/OperationCenterF
 export default function Centros() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editCenter, setEditCenter] = useState<any | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [toggleTarget, setToggleTarget] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
   const { currentCompanyId } = useAuth();
   const { data: centers = [], isLoading: loadingCenters } = useOperationCenters();
   const { data: employees = [] } = useEmployees();
-  const deleteCenter = useDeleteOperationCenter();
+  const updateCenter = useUpdateOperationCenter();
 
   // Calculate employee count per center
   const centerStats = useMemo(() => {
