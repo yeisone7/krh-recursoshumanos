@@ -612,7 +612,7 @@ export function RequisitionFormDialog({
                 name="motivo_solicitud"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Motivo *</FormLabel>
+                    <FormLabel>Motivo <span className="text-orange-500">*</span></FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
