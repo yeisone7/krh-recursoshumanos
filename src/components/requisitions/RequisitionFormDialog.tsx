@@ -660,7 +660,7 @@ export function RequisitionFormDialog({
                   name="solicitante_nombre"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nombre del Solicitante *</FormLabel>
+                      <FormLabel>Nombre del Solicitante <span className="text-orange-500">*</span></FormLabel>
                       <FormControl>
                         <Input {...field} readOnly className="bg-muted cursor-not-allowed" />
                       </FormControl>
