@@ -74,6 +74,14 @@ export function RequisitionDetailDialog({
   const [isExporting, setIsExporting] = useState(false);
   const [liderProceso, setLiderProceso] = useState('');
 
+  useEffect(() => {
+    if (requisition?.lider_proceso) {
+      setLiderProceso(requisition.lider_proceso);
+    } else {
+      setLiderProceso('');
+    }
+  }, [requisition?.lider_proceso]);
+
   if (!requisitionId) return null;
 
   const handleSubmit = async () => {
