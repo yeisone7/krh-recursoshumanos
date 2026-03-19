@@ -187,9 +187,8 @@ export const requisitionFormSchema = z.object({
   persona_a_reemplazar: z.string().optional(),
   requiere_herramienta_trabajo: z.boolean().default(false),
   horario_trabajo: z.string().optional(),
-  dia_descanso_obligatorio: z.enum(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']).optional(),
-  // New fields: salary and contract type
-  salario_propuesto: z.number().optional(),
+  dia_descanso_obligatorio: z.enum(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'], { required_error: 'El día de descanso es requerido' }),
+  // Contract type
   tipo_contrato_solicitado: z.string().optional(),
   // Turno y condiciones
   turno_trabajo_id: z.string().optional(),
