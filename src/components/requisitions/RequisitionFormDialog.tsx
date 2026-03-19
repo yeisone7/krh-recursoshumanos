@@ -572,29 +572,8 @@ export function RequisitionFormDialog({
                 />
               )}
 
-              {/* Salary and Contract Type - New fields */}
+              {/* Contract Type */}
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="salario_propuesto"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Salario Propuesto</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={0}
-                          placeholder="Ej: 2000000"
-                          {...field}
-                          value={field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <FormField
                   control={form.control}
                   name="tipo_contrato_solicitado"
