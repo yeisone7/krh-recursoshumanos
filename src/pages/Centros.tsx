@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Building2, Plus, MapPin, Phone, User, Search, Users, Pencil, MoreHorizontal, Power } from 'lucide-react';
+import { Building2, Plus, MapPin, Phone, User, Search, Users, Pencil } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,12 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -304,23 +299,15 @@ export default function Centros() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(center)}>
-                              <Pencil className="w-4 h-4 mr-2" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setToggleTarget(center)}>
-                              <Power className="w-4 h-4 mr-2" />
-                              {(center as any).is_active === false ? 'Activar' : 'Inactivar'}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={(center as any).is_active !== false}
+                            onCheckedChange={() => setToggleTarget(center)}
+                          />
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(center)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
