@@ -24,16 +24,15 @@ export type CandidateStatus =
 
 // Selection Step Type
 export type SelectionStepType =
-  | 'initial_interview'
-  | 'psycho_test'
-  | 'technical_test'
-  | 'background_check'
-  | 'academic_validation'
-  | 'reference_check'
-  | 'financial_check'
-  | 'medical_exam'
-  | 'final_interview'
-  | 'offer';
+  | 'prefiltro'
+  | 'entrevista_seleccion'
+  | 'entrevista_jefe'
+  | 'validacion_antecedentes'
+  | 'pruebas_psicotecnicas'
+  | 'pruebas_conocimiento'
+  | 'validacion_academica'
+  | 'validacion_referencias'
+  | 'examenes_medicos';
 
 // Selection Step Status
 export type SelectionStepStatus = 'pending' | 'scheduled' | 'completed' | 'passed' | 'failed' | 'skipped';
