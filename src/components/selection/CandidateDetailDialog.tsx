@@ -713,6 +713,21 @@ export function CandidateDetailDialog({
                   </Button>
                 </>
               )}
+              {(status === 'not_selected' || status === 'withdrawn') && (
+                <Button
+                  variant="outline"
+                  className="text-primary hover:text-primary border-primary/30 hover:border-primary hover:bg-primary/10"
+                  onClick={() => handleStatusChange('applied', {
+                    rejection_reason: null,
+                    withdrawal_reason: null,
+                  } as any)}
+                  disabled={updateCandidate.isPending}
+                  aria-label={`Reactivar a ${candidate.first_name} ${candidate.last_name}`}
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Reactivar
+                </Button>
+              )}
             </div>
             <Button 
               variant="outline" 
