@@ -141,10 +141,83 @@ export function useDeleteCandidate() {
   });
 }
 
+// Helper: check if candidate completed all selection stages satisfactorily
+const ALL_SELECTION_STEPS = [
+  'prefiltro', 'entrevista_seleccion', 'entrevista_jefe',
+  'validacion_antecedentes', 'pruebas_psicotecnicas', 'pruebas_conocimiento',
+  'validacion_academica', 'validacion_referencias', 'examenes_medicos',
+];
+
+async function checkAllStagesCompleted(candidateId: string, currentCompanyId: string | null) {
+  if (!currentCompanyId) return;
+
+  const { data: steps } = await supabase
+    .from('selection_steps')
+    .select('step_type, status')
+    .eq('candidate_id', candidateId);
+
+  if (!steps || steps.length === 0) return;
+
+  const stepMap: Record<string, string> = {};
+  for (const s of steps) {
+    stepMap[s.step_type] = s.status;
+  }
+
+  const allDone = ALL_SELECTION_STEPS.every(
+    st => stepMap[st] === 'passed' || stepMap[st] === 'not_applicable'
+  );
+
+  if (!allDone) return;
+
+  // Get candidate info
+  const { data: candidate } = await supabase
+    .from('candidates')
+    .select('first_name, last_name, vacancy_id, vacancies(position_title)')
+    .eq('id', candidateId)
+    .single();
+
+  if (!candidate) return;
+
+  const vacancy = candidate.vacancies as any;
+  const candidateName = `${candidate.first_name} ${candidate.last_name}`;
+
+  // Get configured role for hiring notifications
+  const { data: configData } = await supabase
+    .from('system_config')
+    .select('config_value')
+    .eq('company_id', currentCompanyId)
+    .eq('config_key', 'hiring_notification_role')
+    .maybeSingle();
+
+  const roleId = (configData?.config_value as any)?.role_id;
+  if (!roleId) return;
+
+  const { data: roleUsers } = await supabase
+    .from('user_custom_roles')
+    .select('user_id')
+    .eq('role_id', roleId);
+
+  if (!roleUsers || roleUsers.length === 0) return;
+
+  const notifs = roleUsers.map(ru => ({
+    user_id: ru.user_id,
+    company_id: currentCompanyId,
+    title: '✅ Candidato listo para contratación',
+    message: `${candidateName} ha completado todas las etapas de selección satisfactoriamente para el cargo ${vacancy?.position_title || 'N/A'}. Proceda con la contratación.`,
+    type: 'success' as const,
+    category: 'selection',
+    entity_type: 'candidate',
+    entity_id: candidateId,
+    action_url: `/seleccion?vacancy=${candidate.vacancy_id}`,
+  }));
+
+  await supabase.from('notifications').insert(notifs);
+}
+
 // Selection Steps
 export function useCreateSelectionStep() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (step: Omit<SelectionStepInsert, 'created_by'>) => {
@@ -158,6 +231,14 @@ export function useCreateSelectionStep() {
         .single();
 
       if (error) throw error;
+
+      // Check if all stages are now completed
+      try {
+        await checkAllStagesCompleted(data.candidate_id, currentCompanyId);
+      } catch (err) {
+        console.error('Error checking stage completion:', err);
+      }
+
       return data;
     },
     onSuccess: (data) => {
@@ -169,6 +250,7 @@ export function useCreateSelectionStep() {
 
 export function useUpdateSelectionStep() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<SelectionStep> & { id: string }) => {
@@ -180,6 +262,14 @@ export function useUpdateSelectionStep() {
         .single();
 
       if (error) throw error;
+
+      // Check if all stages are now completed
+      try {
+        await checkAllStagesCompleted(data.candidate_id, currentCompanyId);
+      } catch (err) {
+        console.error('Error checking stage completion:', err);
+      }
+
       return data;
     },
     onSuccess: (data) => {
