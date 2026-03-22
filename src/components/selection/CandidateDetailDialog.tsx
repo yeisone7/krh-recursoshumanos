@@ -79,6 +79,30 @@ export function CandidateDetailDialog({
   const convertToEmployee = useConvertToEmployee();
   const updateStep = useUpdateSelectionStep();
 
+  const fetchCandidateDocs = useCallback(async () => {
+    if (!candidateId) return;
+    setLoadingDocs(true);
+    try {
+      const { data, error } = await supabase
+        .from('candidate_documents')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch {
+      // silent
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [candidateId]);
+
+  useEffect(() => {
+    if (open && candidateId) {
+      fetchCandidateDocs();
+    }
+  }, [open, candidateId, fetchCandidateDocs]);
+
   if (isLoading || !candidate) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
