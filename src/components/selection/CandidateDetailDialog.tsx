@@ -14,7 +14,6 @@ import {
   CheckCircle,
   XCircle,
   UserX,
-  XCircle,
   ArrowRight,
   Clock,
   Upload,
