@@ -35,7 +35,7 @@ export type SelectionStepType =
   | 'examenes_medicos';
 
 // Selection Step Status
-export type SelectionStepStatus = 'pending' | 'scheduled' | 'completed' | 'passed' | 'failed' | 'skipped';
+export type SelectionStepStatus = 'pending' | 'scheduled' | 'completed' | 'passed' | 'failed' | 'skipped' | 'not_applicable';
 
 // Labels
 export const vacancyStatusLabels: Record<VacancyStatus, string> = {
