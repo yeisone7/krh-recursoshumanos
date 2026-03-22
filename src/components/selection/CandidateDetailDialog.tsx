@@ -210,6 +210,10 @@ export function CandidateDetailDialog({
                   <User className="w-4 h-4" />
                   Información
                 </TabsTrigger>
+                <TabsTrigger value="documents" className="gap-2">
+                  <Paperclip className="w-4 h-4" />
+                  Documentos
+                </TabsTrigger>
               </TabsList>
             </div>
 
