@@ -66,6 +66,11 @@ export function CandidateDetailDialog({
 }: CandidateDetailDialogProps) {
   const [activeTab, setActiveTab] = useState('timeline');
   const [showStepForm, setShowStepForm] = useState(false);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const docInputRef = useRef<HTMLInputElement>(null);
+  const { user, currentCompanyId } = useAuth();
   const [selectedStep, setSelectedStep] = useState<SelectionStep | undefined>();
   const [defaultStepType, setDefaultStepType] = useState<SelectionStepType | undefined>();
 
