@@ -41,6 +41,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { useCandidate, useUpdateCandidate, useConvertToEmployee, useUpdateSelectionStep } from '@/hooks/useCandidates';
+import { useEmployeeDocuments } from '@/hooks/useEmployeeHealth';
+import { DocumentFormDialog } from '@/components/employees/DocumentFormDialog';
 import { SelectionTimeline } from './SelectionTimeline';
 import { SelectionStepFormDialog } from './SelectionStepFormDialog';
 import {
