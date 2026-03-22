@@ -250,6 +250,7 @@ export function useCreateSelectionStep() {
 
 export function useUpdateSelectionStep() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<SelectionStep> & { id: string }) => {
@@ -261,6 +262,14 @@ export function useUpdateSelectionStep() {
         .single();
 
       if (error) throw error;
+
+      // Check if all stages are now completed
+      try {
+        await checkAllStagesCompleted(data.candidate_id, currentCompanyId);
+      } catch (err) {
+        console.error('Error checking stage completion:', err);
+      }
+
       return data;
     },
     onSuccess: (data) => {
