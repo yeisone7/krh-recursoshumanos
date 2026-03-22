@@ -13,6 +13,7 @@ import {
   FileText,
   CheckCircle,
   XCircle,
+  UserX,
   ArrowRight,
   Clock,
   Upload,
@@ -45,6 +46,7 @@ import { useEmployeeDocuments } from '@/hooks/useEmployeeHealth';
 import { DocumentFormDialog } from '@/components/employees/DocumentFormDialog';
 import { SelectionTimeline } from './SelectionTimeline';
 import { SelectionStepFormDialog } from './SelectionStepFormDialog';
+import { CandidateReasonDialog } from './CandidateReasonDialog';
 import {
   CandidateStatus,
   candidateStatusLabels,
@@ -77,6 +79,8 @@ export function CandidateDetailDialog({
   const { user, currentCompanyId } = useAuth();
   const [selectedStep, setSelectedStep] = useState<SelectionStep | undefined>();
   const [defaultStepType, setDefaultStepType] = useState<SelectionStepType | undefined>();
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
 
   const { data: candidate, isLoading } = useCandidate(candidateId);
   const updateCandidate = useUpdateCandidate();
@@ -161,17 +165,34 @@ export function CandidateDetailDialog({
     }
   };
 
-  const handleStatusChange = async (newStatus: CandidateStatus) => {
+  const handleStatusChange = async (newStatus: CandidateStatus, extra?: { rejection_reason?: string; general_notes?: string; withdrawal_reason?: string }) => {
     try {
       await updateCandidate.mutateAsync({
         id: candidate.id,
         status: newStatus,
         is_selected: newStatus === 'selected',
+        ...(extra || {}),
       });
       toast.success('Estado del candidato actualizado');
     } catch (error) {
       toast.error('Error al actualizar candidato');
     }
+  };
+
+  const handleReject = (reason: string, observations: string) => {
+    handleStatusChange('not_selected', {
+      rejection_reason: reason,
+      general_notes: observations || candidate.general_notes || null,
+    });
+    setShowRejectDialog(false);
+  };
+
+  const handleWithdraw = (reason: string, observations: string) => {
+    handleStatusChange('withdrawn', {
+      withdrawal_reason: reason,
+      general_notes: observations || candidate.general_notes || null,
+    });
+    setShowWithdrawDialog(false);
   };
 
   const handleConvert = async () => {
@@ -658,7 +679,7 @@ export function CandidateDetailDialog({
                   {convertToEmployee.isPending ? 'Procesando...' : 'Contratar'}
                 </Button>
               )}
-              {status !== 'hired' && status !== 'selected' && status !== 'not_selected' && status !== 'withdrawn' && (
+               {status !== 'hired' && status !== 'selected' && status !== 'not_selected' && status !== 'withdrawn' && (
                 <>
                   <Button
                     variant="outline"
@@ -673,12 +694,22 @@ export function CandidateDetailDialog({
                   <Button
                     variant="outline"
                     className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive hover:bg-destructive/10"
-                    onClick={() => handleStatusChange('not_selected')}
+                    onClick={() => setShowRejectDialog(true)}
                     aria-label={`Marcar a ${candidate.first_name} ${candidate.last_name} como no seleccionado`}
                     data-testid="reject-candidate-button"
                   >
                     <XCircle className="w-4 h-4 mr-2" />
                     No Seleccionar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="text-warning hover:text-warning border-warning/30 hover:border-warning hover:bg-warning/10"
+                    onClick={() => setShowWithdrawDialog(true)}
+                    aria-label={`Registrar retiro de ${candidate.first_name} ${candidate.last_name}`}
+                    data-testid="withdraw-candidate-button"
+                  >
+                    <UserX className="w-4 h-4 mr-2" />
+                    Retirar
                   </Button>
                 </>
               )}
@@ -716,6 +747,26 @@ export function CandidateDetailDialog({
           employeeName={`${candidate.first_name} ${candidate.last_name}`}
         />
       )}
+
+      {/* Rejection Reason Dialog */}
+      <CandidateReasonDialog
+        open={showRejectDialog}
+        onOpenChange={setShowRejectDialog}
+        type="rejection"
+        onConfirm={handleReject}
+        isPending={updateCandidate.isPending}
+        candidateName={`${candidate.first_name} ${candidate.last_name}`}
+      />
+
+      {/* Withdrawal Reason Dialog */}
+      <CandidateReasonDialog
+        open={showWithdrawDialog}
+        onOpenChange={setShowWithdrawDialog}
+        type="withdrawal"
+        onConfirm={handleWithdraw}
+        isPending={updateCandidate.isPending}
+        candidateName={`${candidate.first_name} ${candidate.last_name}`}
+      />
     </>
   );
 }
