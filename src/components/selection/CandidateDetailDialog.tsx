@@ -45,6 +45,7 @@ import { useEmployeeDocuments } from '@/hooks/useEmployeeHealth';
 import { DocumentFormDialog } from '@/components/employees/DocumentFormDialog';
 import { SelectionTimeline } from './SelectionTimeline';
 import { SelectionStepFormDialog } from './SelectionStepFormDialog';
+import { CandidateReasonDialog } from './CandidateReasonDialog';
 import {
   CandidateStatus,
   candidateStatusLabels,
