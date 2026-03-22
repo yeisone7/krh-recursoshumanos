@@ -705,6 +705,17 @@ export function CandidateDetailDialog({
         defaultStepType={defaultStepType}
         existingStepOrder={steps.length}
       />
+
+      {/* Shared Document Form Dialog */}
+      {candidate?.employee_id && currentCompanyId && (
+        <DocumentFormDialog
+          open={showSharedDocForm}
+          onOpenChange={setShowSharedDocForm}
+          employeeId={candidate.employee_id}
+          companyId={currentCompanyId}
+          employeeName={`${candidate.first_name} ${candidate.last_name}`}
+        />
+      )}
     </>
   );
 }
