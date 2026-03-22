@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -15,6 +15,12 @@ import {
   XCircle,
   ArrowRight,
   Clock,
+  Upload,
+  Loader2,
+  Trash2,
+  Download,
+  Eye,
+  Paperclip,
 } from 'lucide-react';
 
 import {
@@ -30,6 +36,8 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { useCandidate, useUpdateCandidate, useConvertToEmployee, useUpdateSelectionStep } from '@/hooks/useCandidates';
 import { SelectionTimeline } from './SelectionTimeline';
@@ -58,6 +66,11 @@ export function CandidateDetailDialog({
 }: CandidateDetailDialogProps) {
   const [activeTab, setActiveTab] = useState('timeline');
   const [showStepForm, setShowStepForm] = useState(false);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const docInputRef = useRef<HTMLInputElement>(null);
+  const { user, currentCompanyId } = useAuth();
   const [selectedStep, setSelectedStep] = useState<SelectionStep | undefined>();
   const [defaultStepType, setDefaultStepType] = useState<SelectionStepType | undefined>();
 
@@ -65,6 +78,30 @@ export function CandidateDetailDialog({
   const updateCandidate = useUpdateCandidate();
   const convertToEmployee = useConvertToEmployee();
   const updateStep = useUpdateSelectionStep();
+
+  const fetchCandidateDocs = useCallback(async () => {
+    if (!candidateId) return;
+    setLoadingDocs(true);
+    try {
+      const { data, error } = await supabase
+        .from('candidate_documents')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch {
+      // silent
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [candidateId]);
+
+  useEffect(() => {
+    if (open && candidateId) {
+      fetchCandidateDocs();
+    }
+  }, [open, candidateId, fetchCandidateDocs]);
 
   if (isLoading || !candidate) {
     return (
@@ -149,6 +186,61 @@ export function CandidateDetailDialog({
     }
   };
 
+
+  const handleCandidateDocUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !currentCompanyId) return;
+    setUploadingDoc(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} excede 10MB`);
+          continue;
+        }
+        const ext = file.name.split('.').pop();
+        const filePath = `candidates/docs_${candidateId}_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+
+        const { error: insertError } = await supabase.from('candidate_documents').insert({
+          candidate_id: candidateId,
+          company_id: currentCompanyId,
+          document_name: file.name,
+          file_url: urlData.publicUrl,
+          file_name: file.name,
+          file_size: file.size,
+          mime_type: file.type,
+          uploaded_by: user?.id,
+        });
+        if (insertError) throw insertError;
+      }
+      toast.success('Documento(s) subido(s) exitosamente');
+      fetchCandidateDocs();
+    } catch {
+      toast.error('Error al subir documento');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleDeleteCandidateDoc = async (docId: string) => {
+    try {
+      const { error } = await supabase.from('candidate_documents').delete().eq('id', docId);
+      if (error) throw error;
+      toast.success('Documento eliminado');
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    } catch {
+      toast.error('Error al eliminar documento');
+    }
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   const formatSalary = (value: number | null) => {
     if (!value) return 'No especificado';
     return new Intl.NumberFormat('es-CO', {
@@ -196,6 +288,10 @@ export function CandidateDetailDialog({
                 <TabsTrigger value="info" className="gap-2">
                   <User className="w-4 h-4" />
                   Información
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="gap-2">
+                  <Paperclip className="w-4 h-4" />
+                  Documentos
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -362,6 +458,92 @@ export function CandidateDetailDialog({
                       )}
                     </div>
                   </>
+                )}
+              </TabsContent>
+
+              {/* Documents Tab */}
+              <TabsContent value="documents" className="p-6 mt-0 space-y-4">
+                {/* Upload */}
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <Paperclip className="w-4 h-4 text-primary" />
+                    Documentos del Candidato
+                  </h3>
+                  <div>
+                    <input
+                      ref={docInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
+                      multiple
+                      onChange={(e) => handleCandidateDocUpload(e.target.files)}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => docInputRef.current?.click()}
+                      disabled={uploadingDoc}
+                    >
+                      {uploadingDoc ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                      )}
+                      Subir documento
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  PDF, imágenes, Word o Excel (máx. 10MB por archivo)
+                </p>
+
+                {loadingDocs ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : documents.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No hay documentos adjuntos</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {documents.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <FileText className="w-5 h-5 text-primary shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{doc.document_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatFileSize(doc.file_size)}
+                              {doc.created_at && ` • ${format(new Date(doc.created_at), 'dd MMM yyyy', { locale: es })}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => window.open(doc.file_url, '_blank')}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteCandidateDoc(doc.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </TabsContent>
             </ScrollArea>
