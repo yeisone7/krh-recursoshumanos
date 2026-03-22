@@ -165,17 +165,34 @@ export function CandidateDetailDialog({
     }
   };
 
-  const handleStatusChange = async (newStatus: CandidateStatus) => {
+  const handleStatusChange = async (newStatus: CandidateStatus, extra?: { rejection_reason?: string; general_notes?: string; withdrawal_reason?: string }) => {
     try {
       await updateCandidate.mutateAsync({
         id: candidate.id,
         status: newStatus,
         is_selected: newStatus === 'selected',
+        ...(extra || {}),
       });
       toast.success('Estado del candidato actualizado');
     } catch (error) {
       toast.error('Error al actualizar candidato');
     }
+  };
+
+  const handleReject = (reason: string, observations: string) => {
+    handleStatusChange('not_selected', {
+      rejection_reason: reason,
+      general_notes: observations || candidate.general_notes || null,
+    });
+    setShowRejectDialog(false);
+  };
+
+  const handleWithdraw = (reason: string, observations: string) => {
+    handleStatusChange('withdrawn', {
+      withdrawal_reason: reason,
+      general_notes: observations || candidate.general_notes || null,
+    });
+    setShowWithdrawDialog(false);
   };
 
   const handleConvert = async () => {
