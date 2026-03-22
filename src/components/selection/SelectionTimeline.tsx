@@ -13,10 +13,13 @@ import {
   UserCheck,
   GraduationCap,
   Phone,
-  Wallet,
   Award,
   Calendar,
   Plus,
+  Filter,
+  Ban,
+  Brain,
+  BookOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +29,7 @@ import {
   SelectionStepStatus,
   selectionStepTypeLabels,
   selectionStepStatusLabels,
+  stepsWithConcepto,
 } from '@/types/vacancy';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -41,16 +45,15 @@ interface SelectionTimelineProps {
 }
 
 const stepIcons: Record<SelectionStepType, React.ElementType> = {
-  initial_interview: MessageSquare,
-  psycho_test: FileText,
-  technical_test: FileText,
-  background_check: UserCheck,
-  academic_validation: GraduationCap,
-  reference_check: Phone,
-  financial_check: Wallet,
-  medical_exam: Stethoscope,
-  final_interview: MessageSquare,
-  offer: Award,
+  prefiltro: Filter,
+  entrevista_seleccion: MessageSquare,
+  entrevista_jefe: UserCheck,
+  validacion_antecedentes: UserCheck,
+  pruebas_psicotecnicas: Brain,
+  pruebas_conocimiento: BookOpen,
+  validacion_academica: GraduationCap,
+  validacion_referencias: Phone,
+  examenes_medicos: Stethoscope,
 };
 
 const statusStyles: Record<SelectionStepStatus, { icon: React.ElementType; color: string; bg: string }> = {
@@ -60,20 +63,20 @@ const statusStyles: Record<SelectionStepStatus, { icon: React.ElementType; color
   passed: { icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10' },
   failed: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/10' },
   skipped: { icon: SkipForward, color: 'text-muted-foreground', bg: 'bg-muted/50' },
+  not_applicable: { icon: Ban, color: 'text-muted-foreground', bg: 'bg-muted/30' },
 };
 
 // Standard selection flow order
 const standardStepOrder: SelectionStepType[] = [
-  'initial_interview',
-  'psycho_test',
-  'technical_test',
-  'background_check',
-  'academic_validation',
-  'reference_check',
-  'financial_check',
-  'medical_exam',
-  'final_interview',
-  'offer',
+  'prefiltro',
+  'entrevista_seleccion',
+  'entrevista_jefe',
+  'validacion_antecedentes',
+  'pruebas_psicotecnicas',
+  'pruebas_conocimiento',
+  'validacion_academica',
+  'validacion_referencias',
+  'examenes_medicos',
 ];
 
 export function SelectionTimeline({
@@ -91,12 +94,21 @@ export function SelectionTimeline({
 
   // Find missing steps from standard flow
   const existingStepTypes = new Set(steps.map((s) => s.step_type));
-  const missingSteps = standardStepOrder.filter((st) => !existingStepTypes.has(st));
+  const missingSteps = standardStepOrder.filter((st) => !existingStepTypes.has(st as any));
 
   const getStepProgress = () => {
     if (steps.length === 0) return 0;
     const completedOrPassed = steps.filter((s) => s.status === 'passed' || s.status === 'completed').length;
     return (completedOrPassed / steps.length) * 100;
+  };
+
+  const getResultLabel = (step: SelectionStep) => {
+    const stepType = step.step_type as SelectionStepType;
+    if (stepsWithConcepto.includes(stepType)) {
+      if (step.result === 'apto') return 'Apto';
+      if (step.result === 'no_apto') return 'No Apto';
+    }
+    return step.result;
   };
 
   return (
@@ -121,7 +133,8 @@ export function SelectionTimeline({
 
         <div className="space-y-4">
           {sortedSteps.map((step, index) => {
-            const StepIcon = stepIcons[step.step_type as SelectionStepType] || FileText;
+            const stepType = step.step_type as SelectionStepType;
+            const StepIcon = stepIcons[stepType] || FileText;
             const statusStyle = statusStyles[step.status as SelectionStepStatus] || statusStyles.pending;
             const StatusIcon = statusStyle.icon;
             const isExpanded = expandedStep === step.id;
@@ -165,7 +178,7 @@ export function SelectionTimeline({
                       <StepIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       <div>
                         <p className="font-medium text-sm">
-                          {selectionStepTypeLabels[step.step_type as SelectionStepType]}
+                          {selectionStepTypeLabels[stepType] || stepType}
                         </p>
                         {step.scheduled_date && (
                           <p className="text-xs text-muted-foreground">
@@ -177,7 +190,7 @@ export function SelectionTimeline({
 
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className={cn('text-xs', statusStyle.bg, statusStyle.color)}>
-                        {selectionStepStatusLabels[step.status as SelectionStepStatus]}
+                        {selectionStepStatusLabels[step.status as SelectionStepStatus] || step.status}
                       </Badge>
                       {step.score !== null && (
                         <Badge variant="secondary" className="text-xs">
@@ -196,16 +209,18 @@ export function SelectionTimeline({
                           <span className="font-medium">{step.evaluator_name}</span>
                         </div>
                       )}
-                      {step.notes && (
-                        <div className="text-sm">
-                          <span className="text-muted-foreground block mb-1">Notas:</span>
-                          <p className="text-foreground whitespace-pre-wrap">{step.notes}</p>
-                        </div>
-                      )}
                       {step.result && (
                         <div className="text-sm">
-                          <span className="text-muted-foreground">Resultado:</span>{' '}
-                          <span className="font-medium">{step.result}</span>
+                          <span className="text-muted-foreground">
+                            {stepsWithConcepto.includes(stepType) ? 'Concepto:' : 'Resultado:'}
+                          </span>{' '}
+                          <span className="font-medium">{getResultLabel(step)}</span>
+                        </div>
+                      )}
+                      {step.notes && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground block mb-1">Observaciones:</span>
+                          <p className="text-foreground whitespace-pre-wrap">{step.notes}</p>
                         </div>
                       )}
                       {step.completed_date && (
@@ -227,7 +242,7 @@ export function SelectionTimeline({
                             }}
                           >
                             <CheckCircle2 className="w-4 h-4 mr-1" />
-                            Aprobar
+                            {stepsWithConcepto.includes(stepType) ? 'Apto' : 'Aprobar'}
                           </Button>
                           <Button
                             size="sm"
@@ -239,7 +254,7 @@ export function SelectionTimeline({
                             }}
                           >
                             <XCircle className="w-4 h-4 mr-1" />
-                            No Aprobar
+                            {stepsWithConcepto.includes(stepType) ? 'No Apto' : 'No Aprobar'}
                           </Button>
                         </div>
                       )}
