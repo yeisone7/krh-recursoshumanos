@@ -747,6 +747,26 @@ export function CandidateDetailDialog({
           employeeName={`${candidate.first_name} ${candidate.last_name}`}
         />
       )}
+
+      {/* Rejection Reason Dialog */}
+      <CandidateReasonDialog
+        open={showRejectDialog}
+        onOpenChange={setShowRejectDialog}
+        type="rejection"
+        onConfirm={handleReject}
+        isPending={updateCandidate.isPending}
+        candidateName={`${candidate.first_name} ${candidate.last_name}`}
+      />
+
+      {/* Withdrawal Reason Dialog */}
+      <CandidateReasonDialog
+        open={showWithdrawDialog}
+        onOpenChange={setShowWithdrawDialog}
+        type="withdrawal"
+        onConfirm={handleWithdraw}
+        isPending={updateCandidate.isPending}
+        candidateName={`${candidate.first_name} ${candidate.last_name}`}
+      />
     </>
   );
 }
