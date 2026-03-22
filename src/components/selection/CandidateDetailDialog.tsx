@@ -162,6 +162,85 @@ export function CandidateDetailDialog({
     }
   };
 
+  // --- Document logic ---
+  const fetchCandidateDocs = useCallback(async () => {
+    if (!candidateId) return;
+    setLoadingDocs(true);
+    try {
+      const { data, error } = await supabase
+        .from('candidate_documents')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch {
+      // silent
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [candidateId]);
+
+  useEffect(() => {
+    if (open && candidateId) {
+      fetchCandidateDocs();
+    }
+  }, [open, candidateId, fetchCandidateDocs]);
+
+  const handleCandidateDocUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !currentCompanyId) return;
+    setUploadingDoc(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} excede 10MB`);
+          continue;
+        }
+        const ext = file.name.split('.').pop();
+        const filePath = `candidates/docs_${candidateId}_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+
+        const { error: insertError } = await supabase.from('candidate_documents').insert({
+          candidate_id: candidateId,
+          company_id: currentCompanyId,
+          document_name: file.name,
+          file_url: urlData.publicUrl,
+          file_name: file.name,
+          file_size: file.size,
+          mime_type: file.type,
+          uploaded_by: user?.id,
+        });
+        if (insertError) throw insertError;
+      }
+      toast.success('Documento(s) subido(s) exitosamente');
+      fetchCandidateDocs();
+    } catch {
+      toast.error('Error al subir documento');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleDeleteCandidateDoc = async (docId: string) => {
+    try {
+      const { error } = await supabase.from('candidate_documents').delete().eq('id', docId);
+      if (error) throw error;
+      toast.success('Documento eliminado');
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    } catch {
+      toast.error('Error al eliminar documento');
+    }
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   const formatSalary = (value: number | null) => {
     if (!value) return 'No especificado';
     return new Intl.NumberFormat('es-CO', {
