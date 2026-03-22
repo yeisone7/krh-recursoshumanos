@@ -229,6 +229,7 @@ export type Database = {
           updated_at: string
           vacancy_id: string
           weaknesses: string | null
+          withdrawal_reason: string | null
         }
         Insert: {
           address?: string | null
@@ -271,6 +272,7 @@ export type Database = {
           updated_at?: string
           vacancy_id: string
           weaknesses?: string | null
+          withdrawal_reason?: string | null
         }
         Update: {
           address?: string | null
@@ -313,6 +315,7 @@ export type Database = {
           updated_at?: string
           vacancy_id?: string
           weaknesses?: string | null
+          withdrawal_reason?: string | null
         }
         Relationships: [
           {
