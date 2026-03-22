@@ -679,7 +679,7 @@ export function CandidateDetailDialog({
                   {convertToEmployee.isPending ? 'Procesando...' : 'Contratar'}
                 </Button>
               )}
-              {status !== 'hired' && status !== 'selected' && status !== 'not_selected' && status !== 'withdrawn' && (
+               {status !== 'hired' && status !== 'selected' && status !== 'not_selected' && status !== 'withdrawn' && (
                 <>
                   <Button
                     variant="outline"
@@ -694,12 +694,22 @@ export function CandidateDetailDialog({
                   <Button
                     variant="outline"
                     className="text-destructive hover:text-destructive border-destructive/30 hover:border-destructive hover:bg-destructive/10"
-                    onClick={() => handleStatusChange('not_selected')}
+                    onClick={() => setShowRejectDialog(true)}
                     aria-label={`Marcar a ${candidate.first_name} ${candidate.last_name} como no seleccionado`}
                     data-testid="reject-candidate-button"
                   >
                     <XCircle className="w-4 h-4 mr-2" />
                     No Seleccionar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="text-warning hover:text-warning border-warning/30 hover:border-warning hover:bg-warning/10"
+                    onClick={() => setShowWithdrawDialog(true)}
+                    aria-label={`Registrar retiro de ${candidate.first_name} ${candidate.last_name}`}
+                    data-testid="withdraw-candidate-button"
+                  >
+                    <UserX className="w-4 h-4 mr-2" />
+                    Retirar
                   </Button>
                 </>
               )}
