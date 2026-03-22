@@ -79,6 +79,8 @@ export function CandidateDetailDialog({
   const { user, currentCompanyId } = useAuth();
   const [selectedStep, setSelectedStep] = useState<SelectionStep | undefined>();
   const [defaultStepType, setDefaultStepType] = useState<SelectionStepType | undefined>();
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
 
   const { data: candidate, isLoading } = useCandidate(candidateId);
   const updateCandidate = useUpdateCandidate();
