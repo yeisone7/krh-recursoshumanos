@@ -83,6 +83,9 @@ export function CandidateDetailDialog({
   const convertToEmployee = useConvertToEmployee();
   const updateStep = useUpdateSelectionStep();
 
+  const candidateEmployeeId = candidate?.employee_id || undefined;
+  const { data: sharedDocs = [], isLoading: loadingSharedDocs } = useEmployeeDocuments(candidateEmployeeId);
+
   const fetchCandidateDocs = useCallback(async () => {
     if (!candidateId) return;
     setLoadingDocs(true);
