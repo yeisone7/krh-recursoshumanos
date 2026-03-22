@@ -91,7 +91,22 @@ export const selectionStepStatusLabels: Record<SelectionStepStatus, string> = {
   passed: 'Aprobado',
   failed: 'No Aprobado',
   skipped: 'Omitido',
+  not_applicable: 'No Aplica',
 };
+
+// Define which steps support "No Aplica"
+export const stepsWithNotApplicable: SelectionStepType[] = [
+  'entrevista_jefe',
+  'pruebas_conocimiento',
+  'validacion_academica',
+  'validacion_referencias',
+];
+
+// Define which steps have a score/calificación field
+export const stepsWithScore: SelectionStepType[] = ['pruebas_conocimiento'];
+
+// Define which steps use concepto (apto/no apto) instead of aprobó/no aprobó
+export const stepsWithConcepto: SelectionStepType[] = ['examenes_medicos'];
 
 // Status styling
 export const vacancyStatusConfig: Record<VacancyStatus, { bg: string; text: string; border: string }> = {
