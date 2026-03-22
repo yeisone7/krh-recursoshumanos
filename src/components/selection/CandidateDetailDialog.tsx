@@ -72,6 +72,7 @@ export function CandidateDetailDialog({
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [showSharedDocForm, setShowSharedDocForm] = useState(false);
   const docInputRef = useRef<HTMLInputElement>(null);
   const { user, currentCompanyId } = useAuth();
   const [selectedStep, setSelectedStep] = useState<SelectionStep | undefined>();
