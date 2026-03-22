@@ -857,3 +857,115 @@ export function useMedicalExamsReport() {
   });
 }
 
+// ─── Selection Process Report ───
+
+export interface SelectionProcessReportRow {
+  vacante: string;
+  candidato: string;
+  documento: string;
+  estado_candidato: string;
+  prefiltro: string;
+  entrevista_seleccion: string;
+  entrevista_jefe: string;
+  validacion_antecedentes: string;
+  pruebas_psicotecnicas: string;
+  pruebas_conocimiento: string;
+  validacion_academica: string;
+  validacion_referencias: string;
+  examenes_medicos: string;
+  etapas_aprobadas: string;
+}
+
+const stepStatusLabel: Record<string, string> = {
+  pending: 'Pendiente',
+  scheduled: 'Programado',
+  passed: 'Aprobado',
+  failed: 'No Aprobado',
+  not_applicable: 'No Aplica',
+  skipped: 'Omitido',
+  completed: 'Completado',
+};
+
+const candidateStatusLabel: Record<string, string> = {
+  applied: 'Postulado',
+  in_interview: 'En Entrevista',
+  in_psycho_test: 'Prueba Psicotécnica',
+  in_technical_test: 'Prueba Técnica',
+  in_validation: 'En Validación',
+  in_medical: 'Examen Médico',
+  selected: 'Seleccionado',
+  not_selected: 'No Seleccionado',
+  withdrawn: 'Retirado',
+  hired: 'Contratado',
+};
+
+const ALL_STEP_TYPES = [
+  'prefiltro',
+  'entrevista_seleccion',
+  'entrevista_jefe',
+  'validacion_antecedentes',
+  'pruebas_psicotecnicas',
+  'pruebas_conocimiento',
+  'validacion_academica',
+  'validacion_referencias',
+  'examenes_medicos',
+] as const;
+
+export function useSelectionProcessReport() {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['report', 'selection_process', currentCompanyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('candidates')
+        .select(`
+          id, first_name, last_name, document_type, document_number, status,
+          vacancies!inner(position_title, company_id),
+          selection_steps(step_type, status, score)
+        `)
+        .eq('vacancies.company_id', currentCompanyId!)
+        .order('application_date', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map((c: any) => {
+        const steps = (c.selection_steps || []) as { step_type: string; status: string; score: number | null }[];
+        const stepMap: Record<string, string> = {};
+        for (const s of steps) {
+          let label = stepStatusLabel[s.status] || s.status;
+          if (s.step_type === 'pruebas_conocimiento' && s.score != null) {
+            label += ` (${s.score}%)`;
+          }
+          if (s.step_type === 'examenes_medicos' && s.status === 'passed') {
+            label = 'Apto';
+          } else if (s.step_type === 'examenes_medicos' && s.status === 'failed') {
+            label = 'No Apto';
+          }
+          stepMap[s.step_type] = label;
+        }
+
+        const approved = steps.filter(s => s.status === 'passed' || s.status === 'not_applicable').length;
+
+        const row: SelectionProcessReportRow = {
+          vacante: c.vacancies?.position_title || '',
+          candidato: `${c.first_name} ${c.last_name}`,
+          documento: `${c.document_type}-${c.document_number}`,
+          estado_candidato: candidateStatusLabel[c.status] || c.status,
+          prefiltro: stepMap['prefiltro'] || 'Sin registrar',
+          entrevista_seleccion: stepMap['entrevista_seleccion'] || 'Sin registrar',
+          entrevista_jefe: stepMap['entrevista_jefe'] || 'Sin registrar',
+          validacion_antecedentes: stepMap['validacion_antecedentes'] || 'Sin registrar',
+          pruebas_psicotecnicas: stepMap['pruebas_psicotecnicas'] || 'Sin registrar',
+          pruebas_conocimiento: stepMap['pruebas_conocimiento'] || 'Sin registrar',
+          validacion_academica: stepMap['validacion_academica'] || 'Sin registrar',
+          validacion_referencias: stepMap['validacion_referencias'] || 'Sin registrar',
+          examenes_medicos: stepMap['examenes_medicos'] || 'Sin registrar',
+          etapas_aprobadas: `${approved} / ${ALL_STEP_TYPES.length}`,
+        };
+        return row;
+      });
+    },
+    enabled: !!currentCompanyId,
+  });
+}

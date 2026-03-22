@@ -66,6 +66,13 @@ export default function Reportes() {
           </div>
         </TabsContent>
 
+        {/* Selección */}
+        <TabsContent value="seleccion">
+          <div className="grid gap-6 md:grid-cols-2">
+            <SelectionProcessReport />
+          </div>
+        </TabsContent>
+
         {/* Contratos */}
         <TabsContent value="contratos">
           <div className="grid gap-6 md:grid-cols-2">
