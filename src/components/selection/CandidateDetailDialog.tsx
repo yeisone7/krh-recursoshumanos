@@ -21,6 +21,7 @@ import {
   Download,
   Eye,
   Paperclip,
+  FolderOpen,
 } from 'lucide-react';
 
 import {
