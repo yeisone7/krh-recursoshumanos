@@ -1,4 +1,4 @@
-import { FileBarChart, Users, FileText, Palmtree, Clock, GraduationCap, Scale, Stethoscope, Package } from 'lucide-react';
+import { FileBarChart, Users, FileText, Palmtree, Clock, GraduationCap, Scale, Stethoscope, Package, ClipboardCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   EmployeeReport,
@@ -14,10 +14,12 @@ import {
   TrainingReport,
   DisciplinaryReport,
   MedicalExamsReport,
+  SelectionProcessReport,
 } from '@/components/reports';
 
 const TABS = [
   { value: 'personal', label: 'Personal', icon: Users },
+  { value: 'seleccion', label: 'Selección', icon: ClipboardCheck },
   { value: 'contratos', label: 'Contratos', icon: FileText },
   { value: 'ausencias', label: 'Ausencias', icon: Palmtree },
   { value: 'nomina', label: 'Nómina', icon: Clock },
@@ -61,6 +63,13 @@ export default function Reportes() {
           <div className="grid gap-6 md:grid-cols-2">
             <EmployeeReport />
             <MedicalExamsReport />
+          </div>
+        </TabsContent>
+
+        {/* Selección */}
+        <TabsContent value="seleccion">
+          <div className="grid gap-6 md:grid-cols-2">
+            <SelectionProcessReport />
           </div>
         </TabsContent>
 
