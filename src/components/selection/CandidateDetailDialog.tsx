@@ -300,6 +300,12 @@ export function CandidateDetailDialog({
                   <Paperclip className="w-4 h-4" />
                   Documentos
                 </TabsTrigger>
+                {candidate.employee_id && (
+                  <TabsTrigger value="shared_docs" className="gap-2">
+                    <FolderOpen className="w-4 h-4" />
+                    Docs Compartidos
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
