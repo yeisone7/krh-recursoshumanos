@@ -381,6 +381,92 @@ export function CandidateDetailDialog({
                   </>
                 )}
               </TabsContent>
+
+              {/* Documents Tab */}
+              <TabsContent value="documents" className="p-6 mt-0 space-y-4">
+                {/* Upload */}
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <Paperclip className="w-4 h-4 text-primary" />
+                    Documentos del Candidato
+                  </h3>
+                  <div>
+                    <input
+                      ref={docInputRef}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
+                      multiple
+                      onChange={(e) => handleCandidateDocUpload(e.target.files)}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => docInputRef.current?.click()}
+                      disabled={uploadingDoc}
+                    >
+                      {uploadingDoc ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                      )}
+                      Subir documento
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  PDF, imágenes, Word o Excel (máx. 10MB por archivo)
+                </p>
+
+                {loadingDocs ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : documents.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No hay documentos adjuntos</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {documents.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <FileText className="w-5 h-5 text-primary shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{doc.document_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatFileSize(doc.file_size)}
+                              {doc.created_at && ` • ${format(new Date(doc.created_at), 'dd MMM yyyy', { locale: es })}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => window.open(doc.file_url, '_blank')}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteCandidateDoc(doc.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
             </ScrollArea>
           </Tabs>
 
