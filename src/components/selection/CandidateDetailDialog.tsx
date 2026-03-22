@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -15,6 +15,12 @@ import {
   XCircle,
   ArrowRight,
   Clock,
+  Upload,
+  Loader2,
+  Trash2,
+  Download,
+  Eye,
+  Paperclip,
 } from 'lucide-react';
 
 import {
