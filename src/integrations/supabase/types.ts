@@ -127,6 +127,66 @@ export type Database = {
           },
         ]
       }
+      candidate_documents: {
+        Row: {
+          candidate_id: string
+          company_id: string
+          created_at: string
+          document_name: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          observations: string | null
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          candidate_id: string
+          company_id: string
+          created_at?: string
+          document_name: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          observations?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          candidate_id?: string
+          company_id?: string
+          created_at?: string
+          document_name?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          observations?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_documents_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidates: {
         Row: {
           address: string | null
