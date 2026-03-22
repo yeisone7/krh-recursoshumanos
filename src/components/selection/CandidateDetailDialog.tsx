@@ -559,6 +559,88 @@ export function CandidateDetailDialog({
                   </div>
                 )}
               </TabsContent>
+
+              {/* Shared Docs Tab */}
+              {candidate.employee_id && (
+                <TabsContent value="shared_docs" className="p-6 mt-0 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-foreground flex items-center gap-2">
+                      <FolderOpen className="w-4 h-4 text-primary" />
+                      Documentos Compartidos del Empleado
+                    </h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowSharedDocForm(true)}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Subir documento
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Estos documentos están vinculados al expediente del empleado y son visibles tanto aquí como en la vista de Empleados.
+                  </p>
+
+                  {loadingSharedDocs ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : sharedDocs.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                      <p className="text-sm">No hay documentos compartidos</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {sharedDocs.map((doc: any) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <FileText className="w-5 h-5 text-primary shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {doc.document_name || doc.file_name || 'Documento'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {doc.document_type && <Badge variant="secondary" className="text-xs mr-2">{doc.document_type}</Badge>}
+                                {formatFileSize(doc.file_size)}
+                                {doc.upload_date && ` • ${format(new Date(doc.upload_date), 'dd MMM yyyy', { locale: es })}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={async () => {
+                                if (!doc.file_url) return;
+                                try {
+                                  const path = doc.file_url.includes('storage/v1/object/public/documents/')
+                                    ? doc.file_url.split('storage/v1/object/public/documents/')[1]
+                                    : doc.file_url.includes('storage/v1/object/documents/')
+                                    ? doc.file_url.split('storage/v1/object/documents/')[1]
+                                    : doc.file_url.startsWith('documents/')
+                                    ? doc.file_url.replace('documents/', '')
+                                    : doc.file_url;
+                                  const { data } = await supabase.storage.from('documents').createSignedUrl(path, 3600);
+                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                                } catch {
+                                  toast.error('Error al acceder al documento');
+                                }
+                              }}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              )}
             </ScrollArea>
           </Tabs>
 
