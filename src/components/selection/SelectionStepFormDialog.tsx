@@ -44,7 +44,9 @@ import {
   SelectionStepType,
   SelectionStepStatus,
   selectionStepTypeLabels,
-  selectionStepStatusLabels,
+  stepsWithNotApplicable,
+  stepsWithScore,
+  stepsWithConcepto,
 } from '@/types/vacancy';
 import { useCreateSelectionStep, useUpdateSelectionStep } from '@/hooks/useCandidates';
 import type { Database } from '@/integrations/supabase/types';
@@ -73,6 +75,21 @@ interface SelectionStepFormDialogProps {
   existingStepOrder?: number;
 }
 
+// Get available status options based on step type
+function getStatusOptions(stepType: string) {
+  const base = [
+    { value: 'pending', label: 'Pendiente' },
+    { value: 'passed', label: stepsWithConcepto.includes(stepType as SelectionStepType) ? 'Apto' : 'Aprobó' },
+    { value: 'failed', label: stepsWithConcepto.includes(stepType as SelectionStepType) ? 'No Apto' : 'No Aprobó' },
+  ];
+
+  if (stepsWithNotApplicable.includes(stepType as SelectionStepType)) {
+    base.push({ value: 'not_applicable', label: 'No Aplica' });
+  }
+
+  return base;
+}
+
 export function SelectionStepFormDialog({
   open,
   onOpenChange,
@@ -99,6 +116,10 @@ export function SelectionStepFormDialog({
     },
   });
 
+  const currentStepType = form.watch('stepType');
+  const showScore = stepsWithScore.includes(currentStepType as SelectionStepType);
+  const isConcepto = stepsWithConcepto.includes(currentStepType as SelectionStepType);
+
   useEffect(() => {
     if (open) {
       form.reset({
@@ -116,9 +137,9 @@ export function SelectionStepFormDialog({
 
   const handleSubmit = async (data: StepFormData) => {
     try {
-      const stepData = {
-        step_type: data.stepType as SelectionStepType,
-        status: data.status as SelectionStepStatus,
+      const stepData: any = {
+        step_type: data.stepType,
+        status: data.status,
         scheduled_date: data.scheduledDate?.toISOString() || null,
         completed_date: data.completedDate?.toISOString() || null,
         evaluator_name: data.evaluatorName || null,
@@ -201,7 +222,7 @@ export function SelectionStepFormDialog({
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Estado</FormLabel>
+                    <FormLabel>{isConcepto ? 'Concepto' : 'Estado'}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -209,7 +230,7 @@ export function SelectionStepFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-background">
-                        {Object.entries(selectionStepStatusLabels).map(([value, label]) => (
+                        {getStatusOptions(currentStepType).map(({ value, label }) => (
                           <SelectItem key={value} value={value}>
                             {label}
                           </SelectItem>
@@ -321,41 +342,53 @@ export function SelectionStepFormDialog({
                 )}
               />
 
+              {showScore && (
+                <FormField
+                  control={form.control}
+                  name="score"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Calificación (%)</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" max="100" placeholder="85" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+            </div>
+
+            {isConcepto && (
               <FormField
                 control={form.control}
-                name="score"
+                name="result"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Puntuación (%)</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" max="100" placeholder="85" {...field} />
-                    </FormControl>
+                    <FormLabel>Concepto Médico</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar concepto" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-background">
+                        <SelectItem value="apto">Apto</SelectItem>
+                        <SelectItem value="no_apto">No Apto</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="result"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Resultado</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Resumen del resultado" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            )}
 
             <FormField
               control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notas</FormLabel>
+                  <FormLabel>Observaciones</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Observaciones adicionales..."

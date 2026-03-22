@@ -24,19 +24,18 @@ export type CandidateStatus =
 
 // Selection Step Type
 export type SelectionStepType =
-  | 'initial_interview'
-  | 'psycho_test'
-  | 'technical_test'
-  | 'background_check'
-  | 'academic_validation'
-  | 'reference_check'
-  | 'financial_check'
-  | 'medical_exam'
-  | 'final_interview'
-  | 'offer';
+  | 'prefiltro'
+  | 'entrevista_seleccion'
+  | 'entrevista_jefe'
+  | 'validacion_antecedentes'
+  | 'pruebas_psicotecnicas'
+  | 'pruebas_conocimiento'
+  | 'validacion_academica'
+  | 'validacion_referencias'
+  | 'examenes_medicos';
 
 // Selection Step Status
-export type SelectionStepStatus = 'pending' | 'scheduled' | 'completed' | 'passed' | 'failed' | 'skipped';
+export type SelectionStepStatus = 'pending' | 'scheduled' | 'completed' | 'passed' | 'failed' | 'skipped' | 'not_applicable';
 
 // Labels
 export const vacancyStatusLabels: Record<VacancyStatus, string> = {
@@ -74,16 +73,15 @@ export const candidateStatusLabels: Record<CandidateStatus, string> = {
 };
 
 export const selectionStepTypeLabels: Record<SelectionStepType, string> = {
-  initial_interview: 'Entrevista Inicial',
-  psycho_test: 'Prueba Psicotécnica',
-  technical_test: 'Prueba Técnica',
-  background_check: 'Verificación de Antecedentes',
-  academic_validation: 'Validación Académica',
-  reference_check: 'Verificación de Referencias',
-  financial_check: 'Verificación Financiera',
-  medical_exam: 'Examen Médico',
-  final_interview: 'Entrevista Final',
-  offer: 'Oferta Laboral',
+  prefiltro: 'Prefiltro',
+  entrevista_seleccion: 'Entrevista de Selección',
+  entrevista_jefe: 'Entrevista Jefe Inmediato',
+  validacion_antecedentes: 'Validación de Antecedentes',
+  pruebas_psicotecnicas: 'Pruebas Psicotécnicas',
+  pruebas_conocimiento: 'Pruebas de Conocimiento',
+  validacion_academica: 'Validación Académica',
+  validacion_referencias: 'Validación de Referencias Laborales',
+  examenes_medicos: 'Exámenes Médicos',
 };
 
 export const selectionStepStatusLabels: Record<SelectionStepStatus, string> = {
@@ -93,7 +91,22 @@ export const selectionStepStatusLabels: Record<SelectionStepStatus, string> = {
   passed: 'Aprobado',
   failed: 'No Aprobado',
   skipped: 'Omitido',
+  not_applicable: 'No Aplica',
 };
+
+// Define which steps support "No Aplica"
+export const stepsWithNotApplicable: SelectionStepType[] = [
+  'entrevista_jefe',
+  'pruebas_conocimiento',
+  'validacion_academica',
+  'validacion_referencias',
+];
+
+// Define which steps have a score/calificación field
+export const stepsWithScore: SelectionStepType[] = ['pruebas_conocimiento'];
+
+// Define which steps use concepto (apto/no apto) instead of aprobó/no aprobó
+export const stepsWithConcepto: SelectionStepType[] = ['examenes_medicos'];
 
 // Status styling
 export const vacancyStatusConfig: Record<VacancyStatus, { bg: string; text: string; border: string }> = {

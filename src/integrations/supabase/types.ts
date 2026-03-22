@@ -7791,6 +7791,7 @@ export type Database = {
         | "passed"
         | "failed"
         | "skipped"
+        | "not_applicable"
       selection_step_type:
         | "initial_interview"
         | "psycho_test"
@@ -8183,6 +8184,7 @@ export const Constants = {
         "passed",
         "failed",
         "skipped",
+        "not_applicable",
       ],
       selection_step_type: [
         "initial_interview",
