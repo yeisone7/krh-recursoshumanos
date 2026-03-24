@@ -24,6 +24,7 @@ import {
   Eye,
   Paperclip,
   FolderOpen,
+  FileDown,
 } from 'lucide-react';
 
 import {
@@ -49,6 +50,7 @@ import { SelectionTimeline } from './SelectionTimeline';
 import { SelectionStepFormDialog } from './SelectionStepFormDialog';
 import { CandidateReasonDialog } from './CandidateReasonDialog';
 import { FamilyMembersSection } from './FamilyMembersSection';
+import { generateCandidatePdf } from '@/lib/candidatePdf';
 import {
   CandidateStatus,
   candidateStatusLabels,
@@ -734,6 +736,14 @@ export function CandidateDetailDialog({
                 </Button>
               )}
             </div>
+            <Button
+              variant="outline"
+              onClick={() => generateCandidatePdf(candidate as any)}
+              className="gap-2"
+            >
+              <FileDown className="w-4 h-4" />
+              Ficha PDF
+            </Button>
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
