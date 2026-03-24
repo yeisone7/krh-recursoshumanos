@@ -468,6 +468,9 @@ export function CandidateDetailDialog({
                   </div>
                 </div>
 
+                {/* Family Members */}
+                <FamilyMembersSection candidateId={candidate.id} />
+
                 {/* Notes */}
                 {(candidate.general_notes || candidate.strengths || candidate.weaknesses) && (
                   <>
