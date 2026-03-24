@@ -1139,9 +1139,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     ))}
                   </div>
                 </TabsContent>
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel>Nombre del Cónyuge</FormLabel>
+
+
                             <FormControl><Input placeholder="Nombre completo" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
