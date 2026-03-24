@@ -614,15 +614,20 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
 
                 {/* Contact Tab */}
                 <TabsContent value="contact" className="mt-0 space-y-4">
+                  {/* Datos de Contacto */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-1 h-5 bg-accent rounded-full" />
+                    <h3 className="font-semibold text-foreground">Datos de Contacto</h3>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>Correo Personal</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="correo@ejemplo.com" {...field} />
+                            <Input type="email" placeholder="personal@email.com" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -642,20 +647,6 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                       )}
                     />
                   </div>
-
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Teléfono Fijo</FormLabel>
-                        <FormControl>
-                          <Input placeholder="6012345678" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <CityDepartmentSelect
                     departmentValue={form.watch('department') || ''}
