@@ -63,6 +63,7 @@ import { VaccinationFormDialog } from './VaccinationFormDialog';
 import { DocumentFormDialog } from './DocumentFormDialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { CandidateHistoryLink } from './CandidateHistoryLink';
 import {
   documentTypeLabels,
   genderLabels,

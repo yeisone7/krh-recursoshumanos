@@ -20,7 +20,9 @@ import {
   ComplianceChart, 
   AreaMetricsTable,
   DistributionCharts,
-  AnalyticsKPICard
+  DistributionCharts,
+  AnalyticsKPICard,
+  SelectionDiversityCharts,
 } from '@/components/analytics';
 
 export default function Analitica() {
@@ -175,6 +177,9 @@ export default function Analitica() {
         byGender={analytics?.byGender || []}
         byCenter={analytics?.byCenter || []}
       />
+
+      {/* Selection Diversity */}
+      <SelectionDiversityCharts />
 
       {/* Area Metrics Table */}
       <AreaMetricsTable data={analytics?.areaMetrics || []} />
