@@ -91,7 +91,7 @@ export function Tab360Profile({ employee }: Tab360ProfileProps) {
               .filter(Boolean).join(', ') || null} 
           />
           <InfoRow 
-            label="Género" 
+            label="Sexo biológico" 
             value={employee.gender ? genderLabels[employee.gender] : null} 
           />
           <InfoRow 
