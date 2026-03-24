@@ -37,6 +37,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -64,6 +65,10 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
       vacancyId: vacancyId || '',
       documentType: 'CC',
       experienceYears: 0,
+      isFirstJob: false,
+      isHeadOfHousehold: false,
+      isConflictVictim: false,
+      isDemobilized: false,
     },
   });
 
@@ -95,6 +100,14 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         salary_expectation: data.salaryExpectation ? parseFloat(data.salaryExpectation.replace(/[^0-9.-]+/g, '')) : null,
         source: data.source || null,
         general_notes: data.generalNotes || null,
+        is_first_job: data.isFirstJob || false,
+        is_head_of_household: data.isHeadOfHousehold || false,
+        disability_type: data.disabilityType || null,
+        ethnic_group: data.ethnicGroup || null,
+        is_conflict_victim: data.isConflictVictim || false,
+        is_demobilized: data.isDemobilized || false,
+        blood_type: data.bloodType || null,
+        marital_status: data.maritalStatus || null,
       });
 
       toast.success('Candidato registrado', {
@@ -413,6 +426,186 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                         )}
                       />
                     )}
+                   </div>
+
+                  {/* Especificaciones de la Persona */}
+                  <div className="pt-2">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-1 h-5 bg-accent rounded-full" />
+                      <h3 className="font-semibold text-foreground">Especificaciones de la Persona</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="isFirstJob"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
+                            <FormLabel className="text-sm font-normal cursor-pointer">Primer Empleo</FormLabel>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="isHeadOfHousehold"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
+                            <FormLabel className="text-sm font-normal cursor-pointer">Madre Cabeza de Familia</FormLabel>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <FormField
+                        control={form.control}
+                        name="disabilityType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Discapacidad</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Ninguna" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="ninguna">Ninguna</SelectItem>
+                                <SelectItem value="fisica">Física</SelectItem>
+                                <SelectItem value="visual">Visual</SelectItem>
+                                <SelectItem value="auditiva">Auditiva</SelectItem>
+                                <SelectItem value="cognitiva">Cognitiva</SelectItem>
+                                <SelectItem value="mental">Mental</SelectItem>
+                                <SelectItem value="multiple">Múltiple</SelectItem>
+                                <SelectItem value="otra">Otra</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="ethnicGroup"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Grupo Étnico</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Ninguno" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="ninguno">Ninguno</SelectItem>
+                                <SelectItem value="indigena">Indígena</SelectItem>
+                                <SelectItem value="afrocolombiano">Afrocolombiano</SelectItem>
+                                <SelectItem value="raizal">Raizal</SelectItem>
+                                <SelectItem value="palenquero">Palenquero</SelectItem>
+                                <SelectItem value="rom">Rom (Gitano)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <FormField
+                        control={form.control}
+                        name="isConflictVictim"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
+                            <FormLabel className="text-sm font-normal cursor-pointer">Víctima del Conflicto Armado</FormLabel>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="isDemobilized"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center justify-between rounded-lg border border-border p-3">
+                            <FormLabel className="text-sm font-normal cursor-pointer">Desmovilizado / Reinsertado</FormLabel>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Otros Datos */}
+                  <div className="pt-2">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-1 h-5 bg-accent rounded-full" />
+                      <h3 className="font-semibold text-foreground">Otros Datos</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="bloodType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tipo de Sangre</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleccionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="O+">O+</SelectItem>
+                                <SelectItem value="O-">O-</SelectItem>
+                                <SelectItem value="A+">A+</SelectItem>
+                                <SelectItem value="A-">A-</SelectItem>
+                                <SelectItem value="B+">B+</SelectItem>
+                                <SelectItem value="B-">B-</SelectItem>
+                                <SelectItem value="AB+">AB+</SelectItem>
+                                <SelectItem value="AB-">AB-</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="maritalStatus"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Estado Civil</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleccionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="soltero">Soltero(a)</SelectItem>
+                                <SelectItem value="casado">Casado(a)</SelectItem>
+                                <SelectItem value="union_libre">Unión Libre</SelectItem>
+                                <SelectItem value="divorciado">Divorciado(a)</SelectItem>
+                                <SelectItem value="viudo">Viudo(a)</SelectItem>
+                                <SelectItem value="separado">Separado(a)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 </TabsContent>
 
