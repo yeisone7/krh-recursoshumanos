@@ -16,6 +16,7 @@ export function SelectionProcessReport() {
       { header: 'Candidato', key: 'candidato', width: 22 },
       { header: 'Documento', key: 'documento', width: 14 },
       { header: 'Estado Candidato', key: 'estado_candidato', width: 14 },
+      { header: 'Personas a Cargo', key: 'personas_a_cargo', width: 12 },
       { header: 'Prefiltro', key: 'prefiltro', width: 12 },
       { header: 'Entrev. Selección', key: 'entrevista_seleccion', width: 14 },
       { header: 'Entrev. Jefe', key: 'entrevista_jefe', width: 12 },
