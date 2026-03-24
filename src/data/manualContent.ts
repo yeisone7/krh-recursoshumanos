@@ -408,7 +408,7 @@ export const MODULE_DOCS: ModuleDoc[] = [
     title: 'Analítica RRHH',
     icon: 'BarChart3',
     description: 'Panel analítico con indicadores clave de gestión humana: rotación, ausentismo, distribución demográfica, cumplimiento de dotación y capacitaciones.',
-    actions: ['Ver KPIs de rotación y ausentismo', 'Ver distribución por género, área, centro', 'Ver gráficos de cumplimiento', 'Filtrar por período y centro'],
+    actions: ['Ver KPIs de rotación y ausentismo', 'Ver distribución por sexo biológico, área, centro', 'Ver gráficos de cumplimiento', 'Filtrar por período y centro'],
     validations: [],
     restrictions: ['Solo lectura; los datos provienen de los módulos operativos'],
     alerts: [],
