@@ -63,6 +63,7 @@ import { VaccinationFormDialog } from './VaccinationFormDialog';
 import { DocumentFormDialog } from './DocumentFormDialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { CandidateHistoryLink } from './CandidateHistoryLink';
 import {
   documentTypeLabels,
   genderLabels,
@@ -551,8 +552,9 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
               </div>
             </div>
 
-            {/* ── EXPIRING ALERTS ── */}
-            <div className="px-6 pt-3">
+            {/* ── CANDIDATE HISTORY ── */}
+            <div className="px-6 pt-3 space-y-3">
+              <CandidateHistoryLink employeeId={employeeId} />
               <ExpiringItemsAlert employee={employee} />
             </div>
 
