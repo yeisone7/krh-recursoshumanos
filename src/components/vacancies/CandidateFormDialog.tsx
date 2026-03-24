@@ -83,6 +83,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         department: data.department || null,
         birth_date: data.birthDate ? format(data.birthDate, 'yyyy-MM-dd') : null,
         document_issue_date: data.documentIssueDate ? format(data.documentIssueDate, 'yyyy-MM-dd') : null,
+        document_issue_city: data.documentIssueCity || null,
         gender: data.gender || null,
         gender_identity: data.genderIdentity || null,
         gender_identity_other: data.genderIdentity === 'otro' ? (data.genderIdentityOther || null) : null,
