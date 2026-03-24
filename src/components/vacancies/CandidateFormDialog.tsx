@@ -84,6 +84,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         phone: data.phone || null,
         mobile: data.mobile || null,
         address: data.address || null,
+        neighborhood: data.neighborhood || null,
         city: data.city || null,
         department: data.department || null,
         birth_date: data.birthDate ? format(data.birthDate, 'yyyy-MM-dd') : null,
@@ -728,6 +729,20 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                         <FormLabel>Dirección</FormLabel>
                         <FormControl>
                           <Input placeholder="Calle 123 # 45-67" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="neighborhood"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Barrio, Vereda u Otro.</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nombre del barrio, vereda, otro..." {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
