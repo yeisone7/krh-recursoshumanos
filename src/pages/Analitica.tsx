@@ -22,6 +22,7 @@ import {
   DistributionCharts,
   AnalyticsKPICard,
   SelectionDiversityCharts,
+  DiversityTrendsChart,
 } from '@/components/analytics';
 
 export default function Analitica() {
