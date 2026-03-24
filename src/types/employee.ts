@@ -4,7 +4,7 @@ import { z } from 'zod';
 // ENUMS AND TYPES - Matching database schema
 // =====================================================
 
-export type GenderType = 'M' | 'F' | 'O';
+export type GenderType = 'M' | 'F';
 export type MaritalStatusType = 'soltero' | 'casado' | 'union_libre' | 'divorciado' | 'viudo';
 export type BloodType = 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
 export type AccountType = 'ahorros' | 'corriente';
@@ -23,7 +23,6 @@ export type DocumentType = 'CC' | 'CE' | 'TI' | 'PA' | 'PEP';
 export const genderLabels: Record<GenderType, string> = {
   M: 'Masculino',
   F: 'Femenino',
-  O: 'Otro',
 };
 
 export const maritalStatusLabels: Record<MaritalStatusType, string> = {
@@ -143,7 +142,7 @@ export const employeeCoreSchema = z.object({
   birthDate: z.date({ required_error: 'La fecha de nacimiento es requerida' }),
   
   // Characteristics
-  gender: z.enum(['M', 'F', 'O'], { required_error: 'Seleccione el sexo biológico' }),
+  gender: z.enum(['M', 'F'], { required_error: 'Seleccione el sexo biológico' }),
   genderIdentity: z.string().optional(),
   genderIdentityOther: z.string().max(100).optional(),
   bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
@@ -176,7 +175,7 @@ export const familyMemberSchema = z.object({
   relationship: z.string().min(1, 'El parentesco es requerido'),
   fullName: z.string().min(2, 'El nombre es requerido'),
   age: z.number().min(0).max(120).optional(),
-  gender: z.enum(['M', 'F', 'O']).nullable().optional(),
+  gender: z.enum(['M', 'F']).nullable().optional(),
   observations: z.string().max(500).optional(),
 });
 
