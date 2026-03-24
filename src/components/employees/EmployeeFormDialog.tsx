@@ -83,11 +83,7 @@ const fieldToTabMap: Record<string, string> = {
   emergencyContactPhone: 'contact',
   emergencyContactRelationship: 'contact',
   // Family tab
-  spouseName: 'family',
-  spouseGender: 'family',
-  spouseBirthDate: 'family',
-  spouseWorks: 'family',
-  childrenCount: 'family',
+  familyMembers: 'family',
   // Labor tab
   operationCenterId: 'labor',
   costCenter: 'labor',
@@ -144,6 +140,7 @@ import {
   riskLevelLabels,
   accountTypeLabels,
   payrollTypeLabels,
+  familyRelationshipOptions,
 } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateEmployee, useUpdateEmployee } from '@/hooks/useEmployees';
@@ -206,8 +203,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
       linkType: 'indefinido',
       payrollType: 'quincenal',
       isOfficeSchedule: true,
-      spouseWorks: false,
-      childrenCount: 0,
+      familyMembers: [],
       accountRegistered: false,
       timeMode: 'administrative',
       timeModeStartDate: new Date(),
@@ -260,11 +256,14 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         emergencyContactRelationship: employee.contact?.emergency_contact_relationship || undefined,
         
         // C. Family
-        spouseName: employee.family?.spouse_name || undefined,
-        spouseGender: employee.family?.spouse_gender as any,
-        spouseBirthDate: employee.family?.spouse_birth_date ? new Date(employee.family.spouse_birth_date) : undefined,
-        spouseWorks: employee.family?.spouse_works || false,
-        childrenCount: employee.family?.children_count || 0,
+        familyMembers: (employee.family_members || []).map(m => ({
+          id: m.id,
+          relationship: m.relationship,
+          fullName: m.full_name,
+          age: m.age ?? undefined,
+          gender: (m.gender as any) || undefined,
+          observations: m.observations || undefined,
+        })),
         
         // D. Work Info
         operationCenterId: employee.work_info?.operation_center_id || undefined,
@@ -315,8 +314,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         linkType: 'indefinido',
         payrollType: 'quincenal',
         isOfficeSchedule: true,
-        spouseWorks: false,
-        childrenCount: 0,
+        familyMembers: [],
         accountRegistered: false,
         timeMode: 'administrative',
         timeModeStartDate: new Date(),
@@ -1006,109 +1004,140 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 {/* C. FAMILY TAB */}
                 <TabsContent value="family" className="mt-0 space-y-6">
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Cónyuge / Pareja</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="spouseName"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel>Nombre del Cónyuge</FormLabel>
-                            <FormControl><Input placeholder="Nombre completo" {...field} /></FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="spouseGender"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Género</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                {Object.entries(genderLabels).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="spouseBirthDate"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel>Fecha de Nacimiento</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant="outline"
-                                    className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
-                                  >
-                                    {field.value ? format(field.value, 'PPP', { locale: es }) : <span>Seleccionar</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-background" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  disabled={(date) => date > new Date()}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="spouseWorks"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                            <FormControl>
-                              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                            </FormControl>
-                            <FormLabel className="font-normal">¿El cónyuge trabaja?</FormLabel>
-                          </FormItem>
-                        )}
-                      />
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2">
+                        <span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>
+                        Núcleo Familiar (Personas a cargo)
+                      </h3>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const current = form.getValues('familyMembers') || [];
+                          form.setValue('familyMembers', [...current, { relationship: '', fullName: '', age: undefined, gender: undefined, observations: undefined }]);
+                        }}
+                      >
+                        <UsersIcon className="w-4 h-4 mr-1" />
+                        Agregar familiar
+                      </Button>
                     </div>
-                  </div>
 
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Hijos</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="childrenCount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Número de Hijos</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                min={0} 
-                                max={20}
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    {(form.watch('familyMembers') || []).length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                        <UsersIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No hay familiares registrados</p>
+                        <p className="text-xs mt-1">Haga clic en "Agregar familiar" para comenzar</p>
+                      </div>
+                    )}
+
+                    {(form.watch('familyMembers') || []).map((_, index) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-3 relative bg-muted/30">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="text-xs">
+                            Familiar #{index + 1}
+                          </Badge>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive h-7 w-7 p-0"
+                            onClick={() => {
+                              const current = form.getValues('familyMembers') || [];
+                              form.setValue('familyMembers', current.filter((_, i) => i !== index));
+                            }}
+                          >
+                            ✕
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                          <FormField
+                            control={form.control}
+                            name={`familyMembers.${index}.relationship`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Parentesco</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent className="bg-background">
+                                    {familyRelationshipOptions.map(opt => (
+                                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`familyMembers.${index}.fullName`}
+                            render={({ field }) => (
+                              <FormItem className="md:col-span-2">
+                                <FormLabel>Nombre Completo</FormLabel>
+                                <FormControl><Input placeholder="Nombre completo" {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`familyMembers.${index}.age`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Edad</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    type="number" 
+                                    min={0} 
+                                    max={120}
+                                    placeholder="Edad"
+                                    value={field.value ?? ''}
+                                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                          <FormField
+                            control={form.control}
+                            name={`familyMembers.${index}.gender`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Género</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value || ''}>
+                                  <FormControl>
+                                    <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent className="bg-background">
+                                    {Object.entries(genderLabels).map(([value, label]) => (
+                                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name={`familyMembers.${index}.observations`}
+                            render={({ field }) => (
+                              <FormItem className="md:col-span-3">
+                                <FormLabel>Observaciones</FormLabel>
+                                <FormControl><Input placeholder="Observaciones adicionales..." {...field} /></FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </TabsContent>
 

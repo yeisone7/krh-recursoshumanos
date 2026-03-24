@@ -2498,6 +2498,60 @@ export type Database = {
           },
         ]
       }
+      employee_family_members: {
+        Row: {
+          age: number | null
+          company_id: string
+          created_at: string
+          employee_id: string
+          full_name: string
+          gender: string | null
+          id: string
+          observations: string | null
+          relationship: string
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          company_id: string
+          created_at?: string
+          employee_id: string
+          full_name: string
+          gender?: string | null
+          id?: string
+          observations?: string | null
+          relationship: string
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          company_id?: string
+          created_at?: string
+          employee_id?: string
+          full_name?: string
+          gender?: string | null
+          id?: string
+          observations?: string | null
+          relationship?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_family_members_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_family_members_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_incapacities: {
         Row: {
           actual_payment_date: string | null
