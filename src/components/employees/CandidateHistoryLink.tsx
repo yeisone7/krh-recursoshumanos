@@ -56,7 +56,7 @@ export function CandidateHistoryLink({ employeeId }: CandidateHistoryLinkProps) 
                       {(c.vacancies as any)?.position_title || 'Vacante'}
                     </span>
                     <Badge
-                      className={cn('text-[10px] h-5', statusConfig?.color)}
+                      className={cn('text-[10px] h-5', statusConfig?.bg, statusConfig?.text)}
                     >
                       {candidateStatusLabels[c.status as keyof typeof candidateStatusLabels] || c.status}
                     </Badge>
