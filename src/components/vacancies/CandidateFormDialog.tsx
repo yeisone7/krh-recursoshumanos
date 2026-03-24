@@ -801,6 +801,149 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                   />
                 </TabsContent>
 
+                {/* Family Tab */}
+                <TabsContent value="family" className="mt-0 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-primary flex items-center gap-2">
+                      <span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>
+                      Núcleo Familiar (Personas a cargo)
+                    </h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => appendFamily({ relationship: '', fullName: '', age: undefined, gender: null, observations: '' })}
+                      className="gap-1"
+                    >
+                      <Users className="w-4 h-4" />
+                      Agregar familiar
+                    </Button>
+                  </div>
+
+                  {familyFields.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
+                      <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No hay familiares registrados</p>
+                      <p className="text-xs mt-1">Haz clic en "Agregar familiar" para añadir personas a cargo</p>
+                    </div>
+                  )}
+
+                  {familyFields.map((field, index) => (
+                    <div key={field.id} className="border rounded-lg p-4 space-y-3 bg-muted/20 relative">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-muted-foreground bg-background border rounded-full px-3 py-0.5">
+                          Familiar #{index + 1}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-destructive hover:text-destructive"
+                          onClick={() => removeFamily(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr_auto] gap-3">
+                        <FormField
+                          control={form.control}
+                          name={`familyMembers.${index}.relationship`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Parentesco</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-background">
+                                  {familyRelationshipOptions.map((opt) => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`familyMembers.${index}.fullName`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Nombre Completo</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Nombre completo" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`familyMembers.${index}.age`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Edad</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  placeholder="Edad"
+                                  className="w-20"
+                                  min={0}
+                                  max={120}
+                                  value={field.value ?? ''}
+                                  onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-3">
+                        <FormField
+                          control={form.control}
+                          name={`familyMembers.${index}.gender`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Sexo biológico</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ''}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-background">
+                                  <SelectItem value="M">Masculino</SelectItem>
+                                  <SelectItem value="F">Femenino</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`familyMembers.${index}.observations`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs">Observaciones</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Observaciones adicionales..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </TabsContent>
+
                 {/* Professional Tab */}
                 <TabsContent value="professional" className="mt-0 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
