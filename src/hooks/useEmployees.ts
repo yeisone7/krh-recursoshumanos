@@ -479,28 +479,22 @@ export function useUpdateEmployee() {
         );
       }
 
-      // Family Members - delete existing and re-insert
-      upsertOperations.push(
-        supabase.from('employee_family_members')
-          .delete()
-          .eq('employee_id', id)
-          .then(() => {
-            const members = (data.familyMembers || []).filter(m => m.fullName && m.relationship);
-            if (members.length > 0) {
-              return supabase.from('employee_family_members').insert(
-                members.map(m => ({
-                  employee_id: id,
-                  company_id: currentCompanyId!,
-                  relationship: m.relationship,
-                  full_name: m.fullName,
-                  age: m.age || null,
-                  gender: m.gender || null,
-                  observations: m.observations || null,
-                }))
-              );
-            }
-          })
-      );
+      // Family Members - delete existing and re-insert (separate from Promise.all)
+      await supabase.from('employee_family_members').delete().eq('employee_id', id);
+      const members = (data.familyMembers || []).filter(m => m.fullName && m.relationship);
+      if (members.length > 0) {
+        await supabase.from('employee_family_members').insert(
+          members.map(m => ({
+            employee_id: id,
+            company_id: currentCompanyId!,
+            relationship: m.relationship,
+            full_name: m.fullName,
+            age: m.age || null,
+            gender: m.gender || null,
+            observations: m.observations || null,
+          }))
+        );
+      }
 
       // Work Info
       if (existingWorkInfo) {
