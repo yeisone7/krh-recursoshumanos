@@ -13,3 +13,4 @@ export { TrainingReport } from './TrainingReport';
 export { DisciplinaryReport } from './DisciplinaryReport';
 export { MedicalExamsReport } from './MedicalExamsReport';
 export { SelectionProcessReport } from './SelectionProcessReport';
+export { SelectionDiversityReport } from './SelectionDiversityReport';

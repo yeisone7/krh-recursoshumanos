@@ -864,6 +864,7 @@ export interface SelectionProcessReportRow {
   candidato: string;
   documento: string;
   estado_candidato: string;
+  personas_a_cargo: number;
   prefiltro: string;
   entrevista_seleccion: string;
   entrevista_jefe: string;
@@ -929,6 +930,21 @@ export function useSelectionProcessReport() {
 
       if (error) throw error;
 
+      // Fetch family member counts
+      const candidateIds = (data || []).map((c: any) => c.id);
+      let familyCounts: Record<string, number> = {};
+      if (candidateIds.length > 0) {
+        const { data: familyData } = await supabase
+          .from('candidate_family_members' as any)
+          .select('candidate_id')
+          .in('candidate_id', candidateIds);
+        if (familyData) {
+          for (const f of familyData as any[]) {
+            familyCounts[f.candidate_id] = (familyCounts[f.candidate_id] || 0) + 1;
+          }
+        }
+      }
+
       return (data || []).map((c: any) => {
         const steps = (c.selection_steps || []) as { step_type: string; status: string; score: number | null }[];
         const stepMap: Record<string, string> = {};
@@ -952,6 +968,7 @@ export function useSelectionProcessReport() {
           candidato: `${c.first_name} ${c.last_name}`,
           documento: `${c.document_type}-${c.document_number}`,
           estado_candidato: candidateStatusLabel[c.status] || c.status,
+          personas_a_cargo: familyCounts[c.id] || 0,
           prefiltro: stepMap['prefiltro'] || 'Sin registrar',
           entrevista_seleccion: stepMap['entrevista_seleccion'] || 'Sin registrar',
           entrevista_jefe: stepMap['entrevista_jefe'] || 'Sin registrar',
@@ -962,6 +979,95 @@ export function useSelectionProcessReport() {
           validacion_referencias: stepMap['validacion_referencias'] || 'Sin registrar',
           examenes_medicos: stepMap['examenes_medicos'] || 'Sin registrar',
           etapas_aprobadas: `${approved} / ${ALL_STEP_TYPES.length}`,
+        };
+        return row;
+      });
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+// ─── Selection Diversity Report ───
+
+export interface SelectionDiversityReportRow {
+  vacante: string;
+  candidato: string;
+  documento: string;
+  estado: string;
+  sexo_biologico: string;
+  sexo_identificacion: string;
+  estado_civil: string;
+  grupo_etnico: string;
+  discapacidad: string;
+  primer_empleo: string;
+  cabeza_familia: string;
+  victima_conflicto: string;
+  desmovilizado: string;
+  personas_a_cargo: number;
+}
+
+const genderLabel: Record<string, string> = {
+  M: 'Masculino', F: 'Femenino', masculino: 'Masculino', femenino: 'Femenino',
+};
+
+const maritalLabel: Record<string, string> = {
+  soltero: 'Soltero/a', casado: 'Casado/a', union_libre: 'Unión Libre',
+  divorciado: 'Divorciado/a', viudo: 'Viudo/a',
+};
+
+export function useSelectionDiversityReport() {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['report', 'selection_diversity', currentCompanyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('candidates')
+        .select(`
+          id, first_name, last_name, document_type, document_number, status,
+          gender, gender_identity, gender_identity_other,
+          marital_status, ethnic_group, disability_type,
+          is_first_job, is_head_of_household, is_conflict_victim, is_demobilized,
+          vacancies!inner(position_title, company_id)
+        `)
+        .eq('vacancies.company_id', currentCompanyId!)
+        .order('application_date', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch family member counts
+      const candidateIds = (data || []).map((c: any) => c.id);
+      let familyCounts: Record<string, number> = {};
+      if (candidateIds.length > 0) {
+        const { data: familyData } = await supabase
+          .from('candidate_family_members' as any)
+          .select('candidate_id')
+          .in('candidate_id', candidateIds);
+        if (familyData) {
+          for (const f of familyData as any[]) {
+            familyCounts[f.candidate_id] = (familyCounts[f.candidate_id] || 0) + 1;
+          }
+        }
+      }
+
+      return (data || []).map((c: any) => {
+        const row: SelectionDiversityReportRow = {
+          vacante: c.vacancies?.position_title || '',
+          candidato: `${c.first_name} ${c.last_name}`,
+          documento: `${c.document_type}-${c.document_number}`,
+          estado: candidateStatusLabel[c.status] || c.status,
+          sexo_biologico: genderLabel[c.gender] || c.gender || 'No registrado',
+          sexo_identificacion: c.gender_identity === 'otro'
+            ? `Otro: ${c.gender_identity_other || ''}`
+            : (genderLabel[c.gender_identity] || c.gender_identity || 'No registrado'),
+          estado_civil: maritalLabel[c.marital_status] || c.marital_status || 'No registrado',
+          grupo_etnico: c.ethnic_group || 'No registrado',
+          discapacidad: c.disability_type || 'Ninguna',
+          primer_empleo: c.is_first_job ? 'Sí' : 'No',
+          cabeza_familia: c.is_head_of_household ? 'Sí' : 'No',
+          victima_conflicto: c.is_conflict_victim ? 'Sí' : 'No',
+          desmovilizado: c.is_demobilized ? 'Sí' : 'No',
+          personas_a_cargo: familyCounts[c.id] || 0,
         };
         return row;
       });
