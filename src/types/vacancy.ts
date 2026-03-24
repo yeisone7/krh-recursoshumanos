@@ -170,6 +170,7 @@ export const candidateFormSchema = z.object({
   phone: z.string().optional(),
   mobile: z.string().optional(),
   address: z.string().optional(),
+  neighborhood: z.string().optional(),
   city: z.string().optional(),
   department: z.string().optional(),
   birthDate: z.date().optional(),

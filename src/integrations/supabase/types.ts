@@ -232,6 +232,7 @@ export type Database = {
           last_name: string
           marital_status: string | null
           mobile: string | null
+          neighborhood: string | null
           phone: string | null
           profession: string | null
           rejection_reason: string | null
@@ -288,6 +289,7 @@ export type Database = {
           last_name: string
           marital_status?: string | null
           mobile?: string | null
+          neighborhood?: string | null
           phone?: string | null
           profession?: string | null
           rejection_reason?: string | null
@@ -344,6 +346,7 @@ export type Database = {
           last_name?: string
           marital_status?: string | null
           mobile?: string | null
+          neighborhood?: string | null
           phone?: string | null
           profession?: string | null
           rejection_reason?: string | null
