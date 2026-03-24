@@ -337,7 +337,7 @@ export function useConvertToEmployee() {
       const hireDate = startDate || new Date().toISOString().split('T')[0];
 
       // Step 1: Create employee in new normalized model (employees_v2)
-      const employeePayload = {
+      const employeePayload: any = {
         company_id: currentCompanyId!,
         first_name: candidate.first_name,
         last_name: candidate.last_name,
@@ -345,6 +345,18 @@ export function useConvertToEmployee() {
         document_number: candidate.document_number,
         birth_date: candidate.birth_date,
         gender: normalizeCandidateGenderToEmployeeGender(candidate.gender),
+        gender_identity: candidate.gender_identity,
+        gender_identity_other: candidate.gender_identity_other,
+        marital_status: candidate.marital_status,
+        blood_type: candidate.blood_type,
+        document_issue_date: candidate.document_issue_date,
+        document_issue_city: candidate.document_issue_city,
+        is_first_job: candidate.is_first_job ?? false,
+        is_head_of_household: candidate.is_head_of_household ?? false,
+        disability_type: candidate.disability_type,
+        ethnic_group: candidate.ethnic_group,
+        is_conflict_victim: candidate.is_conflict_victim ?? false,
+        is_demobilized: candidate.is_demobilized ?? false,
         is_active: true,
         created_by: user?.id,
       };
@@ -383,8 +395,35 @@ export function useConvertToEmployee() {
         residence_address: candidate.address,
         residence_city: candidate.city,
         residence_department: candidate.department,
+        residence_neighborhood: candidate.neighborhood,
+        emergency_contact_name: candidate.emergency_contact_name,
+        emergency_contact_phone: candidate.emergency_contact_phone,
+        emergency_contact_relationship: candidate.emergency_contact_relationship,
         is_current: true,
       });
+
+      // Step 1b2: Copy family members from candidate to employee
+      try {
+        const { data: candidateFamilyMembers } = await supabase
+          .from('candidate_family_members' as any)
+          .select('*')
+          .eq('candidate_id', candidateId);
+
+        if (candidateFamilyMembers && candidateFamilyMembers.length > 0) {
+          const employeeFamilyInserts = (candidateFamilyMembers as any[]).map((m: any) => ({
+            employee_id: employee.id,
+            company_id: currentCompanyId!,
+            relationship: m.relationship,
+            full_name: m.full_name,
+            age: m.age,
+            gender: m.gender,
+            observations: m.observations,
+          }));
+          await supabase.from('employee_family_members').insert(employeeFamilyInserts);
+        }
+      } catch (err) {
+        console.error('Error copying family members:', err);
+      }
 
       // Step 1c: Create work info record
       const centerId = operationCenterId || vacancy?.operation_center_id;

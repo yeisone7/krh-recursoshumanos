@@ -29,15 +29,23 @@ const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; sect
   lastName: { label: 'Apellido', type: 'text', section: 'Personal' },
   documentType: { label: 'Tipo de Documento', type: 'select-doc-type', section: 'Personal' },
   documentNumber: { label: 'Número de Documento', type: 'text', section: 'Personal' },
+  documentIssueDate: { label: 'Fecha de Expedición', type: 'date', section: 'Personal' },
+  documentIssueCity: { label: 'Lugar de Expedición', type: 'text', section: 'Personal' },
   birthDate: { label: 'Fecha de Nacimiento', type: 'date', section: 'Personal' },
   gender: { label: 'Sexo Biológico', type: 'select-gender', section: 'Personal' },
   genderIdentity: { label: 'Sexo de Identificación', type: 'select-gender-identity', section: 'Personal' },
+  maritalStatus: { label: 'Estado Civil', type: 'select-marital', section: 'Personal' },
+  bloodType: { label: 'Tipo de Sangre', type: 'select-blood', section: 'Personal' },
   email: { label: 'Email', type: 'email', section: 'Contacto' },
   mobile: { label: 'Celular', type: 'tel', section: 'Contacto' },
   phone: { label: 'Teléfono Fijo', type: 'tel', section: 'Contacto' },
   city: { label: 'Ciudad', type: 'text', section: 'Contacto' },
   department: { label: 'Departamento', type: 'text', section: 'Contacto' },
   address: { label: 'Dirección', type: 'text', section: 'Contacto' },
+  neighborhood: { label: 'Barrio, Vereda u Otro.', type: 'text', section: 'Contacto', placeholder: 'Nombre del barrio, vereda, otro...' },
+  emergencyContactName: { label: 'Nombre Contacto de Emergencia', type: 'text', section: 'Contacto' },
+  emergencyContactPhone: { label: 'Teléfono Contacto de Emergencia', type: 'tel', section: 'Contacto' },
+  emergencyContactRelationship: { label: 'Parentesco', type: 'text', section: 'Contacto' },
   educationLevel: { label: 'Nivel Educativo', type: 'select-education', section: 'Profesional' },
   profession: { label: 'Profesión / Título', type: 'text', section: 'Profesional' },
   experienceYears: { label: 'Años de Experiencia', type: 'number', section: 'Profesional' },
@@ -45,6 +53,12 @@ const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; sect
   currentPosition: { label: 'Cargo Actual', type: 'text', section: 'Profesional' },
   salaryExpectation: { label: 'Expectativa Salarial', type: 'text', section: 'Profesional' },
   generalNotes: { label: 'Notas Adicionales', type: 'textarea', section: 'Profesional' },
+  isFirstJob: { label: 'Primer Empleo', type: 'select-yes-no', section: 'Especificaciones' },
+  isHeadOfHousehold: { label: 'Cabeza de Familia', type: 'select-yes-no', section: 'Especificaciones' },
+  disabilityType: { label: 'Tipo de Discapacidad', type: 'select-disability', section: 'Especificaciones' },
+  ethnicGroup: { label: 'Grupo Étnico', type: 'select-ethnic', section: 'Especificaciones' },
+  isConflictVictim: { label: 'Víctima del Conflicto', type: 'select-yes-no', section: 'Especificaciones' },
+  isDemobilized: { label: 'Desmovilizado', type: 'select-yes-no', section: 'Especificaciones' },
 };
 
 // Employee fields config
@@ -105,7 +119,7 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
 const CANDIDATE_REQUIRED = ['firstName', 'lastName', 'documentType', 'documentNumber'];
 const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'documentType', 'documentNumber'];
 
-const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional'];
+const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional', 'Especificaciones'];
 const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Especificaciones'];
 
 export default function RegistroPublico() {
@@ -270,12 +284,20 @@ export default function RegistroPublico() {
           p_phone: formData.phone || null,
           p_mobile: formData.mobile || null,
           p_address: formData.address || null,
+          p_neighborhood: formData.neighborhood || null,
           p_city: formData.city || null,
           p_department: formData.department || null,
           p_birth_date: formData.birthDate || null,
           p_gender: formData.gender || null,
           p_gender_identity: formData.genderIdentity || null,
           p_gender_identity_other: formData.genderIdentityOther || null,
+          p_document_issue_date: formData.documentIssueDate || null,
+          p_document_issue_city: formData.documentIssueCity || null,
+          p_marital_status: formData.maritalStatus || null,
+          p_blood_type: formData.bloodType || null,
+          p_emergency_contact_name: formData.emergencyContactName || null,
+          p_emergency_contact_phone: formData.emergencyContactPhone || null,
+          p_emergency_contact_relationship: formData.emergencyContactRelationship || null,
           p_education_level: formData.educationLevel || null,
           p_profession: formData.profession || null,
           p_experience_years: formData.experienceYears ? parseInt(formData.experienceYears) : 0,
@@ -283,6 +305,12 @@ export default function RegistroPublico() {
           p_current_position: formData.currentPosition || null,
           p_salary_expectation: formData.salaryExpectation ? parseFloat(formData.salaryExpectation.replace(/[^0-9.-]+/g, '')) : null,
           p_general_notes: formData.generalNotes || null,
+          p_is_first_job: formData.isFirstJob === 'true' ? true : formData.isFirstJob === 'false' ? false : null,
+          p_is_head_of_household: formData.isHeadOfHousehold === 'true' ? true : formData.isHeadOfHousehold === 'false' ? false : null,
+          p_disability_type: formData.disabilityType || null,
+          p_ethnic_group: formData.ethnicGroup || null,
+          p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
+          p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
         });
         result = data;
       }

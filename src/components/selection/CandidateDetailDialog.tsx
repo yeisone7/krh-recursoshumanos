@@ -48,6 +48,7 @@ import { DocumentFormDialog } from '@/components/employees/DocumentFormDialog';
 import { SelectionTimeline } from './SelectionTimeline';
 import { SelectionStepFormDialog } from './SelectionStepFormDialog';
 import { CandidateReasonDialog } from './CandidateReasonDialog';
+import { FamilyMembersSection } from './FamilyMembersSection';
 import {
   CandidateStatus,
   candidateStatusLabels,
@@ -467,6 +468,9 @@ export function CandidateDetailDialog({
                     )}
                   </div>
                 </div>
+
+                {/* Family Members */}
+                <FamilyMembersSection candidateId={candidate.id} />
 
                 {/* Notes */}
                 {(candidate.general_notes || candidate.strengths || candidate.weaknesses) && (
