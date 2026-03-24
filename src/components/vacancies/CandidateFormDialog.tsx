@@ -82,7 +82,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
 
   const handleSubmit = async (data: CandidateFormData) => {
     try {
-      await createCandidate.mutateAsync({
+      const candidate = await createCandidate.mutateAsync({
         vacancy_id: data.vacancyId,
         first_name: data.firstName,
         last_name: data.lastName,
@@ -121,6 +121,19 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         emergency_contact_phone: data.emergencyContactPhone || null,
         emergency_contact_relationship: data.emergencyContactRelationship || null,
       });
+
+      // Save family members if any
+      if (data.familyMembers && data.familyMembers.length > 0) {
+        const familyInserts = data.familyMembers.map((m) => ({
+          candidate_id: candidate.id,
+          relationship: m.relationship,
+          full_name: m.fullName,
+          age: m.age ?? null,
+          gender: m.gender ?? null,
+          observations: m.observations || null,
+        }));
+        await supabase.from('candidate_family_members' as any).insert(familyInserts);
+      }
 
       toast.success('Candidato registrado', {
         description: `${data.firstName} ${data.lastName} ha sido agregado al proceso.`,
