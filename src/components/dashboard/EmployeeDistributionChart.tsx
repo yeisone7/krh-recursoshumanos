@@ -110,7 +110,7 @@ export function EmployeeDistributionChart({ kpis, isLoading }: EmployeeDistribut
 
         {/* Gender Distribution */}
         <div>
-          <p className="text-sm text-muted-foreground mb-3 text-center">Por Género</p>
+          <p className="text-sm text-muted-foreground mb-3 text-center">Por Sexo biológico</p>
           {genderData.length > 0 ? (
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">

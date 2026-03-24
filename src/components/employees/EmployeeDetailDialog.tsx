@@ -1033,7 +1033,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                           <div className="divide-y divide-border">
                             <InfoItem label="Nombre" value={member.full_name} />
                             {member.age != null && <InfoItem label="Edad" value={`${member.age} años`} />}
-                            {member.gender && <InfoItem label="Género" value={genderLabels[member.gender as keyof typeof genderLabels] || member.gender} />}
+                            {member.gender && <InfoItem label="Sexo biológico" value={genderLabels[member.gender as keyof typeof genderLabels] || member.gender} />}
                             {member.observations && <InfoItem label="Observaciones" value={member.observations} />}
                           </div>
                         </SectionCard>

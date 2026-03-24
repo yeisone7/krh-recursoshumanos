@@ -1109,7 +1109,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                             name={`familyMembers.${index}.gender`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Género</FormLabel>
+                                <FormLabel>Sexo biológico</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value || ''}>
                                   <FormControl>
                                     <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
