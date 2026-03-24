@@ -153,6 +153,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
   const tabItems = [
     { value: 'personal', label: 'Personal', icon: User },
     { value: 'contact', label: 'Contacto', icon: MapPin },
+    { value: 'family', label: 'Familia', icon: Users },
     { value: 'professional', label: 'Profesional', icon: Briefcase },
   ];
 
