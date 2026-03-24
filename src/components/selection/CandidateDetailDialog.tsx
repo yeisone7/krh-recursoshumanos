@@ -80,7 +80,7 @@ export function CandidateDetailDialog({
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [showSharedDocForm, setShowSharedDocForm] = useState(false);
   const docInputRef = useRef<HTMLInputElement>(null);
-  const { user, currentCompanyId } = useAuth();
+  const { user, currentCompanyId, hasPermission } = useAuth();
   const [selectedStep, setSelectedStep] = useState<SelectionStep | undefined>();
   const [defaultStepType, setDefaultStepType] = useState<SelectionStepType | undefined>();
   const [showRejectDialog, setShowRejectDialog] = useState(false);
@@ -736,14 +736,16 @@ export function CandidateDetailDialog({
                 </Button>
               )}
             </div>
-            <Button
-              variant="outline"
-              onClick={() => generateCandidatePdf(candidate as any)}
-              className="gap-2"
-            >
-              <FileDown className="w-4 h-4" />
-              Ficha PDF
-            </Button>
+            {(hasPermission('seleccion', 'view') || hasPermission('reportes', 'view')) && (
+              <Button
+                variant="outline"
+                onClick={() => generateCandidatePdf(candidate as any)}
+                className="gap-2"
+              >
+                <FileDown className="w-4 h-4" />
+                Ficha PDF
+              </Button>
+            )}
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
