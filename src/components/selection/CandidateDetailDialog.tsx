@@ -48,6 +48,8 @@ import { DocumentFormDialog } from '@/components/employees/DocumentFormDialog';
 import { SelectionTimeline } from './SelectionTimeline';
 import { SelectionStepFormDialog } from './SelectionStepFormDialog';
 import { CandidateReasonDialog } from './CandidateReasonDialog';
+import { FamilyMembersSection } from './FamilyMembersSection';
+import { CandidateReasonDialog } from './CandidateReasonDialog';
 import {
   CandidateStatus,
   candidateStatusLabels,
