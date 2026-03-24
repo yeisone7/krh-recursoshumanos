@@ -202,6 +202,7 @@ export type Database = {
             | null
           cv_url: string | null
           department: string | null
+          document_issue_date: string | null
           document_number: string
           document_type: Database["public"]["Enums"]["document_type"]
           education_level: string | null
@@ -245,6 +246,7 @@ export type Database = {
             | null
           cv_url?: string | null
           department?: string | null
+          document_issue_date?: string | null
           document_number: string
           document_type?: Database["public"]["Enums"]["document_type"]
           education_level?: string | null
@@ -288,6 +290,7 @@ export type Database = {
             | null
           cv_url?: string | null
           department?: string | null
+          document_issue_date?: string | null
           document_number?: string
           document_type?: Database["public"]["Enums"]["document_type"]
           education_level?: string | null

@@ -164,6 +164,7 @@ export const candidateFormSchema = z.object({
   lastName: z.string().min(2, 'El apellido es requerido'),
   documentType: z.string().default('CC'),
   documentNumber: z.string().min(5, 'El documento es requerido'),
+  documentIssueDate: z.date().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   phone: z.string().optional(),
   mobile: z.string().optional(),
