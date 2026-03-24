@@ -736,14 +736,16 @@ export function CandidateDetailDialog({
                 </Button>
               )}
             </div>
-            <Button
-              variant="outline"
-              onClick={() => generateCandidatePdf(candidate as any)}
-              className="gap-2"
-            >
-              <FileDown className="w-4 h-4" />
-              Ficha PDF
-            </Button>
+            {(hasPermission('seleccion', 'view') || hasPermission('reportes', 'view')) && (
+              <Button
+                variant="outline"
+                onClick={() => generateCandidatePdf(candidate as any)}
+                className="gap-2"
+              >
+                <FileDown className="w-4 h-4" />
+                Ficha PDF
+              </Button>
+            )}
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
