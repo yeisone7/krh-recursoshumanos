@@ -192,6 +192,7 @@ export type Database = {
           address: string | null
           application_date: string
           birth_date: string | null
+          blood_type: string | null
           city: string | null
           created_at: string
           created_by: string | null
@@ -202,6 +203,7 @@ export type Database = {
             | null
           cv_url: string | null
           department: string | null
+          disability_type: string | null
           document_issue_city: string | null
           document_issue_date: string | null
           document_number: string
@@ -209,6 +211,7 @@ export type Database = {
           education_level: string | null
           email: string | null
           employee_id: string | null
+          ethnic_group: string | null
           experience_years: number | null
           final_concept: string | null
           final_score: number | null
@@ -218,8 +221,13 @@ export type Database = {
           gender_identity_other: string | null
           general_notes: string | null
           id: string
+          is_conflict_victim: boolean | null
+          is_demobilized: boolean | null
+          is_first_job: boolean | null
+          is_head_of_household: boolean | null
           is_selected: boolean | null
           last_name: string
+          marital_status: string | null
           mobile: string | null
           phone: string | null
           profession: string | null
@@ -237,6 +245,7 @@ export type Database = {
           address?: string | null
           application_date?: string
           birth_date?: string | null
+          blood_type?: string | null
           city?: string | null
           created_at?: string
           created_by?: string | null
@@ -247,6 +256,7 @@ export type Database = {
             | null
           cv_url?: string | null
           department?: string | null
+          disability_type?: string | null
           document_issue_city?: string | null
           document_issue_date?: string | null
           document_number: string
@@ -254,6 +264,7 @@ export type Database = {
           education_level?: string | null
           email?: string | null
           employee_id?: string | null
+          ethnic_group?: string | null
           experience_years?: number | null
           final_concept?: string | null
           final_score?: number | null
@@ -263,8 +274,13 @@ export type Database = {
           gender_identity_other?: string | null
           general_notes?: string | null
           id?: string
+          is_conflict_victim?: boolean | null
+          is_demobilized?: boolean | null
+          is_first_job?: boolean | null
+          is_head_of_household?: boolean | null
           is_selected?: boolean | null
           last_name: string
+          marital_status?: string | null
           mobile?: string | null
           phone?: string | null
           profession?: string | null
@@ -282,6 +298,7 @@ export type Database = {
           address?: string | null
           application_date?: string
           birth_date?: string | null
+          blood_type?: string | null
           city?: string | null
           created_at?: string
           created_by?: string | null
@@ -292,6 +309,7 @@ export type Database = {
             | null
           cv_url?: string | null
           department?: string | null
+          disability_type?: string | null
           document_issue_city?: string | null
           document_issue_date?: string | null
           document_number?: string
@@ -299,6 +317,7 @@ export type Database = {
           education_level?: string | null
           email?: string | null
           employee_id?: string | null
+          ethnic_group?: string | null
           experience_years?: number | null
           final_concept?: string | null
           final_score?: number | null
@@ -308,8 +327,13 @@ export type Database = {
           gender_identity_other?: string | null
           general_notes?: string | null
           id?: string
+          is_conflict_victim?: boolean | null
+          is_demobilized?: boolean | null
+          is_first_job?: boolean | null
+          is_head_of_household?: boolean | null
           is_selected?: boolean | null
           last_name?: string
+          marital_status?: string | null
           mobile?: string | null
           phone?: string | null
           profession?: string | null
