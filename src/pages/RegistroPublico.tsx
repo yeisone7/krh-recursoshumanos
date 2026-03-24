@@ -73,7 +73,7 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   residenceAddress: { label: 'Dirección de Residencia', type: 'text', section: 'Contacto' },
   residenceCity: { label: 'Ciudad de Residencia', type: 'text', section: 'Contacto' },
   residenceDepartment: { label: 'Departamento de Residencia', type: 'text', section: 'Contacto' },
-  residenceNeighborhood: { label: 'Barrio', type: 'text', section: 'Contacto' },
+  residenceNeighborhood: { label: 'Barrio, Vereda u otro.', type: 'text', section: 'Contacto' },
   emergencyContactName: { label: 'Nombre Contacto de Emergencia', type: 'text', section: 'Contacto' },
   emergencyContactPhone: { label: 'Teléfono Contacto de Emergencia', type: 'tel', section: 'Contacto' },
   emergencyContactRelationship: { label: 'Parentesco', type: 'text', section: 'Contacto' },

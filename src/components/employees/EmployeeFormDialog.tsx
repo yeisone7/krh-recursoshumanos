@@ -904,7 +904,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         name="residenceNeighborhood"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Barrio</FormLabel>
+                            <FormLabel>Barrio, Vereda u otro.</FormLabel>
                             <FormControl><Input placeholder="Nombre del barrio" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
