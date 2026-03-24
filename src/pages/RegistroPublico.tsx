@@ -24,7 +24,7 @@ interface TokenData {
 }
 
 // Candidate fields config
-const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string }> = {
+const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string; placeholder?: string }> = {
   firstName: { label: 'Nombre', type: 'text', section: 'Personal' },
   lastName: { label: 'Apellido', type: 'text', section: 'Personal' },
   documentType: { label: 'Tipo de Documento', type: 'select-doc-type', section: 'Personal' },
