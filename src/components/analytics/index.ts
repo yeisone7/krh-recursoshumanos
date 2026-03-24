@@ -5,3 +5,4 @@ export { AreaMetricsTable } from './AreaMetricsTable';
 export { DistributionCharts } from './DistributionCharts';
 export { AnalyticsKPICard } from './AnalyticsKPICard';
 export { SelectionDiversityCharts } from './SelectionDiversityCharts';
+export { DiversityTrendsChart } from './DiversityTrendsChart';
