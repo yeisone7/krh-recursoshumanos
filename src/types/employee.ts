@@ -171,13 +171,40 @@ export const employeeContactSchema = z.object({
 });
 
 // C. Family Schema
-export const employeeFamilySchema = z.object({
-  spouseName: z.string().max(100).optional(),
-  spouseGender: z.enum(['M', 'F', 'O']).nullable().optional(),
-  spouseBirthDate: z.date().optional(),
-  spouseWorks: z.boolean().default(false),
-  childrenCount: z.number().min(0).max(20).default(0),
+export const familyMemberSchema = z.object({
+  id: z.string().optional(),
+  relationship: z.string().min(1, 'El parentesco es requerido'),
+  fullName: z.string().min(2, 'El nombre es requerido'),
+  age: z.number().min(0).max(120).optional(),
+  gender: z.enum(['M', 'F', 'O']).nullable().optional(),
+  observations: z.string().max(500).optional(),
 });
+
+export type FamilyMemberFormData = z.infer<typeof familyMemberSchema>;
+
+export const employeeFamilySchema = z.object({
+  familyMembers: z.array(familyMemberSchema).default([]),
+});
+
+export const familyRelationshipOptions = [
+  { value: 'conyuge', label: 'Cónyuge / Pareja' },
+  { value: 'hijo', label: 'Hijo(a)' },
+  { value: 'padre', label: 'Padre' },
+  { value: 'madre', label: 'Madre' },
+  { value: 'hermano', label: 'Hermano(a)' },
+  { value: 'abuelo', label: 'Abuelo(a)' },
+  { value: 'otro', label: 'Otro' },
+] as const;
+
+export const familyRelationshipLabels: Record<string, string> = {
+  conyuge: 'Cónyuge / Pareja',
+  hijo: 'Hijo(a)',
+  padre: 'Padre',
+  madre: 'Madre',
+  hermano: 'Hermano(a)',
+  abuelo: 'Abuelo(a)',
+  otro: 'Otro',
+};
 
 // D. Work Info Schema
 export const employeeWorkInfoSchema = z.object({
@@ -362,6 +389,19 @@ export interface EmployeeFamily {
   updated_at: string;
 }
 
+export interface EmployeeFamilyMember {
+  id: string;
+  employee_id: string;
+  company_id: string;
+  relationship: string;
+  full_name: string;
+  age: number | null;
+  gender: string | null;
+  observations: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface EmployeeWorkInfo {
   id: string;
   employee_id: string;
@@ -485,6 +525,7 @@ export interface EmployeeSchedule {
 export interface EmployeeV2WithRelations extends EmployeeV2 {
   contact?: EmployeeContact | null;
   family?: EmployeeFamily | null;
+  family_members?: EmployeeFamilyMember[];
   work_info?: EmployeeWorkInfo | null;
   social_security?: EmployeeSocialSecurity | null;
   bank_info?: EmployeeBankInfo | null;
