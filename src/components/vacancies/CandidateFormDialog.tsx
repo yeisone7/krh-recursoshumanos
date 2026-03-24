@@ -108,6 +108,9 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         is_demobilized: data.isDemobilized || false,
         blood_type: data.bloodType || null,
         marital_status: data.maritalStatus || null,
+        emergency_contact_name: data.emergencyContactName || null,
+        emergency_contact_phone: data.emergencyContactPhone || null,
+        emergency_contact_relationship: data.emergencyContactRelationship || null,
       });
 
       toast.success('Candidato registrado', {
@@ -611,15 +614,20 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
 
                 {/* Contact Tab */}
                 <TabsContent value="contact" className="mt-0 space-y-4">
+                  {/* Datos de Contacto */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-1 h-5 bg-accent rounded-full" />
+                    <h3 className="font-semibold text-foreground">Datos de Contacto</h3>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>Correo Personal</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="correo@ejemplo.com" {...field} />
+                            <Input type="email" placeholder="personal@email.com" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -640,26 +648,77 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                     />
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Teléfono Fijo</FormLabel>
-                        <FormControl>
-                          <Input placeholder="6012345678" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <CityDepartmentSelect
                     departmentValue={form.watch('department') || ''}
                     cityValue={form.watch('city') || ''}
                     onDepartmentChange={(value) => form.setValue('department', value)}
                     onCityChange={(value) => form.setValue('city', value)}
                   />
+
+                  {/* Contacto de Emergencia */}
+                  <div className="pt-2">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-1 h-5 bg-accent rounded-full" />
+                      <h3 className="font-semibold text-foreground">Contacto de Emergencia</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="emergencyContactName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nombre</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Nombre completo" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="emergencyContactPhone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Teléfono</FormLabel>
+                            <FormControl>
+                              <Input placeholder="3001234567" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="emergencyContactRelationship"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Parentesco</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Esposo(a), Padre, Madre..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="esposo">Esposo(a)</SelectItem>
+                                <SelectItem value="padre">Padre</SelectItem>
+                                <SelectItem value="madre">Madre</SelectItem>
+                                <SelectItem value="hijo">Hijo(a)</SelectItem>
+                                <SelectItem value="hermano">Hermano(a)</SelectItem>
+                                <SelectItem value="abuelo">Abuelo(a)</SelectItem>
+                                <SelectItem value="tio">Tío(a)</SelectItem>
+                                <SelectItem value="primo">Primo(a)</SelectItem>
+                                <SelectItem value="amigo">Amigo(a)</SelectItem>
+                                <SelectItem value="otro">Otro</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
 
                   <FormField
                     control={form.control}
