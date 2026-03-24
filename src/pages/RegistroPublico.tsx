@@ -48,7 +48,7 @@ const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; sect
 };
 
 // Employee fields config
-const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string }> = {
+const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string; placeholder?: string }> = {
   firstName: { label: 'Primer Nombre', type: 'text', section: 'Identidad' },
   middleName: { label: 'Segundo Nombre', type: 'text', section: 'Identidad' },
   lastName: { label: 'Primer Apellido', type: 'text', section: 'Identidad' },
@@ -73,7 +73,7 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   residenceAddress: { label: 'Dirección de Residencia', type: 'text', section: 'Contacto' },
   residenceCity: { label: 'Ciudad de Residencia', type: 'text', section: 'Contacto' },
   residenceDepartment: { label: 'Departamento de Residencia', type: 'text', section: 'Contacto' },
-  residenceNeighborhood: { label: 'Barrio, Vereda u otro.', type: 'text', section: 'Contacto' },
+  residenceNeighborhood: { label: 'Barrio, Vereda u otro.', type: 'text', section: 'Contacto', placeholder: 'Nombre del barrio, vereda, otro...' },
   emergencyContactName: { label: 'Nombre Contacto de Emergencia', type: 'text', section: 'Contacto' },
   emergencyContactPhone: { label: 'Teléfono Contacto de Emergencia', type: 'tel', section: 'Contacto' },
   emergencyContactRelationship: { label: 'Parentesco', type: 'text', section: 'Contacto' },
