@@ -242,6 +242,20 @@ export function useCreateEmployee() {
           children_count: 0,
           is_current: true,
         }),
+        // C2. Family Members
+        ...(data.familyMembers && data.familyMembers.filter(m => m.fullName && m.relationship).length > 0
+          ? [supabase.from('employee_family_members').insert(
+              data.familyMembers.filter(m => m.fullName && m.relationship).map(m => ({
+                employee_id: employeeId,
+                company_id: currentCompanyId!,
+                relationship: m.relationship,
+                full_name: m.fullName,
+                age: m.age || null,
+                gender: m.gender || null,
+                observations: m.observations || null,
+              }))
+            )]
+          : []),
         // D. Work Info
         supabase.from('employee_work_info').insert({
           employee_id: employeeId,
