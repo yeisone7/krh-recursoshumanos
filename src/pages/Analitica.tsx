@@ -181,6 +181,9 @@ export default function Analitica() {
       {/* Selection Diversity */}
       <SelectionDiversityCharts />
 
+      {/* Diversity Trends */}
+      <DiversityTrendsChart />
+
       {/* Area Metrics Table */}
       <AreaMetricsTable data={analytics?.areaMetrics || []} />
     </div>
