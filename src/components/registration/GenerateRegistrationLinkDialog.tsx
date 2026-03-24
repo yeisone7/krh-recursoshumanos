@@ -69,7 +69,7 @@ const EMPLOYEE_FIELDS = [
   { key: 'residenceAddress', label: 'Dirección de Residencia', section: 'Contacto' },
   { key: 'residenceCity', label: 'Ciudad de Residencia', section: 'Contacto' },
   { key: 'residenceDepartment', label: 'Departamento de Residencia', section: 'Contacto' },
-  { key: 'residenceNeighborhood', label: 'Barrio', section: 'Contacto' },
+  { key: 'residenceNeighborhood', label: 'Barrio, Vereda u otro.', section: 'Contacto' },
   { key: 'emergencyContactName', label: 'Nombre Contacto de Emergencia', section: 'Contacto' },
   { key: 'emergencyContactPhone', label: 'Teléfono Contacto de Emergencia', section: 'Contacto' },
   { key: 'emergencyContactRelationship', label: 'Parentesco Contacto de Emergencia', section: 'Contacto' },
