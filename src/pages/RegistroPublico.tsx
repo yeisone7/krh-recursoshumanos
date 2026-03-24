@@ -24,7 +24,7 @@ interface TokenData {
 }
 
 // Candidate fields config
-const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string }> = {
+const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string; placeholder?: string }> = {
   firstName: { label: 'Nombre', type: 'text', section: 'Personal' },
   lastName: { label: 'Apellido', type: 'text', section: 'Personal' },
   documentType: { label: 'Tipo de Documento', type: 'select-doc-type', section: 'Personal' },
@@ -48,7 +48,7 @@ const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; sect
 };
 
 // Employee fields config
-const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string }> = {
+const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string; placeholder?: string }> = {
   firstName: { label: 'Primer Nombre', type: 'text', section: 'Identidad' },
   middleName: { label: 'Segundo Nombre', type: 'text', section: 'Identidad' },
   lastName: { label: 'Primer Apellido', type: 'text', section: 'Identidad' },
@@ -73,7 +73,7 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   residenceAddress: { label: 'Dirección de Residencia', type: 'text', section: 'Contacto' },
   residenceCity: { label: 'Ciudad de Residencia', type: 'text', section: 'Contacto' },
   residenceDepartment: { label: 'Departamento de Residencia', type: 'text', section: 'Contacto' },
-  residenceNeighborhood: { label: 'Barrio, Vereda u otro.', type: 'text', section: 'Contacto' },
+  residenceNeighborhood: { label: 'Barrio, Vereda u otro.', type: 'text', section: 'Contacto', placeholder: 'Nombre del barrio, vereda, otro...' },
   emergencyContactName: { label: 'Nombre Contacto de Emergencia', type: 'text', section: 'Contacto' },
   emergencyContactPhone: { label: 'Teléfono Contacto de Emergencia', type: 'tel', section: 'Contacto' },
   emergencyContactRelationship: { label: 'Parentesco', type: 'text', section: 'Contacto' },
@@ -528,7 +528,7 @@ export default function RegistroPublico() {
     return (
       <div key={key} className="space-y-1.5">
         <Label>{config.label}{isRequired && <span className="text-destructive ml-1">*</span>}</Label>
-        <Input type={config.type} value={formData[key] || ''} onChange={e => handleChange(key, e.target.value)} placeholder={`Ingrese ${config.label.toLowerCase()}`} />
+        <Input type={config.type} value={formData[key] || ''} onChange={e => handleChange(key, e.target.value)} placeholder={config.placeholder || `Ingrese ${config.label.toLowerCase()}`} />
       </div>
     );
   };
