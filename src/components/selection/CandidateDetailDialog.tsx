@@ -80,7 +80,7 @@ export function CandidateDetailDialog({
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [showSharedDocForm, setShowSharedDocForm] = useState(false);
   const docInputRef = useRef<HTMLInputElement>(null);
-  const { user, currentCompanyId } = useAuth();
+  const { user, currentCompanyId, hasPermission } = useAuth();
   const [selectedStep, setSelectedStep] = useState<SelectionStep | undefined>();
   const [defaultStepType, setDefaultStepType] = useState<SelectionStepType | undefined>();
   const [showRejectDialog, setShowRejectDialog] = useState(false);
