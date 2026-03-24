@@ -184,6 +184,14 @@ export const candidateFormSchema = z.object({
   salaryExpectation: z.string().optional(),
   source: z.string().optional(),
   generalNotes: z.string().optional(),
+  isFirstJob: z.boolean().default(false),
+  isHeadOfHousehold: z.boolean().default(false),
+  disabilityType: z.string().optional(),
+  ethnicGroup: z.string().optional(),
+  isConflictVictim: z.boolean().default(false),
+  isDemobilized: z.boolean().default(false),
+  bloodType: z.string().optional(),
+  maritalStatus: z.string().optional(),
 });
 
 export type CandidateFormData = z.infer<typeof candidateFormSchema>;
