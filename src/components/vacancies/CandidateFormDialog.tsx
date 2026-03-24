@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, User, Briefcase, MapPin, Shield, Users, Plus, X } from 'lucide-react';
+import { CalendarIcon, User, Briefcase, MapPin, Shield, Users, X } from 'lucide-react';
 
 import {
   Dialog,
