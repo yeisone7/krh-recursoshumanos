@@ -83,7 +83,7 @@ export function PortalPersonalInfo({ employee }: PortalPersonalInfoProps) {
               value={employee.birth_date ? format(new Date(employee.birth_date), 'PPP', { locale: es }) : '-'} 
             />
             <InfoRow 
-              label="Género" 
+              label="Sexo biológico" 
               value={employee.gender ? genderLabels[employee.gender] : '-'} 
             />
             <InfoRow 
