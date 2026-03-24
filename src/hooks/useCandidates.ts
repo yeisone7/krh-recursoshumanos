@@ -412,6 +412,7 @@ export function useConvertToEmployee() {
         if (candidateFamilyMembers && candidateFamilyMembers.length > 0) {
           const employeeFamilyInserts = (candidateFamilyMembers as any[]).map((m: any) => ({
             employee_id: employee.id,
+            company_id: currentCompanyId!,
             relationship: m.relationship,
             full_name: m.full_name,
             age: m.age,
