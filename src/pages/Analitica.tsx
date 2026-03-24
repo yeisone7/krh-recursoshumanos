@@ -20,7 +20,6 @@ import {
   ComplianceChart, 
   AreaMetricsTable,
   DistributionCharts,
-  DistributionCharts,
   AnalyticsKPICard,
   SelectionDiversityCharts,
 } from '@/components/analytics';
