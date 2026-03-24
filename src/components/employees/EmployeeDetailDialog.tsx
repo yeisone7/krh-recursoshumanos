@@ -671,7 +671,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                           <InfoItem icon={Globe} label="Ciudad / Departamento" value={
                             [employee.contact.residence_city, employee.contact.residence_department].filter(Boolean).join(', ') || null
                           } />
-                          <InfoItem icon={MapPin} label="Barrio" value={employee.contact.residence_neighborhood} />
+                          <InfoItem icon={MapPin} label="Barrio, Vereda u otro." value={employee.contact.residence_neighborhood} />
                         </div>
                       </div>
                     </SectionCard>

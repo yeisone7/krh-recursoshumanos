@@ -146,7 +146,7 @@ export function Tab360Profile({ employee }: Tab360ProfileProps) {
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow label="Dirección" value={employee.contact?.residence_address} />
-          <InfoRow label="Barrio" value={employee.contact?.residence_neighborhood} />
+          <InfoRow label="Barrio, Vereda u otro." value={employee.contact?.residence_neighborhood} />
           <InfoRow 
             label="Ciudad" 
             value={[employee.contact?.residence_city, employee.contact?.residence_department]

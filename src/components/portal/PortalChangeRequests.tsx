@@ -36,7 +36,7 @@ const fieldOptions: Record<string, { value: string; label: string }[]> = {
     { value: 'residence_department', label: 'Departamento de Residencia' },
     { value: 'residence_city', label: 'Ciudad de Residencia' },
     { value: 'residence_address', label: 'Dirección' },
-    { value: 'residence_neighborhood', label: 'Barrio' },
+    { value: 'residence_neighborhood', label: 'Barrio, Vereda u otro.' },
     { value: 'phone', label: 'Teléfono Fijo' },
     { value: 'mobile', label: 'Celular' },
     { value: 'personal_email', label: 'Correo Personal' },

@@ -37,7 +37,7 @@ export const fieldLabels: Record<string, string> = {
   residence_department: 'Departamento de Residencia',
   residence_city: 'Ciudad de Residencia',
   residence_address: 'Dirección',
-  residence_neighborhood: 'Barrio',
+  residence_neighborhood: 'Barrio, Vereda u otro.',
   phone: 'Teléfono Fijo',
   mobile: 'Celular',
   personal_email: 'Correo Personal',
