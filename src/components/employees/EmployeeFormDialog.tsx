@@ -1139,13 +1139,6 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     ))}
                   </div>
                 </TabsContent>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="spouseGender"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Género</FormLabel>
