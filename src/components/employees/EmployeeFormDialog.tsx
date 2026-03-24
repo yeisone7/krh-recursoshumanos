@@ -140,6 +140,7 @@ import {
   riskLevelLabels,
   accountTypeLabels,
   payrollTypeLabels,
+  familyRelationshipOptions,
 } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateEmployee, useUpdateEmployee } from '@/hooks/useEmployees';
