@@ -528,7 +528,7 @@ export default function RegistroPublico() {
     return (
       <div key={key} className="space-y-1.5">
         <Label>{config.label}{isRequired && <span className="text-destructive ml-1">*</span>}</Label>
-        <Input type={config.type} value={formData[key] || ''} onChange={e => handleChange(key, e.target.value)} placeholder={`Ingrese ${config.label.toLowerCase()}`} />
+        <Input type={config.type} value={formData[key] || ''} onChange={e => handleChange(key, e.target.value)} placeholder={config.placeholder || `Ingrese ${config.label.toLowerCase()}`} />
       </div>
     );
   };
