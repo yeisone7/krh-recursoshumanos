@@ -83,11 +83,7 @@ const fieldToTabMap: Record<string, string> = {
   emergencyContactPhone: 'contact',
   emergencyContactRelationship: 'contact',
   // Family tab
-  spouseName: 'family',
-  spouseGender: 'family',
-  spouseBirthDate: 'family',
-  spouseWorks: 'family',
-  childrenCount: 'family',
+  familyMembers: 'family',
   // Labor tab
   operationCenterId: 'labor',
   costCenter: 'labor',
@@ -206,8 +202,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
       linkType: 'indefinido',
       payrollType: 'quincenal',
       isOfficeSchedule: true,
-      spouseWorks: false,
-      childrenCount: 0,
+      familyMembers: [],
       accountRegistered: false,
       timeMode: 'administrative',
       timeModeStartDate: new Date(),
@@ -260,11 +255,14 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         emergencyContactRelationship: employee.contact?.emergency_contact_relationship || undefined,
         
         // C. Family
-        spouseName: employee.family?.spouse_name || undefined,
-        spouseGender: employee.family?.spouse_gender as any,
-        spouseBirthDate: employee.family?.spouse_birth_date ? new Date(employee.family.spouse_birth_date) : undefined,
-        spouseWorks: employee.family?.spouse_works || false,
-        childrenCount: employee.family?.children_count || 0,
+        familyMembers: (employee.family_members || []).map(m => ({
+          id: m.id,
+          relationship: m.relationship,
+          fullName: m.full_name,
+          age: m.age ?? undefined,
+          gender: (m.gender as any) || undefined,
+          observations: m.observations || undefined,
+        })),
         
         // D. Work Info
         operationCenterId: employee.work_info?.operation_center_id || undefined,
@@ -315,8 +313,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         linkType: 'indefinido',
         payrollType: 'quincenal',
         isOfficeSchedule: true,
-        spouseWorks: false,
-        childrenCount: 0,
+        familyMembers: [],
         accountRegistered: false,
         timeMode: 'administrative',
         timeModeStartDate: new Date(),

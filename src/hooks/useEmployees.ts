@@ -115,6 +115,7 @@ export function useEmployee(id: string | undefined) {
         { data: certifications },
         { data: vaccinations },
         { data: timeConfig },
+        { data: familyMembers },
       ] = await Promise.all([
         supabase.from('employee_contact').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
         supabase.from('employee_family').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
@@ -135,12 +136,14 @@ export function useEmployee(id: string | undefined) {
           work_schedules(id, name, days_of_week, start_time, end_time, break_minutes),
           shift_cycles(id, name, code, total_days)
         `).eq('employee_id', id).eq('is_active', true).maybeSingle(),
+        supabase.from('employee_family_members').select('*').eq('employee_id', id).order('created_at', { ascending: true }),
       ]);
 
       return {
         ...employee,
         contact: contact || null,
         family: family || null,
+        family_members: familyMembers || [],
         work_info: workInfo || null,
         social_security: socialSecurity || null,
         bank_info: bankInfo || null,
@@ -229,14 +232,14 @@ export function useCreateEmployee() {
           emergency_contact_relationship: data.emergencyContactRelationship || null,
           is_current: true,
         }),
-        // C. Family
+        // C. Family (legacy table - keep for backward compat)
         supabase.from('employee_family').insert({
           employee_id: employeeId,
-          spouse_name: data.spouseName || null,
-          spouse_gender: data.spouseGender || null,
-          spouse_birth_date: data.spouseBirthDate ? format(data.spouseBirthDate, 'yyyy-MM-dd') : null,
-          spouse_works: data.spouseWorks || false,
-          children_count: data.childrenCount || 0,
+          spouse_name: null,
+          spouse_gender: null,
+          spouse_birth_date: null,
+          spouse_works: false,
+          children_count: 0,
           is_current: true,
         }),
         // D. Work Info
@@ -462,32 +465,28 @@ export function useUpdateEmployee() {
         );
       }
 
-      // Family
-      if (existingFamily) {
-        upsertOperations.push(
-          supabase.from('employee_family')
-            .update({
-              spouse_name: data.spouseName || null,
-              spouse_gender: data.spouseGender || null,
-              spouse_birth_date: data.spouseBirthDate ? format(data.spouseBirthDate, 'yyyy-MM-dd') : null,
-              spouse_works: data.spouseWorks || false,
-              children_count: data.childrenCount || 0,
-            })
-            .eq('id', existingFamily.id)
-        );
-      } else {
-        upsertOperations.push(
-          supabase.from('employee_family').insert({
-            employee_id: id,
-            spouse_name: data.spouseName || null,
-            spouse_gender: data.spouseGender || null,
-            spouse_birth_date: data.spouseBirthDate ? format(data.spouseBirthDate, 'yyyy-MM-dd') : null,
-            spouse_works: data.spouseWorks || false,
-            children_count: data.childrenCount || 0,
-            is_current: true,
+      // Family Members - delete existing and re-insert
+      upsertOperations.push(
+        supabase.from('employee_family_members')
+          .delete()
+          .eq('employee_id', id)
+          .then(() => {
+            const members = (data.familyMembers || []).filter(m => m.fullName && m.relationship);
+            if (members.length > 0) {
+              return supabase.from('employee_family_members').insert(
+                members.map(m => ({
+                  employee_id: id,
+                  company_id: currentCompanyId!,
+                  relationship: m.relationship,
+                  full_name: m.fullName,
+                  age: m.age || null,
+                  gender: m.gender || null,
+                  observations: m.observations || null,
+                }))
+              );
+            }
           })
-        );
-      }
+      );
 
       // Work Info
       if (existingWorkInfo) {
