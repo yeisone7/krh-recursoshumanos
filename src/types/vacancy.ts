@@ -192,6 +192,9 @@ export const candidateFormSchema = z.object({
   isDemobilized: z.boolean().default(false),
   bloodType: z.string().optional(),
   maritalStatus: z.string().optional(),
+  emergencyContactName: z.string().optional(),
+  emergencyContactPhone: z.string().optional(),
+  emergencyContactRelationship: z.string().optional(),
 });
 
 export type CandidateFormData = z.infer<typeof candidateFormSchema>;
