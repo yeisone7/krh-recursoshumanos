@@ -44,7 +44,7 @@ import { toast } from 'sonner';
 import { candidateFormSchema, CandidateFormData } from '@/types/vacancy';
 import { useOpenVacancies } from '@/hooks/useVacancies';
 import { useCreateCandidate } from '@/hooks/useCandidates';
-import { CityDepartmentSelect } from '@/components/ui/city-department-select';
+import { CityDepartmentSelect, CitySelect } from '@/components/ui/city-department-select';
 
 interface CandidateFormDialogProps {
   open: boolean;
@@ -83,6 +83,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         department: data.department || null,
         birth_date: data.birthDate ? format(data.birthDate, 'yyyy-MM-dd') : null,
         document_issue_date: data.documentIssueDate ? format(data.documentIssueDate, 'yyyy-MM-dd') : null,
+        document_issue_city: data.documentIssueCity || null,
         gender: data.gender || null,
         gender_identity: data.genderIdentity || null,
         gender_identity_other: data.genderIdentity === 'otro' ? (data.genderIdentityOther || null) : null,
@@ -246,45 +247,64 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                     />
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="documentIssueDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Fecha de Expedición</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  'w-full pl-3 text-left font-normal',
-                                  !field.value && 'text-muted-foreground'
-                                )}
-                              >
-                                {field.value ? format(field.value, 'PPP', { locale: es }) : <span>Seleccionar</span>}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-background" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              captionLayout="dropdown-buttons"
-                              fromYear={1950}
-                              toYear={new Date().getFullYear()}
-                              locale={es}
-                              initialFocus
-                              className="pointer-events-auto"
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="documentIssueDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Fecha de Expedición</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    'w-full pl-3 text-left font-normal',
+                                    !field.value && 'text-muted-foreground'
+                                  )}
+                                >
+                                  {field.value ? format(field.value, 'PPP', { locale: es }) : <span>Seleccionar</span>}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                captionLayout="dropdown-buttons"
+                                fromYear={1950}
+                                toYear={new Date().getFullYear()}
+                                locale={es}
+                                initialFocus
+                                className="pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="documentIssueCity"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Lugar de Expedición</FormLabel>
+                          <FormControl>
+                            <CitySelect
+                              value={field.value || ''}
+                              onValueChange={field.onChange}
+                              placeholder="Buscar ciudad..."
                             />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
