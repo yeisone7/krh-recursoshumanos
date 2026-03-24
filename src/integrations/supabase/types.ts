@@ -7613,33 +7613,75 @@ export type Database = {
       is_company_member: { Args: { _company_id: string }; Returns: boolean }
       is_psicologo: { Args: never; Returns: boolean }
       is_user_active: { Args: { _user_id: string }; Returns: boolean }
-      submit_candidate_registration: {
-        Args: {
-          p_address?: string
-          p_birth_date?: string
-          p_city?: string
-          p_current_company?: string
-          p_current_position?: string
-          p_department?: string
-          p_document_number?: string
-          p_document_type?: string
-          p_education_level?: string
-          p_email?: string
-          p_experience_years?: number
-          p_first_name: string
-          p_gender?: string
-          p_gender_identity?: string
-          p_gender_identity_other?: string
-          p_general_notes?: string
-          p_last_name: string
-          p_mobile?: string
-          p_phone?: string
-          p_profession?: string
-          p_salary_expectation?: number
-          p_token: string
-        }
-        Returns: Json
-      }
+      submit_candidate_registration:
+        | {
+            Args: {
+              p_address?: string
+              p_birth_date?: string
+              p_city?: string
+              p_current_company?: string
+              p_current_position?: string
+              p_department?: string
+              p_document_number?: string
+              p_document_type?: string
+              p_education_level?: string
+              p_email?: string
+              p_experience_years?: number
+              p_first_name: string
+              p_gender?: string
+              p_gender_identity?: string
+              p_gender_identity_other?: string
+              p_general_notes?: string
+              p_last_name: string
+              p_mobile?: string
+              p_phone?: string
+              p_profession?: string
+              p_salary_expectation?: number
+              p_token: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_address?: string
+              p_birth_date?: string
+              p_blood_type?: string
+              p_city?: string
+              p_current_company?: string
+              p_current_position?: string
+              p_department?: string
+              p_disability_type?: string
+              p_document_issue_city?: string
+              p_document_issue_date?: string
+              p_document_number?: string
+              p_document_type?: string
+              p_education_level?: string
+              p_email?: string
+              p_emergency_contact_name?: string
+              p_emergency_contact_phone?: string
+              p_emergency_contact_relationship?: string
+              p_ethnic_group?: string
+              p_experience_years?: number
+              p_first_name: string
+              p_gender?: string
+              p_gender_identity?: string
+              p_gender_identity_other?: string
+              p_general_notes?: string
+              p_is_conflict_victim?: boolean
+              p_is_demobilized?: boolean
+              p_is_first_job?: boolean
+              p_is_head_of_household?: boolean
+              p_last_name: string
+              p_marital_status?: string
+              p_mobile?: string
+              p_neighborhood?: string
+              p_phone?: string
+              p_profession?: string
+              p_salary_expectation?: number
+              p_token: string
+            }
+            Returns: Json
+          }
       submit_defense_via_token: {
         Args: { p_content: string; p_defense_type?: string; p_token: string }
         Returns: Json
