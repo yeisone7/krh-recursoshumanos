@@ -15,7 +15,8 @@ import { EmployeeV2WithRelations,
   genderLabels, 
   maritalStatusLabels, 
   bloodTypeLabels,
-  documentTypeLabels
+  documentTypeLabels,
+  familyRelationshipLabels,
 } from '@/types/employee';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -175,25 +176,29 @@ export function Tab360Profile({ employee }: Tab360ProfileProps) {
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
-            Núcleo Familiar
+            Núcleo Familiar (Personas a cargo)
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-1">
-          <InfoRow label="Nombre del Cónyuge" value={employee.family?.spouse_name} />
-          {employee.family?.spouse_birth_date && (
-            <InfoRow 
-              label="Fecha de Nacimiento (Cónyuge)" 
-              value={format(new Date(employee.family.spouse_birth_date), "d MMM yyyy", { locale: es })} 
-            />
+        <CardContent className="space-y-3">
+          {employee.family_members && employee.family_members.length > 0 ? (
+            employee.family_members.map((member) => (
+              <div key={member.id} className="border rounded-lg p-3 space-y-1 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    {familyRelationshipLabels[member.relationship] || member.relationship}
+                  </Badge>
+                  {member.age != null && (
+                    <span className="text-xs text-muted-foreground">{member.age} años</span>
+                  )}
+                </div>
+                <InfoRow label="Nombre" value={member.full_name} />
+                {member.gender && <InfoRow label="Género" value={genderLabels[member.gender as keyof typeof genderLabels] || member.gender} />}
+                {member.observations && <InfoRow label="Observaciones" value={member.observations} />}
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground italic">No hay familiares registrados</p>
           )}
-          <InfoRow 
-            label="Cónyuge Trabaja" 
-            value={employee.family?.spouse_works ? 'Sí' : 'No'} 
-          />
-          <InfoRow 
-            label="Número de Hijos" 
-            value={employee.family?.children_count?.toString() || '0'} 
-          />
         </CardContent>
       </Card>
     </motion.div>
