@@ -75,6 +75,7 @@ import {
   vaccineTypeLabels,
   employeeDocumentTypeLabels,
   getEmployeeFullName,
+  familyRelationshipLabels,
 } from '@/types/employee';
 
 interface EmployeeDetailDialogProps {
@@ -1021,27 +1022,22 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
 
                 {/* ── FAMILY TAB ── */}
                 <TabsContent value="family" className="space-y-4 mt-4">
-                  {employee.family ? (
+                  {(employee.family_members && employee.family_members.length > 0) ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {employee.family.spouse_name && (
-                        <SectionCard title="Cónyuge / Pareja" icon={Heart}>
+                      {employee.family_members.map((member) => (
+                        <SectionCard 
+                          key={member.id} 
+                          title={familyRelationshipLabels[member.relationship] || member.relationship} 
+                          icon={Heart}
+                        >
                           <div className="divide-y divide-border">
-                            <InfoItem label="Nombre" value={employee.family.spouse_name} />
-                            {employee.family.spouse_gender && <InfoItem label="Género" value={genderLabels[employee.family.spouse_gender]} />}
-                            {employee.family.spouse_birth_date && (
-                              <InfoItem label="Fecha de Nacimiento" value={format(new Date(employee.family.spouse_birth_date), 'PPP', { locale: es })} />
-                            )}
-                            <InfoItem label="Trabaja" value={employee.family.spouse_works ? 'Sí' : 'No'} />
+                            <InfoItem label="Nombre" value={member.full_name} />
+                            {member.age != null && <InfoItem label="Edad" value={`${member.age} años`} />}
+                            {member.gender && <InfoItem label="Género" value={genderLabels[member.gender as keyof typeof genderLabels] || member.gender} />}
+                            {member.observations && <InfoItem label="Observaciones" value={member.observations} />}
                           </div>
                         </SectionCard>
-                      )}
-
-                      <SectionCard title="Hijos" icon={UsersIcon}>
-                        <div className="flex items-center gap-3 py-2">
-                          <span className="text-3xl font-bold text-primary">{employee.family.children_count || 0}</span>
-                          <span className="text-sm text-muted-foreground">hijos registrados</span>
-                        </div>
-                      </SectionCard>
+                      ))}
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
