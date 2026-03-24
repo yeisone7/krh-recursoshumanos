@@ -71,7 +71,13 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
       isHeadOfHousehold: false,
       isConflictVictim: false,
       isDemobilized: false,
+      familyMembers: [],
     },
+  });
+
+  const { fields: familyFields, append: appendFamily, remove: removeFamily } = useFieldArray({
+    control: form.control,
+    name: 'familyMembers',
   });
 
   const handleSubmit = async (data: CandidateFormData) => {
