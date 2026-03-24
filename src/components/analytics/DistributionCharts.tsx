@@ -83,7 +83,7 @@ export function DistributionCharts({ byContractType, byGender, byCenter }: Distr
         {/* Gender */}
         <div>
           <p className="text-sm text-muted-foreground mb-3 text-center font-medium">
-            Por Género
+            Por Sexo biológico
           </p>
           {byGender.length > 0 ? (
             <>

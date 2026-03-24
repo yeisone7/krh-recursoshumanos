@@ -192,7 +192,7 @@ export function Tab360Profile({ employee }: Tab360ProfileProps) {
                   )}
                 </div>
                 <InfoRow label="Nombre" value={member.full_name} />
-                {member.gender && <InfoRow label="Género" value={genderLabels[member.gender as keyof typeof genderLabels] || member.gender} />}
+                {member.gender && <InfoRow label="Sexo biológico" value={genderLabels[member.gender as keyof typeof genderLabels] || member.gender} />}
                 {member.observations && <InfoRow label="Observaciones" value={member.observations} />}
               </div>
             ))
