@@ -187,6 +187,47 @@ export type Database = {
           },
         ]
       }
+      candidate_family_members: {
+        Row: {
+          age: number | null
+          candidate_id: string
+          created_at: string
+          full_name: string
+          gender: string | null
+          id: string
+          observations: string | null
+          relationship: string
+        }
+        Insert: {
+          age?: number | null
+          candidate_id: string
+          created_at?: string
+          full_name: string
+          gender?: string | null
+          id?: string
+          observations?: string | null
+          relationship: string
+        }
+        Update: {
+          age?: number | null
+          candidate_id?: string
+          created_at?: string
+          full_name?: string
+          gender?: string | null
+          id?: string
+          observations?: string | null
+          relationship?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_family_members_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidates: {
         Row: {
           address: string | null

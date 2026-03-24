@@ -158,6 +158,14 @@ export const vacancyFormSchema = z.object({
 
 export type VacancyFormData = z.infer<typeof vacancyFormSchema>;
 
+export const candidateFamilyMemberSchema = z.object({
+  relationship: z.string().min(1, 'El parentesco es requerido'),
+  fullName: z.string().min(2, 'El nombre es requerido'),
+  age: z.number().min(0).max(120).optional(),
+  gender: z.enum(['M', 'F']).nullable().optional(),
+  observations: z.string().max(500).optional(),
+});
+
 export const candidateFormSchema = z.object({
   vacancyId: z.string().min(1, 'La vacante es requerida'),
   firstName: z.string().min(2, 'El nombre es requerido'),
@@ -196,6 +204,7 @@ export const candidateFormSchema = z.object({
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
   emergencyContactRelationship: z.string().optional(),
+  familyMembers: z.array(candidateFamilyMemberSchema).default([]),
 });
 
 export type CandidateFormData = z.infer<typeof candidateFormSchema>;
