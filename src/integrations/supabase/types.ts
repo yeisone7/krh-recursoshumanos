@@ -210,6 +210,9 @@ export type Database = {
           document_type: Database["public"]["Enums"]["document_type"]
           education_level: string | null
           email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
           employee_id: string | null
           ethnic_group: string | null
           experience_years: number | null
@@ -263,6 +266,9 @@ export type Database = {
           document_type?: Database["public"]["Enums"]["document_type"]
           education_level?: string | null
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           employee_id?: string | null
           ethnic_group?: string | null
           experience_years?: number | null
@@ -316,6 +322,9 @@ export type Database = {
           document_type?: Database["public"]["Enums"]["document_type"]
           education_level?: string | null
           email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           employee_id?: string | null
           ethnic_group?: string | null
           experience_years?: number | null
