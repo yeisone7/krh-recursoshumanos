@@ -1139,9 +1139,6 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     ))}
                   </div>
                 </TabsContent>
-
-
-                            <FormControl><Input placeholder="Nombre completo" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
