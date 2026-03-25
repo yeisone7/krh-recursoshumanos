@@ -555,10 +555,48 @@ export default function RegistroPublico() {
       );
     }
 
+    const handleDocumentBlur = key === 'documentNumber' && !isEmployee ? async () => {
+      const docNum = formData[key]?.trim();
+      if (docNum && docNum.length >= 4 && tokenData?.company_id && !prefilled) {
+        try {
+          const { data } = await supabase.rpc('check_candidate_background', {
+            p_document_number: docNum,
+            p_company_id: tokenData.company_id,
+          } as any);
+          const result = data as any;
+          if (result?.previous_candidacies?.length > 0) {
+            const latest = result.previous_candidacies[0];
+            const updates: Record<string, string> = {};
+            if (!formData.firstName && latest.first_name) updates.firstName = latest.first_name;
+            if (!formData.lastName && latest.last_name) updates.lastName = latest.last_name;
+            if (!formData.email && latest.email) updates.email = latest.email;
+            if (!formData.mobile && latest.mobile) updates.mobile = latest.mobile;
+            if (!formData.phone && latest.phone) updates.phone = latest.phone;
+            if (!formData.address && latest.address) updates.address = latest.address;
+            if (!formData.city && latest.city) updates.city = latest.city;
+            if (!formData.department && latest.department) updates.department = latest.department;
+            if (!formData.neighborhood && latest.neighborhood) updates.neighborhood = latest.neighborhood;
+            if (!formData.gender && latest.gender) updates.gender = latest.gender;
+            if (Object.keys(updates).length > 0) {
+              setFormData(prev => ({ ...prev, ...updates }));
+              setPrefilled(true);
+              toast.info('Se encontró información previa asociada a este documento. Los campos han sido pre-llenados.');
+            }
+          }
+        } catch { /* silent */ }
+      }
+    } : undefined;
+
     return (
       <div key={key} className="space-y-1.5">
         <Label>{config.label}{isRequired && <span className="text-destructive ml-1">*</span>}</Label>
-        <Input type={config.type} value={formData[key] || ''} onChange={e => handleChange(key, e.target.value)} placeholder={config.placeholder || `Ingrese ${config.label.toLowerCase()}`} />
+        <Input
+          type={config.type}
+          value={formData[key] || ''}
+          onChange={e => handleChange(key, e.target.value)}
+          onBlur={handleDocumentBlur}
+          placeholder={config.placeholder || `Ingrese ${config.label.toLowerCase()}`}
+        />
       </div>
     );
   };
