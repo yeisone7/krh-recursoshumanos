@@ -135,7 +135,7 @@ export default function Analitica() {
       </div>
 
       {/* Additional Alert KPI */}
-      {analytics?.certificationExpiringCount && analytics.certificationExpiringCount > 0 && (
+      {analytics?.certificationExpiringCount != null && analytics.certificationExpiringCount > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
