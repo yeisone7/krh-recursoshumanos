@@ -489,7 +489,7 @@ export function useConvertToEmployee() {
           .from('selection_steps')
           .select('*')
           .eq('candidate_id', candidateId)
-          .eq('step_type', 'examenes_medicos')
+          .in('step_type', ['examenes_medicos', 'medical_exam'] as any)
           .eq('status', 'passed')
           .order('completed_date', { ascending: false })
           .limit(1)
