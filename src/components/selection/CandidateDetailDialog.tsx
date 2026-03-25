@@ -895,7 +895,7 @@ export function CandidateDetailDialog({
                   )}
                 </TabsContent>
               )}
-            </ScrollArea>
+            </div>
           </Tabs>
 
           {/* Footer Actions */}
