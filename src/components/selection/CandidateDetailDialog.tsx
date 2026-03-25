@@ -320,6 +320,11 @@ export function CandidateDetailDialog({
             </div>
           </DialogHeader>
 
+          {/* Background alerts */}
+          <div className="px-6">
+            <CandidateBackgroundAlerts background={background} loading={bgLoading} compact />
+          </div>
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
             <div className="px-6 pt-2 border-b">
               <TabsList className="h-10">
