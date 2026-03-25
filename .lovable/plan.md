@@ -1,56 +1,54 @@
 
 
-## Plan: Examen de Ingreso desde Selección con Aprobación Requerida para Contratar
+## Plan: Anexos de Perfil de Cargo por Centro de Operación
 
 ### Resumen
-Cuando un candidato está en estado "seleccionado", en lugar de contratar directamente, el flujo será:
-1. **Registrar examen de ingreso** desde Selección (trayendo exámenes del profesiograma según centro de operación y cargo de la vacante)
-2. El examen se guarda en la tabla `medical_exams` existente para trazabilidad
-3. **Solo se puede contratar si el examen está aprobado** (resultado = "apto" o "apto_restricciones")
+Crear un sistema de "anexos" (overrides parciales) que permita personalizar campos específicos del perfil de un cargo para centros de operación particulares, sin duplicar el perfil completo.
 
-### Cambios
+### 1. Migración SQL
+Nueva tabla `position_profile_annexes` con todos los campos del perfil como nullable (solo se llenan los que cambian), referenciando `position_profiles(id)` y `operation_centers(id)`. Constraint UNIQUE en `(profile_id, operation_center_id)`. RLS basada en `company_id` con `is_company_member()`.
 
-#### 1. Nuevo componente: `CandidateEntryExamDialog.tsx`
-Diálogo modal para registrar el examen de ingreso del candidato, similar a `ExamTransactionFormDialog` pero simplificado:
-- Pre-llena el candidato (no editable)
-- Usa el profesiograma del centro de operación + cargo de la vacante para traer los exámenes requeridos
-- Campos: fecha examen, proveedor/IPS, médico, concepto médico, resultado (Apto/Apto con restricciones/No Apto/Pendiente), restricciones, observaciones
-- Lista de exámenes del profesiograma con checkboxes
-- Guarda en `medical_exams` con `exam_type = 'ingreso'` y referencia al `candidate_id` (nuevo campo o vía el `employee_id` que se crea temporalmente)
+### 2. Tipos TypeScript
+Agregar `PositionProfileAnnex` y `PositionProfileAnnexFormData` en `src/types/positionProfile.ts`.
 
-**Enfoque**: Dado que `medical_exams` requiere `employee_id` y el candidato aún no es empleado, se guardará el examen vinculado al `candidate_id` en la tabla `selection_steps` con tipo `examenes_medicos` y adicionalmente se creará un registro en `medical_exams` al momento de contratar (ya existente). El concepto médico y resultado se almacenarán en `selection_steps`.
+### 3. Hook `src/hooks/useProfileAnnexes.ts`
+- `useProfileAnnexes(profileId)` — lista anexos del perfil con join a `operation_centers` para mostrar nombre.
+- `useCreateProfileAnnex()` / `useUpdateProfileAnnex()` / `useDeleteProfileAnnex()` — CRUD.
+- `useMergedProfile(profileId, operationCenterId)` — devuelve perfil base fusionado con el anexo si existe (campo del anexo reemplaza al base cuando no es null).
 
-#### 2. Modificar `SelectionStepFormDialog.tsx`
-Para la etapa `examenes_medicos`:
-- Agregar campos adicionales: proveedor/IPS, nombre del médico, concepto médico detallado
-- Cargar automáticamente los exámenes del profesiograma basado en el centro de operación y cargo de la vacante
-- Mostrar lista de exámenes requeridos como checklist informativo
-- El campo `result` ya existe y mapea a Apto/No Apto
+### 4. Componente `src/components/config/ProfileAnnexesTab.tsx`
+Pestaña nueva en `PositionProfileDetailDialog`:
+- Lista de centros de operación que tienen anexo (cards con badge de campos modificados).
+- Botón "+ Agregar Anexo" abre selector de centro de operación (solo los que no tienen anexo aún).
+- Al seleccionar, muestra formulario donde cada sección tiene un checkbox "Personalizar este campo" — al activarlo, aparece el campo editable pre-llenado con el valor base.
+- Vista comparativa: valor base (tachado o gris) vs valor del anexo.
 
-#### 3. Modificar `CandidateDetailDialog.tsx`
-- Cambiar la lógica del botón "Contratar": solo habilitarlo si existe una etapa `examenes_medicos` con estado `passed` (Apto)
-- Si no hay examen aprobado, mostrar tooltip/mensaje: "Se requiere examen médico de ingreso aprobado para contratar"
-- Agregar acceso rápido para registrar el examen desde el footer cuando el candidato está `selected`
+### 5. Componente `src/components/config/ProfileAnnexForm.tsx`
+Formulario de creación/edición del anexo:
+- Select de centro de operación (solo en creación).
+- Cada campo con toggle para activar/desactivar override.
+- Campos: purpose, reports_to, supervises, num_positions, education_level, education_detail, experience, specific_knowledge, skills, functions, responsibilities, working_conditions.
+- Campo `notes` para justificar las diferencias.
 
-#### 4. Modificar `VacancyDetailDialog.tsx`
-- Misma lógica de validación del examen antes de contratar
+### 6. Modificar `PositionProfileDetailDialog.tsx`
+Agregar tercera pestaña "Anexos por Centro" con icono `Building2` al `TabsList`, renderizando `ProfileAnnexesTab`.
 
-#### 5. Modificar `useCandidates.ts` (useConvertToEmployee)
-- Al contratar, tomar los datos del examen médico registrado en `selection_steps` y copiarlos a `medical_exams` con datos completos (proveedor, médico, concepto)
-- Eliminar la creación automática de examen "pendiente" actual, ya que ahora el examen se registra antes
+### 7. Archivos
 
-#### 6. Migración SQL (opcional)
-- Agregar columnas a `selection_steps`: `provider`, `doctor_name`, `medical_concept` para almacenar los datos del examen médico durante selección
-- Alternativa: usar el campo `notes` en formato JSON (menos limpio pero sin migración)
+| Archivo | Acción |
+|---|---|
+| Migración SQL | Crear tabla `position_profile_annexes` + RLS |
+| `src/types/positionProfile.ts` | Agregar tipos de anexo |
+| `src/hooks/useProfileAnnexes.ts` | Nuevo — CRUD + merge |
+| `src/components/config/ProfileAnnexesTab.tsx` | Nuevo — listado de anexos |
+| `src/components/config/ProfileAnnexForm.tsx` | Nuevo — formulario de anexo |
+| `src/components/config/PositionProfileDetailDialog.tsx` | Agregar pestaña |
 
-### Archivos a crear/modificar
-
-| Archivo | Cambio |
-|---------|--------|
-| **Migración SQL** | Agregar `provider`, `doctor_name`, `medical_concept` a `selection_steps` |
-| `src/components/selection/SelectionStepFormDialog.tsx` | Campos adicionales para etapa médica + carga de profesiograma |
-| `src/components/selection/CandidateDetailDialog.tsx` | Validación de examen aprobado para contratar |
-| `src/components/vacancies/VacancyDetailDialog.tsx` | Misma validación |
-| `src/hooks/useCandidates.ts` | Copiar datos del examen médico a `medical_exams` al contratar |
-| `src/hooks/useExamProfesiograma.ts` | Nuevo hook para buscar profesiograma por centro+cargo (sin employee) |
+### Forma de uso
+1. Ve a **Catálogos > Cargos** y abre el perfil de un cargo.
+2. Verás la nueva pestaña **"Anexos por Centro"**.
+3. Haz clic en **"+ Agregar Anexo"**, selecciona un Centro de Operación.
+4. Activa solo los campos que necesitas personalizar para ese centro (los demás se heredan del perfil base).
+5. Guarda. En la lista verás el centro con badges indicando qué campos fueron modificados.
+6. Para editar o eliminar un anexo, usa los botones en cada tarjeta.
 
