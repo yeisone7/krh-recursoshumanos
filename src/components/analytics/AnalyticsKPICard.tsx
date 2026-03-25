@@ -82,7 +82,7 @@ export function AnalyticsKPICard({
           {trend && (
             <div className={cn("flex items-center gap-1 mt-2 text-sm font-medium", getTrendColor())}>
               {getTrendIcon()}
-              <span>{Math.abs(trend.value)}%</span>
+              <span>{Math.abs(trend.value).toFixed(1)}%</span>
               <span className="text-muted-foreground font-normal">{trend.label}</span>
             </div>
           )}
