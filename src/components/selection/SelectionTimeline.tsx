@@ -182,7 +182,7 @@ export function SelectionTimeline({
                       <StepIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       <div>
                         <p className="font-medium text-sm">
-                          {selectionStepTypeLabels[stepType] || stepType}
+                          {selectionStepTypeLabels[stepType] || stepType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                         </p>
                         {step.scheduled_date && (
                           <p className="text-xs text-muted-foreground">
