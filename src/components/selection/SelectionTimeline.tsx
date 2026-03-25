@@ -43,6 +43,7 @@ interface SelectionTimelineProps {
   onAddStep?: (stepType: SelectionStepType) => void;
   onEditStep?: (step: SelectionStep) => void;
   onUpdateStepStatus?: (stepId: string, status: SelectionStepStatus) => void;
+  onGenerateExamOrder?: (step: SelectionStep) => void;
   readOnly?: boolean;
 }
 
@@ -87,6 +88,7 @@ export function SelectionTimeline({
   onAddStep,
   onEditStep,
   onUpdateStepStatus,
+  onGenerateExamOrder,
   readOnly = false,
 }: SelectionTimelineProps) {
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
