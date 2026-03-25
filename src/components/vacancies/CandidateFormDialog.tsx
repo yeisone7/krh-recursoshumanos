@@ -48,6 +48,9 @@ import { useCreateCandidate } from '@/hooks/useCandidates';
 import { CityDepartmentSelect, CitySelect } from '@/components/ui/city-department-select';
 import { supabase } from '@/integrations/supabase/client';
 import { familyRelationshipOptions } from '@/types/employee';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCandidateBackground } from '@/hooks/useCandidateBackground';
+import { CandidateBackgroundAlerts } from '@/components/selection/CandidateBackgroundAlerts';
 
 interface CandidateFormDialogProps {
   open: boolean;
@@ -58,8 +61,11 @@ interface CandidateFormDialogProps {
 
 export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }: CandidateFormDialogProps) {
   const [activeTab, setActiveTab] = useState('personal');
+  const { currentCompanyId } = useAuth();
   const { data: vacancies = [] } = useOpenVacancies();
   const createCandidate = useCreateCandidate();
+  const { background, loading: bgLoading, checkBackground } = useCandidateBackground();
+  const [prefilled, setPrefilled] = useState(false);
 
   const form = useForm<CandidateFormData>({
     resolver: zodResolver(candidateFormSchema),
@@ -189,6 +195,8 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
               </div>
 
               <ScrollArea className="h-[calc(90vh-260px)] px-6 py-4">
+                <CandidateBackgroundAlerts background={background} loading={bgLoading} compact />
+
                 {/* Personal Tab */}
                 <TabsContent value="personal" className="mt-0 space-y-4">
                   <FormField
@@ -278,7 +286,34 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                         <FormItem>
                           <FormLabel>Número de Documento *</FormLabel>
                           <FormControl>
-                            <Input placeholder="1234567890" {...field} />
+                            <Input
+                              placeholder="1234567890"
+                              {...field}
+                              onBlur={async (e) => {
+                                field.onBlur();
+                                const docNum = e.target.value.trim();
+                                if (docNum.length >= 4) {
+                                  const result = await checkBackground(docNum, currentCompanyId);
+                                  if (result?.previous_candidacies?.length > 0 && !prefilled) {
+                                    const latest = result.previous_candidacies[0];
+                                    const current = form.getValues();
+                                    if (!current.firstName && latest.first_name) form.setValue('firstName', latest.first_name);
+                                    if (!current.lastName && latest.last_name) form.setValue('lastName', latest.last_name);
+                                    if (!current.email && latest.email) form.setValue('email', latest.email);
+                                    if (!current.mobile && latest.mobile) form.setValue('mobile', latest.mobile);
+                                    if (!current.phone && latest.phone) form.setValue('phone', latest.phone || '');
+                                    if (!current.address && latest.address) form.setValue('address', latest.address);
+                                    if (!current.city && latest.city) form.setValue('city', latest.city);
+                                    if (!current.department && latest.department) form.setValue('department', latest.department);
+                                    if (!current.neighborhood && latest.neighborhood) form.setValue('neighborhood', latest.neighborhood);
+                                    if (!current.gender && latest.gender) form.setValue('gender', latest.gender);
+                                    if (!current.educationLevel && latest.education_level) form.setValue('educationLevel', latest.education_level);
+                                    if (!current.profession && latest.profession) form.setValue('profession', latest.profession);
+                                    setPrefilled(true);
+                                  }
+                                }
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

@@ -7559,6 +7559,14 @@ export type Database = {
         }
         Returns: Json
       }
+      check_candidate_background: {
+        Args: {
+          p_company_id?: string
+          p_document_number: string
+          p_document_type?: string
+        }
+        Returns: Json
+      }
       check_user_permission: {
         Args: { _action: string; _module_code: string; _user_id: string }
         Returns: boolean
