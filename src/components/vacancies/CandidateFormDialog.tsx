@@ -195,6 +195,8 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
               </div>
 
               <ScrollArea className="h-[calc(90vh-260px)] px-6 py-4">
+                <CandidateBackgroundAlerts background={background} loading={bgLoading} compact />
+
                 {/* Personal Tab */}
                 <TabsContent value="personal" className="mt-0 space-y-4">
                   <FormField
