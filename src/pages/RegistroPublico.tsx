@@ -641,6 +641,14 @@ export default function RegistroPublico() {
 
           {step === 'form' && (
             <div className="space-y-6">
+              {prefilled && (
+                <Alert className="border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/20">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-sm text-blue-700 dark:text-blue-400">
+                    Se encontró información previa asociada a este documento. Los campos han sido pre-llenados.
+                  </AlertDescription>
+                </Alert>
+              )}
               {sections.map(section => {
                 const sectionFields = enabledFields.filter(
                   key => fieldConfig[key]?.section === section
