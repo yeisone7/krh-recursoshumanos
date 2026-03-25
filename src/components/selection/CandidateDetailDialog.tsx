@@ -53,6 +53,7 @@ import { SelectionStepFormDialog } from './SelectionStepFormDialog';
 import { CandidateReasonDialog } from './CandidateReasonDialog';
 import { FamilyMembersSection } from './FamilyMembersSection';
 import { generateCandidatePdf } from '@/lib/candidatePdf';
+import { generateExamOrderPdf } from '@/lib/examOrderPdf';
 import { CandidateBackgroundAlerts } from './CandidateBackgroundAlerts';
 import {
   CandidateStatus,
@@ -370,6 +371,43 @@ export function CandidateDetailDialog({
                   onAddStep={handleAddStep}
                   onEditStep={handleEditStep}
                   onUpdateStepStatus={handleUpdateStepStatus}
+                  onGenerateExamOrder={async (step) => {
+                    try {
+                      await generateExamOrderPdf({
+                        candidate: {
+                          first_name: candidate.first_name,
+                          last_name: candidate.last_name,
+                          document_type: candidate.document_type,
+                          document_number: candidate.document_number,
+                          birth_date: candidate.birth_date,
+                          gender: candidate.gender,
+                          email: candidate.email,
+                          mobile: candidate.mobile,
+                          phone: candidate.phone,
+                          address: candidate.address,
+                          city: candidate.city,
+                          department: candidate.department,
+                        },
+                        vacancy: {
+                          position_title: vacancy?.position_title || 'N/A',
+                          operation_center_id: vacancy?.operation_center_id,
+                          operation_centers: vacancy?.operation_centers,
+                        },
+                        step: {
+                          provider: (step as any).provider,
+                          doctor_name: (step as any).doctor_name,
+                          scheduled_date: step.scheduled_date,
+                          exam_profesiograma_items: (step as any).exam_profesiograma_items,
+                          notes: step.notes,
+                        },
+                        companyId: currentCompanyId!,
+                      });
+                      toast.success('Orden de examen generada');
+                    } catch (err) {
+                      console.error('Error generating exam order:', err);
+                      toast.error('Error al generar la orden de examen');
+                    }
+                  }}
                 />
               </TabsContent>
 

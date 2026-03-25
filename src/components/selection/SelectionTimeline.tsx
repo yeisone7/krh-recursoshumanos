@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
 import {
   CheckCircle2,
   Circle,
@@ -20,6 +21,7 @@ import {
   Ban,
   Brain,
   BookOpen,
+  FileDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +43,7 @@ interface SelectionTimelineProps {
   onAddStep?: (stepType: SelectionStepType) => void;
   onEditStep?: (step: SelectionStep) => void;
   onUpdateStepStatus?: (stepId: string, status: SelectionStepStatus) => void;
+  onGenerateExamOrder?: (step: SelectionStep) => void;
   readOnly?: boolean;
 }
 
@@ -85,6 +88,7 @@ export function SelectionTimeline({
   onAddStep,
   onEditStep,
   onUpdateStepStatus,
+  onGenerateExamOrder,
   readOnly = false,
 }: SelectionTimelineProps) {
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
@@ -255,6 +259,24 @@ export function SelectionTimeline({
                           >
                             <XCircle className="w-4 h-4 mr-1" />
                             {stepsWithConcepto.includes(stepType) ? 'No Apto' : 'No Aprobar'}
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Generate exam order button for medical exams */}
+                      {stepType === 'examenes_medicos' && onGenerateExamOrder && (
+                        <div className="pt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-primary hover:text-primary hover:border-primary gap-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onGenerateExamOrder(step);
+                            }}
+                          >
+                            <FileDown className="w-4 h-4" />
+                            Generar Orden de Examen (Res. 2346)
                           </Button>
                         </div>
                       )}
