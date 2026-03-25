@@ -424,6 +424,20 @@ export function CandidateDetailDialog({
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Documento</p>
                       <p className="font-medium">{candidate.document_type} {candidate.document_number}</p>
                     </div>
+                    {(candidate as any).document_issue_date && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Expedición</p>
+                        <p className="font-medium">
+                          {format(new Date((candidate as any).document_issue_date), 'dd MMM yyyy', { locale: es })}
+                        </p>
+                      </div>
+                    )}
+                    {(candidate as any).document_issue_city && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Lugar Expedición</p>
+                        <p className="font-medium">{(candidate as any).document_issue_city}</p>
+                      </div>
+                    )}
                     {candidate.birth_date && (
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Nacimiento</p>
@@ -434,13 +448,13 @@ export function CandidateDetailDialog({
                     )}
                     {candidate.gender && (
                       <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Sexo biológico</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Sexo Biológico</p>
                         <p className="font-medium capitalize">{candidate.gender}</p>
                       </div>
                     )}
                     {(candidate as any).gender_identity && (
                       <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Sexo de identificación</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Sexo de Identificación</p>
                         <p className="font-medium capitalize">
                           {(candidate as any).gender_identity === 'otro'
                             ? `Otro: ${(candidate as any).gender_identity_other || ''}`
@@ -448,16 +462,67 @@ export function CandidateDetailDialog({
                         </p>
                       </div>
                     )}
+                    {(candidate as any).blood_type && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Tipo de Sangre</p>
+                        <p className="font-medium">{(candidate as any).blood_type}</p>
+                      </div>
+                    )}
+                    {(candidate as any).marital_status && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Estado Civil</p>
+                        <p className="font-medium capitalize">{(candidate as any).marital_status}</p>
+                      </div>
+                    )}
+                    {(candidate as any).ethnic_group && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Grupo Étnico</p>
+                        <p className="font-medium capitalize">{(candidate as any).ethnic_group}</p>
+                      </div>
+                    )}
+                    {(candidate as any).disability_type && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Tipo de Discapacidad</p>
+                        <p className="font-medium capitalize">{(candidate as any).disability_type}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
+                {/* Especificaciones */}
+                {((candidate as any).is_first_job || (candidate as any).is_head_of_household || (candidate as any).is_conflict_victim || (candidate as any).is_demobilized) && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary" />
+                        Especificaciones de la Persona
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {(candidate as any).is_first_job && (
+                          <Badge variant="outline" className="bg-info/10 text-info border-info/20">Primer Empleo</Badge>
+                        )}
+                        {(candidate as any).is_head_of_household && (
+                          <Badge variant="outline" className="bg-violet-light text-violet border-violet/20">Madre/Padre Cabeza de Familia</Badge>
+                        )}
+                        {(candidate as any).is_conflict_victim && (
+                          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">Víctima del Conflicto</Badge>
+                        )}
+                        {(candidate as any).is_demobilized && (
+                          <Badge variant="outline" className="bg-tertiary/10 text-tertiary border-tertiary/20">Desmovilizado</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <Separator />
 
-                {/* Contact */}
+                {/* Contact & Address */}
                 <div>
                   <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                     <Mail className="w-4 h-4 text-primary" />
-                    Contacto
+                    Contacto y Ubicación
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {candidate.email && (
@@ -478,9 +543,21 @@ export function CandidateDetailDialog({
                         <p className="font-medium">{candidate.phone}</p>
                       </div>
                     )}
+                    {candidate.address && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Dirección</p>
+                        <p className="font-medium">{candidate.address}</p>
+                      </div>
+                    )}
+                    {(candidate as any).neighborhood && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Barrio, Vereda u Otro</p>
+                        <p className="font-medium">{(candidate as any).neighborhood}</p>
+                      </div>
+                    )}
                     {(candidate.city || candidate.department) && (
-                      <div className="space-y-1 col-span-2">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Ubicación</p>
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Ciudad / Departamento</p>
                         <p className="font-medium flex items-center gap-1">
                           <MapPin className="w-4 h-4 text-muted-foreground" />
                           {[candidate.city, candidate.department].filter(Boolean).join(', ')}
@@ -489,6 +566,39 @@ export function CandidateDetailDialog({
                     )}
                   </div>
                 </div>
+
+                {/* Emergency Contact */}
+                {((candidate as any).emergency_contact_name || (candidate as any).emergency_contact_phone) && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-primary" />
+                        Contacto de Emergencia
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {(candidate as any).emergency_contact_name && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Nombre</p>
+                            <p className="font-medium">{(candidate as any).emergency_contact_name}</p>
+                          </div>
+                        )}
+                        {(candidate as any).emergency_contact_phone && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Teléfono</p>
+                            <p className="font-medium">{(candidate as any).emergency_contact_phone}</p>
+                          </div>
+                        )}
+                        {(candidate as any).emergency_contact_relationship && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Parentesco</p>
+                            <p className="font-medium">{(candidate as any).emergency_contact_relationship}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <Separator />
 
@@ -536,6 +646,53 @@ export function CandidateDetailDialog({
                   </div>
                 </div>
 
+                {/* Recruitment Info */}
+                <Separator />
+                <div>
+                  <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    Información de Postulación
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Postulación</p>
+                      <p className="font-medium">
+                        {format(new Date(candidate.application_date), 'dd MMM yyyy', { locale: es })}
+                      </p>
+                    </div>
+                    {candidate.source && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Fuente</p>
+                        <p className="font-medium capitalize">{candidate.source}</p>
+                      </div>
+                    )}
+                    {candidate.final_score != null && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Puntaje Final</p>
+                        <p className="font-medium">{candidate.final_score}</p>
+                      </div>
+                    )}
+                    {candidate.final_concept && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Concepto Final</p>
+                        <p className="font-medium">{candidate.final_concept}</p>
+                      </div>
+                    )}
+                    {candidate.rejection_reason && (
+                      <div className="space-y-1 col-span-2">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Motivo de Rechazo</p>
+                        <p className="font-medium text-destructive">{candidate.rejection_reason}</p>
+                      </div>
+                    )}
+                    {(candidate as any).withdrawal_reason && (
+                      <div className="space-y-1 col-span-2">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Motivo de Retiro</p>
+                        <p className="font-medium text-warning">{(candidate as any).withdrawal_reason}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Family Members */}
                 <FamilyMembersSection candidateId={candidate.id} />
 
@@ -544,6 +701,10 @@ export function CandidateDetailDialog({
                   <>
                     <Separator />
                     <div className="space-y-4">
+                      <h3 className="font-semibold text-foreground flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary" />
+                        Observaciones
+                      </h3>
                       {candidate.strengths && (
                         <div>
                           <h4 className="text-sm font-medium text-foreground mb-2">Fortalezas</h4>
