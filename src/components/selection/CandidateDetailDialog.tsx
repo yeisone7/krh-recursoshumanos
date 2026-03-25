@@ -26,6 +26,7 @@ import {
   Paperclip,
   FolderOpen,
   FileDown,
+  Stethoscope,
 } from 'lucide-react';
 
 import {
