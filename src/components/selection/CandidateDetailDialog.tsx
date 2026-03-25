@@ -95,6 +95,14 @@ export function CandidateDetailDialog({
 
   const candidateEmployeeId = candidate?.employee_id || undefined;
   const { data: sharedDocs = [], isLoading: loadingSharedDocs } = useEmployeeDocuments(candidateEmployeeId);
+  const { background, loading: bgLoading, checkBackground } = useCandidateBackground();
+
+  // Auto-check background when candidate loads
+  useEffect(() => {
+    if (candidate?.document_number && open) {
+      checkBackground(candidate.document_number, currentCompanyId);
+    }
+  }, [candidate?.document_number, open, currentCompanyId]);
 
   const fetchCandidateDocs = useCallback(async () => {
     if (!candidateId) return;
