@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCandidateBackground } from '@/hooks/useCandidateBackground';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -51,6 +52,7 @@ import { SelectionStepFormDialog } from './SelectionStepFormDialog';
 import { CandidateReasonDialog } from './CandidateReasonDialog';
 import { FamilyMembersSection } from './FamilyMembersSection';
 import { generateCandidatePdf } from '@/lib/candidatePdf';
+import { CandidateBackgroundAlerts } from './CandidateBackgroundAlerts';
 import {
   CandidateStatus,
   candidateStatusLabels,
@@ -93,6 +95,14 @@ export function CandidateDetailDialog({
 
   const candidateEmployeeId = candidate?.employee_id || undefined;
   const { data: sharedDocs = [], isLoading: loadingSharedDocs } = useEmployeeDocuments(candidateEmployeeId);
+  const { background, loading: bgLoading, checkBackground } = useCandidateBackground();
+
+  // Auto-check background when candidate loads
+  useEffect(() => {
+    if (candidate?.document_number && open) {
+      checkBackground(candidate.document_number, currentCompanyId);
+    }
+  }, [candidate?.document_number, open, currentCompanyId]);
 
   const fetchCandidateDocs = useCallback(async () => {
     if (!candidateId) return;
@@ -309,6 +319,11 @@ export function CandidateDetailDialog({
               </Badge>
             </div>
           </DialogHeader>
+
+          {/* Background alerts */}
+          <div className="px-6">
+            <CandidateBackgroundAlerts background={background} loading={bgLoading} compact />
+          </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
             <div className="px-6 pt-2 border-b">

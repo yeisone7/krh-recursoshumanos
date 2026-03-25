@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, CheckCircle2, AlertTriangle, User, Send, Building } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertTriangle, User, Send, Building, Info } from 'lucide-react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type Step = 'loading' | 'error' | 'form' | 'done';
 
@@ -133,6 +134,7 @@ export default function RegistroPublico() {
   const [companyName, setCompanyName] = useState('');
   const [formData, setFormData] = useState<Record<string, string>>({ documentType: 'CC' });
   const [submitting, setSubmitting] = useState(false);
+  const [prefilled, setPrefilled] = useState(false);
 
   useEffect(() => {
     if (!tokenParam) {
@@ -553,10 +555,48 @@ export default function RegistroPublico() {
       );
     }
 
+    const handleDocumentBlur = key === 'documentNumber' && !isEmployee ? async () => {
+      const docNum = formData[key]?.trim();
+      if (docNum && docNum.length >= 4 && tokenData?.company_id && !prefilled) {
+        try {
+          const { data } = await supabase.rpc('check_candidate_background', {
+            p_document_number: docNum,
+            p_company_id: tokenData.company_id,
+          } as any);
+          const result = data as any;
+          if (result?.previous_candidacies?.length > 0) {
+            const latest = result.previous_candidacies[0];
+            const updates: Record<string, string> = {};
+            if (!formData.firstName && latest.first_name) updates.firstName = latest.first_name;
+            if (!formData.lastName && latest.last_name) updates.lastName = latest.last_name;
+            if (!formData.email && latest.email) updates.email = latest.email;
+            if (!formData.mobile && latest.mobile) updates.mobile = latest.mobile;
+            if (!formData.phone && latest.phone) updates.phone = latest.phone;
+            if (!formData.address && latest.address) updates.address = latest.address;
+            if (!formData.city && latest.city) updates.city = latest.city;
+            if (!formData.department && latest.department) updates.department = latest.department;
+            if (!formData.neighborhood && latest.neighborhood) updates.neighborhood = latest.neighborhood;
+            if (!formData.gender && latest.gender) updates.gender = latest.gender;
+            if (Object.keys(updates).length > 0) {
+              setFormData(prev => ({ ...prev, ...updates }));
+              setPrefilled(true);
+              toast.info('Se encontró información previa asociada a este documento. Los campos han sido pre-llenados.');
+            }
+          }
+        } catch { /* silent */ }
+      }
+    } : undefined;
+
     return (
       <div key={key} className="space-y-1.5">
         <Label>{config.label}{isRequired && <span className="text-destructive ml-1">*</span>}</Label>
-        <Input type={config.type} value={formData[key] || ''} onChange={e => handleChange(key, e.target.value)} placeholder={config.placeholder || `Ingrese ${config.label.toLowerCase()}`} />
+        <Input
+          type={config.type}
+          value={formData[key] || ''}
+          onChange={e => handleChange(key, e.target.value)}
+          onBlur={handleDocumentBlur}
+          placeholder={config.placeholder || `Ingrese ${config.label.toLowerCase()}`}
+        />
       </div>
     );
   };
@@ -601,6 +641,14 @@ export default function RegistroPublico() {
 
           {step === 'form' && (
             <div className="space-y-6">
+              {prefilled && (
+                <Alert className="border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/20">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-sm text-blue-700 dark:text-blue-400">
+                    Se encontró información previa asociada a este documento. Los campos han sido pre-llenados.
+                  </AlertDescription>
+                </Alert>
+              )}
               {sections.map(section => {
                 const sectionFields = enabledFields.filter(
                   key => fieldConfig[key]?.section === section
