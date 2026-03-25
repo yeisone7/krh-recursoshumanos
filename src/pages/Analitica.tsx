@@ -65,74 +65,70 @@ export default function Analitica() {
         </p>
       </motion.div>
 
-      {/* Executive KPIs - Row 1 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Executive KPIs - All in one grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <AnalyticsKPICard
           title="Empleados Activos"
           value={analytics?.activeEmployees || 0}
           subtitle={`${analytics?.totalEmployees || 0} totales registrados`}
-          icon={<Users className="w-6 h-6" />}
+          icon={<Users className="w-5 h-5" />}
           href="/empleados"
           variant="primary"
         />
         <AnalyticsKPICard
-          title="Nuevas Contrataciones"
+          title="Contrataciones"
           value={analytics?.newHiresYTD || 0}
           subtitle="En el año actual"
-          icon={<UserPlus className="w-6 h-6" />}
+          icon={<UserPlus className="w-5 h-5" />}
           variant="accent"
         />
         <AnalyticsKPICard
           title="Retiros del Año"
           value={analytics?.terminationsYTD || 0}
           subtitle="Finalizaciones de contrato"
-          icon={<UserMinus className="w-6 h-6" />}
+          icon={<UserMinus className="w-5 h-5" />}
           variant="destructive"
         />
         <AnalyticsKPICard
-          title="Antigüedad Promedio"
-          value={`${analytics?.avgTenureMonths || 0} meses`}
+          title="Antigüedad Prom."
+          value={`${analytics?.avgTenureMonths || 0}m`}
           subtitle="De empleados activos"
-          icon={<Clock className="w-6 h-6" />}
+          icon={<Clock className="w-5 h-5" />}
           variant="info"
         />
-      </div>
-
-      {/* Executive KPIs - Row 2 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <AnalyticsKPICard
           title="Rotación Anual"
-          value={`${analytics?.yearlyTurnoverRate || 0}%`}
-          subtitle={`${analytics?.monthlyTurnoverRate || 0}% este mes`}
-          icon={<TrendingDown className="w-6 h-6" />}
+          value={`${Number(analytics?.yearlyTurnoverRate || 0).toFixed(1)}%`}
+          subtitle={`${Number(analytics?.monthlyTurnoverRate || 0).toFixed(1)}% este mes`}
+          icon={<TrendingDown className="w-5 h-5" />}
           trend={analytics?.yearlyTurnoverRate ? {
-            value: analytics.yearlyTurnoverRate > 10 ? analytics.yearlyTurnoverRate - 10 : 0,
+            value: Number((analytics.yearlyTurnoverRate - 10).toFixed(1)),
             label: 'vs objetivo 10%',
             inverted: true
           } : undefined}
           variant={analytics?.yearlyTurnoverRate && analytics.yearlyTurnoverRate > 15 ? 'destructive' : 'warning'}
         />
         <AnalyticsKPICard
-          title="Tasa Ausentismo"
-          value={`${analytics?.absenteeismRate || 0}%`}
-          subtitle={`${analytics?.avgIncapacityDaysPerEmployee || 0} días/empleado`}
-          icon={<HeartPulse className="w-6 h-6" />}
+          title="Ausentismo"
+          value={`${Number(analytics?.absenteeismRate || 0).toFixed(1)}%`}
+          subtitle={`${Number(analytics?.avgIncapacityDaysPerEmployee || 0).toFixed(1)} días/emp.`}
+          icon={<HeartPulse className="w-5 h-5" />}
           href="/incapacidades"
           variant={analytics?.absenteeismRate && analytics.absenteeismRate > 5 ? 'destructive' : 'warning'}
         />
         <AnalyticsKPICard
-          title="Cumplimiento Capacitación"
+          title="Capacitación"
           value={`${analytics?.trainingComplianceRate || 0}%`}
-          subtitle={`${analytics?.upcomingTrainingSessions || 0} sesiones programadas`}
-          icon={<GraduationCap className="w-6 h-6" />}
+          subtitle={`${analytics?.upcomingTrainingSessions || 0} sesiones prog.`}
+          icon={<GraduationCap className="w-5 h-5" />}
           href="/capacitaciones"
           variant={analytics?.trainingComplianceRate && analytics.trainingComplianceRate >= 80 ? 'accent' : 'warning'}
         />
         <AnalyticsKPICard
-          title="Evaluaciones Completadas"
+          title="Evaluaciones"
           value={`${analytics?.evaluationComplianceRate || 0}%`}
           subtitle={`${analytics?.pendingEvaluations || 0} pendientes`}
-          icon={<Target className="w-6 h-6" />}
+          icon={<Target className="w-5 h-5" />}
           href="/evaluaciones"
           variant={analytics?.evaluationComplianceRate && analytics.evaluationComplianceRate >= 80 ? 'accent' : 'warning'}
         />
