@@ -6,12 +6,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, History, Download, Plus, Loader2, Copy, Pencil, ListChecks } from 'lucide-react';
+import { FileText, History, Download, Plus, Loader2, Copy, Pencil, ListChecks, Building2 } from 'lucide-react';
 import { usePositionProfiles } from '@/hooks/usePositionProfiles';
 import { generatePositionProfilePdf } from '@/lib/positionProfilePdfGenerator';
 import { PositionProfileFormDialog } from './PositionProfileFormDialog';
 import { ClonePositionProfileDialog } from './ClonePositionProfileDialog';
 import { PositionOnboardingTemplates } from '@/components/positions/PositionOnboardingTemplates';
+import { ProfileAnnexesTab } from './ProfileAnnexesTab';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -156,6 +157,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                   <TabsList className="h-8">
                     <TabsTrigger value="profile" className="text-xs gap-1"><FileText className="w-3 h-3" />Perfil</TabsTrigger>
                     <TabsTrigger value="onboarding" className="text-xs gap-1"><ListChecks className="w-3 h-3" />Onboarding</TabsTrigger>
+                    <TabsTrigger value="annexes" className="text-xs gap-1"><Building2 className="w-3 h-3" />Anexos por Centro</TabsTrigger>
                   </TabsList>
                 </div>
                 <TabsContent value="profile">
@@ -271,6 +273,11 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                 <TabsContent value="onboarding">
                   <div className="p-5">
                     <PositionOnboardingTemplates positionId={positionId} positionName={positionName} />
+                  </div>
+                </TabsContent>
+                <TabsContent value="annexes">
+                  <div className="p-5">
+                    {profile && <ProfileAnnexesTab profileId={profile.id} baseProfile={profile} />}
                   </div>
                 </TabsContent>
               </Tabs>

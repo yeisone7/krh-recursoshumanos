@@ -5407,6 +5407,97 @@ export type Database = {
           },
         ]
       }
+      position_profile_annexes: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          education_detail: string | null
+          education_level: string | null
+          experience: string | null
+          functions: Json | null
+          id: string
+          notes: string | null
+          num_positions: number | null
+          operation_center_id: string
+          profile_id: string
+          purpose: string | null
+          reports_to: string | null
+          responsibilities: Json | null
+          skills: Json | null
+          specific_knowledge: Json | null
+          supervises: string | null
+          updated_at: string
+          working_conditions: Json | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          education_detail?: string | null
+          education_level?: string | null
+          experience?: string | null
+          functions?: Json | null
+          id?: string
+          notes?: string | null
+          num_positions?: number | null
+          operation_center_id: string
+          profile_id: string
+          purpose?: string | null
+          reports_to?: string | null
+          responsibilities?: Json | null
+          skills?: Json | null
+          specific_knowledge?: Json | null
+          supervises?: string | null
+          updated_at?: string
+          working_conditions?: Json | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          education_detail?: string | null
+          education_level?: string | null
+          experience?: string | null
+          functions?: Json | null
+          id?: string
+          notes?: string | null
+          num_positions?: number | null
+          operation_center_id?: string
+          profile_id?: string
+          purpose?: string | null
+          reports_to?: string | null
+          responsibilities?: Json | null
+          skills?: Json | null
+          specific_knowledge?: Json | null
+          supervises?: string | null
+          updated_at?: string
+          working_conditions?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "position_profile_annexes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "position_profile_annexes_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "position_profile_annexes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "position_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       position_profiles: {
         Row: {
           approved_by: string | null
