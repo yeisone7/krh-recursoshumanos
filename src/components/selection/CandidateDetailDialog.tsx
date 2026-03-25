@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useCandidateBackground } from '@/hooks/useCandidateBackground';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
