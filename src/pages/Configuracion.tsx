@@ -45,6 +45,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { WatermarkPosition } from '@/lib/watermark';
 import { DEFAULT_WATERMARK_CONFIG } from '@/lib/watermark';
 import { SecurityTab } from '@/components/config/SecurityTab';
+import { DiversityGoalsConfig } from '@/components/config/DiversityGoalsConfig';
 
 export default function Configuracion() {
   const [activeTab, setActiveTab] = useState('company');
@@ -496,6 +497,9 @@ export default function Configuracion() {
                 {updateConfig.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />Guardar Configuración
               </Button>
+
+              {/* Diversity Goals */}
+              <DiversityGoalsConfig />
             </CardContent>
           </Card>
         </TabsContent>

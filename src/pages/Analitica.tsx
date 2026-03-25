@@ -23,6 +23,7 @@ import {
   AnalyticsKPICard,
   SelectionDiversityCharts,
   DiversityTrendsChart,
+  DiversityGoalsWidget,
 } from '@/components/analytics';
 
 export default function Analitica() {
@@ -183,6 +184,9 @@ export default function Analitica() {
 
       {/* Diversity Trends */}
       <DiversityTrendsChart />
+
+      {/* Diversity Goals Progress */}
+      <DiversityGoalsWidget />
 
       {/* Area Metrics Table */}
       <AreaMetricsTable data={analytics?.areaMetrics || []} />
