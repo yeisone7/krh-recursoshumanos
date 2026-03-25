@@ -45,6 +45,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { WatermarkPosition } from '@/lib/watermark';
 import { DEFAULT_WATERMARK_CONFIG } from '@/lib/watermark';
 import { SecurityTab } from '@/components/config/SecurityTab';
+import { DiversityGoalsConfig } from '@/components/config/DiversityGoalsConfig';
 
 export default function Configuracion() {
   const [activeTab, setActiveTab] = useState('company');
