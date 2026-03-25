@@ -26,6 +26,7 @@ import {
   Paperclip,
   FolderOpen,
   FileDown,
+  Stethoscope,
 } from 'lucide-react';
 
 import {
@@ -209,7 +210,18 @@ export function CandidateDetailDialog({
     setShowWithdrawDialog(false);
   };
 
+  // Check if medical exam is approved (required for hiring)
+  const hasApprovedMedicalExam = steps.some(
+    (s: any) => s.step_type === 'examenes_medicos' && s.status === 'passed' && ['apto', 'apto_restricciones'].includes(s.result)
+  );
+
   const handleConvert = async () => {
+    if (!hasApprovedMedicalExam) {
+      toast.error('Se requiere examen médico de ingreso aprobado', {
+        description: 'Registre la etapa de Exámenes Médicos con concepto "Apto" antes de contratar.',
+      });
+      return;
+    }
     try {
       const result = await convertToEmployee.mutateAsync({
         candidateId: candidate.id,
@@ -691,15 +703,28 @@ export function CandidateDetailDialog({
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-between">
             <div className="flex gap-2" role="group" aria-label="Acciones del candidato">
               {status === 'selected' && (
-                <Button 
-                  onClick={handleConvert} 
-                  disabled={convertToEmployee.isPending}
-                  aria-label={`Contratar a ${candidate.first_name} ${candidate.last_name}`}
-                  data-testid="hire-candidate-button"
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  {convertToEmployee.isPending ? 'Procesando...' : 'Contratar'}
-                </Button>
+                <>
+                  <Button 
+                    onClick={handleConvert} 
+                    disabled={convertToEmployee.isPending || !hasApprovedMedicalExam}
+                    aria-label={`Contratar a ${candidate.first_name} ${candidate.last_name}`}
+                    data-testid="hire-candidate-button"
+                    title={!hasApprovedMedicalExam ? 'Se requiere examen médico de ingreso aprobado para contratar' : ''}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    {convertToEmployee.isPending ? 'Procesando...' : 'Contratar'}
+                  </Button>
+                  {!hasApprovedMedicalExam && (
+                    <Button
+                      variant="outline"
+                      className="text-primary hover:text-primary border-primary/30 hover:border-primary hover:bg-primary/10"
+                      onClick={() => handleAddStep('examenes_medicos' as SelectionStepType)}
+                    >
+                      <Stethoscope className="w-4 h-4 mr-2" />
+                      Registrar Examen Médico
+                    </Button>
+                  )}
+                </>
               )}
                {status !== 'hired' && status !== 'selected' && status !== 'not_selected' && status !== 'withdrawn' && (
                 <>
@@ -782,6 +807,8 @@ export function CandidateDetailDialog({
         step={selectedStep}
         defaultStepType={defaultStepType}
         existingStepOrder={steps.length}
+        vacancyOperationCenterId={vacancy?.operation_center_id}
+        vacancyPositionId={vacancy?.position_id}
       />
 
       {/* Shared Document Form Dialog */}

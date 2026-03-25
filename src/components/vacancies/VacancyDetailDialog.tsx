@@ -242,6 +242,20 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   };
 
   const handleConvertToEmployee = async (candidateId: string) => {
+    // Check if candidate has approved medical exam
+    const candidateData = candidates.find((c: any) => c.id === candidateId);
+    const candidateSteps = candidateData?.selection_steps || [];
+    const hasApprovedExam = candidateSteps.some(
+      (s: any) => s.step_type === 'examenes_medicos' && s.status === 'passed' && ['apto', 'apto_restricciones'].includes(s.result)
+    );
+
+    if (!hasApprovedExam) {
+      toast.error('Se requiere examen médico de ingreso aprobado', {
+        description: 'Registre la etapa de Exámenes Médicos con concepto "Apto" desde el detalle del candidato antes de contratar.',
+      });
+      return;
+    }
+
     try {
       const result = await convertToEmployee.mutateAsync({
         candidateId,

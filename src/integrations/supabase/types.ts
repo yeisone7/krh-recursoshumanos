@@ -5659,11 +5659,15 @@ export type Database = {
           completed_date: string | null
           created_at: string
           created_by: string | null
+          doctor_name: string | null
           document_url: string | null
           evaluator_id: string | null
           evaluator_name: string | null
+          exam_profesiograma_items: Json | null
           id: string
+          medical_concept: string | null
           notes: string | null
+          provider: string | null
           result: string | null
           scheduled_date: string | null
           score: number | null
@@ -5677,11 +5681,15 @@ export type Database = {
           completed_date?: string | null
           created_at?: string
           created_by?: string | null
+          doctor_name?: string | null
           document_url?: string | null
           evaluator_id?: string | null
           evaluator_name?: string | null
+          exam_profesiograma_items?: Json | null
           id?: string
+          medical_concept?: string | null
           notes?: string | null
+          provider?: string | null
           result?: string | null
           scheduled_date?: string | null
           score?: number | null
@@ -5695,11 +5703,15 @@ export type Database = {
           completed_date?: string | null
           created_at?: string
           created_by?: string | null
+          doctor_name?: string | null
           document_url?: string | null
           evaluator_id?: string | null
           evaluator_name?: string | null
+          exam_profesiograma_items?: Json | null
           id?: string
+          medical_concept?: string | null
           notes?: string | null
+          provider?: string | null
           result?: string | null
           scheduled_date?: string | null
           score?: number | null
