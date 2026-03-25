@@ -61,8 +61,11 @@ interface CandidateFormDialogProps {
 
 export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }: CandidateFormDialogProps) {
   const [activeTab, setActiveTab] = useState('personal');
+  const { currentCompanyId } = useAuth();
   const { data: vacancies = [] } = useOpenVacancies();
   const createCandidate = useCreateCandidate();
+  const { background, loading: bgLoading, checkBackground } = useCandidateBackground();
+  const [prefilled, setPrefilled] = useState(false);
 
   const form = useForm<CandidateFormData>({
     resolver: zodResolver(candidateFormSchema),
