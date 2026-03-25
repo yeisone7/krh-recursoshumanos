@@ -583,6 +583,72 @@ export function useConvertToEmployee() {
         console.error('Error sending hiring notifications:', err);
       }
 
+      // Step 6b: Check diversity compliance for the vacancy
+      try {
+        const { data: goalsConfig } = await supabase
+          .from('system_config')
+          .select('config_value')
+          .eq('company_id', currentCompanyId!)
+          .eq('config_key', 'diversity_goals')
+          .maybeSingle();
+
+        const goals = goalsConfig?.config_value as any;
+        if (goals?.enabled && goals?.notify_on_close) {
+          const { data: vacCandidates } = await supabase
+            .from('candidates')
+            .select('gender, disability_type, ethnic_group, is_first_job, is_head_of_household')
+            .eq('vacancy_id', vacancy?.id || '');
+
+          if (vacCandidates && vacCandidates.length >= 3) {
+            const total = vacCandidates.length;
+            const threshold = (goals.notify_threshold_pct || 80) / 100;
+            const failures: string[] = [];
+
+            const femalePct = (vacCandidates.filter((c: any) => c.gender === 'F').length / total) * 100;
+            if (femalePct < goals.min_female_pct * threshold) failures.push(`Mujeres: ${femalePct.toFixed(0)}% (meta: ${goals.min_female_pct}%)`);
+
+            const disPct = (vacCandidates.filter((c: any) => c.disability_type && c.disability_type !== 'Ninguna').length / total) * 100;
+            if (disPct < goals.min_disability_pct * threshold) failures.push(`Discapacidad: ${disPct.toFixed(0)}% (meta: ${goals.min_disability_pct}%)`);
+
+            const ethPct = (vacCandidates.filter((c: any) => c.ethnic_group && c.ethnic_group !== 'No registrado' && c.ethnic_group !== 'Ninguno').length / total) * 100;
+            if (ethPct < goals.min_ethnic_pct * threshold) failures.push(`Grupo Étnico: ${ethPct.toFixed(0)}% (meta: ${goals.min_ethnic_pct}%)`);
+
+            if (failures.length > 0) {
+              // Notify admins
+              const { data: sysRoles } = await supabase
+                .from('custom_roles')
+                .select('id')
+                .eq('company_id', currentCompanyId!)
+                .eq('is_system', true);
+
+              if (sysRoles?.length) {
+                const { data: admUsers } = await supabase
+                  .from('user_custom_roles')
+                  .select('user_id')
+                  .in('role_id', sysRoles.map(r => r.id));
+
+                if (admUsers?.length) {
+                  const diversityNotifs = admUsers.map(u => ({
+                    user_id: u.user_id,
+                    company_id: currentCompanyId,
+                    title: '⚠️ Alerta de diversidad en selección',
+                    message: `La vacante "${vacancy?.position_title || 'N/A'}" no cumple metas: ${failures.join(', ')}`,
+                    type: 'warning' as const,
+                    category: 'selection',
+                    entity_type: 'vacancy',
+                    entity_id: vacancy?.id,
+                    action_url: `/seleccion?vacancy=${vacancy?.id}`,
+                  }));
+                  await supabase.from('notifications').insert(diversityNotifs);
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error checking diversity compliance:', err);
+      }
+
       // Step 7: Create onboarding tasks (use position template if available)
       try {
         const { PREDEFINED_TASKS } = await import('@/hooks/useOnboardingTasks');
