@@ -362,7 +362,7 @@ export function CandidateDetailDialog({
               </TabsList>
             </div>
 
-            <ScrollArea className="h-[calc(90vh-260px)]">
+            <div className="overflow-y-auto scrollbar-themed" style={{ maxHeight: 'calc(90vh - 260px)' }}>
               {/* Timeline Tab */}
               <TabsContent value="timeline" className="p-6 mt-0">
                 <SelectionTimeline
