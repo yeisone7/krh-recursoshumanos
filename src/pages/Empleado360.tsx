@@ -65,47 +65,47 @@ export default function Empleado360() {
       <Employee360Alerts employeeId={id} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 rounded-lg border bg-card p-2 shadow-sm">
-          <TabsTrigger value="profile" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1.5 rounded-lg border bg-card p-2 shadow-sm">
+          <TabsTrigger value="profile" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Perfil
           </TabsTrigger>
-          <TabsTrigger value="labor" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="labor" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Laboral
           </TabsTrigger>
-          <TabsTrigger value="contracts" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="contracts" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Contratos
           </TabsTrigger>
-          <TabsTrigger value="timeoff" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="timeoff" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Tiempo Libre
           </TabsTrigger>
-          <TabsTrigger value="incapacities" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="incapacities" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Incapacidades
           </TabsTrigger>
-          <TabsTrigger value="training" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="training" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Capacitación
           </TabsTrigger>
-          <TabsTrigger value="evaluations" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="evaluations" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Evaluaciones
           </TabsTrigger>
-          <TabsTrigger value="health" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="health" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Salud
           </TabsTrigger>
-          <TabsTrigger value="dotation" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="dotation" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Dotación
           </TabsTrigger>
-          <TabsTrigger value="overtime" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="overtime" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Horas Extra
           </TabsTrigger>
-          <TabsTrigger value="disciplinary" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="disciplinary" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Disciplinarios
           </TabsTrigger>
-          <TabsTrigger value="schedules" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="schedules" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Horarios
           </TabsTrigger>
-          <TabsTrigger value="documents" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="documents" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Documentos
           </TabsTrigger>
-          <TabsTrigger value="audit" className="rounded-md px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
+          <TabsTrigger value="audit" className="rounded-md bg-muted/60 px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:hover:bg-muted">
             Auditoría
           </TabsTrigger>
         </TabsList>
