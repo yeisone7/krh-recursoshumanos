@@ -262,6 +262,24 @@ export function SelectionTimeline({
                           </Button>
                         </div>
                       )}
+
+                      {/* Generate exam order button for medical exams */}
+                      {stepType === 'examenes_medicos' && onGenerateExamOrder && (
+                        <div className="pt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-primary hover:text-primary hover:border-primary gap-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onGenerateExamOrder(step);
+                            }}
+                          >
+                            <FileDown className="w-4 h-4" />
+                            Generar Orden de Examen (Res. 2346)
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
