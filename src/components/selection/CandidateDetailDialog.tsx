@@ -52,6 +52,7 @@ import { SelectionStepFormDialog } from './SelectionStepFormDialog';
 import { CandidateReasonDialog } from './CandidateReasonDialog';
 import { FamilyMembersSection } from './FamilyMembersSection';
 import { generateCandidatePdf } from '@/lib/candidatePdf';
+import { CandidateBackgroundAlerts } from './CandidateBackgroundAlerts';
 import {
   CandidateStatus,
   candidateStatusLabels,
