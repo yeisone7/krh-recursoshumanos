@@ -134,6 +134,7 @@ export default function RegistroPublico() {
   const [companyName, setCompanyName] = useState('');
   const [formData, setFormData] = useState<Record<string, string>>({ documentType: 'CC' });
   const [submitting, setSubmitting] = useState(false);
+  const [prefilled, setPrefilled] = useState(false);
 
   useEffect(() => {
     if (!tokenParam) {
