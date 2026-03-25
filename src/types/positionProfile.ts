@@ -69,3 +69,44 @@ export interface PositionProfileFormData {
   approved_by: string;
   effective_date: string;
 }
+
+export interface PositionProfileAnnex {
+  id: string;
+  company_id: string;
+  profile_id: string;
+  operation_center_id: string;
+  purpose: string | null;
+  reports_to: string | null;
+  supervises: string | null;
+  num_positions: number | null;
+  education_level: string | null;
+  education_detail: string | null;
+  experience: string | null;
+  specific_knowledge: SpecificKnowledge[] | null;
+  skills: Skill[] | null;
+  functions: string[] | null;
+  responsibilities: Responsibilities | null;
+  working_conditions: WorkingConditions | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  operation_centers?: { id: string; name: string };
+}
+
+export interface PositionProfileAnnexFormData {
+  operation_center_id: string;
+  purpose: string | null;
+  reports_to: string | null;
+  supervises: string | null;
+  num_positions: number | null;
+  education_level: string | null;
+  education_detail: string | null;
+  experience: string | null;
+  specific_knowledge: SpecificKnowledge[] | null;
+  skills: Skill[] | null;
+  functions: string[] | null;
+  responsibilities: Responsibilities | null;
+  working_conditions: WorkingConditions | null;
+  notes: string | null;
+}
