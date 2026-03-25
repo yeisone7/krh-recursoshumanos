@@ -496,6 +496,9 @@ export default function Configuracion() {
                 {updateConfig.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />Guardar Configuración
               </Button>
+
+              {/* Diversity Goals */}
+              <DiversityGoalsConfig />
             </CardContent>
           </Card>
         </TabsContent>

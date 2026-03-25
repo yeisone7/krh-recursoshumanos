@@ -6,3 +6,4 @@ export { DistributionCharts } from './DistributionCharts';
 export { AnalyticsKPICard } from './AnalyticsKPICard';
 export { SelectionDiversityCharts } from './SelectionDiversityCharts';
 export { DiversityTrendsChart } from './DiversityTrendsChart';
+export { DiversityGoalsWidget } from './DiversityGoalsWidget';
