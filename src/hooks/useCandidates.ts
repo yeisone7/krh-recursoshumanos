@@ -481,21 +481,34 @@ export function useConvertToEmployee() {
 
       if (contractError) throw contractError;
 
-      // Step 3: Create entry medical exam (required by Colombian law)
+      // Step 3: Copy medical exam data from selection_steps to medical_exams
       let entryExam = null;
       if (createEntryExam) {
+        // Look for approved medical exam in selection steps
+        const { data: medicalStep } = await supabase
+          .from('selection_steps')
+          .select('*')
+          .eq('candidate_id', candidateId)
+          .eq('step_type', 'examenes_medicos')
+          .eq('status', 'passed')
+          .order('completed_date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const examData: any = {
+          employee_id: employee.id,
+          exam_type: 'ingreso',
+          exam_date: medicalStep?.completed_date?.split('T')[0] || hireDate,
+          result: medicalStep?.result || 'pendiente',
+          concept: (medicalStep as any)?.medical_concept || medicalStep?.notes || 'Examen de ingreso',
+          provider: (medicalStep as any)?.provider || 'Por definir',
+          doctor_name: (medicalStep as any)?.doctor_name || 'Por definir',
+          created_by: user?.id,
+        };
+
         const { data: exam, error: examError } = await supabase
           .from('medical_exams')
-          .insert({
-            employee_id: employee.id,
-            exam_type: 'ingreso',
-            exam_date: hireDate,
-            result: 'pendiente',
-            concept: 'Examen de ingreso - Generado automáticamente al contratar',
-            provider: 'Por definir',
-            doctor_name: 'Por definir',
-            created_by: user?.id,
-          })
+          .insert(examData)
           .select()
           .single();
 
@@ -506,8 +519,8 @@ export function useConvertToEmployee() {
           });
         } else {
           entryExam = exam;
-          toast.success('Examen de ingreso creado', {
-            description: 'Se generó un examen de ingreso pendiente para el nuevo empleado.',
+          toast.success('Examen de ingreso registrado', {
+            description: 'Se transfirió el examen médico de selección al historial del empleado.',
           });
         }
       }
