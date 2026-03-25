@@ -48,6 +48,9 @@ import { useCreateCandidate } from '@/hooks/useCandidates';
 import { CityDepartmentSelect, CitySelect } from '@/components/ui/city-department-select';
 import { supabase } from '@/integrations/supabase/client';
 import { familyRelationshipOptions } from '@/types/employee';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCandidateBackground } from '@/hooks/useCandidateBackground';
+import { CandidateBackgroundAlerts } from '@/components/selection/CandidateBackgroundAlerts';
 
 interface CandidateFormDialogProps {
   open: boolean;
