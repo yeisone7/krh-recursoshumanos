@@ -68,7 +68,7 @@ export function AnalyticsKPICard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "kpi-card group hover:shadow-card-hover transition-all duration-300",
+        "kpi-card group hover:shadow-card-hover transition-all duration-300 h-full",
         href && "cursor-pointer"
       )}
     >
