@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Stethoscope, ClipboardList } from 'lucide-react';
 
 import {
   Dialog,
@@ -25,6 +25,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -49,6 +51,7 @@ import {
   stepsWithConcepto,
 } from '@/types/vacancy';
 import { useCreateSelectionStep, useUpdateSelectionStep } from '@/hooks/useCandidates';
+import { useExamProfesiogramaByVacancy } from '@/hooks/useExamProfesiogramaByVacancy';
 import type { Database } from '@/integrations/supabase/types';
 
 type SelectionStep = Database['public']['Tables']['selection_steps']['Row'];
@@ -62,6 +65,10 @@ const stepFormSchema = z.object({
   score: z.string().optional(),
   result: z.string().optional(),
   notes: z.string().optional(),
+  // Medical exam fields
+  provider: z.string().optional(),
+  doctorName: z.string().optional(),
+  medicalConcept: z.string().optional(),
 });
 
 type StepFormData = z.infer<typeof stepFormSchema>;
@@ -73,6 +80,8 @@ interface SelectionStepFormDialogProps {
   step?: SelectionStep;
   defaultStepType?: SelectionStepType;
   existingStepOrder?: number;
+  vacancyOperationCenterId?: string;
+  vacancyPositionId?: string;
 }
 
 // Get available status options based on step type
@@ -97,10 +106,13 @@ export function SelectionStepFormDialog({
   step,
   defaultStepType,
   existingStepOrder = 0,
+  vacancyOperationCenterId,
+  vacancyPositionId,
 }: SelectionStepFormDialogProps) {
   const createStep = useCreateSelectionStep();
   const updateStep = useUpdateSelectionStep();
   const isEditing = !!step;
+  const [selectedExams, setSelectedExams] = useState<string[]>([]);
 
   const form = useForm<StepFormData>({
     resolver: zodResolver(stepFormSchema),
@@ -113,15 +125,33 @@ export function SelectionStepFormDialog({
       score: step?.score?.toString() || '',
       result: step?.result || '',
       notes: step?.notes || '',
+      provider: (step as any)?.provider || '',
+      doctorName: (step as any)?.doctor_name || '',
+      medicalConcept: (step as any)?.medical_concept || '',
     },
   });
 
   const currentStepType = form.watch('stepType');
   const showScore = stepsWithScore.includes(currentStepType as SelectionStepType);
   const isConcepto = stepsWithConcepto.includes(currentStepType as SelectionStepType);
+  const isMedicalExam = currentStepType === 'examenes_medicos';
+
+  // Load profesiograma for medical exams
+  const { data: profesiograma } = useExamProfesiogramaByVacancy(
+    isMedicalExam ? vacancyOperationCenterId : undefined,
+    isMedicalExam ? vacancyPositionId : undefined,
+  );
 
   useEffect(() => {
     if (open) {
+      const existingExams = (step as any)?.exam_profesiograma_items;
+      if (existingExams && Array.isArray(existingExams)) {
+        setSelectedExams(existingExams.map((e: any) => e.exam_catalog_id));
+      } else if (profesiograma?.items) {
+        // Pre-select all required exams
+        setSelectedExams(profesiograma.items.filter(i => i.is_required).map(i => i.exam_catalog_id));
+      }
+
       form.reset({
         stepType: step?.step_type || defaultStepType || '',
         status: step?.status || 'pending',
@@ -131,9 +161,20 @@ export function SelectionStepFormDialog({
         score: step?.score?.toString() || '',
         result: step?.result || '',
         notes: step?.notes || '',
+        provider: (step as any)?.provider || '',
+        doctorName: (step as any)?.doctor_name || '',
+        medicalConcept: (step as any)?.medical_concept || '',
       });
     }
-  }, [open, step, defaultStepType]);
+  }, [open, step, defaultStepType, profesiograma]);
+
+  const toggleExam = (examCatalogId: string) => {
+    setSelectedExams(prev =>
+      prev.includes(examCatalogId)
+        ? prev.filter(id => id !== examCatalogId)
+        : [...prev, examCatalogId]
+    );
+  };
 
   const handleSubmit = async (data: StepFormData) => {
     try {
@@ -147,6 +188,23 @@ export function SelectionStepFormDialog({
         result: data.result || null,
         notes: data.notes || null,
       };
+
+      // Add medical exam fields
+      if (isMedicalExam) {
+        stepData.provider = data.provider || null;
+        stepData.doctor_name = data.doctorName || null;
+        stepData.medical_concept = data.medicalConcept || null;
+        stepData.exam_profesiograma_items = selectedExams.length > 0
+          ? selectedExams.map(id => {
+              const item = profesiograma?.items?.find(i => i.exam_catalog_id === id);
+              return {
+                exam_catalog_id: id,
+                name: item?.exam_catalog?.name || 'Examen',
+                is_required: item?.is_required ?? true,
+              };
+            })
+          : null;
+      }
 
       if (isEditing && step) {
         await updateStep.mutateAsync({
@@ -175,7 +233,7 @@ export function SelectionStepFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Editar Etapa' : 'Nueva Etapa de Selección'}</DialogTitle>
           <DialogDescription>
@@ -374,6 +432,7 @@ export function SelectionStepFormDialog({
                       </FormControl>
                       <SelectContent className="bg-background">
                         <SelectItem value="apto">Apto</SelectItem>
+                        <SelectItem value="apto_restricciones">Apto con Restricciones</SelectItem>
                         <SelectItem value="no_apto">No Apto</SelectItem>
                       </SelectContent>
                     </Select>
@@ -381,6 +440,106 @@ export function SelectionStepFormDialog({
                   </FormItem>
                 )}
               />
+            )}
+
+            {/* Medical Exam Specific Fields */}
+            {isMedicalExam && (
+              <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <Stethoscope className="w-4 h-4" />
+                  Datos del Examen Médico de Ingreso
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="provider"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Proveedor / IPS</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nombre de la IPS" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="doctorName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Médico</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nombre del médico" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="medicalConcept"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Concepto / Restricciones</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Detalle del concepto médico, restricciones o recomendaciones..."
+                          className="min-h-[60px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Profesiograma Exams */}
+                {profesiograma && profesiograma.items.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <ClipboardList className="w-4 h-4 text-muted-foreground" />
+                      Exámenes del Profesiograma
+                    </div>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {profesiograma.items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-3 p-2 rounded-md border bg-background hover:bg-muted/50 transition-colors"
+                        >
+                          <Checkbox
+                            checked={selectedExams.includes(item.exam_catalog_id)}
+                            onCheckedChange={() => toggleExam(item.exam_catalog_id)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {item.exam_catalog?.name || 'Examen'}
+                            </p>
+                            {item.exam_catalog?.code && (
+                              <p className="text-xs text-muted-foreground">{item.exam_catalog.code}</p>
+                            )}
+                          </div>
+                          {item.is_required && (
+                            <Badge variant="outline" className="text-xs shrink-0 text-warning border-warning/30">
+                              Obligatorio
+                            </Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {profesiograma === null && vacancyOperationCenterId && vacancyPositionId && (
+                  <p className="text-xs text-muted-foreground italic">
+                    No se encontró profesiograma de exámenes para este centro de operación y cargo.
+                  </p>
+                )}
+              </div>
             )}
 
             <FormField
