@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { ThankYouPreviewDialog } from './ThankYouPreviewDialog';
 import { useCandidateBackground } from '@/hooks/useCandidateBackground';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -12,6 +13,7 @@ import {
   DollarSign,
   Calendar,
   FileText,
+  Heart,
   CheckCircle,
   XCircle,
   UserX,
@@ -89,6 +91,7 @@ export function CandidateDetailDialog({
   const [defaultStepType, setDefaultStepType] = useState<SelectionStepType | undefined>();
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  const [showThanksDialog, setShowThanksDialog] = useState(false);
 
   const { data: candidate, isLoading } = useCandidate(candidateId);
   const updateCandidate = useUpdateCandidate();
@@ -960,19 +963,32 @@ export function CandidateDetailDialog({
                 </>
               )}
               {(status === 'not_selected' || status === 'withdrawn') && (
-                <Button
-                  variant="outline"
-                  className="text-primary hover:text-primary border-primary/30 hover:border-primary hover:bg-primary/10"
-                  onClick={() => handleStatusChange('applied', {
-                    rejection_reason: null,
-                    withdrawal_reason: null,
-                  } as any)}
-                  disabled={updateCandidate.isPending}
-                  aria-label={`Reactivar a ${candidate.first_name} ${candidate.last_name}`}
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Reactivar
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    className="text-primary hover:text-primary border-primary/30 hover:border-primary hover:bg-primary/10"
+                    onClick={() => handleStatusChange('applied', {
+                      rejection_reason: null,
+                      withdrawal_reason: null,
+                    } as any)}
+                    disabled={updateCandidate.isPending}
+                    aria-label={`Reactivar a ${candidate.first_name} ${candidate.last_name}`}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Reactivar
+                  </Button>
+                  {status === 'not_selected' && (
+                    <Button
+                      variant="outline"
+                      className="text-pink-600 hover:text-pink-700 border-pink-300 hover:border-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/20"
+                      onClick={() => setShowThanksDialog(true)}
+                      disabled={!!(candidate as any).thanks_sent_at}
+                    >
+                      <Heart className="w-4 h-4 mr-2" />
+                      {(candidate as any).thanks_sent_at ? 'Agradecimiento Enviado' : 'Enviar Agradecimiento'}
+                    </Button>
+                  )}
+                </>
               )}
             </div>
             {(hasPermission('seleccion', 'view') || hasPermission('reportes', 'view')) && (
@@ -1039,6 +1055,19 @@ export function CandidateDetailDialog({
         onConfirm={handleWithdraw}
         isPending={updateCandidate.isPending}
         candidateName={`${candidate.first_name} ${candidate.last_name}`}
+      />
+
+      {/* Thank You Dialog */}
+      <ThankYouPreviewDialog
+        open={showThanksDialog}
+        onOpenChange={setShowThanksDialog}
+        candidateId={candidate.id}
+        candidateName={`${candidate.first_name} ${candidate.last_name}`}
+        candidateEmail={candidate.email}
+        alreadySent={!!(candidate as any).thanks_sent_at}
+        onSent={() => {
+          // Invalidate query to refresh candidate data
+        }}
       />
     </>
   );
