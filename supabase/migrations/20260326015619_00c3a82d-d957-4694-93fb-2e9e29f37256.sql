@@ -1,0 +1,1 @@
+ALTER TABLE public.candidates ADD COLUMN thanks_sent_at TIMESTAMPTZ DEFAULT NULL;

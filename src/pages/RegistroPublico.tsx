@@ -605,8 +605,18 @@ export default function RegistroPublico() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl shadow-xl border-border/50">
-        <CardHeader className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-t-lg p-6">
+      <Card className="w-full max-w-2xl shadow-xl border-border/50 overflow-hidden">
+        {/* Welcome image for candidates */}
+        {!isEmployee && step === 'form' && (
+          <div className="w-full">
+            <img
+              src="/images/IMAGEN_PROCESO_DE_SELECCION.png"
+              alt="Proceso de Selección"
+              className="w-full h-auto object-cover"
+            />
+          </div>
+        )}
+        <CardHeader className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
               <HeaderIcon className="w-6 h-6" />

@@ -281,6 +281,7 @@ export type Database = {
           source: string | null
           status: Database["public"]["Enums"]["candidate_status"]
           strengths: string | null
+          thanks_sent_at: string | null
           updated_at: string
           vacancy_id: string
           weaknesses: string | null
@@ -338,6 +339,7 @@ export type Database = {
           source?: string | null
           status?: Database["public"]["Enums"]["candidate_status"]
           strengths?: string | null
+          thanks_sent_at?: string | null
           updated_at?: string
           vacancy_id: string
           weaknesses?: string | null
@@ -395,6 +397,7 @@ export type Database = {
           source?: string | null
           status?: Database["public"]["Enums"]["candidate_status"]
           strengths?: string | null
+          thanks_sent_at?: string | null
           updated_at?: string
           vacancy_id?: string
           weaknesses?: string | null
