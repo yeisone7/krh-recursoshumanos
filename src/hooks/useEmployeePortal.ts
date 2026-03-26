@@ -276,19 +276,20 @@ export function useEmployeePortal() {
       const endDate = new Date(request.end_date);
       const calendarDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
+      const insertData = {
+        employee_id: employeeLink.employee_id,
+        company_id: employee.company_id,
+        request_type: request.request_type as 'disfrute' | 'compensacion',
+        start_date: request.start_date,
+        end_date: request.end_date,
+        business_days: request.business_days,
+        calendar_days: calendarDays,
+        notes: request.notes,
+        created_by: user.id,
+      };
       const { error } = await supabase
         .from('vacation_requests')
-        .insert({
-          employee_id: employeeLink.employee_id,
-          company_id: employee.company_id,
-          request_type: request.request_type,
-          start_date: request.start_date,
-          end_date: request.end_date,
-          business_days: request.business_days,
-          calendar_days: calendarDays,
-          notes: request.notes,
-          created_by: user.id,
-        });
+        .insert(insertData);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -313,19 +314,20 @@ export function useEmployeePortal() {
       if (!employeeLink?.employee_id || !employee?.company_id || !user?.id) {
         throw new Error('No hay empleado vinculado');
       }
+      const insertData = {
+        employee_id: employeeLink.employee_id,
+        company_id: employee.company_id,
+        leave_type: request.leave_type as 'permiso_personal',
+        duration_type: 'dias_completos' as const,
+        start_date: request.start_date,
+        end_date: request.end_date,
+        total_days: request.total_days,
+        reason: request.reason,
+        created_by: user.id,
+      };
       const { error } = await supabase
         .from('leave_requests')
-        .insert({
-          employee_id: employeeLink.employee_id,
-          company_id: employee.company_id,
-          leave_type: request.leave_type,
-          duration_type: 'dias_completos',
-          start_date: request.start_date,
-          end_date: request.end_date,
-          total_days: request.total_days,
-          reason: request.reason,
-          created_by: user.id,
-        });
+        .insert(insertData);
       if (error) throw error;
     },
     onSuccess: () => {
