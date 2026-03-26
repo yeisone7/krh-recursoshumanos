@@ -9,9 +9,10 @@ interface PortalCertificatesProps {
   employee: EmployeeV2WithRelations;
   companyName: string;
   companyNit: string;
+  contractInfo?: { salary: number; contract_type: string } | null;
 }
 
-export function PortalCertificates({ employee, companyName, companyNit }: PortalCertificatesProps) {
+export function PortalCertificates({ employee, companyName, companyNit, contractInfo }: PortalCertificatesProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
@@ -23,8 +24,8 @@ export function PortalCertificates({ employee, companyName, companyNit }: Portal
         documentNumber: employee.document_number || '',
         position: employee.positions?.name || employee.work_info?.position_name || 'N/A',
         hireDate: employee.work_info?.hire_date || '',
-        salary: employee.work_info?.salary || 0,
-        contractType: employee.work_info?.contract_type || 'Término indefinido',
+        salary: contractInfo?.salary || 0,
+        contractType: contractInfo?.contract_type || 'Término indefinido',
         companyName,
         companyNit,
         isActive: employee.is_active !== false,
