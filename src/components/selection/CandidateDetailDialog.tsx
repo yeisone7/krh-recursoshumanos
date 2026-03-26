@@ -1056,6 +1056,19 @@ export function CandidateDetailDialog({
         isPending={updateCandidate.isPending}
         candidateName={`${candidate.first_name} ${candidate.last_name}`}
       />
+
+      {/* Thank You Dialog */}
+      <ThankYouPreviewDialog
+        open={showThanksDialog}
+        onOpenChange={setShowThanksDialog}
+        candidateId={candidate.id}
+        candidateName={`${candidate.first_name} ${candidate.last_name}`}
+        candidateEmail={candidate.email}
+        alreadySent={!!(candidate as any).thanks_sent_at}
+        onSent={() => {
+          // Invalidate query to refresh candidate data
+        }}
+      />
     </>
   );
 }
