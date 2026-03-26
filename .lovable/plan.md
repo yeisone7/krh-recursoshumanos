@@ -1,54 +1,50 @@
 
 
-## Plan: Anexos de Perfil de Cargo por Centro de Operación
+## Plan: Imagen de Bienvenida en Auto-registro + Mensaje de Agradecimiento a No Seleccionados
 
 ### Resumen
-Crear un sistema de "anexos" (overrides parciales) que permita personalizar campos específicos del perfil de un cargo para centros de operación particulares, sin duplicar el perfil completo.
+1. Agregar la imagen de bienvenida al proceso de seleccion al inicio de la pagina de auto-registro del candidato.
+2. Crear funcionalidad para enviar un mensaje de agradecimiento (con la segunda imagen) a candidatos no seleccionados.
 
-### 1. Migración SQL
-Nueva tabla `position_profile_annexes` con todos los campos del perfil como nullable (solo se llenan los que cambian), referenciando `position_profiles(id)` y `operation_centers(id)`. Constraint UNIQUE en `(profile_id, operation_center_id)`. RLS basada en `company_id` con `is_company_member()`.
+### Implementacion
 
-### 2. Tipos TypeScript
-Agregar `PositionProfileAnnex` y `PositionProfileAnnexFormData` en `src/types/positionProfile.ts`.
+**1. Copiar imagenes al proyecto**
+- Copiar `IMAGEN_PROCESO_DE_SELECCIÓN_PETROCASINOS.png` a `public/images/`
+- Copiar `IMAGEN_DE_AGRADECIMIENTO_PETROCASINOS.png` a `public/images/`
 
-### 3. Hook `src/hooks/useProfileAnnexes.ts`
-- `useProfileAnnexes(profileId)` — lista anexos del perfil con join a `operation_centers` para mostrar nombre.
-- `useCreateProfileAnnex()` / `useUpdateProfileAnnex()` / `useDeleteProfileAnnex()` — CRUD.
-- `useMergedProfile(profileId, operationCenterId)` — devuelve perfil base fusionado con el anexo si existe (campo del anexo reemplaza al base cuando no es null).
+**2. Modificar `src/pages/RegistroPublico.tsx`**
+- Cuando el `target_type` es candidato, mostrar la imagen de bienvenida al proceso de seleccion ANTES del formulario (encima del CardHeader actual).
+- La imagen se muestra a ancho completo dentro del Card, con bordes redondeados superiores.
 
-### 4. Componente `src/components/config/ProfileAnnexesTab.tsx`
-Pestaña nueva en `PositionProfileDetailDialog`:
-- Lista de centros de operación que tienen anexo (cards con badge de campos modificados).
-- Botón "+ Agregar Anexo" abre selector de centro de operación (solo los que no tienen anexo aún).
-- Al seleccionar, muestra formulario donde cada sección tiene un checkbox "Personalizar este campo" — al activarlo, aparece el campo editable pre-llenado con el valor base.
-- Vista comparativa: valor base (tachado o gris) vs valor del anexo.
+**3. Boton "Enviar Agradecimiento" en el detalle del candidato**
+- En `src/components/selection/CandidateDetailDialog.tsx`, cuando el candidato tiene status `not_selected`, mostrar un boton "Enviar Agradecimiento".
+- Al hacer clic, abre un dialogo de confirmacion que muestra una vista previa de la imagen de agradecimiento.
+- Al confirmar, se invoca un edge function que envia un email al candidato con la imagen embebida y un mensaje de agradecimiento.
 
-### 5. Componente `src/components/config/ProfileAnnexForm.tsx`
-Formulario de creación/edición del anexo:
-- Select de centro de operación (solo en creación).
-- Cada campo con toggle para activar/desactivar override.
-- Campos: purpose, reports_to, supervises, num_positions, education_level, education_detail, experience, specific_knowledge, skills, functions, responsibilities, working_conditions.
-- Campo `notes` para justificar las diferencias.
+**4. Edge Function `send-candidate-thanks`**
+- Recibe `candidateId` y `companyId`.
+- Consulta el email del candidato.
+- Envia email via Resend (ya configurado en el proyecto) con:
+  - Asunto: "Agradecimiento - Proceso de Seleccion [NombreEmpresa]"
+  - Cuerpo HTML con la imagen de agradecimiento embebida y texto complementario.
+- Registra en la tabla de candidatos que se envio el agradecimiento (campo `thanks_sent_at`).
 
-### 6. Modificar `PositionProfileDetailDialog.tsx`
-Agregar tercera pestaña "Anexos por Centro" con icono `Building2` al `TabsList`, renderizando `ProfileAnnexesTab`.
+**5. Migracion SQL**
+- Agregar columna `thanks_sent_at TIMESTAMPTZ` a la tabla `candidates` para evitar envios duplicados.
 
-### 7. Archivos
+**6. Componente `ThankYouPreviewDialog.tsx`**
+- Dialogo que muestra preview de la imagen y boton de confirmar envio.
+- Se deshabilita si el candidato no tiene email o si ya se envio (`thanks_sent_at` no es null).
 
-| Archivo | Acción |
+### Archivos
+
+| Archivo | Accion |
 |---|---|
-| Migración SQL | Crear tabla `position_profile_annexes` + RLS |
-| `src/types/positionProfile.ts` | Agregar tipos de anexo |
-| `src/hooks/useProfileAnnexes.ts` | Nuevo — CRUD + merge |
-| `src/components/config/ProfileAnnexesTab.tsx` | Nuevo — listado de anexos |
-| `src/components/config/ProfileAnnexForm.tsx` | Nuevo — formulario de anexo |
-| `src/components/config/PositionProfileDetailDialog.tsx` | Agregar pestaña |
-
-### Forma de uso
-1. Ve a **Catálogos > Cargos** y abre el perfil de un cargo.
-2. Verás la nueva pestaña **"Anexos por Centro"**.
-3. Haz clic en **"+ Agregar Anexo"**, selecciona un Centro de Operación.
-4. Activa solo los campos que necesitas personalizar para ese centro (los demás se heredan del perfil base).
-5. Guarda. En la lista verás el centro con badges indicando qué campos fueron modificados.
-6. Para editar o eliminar un anexo, usa los botones en cada tarjeta.
+| `public/images/IMAGEN_PROCESO_DE_SELECCION.png` | Copiar imagen de bienvenida |
+| `public/images/IMAGEN_AGRADECIMIENTO.png` | Copiar imagen de agradecimiento |
+| `src/pages/RegistroPublico.tsx` | Agregar imagen de bienvenida para candidatos |
+| `src/components/selection/CandidateDetailDialog.tsx` | Agregar boton "Enviar Agradecimiento" |
+| `src/components/selection/ThankYouPreviewDialog.tsx` | Nuevo - preview + confirmacion |
+| `supabase/functions/send-candidate-thanks/index.ts` | Nuevo - envio de email |
+| Migracion SQL | Agregar `thanks_sent_at` a `candidates` |
 
