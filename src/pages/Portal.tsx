@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, FileText, CalendarDays, Stethoscope, Edit3, AlertCircle, LogOut } from 'lucide-react';
+import { User, FileText, CalendarDays, Stethoscope, Edit3, AlertCircle, LogOut, Wallet, Award } from 'lucide-react';
 import { useEmployeePortal } from '@/hooks/useEmployeePortal';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -10,6 +10,8 @@ import {
   PortalVacationsLeaves,
   PortalIncapacities,
   PortalChangeRequests,
+  PortalPayslips,
+  PortalCertificates,
 } from '@/components/portal';
 
 export default function Portal() {
@@ -18,13 +20,21 @@ export default function Portal() {
     employee,
     documents,
     vacationBalances,
+    vacationRequests,
     leaveRequests,
     incapacities,
     changeRequests,
+    payrollReceipts,
+    leaveTypeConfig,
+    contractInfo,
+    companyInfo,
     isLoading,
     isLoadingDocs,
+    isLoadingPayroll,
     hasAccess,
     createChangeRequest,
+    createVacationRequest,
+    createLeaveRequest,
   } = useEmployeePortal();
 
   if (isLoading) {
@@ -81,7 +91,7 @@ export default function Portal() {
       {/* Main Content */}
       <main className="container py-6">
         <Tabs defaultValue="personal" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 h-auto">
             <TabsTrigger value="personal" className="flex items-center gap-2 py-3">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Mis Datos</span>
@@ -98,6 +108,14 @@ export default function Portal() {
               <Stethoscope className="h-4 w-4" />
               <span className="hidden sm:inline">Incapacidades</span>
             </TabsTrigger>
+            <TabsTrigger value="payslips" className="flex items-center gap-2 py-3">
+              <Wallet className="h-4 w-4" />
+              <span className="hidden sm:inline">Nómina</span>
+            </TabsTrigger>
+            <TabsTrigger value="certificates" className="flex items-center gap-2 py-3">
+              <Award className="h-4 w-4" />
+              <span className="hidden sm:inline">Certificados</span>
+            </TabsTrigger>
             <TabsTrigger value="requests" className="flex items-center gap-2 py-3">
               <Edit3 className="h-4 w-4" />
               <span className="hidden sm:inline">Solicitudes</span>
@@ -109,16 +127,22 @@ export default function Portal() {
           </TabsContent>
 
           <TabsContent value="documents">
-            <PortalDocuments 
-              documents={documents || []} 
-              isLoading={isLoadingDocs} 
+            <PortalDocuments
+              documents={documents || []}
+              isLoading={isLoadingDocs}
             />
           </TabsContent>
 
           <TabsContent value="vacations">
-            <PortalVacationsLeaves 
-              vacationBalances={vacationBalances || []} 
-              leaveRequests={leaveRequests || []} 
+            <PortalVacationsLeaves
+              vacationBalances={vacationBalances || []}
+              leaveRequests={leaveRequests || []}
+              vacationRequests={vacationRequests || []}
+              leaveTypeConfig={leaveTypeConfig || []}
+              onCreateVacation={(data) => createVacationRequest.mutate(data)}
+              onCreateLeave={(data) => createLeaveRequest.mutate(data)}
+              isSubmittingVacation={createVacationRequest.isPending}
+              isSubmittingLeave={createLeaveRequest.isPending}
             />
           </TabsContent>
 
@@ -126,8 +150,24 @@ export default function Portal() {
             <PortalIncapacities incapacities={incapacities || []} />
           </TabsContent>
 
+          <TabsContent value="payslips">
+            <PortalPayslips
+              receipts={payrollReceipts || []}
+              isLoading={isLoadingPayroll}
+            />
+          </TabsContent>
+
+          <TabsContent value="certificates">
+            <PortalCertificates
+              employee={employee}
+              companyName={companyInfo?.name || ''}
+              companyNit={companyInfo?.nit || ''}
+              contractInfo={contractInfo}
+            />
+          </TabsContent>
+
           <TabsContent value="requests">
-            <PortalChangeRequests 
+            <PortalChangeRequests
               changeRequests={changeRequests || []}
               onSubmit={(data) => createChangeRequest.mutate({
                 request_type: data.request_type,
