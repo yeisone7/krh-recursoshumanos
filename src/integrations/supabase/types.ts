@@ -4980,6 +4980,69 @@ export type Database = {
           },
         ]
       }
+      payroll_receipts: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          net_pay: number | null
+          period_end: string
+          period_label: string
+          period_start: string
+          total_deductions: number | null
+          total_earnings: number | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          employee_id: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          net_pay?: number | null
+          period_end: string
+          period_label: string
+          period_start: string
+          total_deductions?: number | null
+          total_earnings?: number | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          net_pay?: number | null
+          period_end?: string
+          period_label?: string
+          period_start?: string
+          total_deductions?: number | null
+          total_earnings?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_receipts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_receipts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_evaluations: {
         Row: {
           areas_to_improve: string | null

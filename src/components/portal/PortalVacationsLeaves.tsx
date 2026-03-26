@@ -1,21 +1,42 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, Plane, Clock, FileCheck, AlertCircle } from 'lucide-react';
+import { CalendarDays, Plane, FileCheck, AlertCircle, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { PortalVacationRequestForm } from './PortalVacationRequestForm';
+import { PortalLeaveRequestForm } from './PortalLeaveRequestForm';
 
 interface PortalVacationsLeavesProps {
   vacationBalances: any[];
   leaveRequests: any[];
+  vacationRequests?: any[];
+  leaveTypeConfig?: { id: string; leave_type: string; display_name: string }[];
+  onCreateVacation?: (data: any) => void;
+  onCreateLeave?: (data: any) => void;
+  isSubmittingVacation?: boolean;
+  isSubmittingLeave?: boolean;
 }
 
-export function PortalVacationsLeaves({ vacationBalances, leaveRequests }: PortalVacationsLeavesProps) {
+export function PortalVacationsLeaves({
+  vacationBalances,
+  leaveRequests,
+  vacationRequests,
+  leaveTypeConfig,
+  onCreateVacation,
+  onCreateLeave,
+  isSubmittingVacation,
+  isSubmittingLeave,
+}: PortalVacationsLeavesProps) {
+  const [showVacationForm, setShowVacationForm] = useState(false);
+  const [showLeaveForm, setShowLeaveForm] = useState(false);
+
   const currentBalance = vacationBalances?.[0];
   const usedDays = currentBalance ? currentBalance.total_days - currentBalance.available_days : 0;
-  const progressPercent = currentBalance 
-    ? Math.min(100, (usedDays / currentBalance.total_days) * 100) 
+  const progressPercent = currentBalance
+    ? Math.min(100, (usedDays / currentBalance.total_days) * 100)
     : 0;
 
   return (
@@ -23,13 +44,23 @@ export function PortalVacationsLeaves({ vacationBalances, leaveRequests }: Porta
       {/* Vacation Balance Card */}
       <Card className="bg-gradient-to-br from-primary/5 to-primary/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plane className="h-5 w-5" />
-            Saldo de Vacaciones
-          </CardTitle>
-          <CardDescription>
-            Periodo {currentBalance?.period_year || new Date().getFullYear()}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Plane className="h-5 w-5" />
+                Saldo de Vacaciones
+              </CardTitle>
+              <CardDescription>
+                Periodo {currentBalance?.period_year || new Date().getFullYear()}
+              </CardDescription>
+            </div>
+            {onCreateVacation && (
+              <Button size="sm" onClick={() => setShowVacationForm(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                Solicitar
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {currentBalance ? (
@@ -46,7 +77,7 @@ export function PortalVacationsLeaves({ vacationBalances, leaveRequests }: Porta
                   <p className="text-sm text-muted-foreground">días causados</p>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Usados: {usedDays} días</span>
@@ -81,21 +112,64 @@ export function PortalVacationsLeaves({ vacationBalances, leaveRequests }: Porta
         </CardContent>
       </Card>
 
+      {/* Vacation Requests History */}
+      {vacationRequests && vacationRequests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Plane className="h-4 w-4" />
+              Mis Solicitudes de Vacaciones
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {vacationRequests.map((req: any) => (
+                <div key={req.id} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div>
+                    <p className="font-medium text-sm capitalize">{req.request_type}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(req.start_date), 'PPP', { locale: es })}
+                      {req.end_date !== req.start_date && (
+                        <> - {format(new Date(req.end_date), 'PPP', { locale: es })}</>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium">{req.business_days} días</span>
+                    <StatusBadge status={req.status} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Leave Requests */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5" />
-            Historial de Permisos y Licencias
-          </CardTitle>
-          <CardDescription>
-            Tus solicitudes de ausencias más recientes
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5" />
+                Historial de Permisos y Licencias
+              </CardTitle>
+              <CardDescription>
+                Tus solicitudes de ausencias más recientes
+              </CardDescription>
+            </div>
+            {onCreateLeave && (
+              <Button size="sm" variant="outline" onClick={() => setShowLeaveForm(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                Solicitar
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {leaveRequests && leaveRequests.length > 0 ? (
             <div className="space-y-3">
-              {leaveRequests.map((request) => (
+              {leaveRequests.map((request: any) => (
                 <div
                   key={request.id}
                   className="flex items-center justify-between p-3 rounded-lg border"
@@ -118,7 +192,7 @@ export function PortalVacationsLeaves({ vacationBalances, leaveRequests }: Porta
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="text-sm font-medium">{request.days_requested} días</p>
+                      <p className="text-sm font-medium">{request.total_days || request.days_requested} días</p>
                     </div>
                     <StatusBadge status={request.status} />
                   </div>
@@ -135,6 +209,32 @@ export function PortalVacationsLeaves({ vacationBalances, leaveRequests }: Porta
           )}
         </CardContent>
       </Card>
+
+      {/* Forms */}
+      {onCreateVacation && (
+        <PortalVacationRequestForm
+          open={showVacationForm}
+          onOpenChange={setShowVacationForm}
+          onSubmit={(data) => {
+            onCreateVacation(data);
+            setShowVacationForm(false);
+          }}
+          isSubmitting={isSubmittingVacation || false}
+          availableDays={currentBalance?.available_days || 0}
+        />
+      )}
+      {onCreateLeave && (
+        <PortalLeaveRequestForm
+          open={showLeaveForm}
+          onOpenChange={setShowLeaveForm}
+          onSubmit={(data) => {
+            onCreateLeave(data);
+            setShowLeaveForm(false);
+          }}
+          isSubmitting={isSubmittingLeave || false}
+          leaveTypes={leaveTypeConfig || []}
+        />
+      )}
     </div>
   );
 }
@@ -145,9 +245,8 @@ function StatusBadge({ status }: { status: string }) {
     aprobado: { label: 'Aprobado', variant: 'default' },
     rechazado: { label: 'Rechazado', variant: 'destructive' },
     cancelado: { label: 'Cancelado', variant: 'outline' },
+    en_curso: { label: 'En Curso', variant: 'default' },
   };
-
-  const { label, variant } = config[status] || { label: status, variant: 'outline' };
-
+  const { label, variant } = config[status] || { label: status, variant: 'outline' as const };
   return <Badge variant={variant}>{label}</Badge>;
 }
