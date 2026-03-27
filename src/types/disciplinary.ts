@@ -44,7 +44,7 @@ export const sanctionTypeLabels: Record<SanctionType, string> = {
   amonestacion_escrita: 'Amonestación Escrita',
   suspension_1_3_dias: 'Suspensión 1-3 días',
   suspension_4_8_dias: 'Suspensión 4-8 días',
-  terminacion_justa_causa: 'Terminación con Justa Causa',
+  terminacion_justa_causa: 'Terminación con Justa Causa Art 62 CST',
   sin_sancion: 'Sin Sanción',
 };
 
