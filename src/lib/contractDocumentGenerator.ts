@@ -499,9 +499,8 @@ export async function convertDocxToPdf(docxBlob: Blob): Promise<Blob> {
           format: 'letter', 
           orientation: 'portrait' 
         },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
       })
-      .from(container.firstElementChild)
+      .from(container.firstElementChild as HTMLElement)
       .outputPdf('blob');
     
     return pdfBlob;
