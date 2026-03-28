@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { FileText, Loader2, FileDown } from 'lucide-react';
+import { FileText, Download, Loader2, FileDown, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 
@@ -16,7 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -25,7 +25,9 @@ import { useCompany } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { documentTypeLabels } from '@/types/employee';
 import {
+  generateContractFromTemplate,
   generateBasicContractPDF,
+  downloadDocument,
   downloadPDF,
   ContractDocumentData,
   calculateMonthsDifference,
@@ -147,8 +149,49 @@ export function GenerateContractDialog({
     ct => ct.contract_type === contract.contract_type
   );
   
-  
+  const hasTemplate = contractTypeConfig?.template_url && contractTypeConfig.template_url.length > 0;
   const employeeName = getEmployeeName(contract.employees);
+
+  const handleGenerateWord = async () => {
+    if (!hasTemplate) {
+      toast.error('Este tipo de contrato no tiene plantilla configurada');
+      return;
+    }
+
+    setIsGenerating(true);
+    setProgress(10);
+
+    try {
+      const documentData = prepareDocumentData();
+      setProgress(30);
+
+      const blob = await generateContractFromTemplate(
+        contractTypeConfig!.template_url!,
+        documentData
+      );
+      setProgress(80);
+
+      const filename = `Contrato_${contract.contract_type}_${contract.employees.document_number}_${format(new Date(), 'yyyyMMdd')}.docx`;
+      downloadDocument(blob, filename);
+      setProgress(100);
+
+      toast.success('Contrato generado exitosamente', {
+        description: `El documento se ha descargado como ${filename}`,
+      });
+
+      setTimeout(() => {
+        onOpenChange(false);
+        setProgress(0);
+      }, 500);
+    } catch (error: any) {
+      console.error('Error generating contract:', error);
+      toast.error('Error al generar el contrato', {
+        description: error.message || 'Por favor intente de nuevo',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleGeneratePDF = async () => {
     setIsGenerating(true);
@@ -322,6 +365,22 @@ export function GenerateContractDialog({
             />
           </div>
 
+          {/* Template Status */}
+          {hasTemplate ? (
+            <Alert>
+              <FileText className="h-4 w-4" />
+              <AlertDescription>
+                Este tipo de contrato tiene una plantilla configurada: <strong>{contractTypeConfig?.template_file_name}</strong>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                No hay plantilla configurada para este tipo de contrato. Solo se puede generar en formato PDF básico.
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Progress Bar */}
           {isGenerating && (
@@ -343,6 +402,7 @@ export function GenerateContractDialog({
             Cancelar
           </Button>
           <Button
+            variant="outline"
             onClick={handleGeneratePDF}
             disabled={isGenerating}
           >
@@ -351,7 +411,18 @@ export function GenerateContractDialog({
             ) : (
               <FileDown className="w-4 h-4 mr-2" />
             )}
-            Generar PDF
+            Generar PDF Básico
+          </Button>
+          <Button
+            onClick={handleGenerateWord}
+            disabled={isGenerating || !hasTemplate}
+          >
+            {isGenerating ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Generar Word
           </Button>
         </DialogFooter>
       </DialogContent>
