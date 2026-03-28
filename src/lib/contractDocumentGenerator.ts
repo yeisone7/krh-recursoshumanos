@@ -433,6 +433,83 @@ export function generateBasicContractPDF(data: ContractDocumentData): jsPDF {
   return doc;
 }
 
+// Convert DOCX blob to PDF using mammoth (DOCX→HTML) + html2pdf.js (HTML→PDF)
+export async function convertDocxToPdf(docxBlob: Blob): Promise<Blob> {
+  const mammoth = await import('mammoth');
+  const html2pdf = (await import('html2pdf.js')).default;
+  
+  const arrayBuffer = await docxBlob.arrayBuffer();
+  
+  // Convert DOCX to HTML using mammoth
+  const result = await mammoth.convertToHtml(
+    { arrayBuffer },
+    {
+      styleMap: [
+        "p[style-name='Title'] => h1:fresh",
+        "p[style-name='Heading 1'] => h1:fresh",
+        "p[style-name='Heading 2'] => h2:fresh",
+        "p[style-name='Heading 3'] => h3:fresh",
+      ],
+    }
+  );
+  
+  const htmlContent = result.value;
+  
+  // Create a temporary container with styling
+  const container = document.createElement('div');
+  container.innerHTML = `
+    <div style="
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #000;
+      padding: 0;
+      max-width: 100%;
+    ">
+      <style>
+        h1 { font-size: 16pt; font-weight: bold; text-align: center; margin: 10pt 0; }
+        h2 { font-size: 14pt; font-weight: bold; margin: 8pt 0; }
+        h3 { font-size: 12pt; font-weight: bold; margin: 6pt 0; }
+        p { margin: 4pt 0; text-align: justify; }
+        table { width: 100%; border-collapse: collapse; margin: 8pt 0; }
+        td, th { border: 1px solid #000; padding: 4pt 6pt; font-size: 11pt; }
+        strong, b { font-weight: bold; }
+        em, i { font-style: italic; }
+        u { text-decoration: underline; }
+      </style>
+      ${htmlContent}
+    </div>
+  `;
+  
+  document.body.appendChild(container);
+  
+  try {
+    const pdfBlob: Blob = await html2pdf()
+      .set({
+        margin: [20, 25, 20, 25], // top, left, bottom, right in mm
+        filename: 'contrato.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'letter', 
+          orientation: 'portrait' 
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+      })
+      .from(container.firstElementChild)
+      .outputPdf('blob');
+    
+    return pdfBlob;
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
 // Download generated document
 export function downloadDocument(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);

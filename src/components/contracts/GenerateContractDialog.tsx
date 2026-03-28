@@ -27,6 +27,7 @@ import { documentTypeLabels } from '@/types/employee';
 import {
   generateContractFromTemplate,
   generateBasicContractPDF,
+  convertDocxToPdf,
   downloadDocument,
   downloadPDF,
   ContractDocumentData,
