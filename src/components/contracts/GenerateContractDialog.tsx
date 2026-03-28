@@ -408,29 +408,31 @@ export function GenerateContractDialog({
           >
             Cancelar
           </Button>
-          <Button
-            variant="outline"
-            onClick={handleGeneratePDF}
-            disabled={isGenerating}
-          >
-            {isGenerating ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <FileDown className="w-4 h-4 mr-2" />
-            )}
-            Generar PDF Básico
-          </Button>
-          <Button
-            onClick={handleGenerateWord}
-            disabled={isGenerating || !hasTemplate}
-          >
-            {isGenerating ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4 mr-2" />
-            )}
-            Generar Word
-          </Button>
+          {hasTemplate ? (
+            <Button
+              onClick={handleGenerateFromTemplate}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              Generar PDF
+            </Button>
+          ) : (
+            <Button
+              onClick={handleGeneratePDF}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4 mr-2" />
+              )}
+              Generar PDF Básico
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
