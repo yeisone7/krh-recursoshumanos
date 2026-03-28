@@ -27,6 +27,7 @@ import { documentTypeLabels } from '@/types/employee';
 import {
   generateContractFromTemplate,
   generateBasicContractPDF,
+  convertDocxToPdf,
   downloadDocument,
   downloadPDF,
   ContractDocumentData,
@@ -152,7 +153,7 @@ export function GenerateContractDialog({
   const hasTemplate = contractTypeConfig?.template_url && contractTypeConfig.template_url.length > 0;
   const employeeName = getEmployeeName(contract.employees);
 
-  const handleGenerateWord = async () => {
+  const handleGenerateFromTemplate = async () => {
     if (!hasTemplate) {
       toast.error('Este tipo de contrato no tiene plantilla configurada');
       return;
@@ -163,19 +164,25 @@ export function GenerateContractDialog({
 
     try {
       const documentData = prepareDocumentData();
-      setProgress(30);
+      setProgress(20);
 
-      const blob = await generateContractFromTemplate(
+      // Generate DOCX from template
+      const docxBlob = await generateContractFromTemplate(
         contractTypeConfig!.template_url!,
         documentData
       );
-      setProgress(80);
+      setProgress(50);
 
-      const filename = `Contrato_${contract.contract_type}_${contract.employees.document_number}_${format(new Date(), 'yyyyMMdd')}.docx`;
-      downloadDocument(blob, filename);
+      // Convert DOCX to PDF client-side
+      toast.info('Convirtiendo a PDF...');
+      const pdfBlob = await convertDocxToPdf(docxBlob);
+      setProgress(90);
+
+      const filename = `Contrato_${contract.contract_type}_${contract.employees.document_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+      downloadDocument(pdfBlob, filename);
       setProgress(100);
 
-      toast.success('Contrato generado exitosamente', {
+      toast.success('Contrato PDF generado exitosamente', {
         description: `El documento se ha descargado como ${filename}`,
       });
 
@@ -184,8 +191,8 @@ export function GenerateContractDialog({
         setProgress(0);
       }, 500);
     } catch (error: any) {
-      console.error('Error generating contract:', error);
-      toast.error('Error al generar el contrato', {
+      console.error('Error generating contract PDF:', error);
+      toast.error('Error al generar el contrato en PDF', {
         description: error.message || 'Por favor intente de nuevo',
       });
     } finally {
@@ -327,7 +334,7 @@ export function GenerateContractDialog({
             Generar Documento de Contrato
           </DialogTitle>
           <DialogDescription>
-            Genere el documento del contrato usando la plantilla configurada o en formato PDF básico.
+            Genere el documento del contrato en formato PDF{hasTemplate ? ' usando la plantilla configurada' : ' básico'}.
           </DialogDescription>
         </DialogHeader>
 
@@ -401,29 +408,31 @@ export function GenerateContractDialog({
           >
             Cancelar
           </Button>
-          <Button
-            variant="outline"
-            onClick={handleGeneratePDF}
-            disabled={isGenerating}
-          >
-            {isGenerating ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <FileDown className="w-4 h-4 mr-2" />
-            )}
-            Generar PDF Básico
-          </Button>
-          <Button
-            onClick={handleGenerateWord}
-            disabled={isGenerating || !hasTemplate}
-          >
-            {isGenerating ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4 mr-2" />
-            )}
-            Generar Word
-          </Button>
+          {hasTemplate ? (
+            <Button
+              onClick={handleGenerateFromTemplate}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              Generar PDF
+            </Button>
+          ) : (
+            <Button
+              onClick={handleGeneratePDF}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4 mr-2" />
+              )}
+              Generar PDF Básico
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
