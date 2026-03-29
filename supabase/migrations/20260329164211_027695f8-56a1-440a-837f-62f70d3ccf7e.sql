@@ -1,0 +1,1 @@
+ALTER TABLE public.operation_centers ADD COLUMN contract_start_date date;

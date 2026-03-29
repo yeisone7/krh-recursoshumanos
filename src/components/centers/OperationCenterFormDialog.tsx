@@ -44,6 +44,7 @@ const operationCenterSchema = z.object({
   department: z.string().optional(),
   phone: z.string().optional(),
   managerName: z.string().optional(),
+  contractStartDate: z.date().optional().nullable(),
   contractCommercialDate: z.date().optional().nullable(),
   notes: z.string().optional(),
 });
@@ -73,6 +74,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
       department: '',
       phone: '',
       managerName: '',
+      contractStartDate: null,
       contractCommercialDate: null,
       notes: '',
     },
@@ -88,6 +90,9 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
         department: editCenter.department || '',
         phone: editCenter.phone || '',
         managerName: editCenter.manager_name || '',
+        contractStartDate: editCenter.contract_start_date
+          ? new Date(editCenter.contract_start_date + 'T00:00:00')
+          : null,
         contractCommercialDate: editCenter.contract_commercial_date
           ? new Date(editCenter.contract_commercial_date + 'T00:00:00')
           : null,
@@ -102,6 +107,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
         department: '',
         phone: '',
         managerName: '',
+        contractStartDate: null,
         contractCommercialDate: null,
         notes: '',
       });
@@ -123,6 +129,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
         department: data.department || null,
         phone: data.phone || null,
         manager_name: data.managerName || null,
+        contract_start_date: data.contractStartDate ? format(data.contractStartDate, 'yyyy-MM-dd') : null,
         contract_commercial_date: data.contractCommercialDate ? format(data.contractCommercialDate, 'yyyy-MM-dd') : null,
         notes: data.notes || null,
       };
