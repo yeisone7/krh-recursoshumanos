@@ -32,10 +32,18 @@ export function ContractPreviewDialog({
   const [rendered, setRendered] = useState(false);
 
   useEffect(() => {
-    if (open && docxBlob && containerRef.current) {
-      renderDocx();
+    let frameId: number | undefined;
+
+    if (open && docxBlob) {
+      frameId = requestAnimationFrame(() => {
+        void renderDocx();
+      });
     }
+
     return () => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
       if (containerRef.current) {
         containerRef.current.innerHTML = '';
       }
@@ -43,32 +51,62 @@ export function ContractPreviewDialog({
     };
   }, [open, docxBlob]);
 
+  const waitForContainerLayout = async (element: HTMLDivElement, maxFrames = 10) => {
+    for (let i = 0; i < maxFrames; i += 1) {
+      const { width, height } = element.getBoundingClientRect();
+      if (width > 0 && height > 0) return true;
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    }
+    return false;
+  };
+
   const renderDocx = async () => {
     if (!docxBlob || !containerRef.current) return;
 
     setIsRendering(true);
+    setRendered(false);
+
     try {
       const { renderAsync } = await import('docx-preview');
       const arrayBuffer = await docxBlob.arrayBuffer();
 
       containerRef.current.innerHTML = '';
 
-      await renderAsync(arrayBuffer, containerRef.current, undefined, {
-        className: 'docx-preview-contract',
-        inWrapper: true,
-        ignoreWidth: false,
-        ignoreHeight: false,
-        ignoreFonts: false,
-        breakPages: true,
-        ignoreLastRenderedPageBreak: false,
-        experimental: true,
-        trimXmlDeclaration: true,
-        useBase64URL: true,
-        renderHeaders: true,
-        renderFooters: true,
-        renderFootnotes: true,
-        renderEndnotes: true,
-      });
+      const hasLayout = await waitForContainerLayout(containerRef.current);
+      if (!hasLayout) {
+        throw new Error('El contenedor de vista previa no tiene dimensiones aún');
+      }
+
+      let pagesRendered = 0;
+      for (let attempt = 0; attempt < 2 && pagesRendered === 0; attempt += 1) {
+        await renderAsync(arrayBuffer, containerRef.current, undefined, {
+          className: 'docx-preview-contract',
+          inWrapper: true,
+          ignoreWidth: false,
+          ignoreHeight: false,
+          ignoreFonts: false,
+          breakPages: true,
+          ignoreLastRenderedPageBreak: false,
+          experimental: true,
+          trimXmlDeclaration: true,
+          useBase64URL: true,
+          renderHeaders: true,
+          renderFooters: true,
+          renderFootnotes: true,
+          renderEndnotes: true,
+        });
+
+        pagesRendered = containerRef.current.querySelectorAll('section.docx').length;
+
+        if (pagesRendered === 0) {
+          await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+          containerRef.current.innerHTML = '';
+        }
+      }
+
+      if (pagesRendered === 0) {
+        throw new Error('No se pudieron renderizar las páginas del documento');
+      }
 
       setRendered(true);
     } catch (error) {
@@ -173,7 +211,7 @@ export function ContractPreviewDialog({
           )}
           <div
             ref={containerRef}
-            className="docx-preview-container"
+            className="docx-preview-container min-h-[1123px] w-full"
           />
           <style>{`
             .docx-preview-container .docx-wrapper {
