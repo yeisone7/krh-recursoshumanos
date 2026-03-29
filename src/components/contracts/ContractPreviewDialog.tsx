@@ -60,6 +60,14 @@ export function ContractPreviewDialog({
     return false;
   };
 
+  const hasRenderedContent = (element: HTMLDivElement) => {
+    const structuralNodes = element.querySelectorAll('section, article, .docx, .docx-preview-contract').length;
+    const visualNodes = element.querySelectorAll('canvas, svg, img, table, p, span, div').length;
+    const textContentLength = element.textContent?.trim().length || 0;
+
+    return structuralNodes > 0 || visualNodes > 0 || textContentLength > 0;
+  };
+
   const renderDocx = async () => {
     if (!docxBlob || !containerRef.current) return;
 
@@ -77,8 +85,8 @@ export function ContractPreviewDialog({
         throw new Error('El contenedor de vista previa no tiene dimensiones aún');
       }
 
-      let pagesRendered = 0;
-      for (let attempt = 0; attempt < 2 && pagesRendered === 0; attempt += 1) {
+      let contentRendered = false;
+      for (let attempt = 0; attempt < 2 && !contentRendered; attempt += 1) {
         await renderAsync(arrayBuffer, containerRef.current, undefined, {
           className: 'docx-preview-contract',
           inWrapper: true,
@@ -96,16 +104,17 @@ export function ContractPreviewDialog({
           renderEndnotes: true,
         });
 
-        pagesRendered = containerRef.current.querySelectorAll('section.docx').length;
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        contentRendered = hasRenderedContent(containerRef.current);
 
-        if (pagesRendered === 0) {
+        if (!contentRendered) {
           await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
           containerRef.current.innerHTML = '';
         }
       }
 
-      if (pagesRendered === 0) {
-        throw new Error('No se pudieron renderizar las páginas del documento');
+      if (!contentRendered) {
+        throw new Error('No se pudo renderizar el contenido del documento');
       }
 
       setRendered(true);
@@ -129,10 +138,12 @@ export function ContractPreviewDialog({
 
       const wrapper = containerRef.current.querySelector('.docx-wrapper') || containerRef.current;
 
-      // Get all page sections
-      const pages = wrapper.querySelectorAll('section.docx');
+      const hasPreviewContent =
+        wrapper.querySelectorAll('section, article, .docx, .docx-preview-contract').length > 0 ||
+        wrapper.childElementCount > 0 ||
+        (wrapper.textContent?.trim().length || 0) > 0;
 
-      if (pages.length === 0) {
+      if (!hasPreviewContent) {
         throw new Error('No se encontraron páginas renderizadas');
       }
 
