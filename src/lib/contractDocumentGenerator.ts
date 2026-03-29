@@ -498,25 +498,27 @@ export async function convertDocxToPdf(docxBlob: Blob): Promise<Blob> {
     const wrapper = container.querySelector('.docx-wrapper') || container;
 
     // Convert rendered HTML to PDF
+    const pdfOptions = {
+      margin: 0,
+      filename: 'contrato.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        width: wrapper.scrollWidth,
+        windowWidth: wrapper.scrollWidth,
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'letter', 
+        orientation: 'portrait' 
+      },
+    };
+    (pdfOptions as any).pagebreak = { mode: ['css', 'legacy'] };
+
     const pdfBlob: Blob = await html2pdf()
-      .set({
-        margin: 0, // docx-preview already handles margins
-        filename: 'contrato.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2,
-          useCORS: true,
-          letterRendering: true,
-          width: wrapper.scrollWidth,
-          windowWidth: wrapper.scrollWidth,
-        },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'letter', 
-          orientation: 'portrait' 
-        },
-        pagebreak: { mode: ['css', 'legacy'] } as any,
-      })
+      .set(pdfOptions)
       .from(wrapper as HTMLElement)
       .outputPdf('blob');
     
