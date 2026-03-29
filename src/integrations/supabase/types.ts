@@ -4629,6 +4629,7 @@ export type Database = {
           code: string | null
           company_id: string
           contract_commercial_date: string | null
+          contract_start_date: string | null
           created_at: string
           created_by: string | null
           department: string | null
@@ -4646,6 +4647,7 @@ export type Database = {
           code?: string | null
           company_id: string
           contract_commercial_date?: string | null
+          contract_start_date?: string | null
           created_at?: string
           created_by?: string | null
           department?: string | null
@@ -4663,6 +4665,7 @@ export type Database = {
           code?: string | null
           company_id?: string
           contract_commercial_date?: string | null
+          contract_start_date?: string | null
           created_at?: string
           created_by?: string | null
           department?: string | null

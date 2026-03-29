@@ -44,6 +44,7 @@ const operationCenterSchema = z.object({
   department: z.string().optional(),
   phone: z.string().optional(),
   managerName: z.string().optional(),
+  contractStartDate: z.date().optional().nullable(),
   contractCommercialDate: z.date().optional().nullable(),
   notes: z.string().optional(),
 });
@@ -73,6 +74,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
       department: '',
       phone: '',
       managerName: '',
+      contractStartDate: null,
       contractCommercialDate: null,
       notes: '',
     },
@@ -88,6 +90,9 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
         department: editCenter.department || '',
         phone: editCenter.phone || '',
         managerName: editCenter.manager_name || '',
+        contractStartDate: editCenter.contract_start_date
+          ? new Date(editCenter.contract_start_date + 'T00:00:00')
+          : null,
         contractCommercialDate: editCenter.contract_commercial_date
           ? new Date(editCenter.contract_commercial_date + 'T00:00:00')
           : null,
@@ -102,6 +107,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
         department: '',
         phone: '',
         managerName: '',
+        contractStartDate: null,
         contractCommercialDate: null,
         notes: '',
       });
@@ -123,6 +129,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
         department: data.department || null,
         phone: data.phone || null,
         manager_name: data.managerName || null,
+        contract_start_date: data.contractStartDate ? format(data.contractStartDate, 'yyyy-MM-dd') : null,
         contract_commercial_date: data.contractCommercialDate ? format(data.contractCommercialDate, 'yyyy-MM-dd') : null,
         notes: data.notes || null,
       };
@@ -253,6 +260,42 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                       <Input className="pl-9" placeholder="Nombre del responsable" {...field} />
                     </div>
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="contractStartDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fecha Inicio del Contrato</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? format(field.value, 'dd/MM/yyyy') : <span>Seleccionar fecha</span>}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ?? undefined}
+                        onSelect={field.onChange}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
