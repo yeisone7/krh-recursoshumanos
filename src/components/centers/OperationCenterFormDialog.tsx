@@ -46,6 +46,7 @@ const operationCenterSchema = z.object({
   managerName: z.string().optional(),
   contractStartDate: z.date().optional().nullable(),
   contractCommercialDate: z.date().optional().nullable(),
+  mainClient: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -76,6 +77,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
       managerName: '',
       contractStartDate: null,
       contractCommercialDate: null,
+      mainClient: '',
       notes: '',
     },
   });
@@ -96,6 +98,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
         contractCommercialDate: editCenter.contract_commercial_date
           ? new Date(editCenter.contract_commercial_date + 'T00:00:00')
           : null,
+        mainClient: editCenter.main_client || '',
         notes: editCenter.notes || '',
       });
     } else {
@@ -109,6 +112,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
         managerName: '',
         contractStartDate: null,
         contractCommercialDate: null,
+        mainClient: '',
         notes: '',
       });
     }
@@ -131,6 +135,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
         manager_name: data.managerName || null,
         contract_start_date: data.contractStartDate ? format(data.contractStartDate, 'yyyy-MM-dd') : null,
         contract_commercial_date: data.contractCommercialDate ? format(data.contractCommercialDate, 'yyyy-MM-dd') : null,
+        main_client: data.mainClient || null,
         notes: data.notes || null,
       };
 
@@ -332,6 +337,20 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                       />
                     </PopoverContent>
                   </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mainClient"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cliente Principal</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nombre del cliente principal" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
