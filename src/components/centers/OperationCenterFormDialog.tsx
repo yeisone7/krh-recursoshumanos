@@ -263,7 +263,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
               name="contractCommercialDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fecha Comercial del Contrato</FormLabel>
+                  <FormLabel>Fecha Terminación Comercial del Contrato</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
