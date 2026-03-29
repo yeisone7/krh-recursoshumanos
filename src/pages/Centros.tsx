@@ -37,6 +37,7 @@ export default function Centros() {
   const [editCenter, setEditCenter] = useState<any | null>(null);
   const [toggleTarget, setToggleTarget] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [detailCenter, setDetailCenter] = useState<any | null>(null);
   
   const { currentCompanyId } = useAuth();
   const { data: centers = [], isLoading: loadingCenters } = useOperationCenters();
