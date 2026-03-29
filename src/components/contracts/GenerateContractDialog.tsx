@@ -87,6 +87,9 @@ export function GenerateContractDialog({
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [generationCity, setGenerationCity] = useState('Bogotá D.C.');
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
+  const [previewFilename, setPreviewFilename] = useState('');
 
   // Fetch employee contact info
   const { data: employeeContact } = useQuery({
