@@ -328,6 +328,13 @@ export default function Centros() {
         editCenter={editCenter}
       />
 
+      {/* Detail Sheet */}
+      <CenterDetailSheet
+        open={!!detailCenter}
+        onOpenChange={(open) => !open && setDetailCenter(null)}
+        center={detailCenter}
+      />
+
       {/* Toggle Active Confirmation */}
       <AlertDialog open={!!toggleTarget} onOpenChange={(open) => !open && setToggleTarget(null)}>
         <AlertDialogContent>
