@@ -31,7 +31,7 @@ import { useOperationCenters, useUpdateOperationCenter } from '@/hooks/useCompan
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuth } from '@/contexts/AuthContext';
 import { OperationCenterFormDialog } from '@/components/centers/OperationCenterFormDialog';
-
+import { CenterDetailSheet } from '@/components/centers/CenterDetailSheet';
 export default function Centros() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editCenter, setEditCenter] = useState<any | null>(null);
@@ -238,7 +238,8 @@ export default function Centros() {
                 </TableHeader>
                 <TableBody>
                   {filteredCenters.map((center) => (
-                    <TableRow key={center.id}>
+                    <TableRow key={center.id} className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setDetailCenter(center)}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-lg bg-primary/10">
@@ -304,8 +305,9 @@ export default function Centros() {
                           <Switch
                             checked={(center as any).is_active !== false}
                             onCheckedChange={() => setToggleTarget(center)}
+                            onClick={(e) => e.stopPropagation()}
                           />
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(center)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(center); }}>
                             <Pencil className="w-4 h-4" />
                           </Button>
                         </div>
