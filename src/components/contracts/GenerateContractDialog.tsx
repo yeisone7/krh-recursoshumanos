@@ -27,12 +27,11 @@ import { documentTypeLabels } from '@/types/employee';
 import {
   generateContractFromTemplate,
   generateBasicContractPDF,
-  convertDocxToPdf,
-  downloadDocument,
   downloadPDF,
   ContractDocumentData,
   calculateMonthsDifference,
 } from '@/lib/contractDocumentGenerator';
+import { ContractPreviewDialog } from './ContractPreviewDialog';
 
 interface ContractData {
   id: string;
