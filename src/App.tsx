@@ -18,6 +18,7 @@ import Dotacion from "./pages/Dotacion";
 import Examenes from "./pages/Examenes";
 import Seleccion from "./pages/Seleccion";
 import Centros from "./pages/Centros";
+import CentrosFichas from "./pages/CentrosFichas";
 import Jornadas from "./pages/Jornadas";
 import Seguridad from "./pages/Seguridad";
 import Configuracion from "./pages/Configuracion";
@@ -125,6 +126,7 @@ const App = () => (
                         <Route path="/seleccion" element={<P module="seleccion"><Seleccion /></P>} />
                         <Route path="/requisiciones" element={<P module="requisiciones"><Requisiciones /></P>} />
                         <Route path="/centros" element={<P module="centros"><Centros /></P>} />
+                        <Route path="/centros/fichas" element={<P module="centros"><CentrosFichas /></P>} />
                         <Route path="/jornadas" element={<P module="jornadas"><Jornadas /></P>} />
                         <Route path="/disciplinarios" element={<P module="disciplinarios"><Disciplinarios /></P>} />
                         <Route path="/vacaciones" element={<P module="vacaciones"><Vacaciones /></P>} />
