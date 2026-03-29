@@ -197,7 +197,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                 name="code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Código</FormLabel>
+                    <FormLabel>Código (N° de Contrato)</FormLabel>
                     <FormControl>
                       <Input placeholder="CN-001" {...field} />
                     </FormControl>
