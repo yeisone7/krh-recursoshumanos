@@ -431,6 +431,13 @@ export function GenerateContractDialog({
           )}
         </DialogFooter>
       </DialogContent>
+
+      <ContractPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        docxBlob={previewBlob}
+        filename={previewFilename}
+      />
     </Dialog>
   );
 }
