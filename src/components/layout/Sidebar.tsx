@@ -227,7 +227,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   // Auto-open menus based on route (in useEffect to avoid setState during render)
   const pathname = location.pathname;
   useEffect(() => {
-    if (pathname.startsWith('/catalogos') || pathname === '/centros') {
+    if (pathname.startsWith('/catalogos') || pathname.startsWith('/centros')) {
       setCatalogosOpen(true);
     }
     if (pathname.startsWith('/capacitaciones')) {
