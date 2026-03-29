@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FileText, Download, Loader2, FileDown, AlertCircle } from 'lucide-react';
@@ -27,12 +27,11 @@ import { documentTypeLabels } from '@/types/employee';
 import {
   generateContractFromTemplate,
   generateBasicContractPDF,
-  convertDocxToPdf,
-  downloadDocument,
   downloadPDF,
   ContractDocumentData,
   calculateMonthsDifference,
 } from '@/lib/contractDocumentGenerator';
+import { ContractPreviewDialog } from './ContractPreviewDialog';
 
 interface ContractData {
   id: string;
@@ -88,6 +87,9 @@ export function GenerateContractDialog({
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [generationCity, setGenerationCity] = useState('Bogotá D.C.');
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
+  const [previewFilename, setPreviewFilename] = useState('');
 
   // Fetch employee contact info
   const { data: employeeContact } = useQuery({
@@ -171,28 +173,22 @@ export function GenerateContractDialog({
         contractTypeConfig!.template_url!,
         documentData
       );
-      setProgress(50);
-
-      // Convert DOCX to PDF client-side
-      toast.info('Convirtiendo a PDF...');
-      const pdfBlob = await convertDocxToPdf(docxBlob);
-      setProgress(90);
+      setProgress(80);
 
       const filename = `Contrato_${contract.contract_type}_${contract.employees.document_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-      downloadDocument(pdfBlob, filename);
+      
+      setPreviewBlob(docxBlob);
+      setPreviewFilename(filename);
       setProgress(100);
 
-      toast.success('Contrato PDF generado exitosamente', {
-        description: `El documento se ha descargado como ${filename}`,
-      });
-
+      // Open preview dialog
       setTimeout(() => {
-        onOpenChange(false);
+        setPreviewOpen(true);
         setProgress(0);
-      }, 500);
+      }, 300);
     } catch (error: any) {
-      console.error('Error generating contract PDF:', error);
-      toast.error('Error al generar el contrato en PDF', {
+      console.error('Error generating contract:', error);
+      toast.error('Error al generar el contrato', {
         description: error.message || 'Por favor intente de nuevo',
       });
     } finally {
@@ -435,6 +431,13 @@ export function GenerateContractDialog({
           )}
         </DialogFooter>
       </DialogContent>
+
+      <ContractPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        docxBlob={previewBlob}
+        filename={previewFilename}
+      />
     </Dialog>
   );
 }
