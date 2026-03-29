@@ -1,54 +1,82 @@
 
 
-## Plan: Exportar Contrato de Plantilla DOCX como PDF
+## Plan: Portal del Empleado — Self-Service Mejorado
 
-### Problema
-Actualmente el contrato se genera desde una plantilla DOCX y se descarga como `.docx`. El usuario quiere que se exporte como PDF manteniendo el mismo contenido de la plantilla.
+### Resumen
+Agregar tres capacidades clave al portal existente: (1) solicitar vacaciones y permisos directamente, (2) consultar y descargar recibos de nómina, y (3) generar certificados laborales bajo demanda.
 
-### Enfoque
-Crear un **edge function** que reciba el DOCX generado, lo convierta a PDF usando **LibreOffice** (disponible en el entorno Deno/Docker de las edge functions), y devuelva el PDF.
+---
 
-**Flujo:**
-1. El cliente genera el DOCX desde la plantilla (lógica existente con docxtemplater)
-2. Envía el DOCX como base64 a la edge function `convert-docx-to-pdf`
-3. La edge function usa LibreOffice headless para convertir DOCX → PDF
-4. Retorna el PDF como base64
-5. El cliente descarga el PDF
+### Estado Actual
+- El portal ya muestra: datos personales, documentos, saldos de vacaciones (solo lectura), incapacidades y solicitudes de cambio de datos.
+- Ya existen hooks `useCreateVacationRequest` y `useCreateLeaveRequest` en el sistema administrativo.
+- No existe tabla de recibos de nómina ni generador de certificados laborales.
 
-### Cambios
+---
 
-**1. Nueva Edge Function `convert-docx-to-pdf`**
-- Recibe `{ docxBase64: string, filename: string }`
-- Escribe el DOCX a un archivo temporal
-- Ejecuta `libreoffice --headless --convert-to pdf`
-- Lee el PDF resultante y lo retorna como base64
-- Limpia archivos temporales
+### Fase 1: Solicitar Vacaciones y Permisos desde el Portal
 
-**2. `src/lib/contractDocumentGenerator.ts`**
-- Agregar función `convertDocxToPdf(docxBlob: Blob): Promise<Blob>` que llama a la edge function
+**Cambios:**
+- **`PortalVacationsLeaves.tsx`**: Agregar botón "Solicitar Vacaciones" que abre un formulario simplificado (no necesita selector de empleado, ya se sabe quién es). Campos: tipo (disfrute/compensación), fecha inicio, fecha fin, motivo.
+- **`PortalVacationsLeaves.tsx`**: Agregar botón "Solicitar Permiso" con formulario: tipo de permiso (desde `leave_type_config`), fechas, motivo, adjunto opcional.
+- **`src/components/portal/PortalVacationRequestForm.tsx`**: Nuevo componente — formulario de solicitud de vacaciones adaptado al portal.
+- **`src/components/portal/PortalLeaveRequestForm.tsx`**: Nuevo componente — formulario de solicitud de permisos adaptado al portal.
+- **`useEmployeePortal.ts`**: Agregar mutations `createVacationRequest` y `createLeaveRequest` que reutilizan la lógica existente pero con el employee_id del empleado vinculado.
+- **RLS**: Las tablas `vacation_requests` y `leave_requests` ya tienen RLS; se agrega política para que el empleado vinculado pueda insertar sus propias solicitudes.
 
-**3. `src/components/contracts/GenerateContractDialog.tsx`**
-- Reemplazar botón "Generar Word" por "Generar PDF" 
-- Eliminar botón "Generar PDF Básico"
-- Modificar `handleGenerateWord` → `handleGeneratePDF`: genera DOCX desde plantilla, luego lo convierte a PDF via la edge function, y descarga el PDF
-- Mantener la opción de "Generar PDF Básico" solo cuando NO hay plantilla configurada
+**Migración SQL:**
+- Política RLS en `vacation_requests`: INSERT para usuarios autenticados donde `employee_id = get_my_employee_id()`.
+- Política RLS en `leave_requests`: INSERT para usuarios autenticados donde `employee_id = get_my_employee_id()`.
 
-**4. `supabase/config.toml`**
-- Agregar configuración para la nueva edge function con `verify_jwt = false`
+---
 
-### UI Resultado
-- Si hay plantilla: solo botón **"Generar PDF"** (genera desde plantilla DOCX → convierte a PDF)
-- Si NO hay plantilla: solo botón **"Generar PDF Básico"** (el fallback actual con jsPDF)
+### Fase 2: Recibos de Nómina
 
-### Archivos
+**Migración SQL:**
+- Nueva tabla `payroll_receipts`:
+  - `id`, `company_id`, `employee_id`, `period_start`, `period_end`, `period_label` (ej: "Marzo 2026"), `file_url` (referencia a storage), `file_name`, `total_earnings`, `total_deductions`, `net_pay`, `created_at`, `created_by`
+- RLS: SELECT para empleados vinculados (`employee_id = get_my_employee_id()`), INSERT/UPDATE/DELETE solo para usuarios admin/rrhh.
+
+**Archivos:**
+- **`src/components/portal/PortalPayslips.tsx`**: Nueva pestaña — lista de recibos con periodo, devengado, deducciones, neto, y botones ver/descargar PDF.
+- **`Portal.tsx`**: Agregar pestaña "Nómina" con icono `Wallet`.
+- **`useEmployeePortal.ts`**: Agregar query para `payroll_receipts`.
+
+> Nota: La carga de recibos se hará desde el módulo administrativo de nómina (fuera del portal). El portal solo consulta y descarga.
+
+---
+
+### Fase 3: Certificados Laborales
+
+**Archivos:**
+- **`src/components/portal/PortalCertificates.tsx`**: Nueva pestaña — botón "Generar Certificado Laboral" que produce un PDF con datos del empleado (nombre, documento, cargo, fecha de ingreso, salario, tipo de contrato).
+- **`src/lib/laborCertificatePdfGenerator.ts`**: Nuevo — genera el PDF con encabezado corporativo, datos del empleado y fecha de expedición. Formato estándar colombiano.
+- **`Portal.tsx`**: Agregar pestaña "Certificados" con icono `Award`.
+
+> No requiere tabla nueva; se genera dinámicamente con los datos ya disponibles del empleado.
+
+---
+
+### Resumen de Archivos
 
 | Archivo | Acción |
 |---|---|
-| `supabase/functions/convert-docx-to-pdf/index.ts` | Nuevo — edge function de conversión |
-| `src/lib/contractDocumentGenerator.ts` | Agregar `convertDocxToPdf()` |
-| `src/components/contracts/GenerateContractDialog.tsx` | Reemplazar botones, nuevo flujo |
-| `supabase/config.toml` | Agregar config de la nueva función |
+| Migración SQL | RLS para solicitudes + tabla `payroll_receipts` |
+| `src/components/portal/PortalVacationRequestForm.tsx` | Nuevo — formulario solicitud vacaciones |
+| `src/components/portal/PortalLeaveRequestForm.tsx` | Nuevo — formulario solicitud permisos |
+| `src/components/portal/PortalPayslips.tsx` | Nuevo — pestaña recibos de nómina |
+| `src/components/portal/PortalCertificates.tsx` | Nuevo — pestaña certificados laborales |
+| `src/lib/laborCertificatePdfGenerator.ts` | Nuevo — generador PDF certificado laboral |
+| `src/components/portal/PortalVacationsLeaves.tsx` | Agregar botones de solicitud |
+| `src/hooks/useEmployeePortal.ts` | Agregar mutations y queries |
+| `src/pages/Portal.tsx` | Agregar 2 pestañas nuevas (Nómina, Certificados) |
+| `src/components/portal/index.ts` | Exportar nuevos componentes |
 
-### Nota técnica
-Si LibreOffice no está disponible en el entorno de edge functions (Deno Deploy), usaremos una alternativa: la librería `mammoth.js` para convertir DOCX a HTML en el cliente, y luego renderizar ese HTML a PDF con `html2pdf.js` o `jsPDF`. Esta alternativa es menos fiel al formato original pero funciona 100% client-side.
+---
+
+### Pestañas del Portal (resultado final)
+
+```text
+Mis Datos | Documentos | Vacaciones/Permisos | Incapacidades | Nómina | Certificados | Solicitudes
+```
 

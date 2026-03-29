@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { FileText, Download, Loader2, FileDown, AlertCircle } from 'lucide-react';
@@ -27,11 +27,11 @@ import { documentTypeLabels } from '@/types/employee';
 import {
   generateContractFromTemplate,
   generateBasicContractPDF,
+  downloadDocument,
   downloadPDF,
   ContractDocumentData,
   calculateMonthsDifference,
 } from '@/lib/contractDocumentGenerator';
-import { ContractPreviewDialog } from './ContractPreviewDialog';
 
 interface ContractData {
   id: string;
@@ -87,9 +87,6 @@ export function GenerateContractDialog({
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [generationCity, setGenerationCity] = useState('Bogotá D.C.');
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
-  const [previewFilename, setPreviewFilename] = useState('');
 
   // Fetch employee contact info
   const { data: employeeContact } = useQuery({
@@ -155,7 +152,7 @@ export function GenerateContractDialog({
   const hasTemplate = contractTypeConfig?.template_url && contractTypeConfig.template_url.length > 0;
   const employeeName = getEmployeeName(contract.employees);
 
-  const handleGenerateFromTemplate = async () => {
+  const handleGenerateWord = async () => {
     if (!hasTemplate) {
       toast.error('Este tipo de contrato no tiene plantilla configurada');
       return;
@@ -166,26 +163,26 @@ export function GenerateContractDialog({
 
     try {
       const documentData = prepareDocumentData();
-      setProgress(20);
+      setProgress(30);
 
-      // Generate DOCX from template
-      const docxBlob = await generateContractFromTemplate(
+      const blob = await generateContractFromTemplate(
         contractTypeConfig!.template_url!,
         documentData
       );
       setProgress(80);
 
-      const filename = `Contrato_${contract.contract_type}_${contract.employees.document_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-      
-      setPreviewBlob(docxBlob);
-      setPreviewFilename(filename);
+      const filename = `Contrato_${contract.contract_type}_${contract.employees.document_number}_${format(new Date(), 'yyyyMMdd')}.docx`;
+      downloadDocument(blob, filename);
       setProgress(100);
 
-      // Open preview dialog
+      toast.success('Contrato generado exitosamente', {
+        description: `El documento se ha descargado como ${filename}`,
+      });
+
       setTimeout(() => {
-        setPreviewOpen(true);
+        onOpenChange(false);
         setProgress(0);
-      }, 300);
+      }, 500);
     } catch (error: any) {
       console.error('Error generating contract:', error);
       toast.error('Error al generar el contrato', {
@@ -330,7 +327,7 @@ export function GenerateContractDialog({
             Generar Documento de Contrato
           </DialogTitle>
           <DialogDescription>
-            Genere el documento del contrato en formato PDF{hasTemplate ? ' usando la plantilla configurada' : ' básico'}.
+            Genere el documento del contrato usando la plantilla configurada o en formato PDF básico.
           </DialogDescription>
         </DialogHeader>
 
@@ -404,40 +401,31 @@ export function GenerateContractDialog({
           >
             Cancelar
           </Button>
-          {hasTemplate ? (
-            <Button
-              onClick={handleGenerateFromTemplate}
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Download className="w-4 h-4 mr-2" />
-              )}
-              Generar PDF
-            </Button>
-          ) : (
-            <Button
-              onClick={handleGeneratePDF}
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <FileDown className="w-4 h-4 mr-2" />
-              )}
-              Generar PDF Básico
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            onClick={handleGeneratePDF}
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <FileDown className="w-4 h-4 mr-2" />
+            )}
+            Generar PDF Básico
+          </Button>
+          <Button
+            onClick={handleGenerateWord}
+            disabled={isGenerating || !hasTemplate}
+          >
+            {isGenerating ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Generar Word
+          </Button>
         </DialogFooter>
       </DialogContent>
-
-      <ContractPreviewDialog
-        open={previewOpen}
-        onOpenChange={setPreviewOpen}
-        docxBlob={previewBlob}
-        filename={previewFilename}
-      />
     </Dialog>
   );
 }
