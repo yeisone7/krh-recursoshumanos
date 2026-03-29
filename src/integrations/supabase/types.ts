@@ -4635,6 +4635,7 @@ export type Database = {
           department: string | null
           id: string
           is_active: boolean
+          main_client: string | null
           manager_name: string | null
           name: string
           notes: string | null
@@ -4653,6 +4654,7 @@ export type Database = {
           department?: string | null
           id?: string
           is_active?: boolean
+          main_client?: string | null
           manager_name?: string | null
           name: string
           notes?: string | null
@@ -4671,6 +4673,7 @@ export type Database = {
           department?: string | null
           id?: string
           is_active?: boolean
+          main_client?: string | null
           manager_name?: string | null
           name?: string
           notes?: string | null

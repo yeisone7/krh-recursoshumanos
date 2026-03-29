@@ -1,0 +1,1 @@
+ALTER TABLE public.operation_centers ADD COLUMN main_client text;
