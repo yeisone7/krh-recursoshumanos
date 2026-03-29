@@ -498,7 +498,7 @@ export async function convertDocxToPdf(docxBlob: Blob): Promise<Blob> {
     const wrapper = container.querySelector('.docx-wrapper') || container;
 
     // Convert rendered HTML to PDF
-    const pdfOptions = {
+    const pdfOptions: any = {
       margin: 0,
       filename: 'contrato.pdf',
       image: { type: 'jpeg', quality: 0.98 },
@@ -514,8 +514,8 @@ export async function convertDocxToPdf(docxBlob: Blob): Promise<Blob> {
         format: 'letter', 
         orientation: 'portrait' 
       },
+      pagebreak: { mode: ['css', 'legacy'] },
     };
-    (pdfOptions as any).pagebreak = { mode: ['css', 'legacy'] };
 
     const pdfBlob: Blob = await html2pdf()
       .set(pdfOptions)
