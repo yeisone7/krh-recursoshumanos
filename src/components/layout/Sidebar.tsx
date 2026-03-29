@@ -138,6 +138,7 @@ const catalogosItem: NavItem = {
   moduleCode: 'catalogos',
   children: [
     { label: 'Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros' },
+    { label: 'Fichas Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros/fichas' },
     { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
     { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
     { label: 'Tipos de Contrato', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-contrato' },
