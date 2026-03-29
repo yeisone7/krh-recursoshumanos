@@ -173,28 +173,22 @@ export function GenerateContractDialog({
         contractTypeConfig!.template_url!,
         documentData
       );
-      setProgress(50);
-
-      // Convert DOCX to PDF client-side
-      toast.info('Convirtiendo a PDF...');
-      const pdfBlob = await convertDocxToPdf(docxBlob);
-      setProgress(90);
+      setProgress(80);
 
       const filename = `Contrato_${contract.contract_type}_${contract.employees.document_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-      downloadDocument(pdfBlob, filename);
+      
+      setPreviewBlob(docxBlob);
+      setPreviewFilename(filename);
       setProgress(100);
 
-      toast.success('Contrato PDF generado exitosamente', {
-        description: `El documento se ha descargado como ${filename}`,
-      });
-
+      // Open preview dialog
       setTimeout(() => {
-        onOpenChange(false);
+        setPreviewOpen(true);
         setProgress(0);
-      }, 500);
+      }, 300);
     } catch (error: any) {
-      console.error('Error generating contract PDF:', error);
-      toast.error('Error al generar el contrato en PDF', {
+      console.error('Error generating contract:', error);
+      toast.error('Error al generar el contrato', {
         description: error.message || 'Por favor intente de nuevo',
       });
     } finally {
