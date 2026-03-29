@@ -267,6 +267,42 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
 
             <FormField
               control={form.control}
+              name="contractStartDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fecha Inicio del Contrato</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'w-full pl-3 text-left font-normal',
+                            !field.value && 'text-muted-foreground'
+                          )}
+                        >
+                          {field.value ? format(field.value, 'dd/MM/yyyy') : <span>Seleccionar fecha</span>}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value ?? undefined}
+                        onSelect={field.onChange}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="contractCommercialDate"
               render={({ field }) => (
                 <FormItem>
