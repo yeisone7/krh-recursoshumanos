@@ -168,7 +168,7 @@ export default function CentrosFichas() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredCenters.map(center => (
-            <CenterAnalyticalCard key={center.id} center={center} />
+            <CenterAnalyticalCard key={center.id} center={center} companyTotalEmployees={companyTotalEmployees} />
           ))}
         </div>
       )}
