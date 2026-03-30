@@ -33,6 +33,7 @@ function ContractDaysBadge({ endDate }: { endDate: string | null }) {
 
 interface Props {
   center: any;
+  companyTotalEmployees?: number;
 }
 
 export function CenterAnalyticalCard({ center }: Props) {
