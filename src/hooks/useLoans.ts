@@ -187,3 +187,65 @@ export function useRegisterPayment() {
     onError: (e: any) => toast({ title: 'Error al registrar pago', description: e.message, variant: 'destructive' }),
   });
 }
+
+export interface LoanRefinancingRecord {
+  id: string;
+  loan_id: string;
+  company_id: string;
+  employee_id: string;
+  refinance_date: string;
+  previous_total_amount: number;
+  previous_interest_rate: number;
+  previous_total_with_interest: number;
+  previous_installments: number;
+  previous_installment_amount: number;
+  previous_paid_installments: number;
+  previous_paid_amount: number;
+  previous_remaining_balance: number;
+  new_total_amount: number;
+  new_interest_rate: number;
+  new_total_with_interest: number;
+  new_installments: number;
+  new_installment_amount: number;
+  new_start_date: string;
+  reason: string | null;
+  document_url: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export function useRefinancingHistory(loanId: string | null) {
+  return useQuery({
+    queryKey: ['loan_refinancing_history', loanId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('loan_refinancing_history')
+        .select('*')
+        .eq('loan_id', loanId!)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as LoanRefinancingRecord[];
+    },
+    enabled: !!loanId,
+  });
+}
+
+export function useCreateRefinancingRecord() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (record: Record<string, any>) => {
+      const { data, error } = await supabase
+        .from('loan_refinancing_history')
+        .insert(record as any)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['loan_refinancing_history'] });
+    },
+    onError: (e: any) => toast({ title: 'Error al registrar refinanciamiento', description: e.message, variant: 'destructive' }),
+  });
+}
