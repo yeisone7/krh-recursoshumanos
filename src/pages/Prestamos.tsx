@@ -20,6 +20,9 @@ import {
   Banknote, Receipt, BarChart3
 } from 'lucide-react';
 import { LoanPortfolioDashboard } from '@/components/loans/LoanPortfolioDashboard';
+import { LoanCollectionCalendar } from '@/components/loans/LoanCollectionCalendar';
+import { LoanRiskScoring } from '@/components/loans/LoanRiskScoring';
+import { LoanRefinanceDialog } from '@/components/loans/LoanRefinanceDialog';
 import { useLoans, useLoanPayments, useCreateLoan, useUpdateLoan, useDeleteLoan, useRegisterPayment, type EmployeeLoan } from '@/hooks/useLoans';
 import { useEmployees } from '@/hooks/useEmployees';
 
