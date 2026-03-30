@@ -13,13 +13,17 @@ interface Props {
 export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
   const fmt = (value: number, isOvertimeHours = false) => {
     if (isOvertimeHours) {
-      // Overtime is always in hours
       return value.toFixed(1);
     }
     if (displayUnit === 'hours') {
       return (value * dailyHours).toFixed(1);
     }
     return value.toFixed(1);
+  };
+
+  const fmtMoney = (value: number) => {
+    if (value === 0) return '-';
+    return `$${value.toLocaleString('es-CO', { minimumFractionDigits: 0 })}`;
   };
 
   if (rows.length === 0) {
@@ -51,6 +55,9 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
               <TableHead className="text-center min-w-[60px]">Vac.</TableHead>
               <TableHead className="text-center min-w-[60px]">Perm.</TableHead>
               <TableHead className="text-center min-w-[80px]">Total Días</TableHead>
+              <TableHead className="text-center min-w-[100px] bg-orange-50 dark:bg-orange-950/20">Préstamos</TableHead>
+              <TableHead className="text-center min-w-[100px] bg-orange-50 dark:bg-orange-950/20">Descuentos</TableHead>
+              <TableHead className="text-center min-w-[110px] bg-orange-50 dark:bg-orange-950/20">Total Deduc.</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -89,6 +96,41 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                   <Badge variant={row.hasWarning ? 'destructive' : 'secondary'}>
                     {row.totalDias}
                   </Badge>
+                </TableCell>
+                <TableCell className="text-center">
+                  {row.loanDeduction > 0 ? (
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <span className="text-orange-600 dark:text-orange-400 font-medium">{fmtMoney(row.loanDeduction)}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {row.loanDetail.map((l, i) => (
+                          <div key={i} className="text-xs">{l.description}: {fmtMoney(l.installmentAmount)}</div>
+                        ))}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : '-'}
+                </TableCell>
+                <TableCell className="text-center">
+                  {row.deductionTotal > 0 ? (
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <span className="text-orange-600 dark:text-orange-400 font-medium">{fmtMoney(row.deductionTotal)}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {row.deductionDetail.map((d, i) => (
+                          <div key={i} className="text-xs">{d.description}: {fmtMoney(d.amount)}</div>
+                        ))}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : '-'}
+                </TableCell>
+                <TableCell className="text-center">
+                  {row.totalDeducciones > 0 ? (
+                    <Badge variant="outline" className="border-orange-300 text-orange-700 dark:text-orange-400">
+                      {fmtMoney(row.totalDeducciones)}
+                    </Badge>
+                  ) : '-'}
                 </TableCell>
               </TableRow>
             ))}

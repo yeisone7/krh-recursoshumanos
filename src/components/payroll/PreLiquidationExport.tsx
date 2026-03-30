@@ -28,6 +28,9 @@ export function PreLiquidationExport({ rows, startDate, endDate }: Props) {
       'Vacaciones (días)': r.vacaciones,
       'Permisos (días)': r.permiso,
       'Total Días': r.totalDias,
+      'Préstamos ($)': r.loanDeduction,
+      'Descuentos ($)': r.deductionTotal,
+      'Total Deducciones ($)': r.totalDeducciones,
       'Alerta': r.hasWarning ? r.warningMessage : '',
     }));
 
