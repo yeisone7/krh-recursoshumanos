@@ -4565,6 +4565,106 @@ export type Database = {
           },
         ]
       }
+      loan_refinancing_history: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          document_url: string | null
+          employee_id: string
+          id: string
+          loan_id: string
+          new_installment_amount: number
+          new_installments: number
+          new_interest_rate: number
+          new_start_date: string
+          new_total_amount: number
+          new_total_with_interest: number
+          previous_installment_amount: number
+          previous_installments: number
+          previous_interest_rate: number
+          previous_paid_amount: number
+          previous_paid_installments: number
+          previous_remaining_balance: number
+          previous_total_amount: number
+          previous_total_with_interest: number
+          reason: string | null
+          refinance_date: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          employee_id: string
+          id?: string
+          loan_id: string
+          new_installment_amount: number
+          new_installments: number
+          new_interest_rate?: number
+          new_start_date: string
+          new_total_amount: number
+          new_total_with_interest: number
+          previous_installment_amount: number
+          previous_installments: number
+          previous_interest_rate?: number
+          previous_paid_amount?: number
+          previous_paid_installments?: number
+          previous_remaining_balance: number
+          previous_total_amount: number
+          previous_total_with_interest: number
+          reason?: string | null
+          refinance_date?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          employee_id?: string
+          id?: string
+          loan_id?: string
+          new_installment_amount?: number
+          new_installments?: number
+          new_interest_rate?: number
+          new_start_date?: string
+          new_total_amount?: number
+          new_total_with_interest?: number
+          previous_installment_amount?: number
+          previous_installments?: number
+          previous_interest_rate?: number
+          previous_paid_amount?: number
+          previous_paid_installments?: number
+          previous_remaining_balance?: number
+          previous_total_amount?: number
+          previous_total_with_interest?: number
+          reason?: string | null
+          refinance_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_refinancing_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_refinancing_history_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_refinancing_history_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "employee_loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_attempts: {
         Row: {
           attempted_at: string
