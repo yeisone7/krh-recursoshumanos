@@ -646,6 +646,13 @@ export default function Prestamos() {
       </Dialog>
         </TabsContent>
       </Tabs>
+
+      {/* Refinance Dialog */}
+      <LoanRefinanceDialog
+        loan={refinanceLoan}
+        open={!!refinanceLoan}
+        onClose={() => setRefinanceLoan(null)}
+      />
     </div>
   );
 }
