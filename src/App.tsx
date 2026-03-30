@@ -52,6 +52,8 @@ import Requisiciones from "./pages/Requisiciones";
 import Perfil from "./pages/Perfil";
 import PreLiquidacion from "./pages/PreLiquidacion";
 import ConfiguracionLaboral from "./pages/ConfiguracionLaboral";
+import Prestamos from "./pages/Prestamos";
+import Descuentos from "./pages/Descuentos";
 import Install from "./pages/Install";
 import { 
   CatalogosAreas, 
