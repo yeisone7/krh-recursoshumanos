@@ -36,9 +36,13 @@ interface Props {
   companyTotalEmployees?: number;
 }
 
-export function CenterAnalyticalCard({ center }: Props) {
+export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Props) {
   const { isLoading, totalEmployees, positionCounts, shifts, areas, expiringContracts } =
     useCenterDetail(center.id);
+
+  const employeePercentage = companyTotalEmployees > 0
+    ? ((totalEmployees / companyTotalEmployees) * 100).toFixed(1)
+    : null;
 
   const formatDate = (d: string | null) =>
     d ? format(new Date(d), 'dd MMM yyyy', { locale: es }) : '—';
