@@ -131,14 +131,17 @@ const benefitsNavItems: NavItem[] = [
   { label: 'Exámenes Médicos', icon: <Stethoscope className="w-5 h-5" />, href: '/examenes', moduleCode: 'examenes' },
 ];
 
+const sucursalesNavItems: NavItem[] = [
+  { label: 'Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros', moduleCode: 'catalogos' },
+  { label: 'Fichas Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros/fichas', moduleCode: 'catalogos' },
+];
+
 const catalogosItem: NavItem = {
   label: 'Catálogos',
   icon: <FolderOpen className="w-5 h-5" />,
   href: '/catalogos',
   moduleCode: 'catalogos',
   children: [
-    { label: 'Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros' },
-    { label: 'Fichas Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros/fichas' },
     { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
     { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
     { label: 'Tipos de Contrato', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-contrato' },
@@ -205,6 +208,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   const filteredCoreNavItems = useMemo(() => filterItems(coreNavItems), [filterItems]);
   const filteredPersonnelNavItems = useMemo(() => filterItems(personnelNavItems), [filterItems]);
+  const filteredSucursalesNavItems = useMemo(() => filterItems(sucursalesNavItems), [filterItems]);
   const filteredSeleccionNavItems = useMemo(() => filterItems(seleccionNavItems), [filterItems]);
   const filteredTimeManagementNavItems = useMemo(() => filterItems(timeManagementNavItems), [filterItems]);
   const filteredDevelopmentNavItems = useMemo(() => filterItems(developmentNavItems), [filterItems]);
@@ -521,6 +525,18 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             <SectionLabel label="Personal" />
             <div className="space-y-0.5">
               {filteredPersonnelNavItems.map((item) =>
+                <NavLinkItem key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Sucursales */}
+        {filteredSucursalesNavItems.length > 0 && (
+          <>
+            <SectionLabel label="Sucursales" />
+            <div className="space-y-0.5">
+              {filteredSucursalesNavItems.map((item) =>
                 <NavLinkItem key={item.href} item={item} />
               )}
             </div>
