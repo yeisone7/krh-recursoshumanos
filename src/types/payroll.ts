@@ -103,6 +103,12 @@ export interface PreLiquidationRow {
   vacaciones: number;
   permiso: number;
   totalDias: number;
+  // Deducciones
+  loanDeduction: number;
+  loanDetail: Array<{ loanId: string; description: string; installmentAmount: number }>;
+  deductionTotal: number;
+  deductionDetail: Array<{ deductionId: string; description: string; amount: number }>;
+  totalDeducciones: number;
   hasWarning: boolean;
   warningMessage?: string;
 }
