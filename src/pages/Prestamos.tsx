@@ -203,6 +203,24 @@ export default function Prestamos() {
         <p className="text-muted-foreground">Gestión de préstamos a empleados con diferimiento por cuotas</p>
       </div>
 
+      <Tabs defaultValue="listado" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="listado">
+            <Receipt className="w-4 h-4 mr-2" />
+            Listado
+          </TabsTrigger>
+          <TabsTrigger value="dashboard">
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Dashboard Cartera
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dashboard">
+          <LoanPortfolioDashboard loans={loans} />
+        </TabsContent>
+
+        <TabsContent value="listado" className="space-y-6">
+
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
