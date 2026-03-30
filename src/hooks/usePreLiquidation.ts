@@ -247,6 +247,26 @@ export function usePreLiquidation(data: PreLiquidationData | null): PreLiquidati
 
       const totalDias = jornada + dominicalTrabajado + festivoTrabajado + descansoRemunerado + incapDays + vacDays + permDays;
 
+      // Loans deduction
+      const empLoans = loansByEmployee[emp.id] || [];
+      const loanDetail = empLoans.map(l => ({
+        loanId: l.id,
+        description: l.description || l.loan_type,
+        installmentAmount: Number(l.installment_amount),
+      }));
+      const loanDeduction = loanDetail.reduce((s, d) => s + d.installmentAmount, 0);
+
+      // Deductions
+      const empDeductions = deductionsByEmployee[emp.id] || [];
+      const deductionDetail = empDeductions.map(d => ({
+        deductionId: d.id,
+        description: d.description,
+        amount: d.is_percentage ? Number(d.percentage_value || 0) : Number(d.amount),
+      }));
+      const deductionTotal = deductionDetail.reduce((s, d) => s + d.amount, 0);
+
+      const totalDeducciones = loanDeduction + deductionTotal;
+
       const hasWarning = totalDias > periodDays;
       const warningMessage = hasWarning
         ? `Total días (${totalDias}) supera los días del período (${periodDays})`
@@ -270,6 +290,11 @@ export function usePreLiquidation(data: PreLiquidationData | null): PreLiquidati
         vacaciones: vacDays,
         permiso: permDays,
         totalDias,
+        loanDeduction,
+        loanDetail,
+        deductionTotal,
+        deductionDetail,
+        totalDeducciones,
         hasWarning,
         warningMessage,
       };
