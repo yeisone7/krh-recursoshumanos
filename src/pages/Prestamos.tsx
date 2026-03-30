@@ -14,12 +14,16 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Plus, Search, DollarSign, Trash2, Eye, CreditCard,
   TrendingUp, AlertTriangle, CheckCircle, Clock, Ban,
   Banknote, Receipt, BarChart3
 } from 'lucide-react';
 import { LoanPortfolioDashboard } from '@/components/loans/LoanPortfolioDashboard';
+import { LoanCollectionCalendar } from '@/components/loans/LoanCollectionCalendar';
+import { LoanRiskScoring } from '@/components/loans/LoanRiskScoring';
+import { LoanRefinanceDialog } from '@/components/loans/LoanRefinanceDialog';
 import { useLoans, useLoanPayments, useCreateLoan, useUpdateLoan, useDeleteLoan, useRegisterPayment, type EmployeeLoan } from '@/hooks/useLoans';
 import { useEmployees } from '@/hooks/useEmployees';
 
@@ -68,6 +72,7 @@ export default function Prestamos() {
   const [editing, setEditing] = useState<EmployeeLoan | null>(null);
   const [detailLoan, setDetailLoan] = useState<EmployeeLoan | null>(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [refinanceLoan, setRefinanceLoan] = useState<EmployeeLoan | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -204,19 +209,35 @@ export default function Prestamos() {
       </div>
 
       <Tabs defaultValue="listado" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="listado">
             <Receipt className="w-4 h-4 mr-2" />
             Listado
           </TabsTrigger>
           <TabsTrigger value="dashboard">
             <BarChart3 className="w-4 h-4 mr-2" />
-            Dashboard Cartera
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="calendario">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Calendario
+          </TabsTrigger>
+          <TabsTrigger value="riesgo">
+            <AlertTriangle className="w-4 h-4 mr-2" />
+            Scoring
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
           <LoanPortfolioDashboard loans={loans} />
+        </TabsContent>
+
+        <TabsContent value="calendario">
+          <LoanCollectionCalendar loans={loans} />
+        </TabsContent>
+
+        <TabsContent value="riesgo">
+          <LoanRiskScoring loans={loans} />
         </TabsContent>
 
         <TabsContent value="listado" className="space-y-6">
@@ -301,6 +322,7 @@ export default function Prestamos() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
+          <TooltipProvider>
           <Table>
             <TableHeader>
               <TableRow>
@@ -363,6 +385,16 @@ export default function Prestamos() {
                             <Eye className="w-4 h-4" />
                           </Button>
                         )}
+                        {loan.status === 'activo' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="sm" variant="ghost" className="h-8 text-warning" onClick={() => setRefinanceLoan(loan)}>
+                                <TrendingUp className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Refinanciar</TooltipContent>
+                          </Tooltip>
+                        )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="sm" variant="ghost" className="text-destructive h-8"><Trash2 className="w-4 h-4" /></Button>
@@ -385,6 +417,7 @@ export default function Prestamos() {
               })}
             </TableBody>
           </Table>
+          </TooltipProvider>
         </CardContent>
       </Card>
 
@@ -613,6 +646,13 @@ export default function Prestamos() {
       </Dialog>
         </TabsContent>
       </Tabs>
+
+      {/* Refinance Dialog */}
+      <LoanRefinanceDialog
+        loan={refinanceLoan}
+        open={!!refinanceLoan}
+        onClose={() => setRefinanceLoan(null)}
+      />
     </div>
   );
 }
