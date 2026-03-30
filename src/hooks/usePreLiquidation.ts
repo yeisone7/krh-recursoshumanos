@@ -36,6 +36,24 @@ interface PreLiquidationData {
     end_date: string;
     status: string;
   }>;
+  loans: Array<{
+    id: string;
+    employee_id: string;
+    loan_type: string;
+    description: string | null;
+    installment_amount: number;
+    status: string;
+  }>;
+  deductions: Array<{
+    id: string;
+    employee_id: string;
+    deduction_type: string;
+    description: string;
+    amount: number;
+    is_percentage: boolean;
+    percentage_value: number | null;
+    status: string;
+  }>;
   employees: Array<{
     id: string;
     first_name: string;
@@ -67,7 +85,7 @@ export function usePreLiquidation(data: PreLiquidationData | null): PreLiquidati
   return useMemo(() => {
     if (!data) return [];
 
-    const { assignments, holidays, novelties, overtimeRecords, incapacities, vacations, leaves, employees, config, filters } = data;
+    const { assignments, holidays, novelties, overtimeRecords, incapacities, vacations, leaves, loans, deductions, employees, config, filters } = data;
     const { startDate, endDate } = filters;
 
     const days = eachDayOfInterval({ start: parseISO(startDate), end: parseISO(endDate) });
@@ -140,6 +158,20 @@ export function usePreLiquidation(data: PreLiquidationData | null): PreLiquidati
     novelties.forEach(n => {
       if (!noveltyByEmployee[n.employee_id]) noveltyByEmployee[n.employee_id] = [];
       noveltyByEmployee[n.employee_id].push(n);
+    });
+
+    // Index active loans by employee
+    const loansByEmployee: Record<string, typeof loans> = {};
+    loans.filter(l => l.status === 'activo').forEach(l => {
+      if (!loansByEmployee[l.employee_id]) loansByEmployee[l.employee_id] = [];
+      loansByEmployee[l.employee_id].push(l);
+    });
+
+    // Index active deductions by employee
+    const deductionsByEmployee: Record<string, typeof deductions> = {};
+    deductions.filter(d => d.status === 'activo').forEach(d => {
+      if (!deductionsByEmployee[d.employee_id]) deductionsByEmployee[d.employee_id] = [];
+      deductionsByEmployee[d.employee_id].push(d);
     });
 
     return employees.map(emp => {
@@ -215,6 +247,26 @@ export function usePreLiquidation(data: PreLiquidationData | null): PreLiquidati
 
       const totalDias = jornada + dominicalTrabajado + festivoTrabajado + descansoRemunerado + incapDays + vacDays + permDays;
 
+      // Loans deduction
+      const empLoans = loansByEmployee[emp.id] || [];
+      const loanDetail = empLoans.map(l => ({
+        loanId: l.id,
+        description: l.description || l.loan_type,
+        installmentAmount: Number(l.installment_amount),
+      }));
+      const loanDeduction = loanDetail.reduce((s, d) => s + d.installmentAmount, 0);
+
+      // Deductions
+      const empDeductions = deductionsByEmployee[emp.id] || [];
+      const deductionDetail = empDeductions.map(d => ({
+        deductionId: d.id,
+        description: d.description,
+        amount: d.is_percentage ? Number(d.percentage_value || 0) : Number(d.amount),
+      }));
+      const deductionTotal = deductionDetail.reduce((s, d) => s + d.amount, 0);
+
+      const totalDeducciones = loanDeduction + deductionTotal;
+
       const hasWarning = totalDias > periodDays;
       const warningMessage = hasWarning
         ? `Total días (${totalDias}) supera los días del período (${periodDays})`
@@ -238,6 +290,11 @@ export function usePreLiquidation(data: PreLiquidationData | null): PreLiquidati
         vacaciones: vacDays,
         permiso: permDays,
         totalDias,
+        loanDeduction,
+        loanDetail,
+        deductionTotal,
+        deductionDetail,
+        totalDeducciones,
         hasWarning,
         warningMessage,
       };

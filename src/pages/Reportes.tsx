@@ -1,4 +1,4 @@
-import { FileBarChart, Users, FileText, Palmtree, Clock, GraduationCap, Scale, Stethoscope, Package, ClipboardCheck, Users2 } from 'lucide-react';
+import { FileBarChart, Users, FileText, Palmtree, Clock, GraduationCap, Scale, Stethoscope, Package, ClipboardCheck, Users2, Landmark } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   EmployeeReport,
@@ -16,6 +16,8 @@ import {
   MedicalExamsReport,
   SelectionProcessReport,
   SelectionDiversityReport,
+  LoansReport,
+  DeductionsReport,
 } from '@/components/reports';
 
 const TABS = [
@@ -97,6 +99,8 @@ export default function Reportes() {
           <div className="grid gap-6 md:grid-cols-2">
             <OvertimeReport />
             <CesantiasReport />
+            <LoansReport />
+            <DeductionsReport />
           </div>
         </TabsContent>
 
