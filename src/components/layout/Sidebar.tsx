@@ -531,6 +531,18 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           </>
         )}
 
+        {/* Sucursales */}
+        {filteredSucursalesNavItems.length > 0 && (
+          <>
+            <SectionLabel label="Sucursales" />
+            <div className="space-y-0.5">
+              {filteredSucursalesNavItems.map((item) =>
+                <NavLinkItem key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
+
         {/* Selección */}
         {filteredSeleccionNavItems.length > 0 && (
           <>
