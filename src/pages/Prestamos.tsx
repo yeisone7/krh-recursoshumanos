@@ -13,11 +13,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plus, Search, DollarSign, Trash2, Eye, CreditCard,
   TrendingUp, AlertTriangle, CheckCircle, Clock, Ban,
-  Banknote, Receipt
+  Banknote, Receipt, BarChart3
 } from 'lucide-react';
+import { LoanPortfolioDashboard } from '@/components/loans/LoanPortfolioDashboard';
 import { useLoans, useLoanPayments, useCreateLoan, useUpdateLoan, useDeleteLoan, useRegisterPayment, type EmployeeLoan } from '@/hooks/useLoans';
 import { useEmployees } from '@/hooks/useEmployees';
 
