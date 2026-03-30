@@ -417,6 +417,7 @@ export default function Prestamos() {
               })}
             </TableBody>
           </Table>
+          </TooltipProvider>
         </CardContent>
       </Card>
 
