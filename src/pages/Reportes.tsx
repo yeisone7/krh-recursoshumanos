@@ -99,6 +99,8 @@ export default function Reportes() {
           <div className="grid gap-6 md:grid-cols-2">
             <OvertimeReport />
             <CesantiasReport />
+            <LoansReport />
+            <DeductionsReport />
           </div>
         </TabsContent>
 

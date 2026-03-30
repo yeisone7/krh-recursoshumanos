@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Calculator, AlertTriangle } from 'lucide-react';
+import { Calculator, AlertTriangle, Lock, Loader2 } from 'lucide-react';
 import { PreLiquidationTable, PreLiquidationExport } from '@/components/payroll';
 import { usePreLiquidation } from '@/hooks/usePreLiquidation';
 import { usePayrollConfig } from '@/hooks/usePayrollConfig';
@@ -15,11 +15,23 @@ import { useHolidaysSet } from '@/hooks/useHolidays';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export default function PreLiquidacion() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, user } = useAuth();
+  const queryClient = useQueryClient();
   const today = new Date();
   const [startDate, setStartDate] = useState(format(startOfMonth(today), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(endOfMonth(today), 'yyyy-MM-dd'));
@@ -98,6 +110,36 @@ export default function PreLiquidacion() {
     enabled: !!currentCompanyId && calculated,
   });
 
+  // Fetch active loans
+  const { data: activeLoans = [] } = useQuery({
+    queryKey: ['loans_for_preliq', currentCompanyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employee_loans')
+        .select('id, employee_id, loan_type, description, installment_amount, status')
+        .eq('company_id', currentCompanyId!)
+        .eq('status', 'activo');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!currentCompanyId && calculated,
+  });
+
+  // Fetch active deductions
+  const { data: activeDeductions = [] } = useQuery({
+    queryKey: ['deductions_for_preliq', currentCompanyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employee_deductions')
+        .select('id, employee_id, deduction_type, description, amount, is_percentage, percentage_value, status')
+        .eq('company_id', currentCompanyId!)
+        .eq('status', 'activo');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!currentCompanyId && calculated,
+  });
+
   const preLiqData = calculated ? {
     assignments,
     holidays: holidaysSet || new Set<string>(),
@@ -111,6 +153,8 @@ export default function PreLiquidacion() {
     incapacities,
     vacations,
     leaves,
+    loans: activeLoans,
+    deductions: activeDeductions,
     employees: employees.map(e => ({
       id: e.id,
       first_name: e.first_name,
@@ -123,6 +167,7 @@ export default function PreLiquidacion() {
 
   const rows = usePreLiquidation(preLiqData);
   const warningCount = rows.filter(r => r.hasWarning).length;
+  const rowsWithDeductions = rows.filter(r => r.totalDeducciones > 0);
 
   const handleCalculate = () => {
     if (!startDate || !endDate) {
@@ -131,6 +176,71 @@ export default function PreLiquidacion() {
     }
     setCalculated(true);
   };
+
+  // Close period mutation — registers loan payments for all active loans
+  const closePeriodMutation = useMutation({
+    mutationFn: async () => {
+      const period = `${startDate} a ${endDate}`;
+      const promises: Promise<void>[] = [];
+
+      for (const row of rows) {
+        for (const loan of row.loanDetail) {
+          promises.push((async () => {
+            // Get loan current state
+            const { data: loanData, error: loanErr } = await supabase
+              .from('employee_loans')
+              .select('paid_installments, paid_amount, total_with_interest, installments')
+              .eq('id', loan.loanId)
+              .single();
+            if (loanErr) throw loanErr;
+
+            const newPaidInstallments = (loanData.paid_installments || 0) + 1;
+            const newPaidAmount = Number(loanData.paid_amount || 0) + loan.installmentAmount;
+            const newBalance = Number(loanData.total_with_interest) - newPaidAmount;
+            const newStatus = newPaidInstallments >= loanData.installments ? 'pagado' : 'activo';
+
+            // Insert payment
+            const { error: payErr } = await supabase
+              .from('employee_loan_payments')
+              .insert({
+                loan_id: loan.loanId,
+                payment_number: newPaidInstallments,
+                payment_date: endDate,
+                amount: loan.installmentAmount,
+                balance_after: Math.max(0, newBalance),
+                payroll_period: period,
+                notes: 'Descuento automático por nómina',
+                created_by: user?.id,
+              } as any);
+            if (payErr) throw payErr;
+
+            // Update loan
+            const { error: updErr } = await supabase
+              .from('employee_loans')
+              .update({
+                paid_installments: newPaidInstallments,
+                paid_amount: newPaidAmount,
+                remaining_balance: Math.max(0, newBalance),
+                status: newStatus,
+              } as any)
+              .eq('id', loan.loanId);
+            if (updErr) throw updErr;
+          })());
+        }
+      }
+
+      await Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employee_loans'] });
+      queryClient.invalidateQueries({ queryKey: ['loan_payments'] });
+      queryClient.invalidateQueries({ queryKey: ['loans_for_preliq'] });
+      toast({ title: 'Período cerrado exitosamente', description: 'Se registraron los descuentos de préstamos automáticamente.' });
+    },
+    onError: (e: any) => {
+      toast({ title: 'Error al cerrar período', description: e.message, variant: 'destructive' });
+    },
+  });
 
   return (
     <div className="space-y-6">
@@ -156,6 +266,36 @@ export default function PreLiquidacion() {
               Calcular
             </Button>
             <PreLiquidationExport rows={rows} startDate={startDate} endDate={endDate} />
+            
+            {/* Close period button */}
+            {rows.length > 0 && rowsWithDeductions.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="default" disabled={closePeriodMutation.isPending}>
+                    {closePeriodMutation.isPending ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Lock className="w-4 h-4 mr-2" />
+                    )}
+                    Cerrar Período
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>¿Cerrar período de nómina?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta acción registrará automáticamente los pagos de cuotas de préstamos para {rowsWithDeductions.length} empleado(s) con deducciones activas en el período {startDate} a {endDate}. Esta acción no se puede deshacer.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => closePeriodMutation.mutate()}>
+                      Confirmar Cierre
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </CardContent>
       </Card>
