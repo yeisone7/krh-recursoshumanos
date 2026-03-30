@@ -71,6 +71,7 @@ export default function Prestamos() {
   const [editing, setEditing] = useState<EmployeeLoan | null>(null);
   const [detailLoan, setDetailLoan] = useState<EmployeeLoan | null>(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [refinanceLoan, setRefinanceLoan] = useState<EmployeeLoan | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
