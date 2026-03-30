@@ -322,6 +322,7 @@ export default function Prestamos() {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
+          <TooltipProvider>
           <Table>
             <TableHeader>
               <TableRow>
