@@ -30,7 +30,7 @@ export function DeductionsReport() {
         .select('*, employees_v2!inner(first_name, last_name, document_number)')
         .eq('company_id', currentCompanyId!)
         .order('created_at', { ascending: false });
-      if (typeFilter !== 'todos') query = query.eq('deduction_type', typeFilter);
+      if (typeFilter !== 'todos') query = query.eq('deduction_type', typeFilter as any);
       const { data, error } = await query;
       if (error) throw error;
       return (data || []).map((d: any) => ({

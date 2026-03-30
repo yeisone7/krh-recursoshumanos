@@ -31,7 +31,7 @@ export function LoansReport() {
         .select('*, employees_v2!inner(first_name, last_name, document_number)')
         .eq('company_id', currentCompanyId!)
         .order('created_at', { ascending: false });
-      if (statusFilter !== 'todos') query = query.eq('status', statusFilter);
+      if (statusFilter !== 'todos') query = query.eq('status', statusFilter as any);
       const { data, error } = await query;
       if (error) throw error;
       return (data || []).map((l: any) => ({
