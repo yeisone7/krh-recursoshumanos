@@ -95,6 +95,7 @@ export default function Prestamos() {
   });
 
   const { data: payments = [] } = useLoanPayments(detailLoan?.id || null);
+  const { data: refinancingHistory = [] } = useRefinancingHistory(detailLoan?.id || null);
 
   const filtered = useMemo(() => {
     return loans.filter(l => {
