@@ -31,6 +31,21 @@ export default function CentrosFichas() {
   const { currentCompanyId } = useAuth();
   const { data: centers = [], isLoading } = useOperationCenters();
 
+  // Total employees across all centers in the company
+  const { data: companyTotalEmployees = 0 } = useQuery({
+    queryKey: ['company_total_employees', currentCompanyId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('employee_work_info')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_current', true)
+        .in('operation_center_id', centers.map(c => c.id));
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!currentCompanyId && centers.length > 0,
+  });
+
   // Unique cities for filter
   const cities = useMemo(() => {
     const set = new Set<string>();
