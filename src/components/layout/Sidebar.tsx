@@ -131,14 +131,17 @@ const benefitsNavItems: NavItem[] = [
   { label: 'Exámenes Médicos', icon: <Stethoscope className="w-5 h-5" />, href: '/examenes', moduleCode: 'examenes' },
 ];
 
+const sucursalesNavItems: NavItem[] = [
+  { label: 'Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros', moduleCode: 'catalogos' },
+  { label: 'Fichas Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros/fichas', moduleCode: 'catalogos' },
+];
+
 const catalogosItem: NavItem = {
   label: 'Catálogos',
   icon: <FolderOpen className="w-5 h-5" />,
   href: '/catalogos',
   moduleCode: 'catalogos',
   children: [
-    { label: 'Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros' },
-    { label: 'Fichas Centros', icon: <Building2 className="w-4 h-4" />, href: '/centros/fichas' },
     { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
     { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
     { label: 'Tipos de Contrato', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-contrato' },
