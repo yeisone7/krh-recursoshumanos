@@ -383,6 +383,16 @@ export default function Prestamos() {
                             <Eye className="w-4 h-4" />
                           </Button>
                         )}
+                        {loan.status === 'activo' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="sm" variant="ghost" className="h-8 text-warning" onClick={() => setRefinanceLoan(loan)}>
+                                <TrendingUp className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Refinanciar</TooltipContent>
+                          </Tooltip>
+                        )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="sm" variant="ghost" className="text-destructive h-8"><Trash2 className="w-4 h-4" /></Button>
