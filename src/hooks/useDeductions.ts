@@ -75,7 +75,7 @@ export function useUpdateDeduction() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<EmployeeDeduction> & { id: string }) => {
+    mutationFn: async ({ id, ...updates }: Record<string, any> & { id: string }) => {
       const { data, error } = await supabase
         .from('employee_deductions')
         .update(updates as any)
