@@ -609,6 +609,61 @@ export default function Prestamos() {
                     </Table>
                   )}
                 </div>
+
+                {/* Refinancing history */}
+                {refinancingHistory.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h3 className="font-medium text-sm mb-2 flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4" />
+                        Historial de Refinanciamientos ({refinancingHistory.length})
+                      </h3>
+                      <div className="space-y-3">
+                        {refinancingHistory.map(r => (
+                          <div key={r.id} className="p-3 rounded-lg border bg-muted/30 space-y-2 text-sm">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">
+                                {format(new Date(r.refinance_date), 'dd MMM yyyy HH:mm', { locale: es })}
+                              </span>
+                              {r.document_url && (
+                                <a href={r.document_url} target="_blank" rel="noopener noreferrer"
+                                  className="text-xs text-primary hover:underline flex items-center gap-1">
+                                  <Eye className="w-3 h-3" /> Ver PDF
+                                </a>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                              <div>
+                                <span className="text-muted-foreground">Saldo anterior: </span>
+                                <span className="font-mono">{formatCurrency(Number(r.previous_remaining_balance))}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Nuevo total: </span>
+                                <span className="font-mono">{formatCurrency(Number(r.new_total_with_interest))}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Cuotas: </span>
+                                <span>{r.previous_installments} → {r.new_installments}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Tasa: </span>
+                                <span>{r.previous_interest_rate}% → {r.new_interest_rate}%</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Nueva cuota: </span>
+                                <span className="font-mono">{formatCurrency(Number(r.new_installment_amount))}</span>
+                              </div>
+                            </div>
+                            {r.reason && (
+                              <p className="text-xs text-muted-foreground italic">"{r.reason}"</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </>
           )}
