@@ -208,6 +208,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   const filteredCoreNavItems = useMemo(() => filterItems(coreNavItems), [filterItems]);
   const filteredPersonnelNavItems = useMemo(() => filterItems(personnelNavItems), [filterItems]);
+  const filteredSucursalesNavItems = useMemo(() => filterItems(sucursalesNavItems), [filterItems]);
   const filteredSeleccionNavItems = useMemo(() => filterItems(seleccionNavItems), [filterItems]);
   const filteredTimeManagementNavItems = useMemo(() => filterItems(timeManagementNavItems), [filterItems]);
   const filteredDevelopmentNavItems = useMemo(() => filterItems(developmentNavItems), [filterItems]);
