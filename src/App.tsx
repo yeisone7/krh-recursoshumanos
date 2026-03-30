@@ -52,6 +52,8 @@ import Requisiciones from "./pages/Requisiciones";
 import Perfil from "./pages/Perfil";
 import PreLiquidacion from "./pages/PreLiquidacion";
 import ConfiguracionLaboral from "./pages/ConfiguracionLaboral";
+import Prestamos from "./pages/Prestamos";
+import Descuentos from "./pages/Descuentos";
 import Install from "./pages/Install";
 import { 
   CatalogosAreas, 
@@ -134,6 +136,8 @@ const App = () => (
                         <Route path="/novedades" element={<P module="novedades"><Novedades /></P>} />
                         <Route path="/pre-liquidacion" element={<P module="pre_liquidacion"><PreLiquidacion /></P>} />
                         <Route path="/configuracion-laboral" element={<P module="config_laboral"><ConfiguracionLaboral /></P>} />
+                        <Route path="/prestamos" element={<P module="prestamos"><Prestamos /></P>} />
+                        <Route path="/descuentos" element={<P module="descuentos"><Descuentos /></P>} />
                         <Route path="/capacitaciones" element={<P module="capacitaciones"><Capacitaciones /></P>} />
                         <Route path="/capacitaciones/crear" element={<P module="capacitaciones"><CrearCapacitacion /></P>} />
                         <Route path="/capacitaciones/crear-manual" element={<P module="capacitaciones"><CrearManual /></P>} />
