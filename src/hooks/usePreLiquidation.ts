@@ -85,7 +85,7 @@ export function usePreLiquidation(data: PreLiquidationData | null): PreLiquidati
   return useMemo(() => {
     if (!data) return [];
 
-    const { assignments, holidays, novelties, overtimeRecords, incapacities, vacations, leaves, employees, config, filters } = data;
+    const { assignments, holidays, novelties, overtimeRecords, incapacities, vacations, leaves, loans, deductions, employees, config, filters } = data;
     const { startDate, endDate } = filters;
 
     const days = eachDayOfInterval({ start: parseISO(startDate), end: parseISO(endDate) });
@@ -158,6 +158,20 @@ export function usePreLiquidation(data: PreLiquidationData | null): PreLiquidati
     novelties.forEach(n => {
       if (!noveltyByEmployee[n.employee_id]) noveltyByEmployee[n.employee_id] = [];
       noveltyByEmployee[n.employee_id].push(n);
+    });
+
+    // Index active loans by employee
+    const loansByEmployee: Record<string, typeof loans> = {};
+    loans.filter(l => l.status === 'activo').forEach(l => {
+      if (!loansByEmployee[l.employee_id]) loansByEmployee[l.employee_id] = [];
+      loansByEmployee[l.employee_id].push(l);
+    });
+
+    // Index active deductions by employee
+    const deductionsByEmployee: Record<string, typeof deductions> = {};
+    deductions.filter(d => d.status === 'activo').forEach(d => {
+      if (!deductionsByEmployee[d.employee_id]) deductionsByEmployee[d.employee_id] = [];
+      deductionsByEmployee[d.employee_id].push(d);
     });
 
     return employees.map(emp => {
