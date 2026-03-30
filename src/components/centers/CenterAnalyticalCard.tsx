@@ -33,11 +33,16 @@ function ContractDaysBadge({ endDate }: { endDate: string | null }) {
 
 interface Props {
   center: any;
+  companyTotalEmployees?: number;
 }
 
-export function CenterAnalyticalCard({ center }: Props) {
+export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Props) {
   const { isLoading, totalEmployees, positionCounts, shifts, areas, expiringContracts } =
     useCenterDetail(center.id);
+
+  const employeePercentage = companyTotalEmployees > 0
+    ? ((totalEmployees / companyTotalEmployees) * 100).toFixed(1)
+    : null;
 
   const formatDate = (d: string | null) =>
     d ? format(new Date(d), 'dd MMM yyyy', { locale: es }) : '—';
@@ -63,6 +68,9 @@ export function CenterAnalyticalCard({ center }: Props) {
           </div>
           <div className="text-right shrink-0">
             <p className="text-2xl font-bold text-primary">{isLoading ? '—' : totalEmployees}</p>
+            {!isLoading && employeePercentage !== null && (
+              <p className="text-xs text-muted-foreground font-medium">{employeePercentage}%</p>
+            )}
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Empleados</p>
           </div>
         </div>
