@@ -68,6 +68,9 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
           </div>
           <div className="text-right shrink-0">
             <p className="text-2xl font-bold text-primary">{isLoading ? '—' : totalEmployees}</p>
+            {!isLoading && employeePercentage !== null && (
+              <p className="text-xs text-muted-foreground font-medium">{employeePercentage}%</p>
+            )}
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Empleados</p>
           </div>
         </div>
