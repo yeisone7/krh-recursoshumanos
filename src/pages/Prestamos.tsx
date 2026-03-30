@@ -208,19 +208,35 @@ export default function Prestamos() {
       </div>
 
       <Tabs defaultValue="listado" className="space-y-4">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto gap-1">
           <TabsTrigger value="listado">
             <Receipt className="w-4 h-4 mr-2" />
             Listado
           </TabsTrigger>
           <TabsTrigger value="dashboard">
             <BarChart3 className="w-4 h-4 mr-2" />
-            Dashboard Cartera
+            Dashboard
+          </TabsTrigger>
+          <TabsTrigger value="calendario">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Calendario
+          </TabsTrigger>
+          <TabsTrigger value="riesgo">
+            <AlertTriangle className="w-4 h-4 mr-2" />
+            Scoring
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard">
           <LoanPortfolioDashboard loans={loans} />
+        </TabsContent>
+
+        <TabsContent value="calendario">
+          <LoanCollectionCalendar loans={loans} />
+        </TabsContent>
+
+        <TabsContent value="riesgo">
+          <LoanRiskScoring loans={loans} />
         </TabsContent>
 
         <TabsContent value="listado" className="space-y-6">
