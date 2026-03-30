@@ -36,6 +36,24 @@ interface PreLiquidationData {
     end_date: string;
     status: string;
   }>;
+  loans: Array<{
+    id: string;
+    employee_id: string;
+    loan_type: string;
+    description: string | null;
+    installment_amount: number;
+    status: string;
+  }>;
+  deductions: Array<{
+    id: string;
+    employee_id: string;
+    deduction_type: string;
+    description: string;
+    amount: number;
+    is_percentage: boolean;
+    percentage_value: number | null;
+    status: string;
+  }>;
   employees: Array<{
     id: string;
     first_name: string;
