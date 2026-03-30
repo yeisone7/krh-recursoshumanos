@@ -20,6 +20,8 @@ import {
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { CenterAnalyticalCard } from '@/components/centers/CenterAnalyticalCard';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function CentrosFichas() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,6 +30,21 @@ export default function CentrosFichas() {
 
   const { currentCompanyId } = useAuth();
   const { data: centers = [], isLoading } = useOperationCenters();
+
+  // Total employees across all centers in the company
+  const { data: companyTotalEmployees = 0 } = useQuery({
+    queryKey: ['company_total_employees', currentCompanyId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('employee_work_info')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_current', true)
+        .in('operation_center_id', centers.map(c => c.id));
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!currentCompanyId && centers.length > 0,
+  });
 
   // Unique cities for filter
   const cities = useMemo(() => {
@@ -151,7 +168,7 @@ export default function CentrosFichas() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredCenters.map(center => (
-            <CenterAnalyticalCard key={center.id} center={center} />
+            <CenterAnalyticalCard key={center.id} center={center} companyTotalEmployees={companyTotalEmployees} />
           ))}
         </div>
       )}
