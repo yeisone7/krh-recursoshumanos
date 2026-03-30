@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, ArrowRight, Calculator } from 'lucide-react';
-import { useUpdateLoan, type EmployeeLoan } from '@/hooks/useLoans';
+import { AlertTriangle, ArrowRight, Calculator, FileDown, Loader2 } from 'lucide-react';
+import { useUpdateLoan, useCreateRefinancingRecord, type EmployeeLoan } from '@/hooks/useLoans';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { generateRefinancePDF } from '@/utils/refinancePdf';
 import { toast } from '@/hooks/use-toast';
 
 const formatCurrency = (v: number) =>
@@ -22,6 +24,9 @@ interface Props {
 
 export function LoanRefinanceDialog({ loan, open, onClose }: Props) {
   const updateLoan = useUpdateLoan();
+  const createRecord = useCreateRefinancingRecord();
+  const { user, currentCompanyId } = useAuth();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [newInstallments, setNewInstallments] = useState('');
   const [newInterestRate, setNewInterestRate] = useState('');
@@ -44,41 +49,139 @@ export function LoanRefinanceDialog({ loan, open, onClose }: Props) {
   const parsedInstallments = Math.max(1, parseInt(newInstallments) || 1);
   const parsedRate = parseFloat(newInterestRate) || 0;
 
-  // New calculations based on remaining balance
   const newTotalWithInterest = remainingBalance * (1 + parsedRate / 100);
   const newInstallmentAmount = newTotalWithInterest / parsedInstallments;
 
-  const handleRefinance = () => {
-    if (!loan) return;
-
-    const refinanceNotes = [
-      loan.notes,
-      `[REFINANCIAMIENTO ${format(new Date(), 'dd/MM/yyyy')}]`,
-      `Saldo refinanciado: ${formatCurrency(remainingBalance)}`,
-      `Cuotas anteriores: ${loan.installments} → Nuevas: ${parsedInstallments}`,
-      `Tasa anterior: ${loan.interest_rate}% → Nueva: ${parsedRate}%`,
-      notes ? `Observación: ${notes}` : null,
-    ].filter(Boolean).join('\n');
-
-    updateLoan.mutate({
-      id: loan.id,
-      total_amount: remainingBalance,
-      interest_rate: parsedRate,
-      total_with_interest: Math.round(newTotalWithInterest * 100) / 100,
-      installments: parsedInstallments,
-      installment_amount: Math.round(newInstallmentAmount * 100) / 100,
-      remaining_balance: Math.round(newTotalWithInterest * 100) / 100,
-      paid_installments: 0,
-      paid_amount: 0,
-      start_date: newStartDate,
-      status: 'activo',
-      notes: refinanceNotes,
-    }, {
-      onSuccess: () => {
-        toast({ title: 'Préstamo refinanciado exitosamente' });
-        onClose();
+  const handleDownloadPDF = () => {
+    const doc = generateRefinancePDF({
+      employeeName: `${loan.employees_v2?.first_name || ''} ${loan.employees_v2?.last_name || ''}`.trim(),
+      documentNumber: loan.employees_v2?.document_number || '',
+      loanType: loan.loan_type,
+      refinanceDate: new Date().toISOString(),
+      previous: {
+        totalAmount: Number(loan.total_amount),
+        interestRate: Number(loan.interest_rate),
+        totalWithInterest: Number(loan.total_with_interest),
+        installments: loan.installments,
+        installmentAmount: Number(loan.installment_amount),
+        paidInstallments: loan.paid_installments,
+        paidAmount: Number(loan.paid_amount),
+        remainingBalance,
       },
+      newTerms: {
+        totalAmount: remainingBalance,
+        interestRate: parsedRate,
+        totalWithInterest: Math.round(newTotalWithInterest * 100) / 100,
+        installments: parsedInstallments,
+        installmentAmount: Math.round(newInstallmentAmount * 100) / 100,
+        startDate: newStartDate,
+      },
+      reason: notes,
     });
+    doc.save(`Refinanciamiento_${loan.employees_v2?.document_number || 'doc'}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+  };
+
+  const handleRefinance = async () => {
+    if (!loan || !currentCompanyId) return;
+    setIsProcessing(true);
+
+    try {
+      // 1. Generate PDF and upload to storage
+      const pdfDoc = generateRefinancePDF({
+        employeeName: `${loan.employees_v2?.first_name || ''} ${loan.employees_v2?.last_name || ''}`.trim(),
+        documentNumber: loan.employees_v2?.document_number || '',
+        loanType: loan.loan_type,
+        refinanceDate: new Date().toISOString(),
+        previous: {
+          totalAmount: Number(loan.total_amount),
+          interestRate: Number(loan.interest_rate),
+          totalWithInterest: Number(loan.total_with_interest),
+          installments: loan.installments,
+          installmentAmount: Number(loan.installment_amount),
+          paidInstallments: loan.paid_installments,
+          paidAmount: Number(loan.paid_amount),
+          remainingBalance,
+        },
+        newTerms: {
+          totalAmount: remainingBalance,
+          interestRate: parsedRate,
+          totalWithInterest: Math.round(newTotalWithInterest * 100) / 100,
+          installments: parsedInstallments,
+          installmentAmount: Math.round(newInstallmentAmount * 100) / 100,
+          startDate: newStartDate,
+        },
+        reason: notes,
+      });
+
+      const pdfBlob = pdfDoc.output('blob');
+      const fileName = `refinanciamientos/${loan.id}/${format(new Date(), 'yyyyMMdd_HHmmss')}.pdf`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(fileName, pdfBlob, { contentType: 'application/pdf' });
+
+      let documentUrl: string | null = null;
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from('documents').getPublicUrl(fileName);
+        documentUrl = urlData.publicUrl;
+      }
+
+      // 2. Create refinancing history record
+      await createRecord.mutateAsync({
+        loan_id: loan.id,
+        company_id: currentCompanyId,
+        employee_id: loan.employee_id,
+        previous_total_amount: Number(loan.total_amount),
+        previous_interest_rate: Number(loan.interest_rate),
+        previous_total_with_interest: Number(loan.total_with_interest),
+        previous_installments: loan.installments,
+        previous_installment_amount: Number(loan.installment_amount),
+        previous_paid_installments: loan.paid_installments,
+        previous_paid_amount: Number(loan.paid_amount),
+        previous_remaining_balance: remainingBalance,
+        new_total_amount: remainingBalance,
+        new_interest_rate: parsedRate,
+        new_total_with_interest: Math.round(newTotalWithInterest * 100) / 100,
+        new_installments: parsedInstallments,
+        new_installment_amount: Math.round(newInstallmentAmount * 100) / 100,
+        new_start_date: newStartDate,
+        reason: notes || null,
+        document_url: documentUrl,
+        created_by: user?.id || null,
+      } as any);
+
+      // 3. Update loan with new terms
+      const refinanceNotes = [
+        loan.notes,
+        `[REFINANCIAMIENTO ${format(new Date(), 'dd/MM/yyyy')}]`,
+        `Saldo refinanciado: ${formatCurrency(remainingBalance)}`,
+        `Cuotas anteriores: ${loan.installments} → Nuevas: ${parsedInstallments}`,
+        `Tasa anterior: ${loan.interest_rate}% → Nueva: ${parsedRate}%`,
+        notes ? `Observación: ${notes}` : null,
+      ].filter(Boolean).join('\n');
+
+      await updateLoan.mutateAsync({
+        id: loan.id,
+        total_amount: remainingBalance,
+        interest_rate: parsedRate,
+        total_with_interest: Math.round(newTotalWithInterest * 100) / 100,
+        installments: parsedInstallments,
+        installment_amount: Math.round(newInstallmentAmount * 100) / 100,
+        remaining_balance: Math.round(newTotalWithInterest * 100) / 100,
+        paid_installments: 0,
+        paid_amount: 0,
+        start_date: newStartDate,
+        status: 'activo',
+        notes: refinanceNotes,
+      });
+
+      toast({ title: 'Préstamo refinanciado exitosamente', description: 'Se generó el documento y el registro de auditoría.' });
+      onClose();
+    } catch (err: any) {
+      toast({ title: 'Error al refinanciar', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -122,46 +225,23 @@ export function LoanRefinanceDialog({ loan, open, onClose }: Props) {
           {/* New terms */}
           <div className="space-y-3">
             <p className="text-sm font-medium">Nuevas Condiciones</p>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">Nuevas Cuotas</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={newInstallments}
-                  onChange={e => setNewInstallments(e.target.value)}
-                />
+                <Input type="number" min="1" value={newInstallments} onChange={e => setNewInstallments(e.target.value)} />
               </div>
               <div>
                 <Label className="text-xs">Nueva Tasa (%)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  value={newInterestRate}
-                  onChange={e => setNewInterestRate(e.target.value)}
-                />
+                <Input type="number" min="0" step="0.1" value={newInterestRate} onChange={e => setNewInterestRate(e.target.value)} />
               </div>
             </div>
-
             <div>
               <Label className="text-xs">Fecha de Inicio</Label>
-              <Input
-                type="date"
-                value={newStartDate}
-                onChange={e => setNewStartDate(e.target.value)}
-              />
+              <Input type="date" value={newStartDate} onChange={e => setNewStartDate(e.target.value)} />
             </div>
-
             <div>
               <Label className="text-xs">Observaciones</Label>
-              <Textarea
-                placeholder="Razón del refinanciamiento..."
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                rows={2}
-              />
+              <Textarea placeholder="Razón del refinanciamiento..." value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
             </div>
           </div>
 
@@ -196,9 +276,14 @@ export function LoanRefinanceDialog({ loan, open, onClose }: Props) {
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={handleDownloadPDF} className="mr-auto">
+            <FileDown className="w-4 h-4 mr-1" />
+            Vista previa PDF
+          </Button>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleRefinance} disabled={updateLoan.isPending}>
+          <Button onClick={handleRefinance} disabled={isProcessing}>
+            {isProcessing && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
             Refinanciar
           </Button>
         </DialogFooter>
