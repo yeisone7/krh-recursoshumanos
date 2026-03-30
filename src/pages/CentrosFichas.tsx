@@ -20,6 +20,8 @@ import {
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { CenterAnalyticalCard } from '@/components/centers/CenterAnalyticalCard';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function CentrosFichas() {
   const [searchQuery, setSearchQuery] = useState('');
