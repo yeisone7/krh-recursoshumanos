@@ -88,10 +88,10 @@ export function useCreateLoan() {
   const { currentCompanyId, user } = useAuth();
 
   return useMutation({
-    mutationFn: async (loan: Omit<EmployeeLoan, 'id' | 'company_id' | 'created_at' | 'updated_at' | 'employees_v2' | 'created_by'>) => {
+    mutationFn: async (loan: Record<string, any>) => {
       const { data, error } = await supabase
         .from('employee_loans')
-        .insert({ ...loan, company_id: currentCompanyId!, created_by: user?.id })
+        .insert({ ...loan, company_id: currentCompanyId!, created_by: user?.id } as any)
         .select()
         .single();
       if (error) throw error;
