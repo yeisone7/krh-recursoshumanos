@@ -2417,6 +2417,87 @@ export type Database = {
           },
         ]
       }
+      employee_deductions: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          deduction_type: Database["public"]["Enums"]["deduction_type"]
+          description: string
+          document_url: string | null
+          employee_id: string
+          end_date: string | null
+          entity_name: string | null
+          id: string
+          is_percentage: boolean
+          is_recurring: boolean
+          notes: string | null
+          percentage_value: number | null
+          reference_number: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["deduction_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          deduction_type: Database["public"]["Enums"]["deduction_type"]
+          description: string
+          document_url?: string | null
+          employee_id: string
+          end_date?: string | null
+          entity_name?: string | null
+          id?: string
+          is_percentage?: boolean
+          is_recurring?: boolean
+          notes?: string | null
+          percentage_value?: number | null
+          reference_number?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["deduction_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          deduction_type?: Database["public"]["Enums"]["deduction_type"]
+          description?: string
+          document_url?: string | null
+          employee_id?: string
+          end_date?: string | null
+          entity_name?: string | null
+          id?: string
+          is_percentage?: boolean
+          is_recurring?: boolean
+          notes?: string | null
+          percentage_value?: number | null
+          reference_number?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["deduction_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_deductions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_deductions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_documents: {
         Row: {
           company_id: string
@@ -2759,6 +2840,149 @@ export type Database = {
             columns: ["reintegration_exam_id"]
             isOneToOne: false
             referencedRelation: "medical_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_loan_payments: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string
+          created_by: string | null
+          id: string
+          loan_id: string
+          notes: string | null
+          payment_date: string
+          payment_number: number
+          payroll_period: string | null
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          loan_id: string
+          notes?: string | null
+          payment_date: string
+          payment_number: number
+          payroll_period?: string | null
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          loan_id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_number?: number
+          payroll_period?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_loan_payments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "employee_loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_loans: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          document_url: string | null
+          employee_id: string
+          end_date: string | null
+          id: string
+          installment_amount: number
+          installments: number
+          interest_rate: number
+          loan_type: Database["public"]["Enums"]["loan_type"]
+          notes: string | null
+          paid_amount: number
+          paid_installments: number
+          rejection_reason: string | null
+          remaining_balance: number
+          start_date: string
+          status: Database["public"]["Enums"]["loan_status"]
+          total_amount: number
+          total_with_interest: number
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          document_url?: string | null
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          installment_amount: number
+          installments?: number
+          interest_rate?: number
+          loan_type?: Database["public"]["Enums"]["loan_type"]
+          notes?: string | null
+          paid_amount?: number
+          paid_installments?: number
+          rejection_reason?: string | null
+          remaining_balance: number
+          start_date: string
+          status?: Database["public"]["Enums"]["loan_status"]
+          total_amount: number
+          total_with_interest: number
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          document_url?: string | null
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          installment_amount?: number
+          installments?: number
+          interest_rate?: number
+          loan_type?: Database["public"]["Enums"]["loan_type"]
+          notes?: string | null
+          paid_amount?: number
+          paid_installments?: number
+          rejection_reason?: string | null
+          remaining_balance?: number
+          start_date?: string
+          status?: Database["public"]["Enums"]["loan_status"]
+          total_amount?: number
+          total_with_interest?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_loans_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_loans_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
             referencedColumns: ["id"]
           },
         ]
@@ -8017,6 +8241,13 @@ export type Database = {
         | "viernes"
         | "sabado"
         | "domingo"
+      deduction_status: "activo" | "pausado" | "finalizado" | "cancelado"
+      deduction_type:
+        | "judicial"
+        | "responsabilidad"
+        | "cooperativa"
+        | "sindicato"
+        | "otro"
       disciplinary_status:
         | "apertura"
         | "investigacion"
@@ -8094,6 +8325,21 @@ export type Database = {
         | "aprendizaje"
         | "servicios"
         | "temporal"
+      loan_status:
+        | "solicitado"
+        | "aprobado"
+        | "activo"
+        | "pagado"
+        | "cancelado"
+        | "rechazado"
+      loan_type:
+        | "personal"
+        | "vivienda"
+        | "educacion"
+        | "calamidad"
+        | "libranza"
+        | "anticipo"
+        | "otro"
       marital_status_type:
         | "soltero"
         | "casado"
@@ -8397,6 +8643,14 @@ export const Constants = {
         "sabado",
         "domingo",
       ],
+      deduction_status: ["activo", "pausado", "finalizado", "cancelado"],
+      deduction_type: [
+        "judicial",
+        "responsabilidad",
+        "cooperativa",
+        "sindicato",
+        "otro",
+      ],
       disciplinary_status: [
         "apertura",
         "investigacion",
@@ -8480,6 +8734,23 @@ export const Constants = {
         "aprendizaje",
         "servicios",
         "temporal",
+      ],
+      loan_status: [
+        "solicitado",
+        "aprobado",
+        "activo",
+        "pagado",
+        "cancelado",
+        "rechazado",
+      ],
+      loan_type: [
+        "personal",
+        "vivienda",
+        "educacion",
+        "calamidad",
+        "libranza",
+        "anticipo",
+        "otro",
       ],
       marital_status_type: [
         "soltero",
