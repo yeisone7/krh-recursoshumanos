@@ -24,7 +24,7 @@ import { LoanPortfolioDashboard } from '@/components/loans/LoanPortfolioDashboar
 import { LoanCollectionCalendar } from '@/components/loans/LoanCollectionCalendar';
 import { LoanRiskScoring } from '@/components/loans/LoanRiskScoring';
 import { LoanRefinanceDialog } from '@/components/loans/LoanRefinanceDialog';
-import { useLoans, useLoanPayments, useCreateLoan, useUpdateLoan, useDeleteLoan, useRegisterPayment, type EmployeeLoan } from '@/hooks/useLoans';
+import { useLoans, useLoanPayments, useCreateLoan, useUpdateLoan, useDeleteLoan, useRegisterPayment, useRefinancingHistory, type EmployeeLoan } from '@/hooks/useLoans';
 import { useEmployees } from '@/hooks/useEmployees';
 
 const LOAN_TYPE_LABELS: Record<string, string> = {
