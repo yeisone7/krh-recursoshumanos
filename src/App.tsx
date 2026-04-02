@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OnboardingGuard } from "@/components/auth/OnboardingGuard";
+import { CompanyGuard } from "@/components/auth/CompanyGuard";
 import { NoRoleGuard } from "@/components/auth/NoRoleGuard";
 import { PermissionRoute } from "@/components/auth/PermissionRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -47,6 +48,7 @@ import Reportes from "./pages/Reportes";
 import Analitica from "./pages/Analitica";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
+import SelectCompany from "./pages/SelectCompany";
 import Empleado360 from "./pages/Empleado360";
 import SuperAdmin from "./pages/SuperAdmin";
 import Requisiciones from "./pages/Requisiciones";
@@ -110,11 +112,17 @@ const App = () => (
                 <Onboarding />
               </ProtectedRoute>
             } />
+            <Route path="/select-company" element={
+              <ProtectedRoute>
+                <SelectCompany />
+              </ProtectedRoute>
+            } />
             <Route
               path="/*"
               element={
                 <ProtectedRoute>
                   <OnboardingGuard>
+                    <CompanyGuard>
                     <NoRoleGuard>
                     <AppLayout>
                       <Routes>
@@ -176,6 +184,7 @@ const App = () => (
                       </Routes>
                     </AppLayout>
                     </NoRoleGuard>
+                    </CompanyGuard>
                   </OnboardingGuard>
                 </ProtectedRoute>
               }
