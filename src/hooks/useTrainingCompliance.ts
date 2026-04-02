@@ -145,9 +145,10 @@ function useAllCompletions() {
 }
 
 export function useTrainingCompliance() {
-  const employees = useActiveEmployeesByCenter();
-  const centers = useOperationCentersList();
-  const courses = usePublishedCourses();
+  const { currentCompanyId } = useAuth();
+  const employees = useActiveEmployeesByCenter(currentCompanyId);
+  const centers = useOperationCentersList(currentCompanyId);
+  const courses = usePublishedCourses(currentCompanyId);
   const completions = useAllCompletions();
   const tokenAssociations = useTokenCenterAssociations();
 
