@@ -177,7 +177,7 @@ export function useCreateContract() {
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async (contract: Omit<ContractInsert, 'created_by'>) => {
+    mutationFn: async (contract: Omit<ContractInsert, 'created_by' | 'company_id'>) => {
       // Check if employee already has an active contract
       const { data: existingContracts, error: checkError } = await supabase
         .from('contracts')
