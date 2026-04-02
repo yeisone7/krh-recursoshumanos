@@ -39,9 +39,9 @@ export interface CenterComplianceData {
   totalEmployees: number;
 }
 
-function useActiveEmployeesByCenter() {
+function useActiveEmployeesByCenter(companyId: string | undefined) {
   return useQuery({
-    queryKey: ['compliance-employees'],
+    queryKey: ['compliance-employees', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employees_v2')
@@ -49,6 +49,7 @@ function useActiveEmployeesByCenter() {
           id, first_name, last_name, document_number,
           employee_work_info!inner(operation_center_id, is_current)
         `)
+        .eq('company_id', companyId!)
         .eq('is_active', true);
 
       if (error) throw error;
@@ -67,6 +68,7 @@ function useActiveEmployeesByCenter() {
           } as ComplianceEmployee;
         });
     },
+    enabled: !!companyId,
   });
 }
 
