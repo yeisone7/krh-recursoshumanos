@@ -184,11 +184,14 @@ describe('Multi-company isolation: Hook query filters', () => {
 
       it(`${fileName} should disable queries when currentCompanyId is missing`, () => {
         // Check for enabled: !!currentCompanyId pattern
+        // Composite hooks may pass companyId to sub-hooks which have their own enabled guards
         const hasEnabledGuard =
-          content.includes('enabled:') &&
-          (content.includes('!!currentCompanyId') ||
-            content.includes('currentCompanyId != null') ||
-            content.includes('Boolean(currentCompanyId)'));
+          (content.includes('enabled:') &&
+            (content.includes('!!currentCompanyId') ||
+              content.includes('currentCompanyId != null') ||
+              content.includes('Boolean(currentCompanyId)'))) ||
+          // Composite hooks that pass companyId as parameter to sub-queries
+          (content.includes('!!companyId') && content.includes('currentCompanyId'));
 
         expect(hasEnabledGuard).toBe(true);
       });
