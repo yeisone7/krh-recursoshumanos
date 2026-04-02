@@ -35,6 +35,7 @@ import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, User
 import { Input } from '@/components/ui/input';
 import { UserRoleDialog } from './UserRoleDialog';
 import { UserCenterDialog } from './UserCenterDialog';
+import { UserCompanyDialog } from './UserCompanyDialog';
 import { LinkEmployeeDialog } from './LinkEmployeeDialog';
 import { useRemoveCompanyAssignment, useToggleUserStatus, type AdminUser } from '@/hooks/useAdminUsers';
 import { useAuth } from '@/contexts/AuthContext';
