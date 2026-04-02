@@ -341,6 +341,7 @@ export function useSetDecision() {
 
       // Create timeline entry
       await supabase.from('disciplinary_timeline').insert({
+        company_id: currentCompanyId!,
         process_id: processId,
         action_type: 'decision',
         description: `Decisión: ${sanctionType}. ${decisionSummary}`,
