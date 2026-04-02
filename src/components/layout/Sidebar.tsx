@@ -188,7 +188,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const location = useLocation();
   const { data: unifiedAlerts } = useUnifiedAlerts();
   const alertCount = unifiedAlerts?.length || 0;
-  const { canView, isAdmin, permissionsLoaded } = useAuth();
+  const { canView, isAdmin, isSuperAdmin, permissionsLoaded } = useAuth();
 
   // In mobile drawer mode, never collapse - always show full sidebar
   const isCollapsed = isMobileDrawer ? false : collapsed;
@@ -632,13 +632,16 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         )}
 
         {/* Admin */}
-        {(showCatalogos || filteredAdminNavItems.length > 0) && (
+        {(showCatalogos || filteredAdminNavItems.length > 0 || isSuperAdmin) && (
           <>
             <SectionLabel label="Administración" />
             <div className="space-y-0.5">
               {showCatalogos && <CatalogosMenu />}
               {filteredAdminNavItems.map((item) =>
                 <NavLinkItem key={item.href} item={item} />
+              )}
+              {isSuperAdmin && (
+                <NavLinkItem item={{ label: 'Super Admin', icon: <Globe className="w-5 h-5" />, href: '/super-admin' }} />
               )}
             </div>
           </>
@@ -653,12 +656,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 }
 
 function CompanySelector({ collapsed }: {collapsed: boolean;}) {
-  const { currentCompanyId, setCurrentCompanyId, roles } = useAuth();
-  const { data: companies } = useCompanies();
+  const { currentCompanyId, setCurrentCompanyId, roles, isSuperAdmin, companies: authCompanies } = useAuth();
+  const { data: queriedCompanies } = useCompanies();
+  const companies = isSuperAdmin ? (queriedCompanies || authCompanies) : (queriedCompanies || []);
   const { data: currentCompany } = useCompany(currentCompanyId || undefined);
   const [open, setOpen] = useState(false);
 
-  const canSwitchCompany = roles.includes('admin');
+  const canSwitchCompany = roles.includes('admin') || isSuperAdmin;
   const hasMultipleCompanies = companies && companies.length > 1;
 
   if (collapsed) {

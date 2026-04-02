@@ -29,6 +29,7 @@ interface AuthContextType {
   isRRHH: boolean;
   isAuditor: boolean;
   isPsicologo: boolean;
+  isSuperAdmin: boolean;
   hasRole: (role: AppRole) => boolean;
   // New permission system
   permissions: PermissionEntry[];
@@ -57,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<PermissionEntry[]>([]);
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [hasAnyRole, setHasAnyRole] = useState(true); // default true to avoid flash
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const fetchPermissions = async (userId: string) => {
     try {
@@ -116,6 +118,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Fetch dynamic permissions
     await fetchPermissions(userId);
+
+    // Check super admin status
+    const { data: saData } = await supabase
+      .from('super_admins')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    setIsSuperAdmin(!!saData);
+
+    // If super admin, fetch ALL companies
+    if (saData) {
+      const { data: allCompanies } = await supabase
+        .from('companies')
+        .select('id, name, nit')
+        .order('name');
+      if (allCompanies && allCompanies.length > 0) {
+        setCompanies(allCompanies);
+        if (!currentCompanyId) {
+          setCurrentCompanyId(allCompanies[0].id);
+        }
+      }
+    }
   };
 
   useEffect(() => {
@@ -135,6 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPermissions([]);
           setPermissionsLoaded(false);
           setHasAnyRole(true);
+          setIsSuperAdmin(false);
         }
       }
     );
@@ -245,6 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPermissions([]);
     setPermissionsLoaded(false);
     setHasAnyRole(true);
+    setIsSuperAdmin(false);
   };
 
   return (
@@ -261,6 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isRRHH,
         isAuditor,
         isPsicologo,
+        isSuperAdmin,
         hasRole: hasRoleFn,
         permissions,
         permissionsLoaded,

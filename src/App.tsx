@@ -48,6 +48,7 @@ import Analitica from "./pages/Analitica";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
 import Empleado360 from "./pages/Empleado360";
+import SuperAdmin from "./pages/SuperAdmin";
 import Requisiciones from "./pages/Requisiciones";
 import Perfil from "./pages/Perfil";
 import PreLiquidacion from "./pages/PreLiquidacion";
@@ -168,6 +169,7 @@ const App = () => (
                         <Route path="/catalogos/motivos-novedad" element={<P module="catalogos"><CatalogosMotivosNovedad /></P>} />
                         <Route path="/catalogos/plataformas-publicacion" element={<P module="catalogos"><CatalogosPlataformasPublicacion /></P>} />
                         <Route path="/perfil" element={<Perfil />} />
+                        <Route path="/super-admin" element={<SuperAdmin />} />
                         <Route path="/seguridad" element={<P module="seguridad"><Seguridad /></P>} />
                         <Route path="/configuracion" element={<P module="configuracion"><Configuracion /></P>} />
                         <Route path="*" element={<NotFound />} />
