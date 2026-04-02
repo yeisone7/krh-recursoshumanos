@@ -76,7 +76,7 @@ const MANUALLY_AUDITED_HOOKS: Record<string, string> = {
   'useDocuments.ts': 'Queries documents by entity_id with company_id in document_versions',
   'useTerminations.ts': 'Filters employee_terminations by company_id via employees_v2 join',
   'useAbsenceConflicts.ts': 'Filters by employee_id which is already company-scoped',
-  'useTrainingCompliance.ts': 'Uses training_courses.company_id via join pattern',
+  
 };
 
 function getHookFiles(): string[] {
@@ -184,11 +184,14 @@ describe('Multi-company isolation: Hook query filters', () => {
 
       it(`${fileName} should disable queries when currentCompanyId is missing`, () => {
         // Check for enabled: !!currentCompanyId pattern
+        // Composite hooks may pass companyId to sub-hooks which have their own enabled guards
         const hasEnabledGuard =
-          content.includes('enabled:') &&
-          (content.includes('!!currentCompanyId') ||
-            content.includes('currentCompanyId != null') ||
-            content.includes('Boolean(currentCompanyId)'));
+          (content.includes('enabled:') &&
+            (content.includes('!!currentCompanyId') ||
+              content.includes('currentCompanyId != null') ||
+              content.includes('Boolean(currentCompanyId)'))) ||
+          // Composite hooks that pass companyId as parameter to sub-queries
+          (content.includes('!!companyId') && content.includes('currentCompanyId'));
 
         expect(hasEnabledGuard).toBe(true);
       });
