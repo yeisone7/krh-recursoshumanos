@@ -375,6 +375,7 @@ export function useSetDecision() {
 
 export function useAddEvidence() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({
