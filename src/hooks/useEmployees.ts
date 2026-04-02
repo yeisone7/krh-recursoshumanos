@@ -290,6 +290,7 @@ export function useCreateEmployee() {
         // F. Bank Info
         supabase.from('employee_bank_info').insert({
           employee_id: employeeId,
+          company_id: currentCompanyId!,
           bank_name: data.bankName || null,
           account_type: data.accountType || null,
           account_number: data.accountNumber || null,
