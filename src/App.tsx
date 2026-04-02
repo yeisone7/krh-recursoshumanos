@@ -112,11 +112,17 @@ const App = () => (
                 <Onboarding />
               </ProtectedRoute>
             } />
+            <Route path="/select-company" element={
+              <ProtectedRoute>
+                <SelectCompany />
+              </ProtectedRoute>
+            } />
             <Route
               path="/*"
               element={
                 <ProtectedRoute>
                   <OnboardingGuard>
+                    <CompanyGuard>
                     <NoRoleGuard>
                     <AppLayout>
                       <Routes>
