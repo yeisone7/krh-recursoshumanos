@@ -302,7 +302,7 @@ export function useAdvanceStatus() {
 
 export function useSetDecision() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({
