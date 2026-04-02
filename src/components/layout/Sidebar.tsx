@@ -640,6 +640,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               {filteredAdminNavItems.map((item) =>
                 <NavLinkItem key={item.href} item={item} />
               )}
+              {isSuperAdmin && (
+                <NavLinkItem item={{ label: 'Super Admin', icon: <Globe className="w-5 h-5" />, href: '/super-admin' }} />
+              )}
             </div>
           </>
         )}
