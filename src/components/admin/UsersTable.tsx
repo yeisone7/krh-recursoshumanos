@@ -355,6 +355,10 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                         <MapPin className="w-4 h-4 mr-2" />
                         Asignar Centros
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleManageCompanies(user)}>
+                        <Building2 className="w-4 h-4 mr-2" />
+                        Asignar Empresas
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleLinkEmployee(user)}>
                         <Link className="w-4 h-4 mr-2" />
                         Vincular Empleado
