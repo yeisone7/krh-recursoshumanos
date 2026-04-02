@@ -452,7 +452,7 @@ export function useDeleteEvidence() {
 
 export function useRegisterAppeal() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({
