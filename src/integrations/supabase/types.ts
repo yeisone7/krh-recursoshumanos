@@ -6865,6 +6865,27 @@ export type Database = {
           },
         ]
       }
+      super_admins: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       system_config: {
         Row: {
           company_id: string
@@ -8489,6 +8510,7 @@ export type Database = {
       is_auditor: { Args: never; Returns: boolean }
       is_company_member: { Args: { _company_id: string }; Returns: boolean }
       is_psicologo: { Args: never; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       is_user_active: { Args: { _user_id: string }; Returns: boolean }
       submit_candidate_registration:
         | {
