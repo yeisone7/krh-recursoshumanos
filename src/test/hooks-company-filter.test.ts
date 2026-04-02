@@ -76,7 +76,7 @@ const MANUALLY_AUDITED_HOOKS: Record<string, string> = {
   'useDocuments.ts': 'Queries documents by entity_id with company_id in document_versions',
   'useTerminations.ts': 'Filters employee_terminations by company_id via employees_v2 join',
   'useAbsenceConflicts.ts': 'Filters by employee_id which is already company-scoped',
-  'useTrainingCompliance.ts': 'Uses training_courses.company_id via join pattern',
+  
 };
 
 function getHookFiles(): string[] {
