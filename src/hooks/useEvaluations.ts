@@ -313,6 +313,7 @@ export function useEvaluations() {
             .from('evaluation_scores')
             .upsert({
               evaluation_id: id,
+              company_id: currentCompanyId!,
               criteria_id: score.criteria_id,
               score: score.score,
               comments: score.comments,

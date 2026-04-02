@@ -297,6 +297,7 @@ export function useUpdateShiftCycle() {
             .insert(
               data.days.map(day => ({
                 shift_cycle_id: data.id,
+                company_id: currentCompanyId!,
                 day_number: day.day_number,
                 shift_id: day.shift_id,
               }))
