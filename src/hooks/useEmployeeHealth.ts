@@ -47,6 +47,7 @@ export interface CreateCertificationData {
 
 export function useCreateCertification() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: CreateCertificationData) => {
