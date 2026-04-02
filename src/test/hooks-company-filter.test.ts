@@ -57,8 +57,12 @@ const EMPLOYEE_DETAIL_HOOKS = new Set([
   'useEmployeePortal.ts',
   'useEmployeeHealth.ts',
   'useWorkInfoHistory.ts',
-  'useCenterDetail.ts',
   'useOnboardingTasks.ts',
+]);
+
+// Hooks that filter by a specific entity ID (center, etc.) rather than company_id
+const ENTITY_DETAIL_HOOKS = new Set([
+  'useCenterDetail.ts',
 ]);
 
 // Hooks that don't query company-scoped data (user preferences, sessions, etc.)
