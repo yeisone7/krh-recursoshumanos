@@ -656,12 +656,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 }
 
 function CompanySelector({ collapsed }: {collapsed: boolean;}) {
-  const { currentCompanyId, setCurrentCompanyId, roles } = useAuth();
-  const { data: companies } = useCompanies();
+  const { currentCompanyId, setCurrentCompanyId, roles, isSuperAdmin, companies: authCompanies } = useAuth();
+  const { data: queriedCompanies } = useCompanies();
+  const companies = isSuperAdmin ? (queriedCompanies || authCompanies) : (queriedCompanies || []);
   const { data: currentCompany } = useCompany(currentCompanyId || undefined);
   const [open, setOpen] = useState(false);
 
-  const canSwitchCompany = roles.includes('admin');
+  const canSwitchCompany = roles.includes('admin') || isSuperAdmin;
   const hasMultipleCompanies = companies && companies.length > 1;
 
   if (collapsed) {
