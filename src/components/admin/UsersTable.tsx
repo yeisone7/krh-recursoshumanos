@@ -410,6 +410,12 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         onOpenChange={setCenterDialogOpen}
       />
 
+      <UserCompanyDialog
+        user={selectedUser}
+        open={companyDialogOpen}
+        onOpenChange={setCompanyDialogOpen}
+      />
+
       <LinkEmployeeDialog
         open={linkDialogOpen}
         onOpenChange={setLinkDialogOpen}
