@@ -389,6 +389,7 @@ export function useConvertToEmployee() {
       // Step 1b: Create contact record
       await supabase.from('employee_contact').insert({
         employee_id: employee.id,
+        company_id: currentCompanyId!,
         email: candidate.email,
         phone: candidate.phone,
         mobile: candidate.mobile,

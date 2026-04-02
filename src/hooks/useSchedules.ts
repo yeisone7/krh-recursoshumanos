@@ -391,7 +391,7 @@ export function useActiveEmployeeTimeConfig(employeeId: string) {
 
 export function useCreateEmployeeTimeConfig() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (config: {
