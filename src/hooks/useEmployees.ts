@@ -236,6 +236,7 @@ export function useCreateEmployee() {
         // C. Family (legacy table - keep for backward compat)
         supabase.from('employee_family').insert({
           employee_id: employeeId,
+          company_id: currentCompanyId!,
           spouse_name: null,
           spouse_gender: null,
           spouse_birth_date: null,
