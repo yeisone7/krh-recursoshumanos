@@ -48,6 +48,7 @@ import Reportes from "./pages/Reportes";
 import Analitica from "./pages/Analitica";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
+import SelectCompany from "./pages/SelectCompany";
 import Empleado360 from "./pages/Empleado360";
 import SuperAdmin from "./pages/SuperAdmin";
 import Requisiciones from "./pages/Requisiciones";
