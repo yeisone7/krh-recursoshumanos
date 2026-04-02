@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface ComplianceEmployee {
   id: string;
@@ -38,9 +39,9 @@ export interface CenterComplianceData {
   totalEmployees: number;
 }
 
-function useActiveEmployeesByCenter() {
+function useActiveEmployeesByCenter(companyId: string | undefined) {
   return useQuery({
-    queryKey: ['compliance-employees'],
+    queryKey: ['compliance-employees', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employees_v2')
@@ -48,6 +49,7 @@ function useActiveEmployeesByCenter() {
           id, first_name, last_name, document_number,
           employee_work_info!inner(operation_center_id, is_current)
         `)
+        .eq('company_id', companyId!)
         .eq('is_active', true);
 
       if (error) throw error;
@@ -66,36 +68,41 @@ function useActiveEmployeesByCenter() {
           } as ComplianceEmployee;
         });
     },
+    enabled: !!companyId,
   });
 }
 
-function useOperationCentersList() {
+function useOperationCentersList(companyId: string | undefined) {
   return useQuery({
-    queryKey: ['compliance-centers'],
+    queryKey: ['compliance-centers', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('operation_centers')
         .select('id, name')
+        .eq('company_id', companyId!)
         .order('name');
       if (error) throw error;
       return data || [];
     },
+    enabled: !!companyId,
   });
 }
 
-function usePublishedCourses() {
+function usePublishedCourses(companyId: string | undefined) {
   return useQuery({
-    queryKey: ['compliance-courses'],
+    queryKey: ['compliance-courses', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('training_courses')
         .select('id, name, code, status')
+        .eq('company_id', companyId!)
         .in('status', ['publicado', 'borrador'])
         .eq('is_active', true)
         .order('name');
       if (error) throw error;
       return data || [];
     },
+    enabled: !!companyId,
   });
 }
 
@@ -138,9 +145,10 @@ function useAllCompletions() {
 }
 
 export function useTrainingCompliance() {
-  const employees = useActiveEmployeesByCenter();
-  const centers = useOperationCentersList();
-  const courses = usePublishedCourses();
+  const { currentCompanyId } = useAuth();
+  const employees = useActiveEmployeesByCenter(currentCompanyId);
+  const centers = useOperationCentersList(currentCompanyId);
+  const courses = usePublishedCourses(currentCompanyId);
   const completions = useAllCompletions();
   const tokenAssociations = useTokenCenterAssociations();
 
