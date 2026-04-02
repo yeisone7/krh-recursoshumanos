@@ -389,6 +389,7 @@ export function useAddEvidence() {
       fileName?: string;
     }) => {
       const insertData = {
+        company_id: currentCompanyId!,
         process_id: processId,
         evidence_type: data.evidence_type,
         description: data.description,
