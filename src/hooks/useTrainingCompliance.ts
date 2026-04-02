@@ -72,17 +72,19 @@ function useActiveEmployeesByCenter(companyId: string | undefined) {
   });
 }
 
-function useOperationCentersList() {
+function useOperationCentersList(companyId: string | undefined) {
   return useQuery({
-    queryKey: ['compliance-centers'],
+    queryKey: ['compliance-centers', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('operation_centers')
         .select('id, name')
+        .eq('company_id', companyId!)
         .order('name');
       if (error) throw error;
       return data || [];
     },
+    enabled: !!companyId,
   });
 }
 
