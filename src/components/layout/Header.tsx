@@ -122,7 +122,10 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
               <Building2 className="w-4 h-4 text-muted-foreground" />
               <Select 
                 value={currentCompanyId || undefined} 
-                onValueChange={setCurrentCompanyId}
+                onValueChange={(val) => {
+                  setCurrentCompanyId(val);
+                  if (user) localStorage.setItem(`last_company_${user.id}`, val);
+                }}
               >
                 <SelectTrigger className="w-[200px] h-9 text-sm border-0 bg-muted/50 hover:bg-muted focus:ring-1 focus:ring-primary/20">
                   <SelectValue placeholder="Seleccionar empresa" />
