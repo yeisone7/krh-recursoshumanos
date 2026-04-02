@@ -29,6 +29,7 @@ interface AuthContextType {
   isRRHH: boolean;
   isAuditor: boolean;
   isPsicologo: boolean;
+  isSuperAdmin: boolean;
   hasRole: (role: AppRole) => boolean;
   // New permission system
   permissions: PermissionEntry[];
