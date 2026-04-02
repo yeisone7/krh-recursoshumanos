@@ -257,12 +257,14 @@ export function useSessionAttendance(sessionId: string | undefined) {
 
 export function useEnrollEmployee() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: EnrollEmployeeData) => {
       const { data: attendance, error } = await supabase
         .from('training_attendance')
         .insert({
+          company_id: currentCompanyId!,
           session_id: data.sessionId,
           employee_id: data.employeeId,
           attendance_status: 'inscrito',
