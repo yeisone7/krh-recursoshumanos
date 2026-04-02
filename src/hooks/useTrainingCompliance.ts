@@ -88,19 +88,21 @@ function useOperationCentersList(companyId: string | undefined) {
   });
 }
 
-function usePublishedCourses() {
+function usePublishedCourses(companyId: string | undefined) {
   return useQuery({
-    queryKey: ['compliance-courses'],
+    queryKey: ['compliance-courses', companyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('training_courses')
         .select('id, name, code, status')
+        .eq('company_id', companyId!)
         .in('status', ['publicado', 'borrador'])
         .eq('is_active', true)
         .order('name');
       if (error) throw error;
       return data || [];
     },
+    enabled: !!companyId,
   });
 }
 
