@@ -588,6 +588,7 @@ export function useUpdateEmployee() {
         upsertOperations.push(
           supabase.from('employee_bank_info').insert({
             employee_id: id,
+            company_id: currentCompanyId!,
             bank_name: data.bankName || null,
             account_type: data.accountType || null,
             account_number: data.accountNumber || null,
