@@ -270,6 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPermissions([]);
     setPermissionsLoaded(false);
     setHasAnyRole(true);
+    setIsSuperAdmin(false);
   };
 
   return (
