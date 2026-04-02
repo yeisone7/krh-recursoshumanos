@@ -525,6 +525,7 @@ export function useCreateShiftAssignment() {
         .from('employee_shift_assignments')
         .insert({
           ...assignment,
+          company_id: currentCompanyId!,
           source: assignment.source || 'manual',
           created_by: user?.id,
         })
