@@ -161,8 +161,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          // Set loading true to prevent flash of onboarding/guards
+          setIsLoading(true);
           setTimeout(() => {
-            fetchUserData(session.user.id);
+            fetchUserData(session.user.id).finally(() => setIsLoading(false));
           }, 0);
         } else {
           setRoles([]);
