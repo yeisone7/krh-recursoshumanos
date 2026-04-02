@@ -188,7 +188,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const location = useLocation();
   const { data: unifiedAlerts } = useUnifiedAlerts();
   const alertCount = unifiedAlerts?.length || 0;
-  const { canView, isAdmin, permissionsLoaded } = useAuth();
+  const { canView, isAdmin, isSuperAdmin, permissionsLoaded } = useAuth();
 
   // In mobile drawer mode, never collapse - always show full sidebar
   const isCollapsed = isMobileDrawer ? false : collapsed;
