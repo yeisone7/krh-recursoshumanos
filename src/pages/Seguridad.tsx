@@ -1,37 +1,17 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Shield, 
-  Users, 
-  Building2, 
-  UserPlus, 
-  Key,
   AlertTriangle,
-  CheckCircle2,
   Info,
   History,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useAdminUsers } from '@/hooks/useAdminUsers';
-import { UsersTable } from '@/components/admin/UsersTable';
-import { InviteUserDialog } from '@/components/admin/InviteUserDialog';
 import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
-import { RolesManager } from '@/components/roles/RolesManager';
 
 export default function Seguridad() {
-  const { isAdmin, roles, companies } = useAuth();
-  const { data: users = [], isLoading } = useAdminUsers();
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
-
-  // Calculate stats
-  const totalUsers = users.length;
-  const adminCount = users.filter(u => u.roles.includes('admin')).length;
-  const rrhhCount = users.filter(u => u.roles.includes('rrhh')).length;
-  const usersWithCenters = users.filter(u => u.centers.length > 0).length;
+  const { isAdmin, roles } = useAuth();
 
   if (!isAdmin) {
     return (
@@ -48,7 +28,7 @@ export default function Seguridad() {
               </div>
               <CardTitle>Acceso Restringido</CardTitle>
               <CardDescription>
-                No tienes permisos para acceder a esta sección. Solo los administradores pueden gestionar usuarios y roles.
+                No tienes permisos para acceder a esta sección. Solo los administradores pueden gestionar la seguridad.
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
@@ -77,100 +57,21 @@ export default function Seguridad() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Seguridad y Roles</h1>
-          <p className="text-muted-foreground">
-            Gestiona usuarios, roles y permisos de acceso
-          </p>
-        </div>
-        <Button onClick={() => setInviteDialogOpen(true)}>
-          <UserPlus className="w-4 h-4 mr-2" />
-          Invitar Usuario
-        </Button>
-      </motion.div>
-
-      {/* Stats Cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid gap-4 md:grid-cols-4"
-      >
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-primary/10">
-                <Users className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{totalUsers}</p>
-                <p className="text-sm text-muted-foreground">Usuarios Totales</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-destructive/10">
-                <Shield className="w-5 h-5 text-destructive" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{adminCount}</p>
-                <p className="text-sm text-muted-foreground">Administradores</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-accent/10">
-                <Key className="w-5 h-5 text-accent" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{rrhhCount}</p>
-                <p className="text-sm text-muted-foreground">Usuarios RRHH</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-lg bg-secondary">
-                <Building2 className="w-5 h-5 text-secondary-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{usersWithCenters}</p>
-                <p className="text-sm text-muted-foreground">Con Centros Asignados</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <h1 className="text-2xl font-bold text-foreground">Seguridad</h1>
+        <p className="text-muted-foreground">
+          Auditoría y políticas de seguridad del sistema
+        </p>
       </motion.div>
 
       {/* Main Content */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.1 }}
       >
-        <Tabs defaultValue="users" className="space-y-4">
+        <Tabs defaultValue="audit" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="users" className="gap-2">
-              <Users className="w-4 h-4" />
-              Usuarios
-            </TabsTrigger>
-            <TabsTrigger value="roles" className="gap-2">
-              <Shield className="w-4 h-4" />
-              Roles
-            </TabsTrigger>
             <TabsTrigger value="audit" className="gap-2">
               <History className="w-4 h-4" />
               Auditoría
@@ -181,16 +82,8 @@ export default function Seguridad() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="users" className="space-y-4">
-            <UsersTable users={users} isLoading={isLoading} />
-          </TabsContent>
-
           <TabsContent value="audit" className="space-y-4">
             <AuditLogViewer />
-          </TabsContent>
-
-          <TabsContent value="roles" className="space-y-4">
-            <RolesManager />
           </TabsContent>
 
           <TabsContent value="info" className="space-y-4">
@@ -239,12 +132,6 @@ export default function Seguridad() {
           </TabsContent>
         </Tabs>
       </motion.div>
-
-      {/* Invite Dialog */}
-      <InviteUserDialog 
-        open={inviteDialogOpen} 
-        onOpenChange={setInviteDialogOpen} 
-      />
     </div>
   );
 }
