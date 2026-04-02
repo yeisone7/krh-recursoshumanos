@@ -123,7 +123,7 @@ export function useDotationTransactions() {
 
 export function useCreateDotationTransaction() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (params: {
@@ -140,6 +140,7 @@ export function useCreateDotationTransaction() {
           delivered_by: params.delivered_by,
           observations: params.observations,
           created_by: user?.id,
+          company_id: currentCompanyId!,
         })
         .select()
         .single();

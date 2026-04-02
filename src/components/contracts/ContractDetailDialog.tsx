@@ -594,7 +594,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
         contractToEdit={{
           id: contract.id,
           employee_id: contract.employeeId,
-          contract_type: contract.contractType, // Pass directly - now using dynamic types from DB
+          contract_type: contract.contractType,
           start_date: contract.startDate.toISOString().split('T')[0],
           end_date: contract.originalEndDate?.toISOString().split('T')[0] || null,
           salary: contract.salary,
@@ -608,7 +608,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
           has_non_compete_clause: contract.hasNonCompeteClause || false,
           has_confidentiality_clause: contract.hasConfidentialityClause || false,
           special_clauses: null,
-          work_labor_description: null, // Objeto/labor para contratos obra_labor
+          work_labor_description: null,
           document_url: contract.documentUrl || null,
           contract_number: contract.contractNumber || null,
           is_terminated: status === 'terminated',
@@ -617,6 +617,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
           is_approved: contract.isApproved || false,
           approved_by: contract.approvedBy || null,
           approved_at: contract.approvedAt?.toISOString() || null,
+          company_id: '',
           created_at: '',
           updated_at: '',
           created_by: null,

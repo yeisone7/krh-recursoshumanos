@@ -51,7 +51,7 @@ export function useValidateExitExam() {
  */
 export function useCreateExitExam() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({ employeeId, examDate }: { employeeId: string; examDate: Date }) => {
@@ -66,6 +66,7 @@ export function useCreateExitExam() {
           provider: 'Por definir',
           doctor_name: 'Por definir',
           created_by: user?.id,
+          company_id: currentCompanyId!,
         })
         .select()
         .single();
