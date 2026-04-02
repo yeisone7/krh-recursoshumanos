@@ -134,6 +134,7 @@ export interface CreateVaccinationData {
 
 export function useCreateVaccination() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: CreateVaccinationData) => {
