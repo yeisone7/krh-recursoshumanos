@@ -326,7 +326,7 @@ export function useCreateContractExtension() {
 
       const { data, error } = await supabase
         .from('contract_extensions')
-        .insert({ ...extension, created_by: user?.id })
+        .insert({ ...extension, created_by: user?.id, company_id: currentCompanyId! })
         .select()
         .single();
 

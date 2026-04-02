@@ -137,13 +137,13 @@ export function useMedicalExam(id: string | undefined) {
 
 export function useCreateMedicalExam() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (exam: Omit<MedicalExamInsert, 'created_by'>) => {
       const { data, error } = await supabase
         .from('medical_exams')
-        .insert({ ...exam, created_by: user?.id })
+        .insert({ ...exam, created_by: user?.id, company_id: currentCompanyId! })
         .select()
         .single();
 

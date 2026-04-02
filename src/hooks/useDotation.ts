@@ -173,7 +173,7 @@ export function useCreateDotationDelivery() {
     mutationFn: async (delivery: Omit<DotationDeliveryInsert, 'created_by'>) => {
       const { data, error } = await supabase
         .from('dotation_deliveries')
-        .insert({ ...delivery, created_by: user?.id })
+        .insert({ ...delivery, created_by: user?.id, company_id: currentCompanyId! })
         .select()
         .single();
 
