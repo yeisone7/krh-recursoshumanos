@@ -262,6 +262,7 @@ export default function Evaluaciones() {
       employee_id: emp.id,
       evaluation_type: 'manager' as const,
       status: 'pending' as const,
+      company_id: currentCompanyId!,
     }));
 
     const { error } = await supabase
