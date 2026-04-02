@@ -263,6 +263,7 @@ export function useCreateShiftCycle() {
 
 export function useUpdateShiftCycle() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: {
