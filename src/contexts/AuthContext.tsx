@@ -118,6 +118,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Fetch dynamic permissions
     await fetchPermissions(userId);
+
+    // Check super admin status
+    const { data: saData } = await supabase
+      .from('super_admins')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    setIsSuperAdmin(!!saData);
+
+    // If super admin, fetch ALL companies
+    if (saData) {
+      const { data: allCompanies } = await supabase
+        .from('companies')
+        .select('id, name, nit')
+        .order('name');
+      if (allCompanies && allCompanies.length > 0) {
+        setCompanies(allCompanies);
+        if (!currentCompanyId) {
+          setCurrentCompanyId(allCompanies[0].id);
+        }
+      }
+    }
   };
 
   useEffect(() => {
