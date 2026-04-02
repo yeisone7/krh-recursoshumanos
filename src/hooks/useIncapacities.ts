@@ -394,7 +394,7 @@ export function useLinkReintegrationExam() {
 
 export function useCreateReintegrationExam() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
   
   return useMutation({
     mutationFn: async ({ incapacity }: { incapacity: IncapacityWithEmployee }) => {
