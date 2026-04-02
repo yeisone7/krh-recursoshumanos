@@ -76,14 +76,15 @@ export function useCandidate(id: string | undefined) {
 
 export function useCreateCandidate() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async (candidate: Omit<CandidateInsert, 'created_by'>) => {
+    mutationFn: async (candidate: Omit<CandidateInsert, 'created_by' | 'company_id'>) => {
       const { data, error } = await supabase
         .from('candidates')
         .insert({
           ...candidate,
+          company_id: currentCompanyId!,
           created_by: user?.id,
         })
         .select()
