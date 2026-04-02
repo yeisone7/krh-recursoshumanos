@@ -269,6 +269,7 @@ export function useAdvanceStatus() {
       const { error: timelineError } = await supabase
         .from('disciplinary_timeline')
         .insert({
+          company_id: currentCompanyId!,
           process_id: processId,
           action_type: newStatus,
           description: notes || `Cambio de estado a: ${newStatus}`,
