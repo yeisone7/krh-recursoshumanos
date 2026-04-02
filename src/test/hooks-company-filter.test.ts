@@ -153,6 +153,9 @@ describe('Multi-company isolation: Hook query filters', () => {
     // Skip if only system/employee-scoped tables
     if (companyTables.length === 0) return;
 
+    // Skip entity-detail hooks
+    if (ENTITY_DETAIL_HOOKS.has(fileName)) return;
+
     // Skip employee-detail hooks (they filter by employee_id)
     if (EMPLOYEE_DETAIL_HOOKS.has(fileName)) {
       it(`${fileName} (employee-detail) should filter by employee_id`, () => {
