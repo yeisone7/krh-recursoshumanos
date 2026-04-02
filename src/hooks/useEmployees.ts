@@ -559,6 +559,7 @@ export function useUpdateEmployee() {
         upsertOperations.push(
           supabase.from('employee_social_security').insert({
             employee_id: id,
+            company_id: currentCompanyId!,
             risk_level: data.riskLevel || null,
             arl: data.arl || null,
             eps: data.eps || null,
