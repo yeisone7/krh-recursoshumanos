@@ -58,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<PermissionEntry[]>([]);
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [hasAnyRole, setHasAnyRole] = useState(true); // default true to avoid flash
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const fetchPermissions = async (userId: string) => {
     try {
