@@ -177,7 +177,7 @@ export function useCreateContract() {
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async (contract: Omit<ContractInsert, 'created_by'>) => {
+    mutationFn: async (contract: Omit<ContractInsert, 'created_by' | 'company_id'>) => {
       // Check if employee already has an active contract
       const { data: existingContracts, error: checkError } = await supabase
         .from('contracts')
@@ -219,6 +219,7 @@ export function useCreateContract() {
           ...contract, 
           created_by: user?.id,
           contract_number: contractNumber,
+          company_id: currentCompanyId!,
         })
         .select()
         .single();
@@ -315,7 +316,7 @@ export function useCreateContractExtension() {
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async (extension: Omit<ContractExtensionInsert, 'created_by'>) => {
+    mutationFn: async (extension: Omit<ContractExtensionInsert, 'created_by' | 'company_id'>) => {
       // Get contract info for logging
       const { data: contract } = await supabase
         .from('contracts')
@@ -325,7 +326,7 @@ export function useCreateContractExtension() {
 
       const { data, error } = await supabase
         .from('contract_extensions')
-        .insert({ ...extension, created_by: user?.id })
+        .insert({ ...extension, created_by: user?.id, company_id: currentCompanyId! })
         .select()
         .single();
 

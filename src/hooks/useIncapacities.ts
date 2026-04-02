@@ -225,7 +225,7 @@ export function useCreateIncapacity() {
             employee_id: formData.employee_id,
             exam_type: 'reintegro' as const,
             exam_date: format(returnDate, 'yyyy-MM-dd'),
-            expiration_date: null, // Reintegration exams don't have an expiration
+            expiration_date: null,
             result: 'pendiente' as const,
             concept: `Examen de reintegro por incapacidad > 30 días (${totalChainDays} días totales)`,
             provider: '',
@@ -233,6 +233,7 @@ export function useCreateIncapacity() {
             restrictions: null,
             observations: `Creado automáticamente por incapacidad ID: ${data.id}. Diagnóstico: ${formData.diagnosis}`,
             created_by: user?.id,
+            company_id: currentCompanyId!,
           };
           
           const { data: examResult, error: examError } = await supabase
@@ -393,7 +394,7 @@ export function useLinkReintegrationExam() {
 
 export function useCreateReintegrationExam() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
   
   return useMutation({
     mutationFn: async ({ incapacity }: { incapacity: IncapacityWithEmployee }) => {
@@ -413,6 +414,7 @@ export function useCreateReintegrationExam() {
         restrictions: null,
         observations: `Creado para incapacidad ID: ${incapacity.id}. Diagnóstico: ${incapacity.diagnosis}`,
         created_by: user?.id,
+        company_id: currentCompanyId!,
       };
       
       const { data: examResult, error: examError } = await supabase
