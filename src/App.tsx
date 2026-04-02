@@ -184,6 +184,7 @@ const App = () => (
                       </Routes>
                     </AppLayout>
                     </NoRoleGuard>
+                    </CompanyGuard>
                   </OnboardingGuard>
                 </ProtectedRoute>
               }
