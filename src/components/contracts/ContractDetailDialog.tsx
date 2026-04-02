@@ -617,7 +617,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
           is_approved: contract.isApproved || false,
           approved_by: contract.approvedBy || null,
           approved_at: contract.approvedAt?.toISOString() || null,
-          company_id: contract.companyId || '',
+          company_id: '',
           created_at: '',
           updated_at: '',
           created_by: null,
