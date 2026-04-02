@@ -285,6 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isRRHH,
         isAuditor,
         isPsicologo,
+        isSuperAdmin,
         hasRole: hasRoleFn,
         permissions,
         permissionsLoaded,
