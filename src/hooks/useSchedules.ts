@@ -511,7 +511,7 @@ export function useShiftAssignments(options: {
 
 export function useCreateShiftAssignment() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (assignment: {
