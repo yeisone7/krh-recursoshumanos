@@ -112,7 +112,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }));
       setCompanies(userCompanies);
       if (!currentCompanyId && userCompanies.length > 0) {
-        setCurrentCompanyId(userCompanies[0].id);
+        // Restore last selected company from localStorage
+        const lastCompany = localStorage.getItem(`last_company_${userId}`);
+        if (lastCompany && userCompanies.some(c => c.id === lastCompany)) {
+          setCurrentCompanyId(lastCompany);
+        } else if (userCompanies.length === 1) {
+          setCurrentCompanyId(userCompanies[0].id);
+        }
+        // If multiple companies and no saved preference, leave null for CompanyGuard
       }
     }
 
