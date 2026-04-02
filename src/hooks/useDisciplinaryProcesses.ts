@@ -233,7 +233,7 @@ export function useUpdateDisciplinaryProcess() {
 
 export function useAdvanceStatus() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({
