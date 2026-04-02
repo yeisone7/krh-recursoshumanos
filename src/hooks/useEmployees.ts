@@ -219,6 +219,7 @@ export function useCreateEmployee() {
         // B. Contact
         supabase.from('employee_contact').insert({
           employee_id: employeeId,
+          company_id: currentCompanyId!,
           residence_department: data.residenceDepartment || null,
           residence_city: data.residenceCity || null,
           residence_address: data.residenceAddress || null,
