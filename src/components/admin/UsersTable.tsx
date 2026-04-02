@@ -113,6 +113,11 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
     setCenterDialogOpen(true);
   };
 
+  const handleManageCompanies = (user: AdminUser) => {
+    setSelectedUser(user);
+    setCompanyDialogOpen(true);
+  };
+
   const handleLinkEmployee = (user: AdminUser) => {
     setSelectedUser(user);
     setLinkDialogOpen(true);
