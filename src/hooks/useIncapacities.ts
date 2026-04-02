@@ -414,6 +414,7 @@ export function useCreateReintegrationExam() {
         restrictions: null,
         observations: `Creado para incapacidad ID: ${incapacity.id}. Diagnóstico: ${incapacity.diagnosis}`,
         created_by: user?.id,
+        company_id: currentCompanyId!,
       };
       
       const { data: examResult, error: examError } = await supabase

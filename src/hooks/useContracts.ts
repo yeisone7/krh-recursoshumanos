@@ -316,7 +316,7 @@ export function useCreateContractExtension() {
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async (extension: Omit<ContractExtensionInsert, 'created_by'>) => {
+    mutationFn: async (extension: Omit<ContractExtensionInsert, 'created_by' | 'company_id'>) => {
       // Get contract info for logging
       const { data: contract } = await supabase
         .from('contracts')

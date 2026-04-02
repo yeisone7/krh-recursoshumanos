@@ -124,6 +124,7 @@ export function useInitiateTermination() {
         is_required: true,
         is_generated: false,
         is_signed: false,
+        company_id: currentCompanyId!,
       }));
 
       const { error: docsError } = await supabase
