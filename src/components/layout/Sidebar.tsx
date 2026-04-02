@@ -632,7 +632,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         )}
 
         {/* Admin */}
-        {(showCatalogos || filteredAdminNavItems.length > 0) && (
+        {(showCatalogos || filteredAdminNavItems.length > 0 || isSuperAdmin) && (
           <>
             <SectionLabel label="Administración" />
             <div className="space-y-0.5">
