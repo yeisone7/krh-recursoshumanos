@@ -219,6 +219,7 @@ export function useCreateContract() {
           ...contract, 
           created_by: user?.id,
           contract_number: contractNumber,
+          company_id: currentCompanyId!,
         })
         .select()
         .single();
