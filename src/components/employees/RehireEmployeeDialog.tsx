@@ -98,6 +98,7 @@ export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmp
 
         await supabase.from('employee_contact').insert({
           employee_id: employee.id,
+          company_id: currentCompanyId!,
           email: lastContact?.email || null,
           mobile: lastContact?.mobile || null,
           phone: lastContact?.phone || null,

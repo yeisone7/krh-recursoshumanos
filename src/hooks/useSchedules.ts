@@ -244,6 +244,7 @@ export function useCreateShiftCycle() {
           .insert(
             data.days.map(day => ({
               shift_cycle_id: cycle.id,
+              company_id: currentCompanyId!,
               day_number: day.day_number,
               shift_id: day.shift_id,
             }))
@@ -262,6 +263,7 @@ export function useCreateShiftCycle() {
 
 export function useUpdateShiftCycle() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: {
@@ -296,6 +298,7 @@ export function useUpdateShiftCycle() {
             .insert(
               data.days.map(day => ({
                 shift_cycle_id: data.id,
+                company_id: currentCompanyId!,
                 day_number: day.day_number,
                 shift_id: day.shift_id,
               }))
@@ -391,7 +394,7 @@ export function useActiveEmployeeTimeConfig(employeeId: string) {
 
 export function useCreateEmployeeTimeConfig() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (config: {
@@ -416,6 +419,7 @@ export function useCreateEmployeeTimeConfig() {
         .from('employee_time_config')
         .insert({
           ...config,
+          company_id: currentCompanyId!,
           is_active: true,
           created_by: user?.id,
         })
@@ -510,7 +514,7 @@ export function useShiftAssignments(options: {
 
 export function useCreateShiftAssignment() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (assignment: {
@@ -524,6 +528,7 @@ export function useCreateShiftAssignment() {
         .from('employee_shift_assignments')
         .insert({
           ...assignment,
+          company_id: currentCompanyId!,
           source: assignment.source || 'manual',
           created_by: user?.id,
         })
@@ -541,7 +546,7 @@ export function useCreateShiftAssignment() {
 
 export function useCreateBulkShiftAssignments() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (assignments: {
@@ -557,6 +562,7 @@ export function useCreateBulkShiftAssignments() {
         .upsert(
           assignments.map(a => ({
             ...a,
+            company_id: currentCompanyId!,
             source: a.source || 'manual',
             created_by: user?.id,
           })),
