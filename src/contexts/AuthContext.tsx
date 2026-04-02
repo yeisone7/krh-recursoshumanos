@@ -143,7 +143,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (allCompanies && allCompanies.length > 0) {
         setCompanies(allCompanies);
         if (!currentCompanyId) {
-          setCurrentCompanyId(allCompanies[0].id);
+          const lastCompany = localStorage.getItem(`last_company_${userId}`);
+          if (lastCompany && allCompanies.some(c => c.id === lastCompany)) {
+            setCurrentCompanyId(lastCompany);
+          } else if (allCompanies.length === 1) {
+            setCurrentCompanyId(allCompanies[0].id);
+          }
         }
       }
     }
