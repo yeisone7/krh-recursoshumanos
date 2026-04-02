@@ -479,6 +479,7 @@ export function useRegisterAppeal() {
 
       // Create timeline entry
       await supabase.from('disciplinary_timeline').insert({
+        company_id: currentCompanyId!,
         process_id: processId,
         action_type: 'apelacion',
         description: `Apelación registrada: ${appealResolution.substring(0, 100)}...`,
