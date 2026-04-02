@@ -614,6 +614,7 @@ export function useUpdateEmployee() {
         upsertOperations.push(
           supabase.from('employee_schedule').insert({
             employee_id: id,
+            company_id: currentCompanyId!,
             payroll_type: data.payrollType || 'quincenal',
             shift_type_id: data.shiftTypeId || null,
             is_office_schedule: data.isOfficeSchedule ?? true,
