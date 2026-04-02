@@ -469,6 +469,7 @@ export function useUpdateEmployee() {
         upsertOperations.push(
           supabase.from('employee_contact').insert({
             employee_id: id,
+            company_id: currentCompanyId!,
             residence_department: data.residenceDepartment || null,
             residence_city: data.residenceCity || null,
             residence_address: data.residenceAddress || null,
