@@ -139,6 +139,7 @@ export function useCreateVaccination() {
       const { data: vac, error } = await supabase
         .from('employee_vaccinations')
         .insert({
+          company_id: currentCompanyId!,
           employee_id: data.employeeId,
           vaccine_type: data.vaccineType,
           vaccine_name: data.vaccineName || null,

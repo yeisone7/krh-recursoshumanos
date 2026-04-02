@@ -523,6 +523,7 @@ export function useAddDefense() {
       fileUrl?: string;
     }) => {
       const insertData = {
+        company_id: currentCompanyId!,
         process_id: processId,
         defense_date: format(data.defense_date, 'yyyy-MM-dd'),
         defense_type: data.defense_type,

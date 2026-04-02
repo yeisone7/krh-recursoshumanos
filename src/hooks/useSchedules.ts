@@ -559,6 +559,7 @@ export function useCreateBulkShiftAssignments() {
         .upsert(
           assignments.map(a => ({
             ...a,
+            company_id: currentCompanyId!,
             source: a.source || 'manual',
             created_by: user?.id,
           })),

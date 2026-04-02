@@ -642,6 +642,7 @@ export function useUpdateEmployee() {
         upsertOperations.push(
           supabase.from('employee_time_config').insert({
             employee_id: id,
+            company_id: currentCompanyId!,
             mode: data.timeMode,
             work_schedule_id: data.timeMode === 'administrative' ? data.workScheduleId : null,
             shift_cycle_id: data.timeMode === 'shift' ? data.shiftCycleId : null,

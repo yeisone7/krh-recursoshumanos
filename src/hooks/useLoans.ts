@@ -152,7 +152,7 @@ export function useRegisterPayment() {
       // Insert payment
       const { error: payError } = await supabase
         .from('employee_loan_payments')
-        .insert({ ...payment, created_by: user?.id });
+        .insert({ ...payment, company_id: currentCompanyId!, created_by: user?.id });
       if (payError) throw payError;
 
       // Update loan balances
