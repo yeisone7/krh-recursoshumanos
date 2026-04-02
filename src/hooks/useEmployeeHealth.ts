@@ -47,12 +47,14 @@ export interface CreateCertificationData {
 
 export function useCreateCertification() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: CreateCertificationData) => {
       const { data: cert, error } = await supabase
         .from('employee_certifications')
         .insert({
+          company_id: currentCompanyId!,
           employee_id: data.employeeId,
           certification_type: data.certificationType,
           certification_name: data.certificationName || null,
@@ -132,12 +134,14 @@ export interface CreateVaccinationData {
 
 export function useCreateVaccination() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: CreateVaccinationData) => {
       const { data: vac, error } = await supabase
         .from('employee_vaccinations')
         .insert({
+          company_id: currentCompanyId!,
           employee_id: data.employeeId,
           vaccine_type: data.vaccineType,
           vaccine_name: data.vaccineName || null,

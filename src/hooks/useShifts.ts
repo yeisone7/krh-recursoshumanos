@@ -144,7 +144,7 @@ export function useEmployeeShifts(employeeId?: string) {
 
 export function useCreateEmployeeShift() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (shift: {
@@ -158,6 +158,7 @@ export function useCreateEmployeeShift() {
         .from('employee_shifts')
         .insert({
           ...shift,
+          company_id: currentCompanyId!,
           created_by: user?.id,
         })
         .select()

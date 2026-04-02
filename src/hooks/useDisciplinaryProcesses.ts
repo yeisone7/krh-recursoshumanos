@@ -176,6 +176,7 @@ export function useCreateDisciplinaryProcess() {
 
       // Create initial timeline entry
       await supabase.from('disciplinary_timeline').insert({
+        company_id: currentCompanyId!,
         process_id: data.id,
         action_type: 'apertura',
         description: 'Apertura del proceso disciplinario',
@@ -232,7 +233,7 @@ export function useUpdateDisciplinaryProcess() {
 
 export function useAdvanceStatus() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -268,6 +269,7 @@ export function useAdvanceStatus() {
       const { error: timelineError } = await supabase
         .from('disciplinary_timeline')
         .insert({
+          company_id: currentCompanyId!,
           process_id: processId,
           action_type: newStatus,
           description: notes || `Cambio de estado a: ${newStatus}`,
@@ -300,7 +302,7 @@ export function useAdvanceStatus() {
 
 export function useSetDecision() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -339,6 +341,7 @@ export function useSetDecision() {
 
       // Create timeline entry
       await supabase.from('disciplinary_timeline').insert({
+        company_id: currentCompanyId!,
         process_id: processId,
         action_type: 'decision',
         description: `Decisión: ${sanctionType}. ${decisionSummary}`,
@@ -372,6 +375,7 @@ export function useSetDecision() {
 
 export function useAddEvidence() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -386,6 +390,7 @@ export function useAddEvidence() {
       fileName?: string;
     }) => {
       const insertData = {
+        company_id: currentCompanyId!,
         process_id: processId,
         evidence_type: data.evidence_type,
         description: data.description,
@@ -447,7 +452,7 @@ export function useDeleteEvidence() {
 
 export function useRegisterAppeal() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -475,6 +480,7 @@ export function useRegisterAppeal() {
 
       // Create timeline entry
       await supabase.from('disciplinary_timeline').insert({
+        company_id: currentCompanyId!,
         process_id: processId,
         action_type: 'apelacion',
         description: `Apelación registrada: ${appealResolution.substring(0, 100)}...`,
@@ -505,7 +511,7 @@ export function useRegisterAppeal() {
 
 export function useAddDefense() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -518,6 +524,7 @@ export function useAddDefense() {
       fileUrl?: string;
     }) => {
       const insertData = {
+        company_id: currentCompanyId!,
         process_id: processId,
         defense_date: format(data.defense_date, 'yyyy-MM-dd'),
         defense_type: data.defense_type,

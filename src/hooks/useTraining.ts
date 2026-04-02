@@ -257,12 +257,14 @@ export function useSessionAttendance(sessionId: string | undefined) {
 
 export function useEnrollEmployee() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: EnrollEmployeeData) => {
       const { data: attendance, error } = await supabase
         .from('training_attendance')
         .insert({
+          company_id: currentCompanyId!,
           session_id: data.sessionId,
           employee_id: data.employeeId,
           attendance_status: 'inscrito',
@@ -715,7 +717,7 @@ export function useTrainingMedia(courseId: string | undefined) {
 
 export function useCreateTrainingMedia() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: {
@@ -732,6 +734,7 @@ export function useCreateTrainingMedia() {
       const { data: media, error } = await supabase
         .from('training_media')
         .insert({
+          company_id: currentCompanyId!,
           course_id: data.courseId,
           type: data.type,
           title: data.title,

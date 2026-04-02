@@ -219,6 +219,7 @@ export function useCreateEmployee() {
         // B. Contact
         supabase.from('employee_contact').insert({
           employee_id: employeeId,
+          company_id: currentCompanyId!,
           residence_department: data.residenceDepartment || null,
           residence_city: data.residenceCity || null,
           residence_address: data.residenceAddress || null,
@@ -235,6 +236,7 @@ export function useCreateEmployee() {
         // C. Family (legacy table - keep for backward compat)
         supabase.from('employee_family').insert({
           employee_id: employeeId,
+          company_id: currentCompanyId!,
           spouse_name: null,
           spouse_gender: null,
           spouse_birth_date: null,
@@ -275,6 +277,7 @@ export function useCreateEmployee() {
         // E. Social Security
         supabase.from('employee_social_security').insert({
           employee_id: employeeId,
+          company_id: currentCompanyId!,
           risk_level: data.riskLevel || null,
           arl: data.arl || null,
           eps: data.eps || null,
@@ -287,6 +290,7 @@ export function useCreateEmployee() {
         // F. Bank Info
         supabase.from('employee_bank_info').insert({
           employee_id: employeeId,
+          company_id: currentCompanyId!,
           bank_name: data.bankName || null,
           account_type: data.accountType || null,
           account_number: data.accountNumber || null,
@@ -296,6 +300,7 @@ export function useCreateEmployee() {
         // J. Schedule
         supabase.from('employee_schedule').insert({
           employee_id: employeeId,
+          company_id: currentCompanyId!,
           payroll_type: data.payrollType || 'quincenal',
           shift_type_id: data.shiftTypeId || null,
           is_office_schedule: data.isOfficeSchedule ?? true,
@@ -305,6 +310,7 @@ export function useCreateEmployee() {
         // K. Time Config (Modalidad de Tiempo)
         supabase.from('employee_time_config').insert({
           employee_id: employeeId,
+          company_id: currentCompanyId!,
           mode: data.timeMode,
           work_schedule_id: data.timeMode === 'administrative' ? data.workScheduleId : null,
           shift_cycle_id: data.timeMode === 'shift' ? data.shiftCycleId : null,
@@ -463,6 +469,7 @@ export function useUpdateEmployee() {
         upsertOperations.push(
           supabase.from('employee_contact').insert({
             employee_id: id,
+            company_id: currentCompanyId!,
             residence_department: data.residenceDepartment || null,
             residence_city: data.residenceCity || null,
             residence_address: data.residenceAddress || null,
@@ -552,6 +559,7 @@ export function useUpdateEmployee() {
         upsertOperations.push(
           supabase.from('employee_social_security').insert({
             employee_id: id,
+            company_id: currentCompanyId!,
             risk_level: data.riskLevel || null,
             arl: data.arl || null,
             eps: data.eps || null,
@@ -580,6 +588,7 @@ export function useUpdateEmployee() {
         upsertOperations.push(
           supabase.from('employee_bank_info').insert({
             employee_id: id,
+            company_id: currentCompanyId!,
             bank_name: data.bankName || null,
             account_type: data.accountType || null,
             account_number: data.accountNumber || null,
@@ -605,6 +614,7 @@ export function useUpdateEmployee() {
         upsertOperations.push(
           supabase.from('employee_schedule').insert({
             employee_id: id,
+            company_id: currentCompanyId!,
             payroll_type: data.payrollType || 'quincenal',
             shift_type_id: data.shiftTypeId || null,
             is_office_schedule: data.isOfficeSchedule ?? true,
@@ -632,6 +642,7 @@ export function useUpdateEmployee() {
         upsertOperations.push(
           supabase.from('employee_time_config').insert({
             employee_id: id,
+            company_id: currentCompanyId!,
             mode: data.timeMode,
             work_schedule_id: data.timeMode === 'administrative' ? data.workScheduleId : null,
             shift_cycle_id: data.timeMode === 'shift' ? data.shiftCycleId : null,

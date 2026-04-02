@@ -145,14 +145,14 @@ export function useDeleteLoan() {
 
 export function useRegisterPayment() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (payment: Omit<LoanPayment, 'id' | 'created_at' | 'created_by'>) => {
       // Insert payment
       const { error: payError } = await supabase
         .from('employee_loan_payments')
-        .insert({ ...payment, created_by: user?.id });
+        .insert({ ...payment, company_id: currentCompanyId!, created_by: user?.id });
       if (payError) throw payError;
 
       // Update loan balances
