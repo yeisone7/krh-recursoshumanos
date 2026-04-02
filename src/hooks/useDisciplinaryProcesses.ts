@@ -176,6 +176,7 @@ export function useCreateDisciplinaryProcess() {
 
       // Create initial timeline entry
       await supabase.from('disciplinary_timeline').insert({
+        company_id: currentCompanyId!,
         process_id: data.id,
         action_type: 'apertura',
         description: 'Apertura del proceso disciplinario',
