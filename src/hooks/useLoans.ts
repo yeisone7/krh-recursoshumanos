@@ -145,7 +145,7 @@ export function useDeleteLoan() {
 
 export function useRegisterPayment() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (payment: Omit<LoanPayment, 'id' | 'created_at' | 'created_by'>) => {
