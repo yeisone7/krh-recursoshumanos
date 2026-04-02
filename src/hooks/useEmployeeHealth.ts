@@ -53,6 +53,7 @@ export function useCreateCertification() {
       const { data: cert, error } = await supabase
         .from('employee_certifications')
         .insert({
+          company_id: currentCompanyId!,
           employee_id: data.employeeId,
           certification_type: data.certificationType,
           certification_name: data.certificationName || null,
