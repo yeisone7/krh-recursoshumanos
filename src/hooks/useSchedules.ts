@@ -416,6 +416,7 @@ export function useCreateEmployeeTimeConfig() {
         .from('employee_time_config')
         .insert({
           ...config,
+          company_id: currentCompanyId!,
           is_active: true,
           created_by: user?.id,
         })
