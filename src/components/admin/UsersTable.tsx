@@ -84,6 +84,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [centerDialogOpen, setCenterDialogOpen] = useState(false);
+  const [companyDialogOpen, setCompanyDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [deactivateReason, setDeactivateReason] = useState('');
