@@ -35,6 +35,7 @@ import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, User
 import { Input } from '@/components/ui/input';
 import { UserRoleDialog } from './UserRoleDialog';
 import { UserCenterDialog } from './UserCenterDialog';
+import { UserCompanyDialog } from './UserCompanyDialog';
 import { LinkEmployeeDialog } from './LinkEmployeeDialog';
 import { useRemoveCompanyAssignment, useToggleUserStatus, type AdminUser } from '@/hooks/useAdminUsers';
 import { useAuth } from '@/contexts/AuthContext';
@@ -83,6 +84,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [centerDialogOpen, setCenterDialogOpen] = useState(false);
+  const [companyDialogOpen, setCompanyDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [deactivateReason, setDeactivateReason] = useState('');
@@ -109,6 +111,11 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const handleManageCenters = (user: AdminUser) => {
     setSelectedUser(user);
     setCenterDialogOpen(true);
+  };
+
+  const handleManageCompanies = (user: AdminUser) => {
+    setSelectedUser(user);
+    setCompanyDialogOpen(true);
   };
 
   const handleLinkEmployee = (user: AdminUser) => {
@@ -348,6 +355,10 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                         <MapPin className="w-4 h-4 mr-2" />
                         Asignar Centros
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleManageCompanies(user)}>
+                        <Building2 className="w-4 h-4 mr-2" />
+                        Asignar Empresas
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleLinkEmployee(user)}>
                         <Link className="w-4 h-4 mr-2" />
                         Vincular Empleado
@@ -397,6 +408,12 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         user={selectedUser}
         open={centerDialogOpen}
         onOpenChange={setCenterDialogOpen}
+      />
+
+      <UserCompanyDialog
+        user={selectedUser}
+        open={companyDialogOpen}
+        onOpenChange={setCompanyDialogOpen}
       />
 
       <LinkEmployeeDialog
