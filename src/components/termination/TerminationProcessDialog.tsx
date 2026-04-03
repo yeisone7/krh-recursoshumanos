@@ -528,6 +528,18 @@ export function TerminationProcessDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Transfer dialog after termination completion */}
+      {employeeData && (
+        <TransferEmployeeDialog
+          open={showTransferDialog}
+          onOpenChange={(open) => {
+            setShowTransferDialog(open);
+            if (!open) onOpenChange(false);
+          }}
+          employee={employeeData}
+        />
+      )}
     </>
   );
 }
