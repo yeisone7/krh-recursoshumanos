@@ -66,6 +66,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CandidateHistoryLink } from './CandidateHistoryLink';
 import { TransferEmployeeDialog } from './TransferEmployeeDialog';
+import { useEmployeeTransfers } from '@/hooks/useEmployeeTransfer';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   documentTypeLabels,
   genderLabels,
