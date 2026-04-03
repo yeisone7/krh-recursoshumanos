@@ -110,6 +110,11 @@ export default function Empleados() {
     setIsRehireOpen(true);
   };
 
+  const handleTransfer = (employee: any) => {
+    setTransferEmployee(employee);
+    setIsTransferOpen(true);
+  };
+
   const filteredEmployees = useMemo(() => {
     if (!employees) return [];
     return employees.filter((emp) => {
