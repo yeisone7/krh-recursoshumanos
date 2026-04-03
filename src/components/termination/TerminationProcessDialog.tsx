@@ -504,8 +504,11 @@ export function TerminationProcessDialog({
                     className={cn(!checklist.canFinalize && 'opacity-50')}
                   >
                     {completeTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Finalizar Proceso
+                    {termination?.terminationType === 'traslado' ? (
+                      <><ArrowRightLeft className="w-4 h-4 mr-2" /> Finalizar y Trasladar</>
+                    ) : (
+                      <><CheckCircle2 className="w-4 h-4 mr-2" /> Finalizar Proceso</>
+                    )}
                   </Button>
                 </div>
 
