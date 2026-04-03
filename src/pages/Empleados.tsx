@@ -23,6 +23,7 @@ import { EmployeeDetailDialog } from '@/components/employees/EmployeeDetailDialo
 import { CertificationAlertsPanel } from '@/components/employees/CertificationAlertsPanel';
 import { EmployeeCard } from '@/components/employees/EmployeeCard';
 import { RehireEmployeeDialog } from '@/components/employees/RehireEmployeeDialog';
+import { TransferEmployeeDialog } from '@/components/employees/TransferEmployeeDialog';
 import { GenerateRegistrationLinkDialog } from '@/components/registration/GenerateRegistrationLinkDialog';
 import { RegistrationTokensList } from '@/components/registration/RegistrationTokensList';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -47,6 +48,8 @@ export default function Empleados() {
   const [isRehireOpen, setIsRehireOpen] = useState(false);
   const [showGenerateLink, setShowGenerateLink] = useState(false);
   const [showTokensList, setShowTokensList] = useState(false);
+  const [transferEmployee, setTransferEmployee] = useState<any>(null);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
 
   const { currentCompanyId } = useAuth();
   const { data: employees, isLoading } = useEmployees();
@@ -105,6 +108,11 @@ export default function Empleados() {
   const handleRehire = (employee: any) => {
     setRehireEmployee(employee);
     setIsRehireOpen(true);
+  };
+
+  const handleTransfer = (employee: any) => {
+    setTransferEmployee(employee);
+    setIsTransferOpen(true);
   };
 
   const filteredEmployees = useMemo(() => {
@@ -358,9 +366,21 @@ export default function Empleados() {
               onViewContract={handleViewContract}
               onViewDocuments={handleViewDocuments}
               onRehire={handleRehire}
+              onTransfer={handleTransfer}
             />
           ))}
         </div>
+      )}
+
+      {transferEmployee && (
+        <TransferEmployeeDialog
+          open={isTransferOpen}
+          onOpenChange={(open) => {
+            setIsTransferOpen(open);
+            if (!open) setTransferEmployee(null);
+          }}
+          employee={transferEmployee}
+        />
       )}
     </div>
   );

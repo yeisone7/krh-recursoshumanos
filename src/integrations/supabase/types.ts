@@ -3611,6 +3611,77 @@ export type Database = {
           },
         ]
       }
+      employee_transfers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          source_company_id: string
+          source_employee_id: string
+          status: Database["public"]["Enums"]["transfer_status"]
+          target_company_id: string
+          target_employee_id: string | null
+          transfer_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          source_company_id: string
+          source_employee_id: string
+          status?: Database["public"]["Enums"]["transfer_status"]
+          target_company_id: string
+          target_employee_id?: string | null
+          transfer_date?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          source_company_id?: string
+          source_employee_id?: string
+          status?: Database["public"]["Enums"]["transfer_status"]
+          target_company_id?: string
+          target_employee_id?: string | null
+          transfer_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_transfers_source_company_id_fkey"
+            columns: ["source_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_transfers_source_employee_id_fkey"
+            columns: ["source_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_transfers_target_company_id_fkey"
+            columns: ["target_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_transfers_target_employee_id_fkey"
+            columns: ["target_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_user_links: {
         Row: {
           employee_id: string
@@ -8925,6 +8996,7 @@ export type Database = {
         | "renuncia"
       training_modality: "presencial" | "virtual" | "mixto"
       training_status: "programado" | "en_curso" | "completado" | "cancelado"
+      transfer_status: "pending" | "completed" | "cancelled"
       vacancy_reason:
         | "new_position"
         | "replacement"
@@ -9347,6 +9419,7 @@ export const Constants = {
       ],
       training_modality: ["presencial", "virtual", "mixto"],
       training_status: ["programado", "en_curso", "completado", "cancelado"],
+      transfer_status: ["pending", "completed", "cancelled"],
       vacancy_reason: [
         "new_position",
         "replacement",
