@@ -387,6 +387,20 @@ export function TerminationProcessDialog({
                     />
                   )}
 
+                  {form.watch('terminationType') === 'traslado' && (
+                    <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <ArrowRightLeft className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-primary">Retiro por traslado</p>
+                          <p className="text-muted-foreground mt-1">
+                            Al finalizar el proceso de retiro, se abrirá el asistente de traslado para copiar los datos del empleado a la empresa destino.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+
                   <FormField
                     control={form.control}
                     name="reason"
