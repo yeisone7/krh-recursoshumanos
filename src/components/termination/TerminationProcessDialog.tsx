@@ -14,6 +14,7 @@ import {
   ClipboardList,
   Save,
   FileType,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -80,7 +81,8 @@ import type { TerminationDocumentData } from '@/types/termination';
 import { Contract, contractTypeLabels } from '@/types/contract';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-
+import { TransferEmployeeDialog } from '@/components/employees/TransferEmployeeDialog';
+import { useEmployee } from '@/hooks/useEmployees';
 interface TerminationProcessDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -96,6 +98,9 @@ export function TerminationProcessDialog({
   const [step, setStep] = useState<'initiate' | 'checklist'>('initiate');
   const [companyData, setCompanyData] = useState<any>(null);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
+
+  const { data: employeeData } = useEmployee(contract.employeeId);
 
   const { data: termination, isLoading } = useContractTerminationProcess(contract.id);
   const initiateTermination = useInitiateTermination();
@@ -248,7 +253,12 @@ export function TerminationProcessDialog({
       reason: termination.reason,
     });
     
-    onOpenChange(false);
+    // If this is a transfer termination, open the transfer dialog
+    if (termination.terminationType === 'traslado' && employeeData) {
+      setShowTransferDialog(true);
+    } else {
+      onOpenChange(false);
+    }
   };
 
   return (
@@ -377,6 +387,20 @@ export function TerminationProcessDialog({
                     />
                   )}
 
+                  {form.watch('terminationType') === 'traslado' && (
+                    <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <ArrowRightLeft className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                        <div className="text-sm">
+                          <p className="font-medium text-primary">Retiro por traslado</p>
+                          <p className="text-muted-foreground mt-1">
+                            Al finalizar el proceso de retiro, se abrirá el asistente de traslado para copiar los datos del empleado a la empresa destino.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <FormField
                     control={form.control}
                     name="reason"
@@ -480,8 +504,11 @@ export function TerminationProcessDialog({
                     className={cn(!checklist.canFinalize && 'opacity-50')}
                   >
                     {completeTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Finalizar Proceso
+                    {termination?.terminationType === 'traslado' ? (
+                      <><ArrowRightLeft className="w-4 h-4 mr-2" /> Finalizar y Trasladar</>
+                    ) : (
+                      <><CheckCircle2 className="w-4 h-4 mr-2" /> Finalizar Proceso</>
+                    )}
                   </Button>
                 </div>
 
@@ -518,6 +545,18 @@ export function TerminationProcessDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Transfer dialog after termination completion */}
+      {employeeData && (
+        <TransferEmployeeDialog
+          open={showTransferDialog}
+          onOpenChange={(open) => {
+            setShowTransferDialog(open);
+            if (!open) onOpenChange(false);
+          }}
+          employee={employeeData}
+        />
+      )}
     </>
   );
 }
