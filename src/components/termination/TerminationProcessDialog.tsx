@@ -253,7 +253,12 @@ export function TerminationProcessDialog({
       reason: termination.reason,
     });
     
-    onOpenChange(false);
+    // If this is a transfer termination, open the transfer dialog
+    if (termination.terminationType === 'traslado' && employeeData) {
+      setShowTransferDialog(true);
+    } else {
+      onOpenChange(false);
+    }
   };
 
   return (
