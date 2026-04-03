@@ -350,6 +350,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const [isVacFormOpen, setIsVacFormOpen] = useState(false);
   const [isDocFormOpen, setIsDocFormOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isContractFormOpen, setIsContractFormOpen] = useState(false);
   const [contractPreselect, setContractPreselect] = useState<{
     id: string;
