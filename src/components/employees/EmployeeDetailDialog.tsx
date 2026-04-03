@@ -1093,6 +1093,11 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
               workCity: contractPreselect.workCity,
             } : undefined}
           />
+          <TransferEmployeeDialog
+            open={isTransferOpen}
+            onOpenChange={setIsTransferOpen}
+            employee={employee}
+          />
         </>
       )}
     </Dialog>
