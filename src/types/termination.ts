@@ -106,6 +106,14 @@ export const requiredDocumentsByType: Record<TerminationType, TerminationDocumen
     'examen_egreso',
     'retiro_cesantias',
   ],
+  traslado: [
+    'acta_terminacion',
+    'notificacion_aportes',
+    'certificado_laboral',
+    'paz_y_salvo',
+    'examen_egreso',
+    'retiro_cesantias',
+  ],
 };
 
 // Termination document interface
