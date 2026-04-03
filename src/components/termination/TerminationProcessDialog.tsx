@@ -399,7 +399,7 @@ export function TerminationProcessDialog({
                         </div>
                       </div>
                     </div>
-                  )
+                  )}
 
                   <FormField
                     control={form.control}
