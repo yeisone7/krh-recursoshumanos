@@ -7,7 +7,8 @@ export type TerminationType =
   | 'periodo_prueba'     // 03 - Terminación por periodo de prueba
   | 'obra_labor'         // 04 - Terminación por obra labor
   | 'sin_justa_causa'    // 05 - Terminación sin justa causa
-  | 'renuncia';          // 07 - Aceptación de renuncia
+  | 'renuncia'           // 07 - Aceptación de renuncia
+  | 'traslado';          // 08 - Retiro por traslado a otra empresa
 
 // Termination document types enum
 export type TerminationDocumentType = 
