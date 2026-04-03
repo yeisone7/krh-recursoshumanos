@@ -66,6 +66,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CandidateHistoryLink } from './CandidateHistoryLink';
 import { TransferEmployeeDialog } from './TransferEmployeeDialog';
+import { useEmployeeTransfers } from '@/hooks/useEmployeeTransfer';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   documentTypeLabels,
   genderLabels,
@@ -367,6 +369,10 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const deleteCertification = useDeleteCertification();
   const deleteVaccination = useDeleteVaccination();
   const deleteDocument = useDeleteDocument();
+  const { data: transfers } = useEmployeeTransfers(employeeId || undefined);
+  const { currentCompanyId } = useAuth();
+  const transferAsSource = transfers?.find(t => (t as any).source_employee_id === employeeId && (t as any).status === 'completed');
+  const transferAsTarget = transfers?.find(t => (t as any).target_employee_id === employeeId && (t as any).status === 'completed');
 
   if (!employeeId) return null;
 
@@ -493,6 +499,18 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     {employee.work_info?.link_type && (
                       <Badge variant="outline" className="text-[11px] text-primary-foreground/90 border-primary-foreground/30 bg-primary-foreground/10">
                         {linkTypeLabels[employee.work_info.link_type]}
+                      </Badge>
+                    )}
+                    {transferAsSource && (
+                      <Badge variant="outline" className="text-[11px] bg-primary/80 text-primary-foreground border-primary/50 gap-1">
+                        <ArrowRightLeft className="w-3 h-3" />
+                        Trasladado
+                      </Badge>
+                    )}
+                    {transferAsTarget && (
+                      <Badge variant="outline" className="text-[11px] bg-accent/80 text-primary-foreground border-accent/50 gap-1">
+                        <ArrowRightLeft className="w-3 h-3" />
+                        Recibido por traslado
                       </Badge>
                     )}
                   </div>

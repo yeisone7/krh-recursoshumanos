@@ -7,7 +7,8 @@ export type TerminationType =
   | 'periodo_prueba'     // 03 - Terminación por periodo de prueba
   | 'obra_labor'         // 04 - Terminación por obra labor
   | 'sin_justa_causa'    // 05 - Terminación sin justa causa
-  | 'renuncia';          // 07 - Aceptación de renuncia
+  | 'renuncia'           // 07 - Aceptación de renuncia
+  | 'traslado';          // 08 - Retiro por traslado a otra empresa
 
 // Termination document types enum
 export type TerminationDocumentType = 
@@ -28,6 +29,7 @@ export const terminationTypeLabels: Record<TerminationType, string> = {
   obra_labor: 'Finalización Obra o Labor',
   sin_justa_causa: 'Sin Justa Causa',
   renuncia: 'Renuncia Voluntaria',
+  traslado: 'Traslado a Otra Empresa',
 };
 
 // Labels for document types
@@ -104,6 +106,14 @@ export const requiredDocumentsByType: Record<TerminationType, TerminationDocumen
     'examen_egreso',
     'retiro_cesantias',
   ],
+  traslado: [
+    'acta_terminacion',
+    'notificacion_aportes',
+    'certificado_laboral',
+    'paz_y_salvo',
+    'examen_egreso',
+    'retiro_cesantias',
+  ],
 };
 
 // Termination document interface
@@ -150,6 +160,7 @@ export const initiateTerminationSchema = z.object({
     'obra_labor',
     'sin_justa_causa',
     'renuncia',
+    'traslado',
   ] as const, {
     required_error: 'Seleccione el tipo de terminación',
   }),
