@@ -81,7 +81,8 @@ import type { TerminationDocumentData } from '@/types/termination';
 import { Contract, contractTypeLabels } from '@/types/contract';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-
+import { TransferEmployeeDialog } from '@/components/employees/TransferEmployeeDialog';
+import { useEmployee } from '@/hooks/useEmployees';
 interface TerminationProcessDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
