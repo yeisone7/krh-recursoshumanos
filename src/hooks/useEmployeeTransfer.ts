@@ -148,6 +148,7 @@ export function useExecuteTransfer() {
         const f = familyRes.data;
         await supabase.from('employee_family').insert({
           employee_id: newId,
+          company_id: targetCompanyId,
           spouse_name: f.spouse_name,
           spouse_gender: f.spouse_gender,
           spouse_birth_date: f.spouse_birth_date,
