@@ -98,6 +98,9 @@ export function TerminationProcessDialog({
   const [step, setStep] = useState<'initiate' | 'checklist'>('initiate');
   const [companyData, setCompanyData] = useState<any>(null);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
+
+  const { data: employeeData } = useEmployee(contract.employeeId);
 
   const { data: termination, isLoading } = useContractTerminationProcess(contract.id);
   const initiateTermination = useInitiateTermination();
