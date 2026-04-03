@@ -34,6 +34,7 @@ interface EmployeeCardProps {
   onViewContract: (id: string) => void;
   onViewDocuments: (id: string) => void;
   onRehire?: (employee: any) => void;
+  onTransfer?: (employee: any) => void;
 }
 
 export function EmployeeCard({
