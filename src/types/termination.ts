@@ -160,6 +160,7 @@ export const initiateTerminationSchema = z.object({
     'obra_labor',
     'sin_justa_causa',
     'renuncia',
+    'traslado',
   ] as const, {
     required_error: 'Seleccione el tipo de terminación',
   }),
