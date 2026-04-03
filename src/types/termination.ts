@@ -29,6 +29,7 @@ export const terminationTypeLabels: Record<TerminationType, string> = {
   obra_labor: 'Finalización Obra o Labor',
   sin_justa_causa: 'Sin Justa Causa',
   renuncia: 'Renuncia Voluntaria',
+  traslado: 'Traslado a Otra Empresa',
 };
 
 // Labels for document types
