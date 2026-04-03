@@ -117,6 +117,15 @@ export function EmployeeCard({
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDocuments(employee.id); }}>
                 Documentos
               </DropdownMenuItem>
+              {!isRetired && onTransfer && (
+                <DropdownMenuItem 
+                  onClick={(e) => { e.stopPropagation(); onTransfer(employee); }}
+                  className="text-primary font-medium"
+                >
+                  <ArrowRightLeft className="w-4 h-4 mr-2" />
+                  Trasladar a otra empresa
+                </DropdownMenuItem>
+              )}
               {isRetired && onRehire && (
                 <DropdownMenuItem 
                   onClick={(e) => { e.stopPropagation(); onRehire(employee); }}
