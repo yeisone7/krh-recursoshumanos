@@ -110,6 +110,7 @@ export function useExecuteTransfer() {
         const c = contactRes.data;
         await supabase.from('employee_contact').insert({
           employee_id: newId,
+          company_id: targetCompanyId,
           residence_department: c.residence_department,
           residence_city: c.residence_city,
           residence_address: c.residence_address,
