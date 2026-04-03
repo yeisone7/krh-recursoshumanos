@@ -366,9 +366,21 @@ export default function Empleados() {
               onViewContract={handleViewContract}
               onViewDocuments={handleViewDocuments}
               onRehire={handleRehire}
+              onTransfer={handleTransfer}
             />
           ))}
         </div>
+      )}
+
+      {transferEmployee && (
+        <TransferEmployeeDialog
+          open={isTransferOpen}
+          onOpenChange={(open) => {
+            setIsTransferOpen(open);
+            if (!open) setTransferEmployee(null);
+          }}
+          employee={transferEmployee}
+        />
       )}
     </div>
   );
