@@ -131,6 +131,7 @@ export function useExecuteTransfer() {
         const s = socialRes.data;
         await supabase.from('employee_social_security').insert({
           employee_id: newId,
+          company_id: targetCompanyId,
           risk_level: s.risk_level,
           arl: s.arl,
           eps: s.eps,
