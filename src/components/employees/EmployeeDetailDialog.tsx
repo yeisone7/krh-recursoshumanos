@@ -36,7 +36,8 @@ import {
   Upload,
   AlertTriangle,
   History,
-  ScrollText
+  ScrollText,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { OnboardingChecklist } from '@/components/employees/OnboardingChecklist';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -64,6 +65,7 @@ import { DocumentFormDialog } from './DocumentFormDialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CandidateHistoryLink } from './CandidateHistoryLink';
+import { TransferEmployeeDialog } from './TransferEmployeeDialog';
 import {
   documentTypeLabels,
   genderLabels,
@@ -349,6 +351,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const [isVacFormOpen, setIsVacFormOpen] = useState(false);
   const [isDocFormOpen, setIsDocFormOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isContractFormOpen, setIsContractFormOpen] = useState(false);
   const [contractPreselect, setContractPreselect] = useState<{
     id: string;
@@ -520,6 +523,17 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     )}
                   </div>
                 </div>
+                {employee.is_active && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setIsTransferOpen(true)}
+                    className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 shrink-0"
+                    title="Trasladar a otra empresa"
+                  >
+                    <ArrowRightLeft className="w-4 h-4" />
+                  </Button>
+                )}
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -1078,6 +1092,11 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
               areaId: contractPreselect.areaId,
               workCity: contractPreselect.workCity,
             } : undefined}
+          />
+          <TransferEmployeeDialog
+            open={isTransferOpen}
+            onOpenChange={setIsTransferOpen}
+            employee={employee}
           />
         </>
       )}
