@@ -178,6 +178,7 @@ export function useExecuteTransfer() {
         const b = bankRes.data;
         await supabase.from('employee_bank_info').insert({
           employee_id: newId,
+          company_id: targetCompanyId,
           bank_name: b.bank_name,
           account_type: b.account_type,
           account_number: b.account_number,
