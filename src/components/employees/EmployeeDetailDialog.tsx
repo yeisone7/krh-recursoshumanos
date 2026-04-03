@@ -501,6 +501,18 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                         {linkTypeLabels[employee.work_info.link_type]}
                       </Badge>
                     )}
+                    {transferAsSource && (
+                      <Badge variant="outline" className="text-[11px] bg-primary/80 text-primary-foreground border-primary/50 gap-1">
+                        <ArrowRightLeft className="w-3 h-3" />
+                        Trasladado
+                      </Badge>
+                    )}
+                    {transferAsTarget && (
+                      <Badge variant="outline" className="text-[11px] bg-accent/80 text-primary-foreground border-accent/50 gap-1">
+                        <ArrowRightLeft className="w-3 h-3" />
+                        Recibido por traslado
+                      </Badge>
+                    )}
                   </div>
                   <h2 className="text-xl font-display font-bold text-primary-foreground leading-tight">
                     {employeeFullName}
