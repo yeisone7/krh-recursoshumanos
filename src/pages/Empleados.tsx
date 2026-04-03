@@ -48,6 +48,8 @@ export default function Empleados() {
   const [isRehireOpen, setIsRehireOpen] = useState(false);
   const [showGenerateLink, setShowGenerateLink] = useState(false);
   const [showTokensList, setShowTokensList] = useState(false);
+  const [transferEmployee, setTransferEmployee] = useState<any>(null);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
 
   const { currentCompanyId } = useAuth();
   const { data: employees, isLoading } = useEmployees();
