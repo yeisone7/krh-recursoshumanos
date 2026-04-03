@@ -369,6 +369,10 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const deleteCertification = useDeleteCertification();
   const deleteVaccination = useDeleteVaccination();
   const deleteDocument = useDeleteDocument();
+  const { data: transfers } = useEmployeeTransfers(employeeId || undefined);
+  const { currentCompanyId } = useAuth();
+  const transferAsSource = transfers?.find(t => (t as any).source_employee_id === employeeId && (t as any).status === 'completed');
+  const transferAsTarget = transfers?.find(t => (t as any).target_employee_id === employeeId && (t as any).status === 'completed');
 
   if (!employeeId) return null;
 
