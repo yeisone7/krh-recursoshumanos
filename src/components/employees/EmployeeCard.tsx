@@ -51,7 +51,7 @@ export function EmployeeCard({
   const navigate = useNavigate();
 
   const isNew = employee.created_at && (Date.now() - new Date(employee.created_at).getTime()) < 10 * 24 * 60 * 60 * 1000;
-  const isRetired = employee.status === 'retired' || employee.status === 'en_retiro';
+  const isRetired = employee.status === 'retired' || employee.status === 'en_retiro' || !employee.is_active;
   const isEnRetiro = employee.status === 'en_retiro';
 
   return (
