@@ -300,8 +300,8 @@ export default function Empleados() {
         </div>
       </motion.div>
 
-      {/* Stats + Certification Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {/* Stats + Certification Alerts - Hidden on mobile */}
+      <div className="hidden md:grid grid-cols-1 lg:grid-cols-12 gap-4">
         <div className="lg:col-span-3 flex flex-col gap-4">
           {[
             { label: 'Total empleados', value: stats.total, color: 'secondary' },
