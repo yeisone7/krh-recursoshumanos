@@ -26,13 +26,6 @@ export function MobileBottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
       {/* Background with top curve illusion */}
       <div className="relative bg-muted/80 backdrop-blur-lg border-t border-border/50">
-        {/* Sliding active indicator bar */}
-        <motion.div
-          className="absolute top-0 h-[2px] bg-primary"
-          style={{ width: `${100 / navItems.length}%` }}
-          animate={{ left: `${(activeIndex >= 0 ? activeIndex : 0) * (100 / navItems.length)}%` }}
-          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-        />
 
         <div className="flex items-end justify-around px-1 pt-2 pb-2 safe-area-bottom">
           {navItems.map((item) => {
