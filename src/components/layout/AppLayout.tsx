@@ -84,10 +84,12 @@ export function AppLayout({ children }: AppLayoutProps) {
         <Header
           onMobileMenuToggle={isMobile ? () => setMobileOpen(true) : undefined}
         />
-        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+        <main className={`flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
           {children}
         </main>
       </div>
+
+      {isMobile && <MobileBottomNav />}
     </div>
   );
 }
