@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, FileText, Clock, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 const navItems = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -19,41 +20,62 @@ export function MobileBottomNav() {
     return location.pathname.startsWith(path);
   };
 
+  const activeIndex = navItems.findIndex((item) => isActive(item.path));
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-md safe-area-bottom md:hidden">
-      <div className="flex items-end justify-around px-1 pt-1 pb-1">
-        {navItems.map((item) => {
-          const active = isActive(item.path);
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={cn(
-                'flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg transition-all duration-200 min-w-0 flex-1',
-                active ? 'text-primary' : 'text-muted-foreground'
-              )}
-            >
-              <div
-                className={cn(
-                  'flex items-center justify-center rounded-full transition-all duration-300',
-                  active
-                    ? 'w-11 h-11 -mt-5 bg-primary text-primary-foreground shadow-lg ring-4 ring-background'
-                    : 'w-8 h-8'
-                )}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+      {/* Background with top curve illusion */}
+      <div className="relative bg-muted/80 backdrop-blur-lg border-t border-border/50">
+        {/* Sliding active indicator bar */}
+        <motion.div
+          className="absolute top-0 h-[2px] bg-primary"
+          style={{ width: `${100 / navItems.length}%` }}
+          animate={{ left: `${(activeIndex >= 0 ? activeIndex : 0) * (100 / navItems.length)}%` }}
+          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+        />
+
+        <div className="flex items-end justify-around px-1 pt-2 pb-2 safe-area-bottom">
+          {navItems.map((item) => {
+            const active = isActive(item.path);
+            return (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className="flex flex-col items-center gap-0.5 min-w-0 flex-1 relative"
               >
-                <item.icon className={cn(active ? 'w-5 h-5' : 'w-5 h-5')} />
-              </div>
-              <span
-                className={cn(
-                  'text-[10px] leading-tight truncate max-w-full',
-                  active ? 'font-semibold' : 'font-medium'
-                )}
-              >
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
+                {/* Icon container */}
+                <motion.div
+                  animate={active ? { y: -14, scale: 1 } : { y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className="relative"
+                >
+                  <div
+                    className={cn(
+                      'flex items-center justify-center rounded-full transition-colors duration-300',
+                      active
+                        ? 'w-12 h-12 bg-primary text-primary-foreground shadow-lg ring-[3px] ring-background'
+                        : 'w-9 h-9 text-muted-foreground'
+                    )}
+                  >
+                    <item.icon className={cn(active ? 'w-5 h-5' : 'w-5 h-5')} strokeWidth={active ? 2.2 : 1.8} />
+                  </div>
+                </motion.div>
+
+                {/* Label */}
+                <motion.span
+                  animate={active ? { y: -4 } : { y: 0 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className={cn(
+                    'text-[10px] leading-tight truncate max-w-full transition-colors duration-200',
+                    active ? 'text-primary font-bold' : 'text-muted-foreground font-medium'
+                  )}
+                >
+                  {item.label}
+                </motion.span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );
