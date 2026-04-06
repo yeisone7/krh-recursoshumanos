@@ -7,6 +7,7 @@ import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { useContractExpiryNotifications } from '@/hooks/useContractExpiryNotifications';
+import { MobileBottomNav } from './MobileBottomNav';
 
 interface AppLayoutProps {
   children: ReactNode;
