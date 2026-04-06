@@ -38,7 +38,7 @@ export function MobileBottomNav() {
               >
                 {/* Icon container */}
                 <motion.div
-                  animate={active ? { y: -14, scale: 1 } : { y: 0, scale: 1 }}
+                  animate={active ? { y: -20 } : { y: 0 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   className="relative"
                 >
@@ -46,25 +46,23 @@ export function MobileBottomNav() {
                     className={cn(
                       'flex items-center justify-center rounded-full transition-colors duration-300',
                       active
-                        ? 'w-12 h-12 bg-primary text-primary-foreground shadow-lg ring-[3px] ring-background'
+                        ? 'w-13 h-13 bg-primary text-primary-foreground shadow-[0_4px_14px_rgba(0,0,0,0.25)] ring-[4px] ring-background'
                         : 'w-9 h-9 text-muted-foreground'
                     )}
                   >
-                    <item.icon className={cn(active ? 'w-5 h-5' : 'w-5 h-5')} strokeWidth={active ? 2.2 : 1.8} />
+                    <item.icon className="w-5 h-5" strokeWidth={active ? 2.2 : 1.8} />
                   </div>
                 </motion.div>
 
-                {/* Label */}
-                <motion.span
-                  animate={active ? { y: -4 } : { y: 0 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                {/* Label - always aligned at the same position */}
+                <span
                   className={cn(
                     'text-[10px] leading-tight truncate max-w-full transition-colors duration-200',
                     active ? 'text-primary font-bold' : 'text-muted-foreground font-medium'
                   )}
                 >
                   {item.label}
-                </motion.span>
+                </span>
               </button>
             );
           })}
