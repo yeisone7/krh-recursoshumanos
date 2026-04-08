@@ -36,7 +36,7 @@ export default function Dashboard() {
         {/* Left Column - KPI Cards */}
         <div className="lg:col-span-2 space-y-4">
           {/* Primary KPIs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-4">
             {kpisLoading ? (
               <>
                 {[1, 2, 3, 4].map(i => (
@@ -79,7 +79,7 @@ export default function Dashboard() {
           </div>
 
           {/* Secondary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-2 gap-4">
             {kpisLoading ? (
               <>
                 {[1, 2, 3, 4].map(i => (
