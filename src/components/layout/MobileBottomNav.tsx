@@ -51,7 +51,7 @@ export function MobileBottomNav() {
 
     const containerRect = container.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
-    const x = elRect.left - containerRect.left + elRect.width / 2 - 24; // 24 = half of indicator size (w-12 = 48px / 2)
+    const x = elRect.left - containerRect.left + elRect.width / 2 - 28; // 28 = half of indicator size (w-14 = 56px / 2)
     setIndicatorX(x);
   }, [activeIndex]);
 
