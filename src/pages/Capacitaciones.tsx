@@ -177,22 +177,35 @@ export default function Capacitaciones() {
                       id: course.id,
                       title: course.name,
                       subtitle: course.category,
-                      badges: [
-                        { label: statusLabel, className: statusClass },
-                        ...(content?.isManual ? [{ label: 'Manual', className: 'bg-muted text-muted-foreground' }] : content ? [{ label: 'IA', className: 'bg-primary/10 text-primary' }] : []),
-                      ],
+                      badge: (
+                        <div className="flex gap-1 flex-wrap">
+                          <Badge className={statusClass}>{statusLabel}</Badge>
+                          {content?.isManual ? (
+                            <Badge variant="outline"><PenLine className="h-3 w-3 mr-1" /> Manual</Badge>
+                          ) : content ? (
+                            <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" /> IA</Badge>
+                          ) : null}
+                        </div>
+                      ),
                       fields: [
                         { label: 'Código', value: course.code || '-' },
                         { label: 'Modalidad', value: MODALITY_LABELS[course.modality] },
                         { label: 'Duración', value: `${course.duration_hours}h` },
                       ],
-                      actions: [
-                        { label: 'Vista previa', icon: <Eye className="h-4 w-4" />, onClick: () => setPreviewCourse(course) },
-                        { label: 'Editar', icon: <PenLine className="h-4 w-4" />, onClick: () => handleEdit(course) },
-                        { label: 'Duplicar', icon: <Copy className="h-4 w-4" />, onClick: () => handleDuplicate(course.id) },
-                        { label: 'Enlace', icon: <Link2 className="h-4 w-4" />, onClick: () => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`) },
-                        { label: 'Eliminar', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleDeleteCourse(course.id), variant: 'destructive' as const },
-                      ],
+                      actions: (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ),
                     };
                   })}
                 />
