@@ -51,7 +51,7 @@ export function MobileBottomNav() {
 
     const containerRect = container.getBoundingClientRect();
     const elRect = el.getBoundingClientRect();
-    const x = elRect.left - containerRect.left + elRect.width / 2 - 24; // 24 = half of indicator size (w-12 = 48px / 2)
+    const x = elRect.left - containerRect.left + elRect.width / 2 - 28; // 28 = half of indicator size (w-14 = 56px / 2)
     setIndicatorX(x);
   }, [activeIndex]);
 
@@ -69,7 +69,7 @@ export function MobileBottomNav() {
         {/* Floating active indicator */}
         {indicatorX !== null && activeIndex >= 0 && (
           <div
-            className="absolute -top-5 z-10 flex items-center justify-center w-12 h-12 rounded-full shadow-lg"
+            className="absolute -top-6 z-10 flex items-center justify-center w-14 h-14 rounded-full shadow-lg"
             style={{
               left: `${indicatorX}px`,
               backgroundColor: '#ff6a00',
