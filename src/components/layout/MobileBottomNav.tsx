@@ -72,11 +72,11 @@ export function MobileBottomNav() {
             className="absolute -top-5 z-10 flex items-center justify-center w-12 h-12 rounded-full shadow-lg"
             style={{
               left: `${indicatorX}px`,
-              backgroundColor: '#e76921',
+              backgroundColor: '#f06810',
               borderColor: 'hsl(var(--card))',
               borderWidth: '4px',
               borderStyle: 'solid',
-              boxShadow: '0 4px 14px -2px rgba(231, 105, 33, 0.4)',
+              boxShadow: '0 4px 14px -2px rgba(240, 104, 16, 0.45)',
               transition: hasAnimated
                 ? 'transform 1s cubic-bezier(0.22, 1, 0.36, 1), left 1s cubic-bezier(0.22, 1, 0.36, 1)'
                 : 'none',
@@ -127,7 +127,7 @@ export function MobileBottomNav() {
                 <span
                   className="text-[10px] leading-tight truncate max-w-full transition-colors duration-200"
                   style={{
-                    color: active ? '#e76921' : 'hsl(var(--muted-foreground))',
+                    color: active ? '#f06810' : 'hsl(var(--muted-foreground))',
                     fontWeight: active ? 600 : 500,
                   }}
                 >
