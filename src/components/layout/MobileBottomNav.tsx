@@ -46,7 +46,7 @@ export function MobileBottomNav() {
                     className={cn(
                       'flex items-center justify-center rounded-full transition-colors duration-300',
                       active
-                        ? 'w-12 h-12 text-white shadow-lg ring-[3px] ring-background'
+                        ? 'w-12 h-12 text-white shadow-lg ring-[5px] ring-background'
                         : 'w-9 h-9 text-muted-foreground'
                     )}
                     style={active ? { backgroundColor: '#e76921' } : undefined}
