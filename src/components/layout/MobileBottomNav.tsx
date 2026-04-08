@@ -49,6 +49,7 @@ export function MobileBottomNav() {
                         ? 'w-12 h-12 text-white shadow-lg ring-[3px] ring-background'
                         : 'w-9 h-9 text-muted-foreground'
                     )}
+                    style={active ? { backgroundColor: '#e76921' } : undefined}
                   >
                     <item.icon className={cn(active ? 'w-5 h-5' : 'w-5 h-5')} strokeWidth={active ? 2.2 : 1.8} />
                   </div>
@@ -62,6 +63,7 @@ export function MobileBottomNav() {
                     'text-[10px] leading-tight truncate max-w-full transition-colors duration-200',
                     active ? 'font-bold' : 'text-muted-foreground font-medium'
                   )}
+                  style={active ? { color: '#e76921' } : undefined}
                 >
                   {item.label}
                 </motion.span>
