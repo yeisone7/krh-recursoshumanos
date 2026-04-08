@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, FileText, Clock, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 
 const navItems = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -11,9 +11,15 @@ const navItems = [
   { label: 'Capacitaciones', path: '/capacitaciones', icon: GraduationCap },
 ];
 
+const STORAGE_KEY = 'mobile-nav-prev-index';
+
 export function MobileBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const itemsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [indicatorX, setIndicatorX] = useState<number | null>(null);
+  const [hasAnimated, setHasAnimated] = useState(false);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -22,51 +28,111 @@ export function MobileBottomNav() {
 
   const activeIndex = navItems.findIndex((item) => isActive(item.path));
 
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-      {/* Background with top curve illusion */}
-      <div className="relative bg-muted/80 backdrop-blur-lg border-t border-border/50">
+  // Restore previous index for initial animation
+  useEffect(() => {
+    const prev = sessionStorage.getItem(STORAGE_KEY);
+    if (prev !== null) {
+      setHasAnimated(true);
+    }
+  }, []);
 
-        <div className="flex items-end justify-around px-1 pt-2 pb-2 safe-area-bottom">
-          {navItems.map((item) => {
+  // Persist active index
+  useEffect(() => {
+    if (activeIndex >= 0) {
+      sessionStorage.setItem(STORAGE_KEY, String(activeIndex));
+    }
+  }, [activeIndex]);
+
+  // Calculate indicator position
+  useLayoutEffect(() => {
+    const el = itemsRef.current[activeIndex];
+    const container = containerRef.current;
+    if (!el || !container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+    const x = elRect.left - containerRect.left + elRect.width / 2 - 24; // 24 = half of indicator size (w-12 = 48px / 2)
+    setIndicatorX(x);
+  }, [activeIndex]);
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+      <div
+        ref={containerRef}
+        className="relative border-t"
+        style={{
+          backgroundColor: 'hsl(var(--card))',
+          borderColor: 'hsl(var(--border))',
+          boxShadow: '0 -4px 12px -2px hsl(var(--foreground) / 0.06)',
+        }}
+      >
+        {/* Floating active indicator */}
+        {indicatorX !== null && activeIndex >= 0 && (
+          <div
+            className="absolute -top-5 z-10 flex items-center justify-center w-12 h-12 rounded-full shadow-lg"
+            style={{
+              left: `${indicatorX}px`,
+              backgroundColor: '#e76921',
+              borderColor: 'hsl(var(--card))',
+              borderWidth: '4px',
+              borderStyle: 'solid',
+              boxShadow: '0 4px 14px -2px rgba(231, 105, 33, 0.4)',
+              transition: hasAnimated
+                ? 'transform 1s cubic-bezier(0.22, 1, 0.36, 1), left 1s cubic-bezier(0.22, 1, 0.36, 1)'
+                : 'none',
+            }}
+          >
+            {(() => {
+              const ActiveIcon = navItems[activeIndex]?.icon;
+              return ActiveIcon ? (
+                <ActiveIcon
+                  className="w-5 h-5"
+                  strokeWidth={2.2}
+                  style={{ color: 'hsl(var(--primary-foreground))' }}
+                />
+              ) : null;
+            })()}
+          </div>
+        )}
+
+        <div className="flex items-end justify-around px-1 pt-3 pb-2 safe-area-bottom">
+          {navItems.map((item, index) => {
             const active = isActive(item.path);
             return (
               <button
                 key={item.path}
-                onClick={() => navigate(item.path)}
-                className="flex flex-col items-center gap-0.5 min-w-0 flex-1 relative"
+                ref={(el) => { itemsRef.current[index] = el; }}
+                onClick={() => {
+                  if (!hasAnimated) setHasAnimated(true);
+                  navigate(item.path);
+                }}
+                className="flex flex-col items-center gap-1 min-w-0 flex-1 relative pb-0.5"
               >
-                {/* Icon container */}
-                <motion.div
-                  animate={active ? { y: -14, scale: 1 } : { y: 0, scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                  className="relative"
+                {/* Inline icon — hidden when active */}
+                <div
+                  className="flex items-center justify-center w-6 h-6 transition-all duration-300"
+                  style={{
+                    opacity: active ? 0 : 1,
+                    transform: active ? 'scale(0.5)' : 'scale(1)',
+                  }}
                 >
-                  <div
-                    className={cn(
-                      'flex items-center justify-center rounded-full transition-colors duration-300',
-                      active
-                        ? 'w-12 h-12 text-white shadow-lg ring-[5px] ring-background'
-                        : 'w-9 h-9 text-muted-foreground'
-                    )}
-                    style={active ? { backgroundColor: '#e76921' } : undefined}
-                  >
-                    <item.icon className={cn(active ? 'w-5 h-5' : 'w-5 h-5')} strokeWidth={active ? 2.2 : 1.8} />
-                  </div>
-                </motion.div>
+                  <item.icon
+                    className="w-5 h-5"
+                    strokeWidth={1.8}
+                    style={{ color: 'hsl(var(--muted-foreground))' }}
+                  />
+                </div>
 
                 {/* Label */}
-                <motion.span
-                  animate={active ? { y: -4 } : { y: 0 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                  className={cn(
-                    'text-[10px] leading-tight truncate max-w-full transition-colors duration-200',
-                    active ? 'font-bold' : 'text-muted-foreground font-medium'
-                  )}
-                  style={active ? { color: '#e76921' } : undefined}
+                <span
+                  className="text-[10px] leading-tight truncate max-w-full transition-colors duration-200"
+                  style={{
+                    color: active ? '#e76921' : 'hsl(var(--muted-foreground))',
+                    fontWeight: active ? 600 : 500,
+                  }}
                 >
                   {item.label}
-                </motion.span>
+                </span>
               </button>
             );
           })}
