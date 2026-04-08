@@ -150,7 +150,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right Column - Quick Actions */}
-        <div className="lg:col-span-1">
+        <div className="hidden lg:block lg:col-span-1">
           <QuickActionsPanel />
         </div>
       </div>
