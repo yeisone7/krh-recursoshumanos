@@ -5,8 +5,8 @@ import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 
 const navItems = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { label: 'Empleados', path: '/empleados', icon: Users },
   { label: 'Contratos', path: '/contratos', icon: FileText },
+  { label: 'Empleados', path: '/empleados', icon: Users },
   { label: 'Jornadas', path: '/jornadas', icon: Clock },
   { label: 'Capacitaciones', path: '/capacitaciones', icon: GraduationCap },
 ];
