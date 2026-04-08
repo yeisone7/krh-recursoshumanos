@@ -223,35 +223,35 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[95vh] p-0 gap-0 overflow-hidden">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 space-y-3">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-primary/10 flex-shrink-0">
-              <GraduationCap className="h-7 w-7 text-primary" />
+        <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 space-y-3">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="p-2 sm:p-3 rounded-xl bg-primary/10 flex-shrink-0">
+              <GraduationCap className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
             </div>
             <div className="flex-1 min-w-0 space-y-1.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="text-xs font-medium">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <Badge variant="outline" className="text-[10px] sm:text-xs font-medium">
                   {categoryLabels[course.category] || course.category} {durationLabel}
                 </Badge>
-                <Badge className={statusColors[course.status] || 'bg-muted text-muted-foreground'}>
+                <Badge className={`text-[10px] sm:text-xs ${statusColors[course.status] || 'bg-muted text-muted-foreground'}`}>
                   {course.status === 'borrador' ? 'Borrador' : course.status === 'publicado' ? 'Publicado' : 'Completado'}
                 </Badge>
                 {content && !content.isManual && (
-                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 gap-1">
-                    <Sparkles className="h-3 w-3" /> Generado por IA
+                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 gap-1 text-[10px] sm:text-xs">
+                    <Sparkles className="h-3 w-3" /> IA
                   </Badge>
                 )}
                 {content?.isManual && (
-                  <Badge variant="outline">Manual</Badge>
+                  <Badge variant="outline" className="text-[10px] sm:text-xs">Manual</Badge>
                 )}
               </div>
-              <h2 className="text-xl font-bold leading-tight">{course.name}</h2>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+              <h2 className="text-base sm:text-xl font-bold leading-tight">{course.name}</h2>
+              <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground flex-wrap">
                 {course.audience && (
-                  <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {course.audience}</span>
+                  <span className="flex items-center gap-1"><Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {course.audience}</span>
                 )}
-                <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {durationLabel}</span>
-                <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> v{course.version}</span>
+                <span className="flex items-center gap-1"><Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {durationLabel}</span>
+                <span className="flex items-center gap-1"><Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> v{course.version}</span>
               </div>
             </div>
           </div>
@@ -259,7 +259,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
           {course.status === 'borrador' && onPublish && (
             <Button
               onClick={() => onPublish(course.id)}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
+              size="sm"
             >
               <Send className="h-4 w-4" /> Publicar Capacitación
             </Button>
@@ -268,8 +269,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-          <div className="px-6 border-b">
-            <TabsList className="bg-transparent h-auto p-0 gap-0 w-full justify-start rounded-none">
+          <div className="px-4 sm:px-6 border-b overflow-x-auto">
+            <TabsList className="bg-transparent h-auto p-0 gap-0 w-max sm:w-full justify-start rounded-none">
               {[
                 { value: 'general', icon: BookOpen, label: 'General' },
                 { value: 'contenido', icon: FileText, label: 'Contenido' },
@@ -280,12 +281,12 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 gap-1.5 text-sm"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2.5 sm:px-4 py-2 sm:py-2.5 gap-1 sm:gap-1.5 text-xs sm:text-sm whitespace-nowrap"
                 >
-                  <tab.icon className="h-4 w-4" />
+                  <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   {tab.label}
                   {tab.value === 'media' && media.length > 0 && (
-                    <Badge className="ml-1 h-5 min-w-[20px] px-1.5 text-[10px] bg-primary text-primary-foreground">
+                    <Badge className="ml-1 h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] px-1 sm:px-1.5 text-[9px] sm:text-[10px] bg-primary text-primary-foreground">
                       {media.length}
                     </Badge>
                   )}
@@ -295,7 +296,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
           </div>
 
           <ScrollArea className="flex-1 max-h-[60vh]">
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* General Tab */}
               <TabsContent value="general" className="mt-0 space-y-5">
                 {content?.introduccion && (
@@ -634,21 +635,21 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
         </Tabs>
 
         {/* Footer */}
-        <div className="border-t px-6 py-3 flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-5">
+        <div className="border-t px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 text-xs sm:text-sm text-muted-foreground">
+          <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
             {media.length > 0 && (
               <span className="flex items-center gap-1.5">
-                <ImageIcon className="h-4 w-4" />
+                <ImageIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <strong className="text-foreground">{media.length}</strong> Media
               </span>
             )}
             <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {format(parseISO(course.created_at), "dd MMM yyyy", { locale: es })}
-              <span className="text-xs">Creación</span>
+              <span className="text-[10px] sm:text-xs">Creación</span>
             </span>
           </div>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Cerrar
           </Button>
         </div>
