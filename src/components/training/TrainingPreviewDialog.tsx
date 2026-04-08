@@ -296,7 +296,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
           </div>
 
           <ScrollArea className="flex-1 max-h-[60vh]">
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* General Tab */}
               <TabsContent value="general" className="mt-0 space-y-5">
                 {content?.introduccion && (
@@ -635,21 +635,21 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
         </Tabs>
 
         {/* Footer */}
-        <div className="border-t px-6 py-3 flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-5">
+        <div className="border-t px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 text-xs sm:text-sm text-muted-foreground">
+          <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
             {media.length > 0 && (
               <span className="flex items-center gap-1.5">
-                <ImageIcon className="h-4 w-4" />
+                <ImageIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <strong className="text-foreground">{media.length}</strong> Media
               </span>
             )}
             <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
+              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {format(parseISO(course.created_at), "dd MMM yyyy", { locale: es })}
-              <span className="text-xs">Creación</span>
+              <span className="text-[10px] sm:text-xs">Creación</span>
             </span>
           </div>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Cerrar
           </Button>
         </div>
