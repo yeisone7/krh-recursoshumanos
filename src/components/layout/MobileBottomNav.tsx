@@ -46,9 +46,10 @@ export function MobileBottomNav() {
                     className={cn(
                       'flex items-center justify-center rounded-full transition-colors duration-300',
                       active
-                        ? 'w-12 h-12 bg-primary text-primary-foreground shadow-lg ring-[3px] ring-background'
+                        ? 'w-12 h-12 text-white shadow-lg ring-[3px] ring-background'
                         : 'w-9 h-9 text-muted-foreground'
                     )}
+                    style={active ? { backgroundColor: '#e76921' } : undefined}
                   >
                     <item.icon className={cn(active ? 'w-5 h-5' : 'w-5 h-5')} strokeWidth={active ? 2.2 : 1.8} />
                   </div>
@@ -60,8 +61,9 @@ export function MobileBottomNav() {
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   className={cn(
                     'text-[10px] leading-tight truncate max-w-full transition-colors duration-200',
-                    active ? 'text-primary font-bold' : 'text-muted-foreground font-medium'
+                    active ? 'font-bold' : 'text-muted-foreground font-medium'
                   )}
+                  style={active ? { color: '#e76921' } : undefined}
                 >
                   {item.label}
                 </motion.span>
