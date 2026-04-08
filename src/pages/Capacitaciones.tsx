@@ -15,6 +15,9 @@ import { CourseFormDialog, CertificateAlertsCard, TrainingPreviewDialog } from '
 import { useTrainingCourses, useTrainingStats, useDeleteCourse, useDuplicateCourse } from '@/hooks/useTraining';
 import { useToast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileCardList } from '@/components/shared/MobileCardList';
+import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import type { TrainingCourse, TrainingModality, TrainingCourseContent } from '@/types/training';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -37,6 +40,7 @@ const MODALITY_LABELS: Record<TrainingModality, string> = {
 
 export default function Capacitaciones() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { toast } = useToast();
   const { data: courses, isLoading: loadingCourses } = useTrainingCourses();
   const { data: stats } = useTrainingStats();
@@ -82,15 +86,15 @@ export default function Capacitaciones() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Capacitaciones</h1>
-          <p className="text-muted-foreground">Plataforma integral de capacitación empresarial</p>
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold">Capacitaciones</h1>
+          <p className="text-sm text-muted-foreground">Plataforma integral de capacitación empresarial</p>
         </div>
-        <Button onClick={() => navigate('/capacitaciones/crear')}>
-          <Sparkles className="h-4 w-4 mr-2" /> Nueva con IA
+        <Button size={isMobile ? 'sm' : 'default'} onClick={() => navigate('/capacitaciones/crear')} className="shrink-0">
+          <Sparkles className="h-4 w-4 mr-1.5" /> Nueva con IA
         </Button>
       </div>
 
@@ -98,23 +102,25 @@ export default function Capacitaciones() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div className="lg:col-span-2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20 h-full">
-            <CardContent className="pt-6 pb-6 flex items-center justify-between h-full">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/20 rounded-xl">
-                  <Sparkles className="h-8 w-8 text-primary" />
+            <CardContent className="pt-5 pb-5 md:pt-6 md:pb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 h-full">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="p-2.5 md:p-3 bg-primary/20 rounded-xl shrink-0">
+                  <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-primary" />
                 </div>
-                <div>
-                  <h2 className="text-xl font-bold">Plataforma de Capacitaciones con IA</h2>
-                  <p className="text-muted-foreground">Genera contenido, evaluaciones y certificados automáticamente</p>
+                <div className="min-w-0">
+                  <h2 className="text-lg md:text-xl font-bold">Plataforma de Capacitaciones con IA</h2>
+                  <p className="text-sm text-muted-foreground">Genera contenido, evaluaciones y certificados automáticamente</p>
                 </div>
               </div>
-              <Button onClick={() => navigate('/capacitaciones/crear')} size="lg">
+              <Button onClick={() => navigate('/capacitaciones/crear')} size={isMobile ? 'sm' : 'lg'} className="w-full sm:w-auto shrink-0">
                 <Plus className="h-4 w-4 mr-2" /> Crear Capacitación
               </Button>
             </CardContent>
           </Card>
         </motion.div>
-        <Card>
+
+        {/* Quick Actions - hidden on mobile */}
+        <Card className="hidden lg:block">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Acciones Rápidas</CardTitle>
           </CardHeader>
@@ -145,70 +151,109 @@ export default function Capacitaciones() {
 
       {/* Search */}
       <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 md:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Buscar cursos..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
       </div>
 
-      {/* Courses Table */}
+      {/* Courses - Mobile Cards / Desktop Table */}
       <Card>
         <CardHeader><CardTitle>Cursos de Capacitación</CardTitle></CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Categoría</TableHead>
-                <TableHead>Modalidad</TableHead>
-                <TableHead>Duración</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          {isMobile ? (
+            <PullToRefresh onRefresh={async () => { await new Promise(r => setTimeout(r, 800)); }}>
               {loadingCourses ? (
-                <TableRow><TableCell colSpan={8} className="text-center">Cargando...</TableCell></TableRow>
+                <p className="text-center text-muted-foreground py-8">Cargando...</p>
               ) : filteredCourses?.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No hay cursos registrados</TableCell></TableRow>
+                <p className="text-center text-muted-foreground py-8">No hay cursos registrados</p>
               ) : (
-                filteredCourses?.map((course) => {
-                  const content = course.content as TrainingCourseContent | null;
-                  return (
-                    <TableRow key={course.id}>
-                      <TableCell className="font-medium">{course.code || '-'}</TableCell>
-                      <TableCell>{course.name}</TableCell>
-                      <TableCell><Badge variant="outline">{course.category}</Badge></TableCell>
-                      <TableCell>{MODALITY_LABELS[course.modality]}</TableCell>
-                      <TableCell><Clock className="h-4 w-4 text-muted-foreground inline mr-1" />{course.duration_hours}h</TableCell>
-                      <TableCell><Badge className={STATUS_COLORS[course.status] || ''}>{STATUS_LABELS[course.status] || course.status}</Badge></TableCell>
-                      <TableCell>
-                        {content?.isManual ? (
-                          <Badge variant="outline"><PenLine className="h-3 w-3 mr-1" /> Manual</Badge>
-                        ) : content ? (
-                          <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" /> IA</Badge>
-                        ) : null}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
+                <MobileCardList
+                  items={(filteredCourses || []).map((course) => {
+                    const content = course.content as TrainingCourseContent | null;
+                    const statusLabel = STATUS_LABELS[course.status] || course.status;
+                    const statusClass = STATUS_COLORS[course.status] || '';
+                    return {
+                      id: course.id,
+                      title: course.name,
+                      subtitle: course.category,
+                      badges: [
+                        { label: statusLabel, className: statusClass },
+                        ...(content?.isManual ? [{ label: 'Manual', className: 'bg-muted text-muted-foreground' }] : content ? [{ label: 'IA', className: 'bg-primary/10 text-primary' }] : []),
+                      ],
+                      fields: [
+                        { label: 'Código', value: course.code || '-' },
+                        { label: 'Modalidad', value: MODALITY_LABELS[course.modality] },
+                        { label: 'Duración', value: `${course.duration_hours}h` },
+                      ],
+                      actions: [
+                        { label: 'Vista previa', icon: <Eye className="h-4 w-4" />, onClick: () => setPreviewCourse(course) },
+                        { label: 'Editar', icon: <PenLine className="h-4 w-4" />, onClick: () => handleEdit(course) },
+                        { label: 'Duplicar', icon: <Copy className="h-4 w-4" />, onClick: () => handleDuplicate(course.id) },
+                        { label: 'Enlace', icon: <Link2 className="h-4 w-4" />, onClick: () => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`) },
+                        { label: 'Eliminar', icon: <Trash2 className="h-4 w-4" />, onClick: () => handleDeleteCourse(course.id), variant: 'destructive' as const },
+                      ],
+                    };
+                  })}
+                />
               )}
-            </TableBody>
-          </Table>
+            </PullToRefresh>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Categoría</TableHead>
+                  <TableHead>Modalidad</TableHead>
+                  <TableHead>Duración</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loadingCourses ? (
+                  <TableRow><TableCell colSpan={8} className="text-center">Cargando...</TableCell></TableRow>
+                ) : filteredCourses?.length === 0 ? (
+                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No hay cursos registrados</TableCell></TableRow>
+                ) : (
+                  filteredCourses?.map((course) => {
+                    const content = course.content as TrainingCourseContent | null;
+                    return (
+                      <TableRow key={course.id}>
+                        <TableCell className="font-medium">{course.code || '-'}</TableCell>
+                        <TableCell>{course.name}</TableCell>
+                        <TableCell><Badge variant="outline">{course.category}</Badge></TableCell>
+                        <TableCell>{MODALITY_LABELS[course.modality]}</TableCell>
+                        <TableCell><Clock className="h-4 w-4 text-muted-foreground inline mr-1" />{course.duration_hours}h</TableCell>
+                        <TableCell><Badge className={STATUS_COLORS[course.status] || ''}>{STATUS_LABELS[course.status] || course.status}</Badge></TableCell>
+                        <TableCell>
+                          {content?.isManual ? (
+                            <Badge variant="outline"><PenLine className="h-3 w-3 mr-1" /> Manual</Badge>
+                          ) : content ? (
+                            <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" /> IA</Badge>
+                          ) : null}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
