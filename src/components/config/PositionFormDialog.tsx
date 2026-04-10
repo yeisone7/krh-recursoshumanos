@@ -29,13 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useAreas, useCreatePosition, useUpdatePosition } from '@/hooks/useSystemConfig';
+import { useAreas, usePositions, useCreatePosition, useUpdatePosition } from '@/hooks/useSystemConfig';
 import type { Position } from '@/types/config';
 
 const positionSchema = z.object({
   name: z.string().min(2, 'El nombre es requerido'),
   code: z.string().optional(),
   area_id: z.string().optional(),
+  parent_position_id: z.string().optional(),
   level: z.number().min(1).max(10).default(1),
   min_salary: z.string().optional(),
   max_salary: z.string().optional(),
@@ -54,8 +55,12 @@ interface PositionFormDialogProps {
 export function PositionFormDialog({ open, onOpenChange, position }: PositionFormDialogProps) {
   const isEditing = !!position;
   const { data: areas = [] } = useAreas();
+  const { data: positions = [] } = usePositions();
   const createPosition = useCreatePosition();
   const updatePosition = useUpdatePosition();
+
+  // Filter out the current position from parent options to avoid self-reference
+  const parentPositionOptions = positions.filter(p => p.id !== position?.id && p.is_active !== false);
 
   const form = useForm<PositionFormData>({
     resolver: zodResolver(positionSchema),
@@ -63,6 +68,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
       name: '',
       code: '',
       area_id: '',
+      parent_position_id: '',
       level: 1,
       min_salary: '',
       max_salary: '',
@@ -79,6 +85,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
           name: position.name,
           code: position.code || '',
           area_id: position.area_id || '',
+          parent_position_id: position.parent_position_id || '',
           level: position.level ?? 1,
           min_salary: position.min_salary?.toString() || '',
           max_salary: position.max_salary?.toString() || '',
@@ -90,6 +97,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
           name: '',
           code: '',
           area_id: '',
+          parent_position_id: '',
           level: 1,
           min_salary: '',
           max_salary: '',
@@ -106,6 +114,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
         name: data.name,
         code: data.code || undefined,
         area_id: data.area_id || undefined,
+        parent_position_id: data.parent_position_id || null,
         level: data.level,
         min_salary: data.min_salary ? parseFloat(data.min_salary) : undefined,
         max_salary: data.max_salary ? parseFloat(data.max_salary) : undefined,
