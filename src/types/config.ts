@@ -52,6 +52,7 @@ export interface Position {
   id: string;
   company_id: string;
   area_id?: string;
+  parent_position_id?: string | null;
   name: string;
   code?: string;
   level: number;

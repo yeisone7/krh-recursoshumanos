@@ -1,22 +1,22 @@
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Users, ChevronDown, ChevronRight } from 'lucide-react';
+import { Users, ChevronDown, ChevronRight, Briefcase } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface OrgChartNodeProps {
-  area: {
+  position: {
     id: string;
     name: string;
     code?: string;
-    manager?: {
+    areaName?: string;
+    level?: number;
+    employees: {
       id: string;
       first_name: string;
       last_name: string;
-      position_name?: string;
       avatar_url?: string;
-    } | null;
-    employeeCount: number;
+    }[];
   };
   children?: React.ReactNode;
   isExpanded: boolean;
@@ -26,7 +26,7 @@ interface OrgChartNodeProps {
 }
 
 export function OrgChartNode({
-  area,
+  position,
   children,
   isExpanded,
   onToggle,
@@ -37,25 +37,22 @@ export function OrgChartNode({
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
+  const mainEmployee = position.employees[0];
+
   return (
     <div className="flex flex-col items-center">
-      {/* Connector line from parent */}
-      {level > 0 && (
-        <div className="w-px h-6 bg-border" />
-      )}
-      
-      {/* Node card */}
+      {level > 0 && <div className="w-px h-6 bg-border" />}
+
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className={cn(
-          "relative bg-card border border-border rounded-lg shadow-sm p-4 min-w-[200px] max-w-[280px]",
+          "relative bg-card border border-border rounded-lg shadow-sm p-4 min-w-[220px] max-w-[280px]",
           "hover:shadow-md transition-shadow cursor-pointer",
           level === 0 && "border-primary/50 bg-primary/5"
         )}
         onClick={hasChildren ? onToggle : undefined}
       >
-        {/* Expand/collapse indicator */}
         {hasChildren && (
           <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10">
             <div className="bg-background border border-border rounded-full p-0.5 shadow-sm">
@@ -68,30 +65,36 @@ export function OrgChartNode({
           </div>
         )}
 
-        {/* Area name */}
-        <div className="text-center mb-3">
-          <h3 className="font-semibold text-foreground text-sm">{area.name}</h3>
-          {area.code && (
-            <span className="text-xs text-muted-foreground">{area.code}</span>
+        {/* Position name */}
+        <div className="text-center mb-2">
+          <div className="flex items-center justify-center gap-1.5 mb-1">
+            <Briefcase className="w-3.5 h-3.5 text-primary" />
+            <h3 className="font-semibold text-foreground text-sm">{position.name}</h3>
+          </div>
+          {position.code && (
+            <span className="text-xs text-muted-foreground">{position.code}</span>
+          )}
+          {position.areaName && (
+            <p className="text-xs text-muted-foreground mt-0.5">{position.areaName}</p>
           )}
         </div>
 
-        {/* Manager info */}
-        {area.manager ? (
+        {/* Employee info */}
+        {mainEmployee ? (
           <div className="flex items-center gap-3 pt-3 border-t border-border">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={area.manager.avatar_url} />
+              <AvatarImage src={mainEmployee.avatar_url} />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {getInitials(area.manager.first_name, area.manager.last_name)}
+                {getInitials(mainEmployee.first_name, mainEmployee.last_name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
-                {area.manager.first_name} {area.manager.last_name}
+                {mainEmployee.first_name} {mainEmployee.last_name}
               </p>
-              {area.manager.position_name && (
-                <p className="text-xs text-muted-foreground truncate">
-                  {area.manager.position_name}
+              {position.employees.length > 1 && (
+                <p className="text-xs text-muted-foreground">
+                  +{position.employees.length - 1} más
                 </p>
               )}
             </div>
@@ -101,7 +104,7 @@ export function OrgChartNode({
             <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
-            <span className="text-xs italic">Sin responsable asignado</span>
+            <span className="text-xs italic">Vacante</span>
           </div>
         )}
 
@@ -109,7 +112,7 @@ export function OrgChartNode({
         <div className="flex justify-center mt-3">
           <Badge variant="secondary" className="text-xs">
             <Users className="w-3 h-3 mr-1" />
-            {area.employeeCount} empleados
+            {position.employees.length} {position.employees.length === 1 ? 'persona' : 'personas'}
           </Badge>
         </div>
       </motion.div>
@@ -123,16 +126,10 @@ export function OrgChartNode({
             exit={{ opacity: 0, height: 0 }}
             className="flex flex-col items-center"
           >
-            {/* Vertical connector to children */}
             <div className="w-px h-6 bg-border" />
-            
-            {/* Horizontal connector and children container */}
             <div className="relative">
-              {/* Horizontal line spanning all children */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px bg-border" 
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px bg-border"
                 style={{ width: 'calc(100% - 100px)' }} />
-              
-              {/* Children nodes */}
               <div className="flex gap-8 pt-0">
                 {children}
               </div>
