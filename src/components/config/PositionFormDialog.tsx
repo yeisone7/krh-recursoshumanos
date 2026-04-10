@@ -226,6 +226,35 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="parent_position_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cargo Superior</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} 
+                    value={field.value || "__none__"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccione cargo superior" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-background">
+                      <SelectItem value="__none__">Sin cargo superior</SelectItem>
+                      {parentPositionOptions.map((pos) => (
+                        <SelectItem key={pos.id} value={pos.id}>
+                          {pos.name} {pos.areas ? `(${pos.areas.name})` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
