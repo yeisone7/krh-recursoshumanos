@@ -6375,6 +6375,7 @@ export type Database = {
           max_salary: number | null
           min_salary: number | null
           name: string
+          parent_position_id: string | null
           requirements: string | null
           updated_at: string
         }
@@ -6391,6 +6392,7 @@ export type Database = {
           max_salary?: number | null
           min_salary?: number | null
           name: string
+          parent_position_id?: string | null
           requirements?: string | null
           updated_at?: string
         }
@@ -6407,6 +6409,7 @@ export type Database = {
           max_salary?: number | null
           min_salary?: number | null
           name?: string
+          parent_position_id?: string | null
           requirements?: string | null
           updated_at?: string
         }
@@ -6423,6 +6426,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "positions_parent_position_id_fkey"
+            columns: ["parent_position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
             referencedColumns: ["id"]
           },
         ]

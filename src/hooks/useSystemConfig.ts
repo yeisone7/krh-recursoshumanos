@@ -143,6 +143,7 @@ export function useCreatePosition() {
       name: string;
       code?: string;
       area_id?: string;
+      parent_position_id?: string;
       level?: number;
       min_salary?: number;
       max_salary?: number;
@@ -176,6 +177,7 @@ export function useUpdatePosition() {
       name: string;
       code: string;
       area_id: string;
+      parent_position_id: string | null;
       level: number;
       min_salary: number;
       max_salary: number;
