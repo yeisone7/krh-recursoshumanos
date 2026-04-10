@@ -90,8 +90,10 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
       if (isEditing) {
         await updateArea.mutateAsync({ 
           id: area.id, 
-          ...data,
-          parent_id: data.parent_id || undefined,
+          name: data.name,
+          code: data.code || null,
+          parent_id: data.parent_id || null,
+          description: data.description || null,
         });
         toast.success('Área actualizada');
       } else {
