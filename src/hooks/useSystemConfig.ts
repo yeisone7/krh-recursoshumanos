@@ -68,12 +68,17 @@ export function useUpdateArea() {
       description: string;
       is_active: boolean;
     }>) => {
+      // Clean undefined values and convert empty strings to null for nullable fields
+      const cleanedUpdates = Object.fromEntries(
+        Object.entries(updates).map(([key, value]) => [key, value === '' ? null : value])
+      );
+
       const { data, error } = await supabase
         .from('areas')
-        .update(updates)
+        .update(cleanedUpdates)
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
