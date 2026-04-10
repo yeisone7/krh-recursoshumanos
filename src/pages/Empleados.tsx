@@ -179,11 +179,11 @@ export default function Empleados() {
           <h1 className="font-display text-2xl font-bold text-foreground">Empleados</h1>
           <p className="text-muted-foreground mt-1">Gestiona la información de todos los empleados</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             onClick={() => setShowTokensList(!showTokensList)}
-            className="gap-2"
+            className="gap-2 hidden sm:inline-flex"
           >
             <Link2 className="w-4 h-4" />
             Enlaces de Registro
@@ -191,14 +191,14 @@ export default function Empleados() {
           <Button
             variant="outline"
             onClick={() => setShowGenerateLink(true)}
-            className="gap-2"
+            className="gap-2 hidden sm:inline-flex"
           >
             <Link2 className="w-4 h-4" />
             Generar Enlace
           </Button>
           <Button 
             onClick={() => setIsFormOpen(true)}
-            className="gradient-primary text-primary-foreground hover:opacity-90 gap-2"
+            className="gradient-primary text-primary-foreground hover:opacity-90 gap-2 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             Nuevo Empleado
