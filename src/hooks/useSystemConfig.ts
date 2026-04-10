@@ -81,6 +81,7 @@ export function useUpdateArea() {
         .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error('No se pudo actualizar el área. Verifique sus permisos.');
       return data;
     },
     onSuccess: () => {
