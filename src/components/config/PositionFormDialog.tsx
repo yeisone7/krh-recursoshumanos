@@ -146,7 +146,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto pr-1" style={{ maxHeight: 'calc(90vh - 140px)' }}>
             <FormField
               control={form.control}
               name="name"
