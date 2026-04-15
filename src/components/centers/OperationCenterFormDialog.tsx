@@ -292,12 +292,12 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
+                      <DatePickerWithDropdowns
                         selected={field.value ?? undefined}
                         onSelect={field.onChange}
+                        fromYear={2000}
+                        toYear={new Date().getFullYear() + 5}
                         initialFocus
-                        className={cn('p-3 pointer-events-auto')}
                       />
                     </PopoverContent>
                   </Popover>
@@ -328,12 +328,12 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
+                      <DatePickerWithDropdowns
                         selected={field.value ?? undefined}
                         onSelect={field.onChange}
+                        fromYear={2000}
+                        toYear={new Date().getFullYear() + 10}
                         initialFocus
-                        className={cn('p-3 pointer-events-auto')}
                       />
                     </PopoverContent>
                   </Popover>
