@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Building2, MapPin, Phone, User, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useEffect } from 'react';
+import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
 
 import {
   Dialog,
@@ -23,7 +24,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
@@ -292,12 +292,12 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
+                      <DatePickerWithDropdowns
                         selected={field.value ?? undefined}
                         onSelect={field.onChange}
+                        fromYear={2000}
+                        toYear={new Date().getFullYear() + 5}
                         initialFocus
-                        className={cn('p-3 pointer-events-auto')}
                       />
                     </PopoverContent>
                   </Popover>
@@ -328,12 +328,12 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                       </FormControl>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
+                      <DatePickerWithDropdowns
                         selected={field.value ?? undefined}
                         onSelect={field.onChange}
+                        fromYear={2000}
+                        toYear={new Date().getFullYear() + 10}
                         initialFocus
-                        className={cn('p-3 pointer-events-auto')}
                       />
                     </PopoverContent>
                   </Popover>
