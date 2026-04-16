@@ -181,7 +181,7 @@ export default function Jornadas() {
       <Card className="flex-1 min-h-0 flex flex-col">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-2 flex-1 min-h-0 flex flex-col">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-              <TabsList className="h-8 w-full sm:w-auto overflow-x-auto">
+              <TabsList className="h-9 w-full sm:w-auto">
                 <TabsTrigger value="calendar" className="gap-1.5 text-xs h-7 px-2.5">
                   <Calendar className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Calendario</span>
