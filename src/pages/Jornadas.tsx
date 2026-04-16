@@ -154,7 +154,7 @@ export default function Jornadas() {
   }
 
   return (
-    <div className="flex flex-col gap-2 h-full min-h-0 overflow-hidden">
+    <div className="flex flex-col gap-2 h-full min-h-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
