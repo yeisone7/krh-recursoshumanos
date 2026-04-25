@@ -175,27 +175,27 @@ export default function Auth() {
       {/* Left side - Hero Branding */}
       <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
         {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(224,45%,12%)] via-[hsl(224,42%,22%)] to-[hsl(224,38%,30%)]" />
+        <div className="absolute inset-0 gradient-hero" />
         
         {/* Decorative geometric shapes */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-            className="absolute -top-32 -right-32 w-96 h-96 rounded-full border border-white/5" />
+            className="absolute -top-32 -right-32 w-96 h-96 rounded-full border border-primary-foreground/10" />
 
           <motion.div
             animate={{ rotate: -360 }}
             transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-48 -left-24 w-[500px] h-[500px] rounded-full border border-white/5" />
+            className="absolute -bottom-48 -left-24 w-[500px] h-[500px] rounded-full border border-primary/20" />
 
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}
             className="absolute top-1/3 right-12 w-64 h-64 rounded-full border border-secondary/10" />
 
-          <div className="absolute top-20 right-20 w-72 h-72 bg-secondary/8 rounded-full blur-3xl" />
-          <div className="absolute bottom-32 left-16 w-56 h-56 bg-primary/20 rounded-full blur-3xl" />
+          <div className="absolute inset-y-0 right-0 w-1/3 bg-primary/10" />
+          <div className="absolute bottom-0 left-0 h-28 w-full bg-gradient-to-t from-primary/20 to-transparent" />
         </div>
 
         {/* Content */}
@@ -225,13 +225,13 @@ export default function Auth() {
                 <Sparkles className="w-4 h-4" />
                 Plataforma KRH
               </div>
-              <h1 className="text-4xl font-bold text-white leading-tight tracking-tight">
+              <h1 className="text-4xl font-bold text-primary-foreground leading-tight tracking-tight">
                 Gestión de<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-[hsl(30,90%,60%)]">
+                <span className="text-transparent bg-clip-text gradient-accent">
                   Recursos Humanos
                 </span>
               </h1>
-              <p className="text-base text-white/60 mt-3 max-w-md leading-relaxed">
+              <p className="text-base text-primary-foreground/70 mt-3 max-w-md leading-relaxed">
                 Plataforma integral para la administración de empleados, contratos, dotación y exámenes médicos.
               </p>
             </motion.div>
@@ -243,22 +243,22 @@ export default function Auth() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
-                className="flex items-center gap-3 p-2.5 bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors group cursor-default">
+                className="flex items-center gap-3 p-2.5 bg-primary-foreground/5 backdrop-blur-sm border border-primary-foreground/10 hover:bg-primary-foreground/10 transition-colors group cursor-default">
 
                   <div className="w-9 h-9 bg-secondary/15 flex items-center justify-center shrink-0">
                     <feat.icon className="w-5 h-5 text-secondary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-white">{feat.title}</p>
-                    <p className="text-xs text-white/50">{feat.desc}</p>
+                    <p className="text-sm font-semibold text-primary-foreground">{feat.title}</p>
+                    <p className="text-xs text-primary-foreground/55">{feat.desc}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-secondary/60 transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-primary-foreground/25 group-hover:text-secondary transition-colors" />
                 </motion.div>
               )}
             </motion.div>
           </div>
           
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="text-sm text-white/30">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="text-sm text-primary-foreground/35">
             © 2025 KRH. Todos los derechos reservados Petrocasinos s.a.
           </motion.p>
         </div>
