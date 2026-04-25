@@ -684,15 +684,15 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
             className={cn(
               "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left",
               canSwitchCompany && hasMultipleCompanies ?
-              "hover:bg-sidebar-accent/50 cursor-pointer" :
+              "hover:bg-sidebar-accent/35 cursor-pointer" :
               "cursor-default"
             )}>
-            <Building2 className="w-4 h-4 text-sidebar-foreground/60 shrink-0" />
+            <Building2 className="w-4 h-4 text-sidebar-foreground/85 shrink-0" />
             <span className="text-sm font-medium text-sidebar-foreground truncate flex-1">
               {currentCompany?.name || 'Seleccionar empresa'}
             </span>
             {canSwitchCompany && hasMultipleCompanies &&
-            <ChevronDown className="w-4 h-4 text-sidebar-foreground/50 shrink-0" />
+            <ChevronDown className="w-4 h-4 text-sidebar-foreground/85 shrink-0" />
             }
           </button>
         </PopoverTrigger>
@@ -758,23 +758,23 @@ function UserSection({ collapsed, onNavigate }: {collapsed: boolean; onNavigate?
         <PopoverTrigger asChild>
           <div
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-sidebar-accent/50 transition-colors",
+              "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-sidebar-accent/35 transition-colors",
               collapsed ? "justify-center" : ""
             )}>
             <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
               {avatarUrl ?
               <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" /> :
-              <span className="text-sm font-semibold text-white">{userInitials}</span>
+              <span className="text-sm font-semibold text-secondary-foreground">{userInitials}</span>
               }
             </div>
             {!collapsed &&
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-sidebar-foreground truncate">{userEmail}</p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">{primaryRole}</p>
+                 <p className="text-xs text-sidebar-foreground/85 truncate">{primaryRole}</p>
               </div>
             }
             {!collapsed &&
-            <ChevronDown className="w-4 h-4 text-sidebar-foreground/50" />
+            <ChevronDown className="w-4 h-4 text-sidebar-foreground/85" />
             }
           </div>
         </PopoverTrigger>
