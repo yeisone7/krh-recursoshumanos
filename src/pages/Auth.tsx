@@ -14,6 +14,7 @@ import { Loader2, Users, Shield, Building2, ChevronRight, Sparkles } from 'lucid
 import petrocasinosLogo from '@/assets/petrocasinos-logo-white.png';
 import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
 import krhLoginHeroLogo from '@/assets/krh-login-hero-logo-horizontal.png';
+import krhLoginHeroLogoOptimized from '@/assets/krh-login-hero-logo-horizontal.webp';
 
 const loginSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
@@ -141,7 +142,18 @@ export default function Auth() {
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-8 w-full">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <img src={krhLoginHeroLogo} alt="Logo horizontal de Gestión de Recursos Humanos" className="h-16 object-contain" />
+            <picture>
+              <source srcSet={krhLoginHeroLogoOptimized} type="image/webp" />
+              <img
+                src={krhLoginHeroLogo}
+                alt="Logo horizontal de Gestión de Recursos Humanos"
+                className="h-16 object-contain"
+                width={480}
+                height={240}
+                decoding="async"
+                fetchPriority="high"
+              />
+            </picture>
           </motion.div>
           
           <div className="space-y-5">
