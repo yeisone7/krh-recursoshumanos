@@ -119,4 +119,26 @@ describe('Auth login loading states', () => {
       redirectTo: `${window.location.origin}/reset-password`,
     });
   });
+
+  it('enfoca y anuncia el resumen de errores cuando falla el login', async () => {
+    authMocks.signIn.mockResolvedValue({ error: new Error('Invalid login credentials') });
+
+    renderAuth();
+
+    act(() => {
+      vi.advanceTimersByTime(1800);
+    });
+
+    fireEvent.change(screen.getByLabelText(/correo electrónico/i), { target: { value: 'admin@krh.com' } });
+    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: '123456' } });
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: /iniciar sesión/i }).closest('form')!);
+    });
+
+    const summary = screen.getByRole('alert');
+    expect(summary).toHaveAttribute('aria-live', 'assertive');
+    expect(summary).toHaveTextContent('No pudimos iniciar sesión');
+    expect(summary).toHaveTextContent('Correo o contraseña incorrectos.');
+    expect(summary).toHaveFocus();
+  });
 });
