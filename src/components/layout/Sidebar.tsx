@@ -84,13 +84,23 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
   const [isLoading, setIsLoading] = useState(!!logoUrl);
   const [showFallback, setShowFallback] = useState(!logoUrl);
   const fallbackTimerRef = useRef<number | null>(null);
-  const initials = (name || 'Empresa')
-    .split(' ')
-    .filter(Boolean)
-    .map((word) => word[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
+  const initials = useMemo(() => {
+    const ignoredWords = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'the', 'of', 'and', 's', 'sa', 'sas', 'ltda', 'inc']);
+    const words = (name || 'Empresa')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]+/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word && !ignoredWords.has(word.toLowerCase()));
+
+    const sourceWords = words.length > 0 ? words : ['Empresa'];
+    return sourceWords
+      .slice(0, 2)
+      .map((word) => word[0])
+      .join('')
+      .toUpperCase();
+  }, [name]);
 
   useEffect(() => {
     setImageError(false);
