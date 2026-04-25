@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const UPDATE_TOAST_ID = 'app-update-available';
+const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
 
 type VersionResponse = {
   version?: string;
@@ -30,7 +31,7 @@ export function AppUpdateNotifier() {
         const data = (await response.json()) as VersionResponse;
         const latestVersion = data.version;
 
-        if (!isMounted || !latestVersion || latestVersion === __APP_VERSION__) return;
+        if (!isMounted || !latestVersion || latestVersion === CURRENT_APP_VERSION) return;
 
         updateNotifiedRef.current = true;
         toast.info('Hay una actualización disponible', {
@@ -39,7 +40,10 @@ export function AppUpdateNotifier() {
           duration: Infinity,
           action: {
             label: 'Actualizar ahora',
-            onClick: () => window.location.reload(),
+            onClick: () => {
+              window.sessionStorage.setItem('krh_pending_update_reload', latestVersion);
+              window.location.assign(`${window.location.pathname}${window.location.search}${window.location.hash}`);
+            },
           },
         });
       } catch {
