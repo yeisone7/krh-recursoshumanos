@@ -419,7 +419,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group",
+                      "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
                       isActive ?
                       "bg-sidebar-accent text-sidebar-accent-foreground" :
                       "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
@@ -431,7 +431,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     )}>
                         {child.icon}
                       </span>
-                      <span className="font-medium text-sm">{child.label}</span>
+                      <span className="font-bold text-sm">{child.label}</span>
                     </motion.div>
                   </Link>);
 
