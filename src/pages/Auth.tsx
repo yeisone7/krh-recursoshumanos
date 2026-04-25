@@ -263,7 +263,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Left side - Hero Branding */}
-      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden bg-card">
+      <div className="hidden md:flex md:w-[42%] lg:w-[50%] xl:w-[55%] md:min-w-[320px] relative overflow-hidden bg-card">
         <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:28px_28px] opacity-15" />
         
         {/* Decorative geometric shapes */}
@@ -271,24 +271,24 @@ export default function Auth() {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-            className="absolute -top-32 -right-32 w-96 h-96 rounded-full border border-primary/35" />
+            className="absolute -top-20 -right-24 lg:-top-32 lg:-right-32 w-64 h-64 lg:w-96 lg:h-96 rounded-full border border-primary/35" />
 
           <motion.div
             animate={{ rotate: -360 }}
             transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-48 -left-24 w-[500px] h-[500px] rounded-full border border-primary/25 bg-primary/5" />
+            className="absolute -bottom-28 -left-20 lg:-bottom-48 lg:-left-24 w-80 h-80 lg:w-[500px] lg:h-[500px] rounded-full border border-primary/25 bg-primary/5" />
 
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}
-            className="absolute top-1/3 right-12 w-64 h-64 rounded-full border border-primary/30" />
+            className="absolute top-1/3 right-6 lg:right-12 w-40 h-40 lg:w-64 lg:h-64 rounded-full border border-primary/30" />
 
           <div className="absolute inset-y-0 right-0 w-1/3 bg-primary/10" />
           <div className="absolute bottom-0 left-0 h-28 w-full bg-gradient-to-t from-primary/15 to-transparent" />
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between p-8 w-full">
+        <div className="relative z-10 flex flex-col justify-between p-5 lg:p-8 w-full min-h-screen">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="relative h-16 w-[128px] sm:w-[160px]">
             {!isHeroLogoLoaded && <div className="absolute inset-0 rounded bg-secondary/15 animate-pulse" aria-hidden="true" />}
