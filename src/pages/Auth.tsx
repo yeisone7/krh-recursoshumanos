@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, Shield, Building2, ChevronRight, Sparkles } from 'lucide-react';
+import { Loader2, Users, Shield, Building2, ChevronRight, ChevronDown, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
@@ -93,6 +93,7 @@ const prefetchPostLoginRoute = (path: string) => {
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [isBrandPanelOpen, setIsBrandPanelOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecoverySent, setIsRecoverySent] = useState(false);
   const [loginErrorSummary, setLoginErrorSummary] = useState<string | null>(null);
