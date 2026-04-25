@@ -91,6 +91,10 @@ export default function Configuracion() {
   const [lockoutMaxAttempts, setLockoutMaxAttempts] = useState(5);
   const [lockoutMinutes, setLockoutMinutes] = useState(15);
 
+  // App update check state
+  const [updateCheckEnabled, setUpdateCheckEnabled] = useState(true);
+  const [updateCheckMinutes, setUpdateCheckMinutes] = useState(5);
+
   // Hiring notification role state
   const [hiringNotifRoleId, setHiringNotifRoleId] = useState<string>('none');
 
@@ -155,6 +159,13 @@ export default function Configuracion() {
         setLockoutEnabled(lockoutConfig.enabled ?? false);
         setLockoutMaxAttempts(lockoutConfig.max_attempts ?? 5);
         setLockoutMinutes(lockoutConfig.lockout_minutes ?? 15);
+      }
+
+      // Load app update check config
+      const appUpdateCheckConfig = systemConfig.app_update_check;
+      if (appUpdateCheckConfig) {
+        setUpdateCheckEnabled(appUpdateCheckConfig.enabled ?? true);
+        setUpdateCheckMinutes(appUpdateCheckConfig.minutes ?? 5);
       }
 
       // Load hiring notification role config
