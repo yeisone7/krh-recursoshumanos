@@ -55,6 +55,27 @@ const AuthFormSkeleton = () => (
   </div>
 );
 
+const prefetchPostLoginRoute = (path: string) => {
+  if (typeof window === 'undefined') return;
+
+  const href = path || '/';
+  if (!document.querySelector(`link[data-route-prefetch="${href}"]`)) {
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = href;
+    link.setAttribute('as', 'document');
+    link.setAttribute('data-route-prefetch', href);
+    document.head.appendChild(link);
+  }
+
+  void import('./Dashboard');
+  void import('@/components/layout/AppLayout');
+  void import('@/components/dashboard/AlertsPanel');
+  void import('@/components/dashboard/QuickActionsPanel');
+  void import('@/hooks/useEmployeeKPIs');
+  void import('@/hooks/useDashboardAlerts');
+};
+
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -79,6 +100,17 @@ export default function Auth() {
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
+  useEffect(() => {
+    const schedulePrefetch = () => prefetchPostLoginRoute(from);
+    if ('requestIdleCallback' in window) {
+      const idleId = window.requestIdleCallback(schedulePrefetch, { timeout: 1500 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(schedulePrefetch, 600);
+    return () => window.clearTimeout(timeoutId);
+  }, [from]);
+
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' }
@@ -91,6 +123,7 @@ export default function Auth() {
 
   const onLoginSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
+    prefetchPostLoginRoute(from);
     try {
       const { error } = await signIn(data.email, data.password);
       if (error) {
