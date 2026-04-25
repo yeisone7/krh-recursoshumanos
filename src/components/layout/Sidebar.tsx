@@ -717,13 +717,6 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
   const primaryRole = roles[0] ? roleLabels[roles[0]] || roles[0] : 'Usuario';
   const canSwitchCompany = roles.includes('admin') || isSuperAdmin;
   const hasMultipleCompanies = companies && companies.length > 1;
-  const companyInitials = (currentCompany?.name || 'Empresa')
-    .split(' ')
-    .map((word) => word[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
-
   const handleNavigate = (path: string) => {
     navigate(path);
     if (onNavigate) onNavigate();
@@ -738,12 +731,7 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
               "flex items-center gap-3 rounded-xl border border-sidebar-border bg-card shadow-sm cursor-pointer hover:border-primary/40 hover:shadow-md transition-all",
               collapsed ? "justify-center p-2" : "px-3 py-2"
             )}>
-            <div className="w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden border border-sidebar-border shrink-0">
-              {currentCompany?.logo_url ?
-              <img src={currentCompany.logo_url} alt={`Logo ${currentCompany.name}`} className="w-full h-full object-cover" /> :
-              <span className="text-sm font-bold text-sidebar-accent-foreground">{companyInitials}</span>
-              }
-            </div>
+            <CompanyLogo name={currentCompany?.name} logoUrl={currentCompany?.logo_url} />
             {!collapsed &&
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground truncate">{currentCompany?.name || 'Seleccionar empresa'}</p>
@@ -767,12 +755,7 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
                   "w-full flex items-center gap-3 rounded-lg text-left transition-colors",
                   canSwitchCompany && hasMultipleCompanies ? "hover:bg-accent p-2 -m-2 cursor-pointer" : "cursor-default"
                 )}>
-                  <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center overflow-hidden border border-border shrink-0">
-                    {currentCompany?.logo_url ?
-                    <img src={currentCompany.logo_url} alt={`Logo ${currentCompany.name}`} className="w-full h-full object-cover" /> :
-                    <Building2 className="w-5 h-5 text-primary" />
-                    }
-                  </div>
+                  <CompanyLogo name={currentCompany?.name} logoUrl={currentCompany?.logo_url} className="bg-accent border-border" fallbackIcon />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{currentCompany?.name || 'Seleccionar empresa'}</p>
                     <p className="text-xs text-muted-foreground truncate">{currentCompany?.nit || 'Empresa actual'}</p>
