@@ -126,13 +126,14 @@ const Install = () => {
           </p>
         </div>
 
-        {compatibilityIssues.length > 0 && !isInstalled && (
+        {(compatibilityIssues.length > 0 || installError) && !isInstalled && (
           <Card className="border-destructive/30 bg-destructive/10">
             <CardContent className="flex items-start gap-3 p-4">
               <AlertCircle className="h-6 w-6 text-destructive shrink-0 mt-0.5" />
               <div className="space-y-2">
                 <p className="text-sm text-foreground font-medium">No es posible instalar KRH en este momento.</p>
                 <ul className="list-disc pl-4 space-y-1 text-sm text-muted-foreground">
+                  {installError && <li>{installError}</li>}
                   {compatibilityIssues.map((issue) => (
                     <li key={issue}>{issue}</li>
                   ))}
@@ -141,6 +142,23 @@ const Install = () => {
             </CardContent>
           </Card>
         )}
+
+        <Button
+          onClick={handleInstall}
+          className="w-full gap-2"
+          size="lg"
+          disabled={installButtonState !== "ready" || !deferredPrompt}
+          variant={installButtonState === "error" ? "destructive" : "default"}
+        >
+          {installButtonState === "installed" ? (
+            <CheckCircle2 className="h-5 w-5" />
+          ) : installButtonState === "error" ? (
+            <AlertCircle className="h-5 w-5" />
+          ) : (
+            <Download className="h-5 w-5" />
+          )}
+          {installButtonLabel}
+        </Button>
 
         {isInstalled ? (
           <Card className="border-accent/30 bg-accent/10">
@@ -151,11 +169,6 @@ const Install = () => {
               </p>
             </CardContent>
           </Card>
-        ) : compatibilityIssues.length > 0 ? null : deferredPrompt ? (
-          <Button onClick={handleInstall} className="w-full gap-2" size="lg">
-            <Download className="h-5 w-5" />
-            Instalar ahora
-          </Button>
         ) : isIOS ? (
           <Card>
             <CardContent className="p-5 space-y-4">
