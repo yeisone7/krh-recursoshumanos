@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Download, Smartphone, Monitor, Share2, Plus, MoreVertical, CheckCircle2 } from "lucide-react";
+import { Download, Smartphone, Monitor, Share2, Plus, MoreVertical, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
@@ -13,10 +13,28 @@ const Install = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [compatibilityIssues, setCompatibilityIssues] = useState<string[]>([]);
 
   useEffect(() => {
     const ua = navigator.userAgent;
     setIsIOS(/iPad|iPhone|iPod/.test(ua));
+
+    const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+    const issues: string[] = [];
+
+    if (!window.isSecureContext && !isLocalhost) {
+      issues.push("La app debe abrirse desde una conexión segura HTTPS.");
+    }
+
+    if (!("serviceWorker" in navigator)) {
+      issues.push("Este navegador no tiene soporte para Service Worker.");
+    }
+
+    if (!document.querySelector('link[rel="manifest"]')) {
+      issues.push("No se encontró el manifest de instalación de la aplicación.");
+    }
+
+    setCompatibilityIssues(issues);
 
     if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
@@ -56,6 +74,22 @@ const Install = () => {
           </p>
         </div>
 
+        {compatibilityIssues.length > 0 && !isInstalled && (
+          <Card className="border-destructive/30 bg-destructive/10">
+            <CardContent className="flex items-start gap-3 p-4">
+              <AlertCircle className="h-6 w-6 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm text-foreground font-medium">No es posible instalar KRH en este momento.</p>
+                <ul className="list-disc pl-4 space-y-1 text-sm text-muted-foreground">
+                  {compatibilityIssues.map((issue) => (
+                    <li key={issue}>{issue}</li>
+                  ))}
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {isInstalled ? (
           <Card className="border-accent/30 bg-accent/10">
             <CardContent className="flex items-center gap-3 p-4">
@@ -65,7 +99,7 @@ const Install = () => {
               </p>
             </CardContent>
           </Card>
-        ) : deferredPrompt ? (
+        ) : compatibilityIssues.length > 0 ? null : deferredPrompt ? (
           <Button onClick={handleInstall} className="w-full gap-2" size="lg">
             <Download className="h-5 w-5" />
             Instalar ahora
