@@ -1,81 +1,35 @@
+Plan de ajuste visual
 
+1. Cambiar la paleta global a un estilo claro similar a la imagen adjunta
+   - Fondo principal blanco / gris muy claro.
+   - Sidebar blanco con bordes suaves.
+   - Verde #38c292 como color de acento principal en activos, botones, links, iconos activos, badges y estados hover.
+   - Textos principales en tonos oscuros y textos secundarios en gris azulado para mejorar legibilidad.
 
-# Traslado Inter-Empresa de Empleados
+2. Rediseñar el sidebar
+   - Quitar el fondo verde sólido del sidebar y dejarlo blanco como la referencia.
+   - Menú activo con fondo verde muy suave y texto/icono #38c292.
+   - Menús inactivos en gris azulado.
+   - Secciones, bordes, tooltips y badges ajustados al nuevo esquema.
+   - Mantener el colapsado actual, pero con apariencia coherente en ambos estados.
 
-## Resumen
+3. Mover la empresa actual desde el header al pie del sidebar
+   - Eliminar del header el selector “Empresa actual”.
+   - Usar el componente de selector de empresa existente dentro del sidebar, ubicado en la zona inferior, arriba o integrado con la sección inferior, similar a la tarjeta de la imagen.
+   - Mostrar nombre de empresa y dato secundario, por ejemplo NIT o email si está disponible.
+   - Mantener el cambio de empresa si el usuario tiene permisos y múltiples empresas.
 
-Crear un flujo de "Traslado entre Empresas" que permita mover un empleado de una empresa a otra, ejecutando el retiro completo en la empresa origen, copiando automáticamente los datos personales a la empresa destino y manteniendo la misma cuenta de usuario.
+4. Reemplazar el avatar por el logo de la empresa
+   - En la tarjeta inferior del sidebar, mostrar `companies.logo_url` como imagen principal.
+   - Si la empresa no tiene logo, usar un fallback con icono de empresa o iniciales.
+   - Mantener el menú de usuario/perfil accesible desde esa zona, sin perder acciones como Perfil, Configuración, Manual y Cerrar sesión.
 
-## Flujo del Proceso
+Detalles técnicos
 
-```text
-Empresa Origen                         Empresa Destino
-─────────────────                      ─────────────────
-1. Admin inicia "Traslado"
-2. Selecciona empresa destino
-3. Se ejecuta retiro completo
-   (acta, liquidación, etc.)
-4. Empleado queda "Retirado"
-                                       5. Se crea nuevo registro
-                                          con datos copiados
-                                       6. Cuenta de usuario se
-                                          reasigna a nueva empresa
-7. Registro de traslado vincula
-   ambos empleados
-```
+- Archivos principales a modificar:
+  - `src/index.css`: tokens globales de color, sidebar, badges, borders y estados.
+  - `src/components/layout/Header.tsx`: retirar selector de empresa del header.
+  - `src/components/layout/Sidebar.tsx`: rediseñar estilos del menú y convertir la sección inferior en tarjeta de empresa/usuario.
+  - `src/components/layout/MobileBottomNav.tsx`: reemplazar el naranja fijo por #38c292 o tokens del sistema para mantener consistencia móvil.
 
-## Cambios en Base de Datos
-
-**Nueva tabla `employee_transfers`:**
-- `id`, `created_at`, `created_by`
-- `source_company_id` — empresa origen
-- `target_company_id` — empresa destino
-- `source_employee_id` — registro del empleado en origen
-- `target_employee_id` — nuevo registro creado en destino
-- `transfer_date` — fecha del traslado
-- `termination_id` — referencia al proceso de retiro en origen
-- `status` — (pending, completed, cancelled)
-- `notes` — observaciones
-
-RLS: acceso para miembros de cualquiera de las dos empresas involucradas.
-
-## Cambios en el Frontend
-
-### 1. Nuevo componente `TransferEmployeeDialog`
-- Se accede desde el menú de acciones del empleado (o desde el perfil)
-- Paso 1: Seleccionar empresa destino (dropdown con todas las empresas disponibles)
-- Paso 2: Confirmar datos a copiar (nombre, documento, contacto, seguridad social, familia, banco)
-- Paso 3: Confirmar y ejecutar
-
-### 2. Hook `useEmployeeTransfer`
-- Crea el registro en `employee_transfers` con status `pending`
-- Copia datos del empleado a la nueva empresa (inserta en `employees_v2`, `employee_contact`, `employee_social_security`, `employee_family`, `employee_bank_info`)
-- Reasigna la cuenta de usuario: agrega `user_company_assignments` para la empresa destino
-- Actualiza status a `completed`
-- Registra evento de auditoría
-
-### 3. Indicador visual
-- Badge "Trasladado" en el perfil del empleado retirado por traslado
-- Link al nuevo registro en la empresa destino desde el historial
-
-### 4. Integración con retiro existente
-- El proceso de retiro se ejecuta de forma estándar (ya existe `TerminationProcessDialog`)
-- El traslado se inicia **después** de completar el retiro, o como parte del mismo flujo si se prefiere
-
-## Detalle Técnico
-
-- Los datos copiados son: información personal (`employees_v2`), contacto (`employee_contact`), seguridad social (`employee_social_security`), familia (`employee_family`), información bancaria (`employee_bank_info`)
-- NO se copian: contratos, turnos, nómina, procesos disciplinarios (pertenecen a la empresa origen)
-- La información laboral (`employee_work_info`) NO se copia — se debe crear nueva en la empresa destino (nuevo cargo, centro, área)
-- La cuenta de usuario mantiene acceso a ambas empresas temporalmente; el admin puede remover el acceso a la empresa origen después si lo desea
-
-## Archivos Involucrados
-
-| Archivo | Acción |
-|---|---|
-| Migración SQL | Crear tabla `employee_transfers` con RLS |
-| `src/hooks/useEmployeeTransfer.ts` | Crear — lógica del traslado |
-| `src/components/employees/TransferEmployeeDialog.tsx` | Crear — UI del traslado |
-| `src/components/employees/EmployeeDetail.tsx` (o similar) | Editar — agregar opción de traslado en menú |
-| `src/hooks/useAdminUsers.ts` | Sin cambios (reasignación de empresa ya existe) |
-
+- La tabla de empresas ya tiene `logo_url`, así que no hace falta cambiar base de datos para mostrar el logo.
