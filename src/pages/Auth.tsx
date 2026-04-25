@@ -142,16 +142,22 @@ export default function Auth() {
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: { email: '', password: '' }
   });
 
   const recoveryForm = useForm<RecoveryFormData>({
     resolver: zodResolver(recoverySchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: { email: '' }
   });
 
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: { first_name: '', last_name: '', document_number: '', email: '', password: '', confirm_password: '' }
   });
 
