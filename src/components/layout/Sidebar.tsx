@@ -656,83 +656,14 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
 }
 
-function CompanySelector({ collapsed }: {collapsed: boolean;}) {
-  const { currentCompanyId, setCurrentCompanyId, roles, isSuperAdmin, companies: authCompanies } = useAuth();
+function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNavigate?: () => void;}) {
+  const { user, roles, signOut, currentCompanyId, setCurrentCompanyId, isSuperAdmin, companies: authCompanies } = useAuth();
   const { data: queriedCompanies } = useCompanies();
-  const companies = isSuperAdmin ? (queriedCompanies || authCompanies) : (queriedCompanies || []);
+  const companies = isSuperAdmin ? (queriedCompanies || authCompanies) : authCompanies;
   const { data: currentCompany } = useCompany(currentCompanyId || undefined);
-  const [open, setOpen] = useState(false);
-
-  const canSwitchCompany = roles.includes('admin') || isSuperAdmin;
-  const hasMultipleCompanies = companies && companies.length > 1;
-
-  if (collapsed) {
-    return (
-      <div className="px-3 py-2">
-        <div className="w-full flex justify-center">
-          <div className="w-8 h-8 rounded-lg bg-sidebar-accent flex items-center justify-center">
-            <Building2 className="w-4 h-4 text-sidebar-foreground" />
-          </div>
-        </div>
-      </div>);
-  }
-
-  return (
-    <div className="px-3 py-2 border-b border-sidebar-border">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild disabled={!canSwitchCompany || !hasMultipleCompanies}>
-          <button
-            className={cn(
-              "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left",
-              canSwitchCompany && hasMultipleCompanies ?
-              "hover:bg-sidebar-accent/35 cursor-pointer" :
-              "cursor-default"
-            )}>
-            <Building2 className="w-4 h-4 text-sidebar-foreground/85 shrink-0" />
-            <span className="text-sm font-medium text-sidebar-foreground truncate flex-1">
-              {currentCompany?.name || 'Seleccionar empresa'}
-            </span>
-            {canSwitchCompany && hasMultipleCompanies &&
-            <ChevronDown className="w-4 h-4 text-sidebar-foreground/85 shrink-0" />
-            }
-          </button>
-        </PopoverTrigger>
-        <PopoverContent
-          side="bottom"
-          align="start"
-          className="w-56 p-1 bg-popover border border-border shadow-lg"
-          sideOffset={4}>
-          <div className="space-y-0.5">
-            {companies?.map((company) =>
-            <button
-              key={company.id}
-              onClick={() => {
-                setCurrentCompanyId(company.id);
-                setOpen(false);
-              }}
-              className={cn(
-                "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
-                currentCompanyId === company.id ?
-                "bg-primary/10 text-primary" :
-                "text-foreground hover:bg-accent"
-              )}>
-                <Building2 className="w-4 h-4 shrink-0" />
-                <span className="truncate flex-1 text-left">{company.name}</span>
-                {currentCompanyId === company.id &&
-              <Check className="w-4 h-4 shrink-0" />
-              }
-              </button>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>);
-}
-
-function UserSection({ collapsed, onNavigate }: {collapsed: boolean; onNavigate?: () => void;}) {
-  const { user, roles, signOut } = useAuth();
   const navigate = useNavigate();
   const [manualOpen, setManualOpen] = useState(false);
+  const [companyOpen, setCompanyOpen] = useState(false);
 
   const roleLabels: Record<string, string> = {
     admin: 'Administrador',
@@ -744,9 +675,15 @@ function UserSection({ collapsed, onNavigate }: {collapsed: boolean; onNavigate?
   };
 
   const userEmail = user?.email || '';
-  const userInitials = userEmail.substring(0, 2).toUpperCase();
-  const avatarUrl = user?.user_metadata?.avatar_url;
   const primaryRole = roles[0] ? roleLabels[roles[0]] || roles[0] : 'Usuario';
+  const canSwitchCompany = roles.includes('admin') || isSuperAdmin;
+  const hasMultipleCompanies = companies && companies.length > 1;
+  const companyInitials = (currentCompany?.name || 'Empresa')
+    .split(' ')
+    .map((word) => word[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -754,28 +691,28 @@ function UserSection({ collapsed, onNavigate }: {collapsed: boolean; onNavigate?
   };
 
   return (<>
-    <div className="border-t border-sidebar-border p-3">
+    <div className="border-t border-sidebar-border p-3 bg-sidebar">
       <Popover>
         <PopoverTrigger asChild>
           <div
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-sidebar-accent/35 transition-colors",
-              collapsed ? "justify-center" : ""
+              "flex items-center gap-3 rounded-xl border border-sidebar-border bg-card shadow-sm cursor-pointer hover:border-primary/40 hover:shadow-md transition-all",
+              collapsed ? "justify-center p-2" : "px-3 py-2"
             )}>
-            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
-              {avatarUrl ?
-              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" /> :
-              <span className="text-sm font-semibold text-secondary-foreground">{userInitials}</span>
+            <div className="w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden border border-sidebar-border shrink-0">
+              {currentCompany?.logo_url ?
+              <img src={currentCompany.logo_url} alt={`Logo ${currentCompany.name}`} className="w-full h-full object-cover" /> :
+              <span className="text-sm font-bold text-sidebar-accent-foreground">{companyInitials}</span>
               }
             </div>
             {!collapsed &&
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">{userEmail}</p>
-                 <p className="text-xs text-sidebar-foreground/85 truncate">{primaryRole}</p>
+                <p className="text-sm font-bold text-foreground truncate">{currentCompany?.name || 'Seleccionar empresa'}</p>
+                 <p className="text-[11px] text-muted-foreground truncate">{currentCompany?.nit || userEmail}</p>
               </div>
             }
             {!collapsed &&
-            <ChevronDown className="w-4 h-4 text-sidebar-foreground/85" />
+            <ExternalLink className="w-4 h-4 text-muted-foreground" />
             }
           </div>
         </PopoverTrigger>
@@ -784,8 +721,49 @@ function UserSection({ collapsed, onNavigate }: {collapsed: boolean; onNavigate?
           align="start"
           className="w-64 p-0 bg-popover border border-border shadow-lg"
           sideOffset={8}>
-          <div className="p-4 border-b border-border">
-            <p className="text-sm font-medium text-foreground">{userEmail}</p>
+          <div className="p-4 border-b border-border space-y-3">
+            <Popover open={companyOpen} onOpenChange={setCompanyOpen}>
+              <PopoverTrigger asChild disabled={!canSwitchCompany || !hasMultipleCompanies}>
+                <button className={cn(
+                  "w-full flex items-center gap-3 rounded-lg text-left transition-colors",
+                  canSwitchCompany && hasMultipleCompanies ? "hover:bg-accent p-2 -m-2 cursor-pointer" : "cursor-default"
+                )}>
+                  <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center overflow-hidden border border-border shrink-0">
+                    {currentCompany?.logo_url ?
+                    <img src={currentCompany.logo_url} alt={`Logo ${currentCompany.name}`} className="w-full h-full object-cover" /> :
+                    <Building2 className="w-5 h-5 text-primary" />
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{currentCompany?.name || 'Seleccionar empresa'}</p>
+                    <p className="text-xs text-muted-foreground truncate">{currentCompany?.nit || 'Empresa actual'}</p>
+                  </div>
+                  {canSwitchCompany && hasMultipleCompanies && <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="right" align="start" className="w-64 p-1 bg-popover border border-border shadow-lg" sideOffset={12}>
+                <div className="space-y-0.5">
+                  {companies?.map((company) =>
+                  <button
+                    key={company.id}
+                    onClick={() => {
+                      setCurrentCompanyId(company.id);
+                      if (user) localStorage.setItem(`last_company_${user.id}`, company.id);
+                      setCompanyOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors",
+                      currentCompanyId === company.id ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent"
+                    )}>
+                    <Building2 className="w-4 h-4 shrink-0" />
+                    <span className="truncate flex-1 text-left">{company.name}</span>
+                    {currentCompanyId === company.id && <Check className="w-4 h-4 shrink-0" />}
+                  </button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+            <p className="text-sm font-medium text-foreground truncate">{userEmail}</p>
             <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded">
               {primaryRole}
             </span>
