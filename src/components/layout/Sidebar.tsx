@@ -294,6 +294,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     return canView(item.moduleCode);
   }, [canView, isAdmin, permissionsLoaded]);
 
+  const canViewQuickAccessItem = useCallback((item: NavItem): boolean => {
+    if (isAdmin || isSuperAdmin) return true;
+    if (!permissionsLoaded) return false;
+    if (!item.moduleCode) return true;
+    return canView(item.moduleCode);
+  }, [canView, isAdmin, isSuperAdmin, permissionsLoaded]);
+
   const filteredCoreNavItems = useMemo(() => filterItems(coreNavItems), [filterItems]);
   const filteredPersonnelNavItems = useMemo(() => filterItems(personnelNavItems), [filterItems]);
   const filteredSucursalesNavItems = useMemo(() => filterItems(sucursalesNavItems), [filterItems]);
@@ -316,7 +323,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     { label: 'Empleados', icon: <Users className="h-5 w-5 shrink-0" strokeWidth={1.9} absoluteStrokeWidth />, href: '/empleados', moduleCode: 'empleados' },
     { label: 'Contratos', icon: <FileText className="h-5 w-5 shrink-0" strokeWidth={1.9} absoluteStrokeWidth />, href: '/contratos', moduleCode: 'contratos' },
     { label: 'Alertas', icon: <Bell className="h-5 w-5 shrink-0" strokeWidth={1.9} absoluteStrokeWidth />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
-  ].filter(canViewItem), [alertCount, canViewItem]);
+  ].filter(canViewQuickAccessItem), [alertCount, canViewQuickAccessItem]);
 
   const showCapacitaciones = canViewItem(capacitacionesItem);
   const showEvaluaciones = canViewItem(evaluacionesItem);
