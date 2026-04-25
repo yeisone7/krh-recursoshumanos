@@ -90,7 +90,9 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
         `)
         .in('employee_id', employeeIds)
         .eq('is_terminated', false)
-        .neq('contract_type', 'indefinido');
+        .neq('contract_type', 'indefinido')
+        .not('end_date', 'is', null)
+        .lte('end_date', in35Days);
 
       if (contracts) {
         for (const contract of contracts) {
@@ -155,6 +157,8 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
         .select('id, employee_id, exam_type, expiration_date')
         .in('employee_id', employeeIds)
         .not('expiration_date', 'is', null)
+        .gte('expiration_date', todayStr)
+        .lte('expiration_date', in30Days)
         .neq('exam_type', 'egreso');
 
       if (exams) {
@@ -188,7 +192,10 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
       const { data: dotations } = await supabase
         .from('dotation_deliveries')
         .select('id, employee_id, item_name, expiration_date')
-        .in('employee_id', employeeIds);
+        .in('employee_id', employeeIds)
+        .not('expiration_date', 'is', null)
+        .gte('expiration_date', todayStr)
+        .lte('expiration_date', in30Days);
 
       if (dotations) {
         for (const dotation of dotations) {
