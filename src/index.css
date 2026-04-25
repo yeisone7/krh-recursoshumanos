@@ -72,7 +72,7 @@
     --warning-foreground: 38 95% 15%;
     --warning-light: 38 95% 95%;
 
-    --destructive: 0 75% 55%;
+    --destructive: 0 74% 42%;
     --destructive-foreground: 0 0% 100%;
     --destructive-light: 0 75% 96%;
 
@@ -90,9 +90,9 @@
     /* Sidebar */
     --sidebar-background: 159 51% 49%;
     --sidebar-foreground: 154 38% 9%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 154 38% 9%;
-    --sidebar-accent: 159 45% 42%;
+    --sidebar-primary: 154 38% 9%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 100%;
     --sidebar-accent-foreground: 154 38% 9%;
     --sidebar-border: 159 42% 39%;
     --sidebar-ring: 159 51% 49%;
@@ -171,9 +171,9 @@
 
     --sidebar-background: 159 51% 49%;
     --sidebar-foreground: 154 38% 9%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 154 38% 9%;
-    --sidebar-accent: 159 45% 42%;
+    --sidebar-primary: 154 38% 9%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 100%;
     --sidebar-accent-foreground: 154 38% 9%;
     --sidebar-border: 159 42% 39%;
     --sidebar-ring: 159 51% 49%;
