@@ -9,11 +9,18 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+type InstallButtonState = "ready" | "installed" | "error";
+
+const isAppInstalled = () =>
+  window.matchMedia("(display-mode: standalone)").matches ||
+  (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
 const Install = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [compatibilityIssues, setCompatibilityIssues] = useState<string[]>([]);
+  const [installError, setInstallError] = useState<string | null>(null);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -36,19 +43,40 @@ const Install = () => {
 
     setCompatibilityIssues(issues);
 
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true);
-    }
+    const displayModeQuery = window.matchMedia("(display-mode: standalone)");
+    const refreshInstalledState = () => setIsInstalled(isAppInstalled());
+
+    refreshInstalledState();
 
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setInstallError(null);
+    };
+
+    const appInstalledHandler = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+      setInstallError(null);
+    };
+
+    const visibilityHandler = () => {
+      if (document.visibilityState === "visible") refreshInstalledState();
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-    window.addEventListener("appinstalled", () => setIsInstalled(true));
+    window.addEventListener("appinstalled", appInstalledHandler);
+    window.addEventListener("focus", refreshInstalledState);
+    document.addEventListener("visibilitychange", visibilityHandler);
+    displayModeQuery.addEventListener("change", refreshInstalledState);
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", appInstalledHandler);
+      window.removeEventListener("focus", refreshInstalledState);
+      document.removeEventListener("visibilitychange", visibilityHandler);
+      displayModeQuery.removeEventListener("change", refreshInstalledState);
+    };
   }, []);
 
   const handleInstall = async () => {
