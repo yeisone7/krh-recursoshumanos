@@ -312,6 +312,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       : []),
   ], [alertCount, filteredToolsNavItemsBase, canViewItem]);
 
+  const quickAccessItems = useMemo<NavItem[]>(() => [
+    { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados', moduleCode: 'empleados' },
+    { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos', moduleCode: 'contratos' },
+    { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
+  ].filter(canViewItem), [alertCount, canViewItem]);
+
   const showCapacitaciones = canViewItem(capacitacionesItem);
   const showEvaluaciones = canViewItem(evaluacionesItem);
   const showCatalogos = canViewItem(catalogosItem);
@@ -406,6 +412,49 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       <p className="text-[10px] font-extrabold text-sidebar-foreground/45 uppercase tracking-[0.16em] px-3 pt-4 pb-1">
         {label}
       </p>
+    ) : null
+  );
+
+  const QuickAccessMenu = () => (
+    quickAccessItems.length > 0 ? (
+      <div className="pt-3">
+        <SectionLabel label="Accesos rápidos" />
+        <div className={cn("gap-2", isCollapsed ? "flex flex-col" : "grid grid-cols-3")}>
+          {quickAccessItems.map((item) => {
+            const isActive = location.pathname === item.href;
+            const content = (
+              <Link key={item.href} to={item.href} onClick={handleNavClick}>
+                <motion.div
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={cn(
+                    "relative flex items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent/40 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    isCollapsed ? "h-10" : "h-16 flex-col gap-1 px-1",
+                    isActive && "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                  )}
+                >
+                  {item.icon}
+                  {!isCollapsed && <span className="max-w-full truncate text-[10px] font-extrabold leading-tight">{item.label}</span>}
+                  {item.badge && (
+                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-extrabold text-primary-foreground ring-2 ring-sidebar">
+                      {item.badge}
+                    </span>
+                  )}
+                </motion.div>
+              </Link>
+            );
+
+            return isCollapsed ? (
+              <Tooltip key={item.href} delayDuration={0}>
+                <TooltipTrigger asChild>{content}</TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8} className="rounded-lg border border-border bg-popover px-3 py-2 font-bold text-popover-foreground shadow-lg">
+                  {item.label === 'Alertas' ? 'Alertas Activas' : item.label}
+                </TooltipContent>
+              </Tooltip>
+            ) : content;
+          })}
+        </div>
+      </div>
     ) : null
   );
 
@@ -607,6 +656,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             )}
           </div>
         )}
+
+        <QuickAccessMenu />
 
         {/* Personnel */}
         {filteredPersonnelNavItems.length > 0 && (
