@@ -551,7 +551,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       {!isMobileDrawer && (
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-20 -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors">
+          className="absolute top-20 -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-[0_8px_18px_hsl(var(--primary)/0.35),0_2px_6px_hsl(var(--foreground)/0.18)] flex items-center justify-center hover:bg-primary/90 hover:shadow-[0_10px_22px_hsl(var(--primary)/0.42),0_3px_8px_hsl(var(--foreground)/0.22)] transition-[background-color,box-shadow,transform] hover:scale-105">
           {collapsed ?
             <ChevronRight className="w-3.5 h-3.5" /> :
             <ChevronLeft className="w-3.5 h-3.5" />
