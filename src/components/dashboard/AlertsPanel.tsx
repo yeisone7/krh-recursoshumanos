@@ -41,7 +41,7 @@ const levelStyles = {
 
 export function AlertsPanel() {
   const navigate = useNavigate();
-  const { data: alerts = [], isLoading } = useDashboardAlerts();
+  const { data: alerts = [], isLoading } = useDashboardAlerts({ includeDotationCompliance: false });
 
   const handleAlertClick = (alert: DashboardAlert) => {
     switch (alert.type) {
