@@ -80,12 +80,36 @@ const Install = () => {
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") setIsInstalled(true);
-    setDeferredPrompt(null);
+    if (isInstalled) return;
+
+    if (!deferredPrompt) {
+      setInstallError("El navegador todavía no habilitó la instalación automática.");
+      return;
+    }
+
+    try {
+      setInstallError(null);
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") setIsInstalled(true);
+      setDeferredPrompt(null);
+    } catch {
+      setInstallError("No se pudo iniciar la instalación. Inténtalo desde el menú del navegador.");
+    }
   };
+
+  const installButtonState: InstallButtonState = isInstalled
+    ? "installed"
+    : compatibilityIssues.length > 0 || installError
+      ? "error"
+      : "ready";
+
+  const installButtonLabel =
+    installButtonState === "installed"
+      ? "Ya instalada"
+      : installButtonState === "error"
+        ? "Instalación no disponible"
+        : "Instalar ahora";
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
