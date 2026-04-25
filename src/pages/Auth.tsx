@@ -104,7 +104,16 @@ export default function Auth() {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setIsFormReady(true));
-    return () => window.cancelAnimationFrame(frame);
+    const fallbackTimeout = window.setTimeout(() => setIsFormReady(true), 1200);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(fallbackTimeout);
+    };
+  }, []);
+
+  useEffect(() => {
+    const fallbackTimeout = window.setTimeout(() => setIsHeroLogoLoaded(true), 1800);
+    return () => window.clearTimeout(fallbackTimeout);
   }, []);
 
   useEffect(() => {
