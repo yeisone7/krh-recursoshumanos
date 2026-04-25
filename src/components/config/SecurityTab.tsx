@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, LogOut, Timer, Loader2, Save, Monitor, Lock } from 'lucide-react';
+import { Shield, LogOut, Timer, Loader2, Save, Monitor, Lock, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,10 @@ interface SecurityTabProps {
   onLockoutEnabledChange: (v: boolean) => void;
   onLockoutMaxAttemptsChange: (v: number) => void;
   onLockoutMinutesChange: (v: number) => void;
+  updateCheckEnabled: boolean;
+  updateCheckMinutes: number;
+  onUpdateCheckEnabledChange: (v: boolean) => void;
+  onUpdateCheckMinutesChange: (v: number) => void;
 }
 
 export function SecurityTab({
@@ -46,12 +50,17 @@ export function SecurityTab({
   onLockoutEnabledChange,
   onLockoutMaxAttemptsChange,
   onLockoutMinutesChange,
+  updateCheckEnabled,
+  updateCheckMinutes,
+  onUpdateCheckEnabledChange,
+  onUpdateCheckMinutesChange,
 }: SecurityTabProps) {
   const { signOut } = useAuth();
   const updateConfig = useUpdateSystemConfig();
   const [signingOutAll, setSigningOutAll] = useState(false);
   const [savingTimeout, setSavingTimeout] = useState(false);
   const [savingLockout, setSavingLockout] = useState(false);
+  const [savingUpdateCheck, setSavingUpdateCheck] = useState(false);
 
   const handleSignOutAll = async () => {
     setSigningOutAll(true);
@@ -99,6 +108,22 @@ export function SecurityTab({
       toast.error('Error al guardar la configuración');
     } finally {
       setSavingLockout(false);
+    }
+  };
+
+  const handleSaveUpdateCheck = async () => {
+    setSavingUpdateCheck(true);
+    try {
+      await updateConfig.mutateAsync({
+        key: 'app_update_check',
+        value: { enabled: updateCheckEnabled, minutes: updateCheckEnabled ? updateCheckMinutes : 0 },
+        description: 'Configuración del chequeo automático de actualizaciones de la aplicación',
+      });
+      toast.success('Configuración de actualizaciones guardada');
+    } catch {
+      toast.error('Error al guardar la configuración');
+    } finally {
+      setSavingUpdateCheck(false);
     }
   };
 
@@ -288,6 +313,60 @@ export function SecurityTab({
 
           <Button onClick={handleSaveLockout} disabled={savingLockout}>
             {savingLockout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+            Guardar Configuración
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* App Update Check */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <RefreshCw className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle>Chequeo automático de actualizaciones</CardTitle>
+              <CardDescription>
+                Revisa si hay una nueva versión publicada y avisa a los usuarios que tengan la app abierta
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-lg border">
+            <div>
+              <Label className="text-sm font-medium">Activar chequeo automático</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Al desactivarlo no se mostrará el aviso automático de actualización pendiente
+              </p>
+            </div>
+            <Switch checked={updateCheckEnabled} onCheckedChange={onUpdateCheckEnabledChange} />
+          </div>
+
+          {updateCheckEnabled && (
+            <div className="p-4 rounded-lg border space-y-3">
+              <Label>Revisar cada (minutos)</Label>
+              <div className="flex items-center gap-3">
+                <Input
+                  type="number"
+                  min={1}
+                  max={1440}
+                  value={updateCheckMinutes}
+                  onChange={(e) => onUpdateCheckMinutesChange(Math.max(1, Math.min(1440, parseInt(e.target.value) || 5)))}
+                  className="w-32"
+                />
+                <span className="text-sm text-muted-foreground">
+                  = {updateCheckMinutes >= 60
+                    ? `${Math.floor(updateCheckMinutes / 60)}h ${updateCheckMinutes % 60}min`
+                    : `${updateCheckMinutes} minutos`}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <Button onClick={handleSaveUpdateCheck} disabled={savingUpdateCheck}>
+            {savingUpdateCheck ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             Guardar Configuración
           </Button>
         </CardContent>
