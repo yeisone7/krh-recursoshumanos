@@ -375,6 +375,48 @@
   }
 }
 
+#app-launch-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  place-items: center;
+  align-content: center;
+  gap: 0.75rem;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transition: opacity 360ms ease, visibility 360ms ease;
+}
+
+#app-launch-screen img {
+  width: 104px;
+  height: 104px;
+  filter: drop-shadow(0 18px 28px hsl(var(--primary) / 0.24));
+}
+
+#app-launch-screen strong {
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+#app-launch-screen span {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+}
+
+@media (display-mode: standalone) {
+  #app-launch-screen {
+    display: grid;
+  }
+}
+
+body.app-ready #app-launch-screen {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* Themed scrollbar */
 .scrollbar-themed::-webkit-scrollbar {
   width: 8px;
