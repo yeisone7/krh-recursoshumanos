@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Auth from './Auth';
@@ -52,14 +52,12 @@ describe('Auth login loading states', () => {
 
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(1800);
     });
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
-      expect(container.querySelector('.animate-pulse')).not.toBeInTheDocument();
-    });
+    expect(screen.getByLabelText(/correo electrónico/i)).toBeInTheDocument();
+    expect(container.querySelector('.animate-pulse')).not.toBeInTheDocument();
   });
 
   it('muestra aria-busy, spinner y texto accesible mientras autentica', async () => {
@@ -67,15 +65,17 @@ describe('Auth login loading states', () => {
 
     renderAuth();
 
-    await act(async () => {
-      vi.runOnlyPendingTimers();
+    act(() => {
+      vi.advanceTimersByTime(1800);
     });
 
     fireEvent.change(screen.getByLabelText(/correo electrónico/i), { target: { value: 'admin@krh.com' } });
     fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: '123456' } });
-    fireEvent.submit(screen.getByRole('button', { name: /iniciar sesión/i }).closest('form')!);
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: /iniciar sesión/i }).closest('form')!);
+    });
 
-    const button = await screen.findByRole('button', { name: /ingresando/i });
+    const button = screen.getByRole('button', { name: /ingresando/i });
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute('aria-busy', 'true');
     expect(button.querySelector('svg')).toHaveClass('animate-spin');
