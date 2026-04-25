@@ -127,7 +127,7 @@
     --popover-foreground: 220 20% 95%;
 
     --primary: 140 63% 49%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 224 40% 14%;
     --primary-hover: 140 63% 40%;
     --primary-light: 140 50% 18%;
 
@@ -143,7 +143,7 @@
     --muted-foreground: 224 15% 55%;
 
     --accent: 140 63% 49%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 224 40% 14%;
     --accent-light: 140 50% 18%;
 
     --violet: 262 55% 60%;
@@ -165,14 +165,14 @@
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 224 20% 20%;
-    --input: 224 20% 20%;
+    --border: 140 28% 28%;
+    --input: 140 28% 28%;
     --ring: 140 63% 49%;
 
     --sidebar-background: 140 58% 18%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 140 63% 49%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary-foreground: 224 40% 14%;
     --sidebar-accent: 140 50% 24%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 140 45% 22%;
