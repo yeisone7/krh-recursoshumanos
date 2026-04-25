@@ -225,7 +225,8 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
         .select('id, employee_id, certification_type, certification_name, license_category, expiry_date')
         .in('employee_id', employeeIds)
         .eq('is_valid', true)
-        .not('expiry_date', 'is', null);
+        .not('expiry_date', 'is', null)
+        .lte('expiry_date', in30Days);
 
       if (certifications) {
         for (const cert of certifications) {
@@ -266,9 +267,6 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
         .eq('company_id', currentCompanyId!);
 
       if (incapacities) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
         for (const inc of incapacities) {
           const employee = employeeMap.get(inc.employee_id);
           if (!employee) continue;
@@ -312,7 +310,8 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
       const { data: vacationBalances } = await supabase
         .from('vacation_balances')
         .select('id, employee_id, days_pending, accumulation_expires')
-        .eq('company_id', currentCompanyId!);
+        .eq('company_id', currentCompanyId!)
+        .or(`days_pending.gt.30,and(accumulation_expires.gte.${todayStr},accumulation_expires.lte.${in30Days})`);
 
       if (vacationBalances) {
         for (const balance of vacationBalances) {
