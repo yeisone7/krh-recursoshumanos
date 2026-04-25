@@ -260,12 +260,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
           isActive ?
           "bg-sidebar-accent text-sidebar-accent-foreground" :
-          "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+          "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-sidebar-accent/35"
         )}>
 
           <span className={cn(
           "transition-colors",
-          isActive ? "text-secondary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+          isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/85 group-hover:text-sidebar-foreground"
         )}>
             {item.icon}
           </span>
@@ -317,7 +317,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   const SectionLabel = ({ label }: {label: string;}) => (
     !isCollapsed ? (
-      <p className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-3 pt-4 pb-1">
+      <p className="text-xs font-semibold text-sidebar-foreground/80 uppercase tracking-wider px-3 pt-4 pb-1">
         {label}
       </p>
     ) : null
@@ -340,12 +340,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
         isAnyChildActive ?
         "bg-sidebar-accent text-sidebar-accent-foreground" :
-        "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+        "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-sidebar-accent/35"
       )}>
 
         <span className={cn(
         "transition-colors",
-        isAnyChildActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+        isAnyChildActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/85 group-hover:text-sidebar-foreground"
       )}>
           {item.icon}
         </span>
