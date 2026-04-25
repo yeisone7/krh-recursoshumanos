@@ -11,7 +11,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2, ChevronRight, Sparkles } from 'lucide-react';
-import petrocasinosLogo from '@/assets/petrocasinos-logo-white.png';
+import { cn } from '@/lib/utils';
 import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
 import krhLoginHeroLogo from '@/assets/krh-login-hero-logo-horizontal.png';
 import krhLoginHeroLogoOptimized from '@/assets/krh-login-hero-logo-horizontal.webp';
@@ -41,10 +41,26 @@ const features = [
 { icon: Building2, title: 'Multi-empresa', desc: 'Administra múltiples centros de operación' },
 { icon: Users, title: 'Gestión integral', desc: 'Empleados, contratos, nómina y más' }];
 
+const AuthFormSkeleton = () => (
+  <div className="space-y-4" aria-hidden="true">
+    <div className="space-y-2">
+      <div className="h-3 w-28 rounded bg-muted animate-pulse" />
+      <div className="h-10 w-full rounded bg-muted/70 animate-pulse" />
+    </div>
+    <div className="space-y-2">
+      <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+      <div className="h-10 w-full rounded bg-muted/70 animate-pulse" />
+    </div>
+    <div className="h-10 w-full rounded bg-primary/20 animate-pulse" />
+  </div>
+);
+
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isHeroLogoLoaded, setIsHeroLogoLoaded] = useState(false);
+  const [isFormReady, setIsFormReady] = useState(false);
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,6 +73,11 @@ export default function Auth() {
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setIsFormReady(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -142,7 +163,9 @@ export default function Auth() {
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-8 w-full">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <picture>
+            <div className="relative h-16 w-[128px] sm:w-[160px]">
+            {!isHeroLogoLoaded && <div className="absolute inset-0 rounded bg-secondary/15 animate-pulse" aria-hidden="true" />}
+            <picture className={cn("block transition-opacity duration-300", isHeroLogoLoaded ? "opacity-100" : "opacity-0")}>
               <source srcSet={krhLoginHeroLogoOptimized} type="image/webp" />
               <img
                 src={krhLoginHeroLogo}
@@ -152,8 +175,10 @@ export default function Auth() {
                 height={240}
                 decoding="async"
                 fetchPriority="high"
+                onLoad={() => setIsHeroLogoLoaded(true)}
               />
             </picture>
+            </div>
           </motion.div>
           
           <div className="space-y-5">
@@ -245,7 +270,7 @@ export default function Auth() {
             </div>
 
             {/* Forms */}
-            {isLogin ?
+            {!isFormReady ? <AuthFormSkeleton /> : isLogin ?
             <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                   <FormField
