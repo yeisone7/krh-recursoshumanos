@@ -320,9 +320,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   ], [alertCount, filteredToolsNavItemsBase, canViewItem]);
 
   const quickAccessItems = useMemo<NavItem[]>(() => [
-    { label: 'Empleados', icon: <Users className="h-5 w-5 shrink-0" strokeWidth={1.9} absoluteStrokeWidth />, href: '/empleados', moduleCode: 'empleados' },
-    { label: 'Contratos', icon: <FileText className="h-5 w-5 shrink-0" strokeWidth={1.9} absoluteStrokeWidth />, href: '/contratos', moduleCode: 'contratos' },
-    { label: 'Alertas', icon: <Bell className="h-5 w-5 shrink-0" strokeWidth={1.9} absoluteStrokeWidth />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
+    { label: 'Empleados', icon: <Users className="size-6 shrink-0" strokeWidth={2} />, href: '/empleados', moduleCode: 'empleados' },
+    { label: 'Contratos', icon: <FileText className="size-6 shrink-0" strokeWidth={2} />, href: '/contratos', moduleCode: 'contratos' },
+    { label: 'Alertas', icon: <Bell className="size-6 shrink-0" strokeWidth={2} />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
   ].filter(canViewQuickAccessItem), [alertCount, canViewQuickAccessItem]);
 
   const showCapacitaciones = canViewItem(capacitacionesItem);
@@ -435,7 +435,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   whileHover={{ backgroundColor: 'hsl(var(--sidebar-accent))' }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "relative flex items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&_svg]:shape-geometricPrecision",
+                    "relative flex items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
                     isCollapsed ? "h-10" : "h-16 flex-col gap-1 px-1",
                     isActive && "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
                   )}
