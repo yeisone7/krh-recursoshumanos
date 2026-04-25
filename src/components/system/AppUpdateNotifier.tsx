@@ -14,10 +14,10 @@ type VersionResponse = {
 export function AppUpdateNotifier() {
   const auth = useOptionalAuth();
 
-  if (!auth) {
-    return null;
-  }
+  return auth ? <AppUpdateNotifierContent /> : null;
+}
 
+function AppUpdateNotifierContent() {
   const { data: systemConfig } = useSystemConfig();
   const updateNotifiedRef = useRef(false);
   const updateCheckConfig = systemConfig?.app_update_check;
