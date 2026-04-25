@@ -313,9 +313,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   ], [alertCount, filteredToolsNavItemsBase, canViewItem]);
 
   const quickAccessItems = useMemo<NavItem[]>(() => [
-    { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados', moduleCode: 'empleados' },
-    { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos', moduleCode: 'contratos' },
-    { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
+    { label: 'Empleados', icon: <Users className="h-5 w-5 shrink-0" strokeWidth={1.9} absoluteStrokeWidth />, href: '/empleados', moduleCode: 'empleados' },
+    { label: 'Contratos', icon: <FileText className="h-5 w-5 shrink-0" strokeWidth={1.9} absoluteStrokeWidth />, href: '/contratos', moduleCode: 'contratos' },
+    { label: 'Alertas', icon: <Bell className="h-5 w-5 shrink-0" strokeWidth={1.9} absoluteStrokeWidth />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
   ].filter(canViewItem), [alertCount, canViewItem]);
 
   const showCapacitaciones = canViewItem(capacitacionesItem);
@@ -425,10 +425,10 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             const content = (
               <Link key={item.href} to={item.href} onClick={handleNavClick}>
                 <motion.div
-                  whileHover={{ y: -1 }}
+                  whileHover={{ backgroundColor: 'hsl(var(--sidebar-accent))' }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "relative flex items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent/40 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    "relative flex items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&_svg]:shape-geometricPrecision",
                     isCollapsed ? "h-10" : "h-16 flex-col gap-1 px-1",
                     isActive && "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
                   )}
