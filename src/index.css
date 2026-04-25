@@ -23,7 +23,7 @@
 
     /* Primary - Brand Green #2ecb62 */
     --primary: 140 63% 49%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 224 40% 14%;
     --primary-hover: 140 63% 40%;
     --primary-light: 140 65% 94%;
 
@@ -43,7 +43,7 @@
 
     /* Accent - Brand Green */
     --accent: 140 63% 49%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 224 40% 14%;
     --accent-light: 140 65% 94%;
 
     /* Extended Color Palette */
@@ -81,19 +81,19 @@
     --info-light: 200 90% 95%;
 
     /* Borders and inputs */
-    --border: 224 18% 88%;
-    --input: 224 18% 88%;
+    --border: 140 20% 76%;
+    --input: 140 20% 76%;
     --ring: 140 63% 49%;
 
     --radius: 0.75rem;
 
     /* Sidebar */
     --sidebar-background: 140 63% 49%;
-    --sidebar-foreground: 0 0% 100%;
+    --sidebar-foreground: 224 40% 14%;
     --sidebar-primary: 0 0% 100%;
     --sidebar-primary-foreground: 140 63% 32%;
     --sidebar-accent: 140 56% 42%;
-    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-accent-foreground: 224 40% 14%;
     --sidebar-border: 140 56% 38%;
     --sidebar-ring: 0 0% 100%;
 
