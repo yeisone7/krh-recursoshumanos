@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2, ChevronRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
 import krhLoginHeroLogo from '@/assets/krh-login-hero-logo-horizontal.png';
 import krhLoginHeroLogoOptimized from '@/assets/krh-login-hero-logo-horizontal.webp';
@@ -19,6 +20,10 @@ import krhLoginHeroLogoOptimized from '@/assets/krh-login-hero-logo-horizontal.w
 const loginSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres')
+});
+
+const recoverySchema = z.object({
+  email: z.string().email('Ingrese un correo válido')
 });
 
 const registerSchema = z.object({
@@ -34,6 +39,7 @@ const registerSchema = z.object({
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
+type RecoveryFormData = z.infer<typeof recoverySchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 const features = [
@@ -86,7 +92,9 @@ const prefetchPostLoginRoute = (path: string) => {
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecoverySent, setIsRecoverySent] = useState(false);
   const [isHeroLogoLoaded, setIsHeroLogoLoaded] = useState(false);
   const [isFormReady, setIsFormReady] = useState(false);
   const { user, signIn, signUp } = useAuth();
@@ -137,6 +145,11 @@ export default function Auth() {
     defaultValues: { email: '', password: '' }
   });
 
+  const recoveryForm = useForm<RecoveryFormData>({
+    resolver: zodResolver(recoverySchema),
+    defaultValues: { email: '' }
+  });
+
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: { first_name: '', last_name: '', document_number: '', email: '', password: '', confirm_password: '' }
@@ -168,6 +181,7 @@ export default function Auth() {
   const handleLoginKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
     if (event.key === 'Escape') {
       loginForm.clearErrors();
+      recoveryForm.clearErrors();
       dismiss();
       return;
     }
@@ -175,6 +189,32 @@ export default function Auth() {
     if (event.key === 'Enter' && !isSubmitting) {
       event.preventDefault();
       event.currentTarget.requestSubmit();
+    }
+  };
+
+  const onRecoverySubmit = async (data: RecoveryFormData) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setIsRecoverySent(false);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'No fue posible enviar el enlace',
+          description: error.message,
+        });
+        return;
+      }
+
+      setIsRecoverySent(true);
+      toast({ title: 'Enlace enviado', description: 'Revisa tu correo para restablecer la contraseña.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
