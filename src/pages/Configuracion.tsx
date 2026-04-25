@@ -423,19 +423,42 @@ export default function Configuracion() {
         <TabsContent value="alerts">
           <Card>
             <CardHeader>
-              <CardTitle>Configuración de Alertas</CardTitle>
-              <CardDescription>Define los días de anticipación para las alertas de vencimiento</CardDescription>
+              <CardTitle>Configuración de Alertas por Empresa</CardTitle>
+              <CardDescription>Define destinatarios, preavisos y niveles para cada tipo de alerta</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" /> Correos destinatarios
+                </Label>
+                <Textarea
+                  value={alertRecipients}
+                  onChange={(e) => setAlertRecipients(e.target.value)}
+                  placeholder="gerencia.talento@empresa.com&#10;coordinacion.rrhh@empresa.com"
+                  className="min-h-24"
+                />
+                <p className="text-xs text-muted-foreground">Puedes separar los correos por salto de línea, coma o punto y coma.</p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div className="space-y-3 p-4 border rounded-lg">
                   <h4 className="font-medium flex items-center gap-2">
                     <FileText className="w-4 h-4" />Contratos
                   </h4>
                   <div>
+                    <Label>Info (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertContractInfo} 
+                      onChange={(e) => setAlertContractInfo(parseInt(e.target.value) || 60)} 
+                    />
+                  </div>
+                  <div>
                     <Label>Advertencia (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertContractWarning} 
                       onChange={(e) => setAlertContractWarning(parseInt(e.target.value) || 30)} 
                     />
@@ -444,6 +467,7 @@ export default function Configuracion() {
                     <Label>Crítico (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertContractCritical} 
                       onChange={(e) => setAlertContractCritical(parseInt(e.target.value) || 7)} 
                     />
@@ -454,9 +478,19 @@ export default function Configuracion() {
                     <Users className="w-4 h-4" />Exámenes Médicos
                   </h4>
                   <div>
+                    <Label>Info (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertExamInfo} 
+                      onChange={(e) => setAlertExamInfo(parseInt(e.target.value) || 60)} 
+                    />
+                  </div>
+                  <div>
                     <Label>Advertencia (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertExamWarning} 
                       onChange={(e) => setAlertExamWarning(parseInt(e.target.value) || 30)} 
                     />
@@ -465,6 +499,7 @@ export default function Configuracion() {
                     <Label>Crítico (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertExamCritical} 
                       onChange={(e) => setAlertExamCritical(parseInt(e.target.value) || 7)} 
                     />
@@ -475,9 +510,19 @@ export default function Configuracion() {
                     <Shirt className="w-4 h-4" />Dotación
                   </h4>
                   <div>
+                    <Label>Info (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertDotationInfo} 
+                      onChange={(e) => setAlertDotationInfo(parseInt(e.target.value) || 60)} 
+                    />
+                  </div>
+                  <div>
                     <Label>Advertencia (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertDotationWarning} 
                       onChange={(e) => setAlertDotationWarning(parseInt(e.target.value) || 30)} 
                     />
@@ -486,6 +531,7 @@ export default function Configuracion() {
                     <Label>Crítico (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertDotationCritical} 
                       onChange={(e) => setAlertDotationCritical(parseInt(e.target.value) || 7)} 
                     />
@@ -495,6 +541,33 @@ export default function Configuracion() {
                   <h4 className="font-medium flex items-center gap-2">
                     <Bell className="w-4 h-4 text-warning" />Notificación Retiros
                   </h4>
+                  <div>
+                    <Label>Info (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertTerminationInfo} 
+                      onChange={(e) => setAlertTerminationInfo(parseInt(e.target.value) || 15)} 
+                    />
+                  </div>
+                  <div>
+                    <Label>Advertencia (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertTerminationWarning} 
+                      onChange={(e) => setAlertTerminationWarning(parseInt(e.target.value) || 7)} 
+                    />
+                  </div>
+                  <div>
+                    <Label>Crítico (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertTerminationCritical} 
+                      onChange={(e) => setAlertTerminationCritical(parseInt(e.target.value) || 3)} 
+                    />
+                  </div>
                   <div>
                     <Label>Días pendientes mínimos</Label>
                     <Input 
