@@ -482,7 +482,10 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       whileTap={{ scale: 0.98 }}
       onClick={() => !isCollapsed && setIsOpen(!isOpen)}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+        "flex items-center gap-3 rounded-lg transition-all duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+        isCollapsed
+          ? "mx-auto h-11 w-11 justify-center p-0 [&_svg]:size-5 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
+          : "px-3 py-2",
         isAnyChildActive ?
         "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" :
         "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
