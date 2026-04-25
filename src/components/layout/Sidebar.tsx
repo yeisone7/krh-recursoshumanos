@@ -258,7 +258,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         whileHover={{ x: 4 }}
         whileTap={{ scale: 0.98 }}
         className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
+          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
           isActive ?
           "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" :
           "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
@@ -276,12 +276,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             </span>
           }
           {item.badge && !isCollapsed &&
-        <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-0.5 rounded-full">
+        <span className="ml-auto min-w-5 rounded-full bg-primary px-2 py-0.5 text-center text-xs font-extrabold text-primary-foreground shadow-sm">
               {item.badge}
             </span>
         }
           {item.badge && isCollapsed &&
-        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-semibold w-5 h-5 rounded-full flex items-center justify-center">
+        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-extrabold text-primary-foreground ring-2 ring-sidebar shadow-sm">
               {item.badge}
             </span>
         }
@@ -297,13 +297,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           </TooltipTrigger>
           <TooltipContent
             side="right"
-              className="bg-popover border-border text-popover-foreground font-medium px-3 py-2 shadow-lg"
+              className="rounded-lg border border-border bg-popover px-3 py-2 font-bold text-popover-foreground shadow-lg"
             sideOffset={8}>
 
             <div className="flex items-center gap-2">
               <span>{item.label}</span>
               {item.badge &&
-              <span className="bg-destructive text-destructive-foreground text-xs font-semibold px-1.5 py-0.5 rounded-full">
+              <span className="rounded-full bg-primary px-1.5 py-0.5 text-xs font-extrabold text-primary-foreground">
                   {item.badge}
                 </span>
               }
@@ -338,7 +338,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       whileTap={{ scale: 0.98 }}
       onClick={() => !isCollapsed && setIsOpen(!isOpen)}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
+        "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
         isAnyChildActive ?
         "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" :
         "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
@@ -351,7 +351,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           {item.icon}
         </span>
         {!isCollapsed &&
-          <span className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1">
+          <span className="font-bold text-sm whitespace-nowrap overflow-hidden flex-1">
             {item.label}
           </span>
         }
@@ -373,11 +373,11 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             </TooltipTrigger>
             <TooltipContent
             side="right"
-            className="bg-popover border-border text-popover-foreground p-0 shadow-lg"
+            className="overflow-hidden rounded-lg border border-border bg-popover p-0 text-popover-foreground shadow-lg"
             sideOffset={8}>
 
               <div className="py-2">
-                <p className="px-3 pb-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider border-b border-sidebar-border mb-1">
+                <p className="mb-1 border-b border-border px-3 pb-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-muted-foreground">
                   {item.label}
                 </p>
                 {item.children?.map((child) => {
@@ -385,7 +385,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                 return (
                   <Link key={child.href} to={child.href} onClick={handleNavClick}>
                       <div className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
+                      "flex items-center gap-2 px-3 py-1.5 text-sm font-bold transition-colors [&_svg]:shrink-0 [&_svg]:stroke-[2]",
                       isActive ?
                         "bg-sidebar-accent text-sidebar-accent-foreground font-medium" :
                       "text-sidebar-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
@@ -419,7 +419,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group",
+                      "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
                       isActive ?
                       "bg-sidebar-accent text-sidebar-accent-foreground" :
                       "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
@@ -431,7 +431,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     )}>
                         {child.icon}
                       </span>
-                      <span className="font-medium text-sm">{child.label}</span>
+                      <span className="font-bold text-sm">{child.label}</span>
                     </motion.div>
                   </Link>);
 
