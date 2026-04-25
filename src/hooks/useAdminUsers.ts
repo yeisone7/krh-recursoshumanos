@@ -13,6 +13,7 @@ export interface AdminUser {
   avatar_url?: string;
   created_at: string;
   roles: AppRole[];
+  custom_roles: string[];
   is_active: boolean;
   deactivated_at?: string;
   deactivation_reason?: string;
@@ -52,6 +53,14 @@ export function useAdminUsers() {
         .in('user_id', userIds);
 
       if (rolesError) throw rolesError;
+
+      const { data: customRolesData, error: customRolesError } = await supabase
+        .from('user_custom_roles')
+        .select('user_id, custom_roles!inner(name, company_id)')
+        .in('user_id', userIds)
+        .eq('custom_roles.company_id', currentCompanyId!);
+
+      if (customRolesError) throw customRolesError;
 
       // Fetch company assignments
       const { data: companyAssignments, error: assignError } = await supabase
@@ -112,6 +121,7 @@ export function useAdminUsers() {
           avatar_url: undefined,
           created_at: '',
           roles: [],
+          custom_roles: [],
           is_active: true,
           companies: [],
           centers: [],
@@ -152,6 +162,13 @@ export function useAdminUsers() {
         const user = usersMap.get(r.user_id);
         if (user) {
           user.roles.push(r.role);
+        }
+      });
+
+      customRolesData?.forEach((r: any) => {
+        const user = usersMap.get(r.user_id);
+        if (user && r.custom_roles?.name) {
+          user.custom_roles.push(r.custom_roles.name);
         }
       });
 

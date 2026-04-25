@@ -116,6 +116,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
     await setPermissions.mutateAsync({
       roleId: role.id,
       permissionIds: Array.from(selectedIds),
+      roleName: role.name,
     });
     setHasChanges(false);
   };
