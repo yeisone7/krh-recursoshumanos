@@ -264,7 +264,8 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
       const { data: incapacities } = await supabase
         .from('employee_incapacities')
         .select('id, employee_id, end_date, recovery_status, total_days, diagnosis')
-        .eq('company_id', currentCompanyId!);
+        .eq('company_id', currentCompanyId!)
+        .or(`and(end_date.gte.${todayStr},end_date.lte.${in5Days}),and(recovery_status.eq.pendiente,end_date.lt.${todayStr})`);
 
       if (incapacities) {
         for (const inc of incapacities) {
@@ -380,7 +381,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
       }
 
       // 8. Fetch dotation profesiograma compliance alerts (missing required items)
-      try {
+      if (includeDotationCompliance) try {
         const { data: profs } = await supabase
           .from('dotation_profesiograma' as any)
           .select('id, operation_center_id, position_id')
