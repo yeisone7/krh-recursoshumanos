@@ -258,7 +258,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         whileHover={{ x: 4 }}
         whileTap={{ scale: 0.98 }}
         className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
+          "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
           isActive ?
           "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" :
           "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
@@ -276,12 +276,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             </span>
           }
           {item.badge && !isCollapsed &&
-        <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-0.5 rounded-full">
+        <span className="ml-auto min-w-5 rounded-full bg-primary px-2 py-0.5 text-center text-xs font-extrabold text-primary-foreground shadow-sm">
               {item.badge}
             </span>
         }
           {item.badge && isCollapsed &&
-        <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-semibold w-5 h-5 rounded-full flex items-center justify-center">
+        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-extrabold text-primary-foreground ring-2 ring-sidebar shadow-sm">
               {item.badge}
             </span>
         }
@@ -297,13 +297,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           </TooltipTrigger>
           <TooltipContent
             side="right"
-              className="bg-popover border-border text-popover-foreground font-medium px-3 py-2 shadow-lg"
+              className="rounded-lg border border-border bg-popover px-3 py-2 font-bold text-popover-foreground shadow-lg"
             sideOffset={8}>
 
             <div className="flex items-center gap-2">
               <span>{item.label}</span>
               {item.badge &&
-              <span className="bg-destructive text-destructive-foreground text-xs font-semibold px-1.5 py-0.5 rounded-full">
+              <span className="rounded-full bg-primary px-1.5 py-0.5 text-xs font-extrabold text-primary-foreground">
                   {item.badge}
                 </span>
               }
