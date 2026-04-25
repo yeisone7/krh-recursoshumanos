@@ -142,16 +142,22 @@ export default function Auth() {
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: { email: '', password: '' }
   });
 
   const recoveryForm = useForm<RecoveryFormData>({
     resolver: zodResolver(recoverySchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: { email: '' }
   });
 
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: { first_name: '', last_name: '', document_number: '', email: '', password: '', confirm_password: '' }
   });
 
@@ -403,7 +409,7 @@ export default function Auth() {
                   <Button
                     type="submit"
                     className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !recoveryForm.formState.isValid}
                     aria-busy={isSubmitting}
                     aria-live="polite"
                   >
@@ -460,7 +466,7 @@ export default function Auth() {
                   <Button
                     type="submit"
                     className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !loginForm.formState.isValid}
                     aria-busy={isSubmitting}
                     aria-live="polite"
                   >
@@ -555,7 +561,7 @@ export default function Auth() {
                       </FormItem>
                   } />
 
-                  <Button type="submit" className="w-full h-9 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full h-9 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm" disabled={isSubmitting || !registerForm.formState.isValid}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Crear Cuenta
                   </Button>
