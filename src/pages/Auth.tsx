@@ -51,6 +51,13 @@ const AuthFormSkeleton = () => (
       <div className="h-3 w-20 rounded bg-muted animate-pulse" />
       <div className="h-10 w-full rounded bg-muted/70 animate-pulse" />
     </div>
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+        <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+      </div>
+      <div className="h-3 w-28 rounded bg-muted animate-pulse" />
+    </div>
     <div className="h-10 w-full rounded bg-primary/20 animate-pulse" />
   </div>
 );
@@ -336,6 +343,16 @@ export default function Auth() {
                         <FormMessage />
                       </FormItem>
                   } />
+
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="flex items-center gap-2 text-muted-foreground">
+                      <input type="checkbox" className="h-4 w-4 rounded border-border accent-primary" />
+                      Recordar sesión
+                    </label>
+                    <button type="button" className="font-semibold text-secondary hover:text-secondary/80 transition-colors">
+                      Recuperar contraseña
+                    </button>
+                  </div>
 
                   <Button type="submit" className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-2" disabled={isSubmitting}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
