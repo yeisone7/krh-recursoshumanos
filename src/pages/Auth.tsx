@@ -342,7 +342,7 @@ export default function Auth() {
             {/* Forms */}
             {!isFormReady ? <AuthFormSkeleton /> : isLogin ?
             <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
                   <FormField
                   control={loginForm.control}
                   name="email"
