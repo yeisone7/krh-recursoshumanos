@@ -354,10 +354,19 @@ export default function Auth() {
                     </button>
                   </div>
 
-                  <Button type="submit" className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-2" disabled={isSubmitting}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Iniciar Sesión
+                  <Button
+                    type="submit"
+                    className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
+                    disabled={isSubmitting}
+                    aria-busy={isSubmitting}
+                    aria-live="polite"
+                  >
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+                    <span>{isSubmitting ? 'Ingresando...' : 'Iniciar Sesión'}</span>
                   </Button>
+                  <span className="sr-only" role="status" aria-live="polite">
+                    {isSubmitting ? 'Autenticando credenciales, por favor espera.' : ''}
+                  </span>
                 </form>
               </Form> :
 
