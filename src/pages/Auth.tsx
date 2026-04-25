@@ -436,6 +436,19 @@ export default function Auth() {
               </Form> : isLogin ?
             <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
+                  {loginErrorSummary && (
+                    <div
+                      ref={loginErrorSummaryRef}
+                      tabIndex={-1}
+                      role="alert"
+                      aria-live="assertive"
+                      className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
+                    >
+                      <p className="font-semibold">No pudimos iniciar sesión</p>
+                      <p>{loginErrorSummary}</p>
+                    </div>
+                  )}
+
                   <FormField
                   control={loginForm.control}
                   name="email"
