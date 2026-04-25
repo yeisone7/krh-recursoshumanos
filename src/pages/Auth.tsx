@@ -368,19 +368,53 @@ export default function Auth() {
                   transition={{ duration: 0.3 }}>
 
                   <h2 className="text-xl font-bold text-foreground">
-                    {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                    {isRecoveryMode ? 'Recuperar contraseña' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
                   </h2>
                   <p className="text-muted-foreground text-xs mt-1">
-                    {isLogin ?
-                    'Ingresa tus credenciales para acceder' :
-                    'Completa el formulario para registrarte'}
+                    {isRecoveryMode ?
+                    'Te enviaremos un enlace seguro a tu correo' :
+                    isLogin ?
+                      'Ingresa tus credenciales para acceder' :
+                      'Completa el formulario para registrarte'}
                   </p>
                 </motion.div>
               </AnimatePresence>
             </div>
 
             {/* Forms */}
-            {!isFormReady ? <AuthFormSkeleton /> : isLogin ?
+            {!isFormReady ? <AuthFormSkeleton /> : isRecoveryMode ?
+            <Form {...recoveryForm}>
+                <form onSubmit={recoveryForm.handleSubmit(onRecoverySubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
+                  <FormField
+                    control={recoveryForm.control}
+                    name="email"
+                    render={({ field }) =>
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                    } />
+
+                  {isRecoverySent && <p className="text-xs text-muted-foreground" role="status" aria-live="polite">Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.</p>}
+
+                  <Button
+                    type="submit"
+                    className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
+                    disabled={isSubmitting}
+                    aria-busy={isSubmitting}
+                    aria-live="polite"
+                  >
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+                    <span>{isSubmitting ? 'Enviando enlace...' : 'Enviar enlace'}</span>
+                  </Button>
+                  <span className="sr-only" role="status" aria-live="polite">
+                    {isSubmitting ? 'Enviando enlace de recuperación, por favor espera.' : ''}
+                  </span>
+                </form>
+              </Form> : isLogin ?
             <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
                   <FormField
@@ -414,7 +448,11 @@ export default function Auth() {
                       <input type="checkbox" className="h-4 w-4 rounded border-border accent-primary disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} />
                       Recordar sesión
                     </label>
-                    <button type="button" className="font-semibold text-secondary hover:text-secondary/80 transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting}>
+                    <button type="button" className="font-semibold text-secondary hover:text-secondary/80 transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} onClick={() => {
+                      setIsRecoveryMode(true);
+                      setIsRecoverySent(false);
+                      recoveryForm.setValue('email', loginForm.getValues('email'));
+                    }}>
                       Recuperar contraseña
                     </button>
                   </div>
