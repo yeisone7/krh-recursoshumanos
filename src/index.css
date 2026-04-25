@@ -5,12 +5,12 @@
 @tailwind utilities;
 
 /* KRH Design System - Corporate HR Platform
-   Petrocasinos Palette: Navy Blue (Primary) + Vibrant Orange (Accent) */
+   Primary Palette: Brand Green (#2ecb62) + White (#ffffff) */
 
 @layer base {
   :root {
     /* Core backgrounds */
-    --background: 220 20% 97%;
+    --background: 0 0% 100%;
     --foreground: 224 40% 18%;
 
     /* Cards and surfaces */
@@ -21,16 +21,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 40% 18%;
 
-    /* Primary - Petrocasinos Navy Blue */
-    --primary: 224 42% 28%;
+    /* Primary - Brand Green #2ecb62 */
+    --primary: 140 63% 49%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 224 42% 22%;
-    --primary-light: 224 45% 95%;
+    --primary-hover: 140 63% 40%;
+    --primary-light: 140 65% 94%;
 
-    /* Secondary - Warm Deep Orange */
-    --secondary: 22 92% 47%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-light: 22 95% 95%;
+    /* Secondary - White */
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 224 40% 18%;
+    --secondary-light: 140 65% 96%;
 
     /* Tertiary - Vibrant Teal (complementary pop) */
     --tertiary: 174 70% 38%;
@@ -41,10 +41,10 @@
     --muted: 220 18% 95%;
     --muted-foreground: 224 15% 46%;
 
-    /* Accent - Orange (main brand accent) */
-    --accent: 22 92% 47%;
+    /* Accent - Brand Green */
+    --accent: 140 63% 49%;
     --accent-foreground: 0 0% 100%;
-    --accent-light: 22 95% 95%;
+    --accent-light: 140 65% 94%;
 
     /* Extended Color Palette */
     --violet: 262 60% 55%;
@@ -83,29 +83,29 @@
     /* Borders and inputs */
     --border: 224 18% 88%;
     --input: 224 18% 88%;
-    --ring: 22 92% 47%;
+    --ring: 140 63% 49%;
 
     --radius: 0.75rem;
 
-    /* Sidebar - Steel Gray (Petrocasinos) */
-    --sidebar-background: 212 8% 40%;
-    --sidebar-foreground: 210 10% 92%;
-    --sidebar-primary: 36 80% 55%;
-    --sidebar-primary-foreground: 212 8% 30%;
-    --sidebar-accent: 212 8% 46%;
-    --sidebar-accent-foreground: 210 10% 95%;
-    --sidebar-border: 212 8% 36%;
-    --sidebar-ring: 36 80% 55%;
+    /* Sidebar */
+    --sidebar-background: 140 63% 49%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 140 63% 32%;
+    --sidebar-accent: 140 56% 42%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 140 56% 38%;
+    --sidebar-ring: 0 0% 100%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(224 42% 28%) 0%, hsl(224 38% 38%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(22 92% 47%) 0%, hsl(30 90% 52%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(140 63% 49%) 0%, hsl(140 58% 39%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(140 65% 96%) 100%);
     --gradient-tertiary: linear-gradient(135deg, hsl(174 70% 38%) 0%, hsl(180 60% 42%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(22 92% 47%) 0%, hsl(32 95% 55%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(224 45% 16%) 0%, hsl(224 40% 22%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 20% 97%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(22 92% 47%) 0%, hsl(346 75% 55%) 100%);
-    --gradient-cool: linear-gradient(135deg, hsl(224 42% 28%) 0%, hsl(262 60% 55%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(140 63% 49%) 0%, hsl(152 60% 40%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(140 63% 49%) 0%, hsl(140 58% 34%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(140 65% 98%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(140 63% 49%) 0%, hsl(140 58% 39%) 100%);
+    --gradient-cool: linear-gradient(135deg, hsl(140 63% 49%) 0%, hsl(174 65% 40%) 100%);
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(224 40% 18% / 0.05);
