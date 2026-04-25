@@ -169,13 +169,13 @@
     --input: 153 30% 26%;
     --ring: 159 51% 49%;
 
-    --sidebar-background: 159 51% 49%;
-    --sidebar-foreground: 154 38% 9%;
-    --sidebar-primary: 154 38% 9%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 214 18% 48%;
+    --sidebar-primary: 159 51% 49%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 100%;
-    --sidebar-accent-foreground: 154 38% 9%;
-    --sidebar-border: 159 42% 39%;
+    --sidebar-accent: 159 51% 18%;
+    --sidebar-accent-foreground: 159 51% 64%;
+    --sidebar-border: 153 30% 26%;
     --sidebar-ring: 159 51% 49%;
   }
 }
