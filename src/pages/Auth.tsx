@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2, ChevronRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
 import krhLoginHeroLogo from '@/assets/krh-login-hero-logo-horizontal.png';
 import krhLoginHeroLogoOptimized from '@/assets/krh-login-hero-logo-horizontal.webp';
@@ -19,6 +20,10 @@ import krhLoginHeroLogoOptimized from '@/assets/krh-login-hero-logo-horizontal.w
 const loginSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres')
+});
+
+const recoverySchema = z.object({
+  email: z.string().email('Ingrese un correo válido')
 });
 
 const registerSchema = z.object({
@@ -34,6 +39,7 @@ const registerSchema = z.object({
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
+type RecoveryFormData = z.infer<typeof recoverySchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 const features = [
@@ -86,7 +92,9 @@ const prefetchPostLoginRoute = (path: string) => {
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecoverySent, setIsRecoverySent] = useState(false);
   const [isHeroLogoLoaded, setIsHeroLogoLoaded] = useState(false);
   const [isFormReady, setIsFormReady] = useState(false);
   const { user, signIn, signUp } = useAuth();
@@ -137,6 +145,11 @@ export default function Auth() {
     defaultValues: { email: '', password: '' }
   });
 
+  const recoveryForm = useForm<RecoveryFormData>({
+    resolver: zodResolver(recoverySchema),
+    defaultValues: { email: '' }
+  });
+
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: { first_name: '', last_name: '', document_number: '', email: '', password: '', confirm_password: '' }
@@ -168,6 +181,7 @@ export default function Auth() {
   const handleLoginKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
     if (event.key === 'Escape') {
       loginForm.clearErrors();
+      recoveryForm.clearErrors();
       dismiss();
       return;
     }
@@ -175,6 +189,32 @@ export default function Auth() {
     if (event.key === 'Enter' && !isSubmitting) {
       event.preventDefault();
       event.currentTarget.requestSubmit();
+    }
+  };
+
+  const onRecoverySubmit = async (data: RecoveryFormData) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setIsRecoverySent(false);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'No fue posible enviar el enlace',
+          description: error.message,
+        });
+        return;
+      }
+
+      setIsRecoverySent(true);
+      toast({ title: 'Enlace enviado', description: 'Revisa tu correo para restablecer la contraseña.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -328,19 +368,53 @@ export default function Auth() {
                   transition={{ duration: 0.3 }}>
 
                   <h2 className="text-xl font-bold text-foreground">
-                    {isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                    {isRecoveryMode ? 'Recuperar contraseña' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
                   </h2>
                   <p className="text-muted-foreground text-xs mt-1">
-                    {isLogin ?
-                    'Ingresa tus credenciales para acceder' :
-                    'Completa el formulario para registrarte'}
+                    {isRecoveryMode ?
+                    'Te enviaremos un enlace seguro a tu correo' :
+                    isLogin ?
+                      'Ingresa tus credenciales para acceder' :
+                      'Completa el formulario para registrarte'}
                   </p>
                 </motion.div>
               </AnimatePresence>
             </div>
 
             {/* Forms */}
-            {!isFormReady ? <AuthFormSkeleton /> : isLogin ?
+            {!isFormReady ? <AuthFormSkeleton /> : isRecoveryMode ?
+            <Form {...recoveryForm}>
+                <form onSubmit={recoveryForm.handleSubmit(onRecoverySubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
+                  <FormField
+                    control={recoveryForm.control}
+                    name="email"
+                    render={({ field }) =>
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                    } />
+
+                  {isRecoverySent && <p className="text-xs text-muted-foreground" role="status" aria-live="polite">Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.</p>}
+
+                  <Button
+                    type="submit"
+                    className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
+                    disabled={isSubmitting}
+                    aria-busy={isSubmitting}
+                    aria-live="polite"
+                  >
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+                    <span>{isSubmitting ? 'Enviando enlace...' : 'Enviar enlace'}</span>
+                  </Button>
+                  <span className="sr-only" role="status" aria-live="polite">
+                    {isSubmitting ? 'Enviando enlace de recuperación, por favor espera.' : ''}
+                  </span>
+                </form>
+              </Form> : isLogin ?
             <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
                   <FormField
@@ -374,7 +448,11 @@ export default function Auth() {
                       <input type="checkbox" className="h-4 w-4 rounded border-border accent-primary disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} />
                       Recordar sesión
                     </label>
-                    <button type="button" className="font-semibold text-secondary hover:text-secondary/80 transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting}>
+                    <button type="button" className="font-semibold text-secondary hover:text-secondary/80 transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} onClick={() => {
+                      setIsRecoveryMode(true);
+                      setIsRecoverySent(false);
+                      recoveryForm.setValue('email', loginForm.getValues('email'));
+                    }}>
                       Recuperar contraseña
                     </button>
                   </div>
@@ -495,18 +573,25 @@ export default function Auth() {
             {/* Toggle */}
             <div className="text-center text-sm">
               <span className="text-muted-foreground">
-                {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
+                {isRecoveryMode ? '¿Recordaste tu contraseña?' : isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
               </span>{' '}
               <button
                 type="button"
                 className="text-secondary hover:text-secondary/80 font-semibold transition-colors"
                 onClick={() => {
-                  setIsLogin(!isLogin);
+                  if (isRecoveryMode) {
+                    setIsRecoveryMode(false);
+                    setIsLogin(true);
+                    setIsRecoverySent(false);
+                    recoveryForm.reset();
+                  } else {
+                    setIsLogin(!isLogin);
+                  }
                   loginForm.reset();
                   registerForm.reset();
                 }}>
 
-                {isLogin ? 'Regístrate' : 'Inicia sesión'}
+                {isRecoveryMode ? 'Inicia sesión' : isLogin ? 'Regístrate' : 'Inicia sesión'}
               </button>
             </div>
           </div>
