@@ -5146,6 +5146,75 @@ export type Database = {
           },
         ]
       }
+      notification_delivery_logs: {
+        Row: {
+          channel: string
+          company_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json
+          notification_id: string | null
+          provider: string | null
+          recipient_email: string | null
+          recipient_user_id: string | null
+          status: string
+          subject: string | null
+          template_name: string | null
+          triggered_by_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          channel?: string
+          company_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          notification_id?: string | null
+          provider?: string | null
+          recipient_email?: string | null
+          recipient_user_id?: string | null
+          status?: string
+          subject?: string | null
+          template_name?: string | null
+          triggered_by_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          company_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          notification_id?: string | null
+          provider?: string | null
+          recipient_email?: string | null
+          recipient_user_id?: string | null
+          status?: string
+          subject?: string | null
+          template_name?: string | null
+          triggered_by_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_delivery_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_delivery_logs_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null
