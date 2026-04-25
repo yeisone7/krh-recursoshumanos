@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => ({
     appVersionPlugin(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.png", "pwa-192x192.png", "pwa-512x512.png"],
+      includeAssets: ["favicon.png", "pwa-192x192.png", "pwa-256x256.png", "pwa-384x384.png", "pwa-512x512.png", "pwa-maskable-512.png"],
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
@@ -70,6 +70,16 @@ export default defineConfig(({ mode }) => ({
           {
             src: "/pwa-192x192.png",
             sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "/pwa-256x256.png",
+            sizes: "256x256",
+            type: "image/png",
+          },
+          {
+            src: "/pwa-384x384.png",
+            sizes: "384x384",
             type: "image/png",
           },
           {
