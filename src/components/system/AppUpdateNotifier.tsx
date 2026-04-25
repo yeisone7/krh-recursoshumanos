@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { useOptionalAuth } from '@/contexts/AuthContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
@@ -11,6 +12,12 @@ type VersionResponse = {
 };
 
 export function AppUpdateNotifier() {
+  const auth = useOptionalAuth();
+
+  return auth ? <AppUpdateNotifierContent /> : null;
+}
+
+function AppUpdateNotifierContent() {
   const { data: systemConfig } = useSystemConfig();
   const updateNotifiedRef = useRef(false);
   const updateCheckConfig = systemConfig?.app_update_check;
