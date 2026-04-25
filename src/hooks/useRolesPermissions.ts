@@ -189,8 +189,9 @@ export function useRolePermissions(roleId: string | null) {
 
 export function useSetRolePermissions() {
   const qc = useQueryClient();
+  const logAction = useLogAction();
   return useMutation({
-    mutationFn: async ({ roleId, permissionIds }: { roleId: string; permissionIds: string[] }) => {
+    mutationFn: async ({ roleId, permissionIds, roleName }: { roleId: string; permissionIds: string[]; roleName?: string }) => {
       // Delete all existing
       const { error: delError } = await supabase
         .from('role_permissions')
@@ -210,6 +211,13 @@ export function useSetRolePermissions() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['role-permissions', vars.roleId] });
       toast.success('Permisos actualizados');
+      logAction.mutate({
+        action: 'update',
+        entityType: 'role',
+        entityId: vars.roleId,
+        entityName: vars.roleName,
+        newValues: { permission_count: vars.permissionIds.length },
+      });
     },
     onError: (e: any) => toast.error(e.message),
   });
