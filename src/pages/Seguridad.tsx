@@ -11,6 +11,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
 import { RolesManager } from '@/components/roles/RolesManager';
+import { QuickRolePermissions } from '@/components/roles/QuickRolePermissions';
 
 export default function Seguridad() {
   const { isAdmin, roles } = useAuth();
@@ -78,6 +79,10 @@ export default function Seguridad() {
                 <ShieldCheck className="w-4 h-4" />
                 Roles y permisos
               </TabsTrigger>
+              <TabsTrigger value="quick-permissions" className="gap-2">
+                <ShieldCheck className="w-4 h-4" />
+                Permisos rápidos
+              </TabsTrigger>
             <TabsTrigger value="audit" className="gap-2">
               <History className="w-4 h-4" />
               Auditoría
@@ -90,6 +95,10 @@ export default function Seguridad() {
 
           <TabsContent value="roles" className="space-y-4">
             <RolesManager />
+          </TabsContent>
+
+          <TabsContent value="quick-permissions" className="space-y-4">
+            <QuickRolePermissions />
           </TabsContent>
 
           <TabsContent value="audit" className="space-y-4">
