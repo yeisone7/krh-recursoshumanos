@@ -230,6 +230,7 @@ export default function Auth() {
                 decoding="async"
                 fetchPriority="high"
                 onLoad={() => setIsHeroLogoLoaded(true)}
+                onError={() => setIsHeroLogoLoaded(true)}
               />
             </picture>
             </div>
