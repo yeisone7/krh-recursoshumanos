@@ -6,9 +6,11 @@ import {
   AlertTriangle,
   Info,
   History,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
+import { RolesManager } from '@/components/roles/RolesManager';
 
 export default function Seguridad() {
   const { isAdmin, roles } = useAuth();
@@ -70,8 +72,12 @@ export default function Seguridad() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <Tabs defaultValue="audit" className="space-y-4">
+          <Tabs defaultValue="roles" className="space-y-4">
           <TabsList>
+              <TabsTrigger value="roles" className="gap-2">
+                <ShieldCheck className="w-4 h-4" />
+                Roles y permisos
+              </TabsTrigger>
             <TabsTrigger value="audit" className="gap-2">
               <History className="w-4 h-4" />
               Auditoría
@@ -81,6 +87,10 @@ export default function Seguridad() {
               Información
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="roles" className="space-y-4">
+            <RolesManager />
+          </TabsContent>
 
           <TabsContent value="audit" className="space-y-4">
             <AuditLogViewer />
