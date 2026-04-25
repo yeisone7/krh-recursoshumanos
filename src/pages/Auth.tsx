@@ -263,29 +263,28 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Left side - Hero Branding */}
-      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 gradient-hero" />
+      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden bg-card">
+        <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:28px_28px] opacity-15" />
         
         {/* Decorative geometric shapes */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-            className="absolute -top-32 -right-32 w-96 h-96 rounded-full border border-primary-foreground/10" />
+            className="absolute -top-32 -right-32 w-96 h-96 rounded-full border border-primary/35" />
 
           <motion.div
             animate={{ rotate: -360 }}
             transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-48 -left-24 w-[500px] h-[500px] rounded-full border border-primary/20" />
+            className="absolute -bottom-48 -left-24 w-[500px] h-[500px] rounded-full border border-primary/25 bg-primary/5" />
 
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}
-            className="absolute top-1/3 right-12 w-64 h-64 rounded-full border border-secondary/10" />
+            className="absolute top-1/3 right-12 w-64 h-64 rounded-full border border-primary/30" />
 
           <div className="absolute inset-y-0 right-0 w-1/3 bg-primary/10" />
-          <div className="absolute bottom-0 left-0 h-28 w-full bg-gradient-to-t from-primary/20 to-transparent" />
+          <div className="absolute bottom-0 left-0 h-28 w-full bg-gradient-to-t from-primary/15 to-transparent" />
         </div>
 
         {/* Content */}
