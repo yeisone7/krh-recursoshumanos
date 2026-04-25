@@ -297,7 +297,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           </TooltipTrigger>
           <TooltipContent
             side="right"
-            className="bg-sidebar border-sidebar-border text-sidebar-foreground font-medium px-3 py-2 shadow-lg"
+              className="bg-popover border-border text-popover-foreground font-medium px-3 py-2 shadow-lg"
             sideOffset={8}>
 
             <div className="flex items-center gap-2">
@@ -373,7 +373,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             </TooltipTrigger>
             <TooltipContent
             side="right"
-            className="bg-sidebar border-sidebar-border text-sidebar-foreground p-0 shadow-lg"
+            className="bg-popover border-border text-popover-foreground p-0 shadow-lg"
             sideOffset={8}>
 
               <div className="py-2">
@@ -387,8 +387,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       <div className={cn(
                       "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
                       isActive ?
-                      "bg-sidebar-accent text-sidebar-accent-foreground font-medium" :
-                      "text-sidebar-foreground/85 hover:bg-sidebar-accent/35 hover:text-sidebar-foreground"
+                        "bg-sidebar-accent text-sidebar-accent-foreground font-medium" :
+                      "text-sidebar-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
                     )}>
                         {child.icon}
                         <span>{child.label}</span>
@@ -422,12 +422,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group",
                       isActive ?
                       "bg-sidebar-accent text-sidebar-accent-foreground" :
-                      "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-sidebar-accent/35"
+                      "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
                     )}>
 
                       <span className={cn(
                       "transition-colors",
-                      isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/85 group-hover:text-sidebar-foreground"
+                      isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"
                     )}>
                         {child.icon}
                       </span>
