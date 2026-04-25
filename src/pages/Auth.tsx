@@ -11,7 +11,6 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2, ChevronRight, Sparkles } from 'lucide-react';
-import petrocasinosLogo from '@/assets/petrocasinos-logo-white.png';
 import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
 import krhLoginHeroLogo from '@/assets/krh-login-hero-logo-horizontal.png';
 import krhLoginHeroLogoOptimized from '@/assets/krh-login-hero-logo-horizontal.webp';
@@ -41,10 +40,26 @@ const features = [
 { icon: Building2, title: 'Multi-empresa', desc: 'Administra múltiples centros de operación' },
 { icon: Users, title: 'Gestión integral', desc: 'Empleados, contratos, nómina y más' }];
 
+const AuthFormSkeleton = () => (
+  <div className="space-y-4" aria-hidden="true">
+    <div className="space-y-2">
+      <div className="h-3 w-28 rounded bg-muted animate-pulse" />
+      <div className="h-10 w-full rounded bg-muted/70 animate-pulse" />
+    </div>
+    <div className="space-y-2">
+      <div className="h-3 w-20 rounded bg-muted animate-pulse" />
+      <div className="h-10 w-full rounded bg-muted/70 animate-pulse" />
+    </div>
+    <div className="h-10 w-full rounded bg-primary/20 animate-pulse" />
+  </div>
+);
+
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isHeroLogoLoaded, setIsHeroLogoLoaded] = useState(false);
+  const [isFormReady, setIsFormReady] = useState(false);
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,6 +72,11 @@ export default function Auth() {
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setIsFormReady(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
