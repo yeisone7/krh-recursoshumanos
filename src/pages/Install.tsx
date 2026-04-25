@@ -9,11 +9,18 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+type InstallButtonState = "ready" | "installed" | "error";
+
+const isAppInstalled = () =>
+  window.matchMedia("(display-mode: standalone)").matches ||
+  (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
 const Install = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [compatibilityIssues, setCompatibilityIssues] = useState<string[]>([]);
+  const [installError, setInstallError] = useState<string | null>(null);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -36,28 +43,73 @@ const Install = () => {
 
     setCompatibilityIssues(issues);
 
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true);
-    }
+    const displayModeQuery = window.matchMedia("(display-mode: standalone)");
+    const refreshInstalledState = () => setIsInstalled(isAppInstalled());
+
+    refreshInstalledState();
 
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setInstallError(null);
+    };
+
+    const appInstalledHandler = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+      setInstallError(null);
+    };
+
+    const visibilityHandler = () => {
+      if (document.visibilityState === "visible") refreshInstalledState();
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-    window.addEventListener("appinstalled", () => setIsInstalled(true));
+    window.addEventListener("appinstalled", appInstalledHandler);
+    window.addEventListener("focus", refreshInstalledState);
+    document.addEventListener("visibilitychange", visibilityHandler);
+    displayModeQuery.addEventListener("change", refreshInstalledState);
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", appInstalledHandler);
+      window.removeEventListener("focus", refreshInstalledState);
+      document.removeEventListener("visibilitychange", visibilityHandler);
+      displayModeQuery.removeEventListener("change", refreshInstalledState);
+    };
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") setIsInstalled(true);
-    setDeferredPrompt(null);
+    if (isInstalled) return;
+
+    if (!deferredPrompt) {
+      setInstallError("El navegador todavía no habilitó la instalación automática.");
+      return;
+    }
+
+    try {
+      setInstallError(null);
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") setIsInstalled(true);
+      setDeferredPrompt(null);
+    } catch {
+      setInstallError("No se pudo iniciar la instalación. Inténtalo desde el menú del navegador.");
+    }
   };
+
+  const installButtonState: InstallButtonState = isInstalled
+    ? "installed"
+    : compatibilityIssues.length > 0 || installError
+      ? "error"
+      : "ready";
+
+  const installButtonLabel =
+    installButtonState === "installed"
+      ? "Ya instalada"
+      : installButtonState === "error"
+        ? "Instalación no disponible"
+        : "Instalar ahora";
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -74,13 +126,14 @@ const Install = () => {
           </p>
         </div>
 
-        {compatibilityIssues.length > 0 && !isInstalled && (
+        {(compatibilityIssues.length > 0 || installError) && !isInstalled && (
           <Card className="border-destructive/30 bg-destructive/10">
             <CardContent className="flex items-start gap-3 p-4">
               <AlertCircle className="h-6 w-6 text-destructive shrink-0 mt-0.5" />
               <div className="space-y-2">
                 <p className="text-sm text-foreground font-medium">No es posible instalar KRH en este momento.</p>
                 <ul className="list-disc pl-4 space-y-1 text-sm text-muted-foreground">
+                  {installError && <li>{installError}</li>}
                   {compatibilityIssues.map((issue) => (
                     <li key={issue}>{issue}</li>
                   ))}
@@ -89,6 +142,23 @@ const Install = () => {
             </CardContent>
           </Card>
         )}
+
+        <Button
+          onClick={handleInstall}
+          className="w-full gap-2"
+          size="lg"
+          disabled={installButtonState !== "ready" || !deferredPrompt}
+          variant={installButtonState === "error" ? "destructive" : "default"}
+        >
+          {installButtonState === "installed" ? (
+            <CheckCircle2 className="h-5 w-5" />
+          ) : installButtonState === "error" ? (
+            <AlertCircle className="h-5 w-5" />
+          ) : (
+            <Download className="h-5 w-5" />
+          )}
+          {installButtonLabel}
+        </Button>
 
         {isInstalled ? (
           <Card className="border-accent/30 bg-accent/10">
@@ -99,11 +169,6 @@ const Install = () => {
               </p>
             </CardContent>
           </Card>
-        ) : compatibilityIssues.length > 0 ? null : deferredPrompt ? (
-          <Button onClick={handleInstall} className="w-full gap-2" size="lg">
-            <Download className="h-5 w-5" />
-            Instalar ahora
-          </Button>
         ) : isIOS ? (
           <Card>
             <CardContent className="p-5 space-y-4">
