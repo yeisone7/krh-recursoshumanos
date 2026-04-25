@@ -1,4 +1,4 @@
-import { useState, useEffect, type KeyboardEvent } from 'react';
+import { useState, useEffect, useRef, type KeyboardEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -95,8 +95,10 @@ export default function Auth() {
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecoverySent, setIsRecoverySent] = useState(false);
+  const [loginErrorSummary, setLoginErrorSummary] = useState<string | null>(null);
   const [isHeroLogoLoaded, setIsHeroLogoLoaded] = useState(false);
   const [isFormReady, setIsFormReady] = useState(false);
+  const loginErrorSummaryRef = useRef<HTMLDivElement>(null);
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -140,6 +142,12 @@ export default function Auth() {
     return () => browserWindow.clearTimeout(timeoutId);
   }, [from]);
 
+  useEffect(() => {
+    if (loginErrorSummary) {
+      loginErrorSummaryRef.current?.focus();
+    }
+  }, [loginErrorSummary]);
+
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     mode: 'onChange',
@@ -165,16 +173,20 @@ export default function Auth() {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
+    setLoginErrorSummary(null);
     prefetchPostLoginRoute(from);
     try {
       const { error } = await signIn(data.email, data.password);
       if (error) {
+        const message = error.message.includes('Invalid login credentials') ?
+          'Correo o contraseña incorrectos.' :
+          error.message;
+
+        setLoginErrorSummary(message);
         toast({
           variant: 'destructive',
           title: 'Error de autenticación',
-          description: error.message.includes('Invalid login credentials') ?
-          'Correo o contraseña incorrectos.' :
-          error.message
+          description: message
         });
         return;
       }
@@ -188,6 +200,7 @@ export default function Auth() {
     if (event.key === 'Escape') {
       loginForm.clearErrors();
       recoveryForm.clearErrors();
+      setLoginErrorSummary(null);
       dismiss();
       return;
     }
@@ -423,6 +436,19 @@ export default function Auth() {
               </Form> : isLogin ?
             <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
+                  {loginErrorSummary && (
+                    <div
+                      ref={loginErrorSummaryRef}
+                      tabIndex={-1}
+                      role="alert"
+                      aria-live="assertive"
+                      className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
+                    >
+                      <p className="font-semibold">No pudimos iniciar sesión</p>
+                      <p>{loginErrorSummary}</p>
+                    </div>
+                  )}
+
                   <FormField
                   control={loginForm.control}
                   name="email"
