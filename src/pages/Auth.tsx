@@ -305,8 +305,8 @@ export default function Auth() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between gap-8 p-5 lg:p-8 w-full min-h-screen">
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex justify-center pt-2 lg:pt-4">
-            <div className="relative h-24 w-full max-w-[220px] lg:h-32 lg:max-w-[320px] mx-auto">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex justify-start pt-2 lg:pt-4">
+            <div className="relative h-24 w-full max-w-[220px] lg:h-32 lg:max-w-[320px]">
             {!isHeroLogoLoaded && <div className="absolute inset-0 rounded bg-secondary/15 animate-pulse" aria-hidden="true" />}
             <picture className={cn("block origin-center transition-[opacity,transform] duration-500 ease-out", isHeroLogoLoaded ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0")}>
               <source srcSet={krhLoginHeroLogoOptimized} type="image/webp" />
