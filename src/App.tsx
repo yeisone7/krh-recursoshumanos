@@ -16,6 +16,7 @@ import Empleados from "./pages/Empleados";
 import Contratos from "./pages/Contratos";
 import Incapacidades from "./pages/Incapacidades";
 import Alertas from "./pages/Alertas";
+import CentroNotificaciones from "./pages/CentroNotificaciones";
 import Dotacion from "./pages/Dotacion";
 import Examenes from "./pages/Examenes";
 import Seleccion from "./pages/Seleccion";
@@ -136,6 +137,7 @@ const App = () => (
                         <Route path="/contratos" element={<P module="contratos"><Contratos /></P>} />
                         <Route path="/incapacidades" element={<P module="incapacidades"><Incapacidades /></P>} />
                         <Route path="/alertas" element={<P module="alertas"><Alertas /></P>} />
+                        <Route path="/notificaciones" element={<P module="alertas"><CentroNotificaciones /></P>} />
                         <Route path="/dotacion" element={<P module="dotacion"><Dotacion /></P>} />
                         <Route path="/examenes" element={<P module="examenes"><Examenes /></P>} />
                         <Route path="/seleccion" element={<P module="seleccion"><Seleccion /></P>} />
