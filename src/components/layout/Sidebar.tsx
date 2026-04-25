@@ -386,8 +386,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       <div className={cn(
                       "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
                       isActive ?
-                      "bg-sidebar-accent text-primary font-medium" :
-                      "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                      "bg-sidebar-accent text-sidebar-accent-foreground font-medium" :
+                      "text-sidebar-foreground/85 hover:bg-sidebar-accent/35 hover:text-sidebar-foreground"
                     )}>
                         {child.icon}
                         <span>{child.label}</span>
@@ -421,12 +421,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group",
                       isActive ?
                       "bg-sidebar-accent text-sidebar-accent-foreground" :
-                      "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-sidebar-accent/35"
                     )}>
 
                       <span className={cn(
                       "transition-colors",
-                      isActive ? "text-secondary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+                      isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/85 group-hover:text-sidebar-foreground"
                     )}>
                         {child.icon}
                       </span>
@@ -490,7 +490,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               </div>
               <div className="flex flex-col">
                 <span className="font-display font-bold text-xl text-sidebar-primary leading-tight">KRH</span>
-                <span className="text-[11px] font-semibold text-white leading-tight whitespace-nowrap">Talento Humano</span>
+                 <span className="text-[11px] font-semibold text-sidebar-foreground leading-tight whitespace-nowrap">Talento Humano</span>
               </div>
             </motion.div> :
 
