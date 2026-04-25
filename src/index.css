@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /* KRH Design System - Corporate HR Platform
-   Reference palette: deep institutional green, mint action, clean white surfaces */
+   Reference palette: deep institutional green, primary #38c292, clean white surfaces */
 
 @layer base {
   :root {
@@ -21,7 +21,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 154 38% 9%;
 
-    /* Primary - Mint action green from reference */
+    /* Primary - #38c292 */
     --primary: 159 55% 49%;
     --primary-foreground: 0 0% 100%;
     --primary-hover: 158 57% 41%;
