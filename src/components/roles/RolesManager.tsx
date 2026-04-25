@@ -64,8 +64,8 @@ export function RolesManager() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Catálogo de Roles</h3>
-          <p className="text-sm text-muted-foreground">Crea y administra los roles del sistema</p>
+          <h3 className="text-lg font-semibold">Roles y permisos por empresa</h3>
+          <p className="text-sm text-muted-foreground">Crea roles para la empresa activa y define permisos por módulo</p>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="w-4 h-4 mr-2" />
