@@ -41,13 +41,29 @@ const certificationTypeLabels: Record<string, string> = {
   otro: 'Certificación',
 };
 
-export function useDashboardAlerts() {
+interface DashboardAlertsOptions {
+  includeDotationCompliance?: boolean;
+}
+
+export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
   const { currentCompanyId } = useAuth();
+  const includeDotationCompliance = options.includeDotationCompliance ?? true;
 
   return useQuery({
-    queryKey: ['dashboard-alerts', currentCompanyId],
+    queryKey: ['dashboard-alerts', currentCompanyId, includeDotationCompliance],
     queryFn: async () => {
       const alerts: DashboardAlert[] = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const toDateString = (date: Date) => date.toISOString().slice(0, 10);
+      const addDays = (days: number) => {
+        const date = new Date(today);
+        date.setDate(date.getDate() + days);
+        return toDateString(date);
+      };
+      const todayStr = toDateString(today);
+      const in5Days = addDays(5);
+      const in30Days = addDays(30);
 
       // Fetch employees from employees_v2 for the current company
       const { data: employees } = await supabase
