@@ -84,6 +84,7 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
   const [isLoading, setIsLoading] = useState(!!logoUrl);
   const [showFallback, setShowFallback] = useState(!logoUrl);
   const fallbackTimerRef = useRef<number | null>(null);
+  const companyName = name?.trim() || 'empresa actual';
   const initials = useMemo(() => {
     const ignoredWords = new Set(['de', 'del', 'la', 'las', 'el', 'los', 'y', 'e', 'the', 'of', 'and', 's', 'sa', 'sas', 'ltda', 'inc']);
     const words = (name || 'Empresa')
@@ -120,13 +121,18 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
   }, [logoUrl]);
 
   return (
-    <div className={cn("relative w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden border border-sidebar-border shrink-0", className)}>
+    <div
+      className={cn("relative w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden border border-sidebar-border shrink-0", className)}
+      role="img"
+      aria-label={`Logo de ${companyName}`}
+      title={`Logo de ${companyName}`}
+    >
       {logoUrl && !imageError && !showFallback ? (
         <>
-          {isLoading && <div className="absolute inset-0 animate-pulse bg-muted" />}
+          {isLoading && <div className="absolute inset-0 animate-pulse bg-muted" aria-hidden="true" />}
         <img
           src={logoUrl}
-          alt={`Logo ${name || 'empresa'}`}
+          alt={`Logo de ${companyName}`}
             className={cn("w-full h-full object-cover transition-opacity duration-200", isLoading ? "opacity-0" : "opacity-100")}
             onLoad={() => {
               if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current);
@@ -141,9 +147,9 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
         />
         </>
       ) : fallbackIcon ? (
-        <Building2 className="w-5 h-5 text-primary" />
+        <Building2 className="w-5 h-5 text-primary" aria-hidden="true" />
       ) : (
-        <span className="text-sm font-bold text-sidebar-accent-foreground">{initials}</span>
+        <span className="text-sm font-bold text-sidebar-accent-foreground" aria-hidden="true">{initials}</span>
       )}
     </div>
   );
