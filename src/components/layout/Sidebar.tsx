@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { UserManualDialog } from '@/components/manual/UserManualDialog';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -83,6 +83,7 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(!!logoUrl);
   const [showFallback, setShowFallback] = useState(!logoUrl);
+  const fallbackTimerRef = useRef<number | null>(null);
   const initials = (name || 'Empresa')
     .split(' ')
     .filter(Boolean)
@@ -98,12 +99,14 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
 
     if (!logoUrl) return;
 
-    const fallbackTimer = window.setTimeout(() => {
+    fallbackTimerRef.current = window.setTimeout(() => {
       setShowFallback(true);
       setIsLoading(false);
     }, 2500);
 
-    return () => window.clearTimeout(fallbackTimer);
+    return () => {
+      if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current);
+    };
   }, [logoUrl]);
 
   return (
@@ -115,7 +118,11 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
           src={logoUrl}
           alt={`Logo ${name || 'empresa'}`}
             className={cn("w-full h-full object-cover transition-opacity duration-200", isLoading ? "opacity-0" : "opacity-100")}
-            onLoad={() => setIsLoading(false)}
+            onLoad={() => {
+              if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current);
+              setIsLoading(false);
+              setShowFallback(false);
+            }}
             onError={() => {
               setImageError(true);
               setIsLoading(false);
