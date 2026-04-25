@@ -28,6 +28,8 @@ export default function ResetPassword() {
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: { password: '', confirmPassword: '' },
   });
 
@@ -88,7 +90,7 @@ export default function ResetPassword() {
               </FormItem>
               } />
 
-            <Button type="submit" className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm" disabled={isSubmitting} aria-busy={isSubmitting} aria-live="polite">
+            <Button type="submit" className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm" disabled={isSubmitting || !form.formState.isValid} aria-busy={isSubmitting} aria-live="polite">
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
               <span>{isSubmitting ? 'Actualizando...' : 'Actualizar contraseña'}</span>
             </Button>
