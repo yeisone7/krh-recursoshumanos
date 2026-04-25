@@ -365,9 +365,44 @@ export default function Auth() {
           transition={{ duration: 0.5 }}
           className="w-full max-w-md relative z-10">
 
-          {/* Mobile logo */}
-          <div className="lg:hidden flex justify-center mb-8">
-            <img src={petrocasinosIcon} alt="KRH" className="h-14 object-contain" />
+          <div className="md:hidden mb-4 overflow-hidden border border-primary/15 bg-card shadow-sm">
+            <button
+              type="button"
+              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+              aria-expanded={isBrandPanelOpen}
+              aria-controls="mobile-brand-panel"
+              onClick={() => setIsBrandPanelOpen((open) => !open)}
+            >
+              <span className="flex items-center gap-3 min-w-0">
+                <img src={petrocasinosIcon} alt="KRH" className="h-11 w-11 shrink-0 object-contain" />
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold text-foreground">Gestión de Recursos Humanos</span>
+                  <span className="block text-xs text-muted-foreground">Plataforma KRH</span>
+                </span>
+              </span>
+              <ChevronDown className={cn("h-4 w-4 shrink-0 text-primary transition-transform", isBrandPanelOpen && "rotate-180")} aria-hidden="true" />
+            </button>
+            <AnimatePresence initial={false}>
+              {isBrandPanelOpen && (
+                <motion.div
+                  id="mobile-brand-panel"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="relative border-t border-primary/10 px-4 py-4">
+                    <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:20px_20px] opacity-10" aria-hidden="true" />
+                    <div className="relative space-y-3">
+                      <img src={krhLoginHeroLogoOptimized} alt="Logo horizontal de Gestión de Recursos Humanos" className="h-16 max-w-full object-contain" />
+                      <p className="text-sm font-semibold text-foreground">Gestión de Recursos Humanos</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">Administra empleados, contratos, dotación y exámenes médicos en una sola plataforma.</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="bg-card border border-border p-8 shadow-xl">
