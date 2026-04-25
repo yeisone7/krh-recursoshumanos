@@ -573,18 +573,25 @@ export default function Auth() {
             {/* Toggle */}
             <div className="text-center text-sm">
               <span className="text-muted-foreground">
-                {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
+                {isRecoveryMode ? '¿Recordaste tu contraseña?' : isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
               </span>{' '}
               <button
                 type="button"
                 className="text-secondary hover:text-secondary/80 font-semibold transition-colors"
                 onClick={() => {
-                  setIsLogin(!isLogin);
+                  if (isRecoveryMode) {
+                    setIsRecoveryMode(false);
+                    setIsLogin(true);
+                    setIsRecoverySent(false);
+                    recoveryForm.reset();
+                  } else {
+                    setIsLogin(!isLogin);
+                  }
                   loginForm.reset();
                   registerForm.reset();
                 }}>
 
-                {isLogin ? 'Regístrate' : 'Inicia sesión'}
+                {isRecoveryMode ? 'Inicia sesión' : isLogin ? 'Regístrate' : 'Inicia sesión'}
               </button>
             </div>
           </div>
