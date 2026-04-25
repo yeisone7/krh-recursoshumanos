@@ -81,6 +81,8 @@ interface CompanyLogoProps {
 
 function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: CompanyLogoProps) {
   const [imageError, setImageError] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!logoUrl);
+  const [showFallback, setShowFallback] = useState(!logoUrl);
   const initials = (name || 'Empresa')
     .split(' ')
     .filter(Boolean)
@@ -91,17 +93,36 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
 
   useEffect(() => {
     setImageError(false);
+    setIsLoading(!!logoUrl);
+    setShowFallback(!logoUrl);
+
+    if (!logoUrl) return;
+
+    const fallbackTimer = window.setTimeout(() => {
+      setShowFallback(true);
+      setIsLoading(false);
+    }, 2500);
+
+    return () => window.clearTimeout(fallbackTimer);
   }, [logoUrl]);
 
   return (
     <div className={cn("w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden border border-sidebar-border shrink-0", className)}>
-      {logoUrl && !imageError ? (
+      {logoUrl && !imageError && !showFallback ? (
+        <>
+          {isLoading && <div className="absolute inset-0 animate-pulse bg-muted" />}
         <img
           src={logoUrl}
           alt={`Logo ${name || 'empresa'}`}
-          className="w-full h-full object-cover"
-          onError={() => setImageError(true)}
+            className={cn("w-full h-full object-cover transition-opacity duration-200", isLoading ? "opacity-0" : "opacity-100")}
+            onLoad={() => setIsLoading(false)}
+            onError={() => {
+              setImageError(true);
+              setIsLoading(false);
+              setShowFallback(true);
+            }}
         />
+        </>
       ) : fallbackIcon ? (
         <Building2 className="w-5 h-5 text-primary" />
       ) : (
