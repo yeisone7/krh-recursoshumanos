@@ -317,6 +317,7 @@ export default function Auth() {
                 width={480}
                 height={240}
                 decoding="async"
+                loading="eager"
                 fetchPriority="high"
                 onLoad={() => setIsHeroLogoLoaded(true)}
                 onError={() => setIsHeroLogoLoaded(true)}
