@@ -6,6 +6,7 @@ import Auth from './Auth';
 const authMocks = vi.hoisted(() => ({
   signIn: vi.fn(),
   signUp: vi.fn(),
+  resetPasswordForEmail: vi.fn(),
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
@@ -23,6 +24,14 @@ vi.mock('@/hooks/use-toast', () => ({
   }),
 }));
 
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    auth: {
+      resetPasswordForEmail: authMocks.resetPasswordForEmail,
+    },
+  },
+}));
+
 vi.mock('./Dashboard', () => ({ default: () => null }));
 vi.mock('@/components/layout/AppLayout', () => ({ AppLayout: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock('@/components/dashboard/AlertsPanel', () => ({ AlertsPanel: () => null }));
@@ -37,6 +46,7 @@ describe('Auth login loading states', () => {
     vi.useFakeTimers();
     authMocks.signIn.mockReset();
     authMocks.signUp.mockReset();
+    authMocks.resetPasswordForEmail.mockReset();
   });
 
   afterEach(() => {
@@ -82,5 +92,31 @@ describe('Auth login loading states', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Autenticando credenciales, por favor espera.');
     expect(screen.getByLabelText(/correo electrónico/i)).toBeDisabled();
     expect(screen.getByLabelText(/contraseña/i)).toBeDisabled();
+  });
+
+  it('envía enlace de recuperación con estado accesible durante la solicitud', async () => {
+    authMocks.resetPasswordForEmail.mockReturnValue(new Promise(() => undefined));
+
+    renderAuth();
+
+    act(() => {
+      vi.advanceTimersByTime(1800);
+    });
+
+    fireEvent.change(screen.getByLabelText(/correo electrónico/i), { target: { value: 'persona@empresa.com' } });
+    fireEvent.click(screen.getByRole('button', { name: /recuperar contraseña/i }));
+
+    await act(async () => {
+      fireEvent.submit(screen.getByRole('button', { name: /enviar enlace/i }).closest('form')!);
+    });
+
+    const button = screen.getByRole('button', { name: /enviando enlace/i });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    expect(button.querySelector('svg')).toHaveClass('animate-spin');
+    expect(screen.getByRole('status')).toHaveTextContent('Enviando enlace de recuperación, por favor espera.');
+    expect(authMocks.resetPasswordForEmail).toHaveBeenCalledWith('persona@empresa.com', {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
   });
 });
