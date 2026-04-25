@@ -1,10 +1,12 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { UserManualDialog } from '@/components/manual/UserManualDialog';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompanies, useCompany } from '@/hooks/useCompanies';
 import { useUnifiedAlerts } from '@/hooks/useUnifiedAlerts';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Tooltip,
   TooltipContent,
@@ -745,6 +747,21 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
   const { data: queriedCompanies } = useCompanies();
   const companies = isSuperAdmin ? (queriedCompanies || authCompanies) : authCompanies;
   const { data: currentCompany } = useCompany(currentCompanyId || undefined);
+  const { data: userProfile } = useQuery({
+    queryKey: ['sidebar-user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('full_name, display_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
   const navigate = useNavigate();
   const [manualOpen, setManualOpen] = useState(false);
   const [companyOpen, setCompanyOpen] = useState(false);
@@ -759,7 +776,14 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
   };
 
   const userEmail = user?.email || '';
-  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || userEmail || 'Usuario';
+  const cleanText = (value: unknown) => typeof value === 'string' ? value.trim() : '';
+  const userName =
+    cleanText(userProfile?.full_name) ||
+    cleanText(userProfile?.display_name) ||
+    cleanText(user?.user_metadata?.full_name) ||
+    cleanText(user?.user_metadata?.name) ||
+    userEmail ||
+    'Usuario';
   const primaryRole = roles[0] ? roleLabels[roles[0]] || roles[0] : 'Usuario';
   const canSwitchCompany = roles.includes('admin') || isSuperAdmin;
   const hasMultipleCompanies = companies && companies.length > 1;
