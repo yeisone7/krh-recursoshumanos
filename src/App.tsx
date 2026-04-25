@@ -47,6 +47,7 @@ import Portal from "./pages/Portal";
 import Reportes from "./pages/Reportes";
 import Analitica from "./pages/Analitica";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
 import SelectCompany from "./pages/SelectCompany";
 import Empleado360 from "./pages/Empleado360";
@@ -98,6 +99,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/capacitacion" element={<AccesoPublico />} />
             <Route path="/descargos" element={<DescargosPublico />} />
             <Route path="/registro" element={<RegistroPublico />} />
