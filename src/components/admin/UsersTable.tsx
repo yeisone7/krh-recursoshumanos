@@ -99,7 +99,8 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
     return users.filter(u => 
       getUserDisplayName(u).toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q) ||
-      u.roles.some(r => r.toLowerCase().includes(q))
+      u.roles.some(r => r.toLowerCase().includes(q)) ||
+      u.custom_roles.some(r => r.toLowerCase().includes(q))
     );
   }, [users, searchQuery]);
 
@@ -180,7 +181,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             <TableRow>
               <TableHead>Usuario</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead>Roles</TableHead>
+              <TableHead>Roles por empresa</TableHead>
               <TableHead>Empresas</TableHead>
               <TableHead>Centros</TableHead>
               <TableHead className="w-[80px]"></TableHead>
@@ -293,10 +294,16 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
-                    {user.roles.length === 0 ? (
+                    {user.custom_roles.length === 0 && user.roles.length === 0 ? (
                       <span className="text-sm text-muted-foreground italic">Sin roles</span>
                     ) : (
-                      user.roles.map(role => (
+                      <>
+                      {user.custom_roles.map(role => (
+                        <Badge key={role} variant="secondary" className="text-xs">
+                          {role}
+                        </Badge>
+                      ))}
+                      {user.roles.map(role => (
                         <Badge 
                           key={role} 
                           variant={ROLE_LABELS[role]?.variant || 'outline'}
@@ -304,7 +311,8 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                         >
                           {ROLE_LABELS[role]?.label || role}
                         </Badge>
-                      ))
+                      ))}
+                      </>
                     )}
                   </div>
                 </TableCell>
