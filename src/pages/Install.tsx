@@ -24,7 +24,8 @@ const Install = () => {
 
   useEffect(() => {
     const ua = navigator.userAgent;
-    setIsIOS(/iPad|iPhone|iPod/.test(ua));
+    const detectedIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    setIsIOS(detectedIOS);
 
     const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
     const issues: string[] = [];
@@ -33,7 +34,7 @@ const Install = () => {
       issues.push("La app debe abrirse desde una conexión segura HTTPS.");
     }
 
-    if (!("serviceWorker" in navigator)) {
+    if (!("serviceWorker" in navigator) && !detectedIOS) {
       issues.push("Este navegador no tiene soporte para Service Worker.");
     }
 
@@ -81,6 +82,11 @@ const Install = () => {
 
   const handleInstall = async () => {
     if (isInstalled) return;
+
+    if (isIOS && !deferredPrompt) {
+      setInstallError(null);
+      return;
+    }
 
     if (!deferredPrompt) {
       setInstallError("El navegador todavía no habilitó la instalación automática.");
@@ -147,7 +153,7 @@ const Install = () => {
           onClick={handleInstall}
           className="w-full gap-2"
           size="lg"
-          disabled={installButtonState !== "ready" || !deferredPrompt}
+          disabled={installButtonState !== "ready" || (!deferredPrompt && !isIOS)}
           variant={installButtonState === "error" ? "destructive" : "default"}
         >
           {installButtonState === "installed" ? (
