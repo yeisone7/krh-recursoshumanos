@@ -64,6 +64,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
       const todayStr = toDateString(today);
       const in5Days = addDays(5);
       const in30Days = addDays(30);
+      const in35Days = addDays(35);
 
       // Fetch employees from employees_v2 for the current company
       const { data: employees } = await supabase
