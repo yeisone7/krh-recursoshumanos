@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type KeyboardEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -92,7 +92,7 @@ export default function Auth() {
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
 
   const from = location.state?.from?.pathname || '/';
 
@@ -162,6 +162,19 @@ export default function Auth() {
       toast({ title: '¡Bienvenido!', description: 'Has iniciado sesión correctamente.' });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleLoginKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
+    if (event.key === 'Escape') {
+      loginForm.clearErrors();
+      dismiss();
+      return;
+    }
+
+    if (event.key === 'Enter' && !isSubmitting) {
+      event.preventDefault();
+      event.currentTarget.requestSubmit();
     }
   };
 
@@ -329,7 +342,7 @@ export default function Auth() {
             {/* Forms */}
             {!isFormReady ? <AuthFormSkeleton /> : isLogin ?
             <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
                   <FormField
                   control={loginForm.control}
                   name="email"
