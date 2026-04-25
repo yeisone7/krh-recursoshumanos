@@ -338,7 +338,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       whileTap={{ scale: 0.98 }}
       onClick={() => !isCollapsed && setIsOpen(!isOpen)}
       className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
+        "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
         isAnyChildActive ?
         "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" :
         "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
@@ -351,7 +351,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           {item.icon}
         </span>
         {!isCollapsed &&
-          <span className="font-medium text-sm whitespace-nowrap overflow-hidden flex-1">
+          <span className="font-bold text-sm whitespace-nowrap overflow-hidden flex-1">
             {item.label}
           </span>
         }
@@ -373,11 +373,11 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             </TooltipTrigger>
             <TooltipContent
             side="right"
-            className="bg-popover border-border text-popover-foreground p-0 shadow-lg"
+            className="overflow-hidden rounded-lg border border-border bg-popover p-0 text-popover-foreground shadow-lg"
             sideOffset={8}>
 
               <div className="py-2">
-                <p className="px-3 pb-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider border-b border-sidebar-border mb-1">
+                <p className="mb-1 border-b border-border px-3 pb-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-muted-foreground">
                   {item.label}
                 </p>
                 {item.children?.map((child) => {
@@ -385,7 +385,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                 return (
                   <Link key={child.href} to={child.href} onClick={handleNavClick}>
                       <div className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
+                      "flex items-center gap-2 px-3 py-1.5 text-sm font-bold transition-colors [&_svg]:shrink-0 [&_svg]:stroke-[2]",
                       isActive ?
                         "bg-sidebar-accent text-sidebar-accent-foreground font-medium" :
                       "text-sidebar-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
