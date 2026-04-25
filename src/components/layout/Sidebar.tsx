@@ -271,7 +271,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             {item.icon}
           </span>
           {!isCollapsed &&
-            <span className="font-medium text-sm whitespace-nowrap overflow-hidden">
+            <span className="font-bold text-sm whitespace-nowrap overflow-hidden">
               {item.label}
             </span>
           }
@@ -318,7 +318,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   const SectionLabel = ({ label }: {label: string;}) => (
     !isCollapsed ? (
-      <p className="text-xs font-semibold text-sidebar-foreground/80 uppercase tracking-wider px-3 pt-4 pb-1">
+      <p className="text-[10px] font-extrabold text-sidebar-foreground/45 uppercase tracking-[0.16em] px-3 pt-4 pb-1">
         {label}
       </p>
     ) : null
@@ -490,8 +490,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                 <img src={petroVerdeLogo} alt="KRH Logo" className="w-10 h-10 object-cover rounded-xl" />
               </div>
               <div className="flex flex-col">
-                <span className="font-display font-bold text-xl text-sidebar-primary leading-tight">KRH</span>
-                 <span className="text-[11px] font-semibold text-sidebar-foreground leading-tight whitespace-nowrap">Talento Humano</span>
+                <span className="font-display font-extrabold text-xl text-sidebar-primary leading-tight">KRH</span>
+                 <span className="text-[11px] font-bold text-sidebar-foreground leading-tight whitespace-nowrap">Talento Humano</span>
               </div>
             </motion.div> :
 
