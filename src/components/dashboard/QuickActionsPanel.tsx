@@ -93,7 +93,7 @@ export function QuickActionsPanel() {
           >
             <div className={cn(
               "w-10 h-10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform",
-              action.isPrimary ? 'bg-white' : action.iconBg
+              action.isPrimary ? 'bg-primary-foreground' : action.iconBg
             )}>
               <action.icon className={cn(
                 "w-5 h-5",
