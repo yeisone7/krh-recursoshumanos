@@ -102,13 +102,18 @@ export default function Auth() {
 
   useEffect(() => {
     const schedulePrefetch = () => prefetchPostLoginRoute(from);
-    if ('requestIdleCallback' in window) {
-      const idleId = window.requestIdleCallback(schedulePrefetch, { timeout: 1500 });
-      return () => window.cancelIdleCallback(idleId);
+    const browserWindow = window as Window & typeof globalThis & {
+      requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+
+    if (browserWindow.requestIdleCallback && browserWindow.cancelIdleCallback) {
+      const idleId = browserWindow.requestIdleCallback(schedulePrefetch, { timeout: 1500 });
+      return () => browserWindow.cancelIdleCallback?.(idleId);
     }
 
-    const timeoutId = window.setTimeout(schedulePrefetch, 600);
-    return () => window.clearTimeout(timeoutId);
+    const timeoutId = browserWindow.setTimeout(schedulePrefetch, 600);
+    return () => browserWindow.clearTimeout(timeoutId);
   }, [from]);
 
   const loginForm = useForm<LoginFormData>({
