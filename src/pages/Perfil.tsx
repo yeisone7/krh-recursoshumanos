@@ -79,6 +79,8 @@ export default function Perfil() {
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       newPassword: '',
       confirmPassword: '',
@@ -484,14 +486,17 @@ export default function Perfil() {
                   )}
                 />
 
-                <Button type="submit" disabled={updatePassword.isPending}>
+                <Button type="submit" disabled={updatePassword.isPending || !passwordForm.formState.isValid} aria-busy={updatePassword.isPending} aria-live="polite">
                   {updatePassword.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
                   ) : (
-                    <Lock className="w-4 h-4 mr-2" />
+                    <Lock className="w-4 h-4 mr-2" aria-hidden="true" />
                   )}
-                  Cambiar contraseña
+                  {updatePassword.isPending ? 'Cambiando contraseña...' : 'Cambiar contraseña'}
                 </Button>
+                <span className="sr-only" role="status" aria-live="polite">
+                  {updatePassword.isPending ? 'Actualizando contraseña, por favor espera.' : ''}
+                </span>
               </form>
             </Form>
           </CardContent>
