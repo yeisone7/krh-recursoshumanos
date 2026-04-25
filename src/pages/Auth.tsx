@@ -51,6 +51,13 @@ const AuthFormSkeleton = () => (
       <div className="h-3 w-20 rounded bg-muted animate-pulse" />
       <div className="h-10 w-full rounded bg-muted/70 animate-pulse" />
     </div>
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className="h-4 w-4 rounded bg-muted animate-pulse" />
+        <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+      </div>
+      <div className="h-3 w-28 rounded bg-muted animate-pulse" />
+    </div>
     <div className="h-10 w-full rounded bg-primary/20 animate-pulse" />
   </div>
 );
