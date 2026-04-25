@@ -5,6 +5,7 @@ import {
   Building2,
   FileText,
   Bell,
+  Mail,
   Loader2,
   Save,
   Users,
@@ -33,6 +34,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompany } from '@/hooks/useCompanies';
@@ -51,12 +53,19 @@ export default function Configuracion() {
   const [activeTab, setActiveTab] = useState('company');
 
   // Alert config state
+  const [alertRecipients, setAlertRecipients] = useState('');
+  const [alertContractInfo, setAlertContractInfo] = useState(60);
   const [alertContractWarning, setAlertContractWarning] = useState(30);
   const [alertContractCritical, setAlertContractCritical] = useState(7);
+  const [alertExamInfo, setAlertExamInfo] = useState(60);
   const [alertExamWarning, setAlertExamWarning] = useState(30);
   const [alertExamCritical, setAlertExamCritical] = useState(7);
+  const [alertDotationInfo, setAlertDotationInfo] = useState(60);
   const [alertDotationWarning, setAlertDotationWarning] = useState(30);
   const [alertDotationCritical, setAlertDotationCritical] = useState(7);
+  const [alertTerminationInfo, setAlertTerminationInfo] = useState(15);
+  const [alertTerminationWarning, setAlertTerminationWarning] = useState(7);
+  const [alertTerminationCritical, setAlertTerminationCritical] = useState(3);
   const [alertTerminationPendingDays, setAlertTerminationPendingDays] = useState(7);
 
   // AI config state
@@ -112,21 +121,31 @@ export default function Configuracion() {
       const examDays = systemConfig.alert_exam_days;
       const dotationDays = systemConfig.alert_dotation_days;
       const terminationPendingDays = systemConfig.alert_termination_pending_days;
+      const notificationRecipients = systemConfig.alert_notification_recipients;
       
+      if (notificationRecipients?.emails) {
+        setAlertRecipients(notificationRecipients.emails.join('\n'));
+      }
       if (contractDays) {
+        setAlertContractInfo(contractDays.info || 60);
         setAlertContractWarning(contractDays.warning || 30);
         setAlertContractCritical(contractDays.critical || 7);
       }
       if (examDays) {
+        setAlertExamInfo(examDays.info || 60);
         setAlertExamWarning(examDays.warning || 30);
         setAlertExamCritical(examDays.critical || 7);
       }
       if (dotationDays) {
+        setAlertDotationInfo(dotationDays.info || 60);
         setAlertDotationWarning(dotationDays.warning || 30);
         setAlertDotationCritical(dotationDays.critical || 7);
       }
       if (terminationPendingDays) {
         setAlertTerminationPendingDays(terminationPendingDays.min_days || 7);
+        setAlertTerminationInfo(terminationPendingDays.info || 15);
+        setAlertTerminationWarning(terminationPendingDays.warning || 7);
+        setAlertTerminationCritical(terminationPendingDays.critical || 3);
       }
 
       // Load AI config
@@ -178,22 +197,37 @@ export default function Configuracion() {
 
   const handleSaveAlertConfig = async () => {
     try {
+      const emails = alertRecipients
+        .split(/[\n,;]/)
+        .map((email) => email.trim())
+        .filter(Boolean);
+
       await Promise.all([
         updateConfig.mutateAsync({
+          key: 'alert_notification_recipients',
+          value: { emails },
+          description: 'Correos destinatarios para alertas por empresa',
+        }),
+        updateConfig.mutateAsync({
           key: 'alert_contract_days',
-          value: { warning: alertContractWarning, critical: alertContractCritical },
+          value: { info: alertContractInfo, warning: alertContractWarning, critical: alertContractCritical },
         }),
         updateConfig.mutateAsync({
           key: 'alert_exam_days',
-          value: { warning: alertExamWarning, critical: alertExamCritical },
+          value: { info: alertExamInfo, warning: alertExamWarning, critical: alertExamCritical },
         }),
         updateConfig.mutateAsync({
           key: 'alert_dotation_days',
-          value: { warning: alertDotationWarning, critical: alertDotationCritical },
+          value: { info: alertDotationInfo, warning: alertDotationWarning, critical: alertDotationCritical },
         }),
         updateConfig.mutateAsync({
           key: 'alert_termination_pending_days',
-          value: { min_days: alertTerminationPendingDays },
+          value: {
+            min_days: alertTerminationPendingDays,
+            info: alertTerminationInfo,
+            warning: alertTerminationWarning,
+            critical: alertTerminationCritical,
+          },
           description: 'Días mínimos de espera antes de notificar retiros pendientes',
         }),
         updateConfig.mutateAsync({
@@ -389,19 +423,42 @@ export default function Configuracion() {
         <TabsContent value="alerts">
           <Card>
             <CardHeader>
-              <CardTitle>Configuración de Alertas</CardTitle>
-              <CardDescription>Define los días de anticipación para las alertas de vencimiento</CardDescription>
+              <CardTitle>Configuración de Alertas por Empresa</CardTitle>
+              <CardDescription>Define destinatarios, preavisos y niveles para cada tipo de alerta</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" /> Correos destinatarios
+                </Label>
+                <Textarea
+                  value={alertRecipients}
+                  onChange={(e) => setAlertRecipients(e.target.value)}
+                  placeholder="gerencia.talento@empresa.com&#10;coordinacion.rrhh@empresa.com"
+                  className="min-h-24"
+                />
+                <p className="text-xs text-muted-foreground">Puedes separar los correos por salto de línea, coma o punto y coma.</p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div className="space-y-3 p-4 border rounded-lg">
                   <h4 className="font-medium flex items-center gap-2">
                     <FileText className="w-4 h-4" />Contratos
                   </h4>
                   <div>
+                    <Label>Info (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertContractInfo} 
+                      onChange={(e) => setAlertContractInfo(parseInt(e.target.value) || 60)} 
+                    />
+                  </div>
+                  <div>
                     <Label>Advertencia (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertContractWarning} 
                       onChange={(e) => setAlertContractWarning(parseInt(e.target.value) || 30)} 
                     />
@@ -410,6 +467,7 @@ export default function Configuracion() {
                     <Label>Crítico (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertContractCritical} 
                       onChange={(e) => setAlertContractCritical(parseInt(e.target.value) || 7)} 
                     />
@@ -420,9 +478,19 @@ export default function Configuracion() {
                     <Users className="w-4 h-4" />Exámenes Médicos
                   </h4>
                   <div>
+                    <Label>Info (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertExamInfo} 
+                      onChange={(e) => setAlertExamInfo(parseInt(e.target.value) || 60)} 
+                    />
+                  </div>
+                  <div>
                     <Label>Advertencia (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertExamWarning} 
                       onChange={(e) => setAlertExamWarning(parseInt(e.target.value) || 30)} 
                     />
@@ -431,6 +499,7 @@ export default function Configuracion() {
                     <Label>Crítico (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertExamCritical} 
                       onChange={(e) => setAlertExamCritical(parseInt(e.target.value) || 7)} 
                     />
@@ -441,9 +510,19 @@ export default function Configuracion() {
                     <Shirt className="w-4 h-4" />Dotación
                   </h4>
                   <div>
+                    <Label>Info (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertDotationInfo} 
+                      onChange={(e) => setAlertDotationInfo(parseInt(e.target.value) || 60)} 
+                    />
+                  </div>
+                  <div>
                     <Label>Advertencia (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertDotationWarning} 
                       onChange={(e) => setAlertDotationWarning(parseInt(e.target.value) || 30)} 
                     />
@@ -452,6 +531,7 @@ export default function Configuracion() {
                     <Label>Crítico (días)</Label>
                     <Input 
                       type="number" 
+                      min={1}
                       value={alertDotationCritical} 
                       onChange={(e) => setAlertDotationCritical(parseInt(e.target.value) || 7)} 
                     />
@@ -461,6 +541,33 @@ export default function Configuracion() {
                   <h4 className="font-medium flex items-center gap-2">
                     <Bell className="w-4 h-4 text-warning" />Notificación Retiros
                   </h4>
+                  <div>
+                    <Label>Info (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertTerminationInfo} 
+                      onChange={(e) => setAlertTerminationInfo(parseInt(e.target.value) || 15)} 
+                    />
+                  </div>
+                  <div>
+                    <Label>Advertencia (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertTerminationWarning} 
+                      onChange={(e) => setAlertTerminationWarning(parseInt(e.target.value) || 7)} 
+                    />
+                  </div>
+                  <div>
+                    <Label>Crítico (días)</Label>
+                    <Input 
+                      type="number" 
+                      min={1}
+                      value={alertTerminationCritical} 
+                      onChange={(e) => setAlertTerminationCritical(parseInt(e.target.value) || 3)} 
+                    />
+                  </div>
                   <div>
                     <Label>Días pendientes mínimos</Label>
                     <Input 
