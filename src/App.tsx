@@ -96,9 +96,9 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <AppUpdateNotifier />
       <BrowserRouter>
         <AuthProvider>
+          <AppUpdateNotifier />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
