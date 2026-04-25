@@ -50,7 +50,8 @@ import {
   Link2,
   FileSignature,
   ClipboardCheck,
-  Globe } from
+  Globe,
+  ExternalLink } from
 'lucide-react';
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -259,13 +260,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         className={cn(
           "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
           isActive ?
-          "bg-sidebar-accent text-sidebar-accent-foreground" :
-          "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-sidebar-accent/35"
+          "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" :
+          "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
         )}>
 
           <span className={cn(
           "transition-colors",
-          isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/85 group-hover:text-sidebar-foreground"
+          isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"
         )}>
             {item.icon}
           </span>
@@ -339,13 +340,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       className={cn(
         "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
         isAnyChildActive ?
-        "bg-sidebar-accent text-sidebar-accent-foreground" :
-        "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-sidebar-accent/35"
+        "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" :
+        "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
       )}>
 
         <span className={cn(
         "transition-colors",
-        isAnyChildActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/85 group-hover:text-sidebar-foreground"
+        isAnyChildActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"
       )}>
           {item.icon}
         </span>
