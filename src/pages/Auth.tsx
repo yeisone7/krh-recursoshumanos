@@ -175,27 +175,27 @@ export default function Auth() {
       {/* Left side - Hero Branding */}
       <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden">
         {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(224,45%,12%)] via-[hsl(224,42%,22%)] to-[hsl(224,38%,30%)]" />
+        <div className="absolute inset-0 gradient-hero" />
         
         {/* Decorative geometric shapes */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-            className="absolute -top-32 -right-32 w-96 h-96 rounded-full border border-white/5" />
+            className="absolute -top-32 -right-32 w-96 h-96 rounded-full border border-primary-foreground/10" />
 
           <motion.div
             animate={{ rotate: -360 }}
             transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-48 -left-24 w-[500px] h-[500px] rounded-full border border-white/5" />
+            className="absolute -bottom-48 -left-24 w-[500px] h-[500px] rounded-full border border-primary/20" />
 
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}
             className="absolute top-1/3 right-12 w-64 h-64 rounded-full border border-secondary/10" />
 
-          <div className="absolute top-20 right-20 w-72 h-72 bg-secondary/8 rounded-full blur-3xl" />
-          <div className="absolute bottom-32 left-16 w-56 h-56 bg-primary/20 rounded-full blur-3xl" />
+          <div className="absolute inset-y-0 right-0 w-1/3 bg-primary/10" />
+          <div className="absolute bottom-0 left-0 h-28 w-full bg-gradient-to-t from-primary/20 to-transparent" />
         </div>
 
         {/* Content */}
