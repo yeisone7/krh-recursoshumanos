@@ -263,7 +263,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Left side - Hero Branding */}
-      <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden bg-card">
+      <div className="hidden md:flex md:w-[42%] lg:w-[50%] xl:w-[55%] md:min-w-[320px] relative overflow-hidden bg-card">
         <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:28px_28px] opacity-15" />
         
         {/* Decorative geometric shapes */}
@@ -271,24 +271,24 @@ export default function Auth() {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-            className="absolute -top-32 -right-32 w-96 h-96 rounded-full border border-primary/35" />
+            className="absolute -top-20 -right-24 lg:-top-32 lg:-right-32 w-64 h-64 lg:w-96 lg:h-96 rounded-full border border-primary/35" />
 
           <motion.div
             animate={{ rotate: -360 }}
             transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-48 -left-24 w-[500px] h-[500px] rounded-full border border-primary/25 bg-primary/5" />
+            className="absolute -bottom-28 -left-20 lg:-bottom-48 lg:-left-24 w-80 h-80 lg:w-[500px] lg:h-[500px] rounded-full border border-primary/25 bg-primary/5" />
 
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}
-            className="absolute top-1/3 right-12 w-64 h-64 rounded-full border border-primary/30" />
+            className="absolute top-1/3 right-6 lg:right-12 w-40 h-40 lg:w-64 lg:h-64 rounded-full border border-primary/30" />
 
           <div className="absolute inset-y-0 right-0 w-1/3 bg-primary/10" />
           <div className="absolute bottom-0 left-0 h-28 w-full bg-gradient-to-t from-primary/15 to-transparent" />
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between p-8 w-full">
+        <div className="relative z-10 flex flex-col justify-between p-5 lg:p-8 w-full min-h-screen">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="relative h-16 w-[128px] sm:w-[160px]">
             {!isHeroLogoLoaded && <div className="absolute inset-0 rounded bg-secondary/15 animate-pulse" aria-hidden="true" />}
@@ -311,17 +311,17 @@ export default function Auth() {
           
           <div className="space-y-5">
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/25 text-primary text-sm font-medium mb-4">
-                <Sparkles className="w-4 h-4" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/25 text-primary text-xs lg:text-sm font-medium mb-3 lg:mb-4">
+                <Sparkles className="w-4 h-4 shrink-0" />
                 Plataforma KRH
               </div>
-              <h1 className="text-4xl font-bold text-foreground leading-tight tracking-tight">
+              <h1 className="text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
                 Gestión de<br />
                 <span className="text-primary">
                   Recursos Humanos
                 </span>
               </h1>
-              <p className="text-base text-muted-foreground mt-3 max-w-md leading-relaxed">
+              <p className="text-sm lg:text-base text-muted-foreground mt-3 max-w-md leading-relaxed">
                 Plataforma integral para la administración de empleados, contratos, dotación y exámenes médicos.
               </p>
             </motion.div>
@@ -333,14 +333,14 @@ export default function Auth() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
-                className="flex items-center gap-3 p-2.5 bg-primary/5 backdrop-blur-sm border border-primary/15 hover:bg-primary/10 transition-colors group cursor-default">
+                className="flex items-center gap-2.5 lg:gap-3 p-2 lg:p-2.5 bg-primary/5 backdrop-blur-sm border border-primary/15 hover:bg-primary/10 transition-colors group cursor-default">
 
-                  <div className="w-9 h-9 bg-primary/10 flex items-center justify-center shrink-0">
-                    <feat.icon className="w-5 h-5 text-primary" />
+                  <div className="w-8 h-8 lg:w-9 lg:h-9 bg-primary/10 flex items-center justify-center shrink-0">
+                    <feat.icon className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">{feat.title}</p>
-                    <p className="text-xs text-muted-foreground">{feat.desc}</p>
+                    <p className="text-xs lg:text-sm font-semibold text-foreground">{feat.title}</p>
+                    <p className="text-xs text-muted-foreground leading-snug">{feat.desc}</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-primary/35 group-hover:text-primary transition-colors" />
                 </motion.div>
