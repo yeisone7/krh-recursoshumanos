@@ -89,6 +89,20 @@ const prefetchPostLoginRoute = (path: string) => {
   void import('@/hooks/useDashboardAlerts');
 };
 
+const preloadHeroLogo = () => {
+  if (typeof document === 'undefined') return;
+  if (document.querySelector('link[data-hero-logo-preload="krh-login"]')) return;
+
+  const link = document.createElement('link');
+  link.rel = 'preload';
+  link.as = 'image';
+  link.href = krhLoginHeroLogoOptimized;
+  link.type = 'image/webp';
+  link.setAttribute('fetchpriority', 'high');
+  link.setAttribute('data-hero-logo-preload', 'krh-login');
+  document.head.appendChild(link);
+};
+
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -123,6 +137,7 @@ export default function Auth() {
   }, []);
 
   useEffect(() => {
+    preloadHeroLogo();
     const fallbackTimeout = window.setTimeout(() => setIsHeroLogoLoaded(true), 1800);
     return () => window.clearTimeout(fallbackTimeout);
   }, []);
@@ -302,6 +317,7 @@ export default function Auth() {
                 width={480}
                 height={240}
                 decoding="async"
+                loading="eager"
                 fetchPriority="high"
                 onLoad={() => setIsHeroLogoLoaded(true)}
                 onError={() => setIsHeroLogoLoaded(true)}
