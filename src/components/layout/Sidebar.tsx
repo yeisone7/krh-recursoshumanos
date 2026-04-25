@@ -542,7 +542,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? 80 : 260) }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className={cn(
-          "h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-sm after:absolute after:right-0 after:top-0 after:h-full after:w-5 after:translate-x-full after:bg-gradient-to-r after:from-border/45 after:to-transparent after:blur-md after:pointer-events-none",
+          "h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-sm after:absolute after:right-0 after:top-0 after:h-full after:w-6 after:translate-x-full after:bg-gradient-to-r after:from-foreground/10 after:via-foreground/5 after:to-transparent after:blur-sm after:pointer-events-none",
           isMobileDrawer && "h-full"
         )}>
 
