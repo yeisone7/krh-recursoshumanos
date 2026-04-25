@@ -143,6 +143,8 @@ export default function Auth() {
   });
 
   const onLoginSubmit = async (data: LoginFormData) => {
+    if (isSubmitting) return;
+
     setIsSubmitting(true);
     prefetchPostLoginRoute(from);
     try {
@@ -335,7 +337,7 @@ export default function Auth() {
                   <FormItem>
                         <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
+                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -348,7 +350,7 @@ export default function Auth() {
                   <FormItem>
                         <FormLabel className="text-sm font-semibold">Contraseña</FormLabel>
                         <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
+                          <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -356,10 +358,10 @@ export default function Auth() {
 
                   <div className="flex items-center justify-between text-xs">
                     <label className="flex items-center gap-2 text-muted-foreground">
-                      <input type="checkbox" className="h-4 w-4 rounded border-border accent-primary" />
+                      <input type="checkbox" className="h-4 w-4 rounded border-border accent-primary disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} />
                       Recordar sesión
                     </label>
-                    <button type="button" className="font-semibold text-secondary hover:text-secondary/80 transition-colors">
+                    <button type="button" className="font-semibold text-secondary hover:text-secondary/80 transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting}>
                       Recuperar contraseña
                     </button>
                   </div>
