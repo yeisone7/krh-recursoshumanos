@@ -906,6 +906,10 @@ export default function Configuracion() {
             onLockoutEnabledChange={setLockoutEnabled}
             onLockoutMaxAttemptsChange={setLockoutMaxAttempts}
             onLockoutMinutesChange={setLockoutMinutes}
+            updateCheckEnabled={updateCheckEnabled}
+            updateCheckMinutes={updateCheckMinutes}
+            onUpdateCheckEnabledChange={setUpdateCheckEnabled}
+            onUpdateCheckMinutesChange={setUpdateCheckMinutes}
           />
         </TabsContent>
       </Tabs>
