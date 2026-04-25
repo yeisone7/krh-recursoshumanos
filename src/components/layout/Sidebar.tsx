@@ -315,7 +315,10 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const toolsNavItems = useMemo<NavItem[]>(() => [
     ...filteredToolsNavItemsBase,
     ...(canViewItem({ label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', moduleCode: 'alertas' })
-      ? [{ label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined }]
+      ? [
+          { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
+          { label: 'Notificaciones', icon: <Bell className="w-5 h-5" />, href: '/notificaciones', moduleCode: 'alertas' },
+        ]
       : []),
   ], [alertCount, filteredToolsNavItemsBase, canViewItem]);
 
