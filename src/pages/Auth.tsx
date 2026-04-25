@@ -291,14 +291,14 @@ export default function Auth() {
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-5 lg:p-8 w-full min-h-screen">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="relative h-32 w-[256px] sm:w-[320px]">
+            <div className="relative h-24 w-full max-w-[220px] lg:h-32 lg:max-w-[320px]">
             {!isHeroLogoLoaded && <div className="absolute inset-0 rounded bg-secondary/15 animate-pulse" aria-hidden="true" />}
             <picture className={cn("block transition-opacity duration-300", isHeroLogoLoaded ? "opacity-100" : "opacity-0")}>
               <source srcSet={krhLoginHeroLogoOptimized} type="image/webp" />
               <img
                 src={krhLoginHeroLogo}
                 alt="Logo horizontal de Gestión de Recursos Humanos"
-                className="h-32 object-contain"
+                className="h-full max-w-full object-contain"
                 width={480}
                 height={240}
                 decoding="async"
@@ -395,7 +395,7 @@ export default function Auth() {
                   <div className="relative border-t border-primary/10 px-4 py-4">
                     <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:20px_20px] opacity-10" aria-hidden="true" />
                     <div className="relative space-y-3">
-                      <img src={krhLoginHeroLogoOptimized} alt="Logo horizontal de Gestión de Recursos Humanos" className="h-16 max-w-full object-contain" />
+                      <img src={krhLoginHeroLogoOptimized} alt="Logo horizontal de Gestión de Recursos Humanos" className="h-14 max-w-full object-contain sm:h-16" />
                       <p className="text-sm font-semibold text-foreground">Gestión de Recursos Humanos</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">Administra empleados, contratos, dotación y exámenes médicos en una sola plataforma.</p>
                     </div>
