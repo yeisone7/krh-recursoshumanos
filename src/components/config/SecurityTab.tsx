@@ -318,6 +318,60 @@ export function SecurityTab({
         </CardContent>
       </Card>
 
+      {/* App Update Check */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <RefreshCw className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle>Chequeo automático de actualizaciones</CardTitle>
+              <CardDescription>
+                Revisa si hay una nueva versión publicada y avisa a los usuarios que tengan la app abierta
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-lg border">
+            <div>
+              <Label className="text-sm font-medium">Activar chequeo automático</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Al desactivarlo no se mostrará el aviso automático de actualización pendiente
+              </p>
+            </div>
+            <Switch checked={updateCheckEnabled} onCheckedChange={onUpdateCheckEnabledChange} />
+          </div>
+
+          {updateCheckEnabled && (
+            <div className="p-4 rounded-lg border space-y-3">
+              <Label>Revisar cada (minutos)</Label>
+              <div className="flex items-center gap-3">
+                <Input
+                  type="number"
+                  min={1}
+                  max={1440}
+                  value={updateCheckMinutes}
+                  onChange={(e) => onUpdateCheckMinutesChange(Math.max(1, Math.min(1440, parseInt(e.target.value) || 5)))}
+                  className="w-32"
+                />
+                <span className="text-sm text-muted-foreground">
+                  = {updateCheckMinutes >= 60
+                    ? `${Math.floor(updateCheckMinutes / 60)}h ${updateCheckMinutes % 60}min`
+                    : `${updateCheckMinutes} minutos`}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <Button onClick={handleSaveUpdateCheck} disabled={savingUpdateCheck}>
+            {savingUpdateCheck ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+            Guardar Configuración
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Session History */}
       <SessionHistory />
     </div>
