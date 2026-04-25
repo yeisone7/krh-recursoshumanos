@@ -72,6 +72,45 @@ interface SidebarProps {
   onNavigate?: () => void;
 }
 
+interface CompanyLogoProps {
+  name?: string | null;
+  logoUrl?: string | null;
+  className?: string;
+  fallbackIcon?: boolean;
+}
+
+function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: CompanyLogoProps) {
+  const [imageError, setImageError] = useState(false);
+  const initials = (name || 'Empresa')
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+
+  useEffect(() => {
+    setImageError(false);
+  }, [logoUrl]);
+
+  return (
+    <div className={cn("w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden border border-sidebar-border shrink-0", className)}>
+      {logoUrl && !imageError ? (
+        <img
+          src={logoUrl}
+          alt={`Logo ${name || 'empresa'}`}
+          className="w-full h-full object-cover"
+          onError={() => setImageError(true)}
+        />
+      ) : fallbackIcon ? (
+        <Building2 className="w-5 h-5 text-primary" />
+      ) : (
+        <span className="text-sm font-bold text-sidebar-accent-foreground">{initials}</span>
+      )}
+    </div>
+  );
+}
+
 // Reorganized: Grouped by workflow logic
 const coreNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/', moduleCode: 'dashboard' },
