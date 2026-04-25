@@ -759,6 +759,7 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
   };
 
   const userEmail = user?.email || '';
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || userEmail || 'Usuario';
   const primaryRole = roles[0] ? roleLabels[roles[0]] || roles[0] : 'Usuario';
   const canSwitchCompany = roles.includes('admin') || isSuperAdmin;
   const hasMultipleCompanies = companies && companies.length > 1;
@@ -780,7 +781,7 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
             {!collapsed &&
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground truncate">{currentCompany?.name || 'Seleccionar empresa'}</p>
-                 <p className="text-[11px] text-muted-foreground truncate">{currentCompany?.nit || userEmail}</p>
+                 <p className="text-[11px] text-muted-foreground truncate">{userName}</p>
               </div>
             }
             {!collapsed &&
@@ -803,7 +804,7 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
                   <CompanyLogo name={currentCompany?.name} logoUrl={currentCompany?.logo_url} className="bg-accent border-border" fallbackIcon />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{currentCompany?.name || 'Seleccionar empresa'}</p>
-                    <p className="text-xs text-muted-foreground truncate">{currentCompany?.nit || 'Empresa actual'}</p>
+                    <p className="text-xs text-muted-foreground truncate">{userName}</p>
                   </div>
                   {canSwitchCompany && hasMultipleCompanies && <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                 </button>
