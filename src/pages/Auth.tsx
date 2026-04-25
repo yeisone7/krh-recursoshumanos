@@ -11,6 +11,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2, ChevronRight, Sparkles } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
 import krhLoginHeroLogo from '@/assets/krh-login-hero-logo-horizontal.png';
 import krhLoginHeroLogoOptimized from '@/assets/krh-login-hero-logo-horizontal.webp';
