@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, LogOut, Timer, Loader2, Save, Monitor, Lock } from 'lucide-react';
+import { Shield, LogOut, Timer, Loader2, Save, Monitor, Lock, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,10 @@ interface SecurityTabProps {
   onLockoutEnabledChange: (v: boolean) => void;
   onLockoutMaxAttemptsChange: (v: number) => void;
   onLockoutMinutesChange: (v: number) => void;
+  updateCheckEnabled: boolean;
+  updateCheckMinutes: number;
+  onUpdateCheckEnabledChange: (v: boolean) => void;
+  onUpdateCheckMinutesChange: (v: number) => void;
 }
 
 export function SecurityTab({
@@ -46,12 +50,17 @@ export function SecurityTab({
   onLockoutEnabledChange,
   onLockoutMaxAttemptsChange,
   onLockoutMinutesChange,
+  updateCheckEnabled,
+  updateCheckMinutes,
+  onUpdateCheckEnabledChange,
+  onUpdateCheckMinutesChange,
 }: SecurityTabProps) {
   const { signOut } = useAuth();
   const updateConfig = useUpdateSystemConfig();
   const [signingOutAll, setSigningOutAll] = useState(false);
   const [savingTimeout, setSavingTimeout] = useState(false);
   const [savingLockout, setSavingLockout] = useState(false);
+  const [savingUpdateCheck, setSavingUpdateCheck] = useState(false);
 
   const handleSignOutAll = async () => {
     setSigningOutAll(true);
@@ -99,6 +108,22 @@ export function SecurityTab({
       toast.error('Error al guardar la configuración');
     } finally {
       setSavingLockout(false);
+    }
+  };
+
+  const handleSaveUpdateCheck = async () => {
+    setSavingUpdateCheck(true);
+    try {
+      await updateConfig.mutateAsync({
+        key: 'app_update_check',
+        value: { enabled: updateCheckEnabled, minutes: updateCheckEnabled ? updateCheckMinutes : 0 },
+        description: 'Configuración del chequeo automático de actualizaciones de la aplicación',
+      });
+      toast.success('Configuración de actualizaciones guardada');
+    } catch {
+      toast.error('Error al guardar la configuración');
+    } finally {
+      setSavingUpdateCheck(false);
     }
   };
 
