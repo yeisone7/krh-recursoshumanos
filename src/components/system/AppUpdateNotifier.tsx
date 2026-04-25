@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const UPDATE_TOAST_ID = 'app-update-available';
@@ -10,10 +11,20 @@ type VersionResponse = {
 };
 
 export function AppUpdateNotifier() {
+  const { data: systemConfig } = useSystemConfig();
   const updateNotifiedRef = useRef(false);
+  const updateCheckConfig = systemConfig?.app_update_check;
+  const updateCheckEnabled = updateCheckConfig?.enabled ?? true;
+  const updateCheckMinutes = Math.max(1, Math.min(1440, updateCheckConfig?.minutes ?? 5));
+  const checkIntervalMs = updateCheckMinutes * 60 * 1000 || VERSION_CHECK_INTERVAL_MS;
 
   useEffect(() => {
     if (!import.meta.env.PROD) return;
+    if (!updateCheckEnabled) {
+      toast.dismiss(UPDATE_TOAST_ID);
+      updateNotifiedRef.current = false;
+      return;
+    }
 
     let isMounted = true;
 
@@ -58,7 +69,7 @@ export function AppUpdateNotifier() {
     };
 
     void checkForUpdate();
-    const intervalId = window.setInterval(checkForUpdate, VERSION_CHECK_INTERVAL_MS);
+    const intervalId = window.setInterval(checkForUpdate, checkIntervalMs);
     window.addEventListener('online', checkForUpdate);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -68,7 +79,7 @@ export function AppUpdateNotifier() {
       window.removeEventListener('online', checkForUpdate);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [checkIntervalMs, updateCheckEnabled]);
 
   return null;
 }
