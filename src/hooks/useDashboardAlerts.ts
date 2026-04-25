@@ -41,13 +41,30 @@ const certificationTypeLabels: Record<string, string> = {
   otro: 'Certificación',
 };
 
-export function useDashboardAlerts() {
+interface DashboardAlertsOptions {
+  includeDotationCompliance?: boolean;
+}
+
+export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
   const { currentCompanyId } = useAuth();
+  const includeDotationCompliance = options.includeDotationCompliance ?? true;
 
   return useQuery({
-    queryKey: ['dashboard-alerts', currentCompanyId],
+    queryKey: ['dashboard-alerts', currentCompanyId, includeDotationCompliance],
     queryFn: async () => {
       const alerts: DashboardAlert[] = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const toDateString = (date: Date) => date.toISOString().slice(0, 10);
+      const addDays = (days: number) => {
+        const date = new Date(today);
+        date.setDate(date.getDate() + days);
+        return toDateString(date);
+      };
+      const todayStr = toDateString(today);
+      const in5Days = addDays(5);
+      const in30Days = addDays(30);
+      const in35Days = addDays(35);
 
       // Fetch employees from employees_v2 for the current company
       const { data: employees } = await supabase
@@ -74,7 +91,9 @@ export function useDashboardAlerts() {
         `)
         .in('employee_id', employeeIds)
         .eq('is_terminated', false)
-        .neq('contract_type', 'indefinido');
+        .neq('contract_type', 'indefinido')
+        .not('end_date', 'is', null)
+        .lte('end_date', in35Days);
 
       if (contracts) {
         for (const contract of contracts) {
@@ -139,6 +158,8 @@ export function useDashboardAlerts() {
         .select('id, employee_id, exam_type, expiration_date')
         .in('employee_id', employeeIds)
         .not('expiration_date', 'is', null)
+        .gte('expiration_date', todayStr)
+        .lte('expiration_date', in30Days)
         .neq('exam_type', 'egreso');
 
       if (exams) {
@@ -172,7 +193,10 @@ export function useDashboardAlerts() {
       const { data: dotations } = await supabase
         .from('dotation_deliveries')
         .select('id, employee_id, item_name, expiration_date')
-        .in('employee_id', employeeIds);
+        .in('employee_id', employeeIds)
+        .not('expiration_date', 'is', null)
+        .gte('expiration_date', todayStr)
+        .lte('expiration_date', in30Days);
 
       if (dotations) {
         for (const dotation of dotations) {
@@ -201,7 +225,8 @@ export function useDashboardAlerts() {
         .select('id, employee_id, certification_type, certification_name, license_category, expiry_date')
         .in('employee_id', employeeIds)
         .eq('is_valid', true)
-        .not('expiry_date', 'is', null);
+        .not('expiry_date', 'is', null)
+        .lte('expiry_date', in30Days);
 
       if (certifications) {
         for (const cert of certifications) {
@@ -239,12 +264,10 @@ export function useDashboardAlerts() {
       const { data: incapacities } = await supabase
         .from('employee_incapacities')
         .select('id, employee_id, end_date, recovery_status, total_days, diagnosis')
-        .eq('company_id', currentCompanyId!);
+        .eq('company_id', currentCompanyId!)
+        .or(`and(end_date.gte.${todayStr},end_date.lte.${in5Days}),and(recovery_status.eq.pendiente,end_date.lt.${todayStr})`);
 
       if (incapacities) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
         for (const inc of incapacities) {
           const employee = employeeMap.get(inc.employee_id);
           if (!employee) continue;
@@ -288,7 +311,8 @@ export function useDashboardAlerts() {
       const { data: vacationBalances } = await supabase
         .from('vacation_balances')
         .select('id, employee_id, days_pending, accumulation_expires')
-        .eq('company_id', currentCompanyId!);
+        .eq('company_id', currentCompanyId!)
+        .or(`days_pending.gt.30,and(accumulation_expires.gte.${todayStr},accumulation_expires.lte.${in30Days})`);
 
       if (vacationBalances) {
         for (const balance of vacationBalances) {
@@ -357,7 +381,7 @@ export function useDashboardAlerts() {
       }
 
       // 8. Fetch dotation profesiograma compliance alerts (missing required items)
-      try {
+      if (includeDotationCompliance) try {
         const { data: profs } = await supabase
           .from('dotation_profesiograma' as any)
           .select('id, operation_center_id, position_id')
