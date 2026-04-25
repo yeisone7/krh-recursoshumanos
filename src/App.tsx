@@ -10,6 +10,7 @@ import { CompanyGuard } from "@/components/auth/CompanyGuard";
 import { NoRoleGuard } from "@/components/auth/NoRoleGuard";
 import { PermissionRoute } from "@/components/auth/PermissionRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { AppUpdateNotifier } from "@/components/system/AppUpdateNotifier";
 import Dashboard from "./pages/Dashboard";
 import Empleados from "./pages/Empleados";
 import Contratos from "./pages/Contratos";
@@ -95,6 +96,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AppUpdateNotifier />
       <BrowserRouter>
         <AuthProvider>
           <Routes>
