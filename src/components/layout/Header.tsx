@@ -3,13 +3,6 @@ import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun, M
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -31,7 +24,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMobileMenuToggle }: HeaderProps) {
-  const { user, companies, currentCompanyId, setCurrentCompanyId, roles, signOut } = useAuth();
+  const { user, companies, roles, signOut } = useAuth();
   const [manualOpen, setManualOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -60,7 +53,6 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const formattedDate = now.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
   const formattedTime = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  const currentCompany = companies.find(c => c.id === currentCompanyId);
   const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'U';
 
   const roleLabels: Record<string, string> = {
@@ -116,31 +108,6 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             <span className="capitalize">{formattedDate}</span>
             <span className="font-mono font-medium text-foreground">{formattedTime}</span>
           </div>
-          {/* Company selector - hidden on mobile, shown from md */}
-          {companies.length > 0 && (
-            <div className="hidden md:flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-muted-foreground" />
-              <Select 
-                value={currentCompanyId || undefined} 
-                onValueChange={(val) => {
-                  setCurrentCompanyId(val);
-                  if (user) localStorage.setItem(`last_company_${user.id}`, val);
-                }}
-              >
-                <SelectTrigger className="w-[200px] h-9 text-sm border-0 bg-muted/50 hover:bg-muted focus:ring-1 focus:ring-primary/20">
-                  <SelectValue placeholder="Seleccionar empresa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           {/* No company message */}
           {companies.length === 0 && (
             <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
