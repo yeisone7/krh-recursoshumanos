@@ -260,12 +260,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
           isActive ?
           "bg-sidebar-accent text-sidebar-accent-foreground" :
-          "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+          "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-sidebar-accent/35"
         )}>
 
           <span className={cn(
           "transition-colors",
-          isActive ? "text-secondary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+          isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/85 group-hover:text-sidebar-foreground"
         )}>
             {item.icon}
           </span>
@@ -317,7 +317,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   const SectionLabel = ({ label }: {label: string;}) => (
     !isCollapsed ? (
-      <p className="text-xs font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-3 pt-4 pb-1">
+      <p className="text-xs font-semibold text-sidebar-foreground/80 uppercase tracking-wider px-3 pt-4 pb-1">
         {label}
       </p>
     ) : null
@@ -340,12 +340,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative cursor-pointer",
         isAnyChildActive ?
         "bg-sidebar-accent text-sidebar-accent-foreground" :
-        "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+        "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-sidebar-accent/35"
       )}>
 
         <span className={cn(
         "transition-colors",
-        isAnyChildActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+        isAnyChildActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/85 group-hover:text-sidebar-foreground"
       )}>
           {item.icon}
         </span>
@@ -386,8 +386,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       <div className={cn(
                       "flex items-center gap-2 px-3 py-1.5 text-sm transition-colors",
                       isActive ?
-                      "bg-sidebar-accent text-primary font-medium" :
-                      "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                      "bg-sidebar-accent text-sidebar-accent-foreground font-medium" :
+                      "text-sidebar-foreground/85 hover:bg-sidebar-accent/35 hover:text-sidebar-foreground"
                     )}>
                         {child.icon}
                         <span>{child.label}</span>
@@ -421,12 +421,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group",
                       isActive ?
                       "bg-sidebar-accent text-sidebar-accent-foreground" :
-                      "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      "text-sidebar-foreground/85 hover:text-sidebar-foreground hover:bg-sidebar-accent/35"
                     )}>
 
                       <span className={cn(
                       "transition-colors",
-                      isActive ? "text-secondary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
+                      isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/85 group-hover:text-sidebar-foreground"
                     )}>
                         {child.icon}
                       </span>
@@ -490,7 +490,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               </div>
               <div className="flex flex-col">
                 <span className="font-display font-bold text-xl text-sidebar-primary leading-tight">KRH</span>
-                <span className="text-[11px] font-semibold text-white leading-tight whitespace-nowrap">Talento Humano</span>
+                 <span className="text-[11px] font-semibold text-sidebar-foreground leading-tight whitespace-nowrap">Talento Humano</span>
               </div>
             </motion.div> :
 
@@ -684,15 +684,15 @@ function CompanySelector({ collapsed }: {collapsed: boolean;}) {
             className={cn(
               "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left",
               canSwitchCompany && hasMultipleCompanies ?
-              "hover:bg-sidebar-accent/50 cursor-pointer" :
+              "hover:bg-sidebar-accent/35 cursor-pointer" :
               "cursor-default"
             )}>
-            <Building2 className="w-4 h-4 text-sidebar-foreground/60 shrink-0" />
+            <Building2 className="w-4 h-4 text-sidebar-foreground/85 shrink-0" />
             <span className="text-sm font-medium text-sidebar-foreground truncate flex-1">
               {currentCompany?.name || 'Seleccionar empresa'}
             </span>
             {canSwitchCompany && hasMultipleCompanies &&
-            <ChevronDown className="w-4 h-4 text-sidebar-foreground/50 shrink-0" />
+            <ChevronDown className="w-4 h-4 text-sidebar-foreground/85 shrink-0" />
             }
           </button>
         </PopoverTrigger>
@@ -758,23 +758,23 @@ function UserSection({ collapsed, onNavigate }: {collapsed: boolean; onNavigate?
         <PopoverTrigger asChild>
           <div
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-sidebar-accent/50 transition-colors",
+              "flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-sidebar-accent/35 transition-colors",
               collapsed ? "justify-center" : ""
             )}>
             <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
               {avatarUrl ?
               <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" /> :
-              <span className="text-sm font-semibold text-white">{userInitials}</span>
+              <span className="text-sm font-semibold text-secondary-foreground">{userInitials}</span>
               }
             </div>
             {!collapsed &&
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-sidebar-foreground truncate">{userEmail}</p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">{primaryRole}</p>
+                 <p className="text-xs text-sidebar-foreground/85 truncate">{primaryRole}</p>
               </div>
             }
             {!collapsed &&
-            <ChevronDown className="w-4 h-4 text-sidebar-foreground/50" />
+            <ChevronDown className="w-4 h-4 text-sidebar-foreground/85" />
             }
           </div>
         </PopoverTrigger>
