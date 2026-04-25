@@ -5,6 +5,7 @@ import {
   Building2,
   FileText,
   Bell,
+  Mail,
   Loader2,
   Save,
   Users,
@@ -33,6 +34,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompany } from '@/hooks/useCompanies';
@@ -51,12 +53,19 @@ export default function Configuracion() {
   const [activeTab, setActiveTab] = useState('company');
 
   // Alert config state
+  const [alertRecipients, setAlertRecipients] = useState('');
+  const [alertContractInfo, setAlertContractInfo] = useState(60);
   const [alertContractWarning, setAlertContractWarning] = useState(30);
   const [alertContractCritical, setAlertContractCritical] = useState(7);
+  const [alertExamInfo, setAlertExamInfo] = useState(60);
   const [alertExamWarning, setAlertExamWarning] = useState(30);
   const [alertExamCritical, setAlertExamCritical] = useState(7);
+  const [alertDotationInfo, setAlertDotationInfo] = useState(60);
   const [alertDotationWarning, setAlertDotationWarning] = useState(30);
   const [alertDotationCritical, setAlertDotationCritical] = useState(7);
+  const [alertTerminationInfo, setAlertTerminationInfo] = useState(15);
+  const [alertTerminationWarning, setAlertTerminationWarning] = useState(7);
+  const [alertTerminationCritical, setAlertTerminationCritical] = useState(3);
   const [alertTerminationPendingDays, setAlertTerminationPendingDays] = useState(7);
 
   // AI config state
@@ -112,21 +121,31 @@ export default function Configuracion() {
       const examDays = systemConfig.alert_exam_days;
       const dotationDays = systemConfig.alert_dotation_days;
       const terminationPendingDays = systemConfig.alert_termination_pending_days;
+      const notificationRecipients = systemConfig.alert_notification_recipients;
       
+      if (notificationRecipients?.emails) {
+        setAlertRecipients(notificationRecipients.emails.join('\n'));
+      }
       if (contractDays) {
+        setAlertContractInfo(contractDays.info || 60);
         setAlertContractWarning(contractDays.warning || 30);
         setAlertContractCritical(contractDays.critical || 7);
       }
       if (examDays) {
+        setAlertExamInfo(examDays.info || 60);
         setAlertExamWarning(examDays.warning || 30);
         setAlertExamCritical(examDays.critical || 7);
       }
       if (dotationDays) {
+        setAlertDotationInfo(dotationDays.info || 60);
         setAlertDotationWarning(dotationDays.warning || 30);
         setAlertDotationCritical(dotationDays.critical || 7);
       }
       if (terminationPendingDays) {
         setAlertTerminationPendingDays(terminationPendingDays.min_days || 7);
+        setAlertTerminationInfo(terminationPendingDays.info || 15);
+        setAlertTerminationWarning(terminationPendingDays.warning || 7);
+        setAlertTerminationCritical(terminationPendingDays.critical || 3);
       }
 
       // Load AI config
@@ -178,22 +197,37 @@ export default function Configuracion() {
 
   const handleSaveAlertConfig = async () => {
     try {
+      const emails = alertRecipients
+        .split(/[\n,;]/)
+        .map((email) => email.trim())
+        .filter(Boolean);
+
       await Promise.all([
         updateConfig.mutateAsync({
+          key: 'alert_notification_recipients',
+          value: { emails },
+          description: 'Correos destinatarios para alertas por empresa',
+        }),
+        updateConfig.mutateAsync({
           key: 'alert_contract_days',
-          value: { warning: alertContractWarning, critical: alertContractCritical },
+          value: { info: alertContractInfo, warning: alertContractWarning, critical: alertContractCritical },
         }),
         updateConfig.mutateAsync({
           key: 'alert_exam_days',
-          value: { warning: alertExamWarning, critical: alertExamCritical },
+          value: { info: alertExamInfo, warning: alertExamWarning, critical: alertExamCritical },
         }),
         updateConfig.mutateAsync({
           key: 'alert_dotation_days',
-          value: { warning: alertDotationWarning, critical: alertDotationCritical },
+          value: { info: alertDotationInfo, warning: alertDotationWarning, critical: alertDotationCritical },
         }),
         updateConfig.mutateAsync({
           key: 'alert_termination_pending_days',
-          value: { min_days: alertTerminationPendingDays },
+          value: {
+            min_days: alertTerminationPendingDays,
+            info: alertTerminationInfo,
+            warning: alertTerminationWarning,
+            critical: alertTerminationCritical,
+          },
           description: 'Días mínimos de espera antes de notificar retiros pendientes',
         }),
         updateConfig.mutateAsync({
