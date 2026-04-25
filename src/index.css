@@ -5,21 +5,21 @@
 @tailwind utilities;
 
 /* KRH Design System - Corporate HR Platform
-   Reference palette: deep institutional green, primary #38c292, clean white surfaces */
+   Reference palette: clean white surfaces with #38c292 as the main accent */
 
 @layer base {
   :root {
     /* Core backgrounds */
-    --background: 150 28% 97%;
-    --foreground: 154 38% 9%;
+    --background: 210 33% 98%;
+    --foreground: 215 28% 17%;
 
     /* Cards and surfaces */
     --card: 0 0% 100%;
-    --card-foreground: 154 38% 9%;
+    --card-foreground: 215 28% 17%;
 
     /* Popovers */
     --popover: 0 0% 100%;
-    --popover-foreground: 154 38% 9%;
+    --popover-foreground: 215 28% 17%;
 
     /* Primary - #38c292 */
     --primary: 159 51% 49%;
@@ -28,23 +28,23 @@
     --primary-light: 156 45% 91%;
 
     /* Secondary - Deep sidebar green */
-    --secondary: 154 68% 15%;
+    --secondary: 159 51% 49%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-light: 151 30% 92%;
+    --secondary-light: 159 51% 94%;
 
     /* Tertiary - Soft icon green */
-    --tertiary: 157 34% 38%;
+    --tertiary: 214 22% 51%;
     --tertiary-foreground: 0 0% 100%;
-    --tertiary-light: 153 31% 91%;
+    --tertiary-light: 210 29% 94%;
 
     /* Muted */
-    --muted: 150 18% 93%;
-    --muted-foreground: 151 10% 43%;
+    --muted: 210 29% 95%;
+    --muted-foreground: 214 18% 48%;
 
     /* Accent - Light mint hover/badge */
-    --accent: 158 42% 88%;
-    --accent-foreground: 154 68% 15%;
-    --accent-light: 156 45% 94%;
+    --accent: 159 51% 94%;
+    --accent-foreground: 159 51% 36%;
+    --accent-light: 159 51% 97%;
 
     /* Extended Color Palette */
     --violet: 166 20% 42%;
@@ -81,20 +81,20 @@
     --info-light: 200 90% 95%;
 
     /* Borders and inputs */
-    --border: 150 18% 83%;
-    --input: 150 18% 83%;
+    --border: 214 30% 90%;
+    --input: 214 30% 90%;
     --ring: 159 51% 49%;
 
     --radius: 0.75rem;
 
     /* Sidebar */
-    --sidebar-background: 159 51% 49%;
-    --sidebar-foreground: 154 38% 9%;
-    --sidebar-primary: 154 38% 9%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 214 18% 48%;
+    --sidebar-primary: 159 51% 49%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 100%;
-    --sidebar-accent-foreground: 154 38% 9%;
-    --sidebar-border: 159 42% 39%;
+    --sidebar-accent: 159 51% 94%;
+    --sidebar-accent-foreground: 159 51% 43%;
+    --sidebar-border: 214 30% 90%;
     --sidebar-ring: 159 51% 49%;
 
     /* Gradients */
@@ -169,13 +169,13 @@
     --input: 153 30% 26%;
     --ring: 159 51% 49%;
 
-    --sidebar-background: 159 51% 49%;
-    --sidebar-foreground: 154 38% 9%;
-    --sidebar-primary: 154 38% 9%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 214 18% 48%;
+    --sidebar-primary: 159 51% 49%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 100%;
-    --sidebar-accent-foreground: 154 38% 9%;
-    --sidebar-border: 159 42% 39%;
+    --sidebar-accent: 159 51% 18%;
+    --sidebar-accent-foreground: 159 51% 64%;
+    --sidebar-border: 153 30% 26%;
     --sidebar-ring: 159 51% 49%;
   }
 }
