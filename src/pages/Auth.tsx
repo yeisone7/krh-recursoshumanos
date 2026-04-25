@@ -162,7 +162,9 @@ export default function Auth() {
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-8 w-full">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <picture>
+            <div className="relative h-16 w-[128px] sm:w-[160px]">
+            {!isHeroLogoLoaded && <div className="absolute inset-0 rounded bg-secondary/15 animate-pulse" aria-hidden="true" />}
+            <picture className={cn("block transition-opacity duration-300", isHeroLogoLoaded ? "opacity-100" : "opacity-0")}>
               <source srcSet={krhLoginHeroLogoOptimized} type="image/webp" />
               <img
                 src={krhLoginHeroLogo}
@@ -172,8 +174,10 @@ export default function Auth() {
                 height={240}
                 decoding="async"
                 fetchPriority="high"
+                onLoad={() => setIsHeroLogoLoaded(true)}
               />
             </picture>
+            </div>
           </motion.div>
           
           <div className="space-y-5">
@@ -265,7 +269,7 @@ export default function Auth() {
             </div>
 
             {/* Forms */}
-            {isLogin ?
+            {!isFormReady ? <AuthFormSkeleton /> : isLogin ?
             <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                   <FormField
