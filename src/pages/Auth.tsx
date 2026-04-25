@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2, ChevronRight, Sparkles } from 'lucide-react';
 import petrocasinosLogo from '@/assets/petrocasinos-logo-white.png';
 import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
+import krhLoginHeroLogo from '@/assets/krh-login-hero-logo-horizontal.png';
 
 const loginSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
@@ -140,7 +141,7 @@ export default function Auth() {
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-8 w-full">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <img src={petrocasinosLogo} alt="Petrocasinos Logo" className="h-12 object-contain" />
+            <img src={krhLoginHeroLogo} alt="Logo horizontal de Gestión de Recursos Humanos" className="h-16 object-contain" />
           </motion.div>
           
           <div className="space-y-5">
