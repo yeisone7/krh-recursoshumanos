@@ -657,6 +657,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           </div>
         )}
 
+        <QuickAccessMenu />
+
         {/* Personnel */}
         {filteredPersonnelNavItems.length > 0 && (
           <>
