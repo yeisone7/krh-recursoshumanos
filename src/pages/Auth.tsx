@@ -311,17 +311,17 @@ export default function Auth() {
           
           <div className="space-y-5">
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/25 text-primary text-sm font-medium mb-4">
-                <Sparkles className="w-4 h-4" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/25 text-primary text-xs lg:text-sm font-medium mb-3 lg:mb-4">
+                <Sparkles className="w-4 h-4 shrink-0" />
                 Plataforma KRH
               </div>
-              <h1 className="text-4xl font-bold text-foreground leading-tight tracking-tight">
+              <h1 className="text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
                 Gestión de<br />
                 <span className="text-primary">
                   Recursos Humanos
                 </span>
               </h1>
-              <p className="text-base text-muted-foreground mt-3 max-w-md leading-relaxed">
+              <p className="text-sm lg:text-base text-muted-foreground mt-3 max-w-md leading-relaxed">
                 Plataforma integral para la administración de empleados, contratos, dotación y exámenes médicos.
               </p>
             </motion.div>
@@ -333,14 +333,14 @@ export default function Auth() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
-                className="flex items-center gap-3 p-2.5 bg-primary/5 backdrop-blur-sm border border-primary/15 hover:bg-primary/10 transition-colors group cursor-default">
+                className="flex items-center gap-2.5 lg:gap-3 p-2 lg:p-2.5 bg-primary/5 backdrop-blur-sm border border-primary/15 hover:bg-primary/10 transition-colors group cursor-default">
 
-                  <div className="w-9 h-9 bg-primary/10 flex items-center justify-center shrink-0">
-                    <feat.icon className="w-5 h-5 text-primary" />
+                  <div className="w-8 h-8 lg:w-9 lg:h-9 bg-primary/10 flex items-center justify-center shrink-0">
+                    <feat.icon className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-foreground">{feat.title}</p>
-                    <p className="text-xs text-muted-foreground">{feat.desc}</p>
+                    <p className="text-xs lg:text-sm font-semibold text-foreground">{feat.title}</p>
+                    <p className="text-xs text-muted-foreground leading-snug">{feat.desc}</p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-primary/35 group-hover:text-primary transition-colors" />
                 </motion.div>
