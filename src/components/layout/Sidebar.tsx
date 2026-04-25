@@ -110,7 +110,7 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
   }, [logoUrl]);
 
   return (
-    <div className={cn("w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden border border-sidebar-border shrink-0", className)}>
+    <div className={cn("relative w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center overflow-hidden border border-sidebar-border shrink-0", className)}>
       {logoUrl && !imageError && !showFallback ? (
         <>
           {isLoading && <div className="absolute inset-0 animate-pulse bg-muted" />}
