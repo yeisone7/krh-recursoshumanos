@@ -178,16 +178,36 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {isMobile && <MobileBottomNav />}
 
-      {showAiButton && !isAiAssistant && (
-        <Sheet open={aiPanelOpen} onOpenChange={setAiPanelOpen}>
-          <SheetContent
-            side={isMobile ? 'bottom' : 'right'}
-            className={`${isMobile ? 'h-[84dvh] rounded-t-xl' : 'h-screen w-[440px] max-w-[calc(100vw-2rem)] sm:max-w-[440px]'} border-border p-0 [&>button]:hidden`}
+      <AnimatePresence>
+        {showAiButton && !isAiAssistant && aiPanelOpen && (
+          <motion.div
+            initial={isMobile ? { y: 80, opacity: 0 } : { x: 40, opacity: 0 }}
+            animate={{ x: 0, y: 0, opacity: 1 }}
+            exit={isMobile ? { y: 80, opacity: 0 } : { x: 40, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className={isMobile
+              ? 'fixed inset-x-2 bottom-0 z-[60] overflow-hidden rounded-t-xl border border-border bg-card shadow-2xl'
+              : 'fixed bottom-6 right-6 z-[60] w-[440px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl'}
+            style={{ height: aiPanelHeight || undefined }}
           >
-            <AiChatPanel compact onClose={() => setAiPanelOpen(false)} />
-          </SheetContent>
-        </Sheet>
-      )}
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Arrastrar para ajustar o cerrar el asistente"
+              onPointerDown={handleAiPanelDragStart}
+              onPointerMove={handleAiPanelDrag}
+              onPointerUp={handleAiPanelDragEnd}
+              onPointerCancel={handleAiPanelDragEnd}
+              className="flex h-7 touch-none cursor-ns-resize items-center justify-center border-b border-border bg-card"
+            >
+              <span className="h-1.5 w-16 rounded-full bg-muted-foreground/30" />
+            </div>
+            <div className="h-[calc(100%-1.75rem)] min-h-0">
+              <AiChatPanel compact onClose={() => setAiPanelOpen(false)} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {showAiButton && (
         <Button
