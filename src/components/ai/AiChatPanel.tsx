@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
-import { Bot, CheckCircle2, Loader2, MessageSquarePlus, Send, Sparkles, X } from 'lucide-react';
+import { Bot, Loader2, MessageSquarePlus, Send, Sparkles } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -143,8 +142,6 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
   const currentStepMatch = lastMessage?.role === 'assistant' ? lastMessage.content.match(/paso\s+(\d+)(?:\s+de\s+(\d+))?/i) : null;
   const currentStepLabel = currentStepMatch ? `Paso ${currentStepMatch[1]}${currentStepMatch[2] ? ` de ${currentStepMatch[2]}` : ''}` : null;
   const canConfirmStep = !!currentStepLabel;
-  const assistantStatus = sendMessage.isPending ? 'Escribiendo' : 'Listo';
-  const AssistantStatusIcon = sendMessage.isPending ? Loader2 : CheckCircle2;
   const pageContext = useMemo(() => {
     const savedPathname = sessionStorage.getItem('krh_last_module_path') || '';
     const pathname = location.pathname === '/asistente-ia' ? savedPathname : location.pathname;
@@ -247,26 +244,6 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
     }
   };
 
-  const chatHeader = (
-    <div className="flex items-start justify-between gap-3 border-b border-border p-3 sm:items-center sm:p-4">
-      <div className="min-w-0">
-        <p className="truncate font-semibold">Conversación temporal</p>
-        <p className="text-xs text-muted-foreground sm:text-sm">Disponible hasta cerrar el chat</p>
-      </div>
-      <div className="flex shrink-0 items-center gap-1.5">
-        <Badge variant="outline" className="gap-1.5 text-[10px] sm:text-xs">
-          <AssistantStatusIcon className={cn('h-3 w-3', sendMessage.isPending && 'animate-spin')} />
-          {assistantStatus}
-        </Badge>
-        {compact && onClose && (
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} aria-label="Minimizar asistente">
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-
   const emptyState = (
     <div className="flex h-full flex-col items-center justify-center gap-3 text-center sm:gap-4">
       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -300,7 +277,6 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
 
   const chatBody = (
     <>
-      {chatHeader}
       <div
         ref={messagesContainerRef}
         onScroll={handleMessagesScroll}
