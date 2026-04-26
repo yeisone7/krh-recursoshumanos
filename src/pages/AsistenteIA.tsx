@@ -100,8 +100,12 @@ export default function AsistenteIA() {
   }, [conversations, selectedConversationId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length, sendMessage.isPending, selectedConversationId]);
+    const shouldScroll = forceNextScrollRef.current || !isMobile || isNearBottomRef.current;
+    if (shouldScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      forceNextScrollRef.current = false;
+    }
+  }, [messages.length, sendMessage.isPending, selectedConversationId, isMobile]);
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === selectedConversationId) || null,
@@ -109,14 +113,23 @@ export default function AsistenteIA() {
   );
 
   const handleNewConversation = () => {
+    forceNextScrollRef.current = true;
     setSelectedConversationId(null);
     setInput('');
+  };
+
+  const handleMessagesScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    isNearBottomRef.current = distanceFromBottom < 120;
   };
 
   const handleSend = async (text = input) => {
     const message = text.trim();
     if (!message || sendMessage.isPending) return;
 
+    forceNextScrollRef.current = true;
     setInput('');
     try {
       const result = await sendMessage.mutateAsync({
@@ -189,7 +202,10 @@ export default function AsistenteIA() {
                         return (
                           <button
                             key={conversation.id}
-                            onClick={() => setSelectedConversationId(conversation.id)}
+                            onClick={() => {
+                              forceNextScrollRef.current = true;
+                              setSelectedConversationId(conversation.id);
+                            }}
                             className={cn(
                               'group flex w-full items-start gap-2 rounded-lg p-2.5 text-left transition-colors sm:p-3',
                               active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
