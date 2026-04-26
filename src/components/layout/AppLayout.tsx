@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useRef } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -23,6 +23,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { hasPermission, permissionsLoaded } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [aiButtonLifted, setAiButtonLifted] = useState(false);
+  const mainRef = useRef<HTMLElement | null>(null);
   const isMobile = useIsMobile();
   const isAiAssistant = location.pathname === '/asistente-ia';
   const showAiButton = permissionsLoaded && hasPermission('asistente_ia');
@@ -52,6 +54,21 @@ export function AppLayout({ children }: AppLayoutProps) {
       sessionStorage.setItem('krh_last_module_path', location.pathname);
     }
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setAiButtonLifted(false);
+      return;
+    }
+
+    const main = mainRef.current;
+    if (!main) return;
+
+    const handleScroll = () => setAiButtonLifted(main.scrollTop > 24);
+    handleScroll();
+    main.addEventListener('scroll', handleScroll, { passive: true });
+    return () => main.removeEventListener('scroll', handleScroll);
+  }, [isMobile, location.pathname]);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -100,7 +117,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <Header
           onMobileMenuToggle={isMobile ? () => setMobileOpen(true) : undefined}
         />
-        <main className={`flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+        <main ref={mainRef} className={`flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 ${isMobile ? 'pb-24' : ''}`}>
           {children}
         </main>
       </div>
@@ -120,7 +137,11 @@ export function AppLayout({ children }: AppLayoutProps) {
             }
             navigate('/asistente-ia');
           }}
-          className={`fixed ${isMobile ? 'bottom-24 right-4' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg [&_svg]:size-7 sm:[&_svg]:size-8`}
+          className={`fixed ${isMobile ? '' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg transition-[bottom,right] duration-200 [&_svg]:size-7 sm:[&_svg]:size-8`}
+          style={isMobile ? {
+            bottom: `calc(env(safe-area-inset-bottom, 0px) + ${aiButtonLifted ? '7.25rem' : '5.75rem'})`,
+            right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
+          } : undefined}
         >
           {isAiAssistant ? <Minimize2 className="size-7 sm:size-8" /> : <Bot className="size-7 sm:size-8" />}
         </Button>
