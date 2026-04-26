@@ -487,6 +487,9 @@ export default function Contratos() {
                                 {contract.is_approved ? 'Aprobado' : 'Pendiente'}
                               </Badge>
                             </div>
+                            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                              Estado: vigencia del contrato por fechas. Aprobación: validación interna del contrato.
+                            </p>
                           </div>
                         </div>
 
