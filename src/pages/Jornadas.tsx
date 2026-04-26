@@ -210,17 +210,17 @@ export default function Jornadas() {
               </TabsList>
 
               {activeTab !== 'calendar' && (
-                <div className="flex gap-2 w-full sm:w-auto">
+                <div className="grid grid-cols-[1fr_auto] gap-2 w-full sm:flex sm:w-auto">
                   <div className="relative flex-1 sm:flex-none sm:w-64">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="Buscar..."
-                      className="pl-9"
+                      className="pl-9 h-9"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <Button size="sm" onClick={() => {
+                  <Button size="sm" className="h-9" onClick={() => {
                     if (activeTab === 'schedules') { setSelectedSchedule(null); setShowScheduleForm(true); }
                     else if (activeTab === 'shifts') { setSelectedShift(null); setShowShiftForm(true); }
                     else if (activeTab === 'cycles') { setSelectedCycle(null); setShowCycleForm(true); }
@@ -233,9 +233,34 @@ export default function Jornadas() {
             </div>
 
             {/* Horarios Administrativos */}
-            <TabsContent value="schedules" className="overflow-auto">
+            <TabsContent value="schedules" className="overflow-auto min-h-0">
               {loadingSchedules ? (
                 <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
+              ) : isMobile ? (
+                <MobileCardList
+                  className="p-1"
+                  emptyMessage="No hay horarios administrativos"
+                  items={filteredSchedules.map((schedule) => ({
+                    id: schedule.id,
+                    title: schedule.name,
+                    subtitle: `${formatTime(schedule.start_time)} - ${formatTime(schedule.end_time)}`,
+                    badge: <Badge variant={schedule.is_active ? 'default' : 'secondary'}>{schedule.is_active ? 'Activo' : 'Inactivo'}</Badge>,
+                    fields: [
+                      { label: 'Días', value: schedule.days_of_week.map(d => DAY_NAMES_SHORT[d]).join(', ') },
+                      { label: 'Descanso', value: `${schedule.break_minutes} min` },
+                    ],
+                    actions: (
+                      <>
+                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => { setSelectedSchedule(schedule); setShowScheduleForm(true); }}>
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setDeleteConfirm({ type: 'schedule', id: schedule.id })}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    ),
+                  }))}
+                />
               ) : (
                 <div className="rounded-md border overflow-x-auto">
                   <Table>
@@ -250,7 +275,7 @@ export default function Jornadas() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {workSchedules.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).map((schedule) => (
+                      {filteredSchedules.map((schedule) => (
                         <TableRow key={schedule.id}>
                           <TableCell>
                             <div>
@@ -296,9 +321,41 @@ export default function Jornadas() {
             </TabsContent>
 
             {/* Turnos */}
-            <TabsContent value="shifts" className="overflow-auto">
+            <TabsContent value="shifts" className="overflow-auto min-h-0">
               {loadingShifts ? (
                 <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
+              ) : isMobile ? (
+                <MobileCardList
+                  className="p-1"
+                  emptyMessage="No hay turnos operativos"
+                  items={filteredShifts.map((shift) => ({
+                    id: shift.id,
+                    title: (
+                      <span className="inline-flex items-center gap-2 min-w-0">
+                        <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: shift.color }} />
+                        <span className="truncate">{shift.name}</span>
+                        {shift.code && <span className="text-muted-foreground">({shift.code})</span>}
+                      </span>
+                    ),
+                    subtitle: `${formatTime(shift.start_time)} - ${formatTime(shift.end_time)}`,
+                    badge: <Badge variant={shift.is_active ? 'default' : 'secondary'}>{shift.is_active ? 'Activo' : 'Inactivo'}</Badge>,
+                    fields: [
+                      { label: 'Descanso', value: `${shift.break_minutes} min` },
+                      { label: 'Tipo', value: shift.is_rest_day ? 'Descanso' : shift.crosses_midnight ? 'Cruza medianoche' : 'Laboral' },
+                      ...(shift.description ? [{ label: 'Descripción', value: shift.description, className: 'col-span-2' }] : []),
+                    ],
+                    actions: (
+                      <>
+                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => { setSelectedShift(shift); setShowShiftForm(true); }}>
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setDeleteConfirm({ type: 'shift', id: shift.id })}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    ),
+                  }))}
+                />
               ) : (
                 <div className="rounded-md border overflow-x-auto">
                   <Table>
@@ -312,7 +369,7 @@ export default function Jornadas() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {shifts.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())).map((shift) => (
+                      {filteredShifts.map((shift) => (
                         <TableRow key={shift.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
