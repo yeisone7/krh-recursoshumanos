@@ -23,7 +23,7 @@ export default function Evidencias() {
   const bulkDelete = useBulkDeleteCompletions();
   const [search, setSearch] = useState('');
   const [filterCourse, setFilterCourse] = useState('all');
-  const [viewMode, setViewMode] = useState<'table' | 'tree'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'tree'>('tree');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [signatureView, setSignatureView] = useState<string | null>(null);
 
