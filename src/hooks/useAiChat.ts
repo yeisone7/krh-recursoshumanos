@@ -5,6 +5,12 @@ import { useAuth } from '@/contexts/AuthContext';
 type ChatMode = 'app_help' | 'data_analysis';
 type ChatRole = 'user' | 'assistant';
 
+export interface AiChatPageContext {
+  module: string;
+  moduleLabel: string;
+  pathname: string;
+}
+
 export interface AiChatConversation {
   id: string;
   company_id: string;
@@ -79,10 +85,12 @@ export function useSendAiChatMessage() {
       message,
       conversationId,
       mode = 'app_help',
+      pageContext,
     }: {
       message: string;
       conversationId?: string | null;
       mode?: ChatMode;
+      pageContext?: AiChatPageContext | null;
     }) => {
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
@@ -90,6 +98,7 @@ export function useSendAiChatMessage() {
           conversationId,
           mode,
           companyId: currentCompanyId,
+          pageContext,
         },
       });
 
