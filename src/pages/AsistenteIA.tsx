@@ -37,10 +37,16 @@ function splitAssistantMessage(content: string) {
   const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
   const sanitizeGreetingName = (line: string | null) => {
     if (!line) return null;
-    return line.replace(
-      /^(\s*[¡!]?(?:hola|buenos días|buenas tardes|buenas noches)\s*,?\s+)([\p{L}ÁÉÍÓÚÜÑáéíóúüñ]+)(?:\s+[\p{L}ÁÉÍÓÚÜÑáéíóúüñ]+)+(.*)$/iu,
-      '$1$2$3'
-    );
+    const greetingMatch = line.match(/^(\s*[¡!]?(?:hola|buenos días|buenas tardes|buenas noches)\b[\s,¡!]*)(.*)$/iu);
+    if (!greetingMatch) return line;
+
+    const [, prefix, rest] = greetingMatch;
+    const nameMatch = rest.match(/^([\p{L}ÁÉÍÓÚÜÑáéíóúüñ]+)(.*)$/u);
+    if (!nameMatch) return line;
+
+    const [, firstName, suffix] = nameMatch;
+    const cleanSuffix = suffix.replace(/^(?:\s+[\p{L}ÁÉÍÓÚÜÑáéíóúüñ'.-]+)+/u, '');
+    return `${prefix}${firstName}${cleanSuffix}`.replace(/\s+([!¡?¿.,;:😊🙂✅👉💡⚠️])/u, '$1');
   };
   const greetingIndex = lines.findIndex((line) => /^(?:[¡!]?\s*)?(hola|buenos días|buenas tardes|buenas noches)\b/i.test(line));
   const titleIndex = lines.findIndex((line) => /^#{1,3}\s+/.test(line) || /^paso\s+\d+(\s+de\s+\d+)?/i.test(line));
