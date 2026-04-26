@@ -30,6 +30,12 @@ const starterQuestions = [
   '¿Dónde veo los contratos próximos a vencer?',
 ];
 
+const mobileQuickReplies = [
+  'Dame el siguiente paso',
+  'Explícalo más simple',
+  'Muéstrame un ejemplo',
+];
+
 const CONFIRM_STEP_MESSAGE = 'Confirmo que completé este paso. Continúa con el siguiente.';
 
 const moduleSuggestions: Record<string, { module: string; moduleLabel: string; suggestions: string[] }> = {
@@ -76,6 +82,7 @@ export default function AsistenteIA() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const [quickRepliesVisible, setQuickRepliesVisible] = useState(true);
 
   const conversationsQuery = useAiChatConversations(mode);
   const messagesQuery = useAiChatMessages(selectedConversationId);
@@ -136,6 +143,7 @@ export default function AsistenteIA() {
 
   const handleNewConversation = () => {
     forceNextScrollRef.current = true;
+    setQuickRepliesVisible(true);
     setSelectedConversationId(null);
     setInput('');
   };
@@ -152,6 +160,7 @@ export default function AsistenteIA() {
     if (!message || sendMessage.isPending) return;
 
     forceNextScrollRef.current = true;
+    if (mobileQuickReplies.includes(message)) setQuickRepliesVisible(false);
     setInput('');
     try {
       const result = await sendMessage.mutateAsync({
@@ -226,6 +235,7 @@ export default function AsistenteIA() {
                             key={conversation.id}
                             onClick={() => {
                               forceNextScrollRef.current = true;
+                              setQuickRepliesVisible(true);
                               setSelectedConversationId(conversation.id);
                             }}
                             className={cn(
@@ -332,6 +342,22 @@ export default function AsistenteIA() {
                   className="border-t border-border bg-card p-3 transition-[padding-bottom] duration-200 sm:p-4"
                   style={isMobile && keyboardOffset ? { paddingBottom: `calc(${keyboardOffset}px + 0.75rem)` } : undefined}
                 >
+                  {isMobile && quickRepliesVisible && messages.length > 0 && !sendMessage.isPending && (
+                    <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                      {mobileQuickReplies.map((reply) => (
+                        <Button
+                          key={reply}
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 shrink-0 text-xs"
+                          onClick={() => handleSend(reply)}
+                        >
+                          {reply}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                   {canConfirmStep && !sendMessage.isPending && (
                     <div className="mb-3 flex justify-end">
                       <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => handleSend(CONFIRM_STEP_MESSAGE)}>
