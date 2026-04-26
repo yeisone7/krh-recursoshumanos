@@ -442,7 +442,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0 gap-0 [&>button]:text-white [&>button]:hover:text-white/80">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0 gap-0 [&>button]:text-primary-foreground [&>button]:hover:text-primary-foreground/80">
         <div className="flex-1 min-h-0 overflow-y-auto scrollbar-themed">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -456,8 +456,12 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
         ) : (
           <>
             {/* ── HEADER ── */}
-            <div className="px-6 pt-6 pb-5 rounded-t-xl relative" style={{ background: 'linear-gradient(135deg, hsl(224 30% 55%) 0%, hsl(224 28% 65%) 100%)' }}>
-              <div className="flex items-start gap-4">
+            <div className="px-6 pt-6 pb-5 rounded-t-xl relative overflow-hidden bg-sidebar">
+              <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:26px_26px] opacity-10" />
+              <div className="absolute -top-20 -right-16 h-56 w-56 rounded-full border border-primary/30 bg-primary/5" />
+              <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full border border-primary/20 bg-primary/5" />
+              <div className="absolute top-8 right-28 h-28 w-28 rounded-full border border-primary/25" />
+              <div className="flex items-start gap-4 relative z-10">
                 {/* Avatar with upload overlay */}
                 <div className="relative group shrink-0">
                   <Avatar className="w-16 h-16 border-2 border-primary-foreground/30">
