@@ -55,6 +55,14 @@
     --indigo-foreground: 0 0% 100%;
     --indigo-light: 148 28% 92%;
 
+    --blue: 214 84% 56%;
+    --blue-foreground: 0 0% 100%;
+    --blue-light: 214 90% 95%;
+
+    --purple: 270 70% 55%;
+    --purple-foreground: 0 0% 100%;
+    --purple-light: 270 75% 96%;
+
     --teal: 163 45% 44%;
     --teal-foreground: 0 0% 100%;
     --teal-light: 160 40% 92%;
@@ -153,6 +161,14 @@
     --indigo: 147 28% 52%;
     --indigo-foreground: 0 0% 100%;
     --indigo-light: 148 28% 20%;
+
+    --blue: 214 86% 66%;
+    --blue-foreground: 154 38% 8%;
+    --blue-light: 214 58% 20%;
+
+    --purple: 270 78% 72%;
+    --purple-foreground: 154 38% 8%;
+    --purple-light: 270 48% 22%;
 
     --teal: 163 45% 50%;
     --teal-foreground: 0 0% 100%;
