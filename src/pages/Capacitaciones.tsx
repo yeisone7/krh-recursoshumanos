@@ -241,13 +241,15 @@ export default function Capacitaciones() {
                               </DropdownMenu>
                             </div>
 
-                            <div className="flex flex-wrap gap-1.5">
-                              <Badge className={statusClass}><BadgeCheck className="mr-1 h-3 w-3" />{statusLabel}</Badge>
-                              <Badge variant="outline"><FileText className="mr-1 h-3 w-3" />{course.code || 'Sin código'}</Badge>
+                            <div className="space-y-1.5">
+                              <div className="flex flex-wrap gap-1.5">
+                                <Badge className={statusClass}><BadgeCheck className="mr-1 h-3 w-3" />{statusLabel}</Badge>
+                                <Badge variant="outline"><FileText className="mr-1 h-3 w-3" />{course.code || 'Sin código'}</Badge>
+                              </div>
                               {content?.isManual ? (
                                 <Badge variant="outline"><PenLine className="h-3 w-3 mr-1" /> Manual</Badge>
                               ) : content ? (
-                                <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" /> IA</Badge>
+                                <Badge variant="secondary" className="w-fit bg-primary/10 text-primary"><Sparkles className="h-3 w-3 mr-1" /> IA</Badge>
                               ) : null}
                             </div>
 
