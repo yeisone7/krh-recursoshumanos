@@ -378,7 +378,7 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
         <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
           <div className="min-w-0">
             <h2 className="truncate text-base font-semibold">Asistente IA</h2>
-            <p className="truncate text-xs text-muted-foreground">Resuelvo tus dudas sobre el uso de la plataforma🤓</p>
+            <p className="truncate text-xs text-muted-foreground">Resuelvo tus dudas sobre el uso de la plataforma.</p>
           </div>
           <Button variant="secondary" size="sm" className="h-8 gap-1.5 px-2.5" onClick={handleNewConversation}>
             <MessageSquarePlus className="h-3.5 w-3.5" /> Nueva
