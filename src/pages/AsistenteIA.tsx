@@ -328,7 +328,10 @@ export default function AsistenteIA() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="border-t border-border p-3 sm:p-4">
+                <div
+                  className="border-t border-border bg-card p-3 transition-[padding-bottom] duration-200 sm:p-4"
+                  style={isMobile && keyboardOffset ? { paddingBottom: `calc(${keyboardOffset}px + 0.75rem)` } : undefined}
+                >
                   {canConfirmStep && !sendMessage.isPending && (
                     <div className="mb-3 flex justify-end">
                       <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => handleSend(CONFIRM_STEP_MESSAGE)}>
@@ -341,7 +344,7 @@ export default function AsistenteIA() {
                       value={input}
                       onChange={(event) => setInput(event.target.value)}
                       onKeyDown={(event) => {
-                        if (event.key === 'Enter' && !event.shiftKey) {
+                        if (event.key === 'Enter' && (isMobile || !event.shiftKey)) {
                           event.preventDefault();
                           handleSend();
                         }
