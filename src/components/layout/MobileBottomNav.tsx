@@ -61,9 +61,9 @@ export function MobileBottomNav() {
         ref={containerRef}
         className="relative border-t"
         style={{
-          backgroundColor: 'hsl(var(--card))',
-          borderColor: 'hsl(var(--border))',
-          boxShadow: '0 -4px 12px -2px hsl(var(--foreground) / 0.06)',
+          backgroundColor: 'hsl(var(--primary))',
+          borderColor: 'hsl(var(--primary-hover))',
+          boxShadow: '0 -4px 12px -2px hsl(var(--primary) / 0.28)',
         }}
       >
         {/* Floating active indicator */}
@@ -72,8 +72,8 @@ export function MobileBottomNav() {
             className="absolute -top-7 z-10 flex items-center justify-center w-16 h-16 rounded-full shadow-lg"
             style={{
               left: `${indicatorX}px`,
-              backgroundColor: 'hsl(var(--primary))',
-              borderColor: 'hsl(var(--card))',
+              backgroundColor: 'hsl(var(--card))',
+              borderColor: 'hsl(var(--primary))',
               borderWidth: '4px',
               borderStyle: 'solid',
               boxShadow: '0 6px 16px -3px rgba(0, 0, 0, 0.35)',
@@ -88,7 +88,7 @@ export function MobileBottomNav() {
                 <ActiveIcon
                   className="w-5 h-5"
                   strokeWidth={2.2}
-                  style={{ color: 'hsl(var(--primary-foreground))' }}
+                  style={{ color: 'hsl(var(--primary))' }}
                 />
               ) : null;
             })()}
@@ -119,7 +119,7 @@ export function MobileBottomNav() {
                   <item.icon
                     className="w-5 h-5"
                     strokeWidth={1.8}
-                    style={{ color: 'hsl(var(--muted-foreground))' }}
+                    style={{ color: 'hsl(var(--primary-foreground) / 0.78)' }}
                   />
                 </div>
 
@@ -127,7 +127,7 @@ export function MobileBottomNav() {
                 <span
                   className="text-[10px] leading-tight truncate max-w-full transition-colors duration-200"
                   style={{
-                    color: active ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                    color: active ? 'hsl(var(--primary-foreground))' : 'hsl(var(--primary-foreground) / 0.78)',
                     fontWeight: active ? 600 : 500,
                   }}
                 >
