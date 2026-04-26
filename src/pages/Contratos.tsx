@@ -22,9 +22,11 @@ import {
   Handshake,
   Infinity,
   RotateCw,
+  Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Select,
   SelectContent,
@@ -476,20 +478,43 @@ export default function Contratos() {
                               </div>
                               <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
                             </div>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              <Badge variant="outline" className={cn('gap-1', statusConfig[status].class)}>
-                                <StatusIcon className="h-3 w-3" />
-                                {statusConfig[status].label}
-                                {daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30 && <span>({daysRemaining}d)</span>}
-                              </Badge>
-                              <Badge variant="outline" className={cn('gap-1', contract.is_approved ? 'bg-success-light text-success border-success/20' : 'bg-warning-light text-warning-foreground border-warning/20')}>
-                                {contract.is_approved ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                                {contract.is_approved ? 'Aprobado' : 'Pendiente'}
-                              </Badge>
-                            </div>
-                            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                              Estado: vigencia del contrato por fechas. Aprobación: validación interna del contrato.
-                            </p>
+                            <TooltipProvider delayDuration={150}>
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge
+                                      variant="outline"
+                                      onClick={(event) => event.stopPropagation()}
+                                      className={cn('gap-1', statusConfig[status].class)}
+                                    >
+                                      <StatusIcon className="h-3 w-3" />
+                                      {statusConfig[status].label}
+                                      {daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30 && <span>({daysRemaining}d)</span>}
+                                      <Info className="h-3 w-3 opacity-70" />
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+                                    Indica si el contrato está vigente, próximo a vencer, vencido o terminado según sus fechas.
+                                  </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge
+                                      variant="outline"
+                                      onClick={(event) => event.stopPropagation()}
+                                      className={cn('gap-1', contract.is_approved ? 'bg-success-light text-success border-success/20' : 'bg-warning-light text-warning-foreground border-warning/20')}
+                                    >
+                                      {contract.is_approved ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                      {contract.is_approved ? 'Aprobado' : 'Pendiente'}
+                                      <Info className="h-3 w-3 opacity-70" />
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+                                    Indica si el contrato ya fue validado en el flujo interno de aprobación.
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </TooltipProvider>
                           </div>
                         </div>
 
