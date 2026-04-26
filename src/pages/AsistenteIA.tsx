@@ -252,7 +252,7 @@ export default function AsistenteIA() {
   };
 
   return (
-    <div className="flex h-[calc(100dvh-9rem)] min-h-0 flex-col gap-3 overflow-hidden md:h-[calc(100vh-5rem)] md:min-h-[620px] md:gap-4">
+    <div className="flex min-h-[calc(100dvh-9rem)] flex-col gap-3 md:h-[calc(100vh-5rem)] md:min-h-[620px] md:gap-4 md:overflow-hidden">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex shrink-0 flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Asistente IA</h1>
@@ -266,15 +266,15 @@ export default function AsistenteIA() {
       <Tabs value={mode} onValueChange={(value) => {
         setMode(value as ChatMode);
         setSelectedConversationId(null);
-      }} className="flex min-h-0 flex-1 flex-col">
+      }} className="flex min-h-0 flex-1 flex-col overflow-visible md:overflow-hidden">
         <TabsList className="grid w-full grid-cols-2 sm:w-fit">
           <TabsTrigger value="app_help" className="gap-2 text-xs sm:text-sm"><Bot className="h-4 w-4" /> Ayuda de la app</TabsTrigger>
           <TabsTrigger value="data_analysis" disabled className="gap-2 text-xs sm:text-sm"><Sparkles className="h-4 w-4" /> Análisis de datos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="app_help" className="min-h-0 flex-1">
-          <div className="flex h-full min-h-0 flex-col gap-3 lg:grid lg:grid-cols-[320px_1fr] lg:gap-4">
-            <Card className="max-h-44 shrink-0 overflow-hidden lg:max-h-none lg:min-h-0">
+          <div className="flex min-h-0 flex-col gap-3 lg:grid lg:h-full lg:grid-cols-[320px_1fr] lg:gap-4">
+            <Card className="max-h-36 shrink-0 overflow-hidden sm:max-h-44 lg:max-h-none lg:min-h-0">
               <CardContent className="flex h-full flex-col p-0">
                 <div className="border-b border-border p-3 sm:p-4">
                   <p className="font-semibold">Conversaciones</p>
@@ -340,7 +340,7 @@ export default function AsistenteIA() {
               </CardContent>
             </Card>
 
-            <Card className="min-h-0 flex-1 overflow-hidden">
+            <Card className="h-[calc(100dvh-20rem)] min-h-[430px] flex-1 overflow-hidden md:h-auto md:min-h-0">
               <CardContent className="flex h-full min-h-0 flex-col p-0">
                 <div className="flex items-start justify-between gap-3 border-b border-border p-3 sm:items-center sm:p-4">
                   <div className="min-w-0">
