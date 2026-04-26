@@ -542,15 +542,15 @@ export function RequisitionFormDialog({
                   control={form.control}
                   name="incluye_alimentacion"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
+                    <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
+                      <div className="min-w-0 space-y-0.5">
                         <FormLabel className="text-base">Incluye Alimentación</FormLabel>
                         <p className="text-sm text-muted-foreground">
                           ¿Durante el turno de trabajo?
                         </p>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
                       </FormControl>
                     </FormItem>
                   )}
@@ -560,15 +560,15 @@ export function RequisitionFormDialog({
                   control={form.control}
                   name="incluye_desplazamiento"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
+                    <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
+                      <div className="min-w-0 space-y-0.5">
                         <FormLabel className="text-base">Incluye Desplazamiento</FormLabel>
                         <p className="text-sm text-muted-foreground">
                           ¿Se incluye transporte?
                         </p>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
                       </FormControl>
                     </FormItem>
                   )}
