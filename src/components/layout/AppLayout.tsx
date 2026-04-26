@@ -118,7 +118,18 @@ export function AppLayout({ children }: AppLayoutProps) {
           onMobileMenuToggle={isMobile ? () => setMobileOpen(true) : undefined}
         />
         <main ref={mainRef} className={`flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 ${isMobile ? 'pb-24' : ''}`}>
-          {children}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={isAiAssistant ? 'ai-assistant' : location.pathname}
+              initial={isAiAssistant ? { opacity: 0, scale: 0.98, y: 8 } : { opacity: 1, scale: 1, y: 0 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={isAiAssistant ? { opacity: 0, scale: 0.98, y: 8 } : { opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="min-h-full"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
