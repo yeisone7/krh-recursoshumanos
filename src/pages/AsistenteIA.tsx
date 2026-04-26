@@ -46,7 +46,7 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[88%] rounded-lg px-4 py-3 text-sm shadow-sm',
+          'max-w-[92%] rounded-lg px-3 py-2.5 text-sm shadow-sm sm:max-w-[88%] sm:px-4 sm:py-3',
           isUser
             ? 'bg-primary text-primary-foreground'
             : 'border border-border bg-card text-card-foreground'
@@ -138,13 +138,13 @@ export default function AsistenteIA() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] min-h-[620px] flex-col gap-4">
+    <div className="flex min-h-[calc(100dvh-8rem)] flex-col gap-3 md:h-[calc(100vh-5rem)] md:min-h-[620px] md:gap-4">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Asistente IA</h1>
-          <p className="mt-1 text-muted-foreground">Ayuda guiada sobre el uso de KRH con la IA seleccionada en Configuración.</p>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">Ayuda guiada sobre el uso de KRH con la IA seleccionada en Configuración.</p>
         </div>
-        <Button onClick={handleNewConversation} className="gap-2">
+        <Button onClick={handleNewConversation} className="w-full gap-2 sm:w-auto">
           <MessageSquarePlus className="h-4 w-4" /> Nueva conversación
         </Button>
       </motion.div>
@@ -153,20 +153,20 @@ export default function AsistenteIA() {
         setMode(value as ChatMode);
         setSelectedConversationId(null);
       }} className="flex min-h-0 flex-1 flex-col">
-        <TabsList className="w-fit">
-          <TabsTrigger value="app_help" className="gap-2"><Bot className="h-4 w-4" /> Ayuda de la app</TabsTrigger>
-          <TabsTrigger value="data_analysis" disabled className="gap-2"><Sparkles className="h-4 w-4" /> Análisis de datos</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:w-fit">
+          <TabsTrigger value="app_help" className="gap-2 text-xs sm:text-sm"><Bot className="h-4 w-4" /> Ayuda de la app</TabsTrigger>
+          <TabsTrigger value="data_analysis" disabled className="gap-2 text-xs sm:text-sm"><Sparkles className="h-4 w-4" /> Análisis de datos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="app_help" className="min-h-0 flex-1">
-          <div className="grid h-full min-h-0 gap-4 lg:grid-cols-[320px_1fr]">
-            <Card className="min-h-0 overflow-hidden">
+          <div className="flex h-full min-h-0 flex-col gap-3 lg:grid lg:grid-cols-[320px_1fr] lg:gap-4">
+            <Card className="max-h-44 shrink-0 overflow-hidden lg:max-h-none lg:min-h-0">
               <CardContent className="flex h-full flex-col p-0">
-                <div className="border-b border-border p-4">
+                <div className="border-b border-border p-3 sm:p-4">
                   <p className="font-semibold">Conversaciones</p>
-                  <p className="text-sm text-muted-foreground">Historial personal por empresa</p>
+                  <p className="hidden text-sm text-muted-foreground sm:block">Historial personal por empresa</p>
                 </div>
-                <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                <div className="min-h-0 flex-1 overflow-y-auto p-1.5 sm:p-2">
                   {conversationsQuery.isLoading ? (
                     <div className="space-y-2 p-2">
                       <Skeleton className="h-14 w-full" />
