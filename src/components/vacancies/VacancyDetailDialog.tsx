@@ -310,17 +310,17 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <div className="px-4 pt-2 border-b flex-shrink-0 sm:px-6">
               <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1 sm:inline-flex sm:h-10 sm:w-auto sm:gap-0">
-                <TabsTrigger value="info" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-                  <FileText className="w-4 h-4" />
+                <TabsTrigger value="info" className="h-10 min-w-0 flex-col gap-0.5 px-1 text-[11px] leading-none sm:h-9 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+                  <FileText className="h-4 w-4 shrink-0" />
                   <span className="truncate">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="candidates" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-                  <Users className="w-4 h-4" />
-                  <span className="truncate">Candidatos ({candidates.length})</span>
+                <TabsTrigger value="candidates" className="h-10 min-w-0 flex-col gap-0.5 px-1 text-[11px] leading-none sm:h-9 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+                  <Users className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Candidatos</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-                  <Paperclip className="w-4 h-4" />
-                  <span className="truncate">Documentos ({documents.length})</span>
+                <TabsTrigger value="documents" className="h-10 min-w-0 flex-col gap-0.5 px-1 text-[11px] leading-none sm:h-9 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+                  <Paperclip className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Documentos</span>
                 </TabsTrigger>
               </TabsList>
             </div>
