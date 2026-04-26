@@ -183,7 +183,7 @@ function validateStepFlowResponse(content: string) {
 async function correctStepFlowResponse(provider: string, aiConfig: AIConfig, systemPrompt: string, messages: ChatMessage[], draftAnswer: string) {
   const correctionPrompt = `${systemPrompt}
 
-Regla de autocorrección obligatoria: la respuesta anterior incluyó un resumen, una vista general o pasos futuros. Reescríbela en español retomando ÚNICAMENTE el paso actual. Mantén este orden: saludo breve solo si corresponde, título "### Paso X de N", instrucciones concretas de ese paso y una sola pregunta final de confirmación. No incluyas listas de pasos futuros, resumen general ni pasos adicionales.`;
+Regla de autocorrección obligatoria: la respuesta anterior incluyó un resumen, una vista general, pasos futuros o el saludo quedó fuera de orden. Reescríbela en español retomando ÚNICAMENTE el paso actual. Mantén este orden exacto: saludo breve solo si corresponde en la primera línea, título "### Paso X de N", instrucciones concretas de ese paso y una sola pregunta final de confirmación. Si usas el nombre del usuario, úsalo solo en el saludo. No incluyas listas de pasos futuros, resumen general ni pasos adicionales.`;
   const correctionMessages: ChatMessage[] = [
     ...messages,
     { role: "assistant", content: draftAnswer },
