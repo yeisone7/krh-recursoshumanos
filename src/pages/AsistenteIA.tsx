@@ -93,7 +93,7 @@ export default function AsistenteIA() {
   const messages = useMemo(() => messagesQuery.data || [], [messagesQuery.data]);
   const lastMessage = messages[messages.length - 1];
   const canConfirmStep = lastMessage?.role === 'assistant' && /paso\s+\d+/i.test(lastMessage.content);
-  const assistantStatus = sendMessage.isPending ? 'Procesando' : messagesQuery.isLoading ? 'Cargando' : 'Listo';
+  const assistantStatus = messagesQuery.isLoading ? 'Procesando' : sendMessage.isPending ? 'Escribiendo' : 'Listo';
   const assistantStatusIcon = sendMessage.isPending || messagesQuery.isLoading ? Loader2 : CheckCircle2;
   const AssistantStatusIcon = assistantStatusIcon;
   const pageContext = useMemo(() => {
@@ -338,7 +338,7 @@ export default function AsistenteIA() {
                     <div className="flex justify-start">
                       <div className="flex max-w-[92%] items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-muted-foreground shadow-sm sm:max-w-[88%] sm:px-4 sm:py-3">
                         <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
-                        <span className="truncate">El asistente está escribiendo...</span>
+                        <span className="truncate">Escribiendo...</span>
                       </div>
                     </div>
                   )}
