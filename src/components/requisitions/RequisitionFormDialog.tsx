@@ -187,7 +187,7 @@ export function RequisitionFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6 [&_button]:min-h-11 sm:[&_button]:min-h-10 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_textarea]:min-h-24 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
         <DialogHeader>
           <DialogTitle>
             {requisition ? 'Editar Requisición' : 'Nueva Requisición de Personal'}
@@ -205,7 +205,7 @@ export function RequisitionFormDialog({
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Datos Generales</h3>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="fecha_requisicion"
@@ -296,7 +296,7 @@ export function RequisitionFormDialog({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="cargo_solicitado"
@@ -344,7 +344,7 @@ export function RequisitionFormDialog({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="area_id"
@@ -396,7 +396,7 @@ export function RequisitionFormDialog({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="cargo_a_reemplazar"
@@ -450,7 +450,7 @@ export function RequisitionFormDialog({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="horario_trabajo"
