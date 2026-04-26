@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import {
   Plus, Search, MoreHorizontal, Clock, Sparkles, PenLine, Library, Link2,
   Eye, Copy, Trash2, LayoutDashboard, BookOpenCheck, MonitorPlay, UsersRound,
-  Layers, Timer, BadgeCheck, FileText
+  Layers, Timer, BadgeCheck, FileText, ShieldCheck, HeartPulse, Utensils,
+  Flame, HardHat, ClipboardCheck, Leaf, BriefcaseBusiness
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,24 @@ const COURSE_ICON_STYLE_BY_MODALITY = {
   virtual: 'bg-info-light text-info ring-info/25',
   mixto: 'bg-primary/10 text-primary ring-primary/25',
 } satisfies Record<TrainingModality, string>;
+
+const COURSE_CATEGORY_VISUALS = [
+  { keywords: ['seguridad', 'sst', 'riesgo', 'epp'], icon: ShieldCheck, style: 'bg-success-light text-success ring-success/25' },
+  { keywords: ['salud', 'primeros auxilios', 'higiene'], icon: HeartPulse, style: 'bg-destructive/10 text-destructive ring-destructive/20' },
+  { keywords: ['alimento', 'cocina', 'cuchillo', 'manipulación', 'manipulacion', 'contaminación', 'contaminacion'], icon: Utensils, style: 'bg-warning-light text-warning ring-warning/25' },
+  { keywords: ['incendio', 'emergencia', 'evacuación', 'evacuacion'], icon: Flame, style: 'bg-accent text-accent-foreground ring-accent/30' },
+  { keywords: ['operación', 'operacion', 'mantenimiento', 'técnico', 'tecnico'], icon: HardHat, style: 'bg-info-light text-info ring-info/25' },
+  { keywords: ['ambiental', 'ambiente', 'residuo'], icon: Leaf, style: 'bg-success-light text-success ring-success/25' },
+  { keywords: ['legal', 'cumplimiento', 'norma'], icon: ClipboardCheck, style: 'bg-primary/10 text-primary ring-primary/25' },
+  { keywords: ['administrativo', 'corporativo', 'inducción', 'induccion'], icon: BriefcaseBusiness, style: 'bg-muted text-muted-foreground ring-border' },
+];
+
+function getCourseCategoryVisual(category: string) {
+  const normalizedCategory = category.toLowerCase();
+  return COURSE_CATEGORY_VISUALS.find(({ keywords }) =>
+    keywords.some((keyword) => normalizedCategory.includes(keyword))
+  ) || { icon: BookOpenCheck, style: 'bg-primary/10 text-primary ring-primary/25' };
+}
 
 export default function Capacitaciones() {
   const navigate = useNavigate();
