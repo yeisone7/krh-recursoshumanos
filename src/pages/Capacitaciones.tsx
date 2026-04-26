@@ -204,8 +204,7 @@ export default function Capacitaciones() {
                     const content = course.content as TrainingCourseContent | null;
                     const statusLabel = STATUS_LABELS[course.status] || course.status;
                     const statusClass = STATUS_COLORS[course.status] || '';
-                    const CourseIcon = COURSE_ICON_BY_MODALITY[course.modality] || BookOpenCheck;
-                    const iconStyle = COURSE_ICON_STYLE_BY_MODALITY[course.modality] || 'bg-primary/10 text-primary ring-primary/20';
+                    const { icon: CourseIcon, style: iconStyle } = getCourseCategoryVisual(course.category);
 
                     return (
                       <motion.div
