@@ -11,7 +11,7 @@ import {
   BookOpen, Clock, Users, Shield, Globe, Target, Scale, Send,
   GraduationCap, Sparkles, ChevronRight, CircleHelp, Image as ImageIcon,
   Lightbulb, FileText, CheckCircle2, Calendar, Network, LayoutPanelTop,
-  Mic, Video, ExternalLink, Trash2,
+  Mic, Video, ExternalLink, Trash2, AlertCircle, Loader2,
 } from 'lucide-react';
 import { MarkdownContent } from './MarkdownContent';
 import { MediaTypeCard } from './MediaTypeCard';
@@ -126,7 +126,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
   const [audioDuration, setAudioDuration] = useState('medium');
   const { currentCompanyId } = useAuth();
   const { data: systemConfig } = useSystemConfig();
-  const { data: media = [] } = useTrainingMedia(course?.id);
+  const { data: media = [], isLoading: isMediaLoading, isError: isMediaError } = useTrainingMedia(course?.id);
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
 
