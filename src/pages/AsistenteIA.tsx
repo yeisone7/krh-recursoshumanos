@@ -281,10 +281,10 @@ export default function AsistenteIA() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="border-t border-border p-4">
+                <div className="border-t border-border p-3 sm:p-4">
                   {canConfirmStep && !sendMessage.isPending && (
                     <div className="mb-3 flex justify-end">
-                      <Button variant="secondary" size="sm" onClick={() => handleSend(CONFIRM_STEP_MESSAGE)}>
+                      <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => handleSend(CONFIRM_STEP_MESSAGE)}>
                         Confirmar paso y continuar
                       </Button>
                     </div>
@@ -300,7 +300,7 @@ export default function AsistenteIA() {
                         }
                       }}
                       placeholder="Pregunta cómo usar un módulo, configurar una alerta o seguir un proceso..."
-                      className="min-h-12 resize-none"
+                      className="max-h-32 min-h-12 resize-none text-sm"
                       disabled={sendMessage.isPending}
                     />
                     <Button size="icon" className="h-12 w-12 shrink-0" onClick={() => handleSend()} disabled={!input.trim() || sendMessage.isPending}>
