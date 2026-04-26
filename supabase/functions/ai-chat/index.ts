@@ -159,6 +159,9 @@ serve(async (req) => {
     const mode: ChatMode = body.mode === "data_analysis" ? "data_analysis" : "app_help";
 
     if (!companyId) return jsonResponse({ error: "Empresa requerida" }, 400);
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(companyId)) {
+      return jsonResponse({ error: "Empresa inválida" }, 400);
+    }
     if (!message || message.length > 4000) return jsonResponse({ error: "Escribe una pregunta de máximo 4000 caracteres" }, 400);
     if (mode === "data_analysis") return jsonResponse({ error: "El chat de análisis de datos estará disponible próximamente." }, 403);
 
