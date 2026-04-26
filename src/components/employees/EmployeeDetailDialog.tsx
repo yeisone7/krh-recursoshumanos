@@ -104,15 +104,14 @@ function InfoItem({ icon: Icon, label, value, className }: { icon?: any; label: 
 
 function MetricChip({ icon: Icon, label, value, color = 'primary' }: { icon: any; label: string; value: string; color?: string }) {
   const colorClasses: Record<string, string> = {
-    primary: 'text-primary bg-primary/10',
-    secondary: 'text-secondary bg-secondary/10',
-    success: 'text-success bg-success/10',
-    warning: 'text-warning bg-warning/10',
-    info: 'text-info bg-info/10',
-    accent: 'text-accent bg-accent/10',
-    destructive: 'text-destructive bg-destructive/10',
-    teal: 'text-teal bg-teal/10',
-    violet: 'text-violet bg-violet/10',
+    primary: 'text-primary bg-primary/15 ring-1 ring-primary/20',
+    secondary: 'text-secondary bg-secondary/15 ring-1 ring-secondary/20',
+    success: 'text-success bg-success/15 ring-1 ring-success/20',
+    warning: 'text-warning bg-warning/15 ring-1 ring-warning/20',
+    info: 'text-info bg-info/15 ring-1 ring-info/20',
+    destructive: 'text-destructive bg-destructive/15 ring-1 ring-destructive/20',
+    teal: 'text-teal bg-teal/15 ring-1 ring-teal/20',
+    violet: 'text-violet bg-violet/15 ring-1 ring-violet/20',
   };
 
   return (
@@ -578,7 +577,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   <MetricChip icon={Cake} label="Edad" value={computeAge(employee.birth_date)} color="success" />
                 )}
                 {employee.document_number && (
-                  <MetricChip icon={Hash} label={documentTypeLabels[employee.document_type]} value={employee.document_number} color="accent" />
+                  <MetricChip icon={Hash} label={documentTypeLabels[employee.document_type]} value={employee.document_number} color="info" />
                 )}
                 {employee.blood_type && (
                   <MetricChip icon={Droplets} label="Tipo Sangre" value={employee.blood_type} color="destructive" />
