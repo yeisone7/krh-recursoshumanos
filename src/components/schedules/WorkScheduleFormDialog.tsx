@@ -122,8 +122,8 @@ export function WorkScheduleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[90vh] flex flex-col overflow-hidden p-4 sm:p-6">
+        <DialogHeader className="shrink-0">
           <DialogTitle>
             {isEditing ? 'Editar Horario Administrativo' : 'Nuevo Horario Administrativo'}
           </DialogTitle>
@@ -205,7 +205,7 @@ export function WorkScheduleFormDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="start_time"
@@ -260,8 +260,8 @@ export function WorkScheduleFormDialog({
               control={form.control}
               name="is_active"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                  <div>
+                <FormItem className="flex items-start sm:items-center justify-between gap-3 rounded-lg border p-3">
+                  <div className="min-w-0">
                     <FormLabel>Activo</FormLabel>
                     <FormDescription>
                       El horario está disponible para asignar
@@ -277,15 +277,16 @@ export function WorkScheduleFormDialog({
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => onOpenChange(false)}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" className="w-full sm:w-auto" disabled={isPending}>
                 {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {isEditing ? 'Guardar Cambios' : 'Crear Horario'}
               </Button>

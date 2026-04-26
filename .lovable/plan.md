@@ -1,36 +1,46 @@
-Implementaré el chat IA como una sesión temporal, sin guardar historial en la base de datos.
+Plan para ajustar la vista **Jornadas** en móvil:
 
-Cambios propuestos:
+1. **Vista principal de Jornadas**
+   - Reorganizar el encabezado y botones superiores para que en móvil no se amontonen.
+   - Ajustar las pestañas de Calendario, Horarios, Turnos y Ciclos para que sean usables en pantallas pequeñas.
+   - Mantener escritorio sin cambios visuales importantes.
 
-1. Quitar historial guardado del chat
-- El asistente dejará de cargar conversaciones anteriores.
-- Se eliminará visualmente la sección/listado de “Conversaciones” en la vista completa.
-- El botón “Nueva” sí hará algo claro: reiniciará la conversación temporal actual.
+2. **Listados de Horarios, Turnos y Ciclos**
+   - En móvil, reemplazar las tablas compactadas por tarjetas tipo `MobileCardList`.
+   - Mostrar en cada tarjeta la información clave: nombre, horario/duración, estado, días, descripción y acciones.
+   - Conservar tabla en tablet/escritorio.
 
-2. Mantener conversación solo mientras el panel esté abierto/minimizado
-- Los mensajes vivirán en memoria del componente.
-- Si el chat está minimizado, la conversación seguirá disponible.
-- Si el usuario cierra el chat, esa conversación se perderá.
+3. **Calendario de turnos**
+   - Compactar controles superiores en móvil: periodo, selector 15d/Mes, modalidad y centro.
+   - Evitar desbordes horizontales innecesarios fuera de la grilla del calendario.
+   - Mantener la grilla con scroll horizontal interno, ya que el calendario por días lo requiere.
+   - Hacer que la vista de pantalla completa también use padding y controles adecuados para móvil.
 
-3. Confirmar antes de cerrar
-- Al cerrar el chat, mostraré una confirmación indicando que la conversación no se guarda.
-- Si confirma, se limpia la conversación y se cierra el panel.
-- Si cancela, vuelve al chat sin perder nada.
+4. **Modales internos de Jornadas**
+   - Revisar y ajustar estos modales para móvil:
+     - Nuevo/editar horario administrativo.
+     - Nuevo/editar turno operativo.
+     - Nuevo/editar ciclo de rotación.
+     - Generar turnos desde ciclo.
+     - Generar ciclo a todos los empleados.
+     - Exportar planilla de turnos.
+   - Aplicar `max-h-[90vh]`, scroll nativo interno y botones apilables cuando falte espacio.
+   - Evitar `ScrollArea` en formularios complejos, siguiendo el patrón del proyecto.
 
-4. Ajustar el backend del asistente
-- La función de IA dejará de crear registros en `ai_chat_conversations` y `ai_chat_messages`.
-- Recibirá el historial temporal enviado desde el frontend para mantener contexto durante la sesión.
-- Responderá igual que ahora, pero sin persistencia.
-
-5. Ajustar textos visuales
-- Cambiaré mensajes como “Nueva conversación” o “Historial personal por empresa” por textos acordes a conversación temporal.
-- Eliminaré acciones de borrar historial, porque ya no habrá historial persistente.
+5. **Validación**
+   - Ejecutar verificación TypeScript.
+   - Revisar específicamente móvil de 390px de ancho, que coincide con tu vista actual.
 
 Detalles técnicos:
 - Archivos principales a modificar:
-  - `src/hooks/useAiChat.ts`
-  - `src/components/ai/AiChatPanel.tsx`
-  - `src/components/layout/AppLayout.tsx`
-  - `supabase/functions/ai-chat/index.ts`
-- No se eliminarán tablas existentes; simplemente se dejarán de usar para este chat.
-- Mantendré la validación de empresa/usuario y el prompt visual ya configurado.
+  - `src/pages/Jornadas.tsx`
+  - `src/components/schedules/ShiftCalendar.tsx`
+  - `src/components/schedules/ShiftFormDialog.tsx`
+  - `src/components/schedules/ShiftCycleFormDialog.tsx`
+  - `src/components/schedules/CycleGeneratorDialog.tsx`
+  - `src/components/schedules/BulkCycleGeneratorDialog.tsx`
+  - `src/components/schedules/ShiftReportExport.tsx`
+- Reutilizar componentes existentes:
+  - `MobileCardList`
+  - `useIsMobile`
+  - patrones de formularios con `overflow-y-auto` nativo.
