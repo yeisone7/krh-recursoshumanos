@@ -311,50 +311,50 @@ export function CandidateDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full">
+          <DialogHeader className="px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
+            <div className="flex flex-col items-start gap-3 pr-8 sm:flex-row sm:items-start sm:justify-between sm:pr-0">
+              <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center sm:h-12 sm:w-12">
                   <span className="font-semibold text-primary text-lg">
                     {candidate.first_name[0]}{candidate.last_name[0]}
                   </span>
                 </div>
-                <div>
-                  <DialogTitle className="font-display text-xl">
+                <div className="min-w-0">
+                  <DialogTitle className="font-display text-lg leading-tight sm:text-xl">
                     {candidate.first_name} {candidate.last_name}
                   </DialogTitle>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground break-words">
                     {vacancy?.position_title || 'Vacante'}
                     {vacancy?.operation_centers?.name && ` • ${vacancy.operation_centers.name}`}
                   </p>
                 </div>
               </div>
-              <Badge className={cn('gap-1', statusStyle.bg, statusStyle.text)}>
+              <Badge className={cn('max-w-full self-start truncate', statusStyle.bg, statusStyle.text)}>
                 {candidateStatusLabels[status]}
               </Badge>
             </div>
           </DialogHeader>
 
           {/* Background alerts */}
-          <div className="px-6">
+          <div className="px-4 sm:px-6">
             <CandidateBackgroundAlerts background={background} loading={bgLoading} compact />
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-            <div className="px-6 pt-2 border-b">
-              <TabsList className="h-10">
-                <TabsTrigger value="timeline" className="gap-2">
+            <div className="px-4 pt-2 border-b sm:px-6">
+              <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1 sm:inline-flex sm:h-10 sm:w-auto sm:gap-0">
+                <TabsTrigger value="timeline" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <Clock className="w-4 h-4" />
-                  Proceso
+                  <span className="truncate">Proceso</span>
                 </TabsTrigger>
-                <TabsTrigger value="info" className="gap-2">
+                <TabsTrigger value="info" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <User className="w-4 h-4" />
-                  Información
+                  <span className="truncate">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="gap-2">
+                <TabsTrigger value="documents" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <Paperclip className="w-4 h-4" />
-                  Documentos
+                  <span className="truncate">Documentos</span>
                 </TabsTrigger>
                 {candidate.employee_id && (
                   <TabsTrigger value="shared_docs" className="gap-2">
