@@ -28,6 +28,8 @@ const starterQuestions = [
   '¿Dónde veo los contratos próximos a vencer?',
 ];
 
+const CONFIRM_STEP_MESSAGE = 'Confirmo que completé este paso. Continúa con el siguiente.';
+
 function MessageBubble({ message }: { message: AiChatMessage }) {
   const isUser = message.role === 'user';
 
@@ -65,6 +67,8 @@ export default function AsistenteIA() {
 
   const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
   const messages = useMemo(() => messagesQuery.data || [], [messagesQuery.data]);
+  const lastMessage = messages[messages.length - 1];
+  const canConfirmStep = lastMessage?.role === 'assistant' && /paso\s+\d+/i.test(lastMessage.content);
 
   useEffect(() => {
     if (!selectedConversationId && conversations.length > 0) {
@@ -242,6 +246,13 @@ export default function AsistenteIA() {
                 </div>
 
                 <div className="border-t border-border p-4">
+                  {canConfirmStep && !sendMessage.isPending && (
+                    <div className="mb-3 flex justify-end">
+                      <Button variant="secondary" size="sm" onClick={() => handleSend(CONFIRM_STEP_MESSAGE)}>
+                        Confirmar paso y continuar
+                      </Button>
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <Textarea
                       value={input}
