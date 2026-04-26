@@ -478,7 +478,17 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                 </div>
                 <Separator />
 
-                {isDraft ? (
+                {isMediaLoading ? (
+                  <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <span>Cargando contenido multimedia...</span>
+                  </div>
+                ) : isMediaError ? (
+                  <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-6 text-center text-sm text-destructive">
+                    <AlertCircle className="h-6 w-6" />
+                    <span>No se pudo cargar el contenido multimedia.</span>
+                  </div>
+                ) : isDraft ? (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <MediaTypeCard
