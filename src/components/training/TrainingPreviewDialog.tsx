@@ -269,8 +269,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-          <div className="px-4 sm:px-6 border-b overflow-x-auto">
-            <TabsList className="bg-transparent h-auto p-0 gap-0 w-max sm:w-full justify-start rounded-none">
+          <div className="border-b overflow-x-auto px-3 sm:px-6">
+            <TabsList className="h-auto w-max justify-start gap-0 rounded-none bg-transparent p-0 sm:w-full">
               {[
                 { value: 'general', icon: BookOpen, label: 'General' },
                 { value: 'contenido', icon: FileText, label: 'Contenido' },
@@ -281,7 +281,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-2.5 sm:px-4 py-2 sm:py-2.5 gap-1 sm:gap-1.5 text-xs sm:text-sm whitespace-nowrap"
+                  className="min-w-fit rounded-none border-b-2 border-transparent px-3 py-2.5 text-xs whitespace-nowrap data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none sm:gap-1.5 sm:px-4 sm:text-sm"
                 >
                   <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   {tab.label}
@@ -295,8 +295,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1 max-h-[60vh]">
-            <div className="p-4 sm:p-6">
+          <ScrollArea className="min-h-0 flex-1 sm:max-h-[60vh]">
+            <div className="p-3 sm:p-6">
               {/* General Tab */}
               <TabsContent value="general" className="mt-0 space-y-5">
                 {content?.introduccion && (
