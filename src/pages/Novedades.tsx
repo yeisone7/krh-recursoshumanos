@@ -237,10 +237,11 @@ export default function Novedades() {
                       title: n.employees_v2 ? `${n.employees_v2.first_name} ${n.employees_v2.last_name}` : 'N/A',
                       subtitle: format(new Date(n.novelty_date), 'dd MMM yyyy', { locale: es }),
                       badge: (
-                        <Badge variant="outline" className="text-xs max-w-[150px] truncate">
+                        <Badge variant="outline" className="max-w-[150px] truncate border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary shadow-sm">
                           {NOVELTY_TYPE_LABELS[n.novelty_type] || n.novelty_type}
                         </Badge>
                       ),
+                      itemClassName: 'relative overflow-hidden border-primary/20 bg-gradient-to-br from-card via-card to-accent/40 shadow-lg shadow-primary/5 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-primary',
                       fields: [
                         { label: 'Inicio', value: (n as any).start_time ? (n as any).start_time.slice(0, 5) : '—' },
                         { label: 'Horas', value: `${n.hours}h` },
