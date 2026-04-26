@@ -21,6 +21,9 @@ export function MobileBottomNav() {
   const [indicatorX, setIndicatorX] = useState<number | null>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
 
+  const navTextColor = 'hsl(var(--primary-foreground))';
+  const navIconMutedColor = 'hsl(var(--primary-foreground) / 0.9)';
+
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
@@ -119,7 +122,7 @@ export function MobileBottomNav() {
                   <item.icon
                     className="w-5 h-5"
                     strokeWidth={1.8}
-                    style={{ color: 'hsl(var(--primary-foreground) / 0.82)' }}
+                    style={{ color: navIconMutedColor }}
                   />
                 </div>
 
@@ -127,9 +130,9 @@ export function MobileBottomNav() {
                 <span
                   className="text-[10px] leading-tight truncate max-w-full transition-colors duration-200"
                   style={{
-                    color: 'hsl(var(--primary-foreground))',
-                    opacity: active ? 1 : 0.82,
-                    fontWeight: active ? 600 : 500,
+                    color: navTextColor,
+                    opacity: active ? 1 : 0.9,
+                    fontWeight: active ? 700 : 600,
                   }}
                 >
                   {item.label}
