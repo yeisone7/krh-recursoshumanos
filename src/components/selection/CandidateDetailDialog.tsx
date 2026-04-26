@@ -422,7 +422,7 @@ export function CandidateDetailDialog({
                     <User className="w-4 h-4 text-primary" />
                     Información Personal
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Documento</p>
                       <p className="font-medium">{candidate.document_type} {candidate.document_number}</p>
@@ -527,7 +527,7 @@ export function CandidateDetailDialog({
                     <Mail className="w-4 h-4 text-primary" />
                     Contacto y Ubicación
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     {candidate.email && (
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground uppercase tracking-wide">Email</p>
@@ -579,7 +579,7 @@ export function CandidateDetailDialog({
                         <Phone className="w-4 h-4 text-primary" />
                         Contacto de Emergencia
                       </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                         {(candidate as any).emergency_contact_name && (
                           <div className="space-y-1">
                             <p className="text-xs text-muted-foreground uppercase tracking-wide">Nombre</p>
@@ -611,7 +611,7 @@ export function CandidateDetailDialog({
                     <Briefcase className="w-4 h-4 text-primary" />
                     Experiencia Profesional
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     {candidate.education_level && (
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground uppercase tracking-wide">Nivel Educativo</p>
@@ -656,7 +656,7 @@ export function CandidateDetailDialog({
                     <Calendar className="w-4 h-4 text-primary" />
                     Información de Postulación
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Postulación</p>
                       <p className="font-medium">
