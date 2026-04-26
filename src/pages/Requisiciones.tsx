@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 
 import { useRequisitions, PersonnelRequisition } from '@/hooks/useRequisitions';
 import { RequisitionFormDialog, RequisitionDetailDialog, RequisitionApprovalDialog } from '@/components/requisitions';
@@ -149,10 +150,14 @@ export default function Requisiciones() {
 
       {/* Filters & Table */}
       <Card>
-        <div className="p-4 border-b flex gap-3">
-          <div className="relative flex-1">
+        <CollapsibleFilters
+          activeCount={(searchQuery ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0)}
+          className="border-b p-4"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Buscar..." className="pl-9" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            <Input placeholder="Buscar..." className="min-h-11 pl-9 sm:min-h-10" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
           </div>
           <SearchableSelect
             options={statusOptions}
@@ -160,9 +165,10 @@ export default function Requisiciones() {
             onValueChange={setStatusFilter}
             placeholder="Estado"
             searchPlaceholder="Buscar estado..."
-            triggerClassName="w-[180px]"
+            triggerClassName="min-h-11 w-full sm:min-h-10 sm:w-[180px]"
           />
-        </div>
+          </div>
+        </CollapsibleFilters>
 
         {isLoading ? (
           <div className="p-4 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
