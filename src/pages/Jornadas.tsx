@@ -193,19 +193,19 @@ export default function Jornadas() {
               <TabsList className="h-auto w-full sm:w-auto grid grid-cols-4 sm:inline-flex p-1">
                 <TabsTrigger value="calendar" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
                   <Calendar className="w-3.5 h-3.5" />
-                  <span className="hidden xs:inline sm:inline">Calendario</span>
+                  <span className="hidden min-[380px]:inline">Calendario</span>
                 </TabsTrigger>
                 <TabsTrigger value="schedules" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
                   <Briefcase className="w-3.5 h-3.5" />
-                  <span className="hidden xs:inline sm:inline">Horarios</span>
+                  <span className="hidden min-[380px]:inline">Horarios</span>
                 </TabsTrigger>
                 <TabsTrigger value="shifts" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
                   <Clock className="w-3.5 h-3.5" />
-                  <span className="hidden xs:inline sm:inline">Turnos</span>
+                  <span className="hidden min-[380px]:inline">Turnos</span>
                 </TabsTrigger>
                 <TabsTrigger value="cycles" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span className="hidden xs:inline sm:inline">Ciclos</span>
+                  <span className="hidden min-[380px]:inline">Ciclos</span>
                 </TabsTrigger>
               </TabsList>
 
