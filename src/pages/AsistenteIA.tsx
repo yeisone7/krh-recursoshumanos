@@ -75,6 +75,7 @@ export default function AsistenteIA() {
   const [mode, setMode] = useState<ChatMode>('app_help');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [input, setInput] = useState('');
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   const conversationsQuery = useAiChatConversations(mode);
   const messagesQuery = useAiChatMessages(selectedConversationId);
@@ -106,6 +107,27 @@ export default function AsistenteIA() {
       forceNextScrollRef.current = false;
     }
   }, [messages.length, sendMessage.isPending, selectedConversationId, isMobile]);
+
+  useEffect(() => {
+    if (!isMobile || !window.visualViewport) {
+      setKeyboardOffset(0);
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    const updateKeyboardOffset = () => {
+      const offset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      setKeyboardOffset(offset > 80 ? offset : 0);
+    };
+
+    updateKeyboardOffset();
+    viewport.addEventListener('resize', updateKeyboardOffset);
+    viewport.addEventListener('scroll', updateKeyboardOffset);
+    return () => {
+      viewport.removeEventListener('resize', updateKeyboardOffset);
+      viewport.removeEventListener('scroll', updateKeyboardOffset);
+    };
+  }, [isMobile]);
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === selectedConversationId) || null,
