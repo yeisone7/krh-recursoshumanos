@@ -274,11 +274,11 @@ export default function Seleccion() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-success/5 to-success/10 border-success/20 border-l-4 border-l-success">
+        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 border-l-4 border-l-primary">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <UserPlus className="w-5 h-5 text-success" />
+              <div className="p-2 rounded-lg bg-primary/10">
+                <UserPlus className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.hiredCandidates}</p>
