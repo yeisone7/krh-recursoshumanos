@@ -310,17 +310,17 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <div className="px-4 pt-2 border-b flex-shrink-0 sm:px-6">
               <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1 sm:inline-flex sm:h-10 sm:w-auto sm:gap-0">
-                <TabsTrigger value="info" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-                  <FileText className="w-4 h-4" />
+                <TabsTrigger value="info" className="h-10 min-w-0 flex-col gap-0.5 px-1 text-[11px] leading-none sm:h-9 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+                  <FileText className="h-4 w-4 shrink-0" />
                   <span className="truncate">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="candidates" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-                  <Users className="w-4 h-4" />
-                  <span className="truncate">Candidatos ({candidates.length})</span>
+                <TabsTrigger value="candidates" className="h-10 min-w-0 flex-col gap-0.5 px-1 text-[11px] leading-none sm:h-9 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+                  <Users className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Candidatos</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-                  <Paperclip className="w-4 h-4" />
-                  <span className="truncate">Documentos ({documents.length})</span>
+                <TabsTrigger value="documents" className="h-10 min-w-0 flex-col gap-0.5 px-1 text-[11px] leading-none sm:h-9 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+                  <Paperclip className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Documentos</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -546,20 +546,22 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     <Button
                       size="sm"
                       variant="outline"
+                      className="min-w-0 px-2 text-xs sm:px-3 sm:text-sm"
                       onClick={() => setShowGenerateLink(true)}
                       disabled={vacancy?.status !== 'in_process'}
                     >
-                      <Link2 className="w-4 h-4 mr-2" />
-                      Generar Enlace
+                      <Link2 className="h-4 w-4 shrink-0 sm:mr-2" />
+                      <span className="truncate">Generar Enlace</span>
                     </Button>
                     <Button
                       size="sm"
+                      className="min-w-0 px-2 text-xs sm:px-3 sm:text-sm"
                       onClick={() => setShowCandidateForm(true)}
                       disabled={vacancy?.status !== 'in_process'}
                       title={vacancy?.status !== 'in_process' ? 'Solo se pueden agregar candidatos cuando la vacante está En Proceso' : undefined}
                     >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Agregar Candidato
+                      <UserPlus className="h-4 w-4 shrink-0 sm:mr-2" />
+                      <span className="truncate">Agregar</span>
                     </Button>
                   </div>
                 </div>
@@ -583,7 +585,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     </div>
                   ) : candidateViewMode === 'kanban' ? (
                     <div
-                      className="overflow-x-auto overflow-y-hidden pb-4 -mx-6 px-6"
+                      className="-mx-4 overflow-x-auto overflow-y-hidden px-4 pb-4 sm:-mx-6 sm:px-6"
                       onWheel={(e) => {
                         // Permite desplazamiento horizontal con rueda/trackpad
                         if (e.deltaY && !e.shiftKey) {
@@ -621,7 +623,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                 <p className="font-medium">
                                   {candidate.first_name} {candidate.last_name}
                                 </p>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                                   <span>{candidate.document_number}</span>
                                   {candidate.mobile && (
                                     <>
@@ -633,7 +635,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               </div>
                             </div>
 
-                            <div className="flex flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
+                            <div className="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-nowrap sm:justify-end">
                               <Badge className={cn('text-xs', statusStyle.bg, statusStyle.text)}>
                                 {candidateStatusLabels[candidateStatus]}
                               </Badge>
@@ -654,7 +656,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               )}
 
                               {candidateStatus !== 'hired' && candidateStatus !== 'withdrawn' && candidateStatus !== 'not_selected' && (
-                                <div className="flex gap-1">
+                                  <div className="flex justify-end gap-1">
                                   {candidateStatus !== 'selected' && (
                                     <Button
                                       size="sm"
@@ -700,8 +702,8 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsContent>
 
               {/* Documents Tab */}
-              <TabsContent value="documents" className="mt-0 p-6 space-y-4">
-                <div className="flex items-center justify-between">
+              <TabsContent value="documents" className="mt-0 space-y-4 p-4 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-semibold text-foreground flex items-center gap-2">
                     <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
                       <Paperclip className="w-4 h-4 text-primary" />
@@ -719,6 +721,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     />
                     <Button
                       size="sm"
+                      className="w-full sm:w-auto"
                       onClick={() => document.getElementById(`vacancy-doc-upload-${vacancyId}`)?.click()}
                       disabled={uploadingDoc}
                     >
@@ -746,7 +749,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     {documents.map((doc) => (
                       <div
                         key={doc.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                        className="flex flex-col gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center"
                       >
                         <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary shrink-0">
                           <FileText className="h-5 w-5" />
