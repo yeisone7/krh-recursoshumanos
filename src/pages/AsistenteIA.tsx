@@ -66,6 +66,7 @@ const moduleSuggestions: Record<string, { module: string; moduleLabel: string; s
 function MessageBubble({ message }: { message: AiChatMessage }) {
   const isUser = message.role === 'user';
   const assistantSections = !isUser ? splitAssistantMessage(message.content) : null;
+  const hasAssistantSections = !!(assistantSections?.title || assistantSections?.confirmation);
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
@@ -81,6 +82,12 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
           <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
         ) : (
           <div className="space-y-3 text-card-foreground">
+            {!hasAssistantSections ? (
+              <div className="prose prose-sm max-w-none text-card-foreground prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:pl-5 prose-ol:my-2 prose-ol:pl-5 prose-li:my-1.5 prose-li:leading-relaxed prose-strong:text-card-foreground">
+                <ReactMarkdown>{message.content.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim()}</ReactMarkdown>
+              </div>
+            ) : (
+              <>
             {assistantSections?.title && (
               <h3 className="text-base font-semibold leading-snug text-card-foreground sm:text-[1.05rem]">
                 {assistantSections.title}
@@ -95,6 +102,8 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
               <div className="border-t border-border pt-3 text-sm font-medium leading-relaxed text-card-foreground">
                 {assistantSections.confirmation}
               </div>
+            )}
+              </>
             )}
           </div>
         )}
