@@ -22,6 +22,7 @@ interface PageContext {
 interface UserContext {
   displayName?: string;
   isNewConversation?: boolean;
+  isStepFlow?: boolean;
 }
 
 interface AIConfig {
@@ -302,7 +303,8 @@ serve(async (req) => {
       ...((previousMessages || []) as Array<{ role: ChatRole; content: string }>).map((item) => ({ role: item.role, content: item.content })),
       { role: "user", content: message },
     ];
-    const systemPrompt = buildSystemPrompt(mode, pageContext, { displayName: userDisplayName, isNewConversation: (previousMessages || []).length === 0 });
+    const isStepFlow = conversationMessages.some((item) => item.role === "assistant" && /paso\s+\d+(?:\s+de\s+\d+)?/i.test(item.content));
+    const systemPrompt = buildSystemPrompt(mode, pageContext, { displayName: userDisplayName, isNewConversation: (previousMessages || []).length === 0, isStepFlow });
 
     let provider = "lovable_ai";
     let answer = "";
