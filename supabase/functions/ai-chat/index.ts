@@ -158,6 +158,45 @@ async function callOpenAIDirect(apiKey: string, systemPrompt: string, messages: 
   return data.choices?.[0]?.message?.content?.trim() || "No pude generar una respuesta.";
 }
 
+function validateStepFlowResponse(content: string) {
+  const normalized = content.toLowerCase();
+  const futureSummaryPhrases = [
+    "vista general de los pasos",
+    "resumen de los pasos",
+    "pasos que seguiremos",
+    "estos son los pasos",
+    "los pasos son",
+    "seguiremos estos pasos",
+  ];
+  const stepHeadings = [...content.matchAll(/(?:^|\n)\s*#{0,3}\s*paso\s+\d+(?:\s+de\s+\d+)?/gi)];
+
+  return {
+    needsCorrection: futureSummaryPhrases.some((phrase) => normalized.includes(phrase)) || stepHeadings.length > 1,
+  };
+}
+
+async function correctStepFlowResponse(provider: string, aiConfig: AIConfig, systemPrompt: string, messages: ChatMessage[], draftAnswer: string) {
+  const correctionPrompt = `${systemPrompt}
+
+Regla de autocorrección obligatoria: la respuesta anterior incluyó un resumen, una vista general o pasos futuros. Reescríbela en español retomando ÚNICAMENTE el paso actual. Mantén este orden: saludo breve solo si corresponde, título "### Paso X de N", instrucciones concretas de ese paso y una sola pregunta final de confirmación. No incluyas listas de pasos futuros, resumen general ni pasos adicionales.`;
+  const correctionMessages: ChatMessage[] = [
+    ...messages,
+    { role: "assistant", content: draftAnswer },
+    { role: "user", content: "Corrige la respuesta anterior y entrega solo el paso actual." },
+  ];
+
+  if (provider === "gemini" && aiConfig.gemini_api_key) {
+    return callGeminiDirect(aiConfig.gemini_api_key, correctionPrompt, correctionMessages);
+  }
+  if (provider === "openai" && aiConfig.openai_api_key) {
+    return callOpenAIDirect(aiConfig.openai_api_key, correctionPrompt, correctionMessages);
+  }
+
+  const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!lovableApiKey) throw new Error("LOVABLE_API_KEY is not configured");
+  return callGateway(lovableApiKey, correctionPrompt, correctionMessages);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -272,6 +311,10 @@ serve(async (req) => {
       const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
       if (!lovableApiKey) throw new Error("LOVABLE_API_KEY is not configured");
       answer = await callGateway(lovableApiKey, systemPrompt, conversationMessages);
+    }
+
+    if (validateStepFlowResponse(answer).needsCorrection) {
+      answer = await correctStepFlowResponse(provider, aiConfig, systemPrompt, conversationMessages, answer);
     }
 
     const { data: assistantMessage, error: assistantError } = await adminClient
