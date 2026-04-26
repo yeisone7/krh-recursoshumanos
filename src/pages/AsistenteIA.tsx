@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
 import { Bot, Clock, MessageSquarePlus, Send, Sparkles, Trash2 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,14 @@ const starterQuestions = [
 
 const CONFIRM_STEP_MESSAGE = 'Confirmo que completé este paso. Continúa con el siguiente.';
 
+const moduleSuggestions: Record<string, { module: string; moduleLabel: string; suggestions: string[] }> = {
+  '/empleados': { module: 'empleados', moduleLabel: 'Empleados', suggestions: ['Registrar un empleado', 'Abrir hoja de vida', 'Revisar datos laborales'] },
+  '/contratos': { module: 'contratos', moduleLabel: 'Contratos', suggestions: ['Crear contrato', 'Revisar vencimientos', 'Generar documento'] },
+  '/dotacion': { module: 'dotacion', moduleLabel: 'Dotación', suggestions: ['Entregar dotación', 'Ver vencimientos', 'Configurar tipos'] },
+  '/examenes': { module: 'examenes', moduleLabel: 'Exámenes', suggestions: ['Registrar examen', 'Revisar vencimientos', 'Consultar profesiograma'] },
+  '/alertas': { module: 'alertas', moduleLabel: 'Alertas', suggestions: ['Revisar alertas críticas', 'Gestionar notificaciones', 'Configurar destinatarios'] },
+};
+
 function MessageBubble({ message }: { message: AiChatMessage }) {
   const isUser = message.role === 'user';
 
@@ -56,6 +65,7 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
 }
 
 export default function AsistenteIA() {
+  const location = useLocation();
   const [mode, setMode] = useState<ChatMode>('app_help');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [input, setInput] = useState('');
@@ -69,6 +79,13 @@ export default function AsistenteIA() {
   const messages = useMemo(() => messagesQuery.data || [], [messagesQuery.data]);
   const lastMessage = messages[messages.length - 1];
   const canConfirmStep = lastMessage?.role === 'assistant' && /paso\s+\d+/i.test(lastMessage.content);
+  const pageContext = useMemo(() => {
+    const savedPathname = sessionStorage.getItem('krh_last_module_path') || '';
+    const pathname = location.pathname === '/asistente-ia' ? savedPathname : location.pathname;
+    const match = Object.entries(moduleSuggestions).find(([path]) => pathname.startsWith(path));
+    if (!match) return null;
+    return { ...match[1], pathname };
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!selectedConversationId && conversations.length > 0) {
@@ -96,6 +113,7 @@ export default function AsistenteIA() {
         message,
         conversationId: selectedConversationId,
         mode,
+        pageContext,
       });
       setSelectedConversationId(result.conversationId);
     } catch (error) {
