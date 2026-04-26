@@ -28,16 +28,14 @@ export interface AiChatMessage {
   created_at: string;
 }
 
-const db = supabase as any;
-
 export function useAiChatConversations(mode: ChatMode = 'app_help') {
   const { currentCompanyId, user } = useAuth();
 
   return useQuery({
     queryKey: ['ai-chat-conversations', currentCompanyId, user?.id, mode],
     queryFn: async () => {
-      const { data, error } = await db
-        .from('ai_chat_conversations')
+      const { data, error } = await supabase
+        .from('ai_chat_conversations' as never)
         .select('*')
         .eq('company_id', currentCompanyId)
         .eq('user_id', user?.id)
@@ -57,8 +55,8 @@ export function useAiChatMessages(conversationId: string | null) {
   return useQuery({
     queryKey: ['ai-chat-messages', conversationId],
     queryFn: async () => {
-      const { data, error } = await db
-        .from('ai_chat_messages')
+      const { data, error } = await supabase
+        .from('ai_chat_messages' as never)
         .select('*')
         .eq('conversation_id', conversationId)
         .eq('company_id', currentCompanyId)
@@ -111,8 +109,8 @@ export function useDeleteAiChatConversation() {
 
   return useMutation({
     mutationFn: async (conversationId: string) => {
-      const { error } = await db
-        .from('ai_chat_conversations')
+      const { error } = await supabase
+        .from('ai_chat_conversations' as never)
         .delete()
         .eq('id', conversationId);
 
