@@ -147,10 +147,10 @@ export function RequisitionDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl overflow-y-auto p-4 sm:p-6 [&_button]:min-h-11 sm:[&_button]:min-h-10 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl">
+          <div className="flex flex-col gap-2 pr-8 sm:flex-row sm:items-center sm:justify-between sm:pr-0">
+            <DialogTitle className="text-lg sm:text-xl">
               Detalle de Requisición
             </DialogTitle>
             {statusConfig && (
@@ -171,16 +171,16 @@ export function RequisitionDetailDialog({
           </div>
         ) : requisition ? (
           <Tabs defaultValue="timeline" className="w-full">
-            <TabsList className="w-full justify-start">
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
-              <TabsTrigger value="details">Detalles</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="timeline" className="min-w-0">Timeline</TabsTrigger>
+              <TabsTrigger value="details" className="min-w-0">Detalles</TabsTrigger>
             </TabsList>
 
             <TabsContent value="timeline" className="mt-4 space-y-4">
               {/* Autoriza field */}
               <Card className="border-primary/20">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0" />
                     <div className="flex-1">
                       <p className="text-sm font-medium mb-1">Autoriza</p>
@@ -189,7 +189,7 @@ export function RequisitionDetailDialog({
                           value={requisition.autoriza || ''}
                           onValueChange={handleAutorizaChange}
                         >
-                          <SelectTrigger className="w-full max-w-xs">
+                          <SelectTrigger className="w-full sm:max-w-xs">
                             <SelectValue placeholder="Seleccionar quién autoriza..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -211,7 +211,7 @@ export function RequisitionDetailDialog({
               {requisition && canEdit && (
                 <Card className="border-primary/20">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <UserCheck className="h-5 w-5 text-primary flex-shrink-0" />
                       <div className="flex-1 space-y-1">
                         <Label className="text-sm font-medium">Líder del Proceso <span className="text-destructive">*</span></Label>
@@ -235,7 +235,7 @@ export function RequisitionDetailDialog({
               {requisition && !canEdit && requisition.lider_proceso && (
                 <Card className="border-primary/20">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <UserCheck className="h-5 w-5 text-primary flex-shrink-0" />
                       <div className="flex-1">
                         <p className="text-sm font-medium mb-1">Líder del Proceso</p>
@@ -263,7 +263,7 @@ export function RequisitionDetailDialog({
                     Información General
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
+                <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <p className="text-sm text-muted-foreground">Cargo Solicitado</p>
                     <p className="font-medium">{requisition.cargo_solicitado}</p>
@@ -365,7 +365,7 @@ export function RequisitionDetailDialog({
                     Solicitante
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
+                <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <p className="text-sm text-muted-foreground">Nombre</p>
                     <p className="font-medium">{requisition.solicitante_nombre}</p>
@@ -388,7 +388,7 @@ export function RequisitionDetailDialog({
 
         {/* Actions */}
         {requisition && (
-          <div className="flex justify-between items-center gap-3 pt-4 border-t">
+          <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
             <Button 
               variant="outline" 
               onClick={handleExportPDF}
@@ -402,7 +402,7 @@ export function RequisitionDetailDialog({
               Exportar PDF
             </Button>
             
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               {canEdit && onEdit && (
                 <Button variant="outline" onClick={onEdit}>
                   <Edit className="w-4 h-4 mr-2" />
