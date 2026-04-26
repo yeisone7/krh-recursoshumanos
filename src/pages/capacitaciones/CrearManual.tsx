@@ -221,7 +221,11 @@ export default function CrearManual() {
                 ))}
                 <Button variant="outline" size="sm" className="mt-2" onClick={() => setContent({ ...content, objetivos: [...(content.objetivos || []), ''] })}>+ Agregar</Button>
               </div>
-              <div><Label>Contenido Principal (Markdown)</Label><Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} className="font-mono text-sm" /></div>
+              <div>
+                <Label>Secciones</Label>
+                <Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} className="font-mono text-sm" />
+                <p className="text-xs text-muted-foreground mt-1">Usa títulos Markdown como ## Sección para organizar el contenido.</p>
+              </div>
               {content.contenido && <div><Label>Vista previa</Label><div className="border rounded-lg p-4 mt-1"><MarkdownContent content={content.contenido} /></div></div>}
               <div>
                 <Label>Puntos Clave</Label>
@@ -237,9 +241,12 @@ export default function CrearManual() {
                   <div className="mt-3"><TrainingMediaGallery media={media as any} onDelete={async (id) => { await deleteMedia.mutateAsync({ id, courseId: editId }); }} /></div>
                 </div>
               )}
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
                 <Button variant="outline" onClick={() => setStep(0)}><ArrowLeft className="h-4 w-4 mr-2" /> Anterior</Button>
-                <Button onClick={() => setStep(2)}>Siguiente <ArrowRight className="h-4 w-4 ml-2" /></Button>
+                <div className="flex flex-col-reverse sm:flex-row gap-2">
+                  {editId && <Button variant="outline" onClick={handleSaveChanges} disabled={!title || isSaving}>{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
+                  <Button onClick={() => setStep(2)}>Siguiente <ArrowRight className="h-4 w-4 ml-2" /></Button>
+                </div>
               </div>
             </CardContent>
           </Card>
