@@ -135,7 +135,7 @@ export default function AsistenteIA() {
     const pathname = location.pathname === '/asistente-ia' ? savedPathname : location.pathname;
     const match = Object.entries(moduleSuggestions).find(([path]) => pathname.startsWith(path));
     if (!match) return null;
-    return { ...match[1], pathname };
+    return { ...match[1], pathname, isActiveModule: location.pathname !== '/asistente-ia' };
   }, [location.pathname]);
 
   useEffect(() => {
