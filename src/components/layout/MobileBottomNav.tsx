@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Clock, Bot } from 'lucide-react';
+import { BookOpen, LayoutDashboard, Users, FileText, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 
@@ -8,7 +8,7 @@ const navItems = [
   { label: 'Contratos', path: '/contratos', icon: FileText },
   { label: 'Empleados', path: '/empleados', icon: Users },
   { label: 'Jornadas', path: '/jornadas', icon: Clock },
-  { label: 'Asistente', path: '/asistente-ia', icon: Bot },
+  { label: 'Capacitación', path: '/capacitaciones', icon: BookOpen },
 ];
 
 const STORAGE_KEY = 'mobile-nav-prev-index';
