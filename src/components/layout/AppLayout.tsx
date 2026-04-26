@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect, useRef } from 'react';
+import { ReactNode, PointerEvent, useState, useEffect, useRef } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -24,9 +24,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { hasPermission, permissionsLoaded } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [aiPanelHeight, setAiPanelHeight] = useState(0);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [aiButtonLifted, setAiButtonLifted] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
+  const dragStartRef = useRef<{ y: number; height: number } | null>(null);
   const isMobile = useIsMobile();
   const isAiAssistant = location.pathname === '/asistente-ia';
   const showAiButton = permissionsLoaded && hasPermission('asistente_ia');
@@ -59,6 +61,19 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!aiPanelOpen) return;
+
+    const updatePanelHeight = () => {
+      const viewportHeight = window.innerHeight;
+      setAiPanelHeight(isMobile ? Math.round(viewportHeight * 0.84) : Math.min(680, viewportHeight - 48));
+    };
+
+    updatePanelHeight();
+    window.addEventListener('resize', updatePanelHeight);
+    return () => window.removeEventListener('resize', updatePanelHeight);
+  }, [aiPanelOpen, isMobile]);
+
+  useEffect(() => {
     if (!isMobile) {
       setAiButtonLifted(false);
       return;
@@ -72,6 +87,31 @@ export function AppLayout({ children }: AppLayoutProps) {
     main.addEventListener('scroll', handleScroll, { passive: true });
     return () => main.removeEventListener('scroll', handleScroll);
   }, [isMobile, location.pathname]);
+
+  const handleAiPanelDragStart = (event: PointerEvent<HTMLDivElement>) => {
+    const currentHeight = aiPanelHeight || Math.round(window.innerHeight * (isMobile ? 0.84 : 0.78));
+    dragStartRef.current = { y: event.clientY, height: currentHeight };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleAiPanelDrag = (event: PointerEvent<HTMLDivElement>) => {
+    const start = dragStartRef.current;
+    if (!start) return;
+
+    const deltaY = event.clientY - start.y;
+    const minHeight = isMobile ? Math.max(280, window.innerHeight * 0.38) : 420;
+    const maxHeight = isMobile ? window.innerHeight * 0.9 : window.innerHeight - 48;
+    setAiPanelHeight(Math.round(Math.min(maxHeight, Math.max(minHeight, start.height - deltaY))));
+  };
+
+  const handleAiPanelDragEnd = (event: PointerEvent<HTMLDivElement>) => {
+    const start = dragStartRef.current;
+    dragStartRef.current = null;
+    if (!start) return;
+
+    const draggedDown = event.clientY - start.y;
+    if (draggedDown > (isMobile ? 130 : 180)) setAiPanelOpen(false);
+  };
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -138,16 +178,36 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {isMobile && <MobileBottomNav />}
 
-      {showAiButton && !isAiAssistant && (
-        <Sheet open={aiPanelOpen} onOpenChange={setAiPanelOpen}>
-          <SheetContent
-            side={isMobile ? 'bottom' : 'right'}
-            className={`${isMobile ? 'h-[84dvh] rounded-t-xl' : 'h-screen w-[440px] max-w-[calc(100vw-2rem)] sm:max-w-[440px]'} border-border p-0 [&>button]:hidden`}
+      <AnimatePresence>
+        {showAiButton && !isAiAssistant && aiPanelOpen && (
+          <motion.div
+            initial={isMobile ? { y: 80, opacity: 0 } : { x: 40, opacity: 0 }}
+            animate={{ x: 0, y: 0, opacity: 1 }}
+            exit={isMobile ? { y: 80, opacity: 0 } : { x: 40, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className={isMobile
+              ? 'fixed inset-x-2 bottom-0 z-[60] overflow-hidden rounded-t-xl border border-border bg-card shadow-2xl'
+              : 'fixed bottom-6 right-6 z-[60] w-[440px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl'}
+            style={{ height: aiPanelHeight || undefined }}
           >
-            <AiChatPanel compact onClose={() => setAiPanelOpen(false)} />
-          </SheetContent>
-        </Sheet>
-      )}
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Arrastrar para ajustar o cerrar el asistente"
+              onPointerDown={handleAiPanelDragStart}
+              onPointerMove={handleAiPanelDrag}
+              onPointerUp={handleAiPanelDragEnd}
+              onPointerCancel={handleAiPanelDragEnd}
+              className="flex h-7 touch-none cursor-ns-resize items-center justify-center border-b border-border bg-card"
+            >
+              <span className="h-1.5 w-16 rounded-full bg-muted-foreground/30" />
+            </div>
+            <div className="h-[calc(100%-1.75rem)] min-h-0">
+              <AiChatPanel compact onClose={() => setAiPanelOpen(false)} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {showAiButton && (
         <Button
