@@ -16,6 +16,7 @@ interface PageContext {
   module?: string;
   moduleLabel?: string;
   pathname?: string;
+  isActiveModule?: boolean;
 }
 
 interface UserContext {
@@ -63,8 +64,11 @@ function buildSystemPrompt(mode: ChatMode, pageContext?: PageContext | null, use
   const personalizationContext = userName
     ? `\nEl usuario se llama ${userName}. ${userContext?.isNewConversation ? "Salúdalo brevemente por su nombre al inicio." : "No repitas saludos si la conversación ya está en curso."}`
     : `\n${userContext?.isNewConversation ? "Saluda de forma breve y amable al inicio." : "No repitas saludos si la conversación ya está en curso."}`;
-  const moduleContext = pageContext?.moduleLabel
+  const allowRecommendedClicks = pageContext?.isActiveModule && !userContext?.isStepFlow;
+  const moduleContext = pageContext?.moduleLabel && allowRecommendedClicks
     ? `\nContexto actual del usuario: viene del módulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. Cuando corresponda, incluye una sección breve llamada "Próximos clics recomendados" con 2 a 4 acciones concretas que el usuario podría hacer después en ese módulo.`
+    : pageContext?.moduleLabel
+      ? `\nContexto actual del usuario: viene del módulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. No incluyas la sección "Próximos clics recomendados" mientras estés guiando un flujo paso a paso.`
     : "";
 
   return `Eres el asistente de ayuda interna de KRH, una aplicación de gestión de talento humano.
@@ -225,6 +229,7 @@ serve(async (req) => {
       module: typeof rawPageContext.module === "string" ? rawPageContext.module.slice(0, 40) : undefined,
       moduleLabel: typeof rawPageContext.moduleLabel === "string" ? rawPageContext.moduleLabel.slice(0, 80) : undefined,
       pathname: typeof rawPageContext.pathname === "string" ? rawPageContext.pathname.slice(0, 120) : undefined,
+      isActiveModule: rawPageContext.isActiveModule === true,
     } : null;
 
     if (!companyId) return jsonResponse({ error: "Empresa requerida" }, 400);
