@@ -183,7 +183,7 @@ export default function Novedades() {
             <CardTitle className="text-sm font-medium">Recargos Configurados</CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-            <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:gap-3 sm:overflow-visible">
+            <div className="scrollbar-header-auto flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:gap-3 sm:overflow-visible">
               {surcharges.map(s => (
                 <Badge key={s.label} variant="outline" className="text-xs shrink-0">
                   {s.label}: {s.pct}%
