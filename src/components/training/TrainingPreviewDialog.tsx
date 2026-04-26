@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,7 @@ interface TrainingPreviewDialogProps {
   onOpenChange: (open: boolean) => void;
   course: TrainingCourse | null;
   onPublish?: (courseId: string) => void;
+  initialTab?: string;
 }
 
 const statusColors: Record<string, string> = {
@@ -120,7 +121,7 @@ function MediaReadOnlyCard({ icon, title, description, items }: {
   );
 }
 
-export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }: TrainingPreviewDialogProps) {
+export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, initialTab = 'general' }: TrainingPreviewDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
   const [generatingMedia, setGeneratingMedia] = useState<Record<string, boolean>>({});
   const [audioDuration, setAudioDuration] = useState('medium');
@@ -130,10 +131,13 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
 
+  useEffect(() => {
+    if (open) setActiveTab(initialTab);
+  }, [open, initialTab]);
+
   if (!course) return null;
 
   const content = course.content as TrainingCourseContent | null;
-  const isDraft = course.status === 'borrador';
 
   const handleGenerateMedia = async (type: string) => {
     if (!course.id || !content) return;
@@ -488,7 +492,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                     <AlertCircle className="h-6 w-6" />
                     <span>No se pudo cargar el contenido multimedia.</span>
                   </div>
-                ) : isDraft ? (
+                ) : content ? (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <MediaTypeCard
