@@ -313,6 +313,10 @@ serve(async (req) => {
       answer = await callGateway(lovableApiKey, systemPrompt, conversationMessages);
     }
 
+    if (validateStepFlowResponse(answer).needsCorrection) {
+      answer = await correctStepFlowResponse(provider, aiConfig, systemPrompt, conversationMessages, answer);
+    }
+
     const { data: assistantMessage, error: assistantError } = await adminClient
       .from("ai_chat_messages")
       .insert({
