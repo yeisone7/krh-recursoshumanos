@@ -75,6 +75,7 @@ export default function AsistenteIA() {
   const [mode, setMode] = useState<ChatMode>('app_help');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [input, setInput] = useState('');
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   const conversationsQuery = useAiChatConversations(mode);
   const messagesQuery = useAiChatMessages(selectedConversationId);
@@ -106,6 +107,27 @@ export default function AsistenteIA() {
       forceNextScrollRef.current = false;
     }
   }, [messages.length, sendMessage.isPending, selectedConversationId, isMobile]);
+
+  useEffect(() => {
+    if (!isMobile || !window.visualViewport) {
+      setKeyboardOffset(0);
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    const updateKeyboardOffset = () => {
+      const offset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      setKeyboardOffset(offset > 80 ? offset : 0);
+    };
+
+    updateKeyboardOffset();
+    viewport.addEventListener('resize', updateKeyboardOffset);
+    viewport.addEventListener('scroll', updateKeyboardOffset);
+    return () => {
+      viewport.removeEventListener('resize', updateKeyboardOffset);
+      viewport.removeEventListener('scroll', updateKeyboardOffset);
+    };
+  }, [isMobile]);
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === selectedConversationId) || null,
@@ -306,7 +328,10 @@ export default function AsistenteIA() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="border-t border-border p-3 sm:p-4">
+                <div
+                  className="border-t border-border bg-card p-3 transition-[padding-bottom] duration-200 sm:p-4"
+                  style={isMobile && keyboardOffset ? { paddingBottom: `calc(${keyboardOffset}px + 0.75rem)` } : undefined}
+                >
                   {canConfirmStep && !sendMessage.isPending && (
                     <div className="mb-3 flex justify-end">
                       <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => handleSend(CONFIRM_STEP_MESSAGE)}>
@@ -319,7 +344,7 @@ export default function AsistenteIA() {
                       value={input}
                       onChange={(event) => setInput(event.target.value)}
                       onKeyDown={(event) => {
-                        if (event.key === 'Enter' && !event.shiftKey) {
+                        if (event.key === 'Enter' && (isMobile || !event.shiftKey)) {
                           event.preventDefault();
                           handleSend();
                         }
