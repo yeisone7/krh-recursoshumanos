@@ -100,7 +100,9 @@ export default function AsistenteIA() {
   const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
   const messages = useMemo(() => messagesQuery.data || [], [messagesQuery.data]);
   const lastMessage = messages[messages.length - 1];
-  const canConfirmStep = lastMessage?.role === 'assistant' && /paso\s+\d+/i.test(lastMessage.content);
+  const currentStepMatch = lastMessage?.role === 'assistant' ? lastMessage.content.match(/paso\s+(\d+)(?:\s+de\s+(\d+))?/i) : null;
+  const currentStepLabel = currentStepMatch ? `Paso ${currentStepMatch[1]}${currentStepMatch[2] ? ` de ${currentStepMatch[2]}` : ''}` : null;
+  const canConfirmStep = !!currentStepLabel;
   const assistantStatus = messagesQuery.isLoading ? 'Procesando' : sendMessage.isPending ? 'Escribiendo' : 'Listo';
   const assistantStatusIcon = sendMessage.isPending || messagesQuery.isLoading ? Loader2 : CheckCircle2;
   const AssistantStatusIcon = assistantStatusIcon;
@@ -376,7 +378,7 @@ export default function AsistenteIA() {
                   {canConfirmStep && !sendMessage.isPending && (
                     <div className="mb-3 flex justify-end">
                       <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => handleSend(CONFIRM_STEP_MESSAGE)}>
-                        Confirmar paso y continuar
+                        {currentStepLabel} · continuar
                       </Button>
                     </div>
                   )}
