@@ -702,8 +702,8 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsContent>
 
               {/* Documents Tab */}
-              <TabsContent value="documents" className="mt-0 p-6 space-y-4">
-                <div className="flex items-center justify-between">
+              <TabsContent value="documents" className="mt-0 space-y-4 p-4 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-semibold text-foreground flex items-center gap-2">
                     <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
                       <Paperclip className="w-4 h-4 text-primary" />
@@ -721,6 +721,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     />
                     <Button
                       size="sm"
+                      className="w-full sm:w-auto"
                       onClick={() => document.getElementById(`vacancy-doc-upload-${vacancyId}`)?.click()}
                       disabled={uploadingDoc}
                     >
@@ -748,7 +749,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     {documents.map((doc) => (
                       <div
                         key={doc.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                        className="flex flex-col gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center"
                       >
                         <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary shrink-0">
                           <FileText className="h-5 w-5" />
