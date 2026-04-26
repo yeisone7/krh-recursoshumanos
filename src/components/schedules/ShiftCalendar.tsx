@@ -646,7 +646,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                           className="flex border-t bg-slate-50 cursor-pointer hover:bg-slate-100"
                           onClick={() => toggleArea(areaKey)}
                         >
-                          <div className="w-32 sm:w-56 px-2 sm:px-3 py-1.5 pl-4 sm:pl-6 border-r font-medium flex items-center gap-1.5 shrink-0 text-xs sticky left-0 bg-slate-50 z-10">
+                          <div className="w-36 sm:w-56 px-2 sm:px-3 py-2 sm:py-1.5 pl-4 sm:pl-6 border-r font-medium flex items-center gap-1.5 shrink-0 text-xs sticky left-0 bg-slate-50 z-10">
                             {isAreaExpanded ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronUp className="w-2.5 h-2.5" />}
                             <span className="truncate">{area.areaName}</span>
                             <Badge variant="outline" className="ml-auto text-[10px] h-4 px-1">
@@ -654,7 +654,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                             </Badge>
                           </div>
                           {daysInPeriod.map((day) => (
-                            <div key={format(day, 'yyyy-MM-dd')} className="w-8 sm:w-10 border-r shrink-0" />
+                            <div key={format(day, 'yyyy-MM-dd')} className="w-9 sm:w-10 border-r shrink-0" />
                           ))}
                         </div>
 
@@ -666,7 +666,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
                           return (
                           <div key={employee.id} className="flex border-y hover:bg-muted/30 -mt-px">
-                            <div className="w-32 sm:w-56 px-2 sm:px-3 py-1 pl-5 sm:pl-9 border-r shrink-0 flex items-center gap-1.5 sticky left-0 bg-background z-10">
+                            <div className="w-36 sm:w-56 px-2 sm:px-3 py-1.5 sm:py-1 pl-5 sm:pl-9 border-r shrink-0 flex items-center gap-1.5 sticky left-0 bg-background z-10">
                               <span className="truncate text-xs">{getEmployeeFullName(employee)}</span>
                               {isAdminMode ? (
                                 <Briefcase className="w-3 h-3 text-indigo-500 shrink-0" />
