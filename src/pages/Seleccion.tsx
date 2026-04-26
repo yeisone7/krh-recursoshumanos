@@ -304,8 +304,8 @@ export default function Seleccion() {
               </h2>
 
               {/* Filters */}
-              <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto">
-                <div className="relative flex-1 sm:w-64">
+              <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto">
+                <div className="relative col-span-2 flex-1 sm:col-span-1 sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar vacantes..."
@@ -315,7 +315,7 @@ export default function Seleccion() {
                   />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-[150px]">
+                  <SelectTrigger className="min-w-0 w-full sm:w-[150px]">
                     <SelectValue placeholder="Estado" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
@@ -327,7 +327,7 @@ export default function Seleccion() {
                   </SelectContent>
                 </Select>
                 <Select value={centerFilter} onValueChange={setCenterFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectTrigger className="min-w-0 w-full sm:w-[180px]">
                     <SelectValue placeholder="Centro" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
