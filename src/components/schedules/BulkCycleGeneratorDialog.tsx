@@ -178,9 +178,9 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
       onOpenChange(o);
       if (!o) { setPreviewMode(false); setGeneratedAssignments([]); }
     }}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
+        <DialogHeader className="shrink-0">
+          <DialogTitle className="flex items-start sm:items-center gap-2 text-base sm:text-lg">
             <Users className="w-5 h-5 text-primary" />
             Generar Ciclo a Todos los Empleados
           </DialogTitle>
@@ -191,7 +191,7 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
 
         {!previewMode ? (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(generatePreview)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(generatePreview)} className="space-y-4 overflow-y-auto min-h-0 pr-1">
               {/* Summary */}
               <Alert>
                 <Users className="h-4 w-4" />
@@ -209,15 +209,15 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
               {shiftEmployeesWithConfig.length > 0 && (
                 <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
                   {shiftEmployeesWithConfig.map(({ employee, cycle }) => (
-                    <div key={employee.id} className="flex items-center justify-between text-sm py-1 px-2 hover:bg-muted rounded">
-                      <span>{getEmployeeFullName(employee)}</span>
-                      <Badge variant="outline" className="text-xs">{cycle.name}</Badge>
+                    <div key={employee.id} className="flex items-start sm:items-center justify-between gap-2 text-sm py-1 px-2 hover:bg-muted rounded">
+                      <span className="min-w-0 truncate">{getEmployeeFullName(employee)}</span>
+                      <Badge variant="outline" className="text-xs shrink-0">{cycle.name}</Badge>
                     </div>
                   ))}
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="start_date"
@@ -227,7 +227,7 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
-                            <Button variant="outline" className={cn('justify-start text-left font-normal', !field.value && 'text-muted-foreground')}>
+                            <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !field.value && 'text-muted-foreground')}>
                               <CalendarIcon className="mr-2 h-4 w-4" />
                               {field.value ? format(field.value, 'dd/MM/yyyy') : 'Seleccionar'}
                             </Button>
@@ -250,7 +250,7 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
-                            <Button variant="outline" className={cn('justify-start text-left font-normal', !field.value && 'text-muted-foreground')}>
+                            <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !field.value && 'text-muted-foreground')}>
                               <CalendarIcon className="mr-2 h-4 w-4" />
                               {field.value ? format(field.value, 'dd/MM/yyyy') : 'Seleccionar'}
                             </Button>
@@ -275,14 +275,14 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
                 </Alert>
               )}
 
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                <Button type="submit" disabled={shiftEmployeesWithConfig.length === 0}>Vista Previa</Button>
+              <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                <Button type="submit" className="w-full sm:w-auto" disabled={shiftEmployeesWithConfig.length === 0}>Vista Previa</Button>
               </DialogFooter>
             </form>
           </Form>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto min-h-0 pr-1">
             <Alert className="border-green-200 bg-green-50">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
@@ -305,9 +305,9 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
               </Alert>
             )}
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setPreviewMode(false)}>Volver</Button>
-              <Button onClick={handleGenerate} disabled={createBulkAssignments.isPending || generatedAssignments.length === 0}>
+            <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setPreviewMode(false)}>Volver</Button>
+              <Button className="w-full sm:w-auto" onClick={handleGenerate} disabled={createBulkAssignments.isPending || generatedAssignments.length === 0}>
                 {createBulkAssignments.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Confirmar Generación
               </Button>

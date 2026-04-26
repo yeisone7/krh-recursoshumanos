@@ -178,9 +178,9 @@ export function ShiftReportExport({ open, onOpenChange }: ShiftReportExportProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
+        <DialogHeader className="shrink-0">
+          <DialogTitle className="flex items-start sm:items-center gap-2 text-base sm:text-lg">
             <FileSpreadsheet className="w-5 h-5 text-primary" />
             Exportar Planilla de Turnos
           </DialogTitle>
@@ -189,14 +189,14 @@ export function ShiftReportExport({ open, onOpenChange }: ShiftReportExportProps
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto min-h-0 pr-1">
           <div className="space-y-2">
             <Label>Mes</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start text-left">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(selectedMonth, 'MMMM yyyy', { locale: es })}
+                  <span className="truncate">{format(selectedMonth, 'MMMM yyyy', { locale: es })}</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -238,11 +238,11 @@ export function ShiftReportExport({ open, onOpenChange }: ShiftReportExportProps
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-col-reverse sm:flex-row gap-2 pt-2">
+          <Button variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleExport} disabled={isExporting}>
+          <Button className="w-full sm:w-auto" onClick={handleExport} disabled={isExporting}>
             {isExporting ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (

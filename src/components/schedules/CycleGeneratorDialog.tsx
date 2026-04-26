@@ -19,7 +19,6 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Form,
@@ -233,9 +232,9 @@ export function CycleGeneratorDialog({
         setGeneratedAssignments([]);
       }
     }}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
+        <DialogHeader className="shrink-0">
+          <DialogTitle className="flex items-start sm:items-center gap-2 text-base sm:text-lg">
             <Zap className="w-5 h-5 text-primary" />
             Generar Turnos desde Ciclo
           </DialogTitle>
@@ -246,7 +245,7 @@ export function CycleGeneratorDialog({
 
         {!previewMode ? (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(generatePreview)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(generatePreview)} className="space-y-4 overflow-y-auto min-h-0 pr-1">
               <FormField
                 control={form.control}
                 name="shift_cycle_id"
@@ -299,7 +298,7 @@ export function CycleGeneratorDialog({
                   <FormItem>
                     <FormLabel>Empleados ({shiftEmployees.length} con modalidad turnos)</FormLabel>
                     <FormControl>
-                      <ScrollArea className="h-32 border rounded-md p-2">
+                      <div className="h-40 sm:h-32 overflow-y-auto border rounded-md p-2">
                         {shiftEmployees.length === 0 ? (
                           <p className="text-sm text-muted-foreground text-center py-4">
                             No hay empleados con modalidad de turnos configurada
@@ -307,7 +306,7 @@ export function CycleGeneratorDialog({
                         ) : (
                           <div className="space-y-1">
                             {shiftEmployees.map((emp) => (
-                              <label key={emp.id} className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded">
+                              <label key={emp.id} className="flex items-start gap-2 cursor-pointer hover:bg-muted p-2 sm:p-1 rounded">
                                 <input
                                   type="checkbox"
                                   checked={field.value.includes(emp.id)}
@@ -320,12 +319,12 @@ export function CycleGeneratorDialog({
                                   }}
                                   className="rounded"
                                 />
-                                <span className="text-sm">{getEmployeeFullName(emp)}</span>
+                                <span className="text-sm min-w-0 break-words">{getEmployeeFullName(emp)}</span>
                               </label>
                             ))}
                           </div>
                         )}
-                      </ScrollArea>
+                      </div>
                     </FormControl>
                     <FormDescription>
                       <Button 
@@ -353,7 +352,7 @@ export function CycleGeneratorDialog({
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="start_date"
@@ -366,7 +365,7 @@ export function CycleGeneratorDialog({
                             <Button
                               variant="outline"
                               className={cn(
-                                'justify-start text-left font-normal',
+                                'w-full justify-start text-left font-normal',
                                 !field.value && 'text-muted-foreground'
                               )}
                             >
@@ -402,7 +401,7 @@ export function CycleGeneratorDialog({
                             <Button
                               variant="outline"
                               className={cn(
-                                'justify-start text-left font-normal',
+                                'w-full justify-start text-left font-normal',
                                 !field.value && 'text-muted-foreground'
                               )}
                             >
@@ -437,18 +436,18 @@ export function CycleGeneratorDialog({
                 </Alert>
               )}
 
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={activeCycles.length === 0}>
+                <Button type="submit" className="w-full sm:w-auto" disabled={activeCycles.length === 0}>
                   Vista Previa
                 </Button>
               </DialogFooter>
             </form>
           </Form>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto min-h-0 pr-1">
             <Alert className="border-green-200 bg-green-50">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
@@ -471,11 +470,12 @@ export function CycleGeneratorDialog({
               </Alert>
             )}
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setPreviewMode(false)}>
+            <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setPreviewMode(false)}>
                 Volver
               </Button>
               <Button 
+                className="w-full sm:w-auto"
                 onClick={handleGenerate} 
                 disabled={createBulkAssignments.isPending || generatedAssignments.length === 0}
               >
