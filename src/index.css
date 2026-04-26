@@ -211,6 +211,26 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 
+  html.dark,
+  html.dark body,
+  html.dark #root {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  html.dark input,
+  html.dark textarea,
+  html.dark select {
+    color-scheme: dark;
+  }
+
+  html.dark input:-webkit-autofill,
+  html.dark textarea:-webkit-autofill,
+  html.dark select:-webkit-autofill {
+    -webkit-text-fill-color: hsl(var(--foreground));
+    box-shadow: 0 0 0 1000px hsl(var(--background)) inset;
+  }
+
   aside.bg-sidebar svg,
   [data-sidebar] svg {
     display: block;
