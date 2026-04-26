@@ -38,6 +38,23 @@ const mobileQuickReplies = [
 
 const CONFIRM_STEP_MESSAGE = 'Confirmo que completé este paso. Continúa con el siguiente.';
 
+function splitAssistantMessage(content: string) {
+  const normalized = content.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
+  const titleIndex = lines.findIndex((line) => /^#{1,3}\s+/.test(line) || /^paso\s+\d+(\s+de\s+\d+)?/i.test(line));
+  const questionIndex = [...lines].reverse().findIndex((line) => /^¿/.test(line) || /\?\s*$/.test(line));
+  const confirmationIndex = questionIndex >= 0 ? lines.length - 1 - questionIndex : -1;
+  const title = titleIndex >= 0 ? lines[titleIndex].replace(/^#{1,3}\s+/, '').replace(/:\s*$/, '') : null;
+  const confirmation = confirmationIndex >= 0 && confirmationIndex !== titleIndex ? lines[confirmationIndex] : null;
+  const instructions = lines
+    .filter((_, index) => index !== titleIndex && index !== confirmationIndex)
+    .join('\n\n')
+    .replace(/(^|\n)(\d+\.\s)/g, '$1$2')
+    .trim();
+
+  return { title, instructions, confirmation };
+}
+
 const moduleSuggestions: Record<string, { module: string; moduleLabel: string; suggestions: string[] }> = {
   '/empleados': { module: 'empleados', moduleLabel: 'Empleados', suggestions: ['Registrar un empleado', 'Abrir hoja de vida', 'Revisar datos laborales'] },
   '/contratos': { module: 'contratos', moduleLabel: 'Contratos', suggestions: ['Crear contrato', 'Revisar vencimientos', 'Generar documento'] },
@@ -48,6 +65,7 @@ const moduleSuggestions: Record<string, { module: string; moduleLabel: string; s
 
 function MessageBubble({ message }: { message: AiChatMessage }) {
   const isUser = message.role === 'user';
+  const assistantSections = !isUser ? splitAssistantMessage(message.content) : null;
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
@@ -62,16 +80,22 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
         {isUser ? (
           <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
         ) : (
-          <div className="prose prose-sm max-w-none text-card-foreground prose-headings:text-card-foreground prose-h3:mb-2 prose-h3:mt-3 prose-h3:text-base prose-h3:font-semibold prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:pl-5 prose-ol:my-2 prose-ol:pl-5 prose-li:my-1 prose-li:leading-relaxed prose-strong:text-card-foreground prose-hr:my-3 prose-hr:border-border first:prose-h3:mt-0">
-            <ReactMarkdown
-              components={{
-                h1: ({ children }) => <h3>{children}</h3>,
-                h2: ({ children }) => <h3>{children}</h3>,
-                h3: ({ children }) => <h3>{children}</h3>,
-              }}
-            >
-              {message.content}
-            </ReactMarkdown>
+          <div className="space-y-3 text-card-foreground">
+            {assistantSections?.title && (
+              <h3 className="text-base font-semibold leading-snug text-card-foreground sm:text-[1.05rem]">
+                {assistantSections.title}
+              </h3>
+            )}
+            {assistantSections?.instructions && (
+              <div className="prose prose-sm max-w-none text-card-foreground prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:pl-5 prose-ol:my-2 prose-ol:pl-5 prose-li:my-1.5 prose-li:leading-relaxed prose-strong:text-card-foreground">
+                <ReactMarkdown>{assistantSections.instructions}</ReactMarkdown>
+              </div>
+            )}
+            {assistantSections?.confirmation && (
+              <div className="border-t border-border pt-3 text-sm font-medium leading-relaxed text-card-foreground">
+                {assistantSections.confirmation}
+              </div>
+            )}
           </div>
         )}
       </div>
