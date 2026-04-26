@@ -106,6 +106,63 @@ export default function Seleccion() {
     });
   }, [vacancies, searchQuery, statusFilter, centerFilter]);
 
+  const vacancyItems = useMemo(
+    () => filteredVacancies.map((vacancy) => {
+      const status = vacancy.status as VacancyStatus;
+      const statusStyle = vacancyStatusConfig[status];
+      const candidateCount = (vacancy as any).candidates?.length || 0;
+      const centerName = (vacancy as any).operation_centers?.name || 'General';
+
+      return {
+        id: vacancy.id,
+        title: vacancy.position_title,
+        subtitle: `${vacancy.department_area || 'Sin área'} • ${vacancy.positions_count} posicion${vacancy.positions_count > 1 ? 'es' : ''}`,
+        badge: (
+          <Badge variant="outline" className={cn('max-w-full truncate', statusStyle.bg, statusStyle.text, statusStyle.border)}>
+            {vacancyStatusLabels[status]}
+          </Badge>
+        ),
+        fields: [
+          { label: 'Centro', value: centerName },
+          { label: 'Candidatos', value: candidateCount },
+          { label: 'Apertura', value: format(new Date(vacancy.open_date), 'dd MMM yyyy', { locale: es }) },
+        ],
+        onClick: () => openVacancyDetail(vacancy.id),
+        actions: (
+          <>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-10 w-10 bg-success/10 hover:bg-success/20 text-success"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCandidateFormVacancyId(vacancy.id);
+                setShowCandidateForm(true);
+              }}
+              disabled={vacancy.status !== 'in_process'}
+              aria-label={`Agregar candidato a vacante ${vacancy.position_title}`}
+            >
+              <UserPlus className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-10 w-10 bg-indigo-light hover:bg-indigo/20 text-indigo"
+              onClick={(e) => {
+                e.stopPropagation();
+                openVacancyDetail(vacancy.id);
+              }}
+              aria-label={`Ver detalle de vacante ${vacancy.position_title}`}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+          </>
+        ),
+      };
+    }),
+    [filteredVacancies]
+  );
+
   const openVacancyDetail = (vacancyId: string) => {
     setSelectedVacancyId(vacancyId);
     setShowVacancyDetail(true);
