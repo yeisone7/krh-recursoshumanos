@@ -179,6 +179,81 @@ export default function Requisiciones() {
             <Button onClick={() => setShowForm(true)}><Plus className="w-4 h-4 mr-2" />Nueva Requisición</Button>
           </div>
         ) : (
+          <>
+          <div className="space-y-3 p-4 md:hidden">
+            {filtered.map(req => {
+              const status = req.estado_requisicion as RequisitionStatus;
+              const cfg = requisitionStatusConfig[status];
+              const step = getCurrentApprovalStep(req);
+              const progress = getApprovalProgress(req);
+              return (
+                <Card key={req.id} className="overflow-hidden" onClick={() => openDetail(req.id)}>
+                  <CardContent className="space-y-4 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words font-medium uppercase leading-snug">{req.cargo_solicitado}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{req.cantidad_vacantes_requeridas} vacantes • {req.solicitante_nombre}</p>
+                      </div>
+                      <Badge variant="outline" className={cn('shrink-0 whitespace-nowrap', cfg.bg, cfg.text, cfg.border)}>{requisitionStatusLabels[status]}</Badge>
+                    </div>
+
+                    <div className="grid gap-2 text-sm text-muted-foreground">
+                      <div className="flex min-w-0 items-center gap-2"><Building2 className="h-4 w-4 shrink-0" /><span className="truncate">{req.operation_centers?.name || '-'}</span></div>
+                      <div className="flex items-center gap-2"><Calendar className="h-4 w-4 shrink-0" /><span>{format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}</span></div>
+                      <div><Badge variant="outline" className="max-w-full whitespace-normal text-left">{requisitionReasonLabels[req.motivo_solicitud as RequisitionReason]}</Badge></div>
+                    </div>
+
+                    <TooltipProvider>
+                      <div className="flex items-center gap-1" role="progressbar" aria-label={`Progreso de aprobación: ${progress.filter(s => s.approved === true).length} de ${progress.length} aprobados`} aria-valuenow={progress.filter(s => s.approved === true).length} aria-valuemax={progress.length}>
+                        {progress.map((s, idx) => (
+                          <div key={s.key} className="flex items-center">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label={`${s.key}: ${s.approved === true ? 'Aprobado' : s.approved === false ? 'Rechazado' : 'Pendiente'}`}
+                                  className={cn(
+                                    'flex h-8 w-8 items-center justify-center rounded-full border-2 text-[10px] font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                                    s.approved === true && 'bg-success text-success-foreground border-success shadow-sm',
+                                    s.approved === false && 'bg-destructive text-destructive-foreground border-destructive shadow-sm',
+                                    s.approved === null && 'bg-muted text-muted-foreground border-border'
+                                  )}
+                                  onClick={e => e.stopPropagation()}
+                                >
+                                  {s.approved === true ? <CheckCircle className="h-4 w-4" /> : s.approved === false ? <XCircle className="h-4 w-4" /> : s.label}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">
+                                <p className="font-medium">{s.key === 'operaciones' ? 'Operaciones' : s.key === 'rrhh' ? 'Recursos Humanos' : s.key === 'juridico' ? 'Jurídico' : s.key === 'gerencia' ? 'Gerencia' : 'Selección'}</p>
+                                <p className={cn(s.approved === true && 'text-success', s.approved === false && 'text-destructive', s.approved === null && 'text-muted-foreground')}>{s.approved === true ? '✓ Aprobado' : s.approved === false ? '✗ Rechazado' : '○ Pendiente'}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            {idx < progress.length - 1 && <div className={cn('h-0.5 w-3', s.approved === true ? 'bg-success' : 'bg-border')} aria-hidden="true" />}
+                          </div>
+                        ))}
+                      </div>
+                    </TooltipProvider>
+
+                    <div className="grid grid-cols-2 gap-2" onClick={e => e.stopPropagation()}>
+                      <Button size="sm" variant="outline" className="min-h-11" onClick={(e) => handleExportPDF(req, e)} disabled={exportingId === req.id}>
+                        {exportingId === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+                        <span className="ml-2">PDF</span>
+                      </Button>
+                      <Button size="sm" variant="outline" className="min-h-11" onClick={() => openDetail(req.id)}>
+                        <Eye className="h-4 w-4 mr-2" />Ver
+                      </Button>
+                      {step && (
+                        <Button size="sm" className="col-span-2 min-h-11" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
+                          <CheckCircle className="h-4 w-4 mr-2" />Aprobar
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          <div className="hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -326,6 +401,8 @@ export default function Requisiciones() {
               })}
             </TableBody>
           </Table>
+          </div>
+          </>
         )}
       </Card>
 
