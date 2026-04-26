@@ -121,8 +121,6 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
         )}
       </div>
     </div>
-    {resetDialog}
-    </>
   );
 }
 
@@ -432,5 +430,7 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
         </TabsContent>
       </Tabs>
     </div>
+    {resetDialog}
+    </>
   );
 }
