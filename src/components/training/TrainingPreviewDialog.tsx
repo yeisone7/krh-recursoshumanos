@@ -11,7 +11,7 @@ import {
   BookOpen, Clock, Users, Shield, Globe, Target, Scale, Send,
   GraduationCap, Sparkles, ChevronRight, CircleHelp, Image as ImageIcon,
   Lightbulb, FileText, CheckCircle2, Calendar, Network, LayoutPanelTop,
-  Mic, Video, ExternalLink, Trash2,
+  Mic, Video, ExternalLink, Trash2, AlertCircle, Loader2,
 } from 'lucide-react';
 import { MarkdownContent } from './MarkdownContent';
 import { MediaTypeCard } from './MediaTypeCard';
@@ -126,7 +126,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
   const [audioDuration, setAudioDuration] = useState('medium');
   const { currentCompanyId } = useAuth();
   const { data: systemConfig } = useSystemConfig();
-  const { data: media = [] } = useTrainingMedia(course?.id);
+  const { data: media = [], isLoading: isMediaLoading, isError: isMediaError } = useTrainingMedia(course?.id);
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
 
@@ -478,7 +478,17 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                 </div>
                 <Separator />
 
-                {isDraft ? (
+                {isMediaLoading ? (
+                  <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    <span>Cargando contenido multimedia...</span>
+                  </div>
+                ) : isMediaError ? (
+                  <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-6 text-center text-sm text-destructive">
+                    <AlertCircle className="h-6 w-6" />
+                    <span>No se pudo cargar el contenido multimedia.</span>
+                  </div>
+                ) : isDraft ? (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <MediaTypeCard
@@ -596,8 +606,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                               </div>
                             </div>
                             {avatarMedia.map((item) => (
-                              <div key={item.id} className="rounded-lg overflow-hidden border bg-black">
-                                <video controls className="w-full max-h-[300px]" src={item.file_url} preload="metadata" />
+                              <div key={item.id} className="overflow-hidden rounded-lg border bg-muted">
+                                <video controls className="aspect-video max-h-72 w-full object-contain" src={item.file_url} preload="metadata" />
                               </div>
                             ))}
                           </CardContent>
@@ -620,7 +630,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                   const audioItems = media.filter(m => m.type === 'audio');
                   const audioUrl = audioItems.length > 0 ? audioItems[audioItems.length - 1].file_url : null;
                   return (
-                    <div className="mt-4">
+                    <div className="mt-4 min-w-0 overflow-hidden">
                       <StoryboardViewer
                         scenes={scenes}
                         imageUrls={imageUrls}
