@@ -29,7 +29,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [aiButtonLifted, setAiButtonLifted] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
-  const dragStartRef = useRef<{ y: number; height: number } | null>(null);
+  const dragStartRef = useRef<{ y: number; height: number; startedAt: number } | null>(null);
   const isMobile = useIsMobile();
   const isAiAssistant = location.pathname === '/asistente-ia';
   const showAiButton = permissionsLoaded && hasPermission('asistente_ia');
@@ -92,7 +92,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const handleAiPanelDragStart = (event: PointerEvent<HTMLDivElement>) => {
     if (aiPanelMinimized) return;
     const currentHeight = aiPanelHeight || Math.round(window.innerHeight * (isMobile ? 0.84 : 0.78));
-    dragStartRef.current = { y: event.clientY, height: currentHeight };
+    dragStartRef.current = { y: event.clientY, height: currentHeight, startedAt: performance.now() };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -112,7 +112,11 @@ export function AppLayout({ children }: AppLayoutProps) {
     if (!start) return;
 
     const draggedDown = event.clientY - start.y;
-    if (draggedDown > (isMobile ? 130 : 180)) {
+    const elapsedMs = Math.max(1, performance.now() - start.startedAt);
+    const downwardVelocity = draggedDown / elapsedMs;
+    const isFastSwipeDown = draggedDown > 36 && downwardVelocity > 0.65;
+
+    if (draggedDown > (isMobile ? 130 : 180) || isFastSwipeDown) {
       setAiPanelOpen(false);
       setAiPanelMinimized(false);
     }
