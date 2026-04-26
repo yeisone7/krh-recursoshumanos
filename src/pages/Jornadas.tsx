@@ -23,6 +23,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MobileCardList } from '@/components/shared/MobileCardList';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Table,
   TableBody,
@@ -66,6 +68,7 @@ import { DAY_NAMES_SHORT } from '@/types/schedule';
 import type { WorkSchedule, Shift, ShiftCycle } from '@/types/schedule';
 
 export default function Jornadas() {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<'calendar' | 'schedules' | 'shifts' | 'cycles'>('calendar');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,6 +101,9 @@ export default function Jornadas() {
   }), [workSchedules, shifts, shiftCycles]);
 
   const formatTime = (time: string) => time?.slice(0, 5) || '';
+  const filteredSchedules = workSchedules.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredShifts = shifts.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredCycles = shiftCycles.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
@@ -138,9 +144,9 @@ export default function Jornadas() {
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-background p-4 flex flex-col">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="font-display text-lg font-bold text-foreground">Calendario de Turnos</h2>
+      <div className="fixed inset-0 z-50 bg-background p-2 sm:p-4 flex flex-col">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h2 className="font-display text-base sm:text-lg font-bold text-foreground truncate">Calendario de Turnos</h2>
           <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsFullscreen(false)}>
             <Minimize2 className="w-3.5 h-3.5 mr-1" />
             <span className="hidden sm:inline">Restaurar</span>
@@ -154,49 +160,52 @@ export default function Jornadas() {
   }
 
   return (
-    <div className="flex flex-col gap-2 h-full min-h-0">
+    <div className="flex flex-col gap-2 h-full min-h-0 overflow-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
+        <div className="min-w-0">
           <h1 className="font-display text-lg font-bold text-foreground">Horarios y Turnos</h1>
           <p className="text-muted-foreground text-xs hidden sm:block">Gestiona horarios administrativos, turnos operativos y ciclos de rotación</p>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowGeneratorDialog(true)}>
+        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:justify-end">
+          <Button variant="outline" size="sm" className="h-8 sm:h-7 text-xs px-2" onClick={() => setShowGeneratorDialog(true)}>
             <Zap className="w-3.5 h-3.5 sm:mr-1" />
             <span className="hidden sm:inline">Generar Ciclo</span>
+            <span className="sm:hidden truncate">Ciclo</span>
           </Button>
-          <Button size="sm" className="h-7 text-xs" onClick={() => setShowBulkGeneratorDialog(true)}>
+          <Button size="sm" className="h-8 sm:h-7 text-xs px-2" onClick={() => setShowBulkGeneratorDialog(true)}>
             <Users className="w-3.5 h-3.5 sm:mr-1" />
             <span className="hidden sm:inline">Generar Todos</span>
+            <span className="sm:hidden truncate">Todos</span>
           </Button>
-          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setShowExportDialog(true)}>
+          <Button variant="outline" size="sm" className="h-8 sm:h-7 text-xs px-2" onClick={() => setShowExportDialog(true)}>
             <FileSpreadsheet className="w-3.5 h-3.5 sm:mr-1" />
             <span className="hidden sm:inline">Exportar</span>
+            <span className="sm:hidden truncate">Excel</span>
           </Button>
         </div>
       </div>
 
       {/* Main Content */}
-      <Card className="flex-1 min-h-0 flex flex-col">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-2 flex-1 min-h-0 flex flex-col">
+      <Card className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-2 flex-1 min-h-0 flex flex-col overflow-hidden">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-              <TabsList className="h-9 w-full sm:w-auto">
-                <TabsTrigger value="calendar" className="gap-1.5 text-xs h-7 px-2.5">
+              <TabsList className="h-auto w-full sm:w-auto grid grid-cols-4 sm:inline-flex p-1">
+                <TabsTrigger value="calendar" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
                   <Calendar className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Calendario</span>
+                  <span className="hidden xs:inline sm:inline">Calendario</span>
                 </TabsTrigger>
-                <TabsTrigger value="schedules" className="gap-1.5 text-xs h-7 px-2.5">
+                <TabsTrigger value="schedules" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
                   <Briefcase className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Horarios</span>
+                  <span className="hidden xs:inline sm:inline">Horarios</span>
                 </TabsTrigger>
-                <TabsTrigger value="shifts" className="gap-1.5 text-xs h-7 px-2.5">
+                <TabsTrigger value="shifts" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
                   <Clock className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Turnos</span>
+                  <span className="hidden xs:inline sm:inline">Turnos</span>
                 </TabsTrigger>
-                <TabsTrigger value="cycles" className="gap-1.5 text-xs h-7 px-2.5">
+                <TabsTrigger value="cycles" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Ciclos</span>
+                  <span className="hidden xs:inline sm:inline">Ciclos</span>
                 </TabsTrigger>
               </TabsList>
 
