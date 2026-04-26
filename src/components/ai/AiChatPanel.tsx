@@ -25,6 +25,12 @@ const starterQuestions = [
   '¿Cómo creo una capacitación con IA?',
   '¿Cómo asigno permisos por rol?',
   '¿Dónde veo los contratos próximos a vencer?',
+  '¿Cómo registro una novedad?',
+  '¿Cómo consulto el centro de notificaciones?',
+  '¿Cómo genero un reporte?',
+  '¿Dónde cambio mi contraseña?',
+  '¿Cómo reviso permisos pendientes?',
+  '¿Cómo busco información de un empleado?',
 ];
 
 const CONFIRM_STEP_MESSAGE = 'Confirmo que completé este paso. Continúa con el siguiente.';
@@ -62,12 +68,18 @@ function splitAssistantMessage(content: string) {
 }
 
 const moduleSuggestions: Record<string, { module: string; moduleLabel: string; suggestions: string[] }> = {
-  '/empleados': { module: 'empleados', moduleLabel: 'Empleados', suggestions: ['Registrar un empleado', 'Abrir hoja de vida', 'Revisar datos laborales'] },
-  '/contratos': { module: 'contratos', moduleLabel: 'Contratos', suggestions: ['Crear contrato', 'Revisar vencimientos', 'Generar documento'] },
-  '/dotacion': { module: 'dotacion', moduleLabel: 'Dotación', suggestions: ['Entregar dotación', 'Ver vencimientos', 'Configurar tipos'] },
-  '/examenes': { module: 'examenes', moduleLabel: 'Exámenes', suggestions: ['Registrar examen', 'Revisar vencimientos', 'Consultar profesiograma'] },
-  '/alertas': { module: 'alertas', moduleLabel: 'Alertas', suggestions: ['Revisar alertas críticas', 'Gestionar notificaciones', 'Configurar destinatarios'] },
+  '/empleados': { module: 'empleados', moduleLabel: 'Empleados', suggestions: ['Registrar un empleado', 'Abrir hoja de vida', 'Revisar datos laborales', 'Actualizar contacto', 'Consultar documentos', 'Ver historial laboral'] },
+  '/contratos': { module: 'contratos', moduleLabel: 'Contratos', suggestions: ['Crear contrato', 'Revisar vencimientos', 'Generar documento', 'Editar contrato', 'Registrar prórroga', 'Consultar preaviso', 'Descargar contrato', 'Validar anexos'] },
+  '/dotacion': { module: 'dotacion', moduleLabel: 'Dotación', suggestions: ['Entregar dotación', 'Ver vencimientos', 'Configurar tipos', 'Registrar devolución', 'Consultar inventario', 'Revisar cumplimiento'] },
+  '/examenes': { module: 'examenes', moduleLabel: 'Exámenes', suggestions: ['Registrar examen', 'Revisar vencimientos', 'Consultar profesiograma', 'Crear orden médica', 'Ver historial médico', 'Configurar catálogo'] },
+  '/alertas': { module: 'alertas', moduleLabel: 'Alertas', suggestions: ['Revisar alertas críticas', 'Gestionar notificaciones', 'Configurar destinatarios', 'Filtrar alertas', 'Atender vencimientos', 'Ver alertas resueltas'] },
 };
+
+function rotateItems<T>(items: T[], seed: string, count: number) {
+  if (items.length <= count) return items;
+  const offset = [...seed].reduce((total, char) => total + char.charCodeAt(0), 0) % items.length;
+  return [...items.slice(offset), ...items.slice(0, offset)].slice(0, count);
+}
 
 function MessageBubble({ message }: { message: AiChatMessage }) {
   const isUser = message.role === 'user';
@@ -149,6 +161,15 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
     if (!match) return null;
     return { ...match[1], pathname, isActiveModule: location.pathname !== '/asistente-ia' };
   }, [location.pathname]);
+  const suggestionSeed = `${location.pathname}-${sessionId}`;
+  const visibleModuleSuggestions = useMemo(
+    () => pageContext ? rotateItems(pageContext.suggestions, suggestionSeed, 3) : [],
+    [pageContext, suggestionSeed]
+  );
+  const visibleStarterQuestions = useMemo(
+    () => rotateItems(starterQuestions, suggestionSeed, 4),
+    [suggestionSeed]
+  );
 
   const scrollMessagesToBottom = (behavior: ScrollBehavior = 'smooth') => {
     const container = messagesContainerRef.current;
@@ -257,7 +278,7 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
         <div className="w-full max-w-2xl rounded-lg border border-border bg-muted/40 p-3 text-left">
           <p className="text-sm font-semibold">Sugerencias para {pageContext.moduleLabel}</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {pageContext.suggestions.map((suggestion) => (
+            {visibleModuleSuggestions.map((suggestion) => (
               <Button key={suggestion} variant="secondary" size="sm" onClick={() => handleSend(`Estoy en ${pageContext.moduleLabel}. Guíame para: ${suggestion}`)}>
                 {suggestion}
               </Button>
@@ -266,7 +287,7 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
         </div>
       )}
       <div className="grid w-full max-w-2xl gap-2 sm:grid-cols-2">
-        {starterQuestions.map((question) => (
+        {visibleStarterQuestions.map((question) => (
           <Button key={question} variant="outline" className="h-auto justify-start whitespace-normal py-2.5 text-left sm:py-3" onClick={() => handleSend(question)}>
             {question}
           </Button>
