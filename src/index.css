@@ -444,3 +444,12 @@ body.app-ready #app-launch-screen {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--primary) / 0.35) hsl(var(--muted));
 }
+
+/* Hide horizontal header/tab scrollbars while preserving touch scroll */
+.scrollbar-header-auto {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-header-auto::-webkit-scrollbar {
+  display: none;
+}
