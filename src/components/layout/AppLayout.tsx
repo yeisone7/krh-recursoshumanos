@@ -113,9 +113,9 @@ export function AppLayout({ children }: AppLayoutProps) {
           aria-label="Abrir Asistente IA"
           title="Asistente IA"
           onClick={() => navigate('/asistente-ia')}
-          className={`fixed ${isMobile ? 'bottom-24 right-4' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg`}
+          className={`fixed ${isMobile ? 'bottom-24 right-4' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg [&_svg]:size-11`}
         >
-          <Bot className="h-6 w-6" />
+          <Bot className="size-11" />
         </Button>
       )}
     </div>
