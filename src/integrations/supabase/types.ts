@@ -14,6 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chat_conversations: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          last_message_at: string
+          mode: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          mode?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          mode?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_conversations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_chat_messages: {
+        Row: {
+          ai_provider: string | null
+          company_id: string
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          role: string
+          user_id: string
+        }
+        Insert: {
+          ai_provider?: string | null
+          company_id: string
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          role: string
+          user_id: string
+        }
+        Update: {
+          ai_provider?: string | null
+          company_id?: string
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_messages_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       areas: {
         Row: {
           code: string | null
