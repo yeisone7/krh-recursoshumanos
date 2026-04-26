@@ -109,6 +109,8 @@ function MetricChip({ icon: Icon, label, value, color = 'primary' }: { icon: any
     success: 'text-success bg-success/15 ring-1 ring-success/20',
     warning: 'text-warning bg-warning/15 ring-1 ring-warning/20',
     info: 'text-info bg-info/15 ring-1 ring-info/20',
+    blue: 'text-blue bg-blue-light ring-1 ring-blue/25',
+    purple: 'text-purple bg-purple-light ring-1 ring-purple/25',
     destructive: 'text-destructive bg-destructive/15 ring-1 ring-destructive/20',
     teal: 'text-teal bg-teal/15 ring-1 ring-teal/20',
     violet: 'text-violet bg-violet/15 ring-1 ring-violet/20',
@@ -571,13 +573,13 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
             <div className="px-6 -mt-3 relative z-10">
               <div className="flex gap-2 pb-1">
                 {employee.work_info?.hire_date && (
-                  <MetricChip icon={Clock} label="Antigüedad" value={computeSeniority(employee.work_info.hire_date)} color="info" />
+                  <MetricChip icon={Clock} label="Antigüedad" value={computeSeniority(employee.work_info.hire_date)} color="blue" />
                 )}
                 {employee.birth_date && (
                   <MetricChip icon={Cake} label="Edad" value={computeAge(employee.birth_date)} color="success" />
                 )}
                 {employee.document_number && (
-                  <MetricChip icon={Hash} label={documentTypeLabels[employee.document_type]} value={employee.document_number} color="violet" />
+                  <MetricChip icon={Hash} label={documentTypeLabels[employee.document_type]} value={employee.document_number} color="purple" />
                 )}
                 {employee.blood_type && (
                   <MetricChip icon={Droplets} label="Tipo Sangre" value={employee.blood_type} color="destructive" />
