@@ -537,7 +537,7 @@ export function RequisitionFormDialog({
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="incluye_alimentacion"
@@ -592,7 +592,7 @@ export function RequisitionFormDialog({
               )}
 
               {/* Contract Type */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="tipo_contrato_solicitado"
@@ -673,7 +673,7 @@ export function RequisitionFormDialog({
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">Información del Solicitante</h3>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="solicitante_nombre"
@@ -704,7 +704,7 @@ export function RequisitionFormDialog({
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
