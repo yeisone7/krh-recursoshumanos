@@ -44,6 +44,12 @@ const COURSE_ICON_BY_MODALITY = {
   mixto: Layers,
 } satisfies Record<TrainingModality, typeof UsersRound>;
 
+const COURSE_ICON_STYLE_BY_MODALITY = {
+  presencial: 'bg-success-light text-success ring-success/20',
+  virtual: 'bg-info-light text-info ring-info/20',
+  mixto: 'bg-accent text-accent-foreground ring-accent/30',
+} satisfies Record<TrainingModality, string>;
+
 export default function Capacitaciones() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -180,6 +186,7 @@ export default function Capacitaciones() {
                     const statusLabel = STATUS_LABELS[course.status] || course.status;
                     const statusClass = STATUS_COLORS[course.status] || '';
                     const CourseIcon = COURSE_ICON_BY_MODALITY[course.modality] || BookOpenCheck;
+                    const iconStyle = COURSE_ICON_STYLE_BY_MODALITY[course.modality] || 'bg-primary/10 text-primary ring-primary/20';
 
                     return (
                       <motion.div
@@ -190,7 +197,7 @@ export default function Capacitaciones() {
                         className="rounded-xl border border-border/70 bg-card p-4 shadow-sm ring-1 ring-primary/5"
                       >
                         <div className="flex items-start gap-3">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ring-1 ${iconStyle}`}>
                             <CourseIcon className="h-6 w-6" />
                           </div>
                           <div className="min-w-0 flex-1 space-y-2">
