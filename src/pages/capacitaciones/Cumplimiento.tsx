@@ -103,24 +103,24 @@ function CenterComplianceSection({ center, courseFilter }: { center: CenterCompl
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
         <Card className="cursor-pointer hover:bg-muted/30 transition-colors">
-          <CardContent className="py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-              <Building2 className="h-5 w-5 text-primary" />
-              <div>
-                <h3 className="font-semibold text-lg">{center.center_name}</h3>
+          <CardContent className="py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              {isOpen ? <ChevronDown className="h-5 w-5 shrink-0" /> : <ChevronRight className="h-5 w-5 shrink-0" />}
+              <Building2 className="h-5 w-5 shrink-0 text-primary" />
+              <div className="min-w-0">
+                <h3 className="break-words text-base font-semibold sm:text-lg">{center.center_name}</h3>
                 <p className="text-sm text-muted-foreground">{center.totalEmployees} empleados activos · {filteredCourses.length} cursos</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Progress value={avgPercentage} className="w-32 h-2.5" />
-              <Badge variant={avgPercentage === 100 ? 'default' : 'secondary'}>{avgPercentage}%</Badge>
+            <div className="flex w-full items-center gap-3 sm:w-auto">
+              <Progress value={avgPercentage} className="h-2.5 min-w-0 flex-1 sm:w-32 sm:flex-none" />
+              <Badge className="shrink-0" variant={avgPercentage === 100 ? 'default' : 'secondary'}>{avgPercentage}%</Badge>
             </div>
           </CardContent>
         </Card>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 ml-4">
+        <div className="grid grid-cols-1 gap-3 mt-3 sm:ml-4 md:grid-cols-2">
           {filteredCourses.map((course) => (
             <CourseComplianceCard key={course.course_id} course={course} />
           ))}
