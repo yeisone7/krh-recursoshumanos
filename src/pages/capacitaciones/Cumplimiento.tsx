@@ -4,7 +4,7 @@ import { es } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import {
   ClipboardCheck, ChevronDown, ChevronRight, UserCheck, UserX,
-  Search, Building2, BookOpen, Download,
+  Search, Building2, BookOpen, Download, SlidersHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -135,6 +135,7 @@ export default function Cumplimiento() {
   const [centerFilter, setCenterFilter] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const filteredData = useMemo(() => {
     let data = complianceData;
@@ -196,7 +197,52 @@ export default function Cumplimiento() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen} className="sm:hidden">
+        <Card>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="flex h-auto w-full items-center justify-between px-4 py-3">
+              <span className="flex items-center gap-2 font-medium">
+                <SlidersHorizontal className="h-4 w-4 text-primary" /> Filtros
+              </span>
+              {filtersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-3 pt-0 pb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Buscar centro..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+              </div>
+              <Select value={centerFilter} onValueChange={setCenterFilter}>
+                <SelectTrigger className="w-full">
+                  <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Centro de Operación" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los centros</SelectItem>
+                  {centers.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={courseFilter} onValueChange={setCourseFilter}>
+                <SelectTrigger className="w-full">
+                  <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Curso" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los cursos</SelectItem>
+                  {courses.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      <Card className="hidden sm:block">
         <CardContent className="pt-4 pb-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
             <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px] lg:max-w-sm">
