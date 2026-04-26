@@ -282,16 +282,16 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 flex flex-col overflow-hidden sm:w-full">
+          <DialogHeader className="px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
+            <div className="flex flex-col items-start gap-3 pr-8 sm:flex-row sm:items-start sm:justify-between sm:pr-0">
+              <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                <div className="w-10 h-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center sm:h-12 sm:w-12">
                   <Briefcase className="w-6 h-6 text-primary" />
                 </div>
-                <div>
-                  <DialogTitle className="font-display text-xl">{vacancy.position_title}</DialogTitle>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0">
+                  <DialogTitle className="font-display text-lg leading-tight sm:text-xl">{vacancy.position_title}</DialogTitle>
+                  <p className="text-sm text-muted-foreground break-words">
                     {(vacancy as any).operation_centers?.name || 'General'}
                     {vacancy.department_area && ` • ${vacancy.department_area}`}
                   </p>
@@ -299,7 +299,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </div>
               <Badge
                 variant="outline"
-                className={cn('gap-1', statusStyle.bg, statusStyle.text, statusStyle.border)}
+                className={cn('max-w-full gap-1 self-start truncate', statusStyle.bg, statusStyle.text, statusStyle.border)}
               >
                 <StatusIcon className="w-3 h-3" />
                 {vacancyStatusLabels[status]}
@@ -308,19 +308,19 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-            <div className="px-6 pt-2 border-b flex-shrink-0">
-              <TabsList className="h-10">
-                <TabsTrigger value="info" className="gap-2">
+            <div className="px-4 pt-2 border-b flex-shrink-0 sm:px-6">
+              <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1 sm:inline-flex sm:h-10 sm:w-auto sm:gap-0">
+                <TabsTrigger value="info" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <FileText className="w-4 h-4" />
-                  Información
+                  <span className="truncate">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="candidates" className="gap-2">
+                <TabsTrigger value="candidates" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <Users className="w-4 h-4" />
-                  Candidatos ({candidates.length})
+                  <span className="truncate">Candidatos ({candidates.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="gap-2">
+                <TabsTrigger value="documents" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <Paperclip className="w-4 h-4" />
-                  Documentos ({documents.length})
+                  <span className="truncate">Documentos ({documents.length})</span>
                 </TabsTrigger>
               </TabsList>
             </div>
