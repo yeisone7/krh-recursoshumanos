@@ -149,14 +149,14 @@ export function RequisitionDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl overflow-y-auto p-4 sm:p-6 [&_button]:min-h-11 sm:[&_button]:min-h-10 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
         <DialogHeader>
-          <div className="flex flex-col gap-2 pr-8 sm:flex-row sm:items-center sm:justify-between sm:pr-0">
-            <DialogTitle className="text-lg sm:text-xl">
+          <div className="flex flex-col items-start gap-2 pr-8 sm:flex-row sm:items-center sm:justify-between sm:pr-0">
+            <DialogTitle className="w-full text-center text-lg leading-tight sm:w-auto sm:text-left sm:text-xl">
               Detalle de Requisición
             </DialogTitle>
             {statusConfig && (
               <Badge
                 variant="outline"
-                className={cn(statusConfig.bg, statusConfig.text, statusConfig.border)}
+                className={cn('max-w-full self-start truncate px-3 sm:self-auto', statusConfig.bg, statusConfig.text, statusConfig.border)}
               >
                 {requisitionStatusLabels[status]}
               </Badge>
