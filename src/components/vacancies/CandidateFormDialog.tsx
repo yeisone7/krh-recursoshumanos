@@ -165,9 +165,9 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[95vh] p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-          <DialogTitle className="font-display text-xl flex items-center gap-2">
+      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl p-0 overflow-hidden sm:w-full">
+        <DialogHeader className="px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
+          <DialogTitle className="font-display text-lg leading-tight flex items-center gap-2 sm:text-xl">
             <User className="w-5 h-5 text-primary" />
             Nuevo Candidato
           </DialogTitle>
@@ -179,13 +179,13 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="px-6 pt-2">
+              <div className="px-4 pt-2 sm:px-6">
                 <TabsList className="w-full h-auto flex-wrap gap-1 bg-muted/50 p-1">
                   {tabItems.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="flex-1 min-w-[100px] gap-2 data-[state=active]:bg-background"
+                      className="h-9 flex-1 min-w-[64px] gap-2 px-2 data-[state=active]:bg-background sm:min-w-[100px]"
                     >
                       <tab.icon className="w-4 h-4" />
                       <span className="hidden sm:inline">{tab.label}</span>
@@ -194,7 +194,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                 </TabsList>
               </div>
 
-              <ScrollArea className="h-[calc(90vh-260px)] px-6 py-4">
+              <ScrollArea className="h-[calc(92dvh-250px)] px-4 py-4 sm:h-[calc(90vh-260px)] sm:px-6">
                 <CandidateBackgroundAlerts background={background} loading={bgLoading} compact />
 
                 {/* Personal Tab */}
@@ -1105,11 +1105,11 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
               </ScrollArea>
             </Tabs>
 
-            <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="px-4 py-4 border-t border-border flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:px-6">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createCandidate.isPending}>
+              <Button type="submit" className="w-full sm:w-auto" disabled={createCandidate.isPending}>
                 {createCandidate.isPending ? 'Registrando...' : 'Registrar Candidato'}
               </Button>
             </div>

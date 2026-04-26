@@ -282,16 +282,16 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 flex flex-col overflow-hidden sm:w-full">
+          <DialogHeader className="px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
+            <div className="flex flex-col items-start gap-3 pr-8 sm:flex-row sm:items-start sm:justify-between sm:pr-0">
+              <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                <div className="w-10 h-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center sm:h-12 sm:w-12">
                   <Briefcase className="w-6 h-6 text-primary" />
                 </div>
-                <div>
-                  <DialogTitle className="font-display text-xl">{vacancy.position_title}</DialogTitle>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0">
+                  <DialogTitle className="font-display text-lg leading-tight sm:text-xl">{vacancy.position_title}</DialogTitle>
+                  <p className="text-sm text-muted-foreground break-words">
                     {(vacancy as any).operation_centers?.name || 'General'}
                     {vacancy.department_area && ` • ${vacancy.department_area}`}
                   </p>
@@ -299,7 +299,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </div>
               <Badge
                 variant="outline"
-                className={cn('gap-1', statusStyle.bg, statusStyle.text, statusStyle.border)}
+                className={cn('max-w-full gap-1 self-start truncate', statusStyle.bg, statusStyle.text, statusStyle.border)}
               >
                 <StatusIcon className="w-3 h-3" />
                 {vacancyStatusLabels[status]}
@@ -308,26 +308,26 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-            <div className="px-6 pt-2 border-b flex-shrink-0">
-              <TabsList className="h-10">
-                <TabsTrigger value="info" className="gap-2">
+            <div className="px-4 pt-2 border-b flex-shrink-0 sm:px-6">
+              <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1 sm:inline-flex sm:h-10 sm:w-auto sm:gap-0">
+                <TabsTrigger value="info" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <FileText className="w-4 h-4" />
-                  Información
+                  <span className="truncate">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="candidates" className="gap-2">
+                <TabsTrigger value="candidates" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <Users className="w-4 h-4" />
-                  Candidatos ({candidates.length})
+                  <span className="truncate">Candidatos ({candidates.length})</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="gap-2">
+                <TabsTrigger value="documents" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <Paperclip className="w-4 h-4" />
-                  Documentos ({documents.length})
+                  <span className="truncate">Documentos ({documents.length})</span>
                 </TabsTrigger>
               </TabsList>
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto">
               {/* Info Tab */}
-              <TabsContent value="info" className="p-6 mt-0 space-y-6">
+              <TabsContent value="info" className="p-4 mt-0 space-y-6 sm:p-6">
                 {/* Requisition Info Card */}
                 {requisition && (
                   <Card className="border-primary/20 bg-primary/5">
@@ -338,7 +338,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                         <div className="space-y-1">
                           <p className="text-xs text-muted-foreground">Cargo Solicitado</p>
                           <p className="font-medium text-sm">{requisition.cargo_solicitado}</p>
@@ -389,7 +389,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   </Card>
                 )}
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Tipo de Convocatoria</p>
                     <p className="font-medium">{vacancyTypeLabels[vacancy.vacancy_type as keyof typeof vacancyTypeLabels]}</p>
@@ -432,7 +432,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     <DollarSign className="w-4 h-4 text-primary" />
                     Compensación
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">Rango Salarial</p>
                       <p className="font-medium">
@@ -470,7 +470,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{vacancy.requirements}</p>
                         </div>
                       )}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {vacancy.experience_years !== null && vacancy.experience_years > 0 && (
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-muted-foreground" />
@@ -496,7 +496,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     Colocado
                   </h3>
                   {vacancy.colocado_url ? (
-                    <div className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                    <div className="flex flex-col gap-3 p-3 rounded-lg border bg-card sm:flex-row sm:items-center">
                       <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
                         <FileText className="h-5 w-5" />
                       </div>
@@ -519,20 +519,20 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsContent>
 
               {/* Candidates Tab */}
-              <TabsContent value="candidates" className="mt-0 p-6 space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-3">
+              <TabsContent value="candidates" className="mt-0 p-4 space-y-4 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-semibold text-foreground flex items-center gap-2">
                     <div className="w-7 h-7 rounded-md bg-violet-light flex items-center justify-center">
                       <Users className="w-4 h-4 text-violet" />
                     </div>
                     {candidates.length} Candidato{candidates.length !== 1 && 's'}
                   </h3>
-                  <div className="flex items-center gap-3">
+                  <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:gap-3">
                     <ToggleGroup
                       type="single"
                       value={candidateViewMode}
                       onValueChange={(v) => v && setCandidateViewMode(v as 'table' | 'kanban')}
-                      className="border rounded-lg p-1"
+                      className="col-span-2 grid grid-cols-2 border rounded-lg p-1 sm:col-span-1 sm:flex"
                     >
                       <ToggleGroupItem value="kanban" aria-label="Vista Kanban" className="gap-1.5 text-xs px-2 h-7">
                         <LayoutGrid className="w-3.5 h-3.5" />
@@ -608,16 +608,16 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                         return (
                           <div
                             key={candidate.id}
-                            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                            className="flex flex-col gap-3 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer sm:flex-row sm:items-center sm:justify-between"
                             onClick={() => openCandidateDetail(candidate.id)}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex min-w-0 items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-violet-light flex items-center justify-center">
                                 <span className="font-medium text-violet">
                                   {candidate.first_name[0]}{candidate.last_name[0]}
                                 </span>
                               </div>
-                              <div>
+                              <div className="min-w-0">
                                 <p className="font-medium">
                                   {candidate.first_name} {candidate.last_name}
                                 </p>
@@ -633,7 +633,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
                               <Badge className={cn('text-xs', statusStyle.bg, statusStyle.text)}>
                                 {candidateStatusLabels[candidateStatus]}
                               </Badge>
@@ -785,8 +785,8 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
 
 
           {/* Footer Actions */}
-          <div className="flex-shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2">
+          <div className="flex-shrink-0 px-4 py-4 border-t border-border bg-muted/30 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap">
               {status === 'open' && (
                 <Button variant="outline" onClick={() => handleStatusChange('in_process')}>
                   <Play className="w-4 h-4 mr-2" />
@@ -810,7 +810,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                 </Button>
               )}
             </div>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
               Cerrar
             </Button>
           </div>
