@@ -63,8 +63,8 @@ export default function AsistenteIA() {
   const sendMessage = useSendAiChatMessage();
   const deleteConversation = useDeleteAiChatConversation();
 
-  const conversations = conversationsQuery.data || [];
-  const messages = messagesQuery.data || [];
+  const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
+  const messages = useMemo(() => messagesQuery.data || [], [messagesQuery.data]);
 
   useEffect(() => {
     if (!selectedConversationId && conversations.length > 0) {
@@ -94,8 +94,8 @@ export default function AsistenteIA() {
         mode,
       });
       setSelectedConversationId(result.conversationId);
-    } catch (error: any) {
-      toast.error(error?.message || 'No se pudo enviar la pregunta');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo enviar la pregunta');
       setInput(message);
     }
   };
@@ -105,8 +105,8 @@ export default function AsistenteIA() {
       await deleteConversation.mutateAsync(conversationId);
       if (selectedConversationId === conversationId) setSelectedConversationId(null);
       toast.success('Conversación eliminada');
-    } catch (error: any) {
-      toast.error(error?.message || 'No se pudo eliminar la conversación');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'No se pudo eliminar la conversación');
     }
   };
 
