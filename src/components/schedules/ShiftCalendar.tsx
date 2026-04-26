@@ -971,12 +971,12 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
         setShowAssignDialog(open);
         if (!open) clearSelection();
       }}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
+        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-sm max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
+          <DialogHeader className="shrink-0">
             <DialogTitle>Asignar Turno</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto min-h-0 px-1 pb-1 sm:px-2">
             <div>
               <p className="text-sm text-muted-foreground mb-2">
                 Se asignará el turno a <strong>{selectedCells[0]?.dates.length || 0}</strong> día(s).
@@ -1019,14 +1019,14 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
             </div>
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
+          <DialogFooter className="shrink-0 flex-col-reverse sm:flex-row gap-2 pt-2">
             {/* Delete button - only show when there are existing assignments */}
             {selectedCells.length > 0 && selectedCells[0]?.dates.some(date => 
               assignmentsMap[selectedCells[0].employeeId]?.[date]
             ) && (
               <Button 
                 variant="destructive" 
-                className="sm:mr-auto"
+                className="w-full sm:w-auto sm:mr-auto"
                 onClick={async () => {
                   const assignmentsToDelete = selectedCells[0]?.dates
                     .map(date => assignmentsMap[selectedCells[0].employeeId]?.[date])
@@ -1056,11 +1056,11 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
               </Button>
             )}
             
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => { setShowAssignDialog(false); clearSelection(); }}>
+            <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => { setShowAssignDialog(false); clearSelection(); }}>
                 Cancelar
               </Button>
-              <Button onClick={handleAssign} disabled={!selectedShiftId || createBulkAssignments.isPending}>
+              <Button className="w-full sm:w-auto" onClick={handleAssign} disabled={!selectedShiftId || createBulkAssignments.isPending}>
                 {createBulkAssignments.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Asignar
               </Button>

@@ -32,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCreateShiftCycle, useUpdateShiftCycle, useShifts } from '@/hooks/useSchedules';
 import type { ShiftCycle, Shift } from '@/types/schedule';
 
@@ -189,8 +188,8 @@ export function ShiftCycleFormDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
-            <div className="space-y-4 shrink-0">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-y-auto min-h-0 px-1 pb-1 sm:px-2">
+            <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
@@ -241,7 +240,7 @@ export function ShiftCycleFormDialog({
             </div>
 
             {/* Cycle Days */}
-            <div className="mt-4 flex flex-col min-h-0 flex-1">
+            <div className="mt-4 flex flex-col min-h-[12rem] sm:min-h-0 sm:flex-1">
               <div className="flex items-center justify-between gap-2 mb-2">
                 <FormLabel>Días del Ciclo ({cycleDays.length} días)</FormLabel>
                 <Button
@@ -268,7 +267,7 @@ export function ShiftCycleFormDialog({
                   <p className="text-sm">Agregue días para definir el ciclo de rotación.</p>
                 </div>
               ) : (
-                <div className="border rounded-md overflow-y-auto max-h-[240px] sm:max-h-[200px]">
+                <div className="border rounded-md overflow-y-auto max-h-[45vh] sm:max-h-[200px]">
                   <div className="p-2 space-y-2">
                     {cycleDays.map((day, index) => {
                       const shift = getShiftById(day.shift_id);
@@ -329,7 +328,7 @@ export function ShiftCycleFormDialog({
               )}
             </div>
 
-            <div className="flex-shrink-0 mt-4 space-y-4">
+            <div className="mt-4 space-y-4">
               <FormField
                 control={form.control}
                 name="is_active"

@@ -144,7 +144,7 @@ export function ShiftFormDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto space-y-4 px-1 sm:px-2">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 min-h-0 overflow-y-auto space-y-4 px-1 pb-1 sm:px-2">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
