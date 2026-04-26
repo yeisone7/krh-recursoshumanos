@@ -73,7 +73,7 @@ export function CandidateReasonDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-md overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>
             {isRejection ? 'Motivo de No Selección' : 'Motivo de Retiro'}
@@ -112,12 +112,13 @@ export function CandidateReasonDialog({
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={() => handleOpenChange(false)}>
+          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleOpenChange(false)}>
               Cancelar
             </Button>
             <Button
               variant={isRejection ? 'destructive' : 'default'}
+              className="w-full sm:w-auto"
               onClick={handleConfirm}
               disabled={!reason || isPending}
             >
