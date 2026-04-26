@@ -147,7 +147,7 @@ export function RequisitionDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl overflow-y-auto p-4 sm:p-6 [&_button]:min-h-11 sm:[&_button]:min-h-10 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
+      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl overflow-y-auto p-4 sm:p-6 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
         <DialogHeader>
           <div className="flex flex-col items-start gap-2 pr-8 sm:flex-row sm:items-center sm:justify-between sm:pr-0">
             <DialogTitle className="w-full text-center text-lg leading-tight sm:w-auto sm:text-left sm:text-xl">
@@ -171,9 +171,9 @@ export function RequisitionDetailDialog({
           </div>
         ) : requisition ? (
           <Tabs defaultValue="timeline" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="timeline" className="min-w-0">Timeline</TabsTrigger>
-              <TabsTrigger value="details" className="min-w-0">Detalles</TabsTrigger>
+            <TabsList className="grid h-10 w-full grid-cols-2 overflow-hidden">
+              <TabsTrigger value="timeline" className="h-8 min-w-0">Timeline</TabsTrigger>
+              <TabsTrigger value="details" className="h-8 min-w-0">Detalles</TabsTrigger>
             </TabsList>
 
             <TabsContent value="timeline" className="mt-4 space-y-4">
