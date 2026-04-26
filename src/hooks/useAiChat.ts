@@ -1,8 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-type ChatMode = 'app_help' | 'data_analysis';
+export type ChatMode = 'app_help' | 'data_analysis';
 type ChatRole = 'user' | 'assistant';
 
 export interface AiChatPageContext {
@@ -10,17 +10,6 @@ export interface AiChatPageContext {
   moduleLabel: string;
   pathname: string;
   isActiveModule?: boolean;
-}
-
-export interface AiChatConversation {
-  id: string;
-  company_id: string;
-  user_id: string;
-  mode: ChatMode;
-  title: string;
-  last_message_at: string;
-  created_at: string;
-  updated_at: string;
 }
 
 export interface AiChatMessage {
@@ -35,50 +24,7 @@ export interface AiChatMessage {
   created_at: string;
 }
 
-export function useAiChatConversations(mode: ChatMode = 'app_help') {
-  const { currentCompanyId, user } = useAuth();
-
-  return useQuery({
-    queryKey: ['ai-chat-conversations', currentCompanyId, user?.id, mode],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('ai_chat_conversations' as never)
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .eq('user_id', user?.id)
-        .eq('mode', mode)
-        .order('last_message_at', { ascending: false });
-
-      if (error) throw error;
-      return (data || []) as AiChatConversation[];
-    },
-    enabled: !!currentCompanyId && !!user?.id,
-  });
-}
-
-export function useAiChatMessages(conversationId: string | null) {
-  const { currentCompanyId, user } = useAuth();
-
-  return useQuery({
-    queryKey: ['ai-chat-messages', conversationId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('ai_chat_messages' as never)
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .eq('company_id', currentCompanyId)
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      return (data || []) as AiChatMessage[];
-    },
-    enabled: !!conversationId && !!currentCompanyId && !!user?.id,
-  });
-}
-
 export function useSendAiChatMessage() {
-  const queryClient = useQueryClient();
   const { currentCompanyId, user } = useAuth();
 
   const getUserDisplayName = async () => {
@@ -103,12 +49,12 @@ export function useSendAiChatMessage() {
   return useMutation({
     mutationFn: async ({
       message,
-      conversationId,
+      history = [],
       mode = 'app_help',
       pageContext,
     }: {
       message: string;
-      conversationId?: string | null;
+      history?: Array<Pick<AiChatMessage, 'role' | 'content'>>;
       mode?: ChatMode;
       pageContext?: AiChatPageContext | null;
     }) => {
@@ -117,7 +63,7 @@ export function useSendAiChatMessage() {
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message,
-          conversationId,
+          history: history.slice(-30),
           mode,
           companyId: currentCompanyId,
           pageContext,
@@ -128,28 +74,6 @@ export function useSendAiChatMessage() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data as { conversationId: string; message: AiChatMessage; provider: string };
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['ai-chat-conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['ai-chat-messages', data.conversationId] });
-    },
-  });
-}
-
-export function useDeleteAiChatConversation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (conversationId: string) => {
-      const { error } = await supabase
-        .from('ai_chat_conversations' as never)
-        .delete()
-        .eq('id', conversationId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ai-chat-conversations'] });
     },
   });
 }
