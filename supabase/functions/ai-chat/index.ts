@@ -170,6 +170,12 @@ serve(async (req) => {
     const companyId = typeof body.companyId === "string" ? body.companyId : "";
     const conversationId = typeof body.conversationId === "string" && body.conversationId ? body.conversationId : null;
     const mode: ChatMode = body.mode === "data_analysis" ? "data_analysis" : "app_help";
+    const rawPageContext = body.pageContext && typeof body.pageContext === "object" ? body.pageContext : null;
+    const pageContext: PageContext | null = rawPageContext ? {
+      module: typeof rawPageContext.module === "string" ? rawPageContext.module.slice(0, 40) : undefined,
+      moduleLabel: typeof rawPageContext.moduleLabel === "string" ? rawPageContext.moduleLabel.slice(0, 80) : undefined,
+      pathname: typeof rawPageContext.pathname === "string" ? rawPageContext.pathname.slice(0, 120) : undefined,
+    } : null;
 
     if (!companyId) return jsonResponse({ error: "Empresa requerida" }, 400);
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(companyId)) {
@@ -236,7 +242,7 @@ serve(async (req) => {
       ...((previousMessages || []) as Array<{ role: ChatRole; content: string }>).map((item) => ({ role: item.role, content: item.content })),
       { role: "user", content: message },
     ];
-    const systemPrompt = buildSystemPrompt(mode);
+    const systemPrompt = buildSystemPrompt(mode, pageContext);
 
     let provider = "lovable_ai";
     let answer = "";
