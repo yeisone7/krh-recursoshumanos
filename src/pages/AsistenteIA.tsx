@@ -41,18 +41,20 @@ const CONFIRM_STEP_MESSAGE = 'Confirmo que completé este paso. Continúa con el
 function splitAssistantMessage(content: string) {
   const normalized = content.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
+  const greetingIndex = lines.findIndex((line) => /^(?:[¡!]?\s*)?(hola|buenos días|buenas tardes|buenas noches)\b/i.test(line));
   const titleIndex = lines.findIndex((line) => /^#{1,3}\s+/.test(line) || /^paso\s+\d+(\s+de\s+\d+)?/i.test(line));
   const questionIndex = [...lines].reverse().findIndex((line) => /^¿/.test(line) || /\?\s*$/.test(line));
   const confirmationIndex = questionIndex >= 0 ? lines.length - 1 - questionIndex : -1;
+  const greeting = greetingIndex >= 0 ? lines[greetingIndex] : null;
   const title = titleIndex >= 0 ? lines[titleIndex].replace(/^#{1,3}\s+/, '').replace(/:\s*$/, '') : null;
   const confirmation = confirmationIndex >= 0 && confirmationIndex !== titleIndex ? lines[confirmationIndex] : null;
   const instructions = lines
-    .filter((_, index) => index !== titleIndex && index !== confirmationIndex)
+    .filter((_, index) => index !== greetingIndex && index !== titleIndex && index !== confirmationIndex)
     .join('\n\n')
     .replace(/(^|\n)(\d+\.\s)/g, '$1$2')
     .trim();
 
-  return { title, instructions, confirmation };
+  return { greeting, title, instructions, confirmation };
 }
 
 const moduleSuggestions: Record<string, { module: string; moduleLabel: string; suggestions: string[] }> = {
@@ -66,7 +68,7 @@ const moduleSuggestions: Record<string, { module: string; moduleLabel: string; s
 function MessageBubble({ message }: { message: AiChatMessage }) {
   const isUser = message.role === 'user';
   const assistantSections = !isUser ? splitAssistantMessage(message.content) : null;
-  const hasAssistantSections = !!(assistantSections?.title || assistantSections?.confirmation);
+  const hasAssistantSections = !!(assistantSections?.greeting || assistantSections?.title || assistantSections?.confirmation);
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
@@ -88,6 +90,11 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
               </div>
             ) : (
               <>
+            {assistantSections?.greeting && (
+              <p className="text-sm leading-relaxed text-card-foreground">
+                {assistantSections.greeting}
+              </p>
+            )}
             {assistantSections?.title && (
               <h3 className="text-base font-semibold leading-snug text-card-foreground sm:text-[1.05rem]">
                 {assistantSections.title}
