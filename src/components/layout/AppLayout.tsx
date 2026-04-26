@@ -8,12 +8,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { useContractExpiryNotifications } from '@/hooks/useContractExpiryNotifications';
 import { MobileBottomNav } from './MobileBottomNav';
+import { useLocation } from 'react-router-dom';
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const isMobile = useIsMobile();
@@ -36,6 +38,13 @@ export function AppLayout({ children }: AppLayoutProps) {
     const timer = setTimeout(() => setShowSwipeHint(false), 3000);
     return () => clearTimeout(timer);
   }, [isMobile]);
+
+  useEffect(() => {
+    const trackedModules = ['/empleados', '/contratos', '/dotacion', '/examenes', '/alertas'];
+    if (trackedModules.some((path) => location.pathname.startsWith(path))) {
+      sessionStorage.setItem('krh_last_module_path', location.pathname);
+    }
+  }, [location.pathname]);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
