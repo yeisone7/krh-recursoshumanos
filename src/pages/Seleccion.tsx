@@ -133,7 +133,7 @@ export default function Seleccion() {
             <Button
               size="sm"
               variant="ghost"
-              className="h-10 w-10 bg-primary/10 hover:bg-primary/20 text-primary"
+              className="h-10 w-10 bg-info/10 hover:bg-info/20 text-info"
               onClick={(e) => {
                 e.stopPropagation();
                 setCandidateFormVacancyId(vacancy.id);
@@ -447,7 +447,7 @@ export default function Seleccion() {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="bg-primary/10 hover:bg-primary/20 text-primary"
+                                  className="bg-info/10 hover:bg-info/20 text-info"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setCandidateFormVacancyId(vacancy.id);
