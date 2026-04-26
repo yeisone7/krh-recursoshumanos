@@ -411,9 +411,39 @@ export default function Jornadas() {
             </TabsContent>
 
             {/* Ciclos */}
-            <TabsContent value="cycles" className="overflow-auto">
+            <TabsContent value="cycles" className="overflow-auto min-h-0">
               {loadingCycles ? (
                 <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
+              ) : isMobile ? (
+                <MobileCardList
+                  className="p-1"
+                  emptyMessage="No hay ciclos de rotación"
+                  items={filteredCycles.map((cycle) => ({
+                    id: cycle.id,
+                    title: (
+                      <span className="min-w-0">
+                        <span className="truncate">{cycle.name}</span>
+                        {cycle.code && <span className="text-muted-foreground ml-1">({cycle.code})</span>}
+                      </span>
+                    ),
+                    subtitle: cycle.description || 'Sin descripción',
+                    badge: <Badge variant={cycle.is_active ? 'default' : 'secondary'}>{cycle.is_active ? 'Activo' : 'Inactivo'}</Badge>,
+                    fields: [
+                      { label: 'Duración', value: `${cycle.total_days} días` },
+                      { label: 'Días configurados', value: cycle.cycle_days?.length || 0 },
+                    ],
+                    actions: (
+                      <>
+                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => { setSelectedCycle(cycle); setShowCycleForm(true); }}>
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setDeleteConfirm({ type: 'cycle', id: cycle.id })}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    ),
+                  }))}
+                />
               ) : (
                 <div className="rounded-md border overflow-x-auto">
                   <Table>
@@ -427,7 +457,7 @@ export default function Jornadas() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {shiftCycles.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((cycle) => (
+                      {filteredCycles.map((cycle) => (
                         <TableRow key={cycle.id}>
                           <TableCell>
                             <div>
@@ -463,10 +493,11 @@ export default function Jornadas() {
 
             {/* Calendario */}
             <TabsContent value="calendar" className="mt-1 flex-1 min-h-0 flex flex-col">
-              <div className="flex justify-end mb-1">
-                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsFullscreen(true)}>
+              <div className="flex justify-end mb-1 shrink-0">
+                <Button variant="outline" size="sm" className="h-8 sm:h-7 text-xs" onClick={() => setIsFullscreen(true)}>
                   <Maximize2 className="w-3.5 h-3.5 sm:mr-1" />
                   <span className="hidden sm:inline">Pantalla completa</span>
+                  <span className="sm:hidden">Ampliar</span>
                 </Button>
               </div>
               <ShiftCalendar />
