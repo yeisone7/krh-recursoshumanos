@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   useAiChatConversations,
   useAiChatMessages,
@@ -67,6 +68,10 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
 export default function AsistenteIA() {
   const location = useLocation();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const isNearBottomRef = useRef(true);
+  const forceNextScrollRef = useRef(true);
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState<ChatMode>('app_help');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [input, setInput] = useState('');
