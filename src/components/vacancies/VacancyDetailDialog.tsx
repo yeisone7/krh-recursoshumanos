@@ -546,20 +546,22 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     <Button
                       size="sm"
                       variant="outline"
+                      className="min-w-0 px-2 text-xs sm:px-3 sm:text-sm"
                       onClick={() => setShowGenerateLink(true)}
                       disabled={vacancy?.status !== 'in_process'}
                     >
-                      <Link2 className="w-4 h-4 mr-2" />
-                      Generar Enlace
+                      <Link2 className="h-4 w-4 shrink-0 sm:mr-2" />
+                      <span className="truncate">Generar Enlace</span>
                     </Button>
                     <Button
                       size="sm"
+                      className="min-w-0 px-2 text-xs sm:px-3 sm:text-sm"
                       onClick={() => setShowCandidateForm(true)}
                       disabled={vacancy?.status !== 'in_process'}
                       title={vacancy?.status !== 'in_process' ? 'Solo se pueden agregar candidatos cuando la vacante está En Proceso' : undefined}
                     >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Agregar Candidato
+                      <UserPlus className="h-4 w-4 shrink-0 sm:mr-2" />
+                      <span className="truncate">Agregar</span>
                     </Button>
                   </div>
                 </div>
@@ -583,7 +585,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     </div>
                   ) : candidateViewMode === 'kanban' ? (
                     <div
-                      className="overflow-x-auto overflow-y-hidden pb-4 -mx-6 px-6"
+                      className="-mx-4 overflow-x-auto overflow-y-hidden px-4 pb-4 sm:-mx-6 sm:px-6"
                       onWheel={(e) => {
                         // Permite desplazamiento horizontal con rueda/trackpad
                         if (e.deltaY && !e.shiftKey) {
