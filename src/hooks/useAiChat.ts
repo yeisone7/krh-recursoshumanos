@@ -9,6 +9,7 @@ export interface AiChatPageContext {
   module: string;
   moduleLabel: string;
   pathname: string;
+  isActiveModule?: boolean;
 }
 
 export interface AiChatConversation {
