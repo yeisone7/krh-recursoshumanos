@@ -364,7 +364,13 @@ export default function Seleccion() {
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-md border">
+                <>
+                <MobileCardList
+                  className="md:hidden"
+                  items={vacancyItems}
+                  emptyMessage="No hay vacantes"
+                />
+                <div className="hidden rounded-md border md:block md:overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -477,6 +483,7 @@ export default function Seleccion() {
                     </TableBody>
                   </Table>
                 </div>
+                </>
               )}
             </div>
           </CardHeader>
