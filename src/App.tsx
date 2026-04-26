@@ -48,6 +48,7 @@ import Calendario from "./pages/Calendario";
 import Portal from "./pages/Portal";
 import Reportes from "./pages/Reportes";
 import Analitica from "./pages/Analitica";
+import AsistenteIA from "./pages/AsistenteIA";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Onboarding from "./pages/Onboarding";
@@ -168,6 +169,7 @@ const App = () => (
                         <Route path="/calendario" element={<P module="calendario"><Calendario /></P>} />
                         <Route path="/reportes" element={<P module="reportes"><Reportes /></P>} />
                         <Route path="/analitica" element={<P module="analitica"><Analitica /></P>} />
+                        <Route path="/asistente-ia" element={<P module="asistente_ia"><AsistenteIA /></P>} />
                         <Route path="/catalogos/areas" element={<P module="catalogos"><CatalogosAreas /></P>} />
                         <Route path="/catalogos/cargos" element={<P module="catalogos"><CatalogosCargos /></P>} />
                         <Route path="/catalogos/tipos-dotacion" element={<P module="catalogos"><CatalogosTiposDotacion /></P>} />
