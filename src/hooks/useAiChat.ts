@@ -87,7 +87,7 @@ export function useSendAiChatMessage() {
     const cleanName = (value?: string | null) => {
       const text = value?.trim();
       if (!text || text.includes('@')) return undefined;
-      return text;
+      return text.split(/\s+/)[0];
     };
 
     const { data } = await supabase
