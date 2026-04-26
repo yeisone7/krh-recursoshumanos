@@ -221,16 +221,16 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[95vh] p-0 gap-0 overflow-hidden">
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-xl p-0 sm:h-auto sm:max-h-[95vh] sm:rounded-lg">
         {/* Header */}
-        <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 space-y-3">
+        <div className="shrink-0 space-y-3 px-3 pb-3 pl-3 pr-10 pt-3 sm:px-6 sm:pb-4 sm:pt-6">
           <div className="flex items-start gap-3 sm:gap-4">
-            <div className="p-2 sm:p-3 rounded-xl bg-primary/10 flex-shrink-0">
-              <GraduationCap className="h-5 w-5 sm:h-7 sm:w-7 text-primary" />
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 sm:h-auto sm:w-auto sm:p-3">
+              <GraduationCap className="h-5 w-5 text-primary sm:h-7 sm:w-7" />
             </div>
             <div className="flex-1 min-w-0 space-y-1.5">
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <Badge variant="outline" className="text-[10px] sm:text-xs font-medium">
+                <Badge variant="outline" className="max-w-full text-[10px] font-medium sm:text-xs">
                   {categoryLabels[course.category] || course.category} {durationLabel}
                 </Badge>
                 <Badge className={`text-[10px] sm:text-xs ${statusColors[course.status] || 'bg-muted text-muted-foreground'}`}>
@@ -245,7 +245,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                   <Badge variant="outline" className="text-[10px] sm:text-xs">Manual</Badge>
                 )}
               </div>
-              <h2 className="text-base sm:text-xl font-bold leading-tight">{course.name}</h2>
+              <h2 className="line-clamp-2 text-base font-bold leading-tight sm:text-xl">{course.name}</h2>
               <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground flex-wrap">
                 {course.audience && (
                   <span className="flex items-center gap-1"><Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {course.audience}</span>
