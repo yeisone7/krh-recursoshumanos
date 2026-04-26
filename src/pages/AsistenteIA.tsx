@@ -35,11 +35,18 @@ const CONFIRM_STEP_MESSAGE = 'Confirmo que completé este paso. Continúa con el
 function splitAssistantMessage(content: string) {
   const normalized = content.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
+  const sanitizeGreetingName = (line: string | null) => {
+    if (!line) return null;
+    return line.replace(
+      /^(\s*[¡!]?(?:hola|buenos días|buenas tardes|buenas noches)\s*,?\s+)([\p{L}ÁÉÍÓÚÜÑáéíóúüñ]+)(?:\s+[\p{L}ÁÉÍÓÚÜÑáéíóúüñ]+)+(.*)$/iu,
+      '$1$2$3'
+    );
+  };
   const greetingIndex = lines.findIndex((line) => /^(?:[¡!]?\s*)?(hola|buenos días|buenas tardes|buenas noches)\b/i.test(line));
   const titleIndex = lines.findIndex((line) => /^#{1,3}\s+/.test(line) || /^paso\s+\d+(\s+de\s+\d+)?/i.test(line));
   const questionIndex = [...lines].reverse().findIndex((line) => /^¿/.test(line) || /\?\s*$/.test(line));
   const confirmationIndex = questionIndex >= 0 ? lines.length - 1 - questionIndex : -1;
-  const greeting = greetingIndex >= 0 ? lines[greetingIndex] : null;
+  const greeting = sanitizeGreetingName(greetingIndex >= 0 ? lines[greetingIndex] : null);
   const title = titleIndex >= 0 ? lines[titleIndex].replace(/^#{1,3}\s+/, '').replace(/:\s*$/, '') : null;
   const confirmation = confirmationIndex >= 0 && confirmationIndex !== titleIndex ? lines[confirmationIndex] : null;
   const instructions = lines
