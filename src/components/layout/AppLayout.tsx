@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect, useRef } from 'react';
+import { ReactNode, PointerEvent, useState, useEffect, useRef } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -24,9 +24,11 @@ export function AppLayout({ children }: AppLayoutProps) {
   const { hasPermission, permissionsLoaded } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [aiPanelHeight, setAiPanelHeight] = useState(0);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [aiButtonLifted, setAiButtonLifted] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
+  const dragStartRef = useRef<{ y: number; height: number } | null>(null);
   const isMobile = useIsMobile();
   const isAiAssistant = location.pathname === '/asistente-ia';
   const showAiButton = permissionsLoaded && hasPermission('asistente_ia');
