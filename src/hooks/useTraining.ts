@@ -845,6 +845,7 @@ export function useCreateFullCourse() {
 
 export function useUpdateFullCourse() {
   const queryClient = useQueryClient();
+  const { currentCompanyId, user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...data }: {
@@ -868,6 +869,16 @@ export function useUpdateFullCourse() {
       content?: TrainingCourseContent;
       status?: string;
     }) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { data: previousCourse, error: fetchError } = await supabase
+        .from('training_courses')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const updateData: Record<string, unknown> = {};
       if (data.name !== undefined) updateData.name = data.name;
       if (data.code !== undefined) updateData.code = data.code;
@@ -887,16 +898,37 @@ export function useUpdateFullCourse() {
       if (data.language !== undefined) updateData.language = data.language;
       if (data.content !== undefined) updateData.content = data.content;
       if (data.status !== undefined) updateData.status = data.status;
+      updateData.version = ((previousCourse as TrainingCourse).version || 1) + 1;
+      updateData.updated_at = new Date().toISOString();
 
-      const { error } = await supabase
+      const { data: updatedCourse, error } = await supabase
         .from('training_courses')
         .update(updateData)
-        .eq('id', id);
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      const { error: auditError } = await supabase.from('audit_logs').insert({
+        user_id: user.id,
+        user_email: user.email,
+        company_id: currentCompanyId || previousCourse.company_id,
+        action: 'update',
+        entity_type: 'training_course',
+        entity_id: id,
+        entity_name: updatedCourse.name,
+        old_values: previousCourse as any,
+        new_values: updatedCourse as any,
+        user_agent: navigator.userAgent,
+      });
+
+      if (auditError) throw auditError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['training_courses'] });
+      queryClient.invalidateQueries({ queryKey: ['training_course'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
     },
   });
 }
