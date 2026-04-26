@@ -1,59 +1,36 @@
-Propuesta: mejorar la experiencia del Asistente IA en móvil para que el usuario pueda seguir instrucciones sin estar entrando y saliendo de la vista completa del chat.
+Implementaré el chat IA como una sesión temporal, sin guardar historial en la base de datos.
 
-## Cambio principal
+Cambios propuestos:
 
-Convertir el FAB del chat en una experiencia tipo panel flotante/overlay en pantallas móviles:
+1. Quitar historial guardado del chat
+- El asistente dejará de cargar conversaciones anteriores.
+- Se eliminará visualmente la sección/listado de “Conversaciones” en la vista completa.
+- El botón “Nueva” sí hará algo claro: reiniciará la conversación temporal actual.
 
-```text
-Usuario está en Contratos / Empleados / Alertas
-        ↓
-Toca FAB Asistente IA
-        ↓
-Se abre un panel de chat sobre la pantalla actual
-        ↓
-El usuario lee el paso, minimiza/cierra el panel, ejecuta la acción en el módulo
-        ↓
-Vuelve a abrir el FAB y continúa la misma conversación
-```
+2. Mantener conversación solo mientras el panel esté abierto/minimizado
+- Los mensajes vivirán en memoria del componente.
+- Si el chat está minimizado, la conversación seguirá disponible.
+- Si el usuario cierra el chat, esa conversación se perderá.
 
-## Qué se implementará
+3. Confirmar antes de cerrar
+- Al cerrar el chat, mostraré una confirmación indicando que la conversación no se guarda.
+- Si confirma, se limpia la conversación y se cierra el panel.
+- Si cancela, vuelve al chat sin perder nada.
 
-1. Mantener al usuario en el módulo actual
-   - En móvil, el FAB ya no navegará necesariamente a `/asistente-ia` para usar el chat.
-   - Abrirá un panel flotante encima de la pantalla actual.
-   - El módulo visible seguirá siendo el contexto de trabajo del usuario.
+4. Ajustar el backend del asistente
+- La función de IA dejará de crear registros en `ai_chat_conversations` y `ai_chat_messages`.
+- Recibirá el historial temporal enviado desde el frontend para mantener contexto durante la sesión.
+- Responderá igual que ahora, pero sin persistencia.
 
-2. Crear un chat compacto para móvil
-   - Panel inferior tipo “sheet” o drawer con altura útil, por ejemplo 75-85% de la pantalla.
-   - Header siempre visible dentro del panel.
-   - Mensajes con scroll interno.
-   - Campo de texto y botón enviar siempre accesibles.
-   - Botón para minimizar/cerrar sin perder la conversación.
+5. Ajustar textos visuales
+- Cambiaré mensajes como “Nueva conversación” o “Historial personal por empresa” por textos acordes a conversación temporal.
+- Eliminaré acciones de borrar historial, porque ya no habrá historial persistente.
 
-3. Reutilizar la lógica actual del chat
-   - Mantener `useAiChat`, conversaciones, mensajes, envío, eliminación y confirmación de pasos.
-   - Evitar duplicar la lógica: extraer la interfaz de chat a un componente reutilizable si es necesario.
-   - La vista completa `/asistente-ia` puede seguir existiendo para escritorio o para consulta más amplia.
-
-4. Corregir el flujo guiado por pasos
-   - El botón “Paso X · continuar” quedará dentro del panel flotante.
-   - Al confirmar un paso, el scroll se mantendrá al final del chat.
-   - El usuario podrá cerrar/minimizar el panel para ejecutar la instrucción y reabrirlo para continuar.
-
-5. Ajustar el FAB para evitar superposiciones
-   - En móvil, el FAB se ubicará por encima del navbar verde y fuera del área del botón enviar.
-   - Cuando el panel esté abierto, el FAB se ocultará o se convertirá en acción de minimizar según convenga para no tapar el input.
-
-## Resultado esperado
-
-El usuario no tendrá que alternar entre “pantalla de chat” y “pantalla del módulo”. Podrá usar el asistente como acompañamiento contextual mientras trabaja en Contratos, Empleados, Alertas, etc.
-
-## Detalles técnicos
-
-- Archivos principales a tocar:
+Detalles técnicos:
+- Archivos principales a modificar:
+  - `src/hooks/useAiChat.ts`
+  - `src/components/ai/AiChatPanel.tsx`
   - `src/components/layout/AppLayout.tsx`
-  - `src/pages/AsistenteIA.tsx`
-  - Posible nuevo componente compartido para el panel/chat compacto.
-- Se conservará el contexto `krh_last_module_path` para que el asistente sepa desde qué módulo se abrió.
-- No requiere cambios de base de datos.
-- No requiere cambios en la función de IA salvo que se detecte que el prompt necesita reforzar el flujo contextual.
+  - `supabase/functions/ai-chat/index.ts`
+- No se eliminarán tablas existentes; simplemente se dejarán de usar para este chat.
+- Mantendré la validación de empresa/usuario y el prompt visual ya configurado.

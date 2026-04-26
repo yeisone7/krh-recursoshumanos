@@ -220,8 +220,14 @@ serve(async (req) => {
     const body = await req.json();
     const message = typeof body.message === "string" ? body.message.trim() : "";
     const companyId = typeof body.companyId === "string" ? body.companyId : "";
-    const conversationId = typeof body.conversationId === "string" && body.conversationId ? body.conversationId : null;
     const mode: ChatMode = body.mode === "data_analysis" ? "data_analysis" : "app_help";
+    const history = Array.isArray(body.history)
+      ? body.history
+          .filter((item: any) => (item?.role === "user" || item?.role === "assistant") && typeof item?.content === "string")
+          .slice(-30)
+          .map((item: any) => ({ role: item.role as ChatRole, content: item.content.trim().slice(0, 4000) }))
+          .filter((item: ChatMessage) => item.content)
+      : [];
     const rawPageContext = body.pageContext && typeof body.pageContext === "object" ? body.pageContext : null;
     const userDisplayName = typeof body.userDisplayName === "string" ? body.userDisplayName.trim().slice(0, 80) : "";
     const pageContext: PageContext | null = rawPageContext ? {
@@ -245,49 +251,7 @@ serve(async (req) => {
 
     if (!membership && !superAdmin) return jsonResponse({ error: "No tienes acceso a esta empresa" }, 403);
 
-    let activeConversationId = conversationId;
-    if (activeConversationId) {
-      const { data: existingConversation } = await adminClient
-        .from("ai_chat_conversations")
-        .select("id")
-        .eq("id", activeConversationId)
-        .eq("user_id", user.id)
-        .eq("company_id", companyId)
-        .maybeSingle();
-
-      if (!existingConversation) {
-        activeConversationId = null;
-      }
-    }
-
-    if (!activeConversationId) {
-      const title = message.slice(0, 70) || "Nueva conversación";
-      const { data: newConversation, error: conversationError } = await adminClient
-        .from("ai_chat_conversations")
-        .insert({ company_id: companyId, user_id: user.id, mode, title })
-        .select("id")
-        .single();
-      if (conversationError) throw conversationError;
-      activeConversationId = newConversation.id;
-    }
-
-    const { data: previousMessages, error: historyError } = await adminClient
-      .from("ai_chat_messages")
-      .select("role, content, created_at")
-      .eq("conversation_id", activeConversationId)
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(30);
-    if (historyError) throw historyError;
-
-    const { error: userMessageError } = await adminClient.from("ai_chat_messages").insert({
-      conversation_id: activeConversationId,
-      company_id: companyId,
-      user_id: user.id,
-      role: "user",
-      content: message,
-    });
-    if (userMessageError) throw userMessageError;
+    const activeConversationId = crypto.randomUUID();
 
     const { data: aiConfigRow } = await adminClient
       .from("system_config")
@@ -298,11 +262,11 @@ serve(async (req) => {
 
     const aiConfig = (aiConfigRow?.config_value || {}) as AIConfig;
     const conversationMessages: ChatMessage[] = [
-      ...((previousMessages || []) as Array<{ role: ChatRole; content: string }>).map((item) => ({ role: item.role, content: item.content })),
+      ...history,
       { role: "user", content: message },
     ];
     const isStepFlow = conversationMessages.some((item) => item.role === "assistant" && /paso\s+\d+(?:\s+de\s+\d+)?/i.test(item.content));
-    const systemPrompt = buildSystemPrompt(mode, pageContext, { displayName: userDisplayName, isNewConversation: (previousMessages || []).length === 0, isStepFlow });
+    const systemPrompt = buildSystemPrompt(mode, pageContext, { displayName: userDisplayName, isNewConversation: history.length === 0, isStepFlow });
 
     let provider = "lovable_ai";
     let answer = "";
@@ -322,25 +286,17 @@ serve(async (req) => {
       answer = await correctStepFlowResponse(provider, aiConfig, systemPrompt, conversationMessages, answer);
     }
 
-    const { data: assistantMessage, error: assistantError } = await adminClient
-      .from("ai_chat_messages")
-      .insert({
-        conversation_id: activeConversationId,
-        company_id: companyId,
-        user_id: user.id,
-        role: "assistant",
-        content: answer,
-        ai_provider: provider,
-        metadata: { selected_model: aiConfig.model || "gateway" },
-      })
-      .select("*")
-      .single();
-    if (assistantError) throw assistantError;
-
-    await adminClient
-      .from("ai_chat_conversations")
-      .update({ last_message_at: new Date().toISOString() })
-      .eq("id", activeConversationId);
+    const assistantMessage = {
+      id: crypto.randomUUID(),
+      conversation_id: activeConversationId,
+      company_id: companyId,
+      user_id: user.id,
+      role: "assistant" as const,
+      content: answer,
+      ai_provider: provider,
+      metadata: { selected_model: aiConfig.model || "gateway", temporary: true },
+      created_at: new Date().toISOString(),
+    };
 
     return jsonResponse({ conversationId: activeConversationId, message: assistantMessage, provider });
   } catch (error: any) {
