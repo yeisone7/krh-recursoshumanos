@@ -269,7 +269,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="shrink-0 overflow-x-auto border-b px-3 sm:px-6">
+          <div className="scrollbar-header-auto shrink-0 overflow-x-auto border-b px-3 sm:px-6">
             <TabsList className="h-auto w-max justify-start gap-1 rounded-none bg-transparent p-0 sm:w-full sm:gap-0">
               {[
                 { value: 'general', icon: BookOpen, label: 'General' },
