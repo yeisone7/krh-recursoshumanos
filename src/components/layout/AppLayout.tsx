@@ -269,7 +269,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
 
       <AlertDialog open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="z-[80]">
           <AlertDialogHeader>
             <AlertDialogTitle>Cerrar chat</AlertDialogTitle>
             <AlertDialogDescription>
