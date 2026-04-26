@@ -571,13 +571,13 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
             <div className="px-6 -mt-3 relative z-10">
               <div className="flex gap-2 pb-1">
                 {employee.work_info?.hire_date && (
-                  <MetricChip icon={Clock} label="Antigüedad" value={computeSeniority(employee.work_info.hire_date)} color="primary" />
+                  <MetricChip icon={Clock} label="Antigüedad" value={computeSeniority(employee.work_info.hire_date)} color="info" />
                 )}
                 {employee.birth_date && (
                   <MetricChip icon={Cake} label="Edad" value={computeAge(employee.birth_date)} color="success" />
                 )}
                 {employee.document_number && (
-                  <MetricChip icon={Hash} label={documentTypeLabels[employee.document_type]} value={employee.document_number} color="info" />
+                  <MetricChip icon={Hash} label={documentTypeLabels[employee.document_type]} value={employee.document_number} color="violet" />
                 )}
                 {employee.blood_type && (
                   <MetricChip icon={Droplets} label="Tipo Sangre" value={employee.blood_type} color="destructive" />
