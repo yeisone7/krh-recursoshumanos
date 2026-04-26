@@ -426,9 +426,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
               <TabsContent value="evaluacion" className="mt-0">
                 {content?.evaluacion && content.evaluacion.length > 0 ? (
                   <Card>
-                    <CardContent className="p-5">
-                      <div className="flex items-center gap-2 mb-4">
-                        <h3 className="font-semibold flex items-center gap-2">
+                    <CardContent className="p-3 sm:p-5">
+                      <div className="mb-4 flex flex-wrap items-center gap-2">
+                        <h3 className="flex items-center gap-2 font-semibold">
                           <CircleHelp className="h-4 w-4" /> Preguntas de Evaluación
                         </h3>
                         <Badge className="bg-primary text-primary-foreground text-xs">
@@ -437,15 +437,15 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                       </div>
                       <div className="space-y-3">
                         {content.evaluacion.map((q, i) => (
-                          <div key={i} className="rounded-lg border p-4 space-y-2">
+                          <div key={i} className="space-y-3 rounded-lg border p-3 sm:p-4">
                             <div className="flex items-start gap-3">
                               <span className="font-bold text-sm text-muted-foreground flex-shrink-0">P{i + 1}</span>
-                              <p className="font-medium text-sm">{q.pregunta}</p>
+                              <p className="min-w-0 break-words text-sm font-medium leading-relaxed">{q.pregunta}</p>
                             </div>
-                            <div className="pl-8 flex items-center gap-1.5 text-sm">
+                            <div className="flex items-start gap-1.5 pl-0 text-sm sm:pl-8">
                               <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
                               <span className="text-green-700 dark:text-green-400 font-medium">Respuesta:</span>
-                              <span className="text-muted-foreground">
+                              <span className="min-w-0 break-words text-muted-foreground">
                                 {q.opciones.findIndex(o => o === q.respuestaCorrecta) >= 0
                                   ? `${String.fromCharCode(65 + q.opciones.findIndex(o => o === q.respuestaCorrecta))}) ${q.respuestaCorrecta}`
                                   : q.respuestaCorrecta
