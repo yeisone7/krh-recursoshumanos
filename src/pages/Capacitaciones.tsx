@@ -227,18 +227,23 @@ export default function Capacitaciones() {
                                   <span className="truncate">{course.category}</span>
                                 </div>
                               </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0"><MoreHorizontal className="h-4 w-4" /></Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <div className="flex shrink-0 flex-col items-end gap-1">
+                                {content && !content.isManual && (
+                                  <Badge className="bg-success-light text-success"><Sparkles className="mr-1 h-3 w-3" /> IA</Badge>
+                                )}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </div>
 
                             <div className="space-y-1.5">
@@ -248,8 +253,6 @@ export default function Capacitaciones() {
                               </div>
                               {content?.isManual ? (
                                 <Badge variant="outline"><PenLine className="h-3 w-3 mr-1" /> Manual</Badge>
-                              ) : content ? (
-                                <Badge variant="secondary" className="w-fit bg-primary/10 text-primary"><Sparkles className="h-3 w-3 mr-1" /> IA</Badge>
                               ) : null}
                             </div>
 
