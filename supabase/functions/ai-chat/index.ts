@@ -12,6 +12,12 @@ const DEFAULT_GATEWAY_MODEL = "google/gemini-3-flash-preview";
 type ChatRole = "user" | "assistant";
 type ChatMode = "app_help" | "data_analysis";
 
+interface PageContext {
+  module?: string;
+  moduleLabel?: string;
+  pathname?: string;
+}
+
 interface AIConfig {
   model?: "gemini" | "openai" | string;
   gemini_api_key?: string;
@@ -43,10 +49,14 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 2): P
   return response!;
 }
 
-function buildSystemPrompt(mode: ChatMode) {
+function buildSystemPrompt(mode: ChatMode, pageContext?: PageContext | null) {
   if (mode === "data_analysis") {
     return "El chat de análisis de datos aún no está habilitado. Responde brevemente indicando que esta capacidad estará disponible próximamente y no inventes datos.";
   }
+
+  const moduleContext = pageContext?.moduleLabel
+    ? `\nContexto actual del usuario: viene del módulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. Cuando corresponda, incluye una sección breve llamada "Próximos clics recomendados" con 2 a 4 acciones concretas que el usuario podría hacer después en ese módulo.`
+    : "";
 
   return `Eres el asistente de ayuda interna de KRH, una aplicación de gestión de talento humano.
 Tu alcance es EXCLUSIVAMENTE orientar sobre el uso de la app: módulos, navegación, procesos, configuraciones, alertas, contratos, empleados, selección, capacitaciones, evaluaciones, notificaciones, permisos y flujos operativos.
@@ -55,7 +65,7 @@ No des asesoría legal definitiva. Puedes orientar en lenguaje práctico sobre d
 Usa un tono amigable, paciente y educativo: explica como un guía experto, evita tecnicismos innecesarios, da contexto breve cuando sea útil y acompaña al usuario paso a paso sin sonar frío o robótico.
 Cuando el usuario quiera realizar una tarea dentro de la app, guíalo como un flujo interactivo: entrega solo el paso actual con número visible (por ejemplo, "Paso 1 de N"), explica qué debe hacer, y termina preguntando si confirma que ya completó ese paso para continuar con el siguiente.
 No avances al siguiente paso hasta que el usuario confirme. Si el usuario dice que no pudo completar el paso, ayúdale a resolver ese paso antes de continuar. Puedes mencionar una vista general breve de los pasos si ayuda, pero el flujo principal debe avanzar uno por uno.
-Responde en español, con pasos claros, concisos y formato Markdown cuando ayude.`;
+Responde en español, con pasos claros, concisos y formato Markdown cuando ayude.${moduleContext}`;
 }
 
 async function callGateway(apiKey: string, systemPrompt: string, messages: ChatMessage[]) {
