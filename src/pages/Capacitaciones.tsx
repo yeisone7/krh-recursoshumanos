@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Plus, Search, MoreHorizontal, Clock, Sparkles, PenLine, Library, Link2,
-  Eye, Copy, Trash2, LayoutDashboard
+  Eye, Copy, Trash2, LayoutDashboard, BookOpenCheck, MonitorPlay, UsersRound,
+  Layers, Timer, BadgeCheck, FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +17,6 @@ import { useTrainingCourses, useTrainingStats, useDeleteCourse, useDuplicateCour
 import { useToast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileCardList } from '@/components/shared/MobileCardList';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import type { TrainingCourse, TrainingModality, TrainingCourseContent } from '@/types/training';
 
@@ -37,6 +37,12 @@ const STATUS_LABELS: Record<string, string> = {
 const MODALITY_LABELS: Record<TrainingModality, string> = {
   presencial: 'Presencial', virtual: 'Virtual', mixto: 'Mixto',
 };
+
+const COURSE_ICON_BY_MODALITY = {
+  presencial: UsersRound,
+  virtual: MonitorPlay,
+  mixto: Layers,
+} satisfies Record<TrainingModality, typeof UsersRound>;
 
 export default function Capacitaciones() {
   const navigate = useNavigate();
@@ -168,47 +174,74 @@ export default function Capacitaciones() {
               ) : filteredCourses?.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">No hay cursos registrados</p>
               ) : (
-                <MobileCardList
-                  items={(filteredCourses || []).map((course) => {
+                <div className="space-y-3">
+                  {(filteredCourses || []).map((course, index) => {
                     const content = course.content as TrainingCourseContent | null;
                     const statusLabel = STATUS_LABELS[course.status] || course.status;
                     const statusClass = STATUS_COLORS[course.status] || '';
-                    return {
-                      id: course.id,
-                      title: course.name,
-                      subtitle: course.category,
-                      badge: (
-                        <div className="flex gap-1 flex-wrap">
-                          <Badge className={statusClass}>{statusLabel}</Badge>
-                          {content?.isManual ? (
-                            <Badge variant="outline"><PenLine className="h-3 w-3 mr-1" /> Manual</Badge>
-                          ) : content ? (
-                            <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" /> IA</Badge>
-                          ) : null}
+                    const CourseIcon = COURSE_ICON_BY_MODALITY[course.modality] || BookOpenCheck;
+
+                    return (
+                      <motion.div
+                        key={course.id}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.04 }}
+                        className="rounded-xl border border-border/70 bg-card p-4 shadow-sm ring-1 ring-primary/5"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                            <CourseIcon className="h-6 w-6" />
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">{course.name}</h3>
+                                <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                  <BookOpenCheck className="h-3.5 w-3.5" />
+                                  <span className="truncate">{course.category}</span>
+                                </div>
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0"><MoreHorizontal className="h-4 w-4" /></Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1.5">
+                              <Badge className={statusClass}><BadgeCheck className="mr-1 h-3 w-3" />{statusLabel}</Badge>
+                              <Badge variant="outline"><FileText className="mr-1 h-3 w-3" />{course.code || 'Sin código'}</Badge>
+                              {content?.isManual ? (
+                                <Badge variant="outline"><PenLine className="h-3 w-3 mr-1" /> Manual</Badge>
+                              ) : content ? (
+                                <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" /> IA</Badge>
+                              ) : null}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 pt-1">
+                              <div className="rounded-lg bg-muted/50 p-2">
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Layers className="h-3 w-3" /> Modalidad</div>
+                                <p className="mt-0.5 text-sm font-medium text-foreground">{MODALITY_LABELS[course.modality]}</p>
+                              </div>
+                              <div className="rounded-lg bg-muted/50 p-2">
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Timer className="h-3 w-3" /> Duración</div>
+                                <p className="mt-0.5 text-sm font-medium text-foreground">{course.duration_hours}h</p>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      ),
-                      fields: [
-                        { label: 'Código', value: course.code || '-' },
-                        { label: 'Modalidad', value: MODALITY_LABELS[course.modality] },
-                        { label: 'Duración', value: `${course.duration_hours}h` },
-                      ],
-                      actions: (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ),
-                    };
+                      </motion.div>
+                    );
                   })}
-                />
+                </div>
               )}
             </PullToRefresh>
           ) : (
