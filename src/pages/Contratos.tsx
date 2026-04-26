@@ -117,6 +117,24 @@ function getEffectiveEndDate(contract: {
   return contract.end_date;
 }
 
+function getContractTypeIcon(type: string) {
+  const normalized = type.toLowerCase();
+  if (normalized.includes('indefin')) return Infinity;
+  if (normalized.includes('obra') || normalized.includes('labor')) return BriefcaseBusiness;
+  if (normalized.includes('aprendiz')) return Handshake;
+  if (normalized.includes('fijo')) return FileClock;
+  return FileText;
+}
+
+function getContractTypeTone(type: string) {
+  const normalized = type.toLowerCase();
+  if (normalized.includes('indefin')) return 'bg-success-light text-success border-success/20';
+  if (normalized.includes('obra') || normalized.includes('labor')) return 'bg-accent-light text-accent border-accent/20';
+  if (normalized.includes('aprendiz')) return 'bg-secondary text-secondary-foreground border-border';
+  if (normalized.includes('fijo')) return 'bg-warning-light text-warning-foreground border-warning/20';
+  return 'bg-primary-light text-primary border-primary/20';
+}
+
 export default function Contratos() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFormOpen, setIsFormOpen] = useState(false);
