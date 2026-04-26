@@ -212,58 +212,57 @@ export default function Capacitaciones() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.04 }}
-                        className="rounded-xl border border-border/70 bg-card p-4 shadow-sm ring-1 ring-primary/5"
+                        className="rounded-xl border border-border/70 bg-card p-4 shadow-sm"
                       >
                         <div className="flex items-start gap-3">
                           <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ring-1 ${iconStyle}`}>
                             <CourseIcon className="h-6 w-6" />
                           </div>
-                          <div className="min-w-0 flex-1 space-y-2">
+                          <div className="min-w-0 flex-1 space-y-3">
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0">
-                                <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">{course.name}</h3>
+                                <h3 className="line-clamp-2 break-words text-sm font-semibold leading-snug text-foreground">{course.name}</h3>
                                 <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                                   <BookOpenCheck className="h-3.5 w-3.5" />
                                   <span className="truncate">{course.category}</span>
                                 </div>
                               </div>
-                              <div className="flex shrink-0 flex-col items-end gap-1">
-                                {content && !content.isManual && (
-                                  <Badge className="bg-success-light text-success"><Sparkles className="mr-1 h-3 w-3" /> IA</Badge>
-                                )}
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0"><MoreHorizontal className="h-4 w-4" /></Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
+                                  <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
 
-                            <div className="space-y-1.5">
-                              <div className="flex flex-wrap gap-1.5">
-                                <Badge className={statusClass}><BadgeCheck className="mr-1 h-3 w-3" />{statusLabel}</Badge>
-                                <Badge variant="outline"><FileText className="mr-1 h-3 w-3" />{course.code || 'Sin código'}</Badge>
-                              </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className={`min-w-0 flex-1 justify-center rounded-full border-transparent px-3 py-1 ${statusClass}`}>
+                                <BadgeCheck className="mr-1 h-3 w-3 shrink-0" />
+                                <span className="truncate">{statusLabel}</span>
+                              </Badge>
                               {content?.isManual ? (
-                                <Badge variant="outline"><PenLine className="h-3 w-3 mr-1" /> Manual</Badge>
-                              ) : null}
+                                <Badge className="shrink-0 rounded-full bg-muted px-3 py-1 text-muted-foreground"><PenLine className="mr-1 h-3 w-3" /> Manual</Badge>
+                              ) : content ? (
+                                <Badge className="shrink-0 rounded-full bg-success-light px-3 py-1 text-success"><Sparkles className="mr-1 h-3 w-3" /> IA</Badge>
+                              ) : (
+                                <Badge variant="outline" className="shrink-0 rounded-full px-3 py-1"><FileText className="mr-1 h-3 w-3" />{course.code || 'Curso'}</Badge>
+                              )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-2 pt-1">
-                              <div className="rounded-lg bg-muted/50 p-2">
+                              <div className="rounded-lg bg-muted/60 p-2.5">
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Layers className="h-3 w-3" /> Modalidad</div>
-                                <p className="mt-0.5 text-sm font-medium text-foreground">{MODALITY_LABELS[course.modality]}</p>
+                                <p className="mt-1 truncate text-sm font-semibold text-foreground">{MODALITY_LABELS[course.modality]}</p>
                               </div>
-                              <div className="rounded-lg bg-muted/50 p-2">
+                              <div className="rounded-lg bg-muted/60 p-2.5">
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Timer className="h-3 w-3" /> Duración</div>
-                                <p className="mt-0.5 text-sm font-medium text-foreground">{course.duration_hours}h</p>
+                                <p className="mt-1 truncate text-sm font-semibold text-foreground">{course.duration_hours}h</p>
                               </div>
                             </div>
                           </div>
