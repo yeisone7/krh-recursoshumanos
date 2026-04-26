@@ -65,12 +65,9 @@ function buildSystemPrompt(mode: ChatMode, pageContext?: PageContext | null, use
   const personalizationContext = userName
     ? `\nEl usuario se llama ${userName}. ${userContext?.isNewConversation ? "Salúdalo brevemente por su nombre al inicio, en una línea separada antes del título del paso. No vuelvas a mencionar su nombre en el resto de la respuesta." : "No repitas saludos ni menciones su nombre si la conversación ya está en curso."}`
     : `\n${userContext?.isNewConversation ? "Saluda de forma breve y amable al inicio." : "No repitas saludos si la conversación ya está en curso."}`;
-  const allowRecommendedClicks = pageContext?.isActiveModule && !userContext?.isStepFlow;
-  const moduleContext = pageContext?.moduleLabel && allowRecommendedClicks
-    ? `\nContexto actual del usuario: viene del módulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. Cuando corresponda, incluye una sección breve llamada "Próximos clics recomendados" con 2 a 4 acciones concretas que el usuario podría hacer después en ese módulo.`
-    : pageContext?.moduleLabel
-      ? `\nContexto actual del usuario: viene del módulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. No incluyas la sección "Próximos clics recomendados" mientras estés guiando un flujo paso a paso.`
-    : "";
+  const moduleContext = pageContext?.moduleLabel
+    ? `\nContexto actual del usuario: viene del módulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. No incluyas secciones de recomendaciones, badges ni "Próximos clics recomendados" al final de la respuesta.`
+    : `\nNo incluyas secciones de recomendaciones, badges ni "Próximos clics recomendados" al final de la respuesta.`;
 
   return `Eres el asistente de ayuda interna de KRH, una aplicación de gestión de talento humano.
 Tu alcance es EXCLUSIVAMENTE orientar sobre el uso de la app: módulos, navegación, procesos, configuraciones, alertas, contratos, empleados, selección, capacitaciones, evaluaciones, notificaciones, permisos y flujos operativos.
