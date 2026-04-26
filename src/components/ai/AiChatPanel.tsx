@@ -1,27 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
-import { Bot, CheckCircle2, Clock, Loader2, MessageSquarePlus, Send, Sparkles, Trash2, X } from 'lucide-react';
+import { Bot, CheckCircle2, Loader2, MessageSquarePlus, Send, Sparkles, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  useAiChatConversations,
-  useAiChatMessages,
-  useDeleteAiChatConversation,
-  useSendAiChatMessage,
-  type AiChatMessage,
-} from '@/hooks/useAiChat';
-
-type ChatMode = 'app_help' | 'data_analysis';
+import { useSendAiChatMessage, type AiChatMessage, type ChatMode } from '@/hooks/useAiChat';
 
 interface AiChatPanelProps {
   compact?: boolean;
@@ -128,6 +121,8 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
         )}
       </div>
     </div>
+    {resetDialog}
+    </>
   );
 }
 
@@ -139,27 +134,19 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
   const forceNextScrollRef = useRef(true);
   const isMobile = useIsMobile();
   const [mode, setMode] = useState<ChatMode>('app_help');
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState(() => crypto.randomUUID());
+  const [messages, setMessages] = useState<AiChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
-  const conversationsQuery = useAiChatConversations(mode);
-  const messagesQuery = useAiChatMessages(selectedConversationId);
   const sendMessage = useSendAiChatMessage();
-  const deleteConversation = useDeleteAiChatConversation();
-
-  const conversations = useMemo(() => conversationsQuery.data || [], [conversationsQuery.data]);
-  const messages = useMemo(() => messagesQuery.data || [], [messagesQuery.data]);
-  const selectedConversation = useMemo(
-    () => conversations.find((conversation) => conversation.id === selectedConversationId) || null,
-    [conversations, selectedConversationId]
-  );
   const lastMessage = messages[messages.length - 1];
   const currentStepMatch = lastMessage?.role === 'assistant' ? lastMessage.content.match(/paso\s+(\d+)(?:\s+de\s+(\d+))?/i) : null;
   const currentStepLabel = currentStepMatch ? `Paso ${currentStepMatch[1]}${currentStepMatch[2] ? ` de ${currentStepMatch[2]}` : ''}` : null;
   const canConfirmStep = !!currentStepLabel;
-  const assistantStatus = messagesQuery.isLoading ? 'Procesando' : sendMessage.isPending ? 'Escribiendo' : 'Listo';
-  const AssistantStatusIcon = sendMessage.isPending || messagesQuery.isLoading ? Loader2 : CheckCircle2;
+  const assistantStatus = sendMessage.isPending ? 'Escribiendo' : 'Listo';
+  const AssistantStatusIcon = sendMessage.isPending ? Loader2 : CheckCircle2;
   const pageContext = useMemo(() => {
     const savedPathname = sessionStorage.getItem('krh_last_module_path') || '';
     const pathname = location.pathname === '/asistente-ia' ? savedPathname : location.pathname;
@@ -167,12 +154,6 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
     if (!match) return null;
     return { ...match[1], pathname, isActiveModule: location.pathname !== '/asistente-ia' };
   }, [location.pathname]);
-
-  useEffect(() => {
-    if (!selectedConversationId && conversations.length > 0) {
-      setSelectedConversationId(conversations[0].id);
-    }
-  }, [conversations, selectedConversationId]);
 
   const scrollMessagesToBottom = (behavior: ScrollBehavior = 'smooth') => {
     const container = messagesContainerRef.current;
@@ -188,7 +169,7 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
       scrollMessagesToBottom('smooth');
       forceNextScrollRef.current = false;
     }
-  }, [messages.length, sendMessage.isPending, selectedConversationId, isMobile]);
+  }, [messages.length, sendMessage.isPending, isMobile]);
 
   useEffect(() => {
     if (!isMobile || !window.visualViewport) {
@@ -211,10 +192,20 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
     };
   }, [isMobile]);
 
-  const handleNewConversation = () => {
+  const resetConversation = () => {
     forceNextScrollRef.current = true;
-    setSelectedConversationId(null);
+    setSessionId(crypto.randomUUID());
+    setMessages([]);
     setInput('');
+    setResetDialogOpen(false);
+  };
+
+  const handleNewConversation = () => {
+    if (messages.length === 0 && !input.trim()) {
+      resetConversation();
+      return;
+    }
+    setResetDialogOpen(true);
   };
 
   const handleMessagesScroll = () => {
@@ -231,45 +222,44 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
     forceNextScrollRef.current = true;
     setInput('');
     try {
+      const userMessage: AiChatMessage = {
+        id: crypto.randomUUID(),
+        conversation_id: sessionId,
+        company_id: '',
+        user_id: '',
+        role: 'user',
+        content: message,
+        ai_provider: null,
+        metadata: { temporary: true },
+        created_at: new Date().toISOString(),
+      };
+      const history = messages.map(({ role, content }) => ({ role, content }));
+      setMessages((current) => [...current, userMessage]);
       const result = await sendMessage.mutateAsync({
         message,
-        conversationId: selectedConversationId,
+        history,
         mode,
         pageContext,
       });
-      setSelectedConversationId(result.conversationId);
+      setMessages((current) => [...current, { ...result.message, conversation_id: sessionId }]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'No se pudo enviar la pregunta');
+      setMessages((current) => current.filter((item) => !(item.role === 'user' && item.content === message && item.conversation_id === sessionId)));
       setInput(message);
-    }
-  };
-
-  const handleDelete = async (conversationId: string) => {
-    try {
-      await deleteConversation.mutateAsync(conversationId);
-      if (selectedConversationId === conversationId) setSelectedConversationId(null);
-      toast.success('Conversación eliminada');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'No se pudo eliminar la conversación');
     }
   };
 
   const chatHeader = (
     <div className="flex items-start justify-between gap-3 border-b border-border p-3 sm:items-center sm:p-4">
       <div className="min-w-0">
-        <p className="truncate font-semibold">{selectedConversation?.title || 'Nueva conversación'}</p>
-        <p className="text-xs text-muted-foreground sm:text-sm">Solo responde preguntas sobre el uso de la app</p>
+        <p className="truncate font-semibold">Conversación temporal</p>
+        <p className="text-xs text-muted-foreground sm:text-sm">Disponible hasta cerrar el chat</p>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         <Badge variant="outline" className="gap-1.5 text-[10px] sm:text-xs">
-          <AssistantStatusIcon className={cn('h-3 w-3', (sendMessage.isPending || messagesQuery.isLoading) && 'animate-spin')} />
+          <AssistantStatusIcon className={cn('h-3 w-3', sendMessage.isPending && 'animate-spin')} />
           {assistantStatus}
         </Badge>
-        {selectedConversationId && (
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(selectedConversationId)} aria-label="Eliminar conversación">
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
         {compact && onClose && (
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} aria-label="Minimizar asistente">
             <X className="h-4 w-4" />
@@ -318,7 +308,7 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
         onScroll={handleMessagesScroll}
         className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 sm:space-y-4 sm:p-4"
       >
-        {messagesQuery.isLoading ? (
+        {false ? (
           <div className="space-y-3">
             <Skeleton className="h-16 w-3/4" />
             <Skeleton className="ml-auto h-14 w-2/3" />
@@ -372,9 +362,27 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
     </>
   );
 
+  const resetDialog = (
+    <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Iniciar una conversación nueva</AlertDialogTitle>
+          <AlertDialogDescription>
+            La conversación actual es temporal y no se guarda. Si continúas, se borrará lo que ves en este chat.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={resetConversation}>Iniciar nueva</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   if (compact) {
     return (
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-card text-card-foreground">
+      <>
+        <div className="flex h-full min-h-0 flex-col overflow-hidden bg-card text-card-foreground">
         <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
           <div className="min-w-0">
             <h2 className="truncate text-base font-semibold">Asistente IA</h2>
@@ -387,11 +395,14 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {chatBody}
         </div>
-      </div>
+        </div>
+        {resetDialog}
+      </>
     );
   }
 
   return (
+    <>
     <div className="flex min-h-[calc(100dvh-9rem)] flex-col gap-3 md:h-[calc(100vh-5rem)] md:min-h-[620px] md:gap-4 md:overflow-hidden">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex shrink-0 flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
@@ -405,7 +416,7 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
 
       <Tabs value={mode} onValueChange={(value) => {
         setMode(value as ChatMode);
-        setSelectedConversationId(null);
+        resetConversation();
       }} className="flex min-h-0 flex-1 flex-col overflow-visible md:overflow-hidden">
         <TabsList className="grid w-full grid-cols-2 sm:w-fit">
           <TabsTrigger value="app_help" className="gap-2 text-xs sm:text-sm"><Bot className="h-4 w-4" /> Ayuda de la app</TabsTrigger>
@@ -413,79 +424,11 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
         </TabsList>
 
         <TabsContent value="app_help" className="min-h-0 flex-1">
-          <div className="flex min-h-0 flex-col gap-3 lg:grid lg:h-full lg:grid-cols-[320px_1fr] lg:gap-4">
-            <Card className="max-h-36 shrink-0 overflow-hidden sm:max-h-44 lg:max-h-none lg:min-h-0">
-              <CardContent className="flex h-full flex-col p-0">
-                <div className="border-b border-border p-3 sm:p-4">
-                  <p className="font-semibold">Conversaciones</p>
-                  <p className="hidden text-sm text-muted-foreground sm:block">Historial personal por empresa</p>
-                </div>
-                <div className="min-h-0 flex-1 overflow-y-auto p-1.5 sm:p-2">
-                  {conversationsQuery.isLoading ? (
-                    <div className="space-y-2 p-2">
-                      <Skeleton className="h-14 w-full" />
-                      <Skeleton className="h-14 w-full" />
-                      <Skeleton className="h-14 w-full" />
-                    </div>
-                  ) : conversations.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-                      Aún no tienes conversaciones.
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {conversations.map((conversation) => {
-                        const active = conversation.id === selectedConversationId;
-                        return (
-                          <button
-                            key={conversation.id}
-                            onClick={() => {
-                              forceNextScrollRef.current = true;
-                              setSelectedConversationId(conversation.id);
-                            }}
-                            className={cn(
-                              'group flex w-full items-start gap-2 rounded-lg p-2.5 text-left transition-colors sm:p-3',
-                              active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-                            )}
-                          >
-                            <Bot className="mt-0.5 h-4 w-4 shrink-0" />
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate text-sm font-semibold">{conversation.title}</span>
-                              <span className={cn('mt-1 flex items-center gap-1 text-xs', active ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
-                                <Clock className="h-3 w-3" /> {new Date(conversation.last_message_at).toLocaleDateString('es-CO')}
-                              </span>
-                            </span>
-                            <span
-                              role="button"
-                              tabIndex={0}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                handleDelete(conversation.id);
-                              }}
-                              onKeyDown={(event) => {
-                                if (event.key === 'Enter' || event.key === ' ') {
-                                  event.stopPropagation();
-                                  handleDelete(conversation.id);
-                                }
-                              }}
-                              className={cn('rounded-md p-1 transition-opacity sm:opacity-0 sm:group-hover:opacity-100', active ? 'hover:bg-primary-foreground/15' : 'hover:bg-background')}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="h-[calc(100dvh-20rem)] min-h-[430px] flex-1 overflow-hidden md:h-auto md:min-h-0">
-              <CardContent className="flex h-full min-h-0 flex-col p-0">
-                {chatBody}
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="h-[calc(100dvh-16rem)] min-h-[430px] flex-1 overflow-hidden md:h-full md:min-h-0">
+            <CardContent className="flex h-full min-h-0 flex-col p-0">
+              {chatBody}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
