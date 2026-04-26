@@ -240,7 +240,7 @@ export default function AsistenteIA() {
 
   return (
     <div className="flex h-[calc(100dvh-9rem)] min-h-0 flex-col gap-3 overflow-hidden md:h-[calc(100vh-5rem)] md:min-h-[620px] md:gap-4">
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex shrink-0 flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Asistente IA</h1>
           <p className="mt-1 text-sm text-muted-foreground sm:text-base">Ayuda guiada sobre el uso de KRH con la IA seleccionada en Configuración.</p>
@@ -314,7 +314,7 @@ export default function AsistenteIA() {
                                   handleDelete(conversation.id);
                                 }
                               }}
-                              className={cn('rounded-md p-1 opacity-0 transition-opacity group-hover:opacity-100', active ? 'hover:bg-primary-foreground/15' : 'hover:bg-background')}
+                              className={cn('rounded-md p-1 transition-opacity sm:opacity-0 sm:group-hover:opacity-100', active ? 'hover:bg-primary-foreground/15' : 'hover:bg-background')}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </span>
