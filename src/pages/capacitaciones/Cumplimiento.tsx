@@ -4,7 +4,7 @@ import { es } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import {
   ClipboardCheck, ChevronDown, ChevronRight, UserCheck, UserX,
-  Search, Building2, BookOpen, Download,
+  Search, Building2, BookOpen, Download, SlidersHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -135,6 +135,7 @@ export default function Cumplimiento() {
   const [centerFilter, setCenterFilter] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const filteredData = useMemo(() => {
     let data = complianceData;
