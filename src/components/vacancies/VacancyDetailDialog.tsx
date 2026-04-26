@@ -327,7 +327,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
 
             <div className="flex-1 min-h-0 overflow-y-auto">
               {/* Info Tab */}
-              <TabsContent value="info" className="p-6 mt-0 space-y-6">
+              <TabsContent value="info" className="p-4 mt-0 space-y-6 sm:p-6">
                 {/* Requisition Info Card */}
                 {requisition && (
                   <Card className="border-primary/20 bg-primary/5">
@@ -338,7 +338,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                         <div className="space-y-1">
                           <p className="text-xs text-muted-foreground">Cargo Solicitado</p>
                           <p className="font-medium text-sm">{requisition.cargo_solicitado}</p>
@@ -389,7 +389,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   </Card>
                 )}
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Tipo de Convocatoria</p>
                     <p className="font-medium">{vacancyTypeLabels[vacancy.vacancy_type as keyof typeof vacancyTypeLabels]}</p>
@@ -432,7 +432,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     <DollarSign className="w-4 h-4 text-primary" />
                     Compensación
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground">Rango Salarial</p>
                       <p className="font-medium">
@@ -470,7 +470,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{vacancy.requirements}</p>
                         </div>
                       )}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {vacancy.experience_years !== null && vacancy.experience_years > 0 && (
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4 text-muted-foreground" />
@@ -496,7 +496,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     Colocado
                   </h3>
                   {vacancy.colocado_url ? (
-                    <div className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                    <div className="flex flex-col gap-3 p-3 rounded-lg border bg-card sm:flex-row sm:items-center">
                       <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
                         <FileText className="h-5 w-5" />
                       </div>
