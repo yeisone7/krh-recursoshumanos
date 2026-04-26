@@ -357,17 +357,17 @@ export function CandidateDetailDialog({
                   <span className="truncate">Documentos</span>
                 </TabsTrigger>
                 {candidate.employee_id && (
-                  <TabsTrigger value="shared_docs" className="gap-2">
+                  <TabsTrigger value="shared_docs" className="col-span-3 h-9 min-w-0 gap-1 px-2 text-xs sm:col-span-1 sm:gap-2 sm:text-sm">
                     <FolderOpen className="w-4 h-4" />
-                    Docs Compartidos
+                    <span className="truncate">Docs Compartidos</span>
                   </TabsTrigger>
                 )}
               </TabsList>
             </div>
 
-            <div className="overflow-y-auto scrollbar-themed" style={{ maxHeight: 'calc(90vh - 260px)' }}>
+            <div className="overflow-y-auto scrollbar-themed" style={{ maxHeight: 'calc(92dvh - 280px)' }}>
               {/* Timeline Tab */}
-              <TabsContent value="timeline" className="p-6 mt-0">
+              <TabsContent value="timeline" className="p-4 mt-0 sm:p-6">
                 <SelectionTimeline
                   steps={steps}
                   candidateId={candidate.id}
@@ -415,7 +415,7 @@ export function CandidateDetailDialog({
               </TabsContent>
 
               {/* Info Tab */}
-              <TabsContent value="info" className="p-6 mt-0 space-y-6">
+              <TabsContent value="info" className="p-4 mt-0 space-y-6 sm:p-6">
                 {/* Personal Info */}
                 <div>
                   <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
