@@ -109,6 +109,7 @@ function MetricChip({ icon: Icon, label, value, color = 'primary' }: { icon: any
     success: 'text-success bg-success/10',
     warning: 'text-warning bg-warning/10',
     info: 'text-info bg-info/10',
+    accent: 'text-accent bg-accent/10',
     destructive: 'text-destructive bg-destructive/10',
     teal: 'text-teal bg-teal/10',
     violet: 'text-violet bg-violet/10',
@@ -574,10 +575,10 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   <MetricChip icon={Clock} label="Antigüedad" value={computeSeniority(employee.work_info.hire_date)} color="primary" />
                 )}
                 {employee.birth_date && (
-                  <MetricChip icon={Cake} label="Edad" value={computeAge(employee.birth_date)} color="secondary" />
+                  <MetricChip icon={Cake} label="Edad" value={computeAge(employee.birth_date)} color="success" />
                 )}
                 {employee.document_number && (
-                  <MetricChip icon={Hash} label={documentTypeLabels[employee.document_type]} value={employee.document_number} color="info" />
+                  <MetricChip icon={Hash} label={documentTypeLabels[employee.document_type]} value={employee.document_number} color="accent" />
                 )}
                 {employee.blood_type && (
                   <MetricChip icon={Droplets} label="Tipo Sangre" value={employee.blood_type} color="destructive" />
