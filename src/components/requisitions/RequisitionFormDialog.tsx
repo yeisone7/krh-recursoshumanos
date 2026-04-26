@@ -187,7 +187,7 @@ export function RequisitionFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6 [&_button]:min-h-11 sm:[&_button]:min-h-10 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_textarea]:min-h-24 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
+      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_textarea]:min-h-24 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
         <DialogHeader>
           <DialogTitle>
             {requisition ? 'Editar Requisición' : 'Nueva Requisición de Personal'}
@@ -495,15 +495,15 @@ export function RequisitionFormDialog({
                 control={form.control}
                 name="requiere_herramienta_trabajo"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
+                  <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
+                    <div className="min-w-0 space-y-0.5">
                       <FormLabel className="text-base">Requiere Herramienta de Trabajo</FormLabel>
                       <p className="text-sm text-muted-foreground">
                         ¿El cargo requiere herramientas o equipos especiales?
                       </p>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
                     </FormControl>
                   </FormItem>
                 )}
@@ -542,15 +542,15 @@ export function RequisitionFormDialog({
                   control={form.control}
                   name="incluye_alimentacion"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
+                    <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
+                      <div className="min-w-0 space-y-0.5">
                         <FormLabel className="text-base">Incluye Alimentación</FormLabel>
                         <p className="text-sm text-muted-foreground">
                           ¿Durante el turno de trabajo?
                         </p>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
                       </FormControl>
                     </FormItem>
                   )}
@@ -560,15 +560,15 @@ export function RequisitionFormDialog({
                   control={form.control}
                   name="incluye_desplazamiento"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
+                    <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
+                      <div className="min-w-0 space-y-0.5">
                         <FormLabel className="text-base">Incluye Desplazamiento</FormLabel>
                         <p className="text-sm text-muted-foreground">
                           ¿Se incluye transporte?
                         </p>
                       </div>
                       <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
                       </FormControl>
                     </FormItem>
                   )}
