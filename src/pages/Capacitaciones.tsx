@@ -220,16 +220,25 @@ export default function Capacitaciones() {
                           </div>
                           <div className="min-w-0 flex-1 space-y-3">
                             <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
+                              <div className="min-w-0 flex-1 space-y-2">
                                 <h3 className="line-clamp-2 break-words text-sm font-semibold leading-snug text-foreground">{course.name}</h3>
-                                <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                                  <BookOpenCheck className="h-3.5 w-3.5" />
-                                  <span className="truncate">{course.category}</span>
+                                <div className="flex items-center gap-2">
+                                  <Badge className={`min-w-0 flex-1 justify-center rounded-full border-transparent px-3 py-1 ${statusClass}`}>
+                                    <BadgeCheck className="mr-1 h-3 w-3 shrink-0" />
+                                    <span className="truncate">{statusLabel}</span>
+                                  </Badge>
+                                  {content?.isManual ? (
+                                    <Badge className="shrink-0 rounded-full bg-muted px-3 py-1 text-muted-foreground"><PenLine className="mr-1 h-3 w-3" /> Manual</Badge>
+                                  ) : content ? (
+                                    <Badge className="shrink-0 rounded-full bg-success-light px-3 py-1 text-success"><Sparkles className="mr-1 h-3 w-3" /> IA</Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="shrink-0 rounded-full px-3 py-1"><FileText className="mr-1 h-3 w-3" />{course.code || 'Curso'}</Badge>
+                                  )}
                                 </div>
                               </div>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0"><MoreVertical className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0" aria-label={`Acciones para ${course.name}`}><MoreVertical className="h-4 w-4" /></Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
@@ -241,18 +250,9 @@ export default function Capacitaciones() {
                               </DropdownMenu>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                              <Badge className={`min-w-0 flex-1 justify-center rounded-full border-transparent px-3 py-1 ${statusClass}`}>
-                                <BadgeCheck className="mr-1 h-3 w-3 shrink-0" />
-                                <span className="truncate">{statusLabel}</span>
-                              </Badge>
-                              {content?.isManual ? (
-                                <Badge className="shrink-0 rounded-full bg-muted px-3 py-1 text-muted-foreground"><PenLine className="mr-1 h-3 w-3" /> Manual</Badge>
-                              ) : content ? (
-                                <Badge className="shrink-0 rounded-full bg-success-light px-3 py-1 text-success"><Sparkles className="mr-1 h-3 w-3" /> IA</Badge>
-                              ) : (
-                                <Badge variant="outline" className="shrink-0 rounded-full px-3 py-1"><FileText className="mr-1 h-3 w-3" />{course.code || 'Curso'}</Badge>
-                              )}
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                              <BookOpenCheck className="h-3.5 w-3.5 shrink-0" />
+                              <span className="truncate">{course.category}</span>
                             </div>
 
                             <div className="grid grid-cols-2 gap-2 pt-1">
