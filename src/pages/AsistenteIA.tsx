@@ -254,7 +254,11 @@ export default function AsistenteIA() {
                   <Badge variant="outline" className="shrink-0 text-[10px] sm:text-xs">IA configurada</Badge>
                 </div>
 
-                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 sm:space-y-4 sm:p-4">
+                <div
+                  ref={messagesContainerRef}
+                  onScroll={handleMessagesScroll}
+                  className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 sm:space-y-4 sm:p-4"
+                >
                   {messagesQuery.isLoading ? (
                     <div className="space-y-3">
                       <Skeleton className="h-16 w-3/4" />
