@@ -193,7 +193,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             className={isMobile
               ? 'fixed inset-x-2 bottom-0 z-[60] overflow-hidden rounded-t-xl border border-border bg-card shadow-2xl'
               : 'fixed bottom-6 right-6 z-[60] w-[440px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl'}
-            style={{ height: aiPanelHeight || undefined }}
+            style={{ height: aiPanelMinimized ? 64 : aiPanelHeight || undefined }}
           >
             <div
               role="button"
@@ -203,11 +203,22 @@ export function AppLayout({ children }: AppLayoutProps) {
               onPointerMove={handleAiPanelDrag}
               onPointerUp={handleAiPanelDragEnd}
               onPointerCancel={handleAiPanelDragEnd}
-              className="flex h-7 touch-none cursor-ns-resize items-center justify-center border-b border-border bg-card"
+              className="relative flex h-7 touch-none cursor-ns-resize items-center justify-center border-b border-border bg-card"
             >
               <span className="h-1.5 w-16 rounded-full bg-muted-foreground/30" />
             </div>
-            <div className="h-[calc(100%-1.75rem)] min-h-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={aiPanelMinimized ? 'Maximizar asistente' : 'Minimizar asistente'}
+              title={aiPanelMinimized ? 'Maximizar asistente' : 'Minimizar asistente'}
+              onClick={() => setAiPanelMinimized((value) => !value)}
+              className="absolute right-10 top-8 z-10 h-8 w-8"
+            >
+              {aiPanelMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+            </Button>
+            <div className={aiPanelMinimized ? 'pointer-events-none h-[calc(100%-1.75rem)] min-h-0 opacity-0' : 'h-[calc(100%-1.75rem)] min-h-0'}>
               <AiChatPanel compact onClose={() => setAiPanelOpen(false)} />
             </div>
           </motion.div>
