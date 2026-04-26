@@ -120,9 +120,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             }
             navigate('/asistente-ia');
           }}
-          className={`fixed ${isMobile ? 'bottom-24 right-4' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg [&_svg]:size-8`}
+          className={`fixed ${isMobile ? 'bottom-24 right-4' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg [&_svg]:size-7 sm:[&_svg]:size-8`}
         >
-          {isAiAssistant ? <Minimize2 className="size-8" /> : <Bot className="size-8" />}
+          {isAiAssistant ? <Minimize2 className="size-7 sm:size-8" /> : <Bot className="size-7 sm:size-8" />}
         </Button>
       )}
     </div>
