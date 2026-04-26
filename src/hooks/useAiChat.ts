@@ -81,6 +81,25 @@ export function useSendAiChatMessage() {
   const queryClient = useQueryClient();
   const { currentCompanyId, user } = useAuth();
 
+  const getUserDisplayName = async () => {
+    if (!user?.id) return undefined;
+
+    const cleanName = (value?: string | null) => {
+      const text = value?.trim();
+      if (!text || text.includes('@')) return undefined;
+      return text;
+    };
+
+    const { data } = await supabase
+      .from('user_profiles' as never)
+      .select('full_name, display_name')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const profile = data as { full_name?: string | null; display_name?: string | null } | null;
+    return cleanName(profile?.full_name) || cleanName(profile?.display_name) || cleanName(user.user_metadata?.full_name) || cleanName(user.user_metadata?.name);
+  };
+
   return useMutation({
     mutationFn: async ({
       message,
@@ -93,6 +112,8 @@ export function useSendAiChatMessage() {
       mode?: ChatMode;
       pageContext?: AiChatPageContext | null;
     }) => {
+      const userDisplayName = await getUserDisplayName();
+
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message,
@@ -100,7 +121,7 @@ export function useSendAiChatMessage() {
           mode,
           companyId: currentCompanyId,
           pageContext,
-          userDisplayName: user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0],
+          userDisplayName,
         },
       });
 
