@@ -311,63 +311,63 @@ export function CandidateDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full">
+          <DialogHeader className="px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
+            <div className="flex flex-col items-start gap-3 pr-8 sm:flex-row sm:items-start sm:justify-between sm:pr-0">
+              <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center sm:h-12 sm:w-12">
                   <span className="font-semibold text-primary text-lg">
                     {candidate.first_name[0]}{candidate.last_name[0]}
                   </span>
                 </div>
-                <div>
-                  <DialogTitle className="font-display text-xl">
+                <div className="min-w-0">
+                  <DialogTitle className="font-display text-lg leading-tight sm:text-xl">
                     {candidate.first_name} {candidate.last_name}
                   </DialogTitle>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground break-words">
                     {vacancy?.position_title || 'Vacante'}
                     {vacancy?.operation_centers?.name && ` • ${vacancy.operation_centers.name}`}
                   </p>
                 </div>
               </div>
-              <Badge className={cn('gap-1', statusStyle.bg, statusStyle.text)}>
+              <Badge className={cn('max-w-full self-start truncate', statusStyle.bg, statusStyle.text)}>
                 {candidateStatusLabels[status]}
               </Badge>
             </div>
           </DialogHeader>
 
           {/* Background alerts */}
-          <div className="px-6">
+          <div className="px-4 sm:px-6">
             <CandidateBackgroundAlerts background={background} loading={bgLoading} compact />
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-            <div className="px-6 pt-2 border-b">
-              <TabsList className="h-10">
-                <TabsTrigger value="timeline" className="gap-2">
+            <div className="px-4 pt-2 border-b sm:px-6">
+              <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1 sm:inline-flex sm:h-10 sm:w-auto sm:gap-0">
+                <TabsTrigger value="timeline" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <Clock className="w-4 h-4" />
-                  Proceso
+                  <span className="truncate">Proceso</span>
                 </TabsTrigger>
-                <TabsTrigger value="info" className="gap-2">
+                <TabsTrigger value="info" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <User className="w-4 h-4" />
-                  Información
+                  <span className="truncate">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="gap-2">
+                <TabsTrigger value="documents" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <Paperclip className="w-4 h-4" />
-                  Documentos
+                  <span className="truncate">Documentos</span>
                 </TabsTrigger>
                 {candidate.employee_id && (
-                  <TabsTrigger value="shared_docs" className="gap-2">
+                  <TabsTrigger value="shared_docs" className="col-span-3 h-9 min-w-0 gap-1 px-2 text-xs sm:col-span-1 sm:gap-2 sm:text-sm">
                     <FolderOpen className="w-4 h-4" />
-                    Docs Compartidos
+                    <span className="truncate">Docs Compartidos</span>
                   </TabsTrigger>
                 )}
               </TabsList>
             </div>
 
-            <div className="overflow-y-auto scrollbar-themed" style={{ maxHeight: 'calc(90vh - 260px)' }}>
+            <div className="overflow-y-auto scrollbar-themed" style={{ maxHeight: 'calc(92dvh - 280px)' }}>
               {/* Timeline Tab */}
-              <TabsContent value="timeline" className="p-6 mt-0">
+              <TabsContent value="timeline" className="p-4 mt-0 sm:p-6">
                 <SelectionTimeline
                   steps={steps}
                   candidateId={candidate.id}
@@ -415,14 +415,14 @@ export function CandidateDetailDialog({
               </TabsContent>
 
               {/* Info Tab */}
-              <TabsContent value="info" className="p-6 mt-0 space-y-6">
+              <TabsContent value="info" className="p-4 mt-0 space-y-6 sm:p-6">
                 {/* Personal Info */}
                 <div>
                   <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
                     <User className="w-4 h-4 text-primary" />
                     Información Personal
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Documento</p>
                       <p className="font-medium">{candidate.document_type} {candidate.document_number}</p>
@@ -527,7 +527,7 @@ export function CandidateDetailDialog({
                     <Mail className="w-4 h-4 text-primary" />
                     Contacto y Ubicación
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     {candidate.email && (
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground uppercase tracking-wide">Email</p>
@@ -579,7 +579,7 @@ export function CandidateDetailDialog({
                         <Phone className="w-4 h-4 text-primary" />
                         Contacto de Emergencia
                       </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                         {(candidate as any).emergency_contact_name && (
                           <div className="space-y-1">
                             <p className="text-xs text-muted-foreground uppercase tracking-wide">Nombre</p>
@@ -611,7 +611,7 @@ export function CandidateDetailDialog({
                     <Briefcase className="w-4 h-4 text-primary" />
                     Experiencia Profesional
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     {candidate.education_level && (
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground uppercase tracking-wide">Nivel Educativo</p>
@@ -656,7 +656,7 @@ export function CandidateDetailDialog({
                     <Calendar className="w-4 h-4 text-primary" />
                     Información de Postulación
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Postulación</p>
                       <p className="font-medium">
@@ -902,8 +902,8 @@ export function CandidateDetailDialog({
           </Tabs>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-between">
-            <div className="flex gap-2" role="group" aria-label="Acciones del candidato">
+          <div className="px-4 py-4 border-t border-border bg-muted/30 flex flex-col gap-3 sm:flex-row sm:justify-between sm:px-6">
+            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap" role="group" aria-label="Acciones del candidato">
               {status === 'selected' && (
                 <>
                   <Button 
@@ -980,7 +980,7 @@ export function CandidateDetailDialog({
                   {status === 'not_selected' && (
                     <Button
                       variant="outline"
-                      className="text-pink-600 hover:text-pink-700 border-pink-300 hover:border-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/20"
+                      className="text-accent hover:text-accent border-accent/30 hover:border-accent hover:bg-accent/10"
                       onClick={() => setShowThanksDialog(true)}
                       disabled={!!(candidate as any).thanks_sent_at}
                     >
@@ -991,6 +991,7 @@ export function CandidateDetailDialog({
                 </>
               )}
             </div>
+            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
             {(hasPermission('seleccion', 'view') || hasPermission('reportes', 'view')) && (
               <Button
                 variant="outline"
@@ -1009,6 +1010,7 @@ export function CandidateDetailDialog({
             >
               Cerrar
             </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

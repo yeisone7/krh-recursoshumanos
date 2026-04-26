@@ -42,6 +42,7 @@ import { cn } from '@/lib/utils';
 import { useVacancies } from '@/hooks/useVacancies';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useOperationCenters } from '@/hooks/useCompanies';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import { VacancyFormDialog } from '@/components/vacancies/VacancyFormDialog';
 import { VacancyDetailDialog } from '@/components/vacancies/VacancyDetailDialog';
 import { CandidateFormDialog } from '@/components/vacancies/CandidateFormDialog';
@@ -104,6 +105,63 @@ export default function Seleccion() {
       return matchesSearch && matchesStatus && matchesCenter;
     });
   }, [vacancies, searchQuery, statusFilter, centerFilter]);
+
+  const vacancyItems = useMemo(
+    () => filteredVacancies.map((vacancy) => {
+      const status = vacancy.status as VacancyStatus;
+      const statusStyle = vacancyStatusConfig[status];
+      const candidateCount = (vacancy as any).candidates?.length || 0;
+      const centerName = (vacancy as any).operation_centers?.name || 'General';
+
+      return {
+        id: vacancy.id,
+        title: vacancy.position_title,
+        subtitle: `${vacancy.department_area || 'Sin área'} • ${vacancy.positions_count} posicion${vacancy.positions_count > 1 ? 'es' : ''}`,
+        badge: (
+          <Badge variant="outline" className={cn('max-w-full truncate', statusStyle.bg, statusStyle.text, statusStyle.border)}>
+            {vacancyStatusLabels[status]}
+          </Badge>
+        ),
+        fields: [
+          { label: 'Centro', value: centerName },
+          { label: 'Candidatos', value: candidateCount },
+          { label: 'Apertura', value: format(new Date(vacancy.open_date), 'dd MMM yyyy', { locale: es }) },
+        ],
+        onClick: () => openVacancyDetail(vacancy.id),
+        actions: (
+          <>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-10 w-10 bg-success/10 hover:bg-success/20 text-success"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCandidateFormVacancyId(vacancy.id);
+                setShowCandidateForm(true);
+              }}
+              disabled={vacancy.status !== 'in_process'}
+              aria-label={`Agregar candidato a vacante ${vacancy.position_title}`}
+            >
+              <UserPlus className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-10 w-10 bg-indigo-light hover:bg-indigo/20 text-indigo"
+              onClick={(e) => {
+                e.stopPropagation();
+                openVacancyDetail(vacancy.id);
+              }}
+              aria-label={`Ver detalle de vacante ${vacancy.position_title}`}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+          </>
+        ),
+      };
+    }),
+    [filteredVacancies]
+  );
 
   const openVacancyDetail = (vacancyId: string) => {
     setSelectedVacancyId(vacancyId);
@@ -239,14 +297,14 @@ export default function Seleccion() {
       >
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h2 className="font-semibold text-lg flex items-center gap-2">
                 <Briefcase className="w-5 h-5 text-primary" />
                 Vacantes
               </h2>
 
               {/* Filters */}
-              <div className="flex gap-3">
+              <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto">
                 <div className="relative flex-1 sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -257,7 +315,7 @@ export default function Seleccion() {
                   />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-full sm:w-[150px]">
                     <SelectValue placeholder="Estado" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
@@ -269,7 +327,7 @@ export default function Seleccion() {
                   </SelectContent>
                 </Select>
                 <Select value={centerFilter} onValueChange={setCenterFilter}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Centro" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
@@ -306,7 +364,13 @@ export default function Seleccion() {
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-md border">
+                <>
+                <MobileCardList
+                  className="md:hidden"
+                  items={vacancyItems}
+                  emptyMessage="No hay vacantes"
+                />
+                <div className="hidden rounded-md border md:block md:overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -419,6 +483,7 @@ export default function Seleccion() {
                     </TableBody>
                   </Table>
                 </div>
+                </>
               )}
             </div>
           </CardHeader>
