@@ -12,6 +12,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Bot, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { AiChatPanel } from '@/components/ai/AiChatPanel';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -22,6 +24,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const { hasPermission, permissionsLoaded } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileAiOpen, setMobileAiOpen] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [aiButtonLifted, setAiButtonLifted] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -53,6 +56,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     if (trackedModules.some((path) => location.pathname.startsWith(path))) {
       sessionStorage.setItem('krh_last_module_path', location.pathname);
     }
+    if (location.pathname === '/asistente-ia') setMobileAiOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -135,6 +139,14 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {isMobile && <MobileBottomNav />}
 
+      {isMobile && showAiButton && !isAiAssistant && (
+        <Sheet open={mobileAiOpen} onOpenChange={setMobileAiOpen}>
+          <SheetContent side="bottom" className="h-[84dvh] rounded-t-xl border-border p-0 [&>button]:hidden">
+            <AiChatPanel compact onClose={() => setMobileAiOpen(false)} />
+          </SheetContent>
+        </Sheet>
+      )}
+
       {showAiButton && (
         <Button
           type="button"
@@ -142,13 +154,17 @@ export function AppLayout({ children }: AppLayoutProps) {
           aria-label={isAiAssistant ? 'Minimizar Asistente IA' : 'Abrir Asistente IA'}
           title={isAiAssistant ? 'Minimizar Asistente IA' : 'Asistente IA'}
           onClick={() => {
+            if (isMobile && !isAiAssistant) {
+              setMobileAiOpen(true);
+              return;
+            }
             if (isAiAssistant) {
               navigate(sessionStorage.getItem('krh_last_module_path') || '/');
               return;
             }
             navigate('/asistente-ia');
           }}
-          className={`fixed ${isMobile ? '' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg transition-[bottom,right] duration-200 [&_svg]:size-[1.575rem] sm:[&_svg]:size-[1.8rem]`}
+          className={`fixed ${isMobile ? mobileAiOpen && !isAiAssistant ? 'hidden' : '' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg transition-[bottom,right] duration-200 [&_svg]:size-[1.575rem] sm:[&_svg]:size-[1.8rem]`}
           style={isMobile ? {
             bottom: `calc(env(safe-area-inset-bottom, 0px) + ${isAiAssistant ? '10rem' : aiButtonLifted ? '7.25rem' : '5.75rem'})`,
             right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
