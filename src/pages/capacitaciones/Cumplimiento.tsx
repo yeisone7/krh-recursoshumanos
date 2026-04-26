@@ -191,7 +191,7 @@ export default function Cumplimiento() {
           </h1>
           <p className="text-sm text-muted-foreground sm:text-base">Matriz de cumplimiento de capacitaciones por centro de operación</p>
         </div>
-        <Button className="w-full sm:w-auto" variant="outline" onClick={handleExport} disabled={filteredData.length === 0}>
+        <Button className="min-h-11 w-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-h-10 sm:w-auto" variant="outline" onClick={handleExport} disabled={filteredData.length === 0}>
           <Download className="h-4 w-4" /> <span className="truncate">Exportar Excel</span>
         </Button>
       </div>
@@ -247,10 +247,10 @@ export default function Cumplimiento() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
             <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px] lg:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar centro..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input placeholder="Buscar centro..." className="min-h-11 pl-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-h-10" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <Select value={centerFilter} onValueChange={setCenterFilter}>
-              <SelectTrigger className="w-full lg:w-[220px]">
+              <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background sm:min-h-10 lg:w-[220px]">
                 <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Centro de Operación" />
               </SelectTrigger>
@@ -262,7 +262,7 @@ export default function Cumplimiento() {
               </SelectContent>
             </Select>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="w-full sm:col-span-2 lg:col-span-1 lg:w-[220px]">
+              <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background sm:col-span-2 sm:min-h-10 lg:col-span-1 lg:w-[220px]">
                 <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Curso" />
               </SelectTrigger>
