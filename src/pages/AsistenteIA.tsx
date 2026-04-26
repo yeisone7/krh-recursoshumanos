@@ -30,12 +30,6 @@ const starterQuestions = [
   '¿Dónde veo los contratos próximos a vencer?',
 ];
 
-const mobileQuickReplies = [
-  'Dame el siguiente paso',
-  'Explícalo más simple',
-  'Muéstrame un ejemplo',
-];
-
 const CONFIRM_STEP_MESSAGE = 'Confirmo que completé este paso. Continúa con el siguiente.';
 
 function splitAssistantMessage(content: string) {
@@ -130,7 +124,6 @@ export default function AsistenteIA() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [keyboardOffset, setKeyboardOffset] = useState(0);
-  const [quickRepliesVisible, setQuickRepliesVisible] = useState(true);
 
   const conversationsQuery = useAiChatConversations(mode);
   const messagesQuery = useAiChatMessages(selectedConversationId);
@@ -160,10 +153,18 @@ export default function AsistenteIA() {
     }
   }, [conversations, selectedConversationId]);
 
+  const scrollMessagesToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    requestAnimationFrame(() => {
+      container.scrollTo({ top: container.scrollHeight, behavior });
+    });
+  };
+
   useEffect(() => {
     const shouldScroll = forceNextScrollRef.current || !isMobile || isNearBottomRef.current;
     if (shouldScroll) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      scrollMessagesToBottom('smooth');
       forceNextScrollRef.current = false;
     }
   }, [messages.length, sendMessage.isPending, selectedConversationId, isMobile]);
@@ -196,7 +197,6 @@ export default function AsistenteIA() {
 
   const handleNewConversation = () => {
     forceNextScrollRef.current = true;
-    setQuickRepliesVisible(true);
     setSelectedConversationId(null);
     setInput('');
   };
@@ -213,7 +213,6 @@ export default function AsistenteIA() {
     if (!message || sendMessage.isPending) return;
 
     forceNextScrollRef.current = true;
-    if (mobileQuickReplies.includes(message)) setQuickRepliesVisible(false);
     setInput('');
     try {
       const result = await sendMessage.mutateAsync({
@@ -240,7 +239,7 @@ export default function AsistenteIA() {
   };
 
   return (
-    <div className="flex min-h-[calc(100dvh-8rem)] flex-col gap-3 md:h-[calc(100vh-5rem)] md:min-h-[620px] md:gap-4">
+    <div className="flex h-[calc(100dvh-9rem)] min-h-0 flex-col gap-3 overflow-hidden md:h-[calc(100vh-5rem)] md:min-h-[620px] md:gap-4">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Asistente IA</h1>
