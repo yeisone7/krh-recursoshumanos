@@ -218,7 +218,16 @@ export default function Capacitaciones() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.04 }}
-                        className="rounded-xl border border-border/70 bg-card p-4 shadow-sm"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleOpenPreview(course)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            handleOpenPreview(course);
+                          }
+                        }}
+                        className="cursor-pointer rounded-xl border border-border/70 bg-card p-4 shadow-sm transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <div className="flex items-start gap-3">
                           <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ring-1 ${iconStyle}`}>
@@ -235,9 +244,9 @@ export default function Capacitaciones() {
                               </div>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0"><MoreVertical className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0" onClick={(event) => event.stopPropagation()}><MoreVertical className="h-4 w-4" /></Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
+                                <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
                                   <DropdownMenuItem onClick={() => handleOpenPreview(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleOpenPreview(course, 'media')}><ImageIcon className="h-4 w-4 mr-2" /> Multimedia</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
