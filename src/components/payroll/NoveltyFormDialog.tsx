@@ -107,12 +107,12 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
+        <DialogHeader className="shrink-0">
           <DialogTitle>{isEditing ? 'Editar Novedad' : 'Nueva Novedad'}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 overflow-y-auto min-h-0 pr-1">
           <div className="space-y-2">
             <Label>Empleado *</Label>
             <SearchableSelect
@@ -144,7 +144,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
             </Select>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label>Hora inicio</Label>
               <Input
@@ -197,9 +197,9 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={create.isPending || update.isPending}>
+        <DialogFooter className="flex-col-reverse sm:flex-row gap-2 pt-3 shrink-0">
+          <Button variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button className="w-full sm:w-auto" onClick={handleSave} disabled={create.isPending || update.isPending}>
             {isEditing ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogFooter>
