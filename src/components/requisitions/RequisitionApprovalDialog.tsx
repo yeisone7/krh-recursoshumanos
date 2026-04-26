@@ -468,7 +468,7 @@ export function RequisitionApprovalDialog({
           )}
 
           {step === 'gerencia' && (
-            <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
               <div className="space-y-0.5">
                 <Label className="text-base">Salario Aprobado por Gerencia</Label>
                 <p className="text-sm text-muted-foreground">
@@ -495,7 +495,7 @@ export function RequisitionApprovalDialog({
           </div>
 
           {/* Approval toggle */}
-          <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/50">
+          <div className="flex items-center justify-between gap-4 rounded-lg border p-4 bg-muted/50">
             <div className="space-y-0.5">
               <Label className="text-base font-semibold">
                 {approved ? '✓ Aprobar' : '✗ Rechazar'}
@@ -509,7 +509,7 @@ export function RequisitionApprovalDialog({
             <Switch checked={approved} onCheckedChange={setApproved} />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
