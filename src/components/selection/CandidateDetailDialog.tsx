@@ -902,8 +902,8 @@ export function CandidateDetailDialog({
           </Tabs>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-between">
-            <div className="flex gap-2" role="group" aria-label="Acciones del candidato">
+          <div className="px-4 py-4 border-t border-border bg-muted/30 flex flex-col gap-3 sm:flex-row sm:justify-between sm:px-6">
+            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap" role="group" aria-label="Acciones del candidato">
               {status === 'selected' && (
                 <>
                   <Button 
@@ -980,7 +980,7 @@ export function CandidateDetailDialog({
                   {status === 'not_selected' && (
                     <Button
                       variant="outline"
-                      className="text-pink-600 hover:text-pink-700 border-pink-300 hover:border-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/20"
+                      className="text-accent hover:text-accent border-accent/30 hover:border-accent hover:bg-accent/10"
                       onClick={() => setShowThanksDialog(true)}
                       disabled={!!(candidate as any).thanks_sent_at}
                     >
@@ -991,6 +991,7 @@ export function CandidateDetailDialog({
                 </>
               )}
             </div>
+            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
             {(hasPermission('seleccion', 'view') || hasPermission('reportes', 'view')) && (
               <Button
                 variant="outline"
@@ -1009,6 +1010,7 @@ export function CandidateDetailDialog({
             >
               Cerrar
             </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
