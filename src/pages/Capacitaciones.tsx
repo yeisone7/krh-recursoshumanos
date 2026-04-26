@@ -45,9 +45,9 @@ const COURSE_ICON_BY_MODALITY = {
 } satisfies Record<TrainingModality, typeof UsersRound>;
 
 const COURSE_ICON_STYLE_BY_MODALITY = {
-  presencial: 'bg-success-light text-success ring-success/20',
-  virtual: 'bg-info-light text-info ring-info/20',
-  mixto: 'bg-accent text-accent-foreground ring-accent/30',
+  presencial: 'bg-warning-light text-warning ring-warning/25',
+  virtual: 'bg-info-light text-info ring-info/25',
+  mixto: 'bg-primary/10 text-primary ring-primary/25',
 } satisfies Record<TrainingModality, string>;
 
 export default function Capacitaciones() {
