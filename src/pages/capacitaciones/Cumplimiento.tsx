@@ -29,13 +29,13 @@ function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
   return (
     <Card className="border-l-4" style={{ borderLeftColor: course.percentage === 100 ? '#10b981' : course.percentage >= 50 ? '#f59e0b' : 'hsl(var(--destructive))' }}>
       <CardContent className="pt-4 pb-3 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <span className="font-semibold">{course.course_name}</span>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-2">
+            <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 break-words font-semibold">{course.course_name}</span>
             {course.course_code && <Badge variant="outline" className="text-xs">{course.course_code}</Badge>}
           </div>
-          <Badge className={course.percentage === 100 ? 'bg-emerald-100 text-emerald-800' : course.percentage >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}>
+          <Badge className={`shrink-0 ${course.percentage === 100 ? 'bg-emerald-100 text-emerald-800' : course.percentage >= 50 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}`}>
             {course.percentage}%
           </Badge>
         </div>
@@ -181,30 +181,30 @@ export default function Cumplimiento() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <ClipboardCheck className="h-8 w-8 text-primary" />
+      <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="flex items-center gap-3 text-2xl font-bold leading-tight sm:text-3xl">
+            <ClipboardCheck className="h-6 w-6 shrink-0 text-primary sm:h-8 sm:w-8" />
             Cumplimiento por Centro
           </h1>
-          <p className="text-muted-foreground">Matriz de cumplimiento de capacitaciones por centro de operación</p>
+          <p className="text-sm text-muted-foreground sm:text-base">Matriz de cumplimiento de capacitaciones por centro de operación</p>
         </div>
-        <Button variant="outline" onClick={handleExport} disabled={filteredData.length === 0}>
-          <Download className="h-4 w-4 mr-2" /> Exportar Excel
+        <Button className="w-full sm:w-auto" variant="outline" onClick={handleExport} disabled={filteredData.length === 0}>
+          <Download className="h-4 w-4" /> <span className="truncate">Exportar Excel</span>
         </Button>
       </div>
 
       {/* Filters */}
       <Card>
         <CardContent className="pt-4 pb-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
+            <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px] lg:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar centro..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <Select value={centerFilter} onValueChange={setCenterFilter}>
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-full lg:w-[220px]">
                 <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Centro de Operación" />
               </SelectTrigger>
@@ -216,7 +216,7 @@ export default function Cumplimiento() {
               </SelectContent>
             </Select>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-full sm:col-span-2 lg:col-span-1 lg:w-[220px]">
                 <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Curso" />
               </SelectTrigger>
