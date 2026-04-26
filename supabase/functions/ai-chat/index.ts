@@ -201,8 +201,13 @@ serve(async (req) => {
         .eq("user_id", user.id)
         .eq("company_id", companyId)
         .maybeSingle();
-      if (!existingConversation) return jsonResponse({ error: "Conversación no encontrada" }, 404);
-    } else {
+
+      if (!existingConversation) {
+        activeConversationId = null;
+      }
+    }
+
+    if (!activeConversationId) {
       const title = message.slice(0, 70) || "Nueva conversación";
       const { data: newConversation, error: conversationError } = await adminClient
         .from("ai_chat_conversations")
