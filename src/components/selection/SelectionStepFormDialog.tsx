@@ -233,7 +233,7 @@ export function SelectionStepFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Editar Etapa' : 'Nueva Etapa de Selección'}</DialogTitle>
           <DialogDescription>
@@ -245,7 +245,7 @@ export function SelectionStepFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="stepType"
@@ -301,7 +301,7 @@ export function SelectionStepFormDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="scheduledDate"
@@ -385,7 +385,7 @@ export function SelectionStepFormDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="evaluatorName"
@@ -450,7 +450,7 @@ export function SelectionStepFormDialog({
                   Datos del Examen Médico de Ingreso
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="provider"
@@ -560,11 +560,11 @@ export function SelectionStepFormDialog({
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createStep.isPending || updateStep.isPending}>
+              <Button type="submit" className="w-full sm:w-auto" disabled={createStep.isPending || updateStep.isPending}>
                 {isEditing ? 'Actualizar' : 'Agregar Etapa'}
               </Button>
             </div>
