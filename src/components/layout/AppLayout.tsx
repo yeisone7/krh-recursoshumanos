@@ -11,6 +11,7 @@ import { MobileBottomNav } from './MobileBottomNav';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bot, Maximize2, Minimize2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { AiChatPanel } from '@/components/ai/AiChatPanel';
 
@@ -28,6 +29,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [aiPanelMinimized, setAiPanelMinimized] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [aiButtonLifted, setAiButtonLifted] = useState(false);
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
   const dragStartRef = useRef<{ y: number; height: number; startedAt: number } | null>(null);
   const isMobile = useIsMobile();
@@ -117,14 +119,18 @@ export function AppLayout({ children }: AppLayoutProps) {
     const isFastSwipeDown = draggedDown > 36 && downwardVelocity > 0.65;
 
     if (draggedDown > (isMobile ? 130 : 180) || isFastSwipeDown) {
-      setAiPanelOpen(false);
-      setAiPanelMinimized(false);
+      requestCloseAiPanel();
     }
   };
 
   const closeAiPanel = () => {
     setAiPanelOpen(false);
     setAiPanelMinimized(false);
+    setCloseConfirmOpen(false);
+  };
+
+  const requestCloseAiPanel = () => {
+    setCloseConfirmOpen(true);
   };
 
   return (
@@ -247,7 +253,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   size="icon"
                   aria-label="Cerrar asistente"
                   title="Cerrar asistente"
-                  onClick={closeAiPanel}
+                  onClick={requestCloseAiPanel}
                   className="h-8 w-8"
                 >
                   <X className="h-4 w-4" />
@@ -260,6 +266,22 @@ export function AppLayout({ children }: AppLayoutProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+
+      <AlertDialog open={closeConfirmOpen} onOpenChange={setCloseConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cerrar chat</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta conversación no se guarda. Si cierras el chat, perderás la información visible; si lo minimizas, seguirá disponible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={closeAiPanel}>Cerrar chat</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {showAiButton && (
         <Button
