@@ -12,7 +12,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Bot, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { AiChatPanel } from '@/components/ai/AiChatPanel';
 
 interface AppLayoutProps {
