@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
-import { Bot, Clock, MessageSquarePlus, Send, Sparkles, Trash2 } from 'lucide-react';
+import { Bot, CheckCircle2, Clock, Loader2, MessageSquarePlus, Send, Sparkles, Trash2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -93,6 +93,9 @@ export default function AsistenteIA() {
   const messages = useMemo(() => messagesQuery.data || [], [messagesQuery.data]);
   const lastMessage = messages[messages.length - 1];
   const canConfirmStep = lastMessage?.role === 'assistant' && /paso\s+\d+/i.test(lastMessage.content);
+  const assistantStatus = sendMessage.isPending ? 'Procesando' : messagesQuery.isLoading ? 'Cargando' : 'Listo';
+  const assistantStatusIcon = sendMessage.isPending || messagesQuery.isLoading ? Loader2 : CheckCircle2;
+  const AssistantStatusIcon = assistantStatusIcon;
   const pageContext = useMemo(() => {
     const savedPathname = sessionStorage.getItem('krh_last_module_path') || '';
     const pathname = location.pathname === '/asistente-ia' ? savedPathname : location.pathname;
