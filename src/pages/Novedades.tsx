@@ -127,53 +127,55 @@ export default function Novedades() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-        <Card>
-          <CardContent className="p-3 sm:pt-6 sm:px-6 sm:pb-6">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground">Registros</p>
-                <p className="text-xl sm:text-2xl font-bold">{filtered.length}</p>
+      {!isMobile && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm text-muted-foreground">Registros</p>
+                  <p className="text-2xl font-bold">{filtered.length}</p>
+                </div>
+                <FileText className="h-8 w-8 text-primary shrink-0" />
               </div>
-              <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3 sm:pt-6 sm:px-6 sm:pb-6">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground">Horas</p>
-                <p className="text-xl sm:text-2xl font-bold truncate">{totalHours.toFixed(1)}h</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm text-muted-foreground">Horas</p>
+                  <p className="text-2xl font-bold truncate">{totalHours.toFixed(1)}h</p>
+                </div>
+                <Clock className="h-8 w-8 text-primary shrink-0" />
               </div>
-              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3 sm:pt-6 sm:px-6 sm:pb-6">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground">Tipos</p>
-                <p className="text-xl sm:text-2xl font-bold">{Object.keys(typeDistribution).length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm text-muted-foreground">Tipos</p>
+                  <p className="text-2xl font-bold">{Object.keys(typeDistribution).length}</p>
+                </div>
+                <ListFilter className="h-8 w-8 text-primary shrink-0" />
               </div>
-              <ListFilter className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3 sm:pt-6 sm:px-6 sm:pb-6">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground">Más frecuente</p>
-                <p className="text-base sm:text-2xl font-bold truncate">
-                  {topType ? NOVELTY_TYPE_LABELS[topType[0] as NoveltyType] || topType[0] : '—'}
-                </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm text-muted-foreground">Más frecuente</p>
+                  <p className="text-2xl font-bold truncate">
+                    {topType ? NOVELTY_TYPE_LABELS[topType[0] as NoveltyType] || topType[0] : '—'}
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {surcharges.length > 0 && (
         <Card>
