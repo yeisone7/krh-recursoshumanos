@@ -20,6 +20,7 @@ interface PageContext {
 
 interface UserContext {
   displayName?: string;
+  isNewConversation?: boolean;
 }
 
 interface AIConfig {
@@ -60,8 +61,8 @@ function buildSystemPrompt(mode: ChatMode, pageContext?: PageContext | null, use
 
   const userName = userContext?.displayName?.trim();
   const personalizationContext = userName
-    ? `\nEl usuario se llama ${userName}. Salúdalo por su nombre al iniciar una conversación nueva o cuando sea natural, sin repetir el saludo en cada respuesta.`
-    : "\nSaluda de forma breve y amable al iniciar una conversación nueva, sin repetir el saludo en cada respuesta.";
+    ? `\nEl usuario se llama ${userName}. ${userContext?.isNewConversation ? "Salúdalo brevemente por su nombre al inicio." : "No repitas saludos si la conversación ya está en curso."}`
+    : `\n${userContext?.isNewConversation ? "Saluda de forma breve y amable al inicio." : "No repitas saludos si la conversación ya está en curso."}`;
   const moduleContext = pageContext?.moduleLabel
     ? `\nContexto actual del usuario: viene del módulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. Cuando corresponda, incluye una sección breve llamada "Próximos clics recomendados" con 2 a 4 acciones concretas que el usuario podría hacer después en ese módulo.`
     : "";
@@ -72,8 +73,8 @@ No consultes ni inventes datos reales de empleados, contratos, nómina, candidat
 No des asesoría legal definitiva. Puedes orientar en lenguaje práctico sobre dónde registrar información o qué flujo seguir en la app.
 Usa un tono humano, cercano, amable y educativo: responde como una persona experta que acompaña con paciencia, no como un robot. Usa frases naturales, reconoce la necesidad del usuario y evita tecnicismos innecesarios.${personalizationContext}
 Haz que el formato sea agradable y fácil de leer: usa Markdown limpio con saltos de línea, títulos cortos en nivel 3 (###), listas numeradas para pasos, viñetas para detalles, negritas para conceptos clave y separadores suaves (---) solo cuando aporten claridad. Evita bloques largos de texto; máximo 2-3 frases por párrafo. Incluye emojis de forma moderada y profesional para orientar visualmente (por ejemplo: 🙂, ✅, 👉, 💡, ⚠️), sin saturar la respuesta.
-Cuando el usuario quiera realizar una tarea dentro de la app, guíalo como un flujo interactivo: entrega solo el paso actual con número visible (por ejemplo, "Paso 1 de N"), explica qué debe hacer, y termina preguntando si confirma que ya completó ese paso para continuar con el siguiente.
-No avances al siguiente paso hasta que el usuario confirme. Si el usuario dice que no pudo completar el paso, ayúdale a resolver ese paso antes de continuar. Puedes mencionar una vista general breve de los pasos si ayuda, pero el flujo principal debe avanzar uno por uno.
+Cuando el usuario quiera realizar una tarea dentro de la app, guíalo como un flujo interactivo y mantén un orden estricto: 1) saludo breve solo si corresponde, 2) título del paso actual, 3) instrucciones del paso actual, 4) pregunta de confirmación. No incluyas una vista general, resumen de todos los pasos ni adelantes pasos futuros salvo que el usuario lo pida explícitamente.
+Entrega solo el paso actual con número visible (por ejemplo, "### Paso 1 de N"). No avances al siguiente paso hasta que el usuario confirme. Si el usuario dice que no pudo completar el paso, ayúdale a resolver ese paso antes de continuar.
 Responde en español, con pasos claros, concisos y formato Markdown cuando ayude.${moduleContext}`;
 }
 
@@ -257,7 +258,7 @@ serve(async (req) => {
       ...((previousMessages || []) as Array<{ role: ChatRole; content: string }>).map((item) => ({ role: item.role, content: item.content })),
       { role: "user", content: message },
     ];
-    const systemPrompt = buildSystemPrompt(mode, pageContext, { displayName: userDisplayName });
+    const systemPrompt = buildSystemPrompt(mode, pageContext, { displayName: userDisplayName, isNewConversation: (previousMessages || []).length === 0 });
 
     let provider = "lovable_ai";
     let answer = "";
