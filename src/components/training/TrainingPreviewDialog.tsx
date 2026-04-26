@@ -548,6 +548,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         isGenerating={!!generatingMedia.imagen}
                         onGenerate={() => handleGenerateMedia('imagen')}
                         onDelete={handleDeleteMedia}
+                        uploadAccept="image/*"
+                        isUploading={!!uploadingMedia.imagen}
+                        onUpload={(file) => handleUploadMedia('imagen', file)}
                       />
                       <MediaTypeCard
                         icon={<Network className="h-5 w-5 text-muted-foreground" />}
@@ -557,6 +560,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         isGenerating={!!generatingMedia.mapa_mental}
                         onGenerate={() => handleGenerateMedia('mapa_mental')}
                         onDelete={handleDeleteMedia}
+                        uploadAccept="image/*"
+                        isUploading={!!uploadingMedia.mapa_mental}
+                        onUpload={(file) => handleUploadMedia('mapa_mental', file)}
                       />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -568,6 +574,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         isGenerating={!!generatingMedia.infografia}
                         onGenerate={() => handleGenerateMedia('infografia')}
                         onDelete={handleDeleteMedia}
+                        uploadAccept="image/*"
+                        isUploading={!!uploadingMedia.infografia}
+                        onUpload={(file) => handleUploadMedia('infografia', file)}
                       />
                       <MediaTypeCard
                         icon={<Mic className="h-5 w-5 text-muted-foreground" />}
@@ -577,6 +586,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         isGenerating={!!generatingMedia.audio}
                         onGenerate={handleGenerateAudio}
                         onDelete={handleDeleteMedia}
+                        uploadAccept="audio/*"
+                        isUploading={!!uploadingMedia.audio}
+                        onUpload={(file) => handleUploadMedia('audio', file)}
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">Duración:</span>
