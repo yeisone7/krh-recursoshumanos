@@ -623,7 +623,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                 <p className="font-medium">
                                   {candidate.first_name} {candidate.last_name}
                                 </p>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                                   <span>{candidate.document_number}</span>
                                   {candidate.mobile && (
                                     <>
@@ -635,7 +635,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               </div>
                             </div>
 
-                            <div className="flex flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
+                            <div className="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-nowrap sm:justify-end">
                               <Badge className={cn('text-xs', statusStyle.bg, statusStyle.text)}>
                                 {candidateStatusLabels[candidateStatus]}
                               </Badge>
@@ -656,7 +656,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               )}
 
                               {candidateStatus !== 'hired' && candidateStatus !== 'withdrawn' && candidateStatus !== 'not_selected' && (
-                                <div className="flex gap-1">
+                                  <div className="flex justify-end gap-1">
                                   {candidateStatus !== 'selected' && (
                                     <Button
                                       size="sm"
