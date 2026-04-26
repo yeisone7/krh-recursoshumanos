@@ -23,7 +23,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const { hasPermission, permissionsLoaded } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileAiOpen, setMobileAiOpen] = useState(false);
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [aiButtonLifted, setAiButtonLifted] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -55,7 +55,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     if (trackedModules.some((path) => location.pathname.startsWith(path))) {
       sessionStorage.setItem('krh_last_module_path', location.pathname);
     }
-    if (location.pathname === '/asistente-ia') setMobileAiOpen(false);
+    if (location.pathname === '/asistente-ia') setAiPanelOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -138,10 +138,13 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {isMobile && <MobileBottomNav />}
 
-      {isMobile && showAiButton && !isAiAssistant && (
-        <Sheet open={mobileAiOpen} onOpenChange={setMobileAiOpen}>
-          <SheetContent side="bottom" className="h-[84dvh] rounded-t-xl border-border p-0 [&>button]:hidden">
-            <AiChatPanel compact onClose={() => setMobileAiOpen(false)} />
+      {showAiButton && !isAiAssistant && (
+        <Sheet open={aiPanelOpen} onOpenChange={setAiPanelOpen}>
+          <SheetContent
+            side={isMobile ? 'bottom' : 'right'}
+            className={`${isMobile ? 'h-[84dvh] rounded-t-xl' : 'h-screen w-[440px] max-w-[calc(100vw-2rem)] sm:max-w-[440px]'} border-border p-0 [&>button]:hidden`}
+          >
+            <AiChatPanel compact onClose={() => setAiPanelOpen(false)} />
           </SheetContent>
         </Sheet>
       )}
@@ -153,8 +156,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           aria-label={isAiAssistant ? 'Minimizar Asistente IA' : 'Abrir Asistente IA'}
           title={isAiAssistant ? 'Minimizar Asistente IA' : 'Asistente IA'}
           onClick={() => {
-            if (isMobile && !isAiAssistant) {
-              setMobileAiOpen(true);
+            if (!isAiAssistant) {
+              setAiPanelOpen(true);
               return;
             }
             if (isAiAssistant) {
@@ -163,7 +166,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             }
             navigate('/asistente-ia');
           }}
-          className={`fixed ${isMobile ? mobileAiOpen && !isAiAssistant ? 'hidden' : '' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg transition-[bottom,right] duration-200 [&_svg]:size-[1.575rem] sm:[&_svg]:size-[1.8rem]`}
+          className={`fixed ${isMobile ? aiPanelOpen && !isAiAssistant ? 'hidden' : '' : aiPanelOpen && !isAiAssistant ? 'hidden bottom-6 right-6' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg transition-[bottom,right] duration-200 [&_svg]:size-[1.575rem] sm:[&_svg]:size-[1.8rem]`}
           style={isMobile ? {
             bottom: `calc(env(safe-area-inset-bottom, 0px) + ${isAiAssistant ? '10rem' : aiButtonLifted ? '7.25rem' : '5.75rem'})`,
             right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
