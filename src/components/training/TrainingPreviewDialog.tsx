@@ -635,7 +635,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
         </Tabs>
 
         {/* Footer */}
-        <div className="border-t px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 text-xs sm:text-sm text-muted-foreground">
+        <div className="shrink-0 border-t px-3 py-2.5 text-xs text-muted-foreground sm:flex sm:items-center sm:justify-between sm:gap-0 sm:px-6 sm:py-3 sm:text-sm">
           <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
             {media.length > 0 && (
               <span className="flex items-center gap-1.5">
@@ -649,7 +649,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
               <span className="text-[10px] sm:text-xs">Creación</span>
             </span>
           </div>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="mt-2 w-full sm:mt-0 sm:w-auto">
             Cerrar
           </Button>
         </div>
