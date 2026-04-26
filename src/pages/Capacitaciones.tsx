@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Plus, Search, MoreHorizontal, Clock, Sparkles, PenLine, Library, Link2,
-  Eye, Copy, Trash2, LayoutDashboard
+  Eye, Copy, Trash2, LayoutDashboard, BookOpenCheck, MonitorPlay, UsersRound,
+  Layers, Timer, BadgeCheck, FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +17,6 @@ import { useTrainingCourses, useTrainingStats, useDeleteCourse, useDuplicateCour
 import { useToast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MobileCardList } from '@/components/shared/MobileCardList';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import type { TrainingCourse, TrainingModality, TrainingCourseContent } from '@/types/training';
 
@@ -37,6 +37,12 @@ const STATUS_LABELS: Record<string, string> = {
 const MODALITY_LABELS: Record<TrainingModality, string> = {
   presencial: 'Presencial', virtual: 'Virtual', mixto: 'Mixto',
 };
+
+const COURSE_ICON_BY_MODALITY = {
+  presencial: UsersRound,
+  virtual: MonitorPlay,
+  mixto: Layers,
+} satisfies Record<TrainingModality, typeof UsersRound>;
 
 export default function Capacitaciones() {
   const navigate = useNavigate();
