@@ -297,14 +297,14 @@ export default function Seleccion() {
       >
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h2 className="font-semibold text-lg flex items-center gap-2">
                 <Briefcase className="w-5 h-5 text-primary" />
                 Vacantes
               </h2>
 
               {/* Filters */}
-              <div className="flex gap-3">
+              <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto">
                 <div className="relative flex-1 sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -315,7 +315,7 @@ export default function Seleccion() {
                   />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[150px]">
+                  <SelectTrigger className="w-full sm:w-[150px]">
                     <SelectValue placeholder="Estado" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
@@ -327,7 +327,7 @@ export default function Seleccion() {
                   </SelectContent>
                 </Select>
                 <Select value={centerFilter} onValueChange={setCenterFilter}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Centro" />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
