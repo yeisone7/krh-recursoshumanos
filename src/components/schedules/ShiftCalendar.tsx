@@ -694,7 +694,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                   <ContextMenuTrigger>
                                     <div
                                       className={cn(
-                                        'w-8 sm:w-10 px-0.5 py-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
+                                        'w-9 sm:w-10 px-0.5 py-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
                                         sunday && !absence && 'bg-red-50',
                                         holiday && !absence && 'bg-amber-50',
                                         absence && !hasConflict && absence.type === 'vacation' && 'bg-green-50',
@@ -715,7 +715,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                       <TooltipProvider>
                                         <Tooltip>
                                           <TooltipTrigger asChild>
-                                            <div className="w-full h-full min-h-[20px]">
+                                            <div className="w-full h-full min-h-[28px] sm:min-h-[20px]">
                                               {/* Conflict indicator badge */}
                                               {hasConflict && (
                                                 <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center z-10 shadow-sm">
@@ -767,7 +767,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                                 </div>
                                               )}
                                               {/* Empty: non-admin with no shift/absence */}
-                                              {!isAdminMode && !shift && !absence && <div className="h-6" />}
+                                              {!isAdminMode && !shift && !absence && <div className="h-7 sm:h-6" />}
                                             </div>
                                           </TooltipTrigger>
                                           
