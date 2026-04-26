@@ -613,6 +613,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                       isGenerating={false}
                       onGenerate={() => {}}
                       onDelete={handleDeleteMedia}
+                      uploadAccept="video/*"
+                      isUploading={!!uploadingMedia.video}
+                      onUpload={(file) => handleUploadMedia('video', file)}
                     />
                   </>
                 ) : (
