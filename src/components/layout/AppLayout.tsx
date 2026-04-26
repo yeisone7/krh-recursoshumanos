@@ -9,7 +9,7 @@ import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { useContractExpiryNotifications } from '@/hooks/useContractExpiryNotifications';
 import { MobileBottomNav } from './MobileBottomNav';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bot, Maximize2, Minimize2 } from 'lucide-react';
+import { Bot, Maximize2, Minimize2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { AiChatPanel } from '@/components/ai/AiChatPanel';
@@ -122,6 +122,11 @@ export function AppLayout({ children }: AppLayoutProps) {
     }
   };
 
+  const closeAiPanel = () => {
+    setAiPanelOpen(false);
+    setAiPanelMinimized(false);
+  };
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Mobile swipe indicator */}
@@ -199,31 +204,58 @@ export function AppLayout({ children }: AppLayoutProps) {
               : 'fixed bottom-6 right-6 z-[60] w-[440px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl'}
             style={{ height: aiPanelMinimized ? 64 : aiPanelHeight || undefined }}
           >
-            <div
-              role="button"
-              tabIndex={0}
-              aria-label="Arrastrar para ajustar o cerrar el asistente"
-              onPointerDown={handleAiPanelDragStart}
-              onPointerMove={handleAiPanelDrag}
-              onPointerUp={handleAiPanelDragEnd}
-              onPointerCancel={handleAiPanelDragEnd}
-              className="relative flex h-7 touch-none cursor-ns-resize items-center justify-center border-b border-border bg-card"
-            >
-              <span className="h-1.5 w-16 rounded-full bg-muted-foreground/30" />
+            <div className="flex h-16 items-center gap-2 border-b border-border bg-card px-3">
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Arrastrar para ajustar o cerrar el asistente"
+                onPointerDown={handleAiPanelDragStart}
+                onPointerMove={handleAiPanelDrag}
+                onPointerUp={handleAiPanelDragEnd}
+                onPointerCancel={handleAiPanelDragEnd}
+                className="flex min-w-0 flex-1 touch-none cursor-ns-resize items-center gap-3 self-stretch"
+              >
+                {aiPanelMinimized ? (
+                  <>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Bot className="h-5 w-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-card-foreground">Asistente IA</span>
+                      <span className="block truncate text-xs text-muted-foreground">Chat minimizado</span>
+                    </span>
+                  </>
+                ) : (
+                  <span className="mx-auto h-1.5 w-16 rounded-full bg-muted-foreground/30" />
+                )}
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={aiPanelMinimized ? 'Maximizar asistente' : 'Minimizar asistente'}
+                  title={aiPanelMinimized ? 'Maximizar asistente' : 'Minimizar asistente'}
+                  onClick={() => setAiPanelMinimized((value) => !value)}
+                  className="h-8 w-8"
+                >
+                  {aiPanelMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Cerrar asistente"
+                  title="Cerrar asistente"
+                  onClick={closeAiPanel}
+                  className="h-8 w-8"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={aiPanelMinimized ? 'Maximizar asistente' : 'Minimizar asistente'}
-              title={aiPanelMinimized ? 'Maximizar asistente' : 'Minimizar asistente'}
-              onClick={() => setAiPanelMinimized((value) => !value)}
-              className="absolute right-10 top-8 z-10 h-8 w-8"
-            >
-              {aiPanelMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-            </Button>
-            <div className={aiPanelMinimized ? 'pointer-events-none h-[calc(100%-1.75rem)] min-h-0 opacity-0' : 'h-[calc(100%-1.75rem)] min-h-0'}>
-              <AiChatPanel compact onClose={() => setAiPanelOpen(false)} />
+            <div className={aiPanelMinimized ? 'pointer-events-none h-[calc(100%-4rem)] min-h-0 opacity-0' : 'h-[calc(100%-4rem)] min-h-0'}>
+              <AiChatPanel compact />
             </div>
           </motion.div>
         )}
