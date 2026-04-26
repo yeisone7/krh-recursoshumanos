@@ -181,22 +181,22 @@ export function ShiftCycleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
+        <DialogHeader className="shrink-0">
           <DialogTitle>
             {isEditing ? 'Editar Ciclo de Rotación' : 'Nuevo Ciclo de Rotación'}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-            <div className="space-y-4 flex-shrink-0">
-              <div className="grid grid-cols-3 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+            <div className="space-y-4 shrink-0">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
-                    <FormItem className="col-span-2">
+                    <FormItem className="sm:col-span-2">
                       <FormLabel>Nombre</FormLabel>
                       <FormControl>
                         <Input placeholder="Ej: Ciclo 4x2" {...field} />
@@ -242,7 +242,7 @@ export function ShiftCycleFormDialog({
 
             {/* Cycle Days */}
             <div className="mt-4 flex flex-col min-h-0 flex-1">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between gap-2 mb-2">
                 <FormLabel>Días del Ciclo ({cycleDays.length} días)</FormLabel>
                 <Button
                   type="button"
@@ -251,8 +251,9 @@ export function ShiftCycleFormDialog({
                   onClick={addDay}
                   disabled={activeShifts.length === 0}
                 >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Agregar Día
+                  <Plus className="w-4 h-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Agregar Día</span>
+                  <span className="sm:hidden">Agregar</span>
                 </Button>
               </div>
 
@@ -267,24 +268,24 @@ export function ShiftCycleFormDialog({
                   <p className="text-sm">Agregue días para definir el ciclo de rotación.</p>
                 </div>
               ) : (
-                <div className="border rounded-md overflow-y-auto max-h-[200px]">
+                <div className="border rounded-md overflow-y-auto max-h-[240px] sm:max-h-[200px]">
                   <div className="p-2 space-y-2">
                     {cycleDays.map((day, index) => {
                       const shift = getShiftById(day.shift_id);
                       return (
                         <div
                           key={index}
-                          className="flex items-center gap-2 p-2 bg-muted/50 rounded-md"
+                          className="grid grid-cols-[auto_1fr_auto] sm:flex sm:items-center gap-2 p-2 bg-muted/50 rounded-md"
                         >
                           <GripVertical className="w-4 h-4 text-muted-foreground" />
-                          <Badge variant="outline" className="w-16 justify-center">
+                          <Badge variant="outline" className="w-14 sm:w-16 justify-center">
                             Día {day.day_number}
                           </Badge>
                           <Select
                             value={day.shift_id}
                             onValueChange={(value) => updateDay(index, value)}
                           >
-                            <SelectTrigger className="flex-1 bg-background">
+                            <SelectTrigger className="min-w-0 sm:flex-1 bg-background">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-background">
@@ -307,7 +308,7 @@ export function ShiftCycleFormDialog({
                             </SelectContent>
                           </Select>
                           {shift && (
-                            <span className="text-xs text-muted-foreground w-24 text-center">
+                            <span className="hidden sm:inline text-xs text-muted-foreground w-24 text-center">
                               {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
                             </span>
                           )}
@@ -333,8 +334,8 @@ export function ShiftCycleFormDialog({
                 control={form.control}
                 name="is_active"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                    <div>
+                  <FormItem className="flex items-start sm:items-center justify-between gap-3 rounded-lg border p-3">
+                    <div className="min-w-0">
                       <FormLabel>Activo</FormLabel>
                       <FormDescription>
                         El ciclo está disponible para asignar
@@ -350,15 +351,16 @@ export function ShiftCycleFormDialog({
                 )}
               />
 
-              <div className="flex justify-end gap-3">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
                 <Button
                   type="button"
                   variant="outline"
+                  className="w-full sm:w-auto"
                   onClick={() => onOpenChange(false)}
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" className="w-full sm:w-auto" disabled={isPending}>
                   {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {isEditing ? 'Guardar Cambios' : 'Crear Ciclo'}
                 </Button>
