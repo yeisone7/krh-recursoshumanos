@@ -30,6 +30,12 @@ const starterQuestions = [
   '¿Dónde veo los contratos próximos a vencer?',
 ];
 
+const mobileQuickReplies = [
+  'Dame el siguiente paso',
+  'Explícalo más simple',
+  'Muéstrame un ejemplo',
+];
+
 const CONFIRM_STEP_MESSAGE = 'Confirmo que completé este paso. Continúa con el siguiente.';
 
 const moduleSuggestions: Record<string, { module: string; moduleLabel: string; suggestions: string[] }> = {
@@ -76,6 +82,7 @@ export default function AsistenteIA() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const [quickRepliesVisible, setQuickRepliesVisible] = useState(true);
 
   const conversationsQuery = useAiChatConversations(mode);
   const messagesQuery = useAiChatMessages(selectedConversationId);
