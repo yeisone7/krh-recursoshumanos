@@ -365,7 +365,7 @@ export function CycleGeneratorDialog({
                             <Button
                               variant="outline"
                               className={cn(
-                                'justify-start text-left font-normal',
+                                'w-full justify-start text-left font-normal',
                                 !field.value && 'text-muted-foreground'
                               )}
                             >
@@ -401,7 +401,7 @@ export function CycleGeneratorDialog({
                             <Button
                               variant="outline"
                               className={cn(
-                                'justify-start text-left font-normal',
+                                'w-full justify-start text-left font-normal',
                                 !field.value && 'text-muted-foreground'
                               )}
                             >
@@ -436,18 +436,18 @@ export function CycleGeneratorDialog({
                 </Alert>
               )}
 
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={activeCycles.length === 0}>
+                <Button type="submit" className="w-full sm:w-auto" disabled={activeCycles.length === 0}>
                   Vista Previa
                 </Button>
               </DialogFooter>
             </form>
           </Form>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto min-h-0 pr-1">
             <Alert className="border-green-200 bg-green-50">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
@@ -470,11 +470,12 @@ export function CycleGeneratorDialog({
               </Alert>
             )}
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setPreviewMode(false)}>
+            <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setPreviewMode(false)}>
                 Volver
               </Button>
               <Button 
+                className="w-full sm:w-auto"
                 onClick={handleGenerate} 
                 disabled={createBulkAssignments.isPending || generatedAssignments.length === 0}
               >
