@@ -243,6 +243,18 @@ export default function AsistenteIA() {
                         <p className="text-lg font-semibold">¿Qué necesitas hacer en KRH?</p>
                         <p className="mt-1 text-sm text-muted-foreground">El asistente te guía paso a paso dentro de la aplicación.</p>
                       </div>
+                      {pageContext && (
+                        <div className="w-full max-w-2xl rounded-lg border border-border bg-muted/40 p-3 text-left">
+                          <p className="text-sm font-semibold">Sugerencias para {pageContext.moduleLabel}</p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {pageContext.suggestions.map((suggestion) => (
+                              <Button key={suggestion} variant="secondary" size="sm" onClick={() => handleSend(`Estoy en ${pageContext.moduleLabel}. Guíame para: ${suggestion}`)}>
+                                {suggestion}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       <div className="grid w-full max-w-2xl gap-2 sm:grid-cols-2">
                         {starterQuestions.map((question) => (
                           <Button key={question} variant="outline" className="h-auto justify-start whitespace-normal py-3 text-left" onClick={() => handleSend(question)}>
