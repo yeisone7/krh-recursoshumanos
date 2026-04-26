@@ -305,7 +305,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                       <h3 className="font-semibold mb-2 flex items-center gap-2">
                         <BookOpen className="h-4 w-4" /> Introducción
                       </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{content.introduccion}</p>
+                      <p className="line-clamp-6 break-words text-sm leading-relaxed text-muted-foreground sm:line-clamp-none">{content.introduccion}</p>
                     </CardContent>
                   </Card>
                 )}
@@ -316,7 +316,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                       <h3 className="font-semibold mb-2 flex items-center gap-2">
                         <Target className="h-4 w-4" /> Objetivo
                       </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{course.objective}</p>
+                      <p className="line-clamp-6 break-words text-sm leading-relaxed text-muted-foreground sm:line-clamp-none">{course.objective}</p>
                     </CardContent>
                   </Card>
                 )}
@@ -331,7 +331,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                         {content.objetivos.map((obj, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                             <ChevronRight className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
-                            <span>{obj}</span>
+                            <span className="line-clamp-3 min-w-0 break-words sm:line-clamp-none">{obj}</span>
                           </li>
                         ))}
                       </ul>
@@ -359,7 +359,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                     <CardContent className="p-4 flex flex-col items-center text-center gap-1.5">
                       <Scale className="h-5 w-5 text-primary" />
                       <span className="text-xs text-muted-foreground">Marco Legal</span>
-                      <span className="font-semibold text-sm capitalize">{course.legal_framework || 'Interno'}</span>
+                      <span className="line-clamp-2 break-words text-sm font-semibold capitalize">{course.legal_framework || 'Interno'}</span>
                     </CardContent>
                   </Card>
                   <Card>
