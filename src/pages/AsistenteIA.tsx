@@ -62,8 +62,16 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
         {isUser ? (
           <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
         ) : (
-          <div className="prose prose-sm max-w-none text-card-foreground prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-strong:text-card-foreground">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
+          <div className="prose prose-sm max-w-none text-card-foreground prose-headings:text-card-foreground prose-h3:mb-2 prose-h3:mt-3 prose-h3:text-base prose-h3:font-semibold prose-p:my-2 prose-p:leading-relaxed prose-ul:my-2 prose-ul:pl-5 prose-ol:my-2 prose-ol:pl-5 prose-li:my-1 prose-li:leading-relaxed prose-strong:text-card-foreground prose-hr:my-3 prose-hr:border-border first:prose-h3:mt-0">
+            <ReactMarkdown
+              components={{
+                h1: ({ children }) => <h3>{children}</h3>,
+                h2: ({ children }) => <h3>{children}</h3>,
+                h3: ({ children }) => <h3>{children}</h3>,
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
           </div>
         )}
       </div>
