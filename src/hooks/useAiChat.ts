@@ -78,7 +78,7 @@ export function useAiChatMessages(conversationId: string | null) {
 
 export function useSendAiChatMessage() {
   const queryClient = useQueryClient();
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, user } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -99,6 +99,7 @@ export function useSendAiChatMessage() {
           mode,
           companyId: currentCompanyId,
           pageContext,
+          userDisplayName: user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0],
         },
       });
 
