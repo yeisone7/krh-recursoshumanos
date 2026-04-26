@@ -221,10 +221,10 @@ export function RequisitionApprovalDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6 [&_button]:min-h-11 sm:[&_button]:min-h-10 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_textarea]:min-h-24 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
         <DialogHeader>
-          <DialogTitle>{stepTitles[step]}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="pr-8 text-lg leading-tight sm:pr-0">{stepTitles[step]}</DialogTitle>
+          <DialogDescription className="break-words pr-8 sm:pr-0">
             Requisición: {requisition.cargo_solicitado} ({requisition.cantidad_vacantes_requeridas} vacantes)
           </DialogDescription>
         </DialogHeader>
@@ -233,7 +233,7 @@ export function RequisitionApprovalDialog({
 
           {/* Step-specific fields */}
           {step === 'operaciones' && (
-            <div className="flex items-center justify-between rounded-lg border p-4">
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
               <div className="space-y-0.5">
                 <Label className="text-base">Salario Aprobado</Label>
                 <p className="text-sm text-muted-foreground">
@@ -355,7 +355,7 @@ export function RequisitionApprovalDialog({
               </div>
 
               {/* Creación del Perfil de Cargo */}
-              <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <Label className="text-base">Creación del Perfil de Cargo</Label>
                   <p className="text-sm text-muted-foreground">
@@ -383,7 +383,7 @@ export function RequisitionApprovalDialog({
 
               {/* Códigos de la Vacante */}
               <div className="space-y-3 rounded-lg border p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <Label className="text-base">Códigos de la Vacante</Label>
                   <Button type="button" variant="outline" size="sm" onClick={addVacancyCode}>
                     <Plus className="h-4 w-4 mr-1" /> Agregar
@@ -405,7 +405,7 @@ export function RequisitionApprovalDialog({
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                    <div className="grid grid-cols-4 gap-2 pr-8">
+                    <div className="grid grid-cols-1 gap-2 pr-8 sm:grid-cols-2 lg:grid-cols-4">
                       <div className="space-y-1">
                         <Label className="text-xs text-muted-foreground">Plataforma</Label>
                         <Select
