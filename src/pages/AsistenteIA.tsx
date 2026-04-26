@@ -287,7 +287,6 @@ export default function AsistenteIA() {
                             key={conversation.id}
                             onClick={() => {
                               forceNextScrollRef.current = true;
-                              setQuickRepliesVisible(true);
                               setSelectedConversationId(conversation.id);
                             }}
                             className={cn(
@@ -398,22 +397,6 @@ export default function AsistenteIA() {
                   className="border-t border-border bg-card p-3 transition-[padding-bottom] duration-200 sm:p-4"
                   style={isMobile && keyboardOffset ? { paddingBottom: `calc(${keyboardOffset}px + 0.75rem)` } : undefined}
                 >
-                  {isMobile && quickRepliesVisible && messages.length > 0 && !sendMessage.isPending && (
-                    <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
-                      {mobileQuickReplies.map((reply) => (
-                        <Button
-                          key={reply}
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="h-8 shrink-0 text-xs"
-                          onClick={() => handleSend(reply)}
-                        >
-                          {reply}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
                   {canConfirmStep && !sendMessage.isPending && (
                     <div className="mb-3 flex justify-end">
                       <Button variant="secondary" size="sm" className="w-full sm:w-auto" onClick={() => handleSend(CONFIRM_STEP_MESSAGE)}>
