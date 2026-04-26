@@ -61,6 +61,19 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!aiPanelOpen) return;
+
+    const updatePanelHeight = () => {
+      const viewportHeight = window.innerHeight;
+      setAiPanelHeight(isMobile ? Math.round(viewportHeight * 0.84) : Math.min(680, viewportHeight - 48));
+    };
+
+    updatePanelHeight();
+    window.addEventListener('resize', updatePanelHeight);
+    return () => window.removeEventListener('resize', updatePanelHeight);
+  }, [aiPanelOpen, isMobile]);
+
+  useEffect(() => {
     if (!isMobile) {
       setAiButtonLifted(false);
       return;
@@ -74,6 +87,31 @@ export function AppLayout({ children }: AppLayoutProps) {
     main.addEventListener('scroll', handleScroll, { passive: true });
     return () => main.removeEventListener('scroll', handleScroll);
   }, [isMobile, location.pathname]);
+
+  const handleAiPanelDragStart = (event: PointerEvent<HTMLDivElement>) => {
+    const currentHeight = aiPanelHeight || Math.round(window.innerHeight * (isMobile ? 0.84 : 0.78));
+    dragStartRef.current = { y: event.clientY, height: currentHeight };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleAiPanelDrag = (event: PointerEvent<HTMLDivElement>) => {
+    const start = dragStartRef.current;
+    if (!start) return;
+
+    const deltaY = event.clientY - start.y;
+    const minHeight = isMobile ? Math.max(280, window.innerHeight * 0.38) : 420;
+    const maxHeight = isMobile ? window.innerHeight * 0.9 : window.innerHeight - 48;
+    setAiPanelHeight(Math.round(Math.min(maxHeight, Math.max(minHeight, start.height - deltaY))));
+  };
+
+  const handleAiPanelDragEnd = (event: PointerEvent<HTMLDivElement>) => {
+    const start = dragStartRef.current;
+    dragStartRef.current = null;
+    if (!start) return;
+
+    const draggedDown = event.clientY - start.y;
+    if (draggedDown > (isMobile ? 130 : 180)) setAiPanelOpen(false);
+  };
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
