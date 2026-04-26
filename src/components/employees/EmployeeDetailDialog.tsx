@@ -442,7 +442,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0 gap-0 [&>button]:text-primary-foreground [&>button]:hover:text-primary-foreground/80">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0 gap-0 [&>button]:text-foreground [&>button]:hover:text-foreground/80">
         <div className="flex-1 min-h-0 overflow-y-auto scrollbar-themed">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -464,9 +464,9 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
               <div className="flex items-start gap-4 relative z-10">
                 {/* Avatar with upload overlay */}
                 <div className="relative group shrink-0">
-                  <Avatar className="w-16 h-16 border-2 border-primary-foreground/30">
+                  <Avatar className="w-16 h-16 border-2 border-primary/20 shadow-sm">
                     <AvatarImage src={employee.avatar_url || undefined} alt={employeeFullName} />
-                    <AvatarFallback className="bg-primary-foreground/20 text-primary-foreground text-xl font-bold">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
                       {employee.first_name[0]}{employee.last_name[0]}
                     </AvatarFallback>
                   </Avatar>
@@ -501,7 +501,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       {employee.is_active ? 'Activo' : 'Inactivo'}
                     </Badge>
                     {employee.work_info?.link_type && (
-                      <Badge variant="outline" className="text-[11px] text-primary-foreground/90 border-primary-foreground/30 bg-primary-foreground/10">
+                    <Badge variant="outline" className="text-[11px] text-foreground border-border bg-card/70">
                         {linkTypeLabels[employee.work_info.link_type]}
                       </Badge>
                     )}
@@ -518,13 +518,13 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       </Badge>
                     )}
                   </div>
-                  <h2 className="text-xl font-display font-bold text-primary-foreground leading-tight">
+                  <h2 className="text-xl font-display font-bold text-foreground leading-tight">
                     {employeeFullName}
                   </h2>
-                  <p className="text-primary-foreground/80 text-sm mt-0.5">
+                  <p className="text-muted-foreground text-sm mt-0.5">
                     {employee.work_info?.position_name || 'Sin cargo asignado'}
                   </p>
-                  <div className="flex items-center gap-3 mt-2 text-primary-foreground/70 text-xs flex-wrap">
+                  <div className="flex items-center gap-3 mt-2 text-muted-foreground text-xs flex-wrap">
                     {employee.operation_centers?.name && (
                       <span className="flex items-center gap-1">
                         <Building className="w-3 h-3" />
@@ -550,7 +550,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     variant="ghost" 
                     size="icon" 
                     onClick={() => setIsTransferOpen(true)}
-                    className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 shrink-0"
+                    className="text-muted-foreground hover:text-foreground hover:bg-primary/10 shrink-0"
                     title="Trasladar a otra empresa"
                   >
                     <ArrowRightLeft className="w-4 h-4" />
@@ -560,7 +560,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   variant="ghost" 
                   size="icon" 
                   onClick={() => setIsEditOpen(true)}
-                  className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 shrink-0"
+                  className="text-muted-foreground hover:text-foreground hover:bg-primary/10 shrink-0"
                 >
                   <Pencil className="w-4 h-4" />
                 </Button>
