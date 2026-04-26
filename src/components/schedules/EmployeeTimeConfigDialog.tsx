@@ -140,13 +140,13 @@ export function EmployeeTimeConfigDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Asignar Modalidad de Tiempo</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto min-h-0 px-1 pb-1 sm:px-2">
             {!preselectedEmployeeId && (
               <FormField
                 control={form.control}
@@ -184,11 +184,11 @@ export function EmployeeTimeConfigDialog({
                     <RadioGroup
                       onValueChange={field.onChange}
                       value={field.value}
-                      className="grid grid-cols-2 gap-4"
+                      className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
                     >
                       <label
                         className={cn(
-                          'flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all',
+                          'flex items-center gap-3 p-3 sm:p-4 rounded-lg border cursor-pointer transition-all',
                           field.value === 'administrative'
                             ? 'border-primary bg-primary/5'
                             : 'border-input hover:border-primary/50'
@@ -206,7 +206,7 @@ export function EmployeeTimeConfigDialog({
                       </label>
                       <label
                         className={cn(
-                          'flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all',
+                          'flex items-center gap-3 p-3 sm:p-4 rounded-lg border cursor-pointer transition-all',
                           field.value === 'shift'
                             ? 'border-primary bg-primary/5'
                             : 'border-input hover:border-primary/50'
@@ -406,15 +406,16 @@ export function EmployeeTimeConfigDialog({
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={() => onOpenChange(false)}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createConfig.isPending}>
+              <Button type="submit" className="w-full sm:w-auto" disabled={createConfig.isPending}>
                 {createConfig.isPending && (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 )}
