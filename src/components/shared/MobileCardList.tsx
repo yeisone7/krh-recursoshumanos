@@ -16,6 +16,7 @@ interface MobileCardItem {
   fields?: MobileCardField[];
   onClick?: () => void;
   actions?: ReactNode;
+  itemClassName?: string;
 }
 
 interface MobileCardListProps {
@@ -40,7 +41,8 @@ export function MobileCardList({ items, emptyMessage = 'No hay registros', class
           key={item.id}
           className={cn(
             "card-elevated p-4 space-y-3 transition-all",
-            item.onClick && "cursor-pointer hover:border-primary/30 active:scale-[0.99]"
+            item.onClick && "cursor-pointer hover:border-primary/30 active:scale-[0.99]",
+            item.itemClassName
           )}
           onClick={item.onClick}
         >
