@@ -57,10 +57,13 @@ export default function CrearManual() {
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
 
+  const isSaving = createCourse.isPending || updateCourse.isPending;
+
   useEffect(() => {
     if (existingCourse) {
       setTitle(existingCourse.name);
       setTipo(existingCourse.category);
+      setDescripcion(existingCourse.description || '');
       setNivel(existingCourse.level || 'Básico');
       setObjetivo(existingCourse.objective || '');
       setMarcoLegal(existingCourse.legal_framework || '');
@@ -87,7 +90,7 @@ export default function CrearManual() {
       };
       if (editId) {
         await updateCourse.mutateAsync({ id: editId, ...courseData });
-        toast.success(status === 'publicado' ? 'Publicada' : 'Borrador guardado');
+        toast.success(status === 'publicado' ? 'Publicada' : 'Cambios guardados');
       } else {
         const result = await createCourse.mutateAsync(courseData);
         toast.success(status === 'publicado' ? 'Publicada' : 'Borrador guardado');
@@ -96,13 +99,15 @@ export default function CrearManual() {
     } catch { toast.error('Error al guardar'); }
   };
 
+  const handleSaveChanges = () => handleSave(existingCourse?.status || 'borrador');
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/capacitaciones')}><ArrowLeft className="h-5 w-5" /></Button>
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><PenLine className="h-6 w-6" /> {editId ? 'Editar' : 'Crear'} Capacitación Manual</h1>
-          <p className="text-muted-foreground">Crea contenido y evaluaciones manualmente</p>
+          <p className="text-muted-foreground">Crea contenido y evaluaciones manualmente{existingCourse?.version ? ` · Versión ${existingCourse.version}` : ''}</p>
         </div>
       </div>
 
@@ -194,7 +199,10 @@ export default function CrearManual() {
                 <Label className="flex items-center gap-1.5"><AlignLeft className="h-4 w-4" /> Descripción o Contexto Adicional</Label>
                 <Textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Proporciona información adicional que ayude a definir el contenido de la capacitación..." rows={4} />
               </div>
-              <div className="flex justify-end"><Button onClick={() => setStep(1)} disabled={!title}>Siguiente <ArrowRight className="h-4 w-4 ml-2" /></Button></div>
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                {editId && <Button variant="outline" onClick={handleSaveChanges} disabled={!title || isSaving}>{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
+                <Button onClick={() => setStep(1)} disabled={!title}>Siguiente <ArrowRight className="h-4 w-4 ml-2" /></Button>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -213,7 +221,11 @@ export default function CrearManual() {
                 ))}
                 <Button variant="outline" size="sm" className="mt-2" onClick={() => setContent({ ...content, objetivos: [...(content.objetivos || []), ''] })}>+ Agregar</Button>
               </div>
-              <div><Label>Contenido Principal (Markdown)</Label><Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} className="font-mono text-sm" /></div>
+              <div>
+                <Label>Secciones</Label>
+                <Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} className="font-mono text-sm" />
+                <p className="text-xs text-muted-foreground mt-1">Usa títulos Markdown como ## Sección para organizar el contenido.</p>
+              </div>
               {content.contenido && <div><Label>Vista previa</Label><div className="border rounded-lg p-4 mt-1"><MarkdownContent content={content.contenido} /></div></div>}
               <div>
                 <Label>Puntos Clave</Label>
@@ -229,9 +241,12 @@ export default function CrearManual() {
                   <div className="mt-3"><TrainingMediaGallery media={media as any} onDelete={async (id) => { await deleteMedia.mutateAsync({ id, courseId: editId }); }} /></div>
                 </div>
               )}
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
                 <Button variant="outline" onClick={() => setStep(0)}><ArrowLeft className="h-4 w-4 mr-2" /> Anterior</Button>
-                <Button onClick={() => setStep(2)}>Siguiente <ArrowRight className="h-4 w-4 ml-2" /></Button>
+                <div className="flex flex-col-reverse sm:flex-row gap-2">
+                  {editId && <Button variant="outline" onClick={handleSaveChanges} disabled={!title || isSaving}>{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
+                  <Button onClick={() => setStep(2)}>Siguiente <ArrowRight className="h-4 w-4 ml-2" /></Button>
+                </div>
               </div>
             </CardContent>
           </Card>
