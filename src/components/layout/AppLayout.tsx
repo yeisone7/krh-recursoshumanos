@@ -9,7 +9,7 @@ import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { useContractExpiryNotifications } from '@/hooks/useContractExpiryNotifications';
 import { MobileBottomNav } from './MobileBottomNav';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bot, Minimize2 } from 'lucide-react';
+import { Bot, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { AiChatPanel } from '@/components/ai/AiChatPanel';
@@ -25,6 +25,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [aiPanelHeight, setAiPanelHeight] = useState(0);
+  const [aiPanelMinimized, setAiPanelMinimized] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [aiButtonLifted, setAiButtonLifted] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -61,7 +62,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!aiPanelOpen) return;
+    if (!aiPanelOpen || aiPanelMinimized) return;
 
     const updatePanelHeight = () => {
       const viewportHeight = window.innerHeight;
@@ -71,7 +72,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     updatePanelHeight();
     window.addEventListener('resize', updatePanelHeight);
     return () => window.removeEventListener('resize', updatePanelHeight);
-  }, [aiPanelOpen, isMobile]);
+  }, [aiPanelOpen, aiPanelMinimized, isMobile]);
 
   useEffect(() => {
     if (!isMobile) {
@@ -89,6 +90,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [isMobile, location.pathname]);
 
   const handleAiPanelDragStart = (event: PointerEvent<HTMLDivElement>) => {
+    if (aiPanelMinimized) return;
     const currentHeight = aiPanelHeight || Math.round(window.innerHeight * (isMobile ? 0.84 : 0.78));
     dragStartRef.current = { y: event.clientY, height: currentHeight };
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -110,7 +112,10 @@ export function AppLayout({ children }: AppLayoutProps) {
     if (!start) return;
 
     const draggedDown = event.clientY - start.y;
-    if (draggedDown > (isMobile ? 130 : 180)) setAiPanelOpen(false);
+    if (draggedDown > (isMobile ? 130 : 180)) {
+      setAiPanelOpen(false);
+      setAiPanelMinimized(false);
+    }
   };
 
   return (
@@ -188,7 +193,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             className={isMobile
               ? 'fixed inset-x-2 bottom-0 z-[60] overflow-hidden rounded-t-xl border border-border bg-card shadow-2xl'
               : 'fixed bottom-6 right-6 z-[60] w-[440px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl'}
-            style={{ height: aiPanelHeight || undefined }}
+            style={{ height: aiPanelMinimized ? 64 : aiPanelHeight || undefined }}
           >
             <div
               role="button"
@@ -198,11 +203,22 @@ export function AppLayout({ children }: AppLayoutProps) {
               onPointerMove={handleAiPanelDrag}
               onPointerUp={handleAiPanelDragEnd}
               onPointerCancel={handleAiPanelDragEnd}
-              className="flex h-7 touch-none cursor-ns-resize items-center justify-center border-b border-border bg-card"
+              className="relative flex h-7 touch-none cursor-ns-resize items-center justify-center border-b border-border bg-card"
             >
               <span className="h-1.5 w-16 rounded-full bg-muted-foreground/30" />
             </div>
-            <div className="h-[calc(100%-1.75rem)] min-h-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={aiPanelMinimized ? 'Maximizar asistente' : 'Minimizar asistente'}
+              title={aiPanelMinimized ? 'Maximizar asistente' : 'Minimizar asistente'}
+              onClick={() => setAiPanelMinimized((value) => !value)}
+              className="absolute right-10 top-8 z-10 h-8 w-8"
+            >
+              {aiPanelMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+            </Button>
+            <div className={aiPanelMinimized ? 'pointer-events-none h-[calc(100%-1.75rem)] min-h-0 opacity-0' : 'h-[calc(100%-1.75rem)] min-h-0'}>
               <AiChatPanel compact onClose={() => setAiPanelOpen(false)} />
             </div>
           </motion.div>
