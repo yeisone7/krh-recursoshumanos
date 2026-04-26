@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   useAiChatConversations,
   useAiChatMessages,
@@ -67,6 +68,10 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
 export default function AsistenteIA() {
   const location = useLocation();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const isNearBottomRef = useRef(true);
+  const forceNextScrollRef = useRef(true);
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState<ChatMode>('app_help');
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [input, setInput] = useState('');
@@ -95,8 +100,12 @@ export default function AsistenteIA() {
   }, [conversations, selectedConversationId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length, sendMessage.isPending, selectedConversationId]);
+    const shouldScroll = forceNextScrollRef.current || !isMobile || isNearBottomRef.current;
+    if (shouldScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      forceNextScrollRef.current = false;
+    }
+  }, [messages.length, sendMessage.isPending, selectedConversationId, isMobile]);
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === selectedConversationId) || null,
@@ -104,14 +113,23 @@ export default function AsistenteIA() {
   );
 
   const handleNewConversation = () => {
+    forceNextScrollRef.current = true;
     setSelectedConversationId(null);
     setInput('');
+  };
+
+  const handleMessagesScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    isNearBottomRef.current = distanceFromBottom < 120;
   };
 
   const handleSend = async (text = input) => {
     const message = text.trim();
     if (!message || sendMessage.isPending) return;
 
+    forceNextScrollRef.current = true;
     setInput('');
     try {
       const result = await sendMessage.mutateAsync({
@@ -184,7 +202,10 @@ export default function AsistenteIA() {
                         return (
                           <button
                             key={conversation.id}
-                            onClick={() => setSelectedConversationId(conversation.id)}
+                            onClick={() => {
+                              forceNextScrollRef.current = true;
+                              setSelectedConversationId(conversation.id);
+                            }}
                             className={cn(
                               'group flex w-full items-start gap-2 rounded-lg p-2.5 text-left transition-colors sm:p-3',
                               active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
@@ -233,7 +254,11 @@ export default function AsistenteIA() {
                   <Badge variant="outline" className="shrink-0 text-[10px] sm:text-xs">IA configurada</Badge>
                 </div>
 
-                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 sm:space-y-4 sm:p-4">
+                <div
+                  ref={messagesContainerRef}
+                  onScroll={handleMessagesScroll}
+                  className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 sm:space-y-4 sm:p-4"
+                >
                   {messagesQuery.isLoading ? (
                     <div className="space-y-3">
                       <Skeleton className="h-16 w-3/4" />
