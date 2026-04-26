@@ -359,11 +359,11 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
 
   const resetDialog = (
     <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
-      <AlertDialogContent>
+      <AlertDialogContent className="z-[80]">
         <AlertDialogHeader>
-          <AlertDialogTitle>Iniciar una conversación nueva</AlertDialogTitle>
+          <AlertDialogTitle>Nuevo chat</AlertDialogTitle>
           <AlertDialogDescription>
-            La conversación actual es temporal y no se guarda. Si continúas, se borrará lo que ves en este chat.
+            Esta conversación no se guarda. Si inicias un nuevo chat, se borrará la información visible; si cancelas, seguirás en la conversación actual.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
