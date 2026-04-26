@@ -16,6 +16,12 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
+  BriefcaseBusiness,
+  Coins,
+  FileClock,
+  Handshake,
+  Infinity,
+  RotateCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +35,6 @@ import {
 import { cn } from '@/lib/utils';
 import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { ContractDetailDialog } from '@/components/contracts/ContractDetailDialog';
-import { MobileCardList } from '@/components/shared/MobileCardList';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { useContracts } from '@/hooks/useContracts';
