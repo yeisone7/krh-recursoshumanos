@@ -47,9 +47,9 @@ function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
 
         {/* Completed */}
         <Collapsible open={showCompleted} onOpenChange={setShowCompleted}>
-          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
-            {showCompleted ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-            <UserCheck className="h-3.5 w-3.5" />
+          <CollapsibleTrigger className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-medium text-emerald-700 outline-none transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-emerald-400 sm:min-h-8 sm:w-auto sm:px-0 sm:hover:bg-transparent sm:hover:underline">
+            {showCompleted ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+            <UserCheck className="h-4 w-4 shrink-0" />
             Completaron ({course.completedCount})
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-1 ml-5 space-y-0.5">
@@ -67,9 +67,9 @@ function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
 
         {/* Pending */}
         <Collapsible open={showPending} onOpenChange={setShowPending}>
-          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400 hover:underline">
-            {showPending ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-            <UserX className="h-3.5 w-3.5" />
+          <CollapsibleTrigger className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-medium text-red-700 outline-none transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-red-400 sm:min-h-8 sm:w-auto sm:px-0 sm:hover:bg-transparent sm:hover:underline">
+            {showPending ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+            <UserX className="h-4 w-4 shrink-0" />
             Pendientes ({course.pending.length})
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-1 ml-5 space-y-0.5">
@@ -102,8 +102,8 @@ function CenterComplianceSection({ center, courseFilter }: { center: CenterCompl
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
-        <Card className="cursor-pointer hover:bg-muted/30 transition-colors">
-          <CardContent className="py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Card className="cursor-pointer transition-colors hover:bg-muted/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
+          <CardContent className="flex min-h-20 flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
               {isOpen ? <ChevronDown className="h-5 w-5 shrink-0" /> : <ChevronRight className="h-5 w-5 shrink-0" />}
               <Building2 className="h-5 w-5 shrink-0 text-primary" />
@@ -191,7 +191,7 @@ export default function Cumplimiento() {
           </h1>
           <p className="text-sm text-muted-foreground sm:text-base">Matriz de cumplimiento de capacitaciones por centro de operación</p>
         </div>
-        <Button className="w-full sm:w-auto" variant="outline" onClick={handleExport} disabled={filteredData.length === 0}>
+        <Button className="min-h-11 w-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-h-10 sm:w-auto" variant="outline" onClick={handleExport} disabled={filteredData.length === 0}>
           <Download className="h-4 w-4" /> <span className="truncate">Exportar Excel</span>
         </Button>
       </div>
@@ -200,7 +200,7 @@ export default function Cumplimiento() {
       <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen} className="sm:hidden">
         <Card>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="flex h-auto w-full items-center justify-between px-4 py-3">
+            <Button variant="ghost" className="flex min-h-12 w-full items-center justify-between px-4 py-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
               <span className="flex items-center gap-2 font-medium">
                 <SlidersHorizontal className="h-4 w-4 text-primary" /> Filtros
               </span>
@@ -211,10 +211,10 @@ export default function Cumplimiento() {
             <CardContent className="space-y-3 pt-0 pb-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar centro..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input placeholder="Buscar centro..." className="min-h-11 pl-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               <Select value={centerFilter} onValueChange={setCenterFilter}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
                   <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Centro de Operación" />
                 </SelectTrigger>
@@ -226,7 +226,7 @@ export default function Cumplimiento() {
                 </SelectContent>
               </Select>
               <Select value={courseFilter} onValueChange={setCourseFilter}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
                   <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Curso" />
                 </SelectTrigger>
@@ -247,10 +247,10 @@ export default function Cumplimiento() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
             <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px] lg:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar centro..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input placeholder="Buscar centro..." className="min-h-11 pl-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-h-10" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <Select value={centerFilter} onValueChange={setCenterFilter}>
-              <SelectTrigger className="w-full lg:w-[220px]">
+              <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background sm:min-h-10 lg:w-[220px]">
                 <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Centro de Operación" />
               </SelectTrigger>
@@ -262,7 +262,7 @@ export default function Cumplimiento() {
               </SelectContent>
             </Select>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="w-full sm:col-span-2 lg:col-span-1 lg:w-[220px]">
+              <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background sm:col-span-2 sm:min-h-10 lg:col-span-1 lg:w-[220px]">
                 <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Curso" />
               </SelectTrigger>
