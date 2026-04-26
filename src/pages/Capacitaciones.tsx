@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Plus, Search, MoreHorizontal, Clock, Sparkles, PenLine, Library, Link2,
+  Plus, Search, MoreVertical, Clock, Sparkles, PenLine, Library, Link2,
   Eye, Copy, Trash2, LayoutDashboard, BookOpenCheck, MonitorPlay, UsersRound,
   Layers, Timer, BadgeCheck, FileText, ShieldCheck, HeartPulse, Utensils,
   Flame, HardHat, ClipboardCheck, Leaf, BriefcaseBusiness
@@ -229,7 +229,7 @@ export default function Capacitaciones() {
                               </div>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0"><MoreHorizontal className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0"><MoreVertical className="h-4 w-4" /></Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
@@ -312,7 +312,7 @@ export default function Capacitaciones() {
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
