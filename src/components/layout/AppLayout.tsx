@@ -56,7 +56,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [isMobile]);
 
   useEffect(() => {
-    const trackedModules = ['/empleados', '/contratos', '/dotacion', '/examenes', '/alertas'];
+    const trackedModules = ['/empleados', '/contratos', '/jornadas', '/novedades', '/requisiciones', '/seleccion', '/dotacion', '/examenes', '/alertas'];
     if (trackedModules.some((path) => location.pathname.startsWith(path))) {
       sessionStorage.setItem('krh_last_module_path', location.pathname);
     }
