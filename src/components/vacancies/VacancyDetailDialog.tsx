@@ -519,20 +519,20 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsContent>
 
               {/* Candidates Tab */}
-              <TabsContent value="candidates" className="mt-0 p-6 space-y-4">
-                <div className="flex items-center justify-between flex-wrap gap-3">
+              <TabsContent value="candidates" className="mt-0 p-4 space-y-4 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-semibold text-foreground flex items-center gap-2">
                     <div className="w-7 h-7 rounded-md bg-violet-light flex items-center justify-center">
                       <Users className="w-4 h-4 text-violet" />
                     </div>
                     {candidates.length} Candidato{candidates.length !== 1 && 's'}
                   </h3>
-                  <div className="flex items-center gap-3">
+                  <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:gap-3">
                     <ToggleGroup
                       type="single"
                       value={candidateViewMode}
                       onValueChange={(v) => v && setCandidateViewMode(v as 'table' | 'kanban')}
-                      className="border rounded-lg p-1"
+                      className="col-span-2 grid grid-cols-2 border rounded-lg p-1 sm:col-span-1 sm:flex"
                     >
                       <ToggleGroupItem value="kanban" aria-label="Vista Kanban" className="gap-1.5 text-xs px-2 h-7">
                         <LayoutGrid className="w-3.5 h-3.5" />
@@ -608,16 +608,16 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                         return (
                           <div
                             key={candidate.id}
-                            className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                            className="flex flex-col gap-3 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer sm:flex-row sm:items-center sm:justify-between"
                             onClick={() => openCandidateDetail(candidate.id)}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex min-w-0 items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-violet-light flex items-center justify-center">
                                 <span className="font-medium text-violet">
                                   {candidate.first_name[0]}{candidate.last_name[0]}
                                 </span>
                               </div>
-                              <div>
+                              <div className="min-w-0">
                                 <p className="font-medium">
                                   {candidate.first_name} {candidate.last_name}
                                 </p>
@@ -633,7 +633,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
                               <Badge className={cn('text-xs', statusStyle.bg, statusStyle.text)}>
                                 {candidateStatusLabels[candidateStatus]}
                               </Badge>
