@@ -6,6 +6,7 @@ import { useSystemConfig } from '@/hooks/useSystemConfig';
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const UPDATE_TOAST_ID = 'app-update-available';
 const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
+const ACKNOWLEDGED_UPDATE_KEY = 'krh_acknowledged_update_version';
 
 type VersionResponse = {
   version?: string;
@@ -50,8 +51,10 @@ function AppUpdateNotifierContent() {
         const latestVersion = data.version;
 
         if (!isMounted || !latestVersion || latestVersion === CURRENT_APP_VERSION) return;
+        if (window.sessionStorage.getItem(ACKNOWLEDGED_UPDATE_KEY) === latestVersion) return;
 
         updateNotifiedRef.current = true;
+        toast.dismiss(UPDATE_TOAST_ID);
         toast.info('Hay una actualización disponible', {
           id: UPDATE_TOAST_ID,
           description: 'Actualiza para cargar la versión más reciente de KRH.',
@@ -59,8 +62,11 @@ function AppUpdateNotifierContent() {
           action: {
             label: 'Actualizar ahora',
             onClick: () => {
-              window.sessionStorage.setItem('krh_pending_update_reload', latestVersion);
-              window.location.assign(`${window.location.pathname}${window.location.search}${window.location.hash}`);
+              window.sessionStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, latestVersion);
+              toast.dismiss(UPDATE_TOAST_ID);
+              const url = new URL(window.location.href);
+              url.searchParams.set('refresh', latestVersion.slice(0, 12));
+              window.location.replace(url.toString());
             },
           },
         });
