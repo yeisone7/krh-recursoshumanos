@@ -102,8 +102,8 @@ function CenterComplianceSection({ center, courseFilter }: { center: CenterCompl
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
-        <Card className="cursor-pointer hover:bg-muted/30 transition-colors">
-          <CardContent className="py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Card className="cursor-pointer transition-colors hover:bg-muted/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
+          <CardContent className="flex min-h-20 flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
               {isOpen ? <ChevronDown className="h-5 w-5 shrink-0" /> : <ChevronRight className="h-5 w-5 shrink-0" />}
               <Building2 className="h-5 w-5 shrink-0 text-primary" />
@@ -200,7 +200,7 @@ export default function Cumplimiento() {
       <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen} className="sm:hidden">
         <Card>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="flex h-auto w-full items-center justify-between px-4 py-3">
+            <Button variant="ghost" className="flex min-h-12 w-full items-center justify-between px-4 py-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
               <span className="flex items-center gap-2 font-medium">
                 <SlidersHorizontal className="h-4 w-4 text-primary" /> Filtros
               </span>
@@ -211,10 +211,10 @@ export default function Cumplimiento() {
             <CardContent className="space-y-3 pt-0 pb-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar centro..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input placeholder="Buscar centro..." className="min-h-11 pl-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               <Select value={centerFilter} onValueChange={setCenterFilter}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
                   <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Centro de Operación" />
                 </SelectTrigger>
@@ -226,7 +226,7 @@ export default function Cumplimiento() {
                 </SelectContent>
               </Select>
               <Select value={courseFilter} onValueChange={setCourseFilter}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
                   <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Curso" />
                 </SelectTrigger>
