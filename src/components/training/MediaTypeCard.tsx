@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns';
-import { ExternalLink, Trash2, Plus, Loader2 } from 'lucide-react';
+import { ExternalLink, Trash2, Plus, Loader2, Upload } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { TrainingMedia } from '@/types/training';
@@ -12,6 +12,9 @@ interface MediaTypeCardProps {
   isGenerating: boolean;
   onGenerate: () => void;
   onDelete: (id: string) => void;
+  uploadAccept?: string;
+  isUploading?: boolean;
+  onUpload?: (file: File) => void;
   children?: React.ReactNode;
 }
 
@@ -23,6 +26,9 @@ export function MediaTypeCard({
   isGenerating,
   onGenerate,
   onDelete,
+  uploadAccept,
+  isUploading = false,
+  onUpload,
   children,
 }: MediaTypeCardProps) {
   return (
@@ -92,18 +98,42 @@ export function MediaTypeCard({
           </div>
         )}
 
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={onGenerate}
-          disabled={isGenerating}
-        >
-          {isGenerating ? (
-            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</>
-          ) : (
-            <><Plus className="h-4 w-4 mr-2" /> {items.length > 0 ? 'Generar otro' : 'Generar'}</>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={onGenerate}
+            disabled={isGenerating || isUploading}
+          >
+            {isGenerating ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</>
+            ) : (
+              <><Plus className="h-4 w-4 mr-2" /> {items.length > 0 ? 'Generar otro' : 'Generar'}</>
+            )}
+          </Button>
+          {onUpload && uploadAccept && (
+            <Button asChild variant="outline" className="w-full" disabled={isGenerating || isUploading}>
+              <label className={(isGenerating || isUploading) ? 'pointer-events-none opacity-50' : 'cursor-pointer'}>
+                {isUploading ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Subiendo...</>
+                ) : (
+                  <><Upload className="h-4 w-4 mr-2" /> Subir</>
+                )}
+                <input
+                  type="file"
+                  accept={uploadAccept}
+                  className="sr-only"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = '';
+                    if (file) onUpload(file);
+                  }}
+                  disabled={isGenerating || isUploading}
+                />
+              </label>
+            </Button>
           )}
-        </Button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -124,6 +124,7 @@ function MediaReadOnlyCard({ icon, title, description, items }: {
 export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, initialTab = 'general' }: TrainingPreviewDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
   const [generatingMedia, setGeneratingMedia] = useState<Record<string, boolean>>({});
+  const [uploadingMedia, setUploadingMedia] = useState<Record<string, boolean>>({});
   const [audioDuration, setAudioDuration] = useState('medium');
   const { currentCompanyId } = useAuth();
   const { data: systemConfig } = useSystemConfig();
@@ -217,6 +218,50 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
 
   const handleDeleteMedia = async (id: string) => {
     await deleteMedia.mutateAsync({ id, courseId: course.id });
+  };
+
+  const handleUploadMedia = async (kind: 'imagen' | 'mapa_mental' | 'infografia' | 'audio' | 'video', file: File) => {
+    const rules = {
+      imagen: { type: 'imagen', title: 'Imagen Explicativa', accept: 'image/', max: 10 * 1024 * 1024, label: 'imagen' },
+      mapa_mental: { type: 'imagen', title: 'Mapa Mental', accept: 'image/', max: 10 * 1024 * 1024, label: 'mapa mental' },
+      infografia: { type: 'infografia', title: 'Infografía', accept: 'image/', max: 10 * 1024 * 1024, label: 'infografía' },
+      audio: { type: 'audio', title: 'Audio Narrado', accept: 'audio/', max: 50 * 1024 * 1024, label: 'audio' },
+      video: { type: 'video', title: 'Storyboard', accept: 'video/', max: 200 * 1024 * 1024, label: 'video' },
+    }[kind];
+
+    if (!file.type.startsWith(rules.accept)) {
+      toast.error(`El archivo seleccionado no corresponde a ${rules.label}.`);
+      return;
+    }
+    if (file.size > rules.max) {
+      toast.error(`El archivo supera el tamaño máximo permitido para ${rules.label}.`);
+      return;
+    }
+
+    setUploadingMedia(prev => ({ ...prev, [kind]: true }));
+    try {
+      const extension = file.name.split('.').pop() || 'bin';
+      const fileName = `${course.id}/${kind}_${Date.now()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from('training-media')
+        .upload(fileName, file, { contentType: file.type, upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('training-media').getPublicUrl(fileName);
+      await createMedia.mutateAsync({
+        courseId: course.id,
+        type: rules.type,
+        title: rules.title,
+        description: file.name,
+        fileUrl: urlData.publicUrl,
+        fileSize: file.size,
+      });
+      toast.success(`${rules.label.charAt(0).toUpperCase() + rules.label.slice(1)} subido exitosamente`);
+    } catch (err: any) {
+      toast.error(err?.message || `Error al subir ${rules.label}`);
+    } finally {
+      setUploadingMedia(prev => ({ ...prev, [kind]: false }));
+    }
   };
 
   const durationLabel = course.duration_hours < 1
@@ -503,6 +548,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         isGenerating={!!generatingMedia.imagen}
                         onGenerate={() => handleGenerateMedia('imagen')}
                         onDelete={handleDeleteMedia}
+                        uploadAccept="image/*"
+                        isUploading={!!uploadingMedia.imagen}
+                        onUpload={(file) => handleUploadMedia('imagen', file)}
                       />
                       <MediaTypeCard
                         icon={<Network className="h-5 w-5 text-muted-foreground" />}
@@ -512,6 +560,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         isGenerating={!!generatingMedia.mapa_mental}
                         onGenerate={() => handleGenerateMedia('mapa_mental')}
                         onDelete={handleDeleteMedia}
+                        uploadAccept="image/*"
+                        isUploading={!!uploadingMedia.mapa_mental}
+                        onUpload={(file) => handleUploadMedia('mapa_mental', file)}
                       />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -523,6 +574,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         isGenerating={!!generatingMedia.infografia}
                         onGenerate={() => handleGenerateMedia('infografia')}
                         onDelete={handleDeleteMedia}
+                        uploadAccept="image/*"
+                        isUploading={!!uploadingMedia.infografia}
+                        onUpload={(file) => handleUploadMedia('infografia', file)}
                       />
                       <MediaTypeCard
                         icon={<Mic className="h-5 w-5 text-muted-foreground" />}
@@ -532,6 +586,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         isGenerating={!!generatingMedia.audio}
                         onGenerate={handleGenerateAudio}
                         onDelete={handleDeleteMedia}
+                        uploadAccept="audio/*"
+                        isUploading={!!uploadingMedia.audio}
+                        onUpload={(file) => handleUploadMedia('audio', file)}
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">Duración:</span>
@@ -556,6 +613,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                       isGenerating={false}
                       onGenerate={() => {}}
                       onDelete={handleDeleteMedia}
+                      uploadAccept="video/*"
+                      isUploading={!!uploadingMedia.video}
+                      onUpload={(file) => handleUploadMedia('video', file)}
                     />
                   </>
                 ) : (
