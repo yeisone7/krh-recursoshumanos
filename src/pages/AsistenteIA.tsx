@@ -186,7 +186,7 @@ export default function AsistenteIA() {
                             key={conversation.id}
                             onClick={() => setSelectedConversationId(conversation.id)}
                             className={cn(
-                              'group flex w-full items-start gap-2 rounded-lg p-3 text-left transition-colors',
+                              'group flex w-full items-start gap-2 rounded-lg p-2.5 text-left transition-colors sm:p-3',
                               active ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
                             )}
                           >
@@ -223,24 +223,24 @@ export default function AsistenteIA() {
               </CardContent>
             </Card>
 
-            <Card className="min-h-0 overflow-hidden">
+            <Card className="min-h-0 flex-1 overflow-hidden">
               <CardContent className="flex h-full min-h-0 flex-col p-0">
-                <div className="flex items-center justify-between border-b border-border p-4">
-                  <div>
-                    <p className="font-semibold">{selectedConversation?.title || 'Nueva conversación'}</p>
-                    <p className="text-sm text-muted-foreground">Solo responde preguntas sobre el uso de la app</p>
+                <div className="flex items-start justify-between gap-3 border-b border-border p-3 sm:items-center sm:p-4">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">{selectedConversation?.title || 'Nueva conversación'}</p>
+                    <p className="text-xs text-muted-foreground sm:text-sm">Solo responde preguntas sobre el uso de la app</p>
                   </div>
-                  <Badge variant="outline">IA configurada</Badge>
+                  <Badge variant="outline" className="shrink-0 text-[10px] sm:text-xs">IA configurada</Badge>
                 </div>
 
-                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 sm:space-y-4 sm:p-4">
                   {messagesQuery.isLoading ? (
                     <div className="space-y-3">
                       <Skeleton className="h-16 w-3/4" />
                       <Skeleton className="ml-auto h-14 w-2/3" />
                     </div>
                   ) : messages.length === 0 ? (
-                    <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+                    <div className="flex h-full flex-col items-center justify-center gap-3 text-center sm:gap-4">
                       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
                         <Bot className="h-7 w-7" />
                       </div>
@@ -262,7 +262,7 @@ export default function AsistenteIA() {
                       )}
                       <div className="grid w-full max-w-2xl gap-2 sm:grid-cols-2">
                         {starterQuestions.map((question) => (
-                          <Button key={question} variant="outline" className="h-auto justify-start whitespace-normal py-3 text-left" onClick={() => handleSend(question)}>
+                          <Button key={question} variant="outline" className="h-auto justify-start whitespace-normal py-2.5 text-left sm:py-3" onClick={() => handleSend(question)}>
                             {question}
                           </Button>
                         ))}
