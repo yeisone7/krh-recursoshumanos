@@ -47,9 +47,9 @@ function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
 
         {/* Completed */}
         <Collapsible open={showCompleted} onOpenChange={setShowCompleted}>
-          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
-            {showCompleted ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-            <UserCheck className="h-3.5 w-3.5" />
+          <CollapsibleTrigger className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-medium text-emerald-700 outline-none transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-emerald-400 sm:min-h-8 sm:w-auto sm:px-0 sm:hover:bg-transparent sm:hover:underline">
+            {showCompleted ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+            <UserCheck className="h-4 w-4 shrink-0" />
             Completaron ({course.completedCount})
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-1 ml-5 space-y-0.5">
@@ -67,9 +67,9 @@ function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
 
         {/* Pending */}
         <Collapsible open={showPending} onOpenChange={setShowPending}>
-          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400 hover:underline">
-            {showPending ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-            <UserX className="h-3.5 w-3.5" />
+          <CollapsibleTrigger className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-medium text-red-700 outline-none transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-red-400 sm:min-h-8 sm:w-auto sm:px-0 sm:hover:bg-transparent sm:hover:underline">
+            {showPending ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+            <UserX className="h-4 w-4 shrink-0" />
             Pendientes ({course.pending.length})
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-1 ml-5 space-y-0.5">
