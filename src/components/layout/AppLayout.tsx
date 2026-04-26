@@ -150,7 +150,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           }}
           className={`fixed ${isMobile ? '' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg transition-[bottom,right] duration-200 [&_svg]:size-[1.575rem] sm:[&_svg]:size-[1.8rem]`}
           style={isMobile ? {
-            bottom: `calc(env(safe-area-inset-bottom, 0px) + ${aiButtonLifted ? '7.25rem' : '5.75rem'})`,
+            bottom: `calc(env(safe-area-inset-bottom, 0px) + ${isAiAssistant ? '10rem' : aiButtonLifted ? '7.25rem' : '5.75rem'})`,
             right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',
           } : undefined}
         >
