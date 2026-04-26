@@ -606,8 +606,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                               </div>
                             </div>
                             {avatarMedia.map((item) => (
-                              <div key={item.id} className="rounded-lg overflow-hidden border bg-black">
-                                <video controls className="w-full max-h-[300px]" src={item.file_url} preload="metadata" />
+                              <div key={item.id} className="overflow-hidden rounded-lg border bg-muted">
+                                <video controls className="aspect-video max-h-72 w-full object-contain" src={item.file_url} preload="metadata" />
                               </div>
                             ))}
                           </CardContent>
@@ -630,7 +630,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                   const audioItems = media.filter(m => m.type === 'audio');
                   const audioUrl = audioItems.length > 0 ? audioItems[audioItems.length - 1].file_url : null;
                   return (
-                    <div className="mt-4">
+                    <div className="mt-4 min-w-0 overflow-hidden">
                       <StoryboardViewer
                         scenes={scenes}
                         imageUrls={imageUrls}
