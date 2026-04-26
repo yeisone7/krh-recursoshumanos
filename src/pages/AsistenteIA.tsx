@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
-import { Bot, Clock, MessageSquarePlus, Send, Sparkles, Trash2 } from 'lucide-react';
+import { Bot, CheckCircle2, Clock, Loader2, MessageSquarePlus, Send, Sparkles, Trash2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -93,6 +93,9 @@ export default function AsistenteIA() {
   const messages = useMemo(() => messagesQuery.data || [], [messagesQuery.data]);
   const lastMessage = messages[messages.length - 1];
   const canConfirmStep = lastMessage?.role === 'assistant' && /paso\s+\d+/i.test(lastMessage.content);
+  const assistantStatus = sendMessage.isPending ? 'Procesando' : messagesQuery.isLoading ? 'Cargando' : 'Listo';
+  const assistantStatusIcon = sendMessage.isPending || messagesQuery.isLoading ? Loader2 : CheckCircle2;
+  const AssistantStatusIcon = assistantStatusIcon;
   const pageContext = useMemo(() => {
     const savedPathname = sessionStorage.getItem('krh_last_module_path') || '';
     const pathname = location.pathname === '/asistente-ia' ? savedPathname : location.pathname;
@@ -283,7 +286,10 @@ export default function AsistenteIA() {
                     <p className="truncate font-semibold">{selectedConversation?.title || 'Nueva conversación'}</p>
                     <p className="text-xs text-muted-foreground sm:text-sm">Solo responde preguntas sobre el uso de la app</p>
                   </div>
-                  <Badge variant="outline" className="shrink-0 text-[10px] sm:text-xs">IA configurada</Badge>
+                  <Badge variant="outline" className="shrink-0 gap-1.5 text-[10px] sm:text-xs">
+                    <AssistantStatusIcon className={cn('h-3 w-3', (sendMessage.isPending || messagesQuery.isLoading) && 'animate-spin')} />
+                    {assistantStatus}
+                  </Badge>
                 </div>
 
                 <div
@@ -330,8 +336,9 @@ export default function AsistenteIA() {
                   )}
                   {sendMessage.isPending && (
                     <div className="flex justify-start">
-                      <div className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
-                        Pensando...
+                      <div className="flex max-w-[92%] items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-muted-foreground shadow-sm sm:max-w-[88%] sm:px-4 sm:py-3">
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+                        <span className="truncate">El asistente está escribiendo...</span>
                       </div>
                     </div>
                   )}
