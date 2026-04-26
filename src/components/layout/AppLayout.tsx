@@ -8,7 +8,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { useContractExpiryNotifications } from '@/hooks/useContractExpiryNotifications';
 import { MobileBottomNav } from './MobileBottomNav';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Bot } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -16,9 +19,12 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { hasPermission, permissionsLoaded } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const isMobile = useIsMobile();
+  const showAiButton = permissionsLoaded && hasPermission('asistente_ia') && location.pathname !== '/asistente-ia';
   useInactivityTimeout();
   useContractExpiryNotifications();
 
@@ -99,6 +105,19 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
 
       {isMobile && <MobileBottomNav />}
+
+      {showAiButton && (
+        <Button
+          type="button"
+          size="icon"
+          aria-label="Abrir Asistente IA"
+          title="Asistente IA"
+          onClick={() => navigate('/asistente-ia')}
+          className={`fixed ${isMobile ? 'bottom-24 right-4' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg`}
+        >
+          <Bot className="h-6 w-6" />
+        </Button>
+      )}
     </div>
   );
 }
