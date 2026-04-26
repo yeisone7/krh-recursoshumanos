@@ -42,6 +42,7 @@ import { cn } from '@/lib/utils';
 import { useVacancies } from '@/hooks/useVacancies';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useOperationCenters } from '@/hooks/useCompanies';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import { VacancyFormDialog } from '@/components/vacancies/VacancyFormDialog';
 import { VacancyDetailDialog } from '@/components/vacancies/VacancyDetailDialog';
 import { CandidateFormDialog } from '@/components/vacancies/CandidateFormDialog';
