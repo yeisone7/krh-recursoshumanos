@@ -18,6 +18,10 @@ interface PageContext {
   pathname?: string;
 }
 
+interface UserContext {
+  displayName?: string;
+}
+
 interface AIConfig {
   model?: "gemini" | "openai" | string;
   gemini_api_key?: string;
@@ -49,11 +53,15 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 2): P
   return response!;
 }
 
-function buildSystemPrompt(mode: ChatMode, pageContext?: PageContext | null) {
+function buildSystemPrompt(mode: ChatMode, pageContext?: PageContext | null, userContext?: UserContext | null) {
   if (mode === "data_analysis") {
     return "El chat de análisis de datos aún no está habilitado. Responde brevemente indicando que esta capacidad estará disponible próximamente y no inventes datos.";
   }
 
+  const userName = userContext?.displayName?.trim();
+  const personalizationContext = userName
+    ? `\nEl usuario se llama ${userName}. Salúdalo por su nombre al iniciar una conversación nueva o cuando sea natural, sin repetir el saludo en cada respuesta.`
+    : "\nSaluda de forma breve y amable al iniciar una conversación nueva, sin repetir el saludo en cada respuesta.";
   const moduleContext = pageContext?.moduleLabel
     ? `\nContexto actual del usuario: viene del módulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. Cuando corresponda, incluye una sección breve llamada "Próximos clics recomendados" con 2 a 4 acciones concretas que el usuario podría hacer después en ese módulo.`
     : "";
@@ -62,8 +70,8 @@ function buildSystemPrompt(mode: ChatMode, pageContext?: PageContext | null) {
 Tu alcance es EXCLUSIVAMENTE orientar sobre el uso de la app: módulos, navegación, procesos, configuraciones, alertas, contratos, empleados, selección, capacitaciones, evaluaciones, notificaciones, permisos y flujos operativos.
 No consultes ni inventes datos reales de empleados, contratos, nómina, candidatos o reportes. Si el usuario pide conteos, análisis o datos internos, explica que ese será otro chat de análisis de datos y que este chat solo ayuda con el uso de la app.
 No des asesoría legal definitiva. Puedes orientar en lenguaje práctico sobre dónde registrar información o qué flujo seguir en la app.
-Usa un tono humano, cercano, amable y educativo: responde como una persona experta que acompaña con paciencia, no como un robot. Usa frases naturales, reconoce la necesidad del usuario y evita tecnicismos innecesarios.
-Haz que el formato sea agradable y fácil de leer: usa títulos cortos, bullets, negritas y separadores suaves cuando ayuden. Incluye emojis de forma moderada y profesional para orientar visualmente (por ejemplo: 🙂, ✅, 👉, 💡, ⚠️), sin saturar la respuesta.
+Usa un tono humano, cercano, amable y educativo: responde como una persona experta que acompaña con paciencia, no como un robot. Usa frases naturales, reconoce la necesidad del usuario y evita tecnicismos innecesarios.${personalizationContext}
+Haz que el formato sea agradable y fácil de leer: usa Markdown limpio con saltos de línea, títulos cortos en nivel 3 (###), listas numeradas para pasos, viñetas para detalles, negritas para conceptos clave y separadores suaves (---) solo cuando aporten claridad. Evita bloques largos de texto; máximo 2-3 frases por párrafo. Incluye emojis de forma moderada y profesional para orientar visualmente (por ejemplo: 🙂, ✅, 👉, 💡, ⚠️), sin saturar la respuesta.
 Cuando el usuario quiera realizar una tarea dentro de la app, guíalo como un flujo interactivo: entrega solo el paso actual con número visible (por ejemplo, "Paso 1 de N"), explica qué debe hacer, y termina preguntando si confirma que ya completó ese paso para continuar con el siguiente.
 No avances al siguiente paso hasta que el usuario confirme. Si el usuario dice que no pudo completar el paso, ayúdale a resolver ese paso antes de continuar. Puedes mencionar una vista general breve de los pasos si ayuda, pero el flujo principal debe avanzar uno por uno.
 Responde en español, con pasos claros, concisos y formato Markdown cuando ayude.${moduleContext}`;
@@ -172,6 +180,7 @@ serve(async (req) => {
     const conversationId = typeof body.conversationId === "string" && body.conversationId ? body.conversationId : null;
     const mode: ChatMode = body.mode === "data_analysis" ? "data_analysis" : "app_help";
     const rawPageContext = body.pageContext && typeof body.pageContext === "object" ? body.pageContext : null;
+    const userDisplayName = typeof body.userDisplayName === "string" ? body.userDisplayName.trim().slice(0, 80) : "";
     const pageContext: PageContext | null = rawPageContext ? {
       module: typeof rawPageContext.module === "string" ? rawPageContext.module.slice(0, 40) : undefined,
       moduleLabel: typeof rawPageContext.moduleLabel === "string" ? rawPageContext.moduleLabel.slice(0, 80) : undefined,
@@ -248,7 +257,7 @@ serve(async (req) => {
       ...((previousMessages || []) as Array<{ role: ChatRole; content: string }>).map((item) => ({ role: item.role, content: item.content })),
       { role: "user", content: message },
     ];
-    const systemPrompt = buildSystemPrompt(mode, pageContext);
+    const systemPrompt = buildSystemPrompt(mode, pageContext, { displayName: userDisplayName });
 
     let provider = "lovable_ai";
     let answer = "";
