@@ -270,7 +270,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           <div className="border-b overflow-x-auto px-3 sm:px-6">
-            <TabsList className="h-auto w-max justify-start gap-0 rounded-none bg-transparent p-0 sm:w-full">
+            <TabsList className="h-auto w-max justify-start gap-1 rounded-none bg-transparent p-0 sm:w-full sm:gap-0">
               {[
                 { value: 'general', icon: BookOpen, label: 'General' },
                 { value: 'contenido', icon: FileText, label: 'Contenido' },
@@ -281,7 +281,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="min-w-fit rounded-none border-b-2 border-transparent px-3 py-2.5 text-xs whitespace-nowrap data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none sm:gap-1.5 sm:px-4 sm:text-sm"
+                  className="min-h-11 min-w-fit rounded-t-md border-b-2 border-transparent px-3.5 py-3 text-xs font-medium whitespace-nowrap data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none sm:min-h-10 sm:gap-1.5 sm:rounded-none sm:px-4 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-transparent"
                 >
                   <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   {tab.label}
