@@ -124,17 +124,18 @@ serve(async (req) => {
 
     const aiConfig = await getAIConfig(companyId);
     const keyPoints = (puntosClave || []).slice(0, 5).join(", ");
+    const spanishTextRule = "Idioma obligatorio: español latinoamericano. Si la imagen incluye texto, títulos, etiquetas, rótulos, ramas, iconos con palabras o secciones, TODO debe estar escrito únicamente en español, sin palabras en inglés. Revisa ortografía y tildes en español.";
     let prompt = "";
 
     switch (type) {
       case "imagen":
-        prompt = `Genera una imagen profesional, educativa y visualmente atractiva que represente el tema de capacitación empresarial: "${title}". Puntos clave: ${keyPoints}. Estilo: ilustración corporativa limpia, colores profesionales, sin texto superpuesto.`;
+        prompt = `Genera una imagen profesional, educativa y visualmente atractiva que represente el tema de capacitación empresarial: "${title}". Puntos clave: ${keyPoints}. ${spanishTextRule} Estilo: ilustración corporativa limpia, colores profesionales, sin texto superpuesto salvo que sea estrictamente necesario y en español.`;
         break;
       case "mapa_mental":
-        prompt = `Genera una imagen de un mapa mental profesional y visualmente organizado sobre: "${title}". Incluye como ramas principales: ${keyPoints}. Estilo: diagrama limpio con colores distinguibles, nodos bien espaciados, fondo claro, texto legible en español.`;
+        prompt = `Genera una imagen de un mapa mental profesional y visualmente organizado sobre: "${title}". Incluye como ramas principales: ${keyPoints}. ${spanishTextRule} Estilo: diagrama limpio con colores distinguibles, nodos bien espaciados, fondo claro, texto grande y legible en español.`;
         break;
       case "infografia":
-        prompt = `Genera una infografía profesional vertical sobre: "${title}". Incluye estos puntos clave: ${keyPoints}. Estilo: diseño corporativo moderno, iconos representativos, secciones numeradas, colores profesionales, texto en español.`;
+        prompt = `Genera una infografía profesional vertical sobre: "${title}". Incluye estos puntos clave: ${keyPoints}. ${spanishTextRule} Estilo: diseño corporativo moderno, iconos representativos, secciones numeradas, colores profesionales, texto claro en español.`;
         break;
       default:
         return new Response(
