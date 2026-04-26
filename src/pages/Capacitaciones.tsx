@@ -162,21 +162,21 @@ export default function Capacitaciones() {
             <CardTitle className="text-base">Acciones Rápidas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="justify-start" onClick={() => navigate('/capacitaciones/crear')}>
-                <Sparkles className="h-4 w-4 mr-2" /> Nueva con IA
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-2">
+              <Button variant="outline" className="h-auto min-h-10 min-w-0 justify-start px-3 text-left whitespace-normal" onClick={() => navigate('/capacitaciones/crear')}>
+                <Sparkles className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">Nueva con IA</span>
               </Button>
-              <Button variant="outline" className="justify-start" onClick={() => navigate('/capacitaciones/biblioteca')}>
-                <Library className="h-4 w-4 mr-2" /> Ver Biblioteca
+              <Button variant="outline" className="h-auto min-h-10 min-w-0 justify-start px-3 text-left whitespace-normal" onClick={() => navigate('/capacitaciones/biblioteca')}>
+                <Library className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">Ver Biblioteca</span>
               </Button>
-              <Button variant="outline" className="justify-start" onClick={() => navigate('/capacitaciones/crear-manual')}>
-                <PenLine className="h-4 w-4 mr-2" /> Nueva Manual
+              <Button variant="outline" className="h-auto min-h-10 min-w-0 justify-start px-3 text-left whitespace-normal" onClick={() => navigate('/capacitaciones/crear-manual')}>
+                <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">Nueva Manual</span>
               </Button>
-              <Button variant="outline" className="justify-start" onClick={() => navigate('/capacitaciones/acceso/generar')}>
-                <Link2 className="h-4 w-4 mr-2" /> Generar Enlace
+              <Button variant="outline" className="h-auto min-h-10 min-w-0 justify-start px-3 text-left whitespace-normal" onClick={() => navigate('/capacitaciones/acceso/generar')}>
+                <Link2 className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">Generar Enlace</span>
               </Button>
-              <Button variant="outline" className="justify-start col-span-2" onClick={() => navigate('/capacitaciones/cumplimiento')}>
-                <LayoutDashboard className="h-4 w-4 mr-2" /> Cumplimiento
+              <Button variant="outline" className="h-auto min-h-10 min-w-0 justify-start px-3 text-left whitespace-normal [grid-column:1/-1]" onClick={() => navigate('/capacitaciones/cumplimiento')}>
+                <LayoutDashboard className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">Cumplimiento</span>
               </Button>
             </div>
           </CardContent>
