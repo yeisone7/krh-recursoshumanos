@@ -9,7 +9,7 @@ import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { useContractExpiryNotifications } from '@/hooks/useContractExpiryNotifications';
 import { MobileBottomNav } from './MobileBottomNav';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bot } from 'lucide-react';
+import { Bot, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -24,7 +24,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const isMobile = useIsMobile();
-  const showAiButton = permissionsLoaded && hasPermission('asistente_ia') && location.pathname !== '/asistente-ia';
+  const isAiAssistant = location.pathname === '/asistente-ia';
+  const showAiButton = permissionsLoaded && hasPermission('asistente_ia');
   useInactivityTimeout();
   useContractExpiryNotifications();
 
@@ -110,12 +111,18 @@ export function AppLayout({ children }: AppLayoutProps) {
         <Button
           type="button"
           size="icon"
-          aria-label="Abrir Asistente IA"
-          title="Asistente IA"
-          onClick={() => navigate('/asistente-ia')}
+          aria-label={isAiAssistant ? 'Minimizar Asistente IA' : 'Abrir Asistente IA'}
+          title={isAiAssistant ? 'Minimizar Asistente IA' : 'Asistente IA'}
+          onClick={() => {
+            if (isAiAssistant) {
+              navigate(sessionStorage.getItem('krh_last_module_path') || '/');
+              return;
+            }
+            navigate('/asistente-ia');
+          }}
           className={`fixed ${isMobile ? 'bottom-24 right-4' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg [&_svg]:size-11`}
         >
-          <Bot className="size-11" />
+          {isAiAssistant ? <Minimize2 className="size-11" /> : <Bot className="size-11" />}
         </Button>
       )}
     </div>
