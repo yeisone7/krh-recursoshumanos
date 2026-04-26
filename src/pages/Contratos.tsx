@@ -16,6 +16,12 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
+  BriefcaseBusiness,
+  Coins,
+  FileClock,
+  Handshake,
+  Infinity,
+  RotateCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +35,6 @@ import {
 import { cn } from '@/lib/utils';
 import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { ContractDetailDialog } from '@/components/contracts/ContractDetailDialog';
-import { MobileCardList } from '@/components/shared/MobileCardList';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { useContracts } from '@/hooks/useContracts';
@@ -110,6 +115,24 @@ function getEffectiveEndDate(contract: {
     return sortedExtensions[0].end_date;
   }
   return contract.end_date;
+}
+
+function getContractTypeIcon(type: string) {
+  const normalized = type.toLowerCase();
+  if (normalized.includes('indefin')) return Infinity;
+  if (normalized.includes('obra') || normalized.includes('labor')) return BriefcaseBusiness;
+  if (normalized.includes('aprendiz')) return Handshake;
+  if (normalized.includes('fijo')) return FileClock;
+  return FileText;
+}
+
+function getContractTypeTone(type: string) {
+  const normalized = type.toLowerCase();
+  if (normalized.includes('indefin')) return 'bg-success-light text-success border-success/20';
+  if (normalized.includes('obra') || normalized.includes('labor')) return 'bg-accent-light text-accent border-accent/20';
+  if (normalized.includes('aprendiz')) return 'bg-secondary text-secondary-foreground border-border';
+  if (normalized.includes('fijo')) return 'bg-warning-light text-warning-foreground border-warning/20';
+  return 'bg-primary-light text-primary border-primary/20';
 }
 
 export default function Contratos() {
@@ -418,32 +441,97 @@ export default function Contratos() {
         ) : isMobile ? (
           <div className="p-3">
             <PullToRefresh onRefresh={async () => { /* refetch is automatic via react-query */ await new Promise(r => setTimeout(r, 800)); }}>
-              <MobileCardList
-                items={filteredContracts.map((contract) => {
+              <div className="space-y-3">
+                {filteredContracts.map((contract, index) => {
                   const status = getContractStatus(contract);
                   const effectiveEndDate = getEffectiveEndDate(contract);
+                  const daysRemaining = calculateDaysRemaining(effectiveEndDate);
                   const StatusIcon = statusConfig[status].icon;
-                  return {
-                    id: contract.id,
-                    title: `${contract.employees?.first_name} ${contract.employees?.last_name}`,
-                    subtitle: contract.employees?.document_number,
-                    badge: (
-                      <Badge variant="outline" className={cn("gap-1", statusConfig[status].class)}>
-                        <StatusIcon className="w-3 h-3" />
-                        {statusConfig[status].label}
-                      </Badge>
-                    ),
-                    fields: [
-                      { label: 'Tipo', value: getContractTypeLabel(contract.contract_type) },
-                      { label: 'Salario', value: formatCurrency(Number(contract.salary)) },
-                      { label: 'Inicio', value: new Date(contract.start_date).toLocaleDateString('es-CO') },
-                      { label: 'Vigencia', value: effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido' },
-                    ],
-                    onClick: () => handleContractClick(contract.id),
-                  };
+                  const ContractTypeIcon = getContractTypeIcon(contract.contract_type);
+                  const extensionsCount = contract.contract_extensions?.length || 0;
+
+                  return (
+                    <motion.button
+                      key={contract.id}
+                      type="button"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: index * 0.03 }}
+                      onClick={() => handleContractClick(contract.id)}
+                      className="w-full overflow-hidden rounded-lg border border-border bg-card text-left shadow-sm transition-all active:scale-[0.99]"
+                    >
+                      <div className={cn('h-1 w-full', status === 'expired' ? 'bg-destructive' : status === 'expiring' ? 'bg-warning' : status === 'terminated' ? 'bg-muted-foreground' : 'bg-success')} />
+                      <div className="space-y-4 p-4">
+                        <div className="flex items-start gap-3">
+                          <div className={cn('flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border', getContractTypeTone(contract.contract_type))}>
+                            <ContractTypeIcon className="h-6 w-6" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="truncate text-base font-semibold text-foreground">
+                                  {contract.employees?.first_name} {contract.employees?.last_name}
+                                </p>
+                                <p className="mt-0.5 text-xs text-muted-foreground">CC {contract.employees?.document_number}</p>
+                              </div>
+                              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <Badge variant="outline" className={cn('gap-1', statusConfig[status].class)}>
+                                <StatusIcon className="h-3 w-3" />
+                                {statusConfig[status].label}
+                                {daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30 && <span>({daysRemaining}d)</span>}
+                              </Badge>
+                              <Badge variant="outline" className={cn('gap-1', contract.is_approved ? 'bg-success-light text-success border-success/20' : 'bg-warning-light text-warning-foreground border-warning/20')}>
+                                {contract.is_approved ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                                {contract.is_approved ? 'Aprobado' : 'Pendiente'}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-lg border border-border bg-muted/30 p-3">
+                          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                            <FileText className="h-4 w-4 text-primary" />
+                            <span className="truncate">{getContractTypeLabel(contract.contract_type)}</span>
+                          </div>
+                          <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Inicio</p>
+                              <p className="mt-0.5 font-medium text-foreground">{new Date(contract.start_date).toLocaleDateString('es-CO')}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Vigencia</p>
+                              <p className="mt-0.5 font-medium text-foreground">{effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Salario</p>
+                              <p className="mt-0.5 font-medium text-foreground">{formatCurrency(Number(contract.salary))}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Prórrogas</p>
+                              <p className="mt-0.5 flex items-center gap-1 font-medium text-foreground">
+                                <RotateCw className="h-3.5 w-3.5 text-accent" />
+                                {extensionsCount > 0 ? `${extensionsCount} registrada${extensionsCount > 1 ? 's' : ''}` : 'Sin prórrogas'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                          <span className="flex min-w-0 items-center gap-1.5">
+                            <Coins className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">{contract.contract_number || 'Sin consecutivo'}</span>
+                          </span>
+                          {status === 'expiring' && daysRemaining !== null && (
+                            <span className="shrink-0 font-medium text-warning-foreground">Vence en {daysRemaining} días</span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.button>
+                  );
                 })}
-                emptyMessage="No se encontraron contratos"
-              />
+              </div>
             </PullToRefresh>
           </div>
         ) : (
