@@ -5,7 +5,7 @@ import {
   Plus, Search, MoreVertical, Clock, Sparkles, PenLine, Library, Link2,
   Eye, Copy, Trash2, LayoutDashboard, BookOpenCheck, MonitorPlay, UsersRound,
   Layers, Timer, BadgeCheck, FileText, ShieldCheck, HeartPulse, Utensils,
-  Flame, HardHat, ClipboardCheck, Leaf, BriefcaseBusiness
+  Flame, HardHat, ClipboardCheck, Leaf, BriefcaseBusiness, ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,6 +82,7 @@ export default function Capacitaciones() {
   const [courseDialogOpen, setCourseDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<TrainingCourse | null>(null);
   const [previewCourse, setPreviewCourse] = useState<TrainingCourse | null>(null);
+  const [previewInitialTab, setPreviewInitialTab] = useState('general');
 
   const filteredCourses = courses?.filter(course =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,6 +115,11 @@ export default function Capacitaciones() {
     } else {
       navigate(`/capacitaciones/crear?id=${course.id}`);
     }
+  }
+
+  function handleOpenPreview(course: TrainingCourse, tab = 'general') {
+    setPreviewInitialTab(tab);
+    setPreviewCourse(course);
   }
 
   return (
@@ -232,7 +238,8 @@ export default function Capacitaciones() {
                                   <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0"><MoreVertical className="h-4 w-4" /></Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleOpenPreview(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleOpenPreview(course, 'media')}><ImageIcon className="h-4 w-4 mr-2" /> Multimedia</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
@@ -314,7 +321,8 @@ export default function Capacitaciones() {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenPreview(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleOpenPreview(course, 'media')}><ImageIcon className="h-4 w-4 mr-2" /> Multimedia</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
                               <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
@@ -334,7 +342,7 @@ export default function Capacitaciones() {
 
       {/* Dialogs */}
       <CourseFormDialog open={courseDialogOpen} onOpenChange={setCourseDialogOpen} course={selectedCourse} />
-      <TrainingPreviewDialog open={!!previewCourse} onOpenChange={() => setPreviewCourse(null)} course={previewCourse} />
+      <TrainingPreviewDialog open={!!previewCourse} onOpenChange={() => setPreviewCourse(null)} course={previewCourse} initialTab={previewInitialTab} />
     </div>
   );
 }
