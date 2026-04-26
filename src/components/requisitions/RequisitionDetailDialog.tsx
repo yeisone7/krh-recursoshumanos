@@ -211,7 +211,7 @@ export function RequisitionDetailDialog({
               {requisition && canEdit && (
                 <Card className="border-primary/20">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <UserCheck className="h-5 w-5 text-primary flex-shrink-0" />
                       <div className="flex-1 space-y-1">
                         <Label className="text-sm font-medium">Líder del Proceso <span className="text-destructive">*</span></Label>
@@ -235,7 +235,7 @@ export function RequisitionDetailDialog({
               {requisition && !canEdit && requisition.lider_proceso && (
                 <Card className="border-primary/20">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <UserCheck className="h-5 w-5 text-primary flex-shrink-0" />
                       <div className="flex-1">
                         <p className="text-sm font-medium mb-1">Líder del Proceso</p>
@@ -263,7 +263,7 @@ export function RequisitionDetailDialog({
                     Información General
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
+                <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <p className="text-sm text-muted-foreground">Cargo Solicitado</p>
                     <p className="font-medium">{requisition.cargo_solicitado}</p>
@@ -365,7 +365,7 @@ export function RequisitionDetailDialog({
                     Solicitante
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
+                <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <p className="text-sm text-muted-foreground">Nombre</p>
                     <p className="font-medium">{requisition.solicitante_nombre}</p>
@@ -388,7 +388,7 @@ export function RequisitionDetailDialog({
 
         {/* Actions */}
         {requisition && (
-          <div className="flex justify-between items-center gap-3 pt-4 border-t">
+          <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
             <Button 
               variant="outline" 
               onClick={handleExportPDF}
@@ -402,7 +402,7 @@ export function RequisitionDetailDialog({
               Exportar PDF
             </Button>
             
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               {canEdit && onEdit && (
                 <Button variant="outline" onClick={onEdit}>
                   <Edit className="w-4 h-4 mr-2" />
