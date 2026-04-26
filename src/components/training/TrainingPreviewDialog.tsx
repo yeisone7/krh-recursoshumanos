@@ -305,7 +305,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                       <h3 className="font-semibold mb-2 flex items-center gap-2">
                         <BookOpen className="h-4 w-4" /> Introducción
                       </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{content.introduccion}</p>
+                      <p className="line-clamp-6 break-words text-sm leading-relaxed text-muted-foreground sm:line-clamp-none">{content.introduccion}</p>
                     </CardContent>
                   </Card>
                 )}
@@ -316,7 +316,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                       <h3 className="font-semibold mb-2 flex items-center gap-2">
                         <Target className="h-4 w-4" /> Objetivo
                       </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{course.objective}</p>
+                      <p className="line-clamp-6 break-words text-sm leading-relaxed text-muted-foreground sm:line-clamp-none">{course.objective}</p>
                     </CardContent>
                   </Card>
                 )}
@@ -331,7 +331,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                         {content.objetivos.map((obj, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                             <ChevronRight className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
-                            <span>{obj}</span>
+                            <span className="line-clamp-3 min-w-0 break-words sm:line-clamp-none">{obj}</span>
                           </li>
                         ))}
                       </ul>
@@ -359,7 +359,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                     <CardContent className="p-4 flex flex-col items-center text-center gap-1.5">
                       <Scale className="h-5 w-5 text-primary" />
                       <span className="text-xs text-muted-foreground">Marco Legal</span>
-                      <span className="font-semibold text-sm capitalize">{course.legal_framework || 'Interno'}</span>
+                      <span className="line-clamp-2 break-words text-sm font-semibold capitalize">{course.legal_framework || 'Interno'}</span>
                     </CardContent>
                   </Card>
                   <Card>
@@ -408,7 +408,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                             <span className="bg-amber-500 text-white rounded-full w-7 h-7 flex items-center justify-center flex-shrink-0 text-xs font-bold">
                               {i + 1}
                             </span>
-                            <span className="text-sm leading-relaxed">{punto}</span>
+                            <span className="line-clamp-4 min-w-0 break-words text-sm leading-relaxed sm:line-clamp-none">{punto}</span>
                           </div>
                         ))}
                       </div>
@@ -440,12 +440,12 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish }:
                           <div key={i} className="space-y-3 rounded-lg border p-3 sm:p-4">
                             <div className="flex items-start gap-3">
                               <span className="font-bold text-sm text-muted-foreground flex-shrink-0">P{i + 1}</span>
-                              <p className="min-w-0 break-words text-sm font-medium leading-relaxed">{q.pregunta}</p>
+                              <p className="line-clamp-3 min-w-0 break-words text-sm font-medium leading-relaxed sm:line-clamp-none">{q.pregunta}</p>
                             </div>
                             <div className="flex items-start gap-1.5 pl-0 text-sm sm:pl-8">
                               <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
                               <span className="text-green-700 dark:text-green-400 font-medium">Respuesta:</span>
-                              <span className="min-w-0 break-words text-muted-foreground">
+                              <span className="line-clamp-3 min-w-0 break-words text-muted-foreground sm:line-clamp-none">
                                 {q.opciones.findIndex(o => o === q.respuestaCorrecta) >= 0
                                   ? `${String.fromCharCode(65 + q.opciones.findIndex(o => o === q.respuestaCorrecta))}) ${q.respuestaCorrecta}`
                                   : q.respuestaCorrecta
