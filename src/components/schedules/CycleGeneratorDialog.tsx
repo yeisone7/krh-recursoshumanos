@@ -245,7 +245,7 @@ export function CycleGeneratorDialog({
 
         {!previewMode ? (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(generatePreview)} className="space-y-4 overflow-y-auto min-h-0 pr-1">
+            <form onSubmit={form.handleSubmit(generatePreview)} className="space-y-4 overflow-y-auto min-h-0 px-1 pb-1 sm:px-2">
               <FormField
                 control={form.control}
                 name="shift_cycle_id"
@@ -447,7 +447,7 @@ export function CycleGeneratorDialog({
             </form>
           </Form>
         ) : (
-          <div className="space-y-4 overflow-y-auto min-h-0 pr-1">
+          <div className="space-y-4 overflow-y-auto min-h-0 px-1 pb-1 sm:px-2">
             <Alert className="border-green-200 bg-green-50">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
