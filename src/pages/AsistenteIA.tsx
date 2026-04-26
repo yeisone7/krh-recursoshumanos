@@ -143,6 +143,7 @@ export default function AsistenteIA() {
 
   const handleNewConversation = () => {
     forceNextScrollRef.current = true;
+    setQuickRepliesVisible(true);
     setSelectedConversationId(null);
     setInput('');
   };
@@ -159,6 +160,7 @@ export default function AsistenteIA() {
     if (!message || sendMessage.isPending) return;
 
     forceNextScrollRef.current = true;
+    if (mobileQuickReplies.includes(message)) setQuickRepliesVisible(false);
     setInput('');
     try {
       const result = await sendMessage.mutateAsync({
@@ -233,6 +235,7 @@ export default function AsistenteIA() {
                             key={conversation.id}
                             onClick={() => {
                               forceNextScrollRef.current = true;
+                              setQuickRepliesVisible(true);
                               setSelectedConversationId(conversation.id);
                             }}
                             className={cn(
