@@ -194,6 +194,39 @@ export default function AnaliticaSeleccion() {
     const monthStarts = Array.from({ length: 6 }, (_, index) => startOfMonth(subMonths(today, 5 - index)));
     const monthKey = (date: Date) => format(date, 'yyyy-MM');
     const monthLabel = (date: Date) => format(date, 'MMM yy', { locale: es });
+    const buildCoverageTrend = (period: 'week' | 'month') => {
+      const periods = Array.from({ length: period === 'week' ? 12 : 6 }, (_, index) =>
+        period === 'week'
+          ? startOfWeek(subWeeks(today, 11 - index), { weekStartsOn: 1 })
+          : startOfMonth(subMonths(today, 5 - index))
+      );
+
+      return periods.map((periodStart) => {
+        const key = periodKey(periodStart, period);
+        const opened = vacancies.filter((item: any) => {
+          const date = asDate(item.open_date || item.created_at);
+          return date && periodKey(date, period) === key;
+        }).length;
+        const closedItems = vacancies.filter((item: any) => {
+          const date = asDate(item.actual_close_date);
+          return date && periodKey(date, period) === key;
+        });
+        const avgCoverage = closedItems.length
+          ? Math.round(closedItems.reduce((sum: number, item: any) => {
+              const openDate = asDate(item.open_date);
+              const closeDate = asDate(item.actual_close_date);
+              return openDate && closeDate ? sum + Math.max(0, differenceInCalendarDays(closeDate, openDate)) : sum;
+            }, 0) / closedItems.length)
+          : 0;
+
+        return {
+          period: periodLabel(periodStart, period),
+          aperturas: opened,
+          cierres: closedItems.length,
+          cobertura: avgCoverage,
+        };
+      });
+    };
 
     const trend = monthStarts.map((month) => {
       const key = monthKey(month);
@@ -222,6 +255,10 @@ export default function AnaliticaSeleccion() {
         contratados: hiredCount,
       };
     });
+    const weeklyCoverageTrend = buildCoverageTrend('week');
+    const monthlyCoverageTrend = buildCoverageTrend('month');
+    const peakWeeklyOpenings = weeklyCoverageTrend.reduce((peak, item) => item.aperturas > peak.aperturas ? item : peak, weeklyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
+    const peakMonthlyCoverage = monthlyCoverageTrend.reduce((peak, item) => item.cobertura > peak.cobertura ? item : peak, monthlyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
 
     const activeVacancies = vacancies.filter((item: any) => ['open', 'in_process'].includes(item.status));
     const closedVacancies = vacancies.filter((item: any) => item.actual_close_date && item.open_date);
@@ -393,6 +430,10 @@ export default function AnaliticaSeleccion() {
 
     return {
       trend,
+      weeklyCoverageTrend,
+      monthlyCoverageTrend,
+      peakWeeklyOpenings,
+      peakMonthlyCoverage,
       funnel,
       recruitmentFunnel,
       sourceConversion,
