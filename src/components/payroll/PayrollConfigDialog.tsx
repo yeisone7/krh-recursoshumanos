@@ -75,10 +75,10 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Settings className="w-5 h-5 shrink-0" />
             Configuración de Parámetros Laborales
           </DialogTitle>
         </DialogHeader>
@@ -87,7 +87,7 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
           {/* Jornada */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Jornada</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Jornada máxima semanal (horas)</Label>
                 <Input
@@ -120,7 +120,7 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
           {/* Nocturno */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Jornada Nocturna</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Inicio jornada nocturna</Label>
                 <Input
@@ -143,7 +143,7 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
           {/* Recargos */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Porcentajes de Recargo</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {surchargeFields.map(({ key, label }) => (
                 <div key={key} className="space-y-2">
                   <Label className="text-xs">{label}</Label>
@@ -158,7 +158,7 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSave} disabled={upsert.isPending}>
             {upsert.isPending ? 'Guardando...' : 'Guardar'}
