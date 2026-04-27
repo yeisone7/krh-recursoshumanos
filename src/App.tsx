@@ -20,6 +20,7 @@ import CentroNotificaciones from "./pages/CentroNotificaciones";
 import Dotacion from "./pages/Dotacion";
 import Examenes from "./pages/Examenes";
 import Seleccion from "./pages/Seleccion";
+import AnaliticaSeleccion from "./pages/AnaliticaSeleccion";
 import Centros from "./pages/Centros";
 import CentrosFichas from "./pages/CentrosFichas";
 import Jornadas from "./pages/Jornadas";
@@ -142,6 +143,7 @@ const App = () => (
                         <Route path="/dotacion" element={<P module="dotacion"><Dotacion /></P>} />
                         <Route path="/examenes" element={<P module="examenes"><Examenes /></P>} />
                         <Route path="/seleccion" element={<P module="seleccion"><Seleccion /></P>} />
+                        <Route path="/seleccion/analitica" element={<P module="seleccion"><AnaliticaSeleccion /></P>} />
                         <Route path="/requisiciones" element={<P module="requisiciones"><Requisiciones /></P>} />
                         <Route path="/centros" element={<P module="centros"><Centros /></P>} />
                         <Route path="/centros/fichas" element={<P module="centros"><CentrosFichas /></P>} />
