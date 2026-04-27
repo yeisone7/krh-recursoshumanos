@@ -94,31 +94,38 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-lg font-semibold capitalize">
-            {viewTitle}
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <CardTitle className="text-base font-semibold capitalize sm:text-lg">
+            <span className="sm:hidden">{mobileTitle}</span>
+            <span className="hidden sm:inline">{viewTitle}</span>
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-2 sm:justify-end">
             <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week')}>
-              <TabsList className="h-8">
+              <TabsList className="hidden h-8 sm:inline-flex">
                 <TabsTrigger value="month" className="text-xs px-3">Mes</TabsTrigger>
                 <TabsTrigger value="week" className="text-xs px-3">Semana</TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button variant="outline" size="sm" onClick={goToToday}>
+            <Button variant="outline" size="sm" className="h-8" onClick={goToToday}>
               Hoy
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevious}>
+            <Button variant="outline" size="icon" className="hidden h-8 w-8 sm:inline-flex" onClick={goToPrevious}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNext}>
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={goToPreviousWeek}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="hidden h-8 w-8 sm:inline-flex" onClick={goToNext}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={goToNextWeek}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
         {isLoading ? (
           <div className="h-96 flex items-center justify-center text-muted-foreground">
             Cargando...
