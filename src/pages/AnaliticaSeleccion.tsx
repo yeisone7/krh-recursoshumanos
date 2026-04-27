@@ -102,6 +102,24 @@ function groupCount<T>(items: T[], getKey: (item: T) => string | null | undefine
     .sort((a, b) => b.value - a.value);
 }
 
+function candidateReachedStage(candidate: any, stage: 'aplicado' | 'evaluado' | 'entrevista' | 'oferta' | 'contratado') {
+  const status = String(candidate.status || '').toLowerCase();
+  const currentStep = String(candidate.current_step || '').toLowerCase();
+  const steps = Array.isArray(candidate.selection_steps) ? candidate.selection_steps : [];
+  const hasStep = (terms: string[]) => steps.some((step: any) => {
+    const type = String(step.step_type || '').toLowerCase();
+    const stepStatus = String(step.status || '').toLowerCase();
+    const result = String(step.result || '').toLowerCase();
+    return terms.some((term) => type.includes(term) || stepStatus.includes(term) || result.includes(term));
+  });
+
+  if (stage === 'aplicado') return true;
+  if (stage === 'contratado') return status === 'hired';
+  if (stage === 'oferta') return ['selected', 'hired'].includes(status) || currentStep.includes('offer') || currentStep.includes('oferta') || hasStep(['offer', 'oferta']);
+  if (stage === 'entrevista') return ['selected', 'hired'].includes(status) || currentStep.includes('interview') || currentStep.includes('entrevista') || hasStep(['interview', 'entrevista']);
+  return Boolean(candidate.final_score || hasStep(['evaluation', 'evaluacion', 'evaluación', 'test', 'prueba', 'assessment', 'score']) || ['selected', 'hired'].includes(status));
+}
+
 function ChartCard({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <Card className={cn('overflow-hidden', className)}>
@@ -296,6 +314,45 @@ export default function AnaliticaSeleccion() {
       { name: 'Contratados', value: hiredCandidates.length },
     ];
 
+    const recruitmentStages = [
+      { key: 'aplicado', name: 'Aplicado' },
+      { key: 'evaluado', name: 'Evaluado' },
+      { key: 'entrevista', name: 'Entrevista' },
+      { key: 'oferta', name: 'Oferta' },
+      { key: 'contratado', name: 'Contratado' },
+    ] as const;
+    const recruitmentFunnel = recruitmentStages.map((stage, index) => {
+      const value = candidates.filter((candidate: any) => candidateReachedStage(candidate, stage.key)).length;
+      const previous = index === 0 ? value : candidates.filter((candidate: any) => candidateReachedStage(candidate, recruitmentStages[index - 1].key)).length;
+      return {
+        name: stage.name,
+        value,
+        totalPercent: percent(value, candidates.length),
+        stepPercent: index === 0 ? 100 : percent(value, previous),
+      };
+    });
+    const sourceConversion = Object.values(
+      candidates.reduce<Record<string, any>>((acc: any, candidate: any) => {
+        const source = formatStatus(candidate.source || 'Sin fuente');
+        if (!acc[source]) {
+          acc[source] = { source, aplicado: 0, evaluado: 0, entrevista: 0, oferta: 0, contratado: 0 };
+        }
+        recruitmentStages.forEach((stage) => {
+          if (candidateReachedStage(candidate, stage.key)) acc[source][stage.key] += 1;
+        });
+        return acc;
+      }, {})
+    )
+      .map((entry: any) => ({
+        ...entry,
+        evaluadoPct: percent(entry.evaluado, entry.aplicado),
+        entrevistaPct: percent(entry.entrevista, entry.aplicado),
+        ofertaPct: percent(entry.oferta, entry.aplicado),
+        contratadoPct: percent(entry.contratado, entry.aplicado),
+      }))
+      .sort((a: any, b: any) => b.aplicado - a.aplicado)
+      .slice(0, 8);
+
     const radar = [
       { metric: 'Cobertura', value: percent(totalPositions, Math.max(requestedPositions, totalPositions)) },
       { metric: 'Conversión', value: hireRate },
@@ -325,6 +382,8 @@ export default function AnaliticaSeleccion() {
     return {
       trend,
       funnel,
+      recruitmentFunnel,
+      sourceConversion,
       radar,
       statusCandidates,
       statusVacancies,
@@ -451,6 +510,41 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
+        <ChartCard title="Embudo de reclutamiento por etapa" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.recruitmentFunnel} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => name === 'Volumen' ? value : `${value}%`} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="value" name="Volumen" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="totalPercent" name="% del total" stroke="hsl(var(--success))" strokeWidth={3} />
+              <Line yAxisId="right" type="monotone" dataKey="stepPercent" name="% etapa anterior" stroke="hsl(var(--warning))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Conversión por fuente de convocatoria" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.sourceConversion} margin={{ left: -20, right: 18, top: 10, bottom: 36 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="source" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => String(name).includes('%') ? `${value}%` : value} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="aplicado" name="Aplicado" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="evaluado" name="Evaluado" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="entrevista" name="Entrevista" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="oferta" name="Oferta" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="contratado" name="Contratado" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="contratadoPct" name="% contratado" stroke="hsl(var(--foreground))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
         <ChartCard title="Salud integral del proceso">
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart data={analytics.radar} outerRadius="72%">
@@ -562,6 +656,47 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            Conversión detallada por fuente de convocatoria
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {analytics.sourceConversion.length > 0 ? analytics.sourceConversion.map((source: any) => (
+              <div key={source.source} className="rounded-md border p-3">
+                <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="font-medium text-foreground">{source.source}</p>
+                  <Badge variant="outline" className="w-fit">{source.contratadoPct}% contratación</Badge>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-5">
+                  {[
+                    ['Aplicado', source.aplicado, 100],
+                    ['Evaluado', source.evaluado, source.evaluadoPct],
+                    ['Entrevista', source.entrevista, source.entrevistaPct],
+                    ['Oferta', source.oferta, source.ofertaPct],
+                    ['Contratado', source.contratado, source.contratadoPct],
+                  ].map(([label, value, pct]) => (
+                    <div key={label as string} className="rounded-md bg-muted/50 p-2">
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <span className="text-muted-foreground">{label}</span>
+                        <span className="font-medium text-foreground">{value}</span>
+                      </div>
+                      <Progress value={Number(pct)} className="mt-2 h-1.5" />
+                      <p className="mt-1 text-[11px] text-muted-foreground">{pct}%</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )) : (
+              <p className="text-sm text-muted-foreground">Aún no hay candidatos con fuente de convocatoria registrada.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
