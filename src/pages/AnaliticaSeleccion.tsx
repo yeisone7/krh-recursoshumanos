@@ -902,7 +902,80 @@ export default function AnaliticaSeleccion() {
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
+
+        <ChartCard title="Ranking de demanda por cargo" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.demandByPosition} layout="vertical" margin={{ left: 36, right: 18, top: 8, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" tick={{ fontSize: 12 }} />
+              <YAxis dataKey="cargo" type="category" width={118} tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="demanda" name="Cupos demandados" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
+              <Bar dataKey="candidatos" name="Candidatos" fill="hsl(var(--secondary))" radius={[0, 6, 6, 0]} />
+              <Bar dataKey="contratados" name="Contratados" fill="hsl(var(--success))" radius={[0, 6, 6, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Tasa de cobertura por cargo">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.coverageByPosition} margin={{ left: -20, right: 12, top: 8, bottom: 36 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="cargo" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value) => `${value}%`} />
+              <Bar dataKey="cobertura" name="Cobertura" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Demanda y cobertura por jornada">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.demandByShift} margin={{ left: -20, right: 18, top: 10, bottom: 24 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="jornada" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => String(name).includes('Cobertura') ? `${value}%` : value} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="demanda" name="Demanda" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="contratados" name="Contratados" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="cobertura" name="Cobertura %" stroke="hsl(var(--warning))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <AlertTriangle className="h-5 w-5 text-warning" />
+            Alertas de estancamiento
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {analytics.stagnationAlerts.length > 0 ? analytics.stagnationAlerts.map((candidate: any) => (
+              <div key={candidate.id} className="rounded-md border border-warning/30 bg-warning-light/40 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{candidate.name}</p>
+                    <p className="text-xs text-muted-foreground">{candidate.vacancy} · {candidate.source}</p>
+                  </div>
+                  <Badge variant="outline" className="shrink-0 border-warning/30 text-warning">{candidate.stagnantDays} días</Badge>
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>Estado: {candidate.status}</span>
+                  <span>Sin avance ≥ 7 días</span>
+                </div>
+              </div>
+            )) : (
+              <p className="text-sm text-muted-foreground">No hay candidatos en proceso sin avance durante 7 días o más.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
