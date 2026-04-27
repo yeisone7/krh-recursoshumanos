@@ -314,6 +314,45 @@ export default function AnaliticaSeleccion() {
       { name: 'Contratados', value: hiredCandidates.length },
     ];
 
+    const recruitmentStages = [
+      { key: 'aplicado', name: 'Aplicado' },
+      { key: 'evaluado', name: 'Evaluado' },
+      { key: 'entrevista', name: 'Entrevista' },
+      { key: 'oferta', name: 'Oferta' },
+      { key: 'contratado', name: 'Contratado' },
+    ] as const;
+    const recruitmentFunnel = recruitmentStages.map((stage, index) => {
+      const value = candidates.filter((candidate: any) => candidateReachedStage(candidate, stage.key)).length;
+      const previous = index === 0 ? value : candidates.filter((candidate: any) => candidateReachedStage(candidate, recruitmentStages[index - 1].key)).length;
+      return {
+        name: stage.name,
+        value,
+        totalPercent: percent(value, candidates.length),
+        stepPercent: index === 0 ? 100 : percent(value, previous),
+      };
+    });
+    const sourceConversion = Object.values(
+      candidates.reduce<Record<string, any>>((acc: any, candidate: any) => {
+        const source = formatStatus(candidate.source || 'Sin fuente');
+        if (!acc[source]) {
+          acc[source] = { source, aplicado: 0, evaluado: 0, entrevista: 0, oferta: 0, contratado: 0 };
+        }
+        recruitmentStages.forEach((stage) => {
+          if (candidateReachedStage(candidate, stage.key)) acc[source][stage.key] += 1;
+        });
+        return acc;
+      }, {})
+    )
+      .map((entry: any) => ({
+        ...entry,
+        evaluadoPct: percent(entry.evaluado, entry.aplicado),
+        entrevistaPct: percent(entry.entrevista, entry.aplicado),
+        ofertaPct: percent(entry.oferta, entry.aplicado),
+        contratadoPct: percent(entry.contratado, entry.aplicado),
+      }))
+      .sort((a: any, b: any) => b.aplicado - a.aplicado)
+      .slice(0, 8);
+
     const radar = [
       { metric: 'Cobertura', value: percent(totalPositions, Math.max(requestedPositions, totalPositions)) },
       { metric: 'Conversión', value: hireRate },
@@ -343,6 +382,8 @@ export default function AnaliticaSeleccion() {
     return {
       trend,
       funnel,
+      recruitmentFunnel,
+      sourceConversion,
       radar,
       statusCandidates,
       statusVacancies,
