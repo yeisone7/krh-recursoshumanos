@@ -1881,6 +1881,83 @@ export type Database = {
           },
         ]
       }
+      document_expiry_alerts: {
+        Row: {
+          close_reason: string | null
+          closed_at: string | null
+          closed_by: string | null
+          company_id: string
+          created_at: string
+          document_id: string
+          employee_id: string
+          expires_at: string
+          id: string
+          notification_id: string | null
+          notified_at: string | null
+          status: Database["public"]["Enums"]["document_expiry_alert_status"]
+          updated_at: string
+        }
+        Insert: {
+          close_reason?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          company_id: string
+          created_at?: string
+          document_id: string
+          employee_id: string
+          expires_at: string
+          id?: string
+          notification_id?: string | null
+          notified_at?: string | null
+          status?: Database["public"]["Enums"]["document_expiry_alert_status"]
+          updated_at?: string
+        }
+        Update: {
+          close_reason?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          company_id?: string
+          created_at?: string
+          document_id?: string
+          employee_id?: string
+          expires_at?: string
+          id?: string
+          notification_id?: string | null
+          notified_at?: string | null
+          status?: Database["public"]["Enums"]["document_expiry_alert_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_expiry_alerts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_expiry_alerts_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: true
+            referencedRelation: "employee_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_expiry_alerts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_expiry_alerts_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_versions: {
         Row: {
           company_id: string
@@ -8991,6 +9068,7 @@ export type Database = {
         | "decision"
         | "apelacion"
         | "cerrado"
+      document_expiry_alert_status: "pendiente" | "notificada" | "cerrada"
       document_type: "CC" | "CE" | "TI" | "PA" | "PEP"
       dotation_item_type:
         | "uniforme_camisa"
@@ -9409,6 +9487,7 @@ export const Constants = {
         "apelacion",
         "cerrado",
       ],
+      document_expiry_alert_status: ["pendiente", "notificada", "cerrada"],
       document_type: ["CC", "CE", "TI", "PA", "PEP"],
       dotation_item_type: [
         "uniforme_camisa",
