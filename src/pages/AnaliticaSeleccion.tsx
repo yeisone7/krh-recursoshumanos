@@ -27,6 +27,7 @@ import {
 } from 'recharts';
 import {
   Activity,
+  AlertTriangle,
   BarChart3,
   Briefcase,
   CalendarDays,
@@ -104,6 +105,17 @@ function isWithinRange(date: Date | null, startDate: string, endDate: string) {
 
 function getCandidateCenterId(candidate: any) {
   return candidate.vacancies?.operation_center_id || candidate.vacancies?.operation_centers?.id || null;
+}
+
+function getCandidateLastActivityDate(candidate: any) {
+  const stepDates = (candidate.selection_steps || [])
+    .flatMap((step: any) => [step.completed_date, step.updated_at, step.created_at, step.scheduled_date])
+    .map(asDate)
+    .filter(Boolean) as Date[];
+  const baseDates = [candidate.updated_at, candidate.application_date, candidate.created_at].map(asDate).filter(Boolean) as Date[];
+  const dates = [...stepDates, ...baseDates];
+  if (!dates.length) return null;
+  return dates.sort((a, b) => b.getTime() - a.getTime())[0];
 }
 
 function periodKey(date: Date, period: 'week' | 'month') {
@@ -405,6 +417,55 @@ export default function AnaliticaSeleccion() {
       promedio: Math.round(entry.values.reduce((sum, value) => sum + value, 0) / entry.values.length),
     })).sort((a, b) => b.promedio - a.promedio).slice(0, 8);
 
+    const demandByPosition = Object.values(
+      vacancies.reduce<Record<string, { cargo: string; demanda: number; vacantes: number; candidatos: number; contratados: number; cobertura: number }>>((acc: any, vacancy: any) => {
+        const cargo = formatStatus(vacancy.position_title || vacancy.personnel_requisitions?.cargo_solicitado || 'Sin cargo');
+        if (!acc[cargo]) acc[cargo] = { cargo, demanda: 0, vacantes: 0, candidatos: 0, contratados: 0, cobertura: 0 };
+        const vacancyCandidates = candidates.filter((candidate: any) => candidate.vacancy_id === vacancy.id);
+        const positions = vacancy.positions_count || 1;
+        acc[cargo].demanda += positions;
+        acc[cargo].vacantes += 1;
+        acc[cargo].candidatos += vacancyCandidates.length;
+        acc[cargo].contratados += vacancyCandidates.filter((candidate: any) => candidate.status === 'hired').length;
+        acc[cargo].cobertura = percent(acc[cargo].contratados, acc[cargo].demanda);
+        return acc;
+      }, {})
+    ).sort((a, b) => b.demanda - a.demanda).slice(0, 10);
+
+    const coverageByPosition = [...demandByPosition]
+      .sort((a, b) => b.cobertura - a.cobertura || b.demanda - a.demanda)
+      .slice(0, 8);
+
+    const demandByShift = Object.values(
+      vacancies.reduce<Record<string, { jornada: string; demanda: number; candidatos: number; contratados: number; cobertura: number }>>((acc: any, vacancy: any) => {
+        const jornada = formatStatus(vacancy.shift_type || 'Sin jornada');
+        if (!acc[jornada]) acc[jornada] = { jornada, demanda: 0, candidatos: 0, contratados: 0, cobertura: 0 };
+        const vacancyCandidates = candidates.filter((candidate: any) => candidate.vacancy_id === vacancy.id);
+        acc[jornada].demanda += vacancy.positions_count || 1;
+        acc[jornada].candidatos += vacancyCandidates.length;
+        acc[jornada].contratados += vacancyCandidates.filter((candidate: any) => candidate.status === 'hired').length;
+        acc[jornada].cobertura = percent(acc[jornada].contratados, acc[jornada].demanda);
+        return acc;
+      }, {})
+    ).sort((a, b) => b.demanda - a.demanda).slice(0, 8);
+
+    const stagnationAlerts = inProcessCandidates
+      .map((candidate: any) => {
+        const lastActivity = getCandidateLastActivityDate(candidate);
+        const stagnantDays = lastActivity ? Math.max(0, differenceInCalendarDays(today, lastActivity)) : 0;
+        return {
+          id: candidate.id,
+          name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || candidate.document_number || 'Candidato sin nombre',
+          vacancy: candidate.vacancies?.position_title || 'Vacante sin cargo',
+          source: formatStatus(candidate.source || 'Sin fuente'),
+          status: formatStatus(candidate.status),
+          stagnantDays,
+        };
+      })
+      .filter((candidate) => candidate.stagnantDays >= 7)
+      .sort((a, b) => b.stagnantDays - a.stagnantDays)
+      .slice(0, 8);
+
     const funnel = [
       { name: 'Requisiciones', value: requisitions.length },
       { name: 'Vacantes', value: vacancies.length },
@@ -504,6 +565,10 @@ export default function AnaliticaSeleccion() {
       aging,
       stepsByType,
       salaryByArea,
+      demandByPosition,
+      coverageByPosition,
+      demandByShift,
+      stagnationAlerts,
       insights,
       kpis: {
         requisitions: requisitions.length,
@@ -837,7 +902,80 @@ export default function AnaliticaSeleccion() {
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
+
+        <ChartCard title="Ranking de demanda por cargo" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.demandByPosition} layout="vertical" margin={{ left: 36, right: 18, top: 8, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" tick={{ fontSize: 12 }} />
+              <YAxis dataKey="cargo" type="category" width={118} tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="demanda" name="Cupos demandados" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
+              <Bar dataKey="candidatos" name="Candidatos" fill="hsl(var(--secondary))" radius={[0, 6, 6, 0]} />
+              <Bar dataKey="contratados" name="Contratados" fill="hsl(var(--success))" radius={[0, 6, 6, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Tasa de cobertura por cargo">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.coverageByPosition} margin={{ left: -20, right: 12, top: 8, bottom: 36 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="cargo" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value) => `${value}%`} />
+              <Bar dataKey="cobertura" name="Cobertura" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Demanda y cobertura por jornada">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.demandByShift} margin={{ left: -20, right: 18, top: 10, bottom: 24 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="jornada" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => String(name).includes('Cobertura') ? `${value}%` : value} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="demanda" name="Demanda" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="contratados" name="Contratados" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="cobertura" name="Cobertura %" stroke="hsl(var(--warning))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <AlertTriangle className="h-5 w-5 text-warning" />
+            Alertas de estancamiento
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {analytics.stagnationAlerts.length > 0 ? analytics.stagnationAlerts.map((candidate: any) => (
+              <div key={candidate.id} className="rounded-md border border-warning/30 bg-warning-light/40 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{candidate.name}</p>
+                    <p className="text-xs text-muted-foreground">{candidate.vacancy} · {candidate.source}</p>
+                  </div>
+                  <Badge variant="outline" className="shrink-0 border-warning/30 text-warning">{candidate.stagnantDays} días</Badge>
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>Estado: {candidate.status}</span>
+                  <span>Sin avance ≥ 7 días</span>
+                </div>
+              </div>
+            )) : (
+              <p className="text-sm text-muted-foreground">No hay candidatos en proceso sin avance durante 7 días o más.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
