@@ -38,6 +38,9 @@ import {
   History,
   ScrollText,
   ArrowRightLeft,
+  ChevronDown,
+  ChevronRight,
+  Folder,
 } from 'lucide-react';
 import { OnboardingChecklist } from '@/components/employees/OnboardingChecklist';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -79,6 +82,9 @@ import {
   certificationTypeLabels,
   vaccineTypeLabels,
   employeeDocumentTypeLabels,
+  employeeDocumentFolderOrder,
+  normalizeEmployeeDocumentFolder,
+  type EmployeeDocument,
   getEmployeeFullName,
   familyRelationshipLabels,
 } from '@/types/employee';
