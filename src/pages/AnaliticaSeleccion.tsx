@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { format, subMonths, startOfMonth, differenceInCalendarDays } from 'date-fns';
+import { format, subMonths, subWeeks, startOfMonth, startOfWeek, differenceInCalendarDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   Area,
@@ -19,6 +19,7 @@ import {
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
