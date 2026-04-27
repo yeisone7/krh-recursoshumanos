@@ -63,8 +63,8 @@ export function EmployeeCard({
       className="card-elevated p-5 group cursor-pointer hover:border-primary/30"
       onClick={() => onOpenDetail(employee.id)}
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="relative">
             <Avatar className="w-12 h-12">
               <AvatarImage src={employee.avatar_url || undefined} alt={getEmployeeFullName(employee)} />
@@ -79,18 +79,18 @@ export function EmployeeCard({
               </span>
             )}
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
               {getEmployeeFullName(employee)}
             </h3>
             <p className="text-sm text-muted-foreground">{employee.work_info?.position_name || 'Sin cargo'}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           <Button
             variant="outline"
             size="sm"
-            className="h-8 px-2.5 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-8 px-2.5 text-xs font-medium opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
             onClick={(e) => { e.stopPropagation(); navigate(`/empleados/${employee.id}/360`); }}
           >
             <Eye className="w-3.5 h-3.5 mr-1" />
@@ -98,7 +98,7 @@ export function EmployeeCard({
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
