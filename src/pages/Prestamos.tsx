@@ -244,7 +244,7 @@ export default function Prestamos() {
         <TabsContent value="listado" className="space-y-6">
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center gap-2">
@@ -294,13 +294,13 @@ export default function Prestamos() {
       {/* Filters & Actions */}
       <Card>
         <CardContent className="pt-4 pb-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
+            <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Buscar por empleado..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full lg:w-[180px]">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
@@ -312,7 +312,7 @@ export default function Prestamos() {
                 <SelectItem value="rechazado">Rechazado</SelectItem>
               </SelectContent>
             </Select>
-            <Button onClick={openCreate}>
+            <Button onClick={openCreate} className="sm:col-span-2 lg:col-span-1 lg:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Préstamo
             </Button>
@@ -321,7 +321,7 @@ export default function Prestamos() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           <TooltipProvider>
           <Table>
@@ -421,6 +421,96 @@ export default function Prestamos() {
           </TooltipProvider>
         </CardContent>
       </Card>
+
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Cargando...</CardContent></Card>
+        ) : filtered.length === 0 ? (
+          <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No se encontraron préstamos</CardContent></Card>
+        ) : filtered.map(loan => {
+          const progress = loan.installments > 0 ? (loan.paid_installments / loan.installments) * 100 : 0;
+          return (
+            <Card key={loan.id} className="overflow-hidden">
+              <CardContent className="space-y-4 p-4" onClick={() => setDetailLoan(loan)}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{loan.employees_v2?.first_name} {loan.employees_v2?.last_name}</p>
+                    <p className="text-xs text-muted-foreground">{loan.employees_v2?.document_number}</p>
+                  </div>
+                  <Badge className={`shrink-0 text-xs border ${STATUS_COLORS[loan.status] || ''}`} variant="outline">
+                    {STATUS_LABELS[loan.status] || loan.status}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="rounded-md bg-muted/50 p-2">
+                    <p className="text-xs text-muted-foreground">Tipo</p>
+                    <p className="font-medium">{LOAN_TYPE_LABELS[loan.loan_type] || loan.loan_type}</p>
+                  </div>
+                  <div className="rounded-md bg-muted/50 p-2">
+                    <p className="text-xs text-muted-foreground">Cuotas</p>
+                    <p className="font-medium">{loan.paid_installments}/{loan.installments}</p>
+                  </div>
+                  <div className="rounded-md bg-muted/50 p-2">
+                    <p className="text-xs text-muted-foreground">Monto total</p>
+                    <p className="font-medium">{formatCurrency(Number(loan.total_with_interest))}</p>
+                  </div>
+                  <div className="rounded-md bg-muted/50 p-2">
+                    <p className="text-xs text-muted-foreground">Saldo</p>
+                    <p className="font-medium">{formatCurrency(Number(loan.remaining_balance))}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+                    <span>Progreso</span>
+                    <span>{progress.toFixed(0)}%</span>
+                  </div>
+                  <Progress value={progress} className="h-2" />
+                </div>
+
+                <div className="flex flex-wrap justify-end gap-2" onClick={e => e.stopPropagation()}>
+                  {loan.status === 'solicitado' && (
+                    <>
+                      <Button size="sm" variant="outline" className="text-primary" onClick={() => handleApprove(loan)}>
+                        <CheckCircle className="w-4 h-4 mr-1" /> Aprobar
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleReject(loan)}>
+                        <Ban className="w-4 h-4 mr-1" /> Rechazar
+                      </Button>
+                    </>
+                  )}
+                  {['solicitado', 'aprobado'].includes(loan.status) && (
+                    <Button size="sm" variant="outline" onClick={() => openEdit(loan)}>
+                      <Eye className="w-4 h-4 mr-1" /> Editar
+                    </Button>
+                  )}
+                  {loan.status === 'activo' && (
+                    <Button size="sm" variant="outline" className="text-warning" onClick={() => setRefinanceLoan(loan)}>
+                      <TrendingUp className="w-4 h-4 mr-1" /> Refinanciar
+                    </Button>
+                  )}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="text-destructive"><Trash2 className="w-4 h-4 mr-1" /> Eliminar</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar préstamo?</AlertDialogTitle>
+                        <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteLoan.mutate(loan.id)}>Eliminar</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       {/* Create/Edit Dialog */}
       <Dialog open={showForm} onOpenChange={o => { if (!o) { setShowForm(false); resetForm(); } }}>
