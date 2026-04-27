@@ -103,7 +103,7 @@ export function LoanCollectionCalendar({ loans }: Props) {
   return (
     <div className="space-y-4">
       {/* Monthly summary */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <Card>
           <CardContent className="pt-4 pb-3 text-center">
             <p className="text-xs text-muted-foreground">Esperado</p>
@@ -126,12 +126,12 @@ export function LoanCollectionCalendar({ loans }: Props) {
 
       {/* Calendar */}
       <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
+        <CardHeader className="pb-2 px-3 sm:px-6">
+          <div className="flex items-center justify-between gap-2">
             <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(m => subMonths(m, 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <CardTitle className="text-base capitalize">
+            <CardTitle className="text-sm sm:text-base capitalize text-center">
               {format(currentMonth, 'MMMM yyyy', { locale: es })}
             </CardTitle>
             <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(m => addMonths(m, 1))}>
@@ -139,18 +139,18 @@ export function LoanCollectionCalendar({ loans }: Props) {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-2 sm:px-6">
           <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
             {/* Day headers */}
             {dayNames.map(d => (
-              <div key={d} className="bg-muted p-2 text-center text-xs font-medium text-muted-foreground">
+              <div key={d} className="bg-muted p-1.5 text-center text-[10px] font-medium text-muted-foreground sm:p-2 sm:text-xs">
                 {d}
               </div>
             ))}
 
             {/* Empty cells for offset */}
             {Array.from({ length: startDayOfWeek }).map((_, i) => (
-              <div key={`empty-${i}`} className="bg-card p-1 min-h-[80px]" />
+              <div key={`empty-${i}`} className="bg-card p-1 min-h-[58px] sm:min-h-[80px]" />
             ))}
 
             {/* Day cells */}
@@ -167,13 +167,13 @@ export function LoanCollectionCalendar({ loans }: Props) {
                     <TooltipTrigger asChild>
                       <div
                         className={cn(
-                          "bg-card p-1 min-h-[80px] cursor-default transition-colors",
+                          "bg-card p-1 min-h-[58px] cursor-default transition-colors sm:min-h-[80px]",
                           isToday(day) && "ring-2 ring-primary ring-inset",
                           events.length > 0 && "hover:bg-muted/50"
                         )}
                       >
                         <div className={cn(
-                          "text-xs font-medium mb-1",
+                           "text-[11px] font-medium mb-1 sm:text-xs",
                           isToday(day) ? "text-primary font-bold" : "text-foreground"
                         )}>
                           {format(day, 'd')}
@@ -185,7 +185,7 @@ export function LoanCollectionCalendar({ loans }: Props) {
                               <div
                                 key={i}
                                 className={cn(
-                                  "text-[10px] leading-tight px-1 py-0.5 rounded truncate",
+                                  "hidden text-[10px] leading-tight px-1 py-0.5 rounded truncate sm:block",
                                   e.isPaid && "bg-primary/10 text-primary",
                                   e.isOverdue && "bg-destructive/10 text-destructive",
                                   !e.isPaid && !e.isOverdue && "bg-muted text-muted-foreground"
@@ -195,7 +195,7 @@ export function LoanCollectionCalendar({ loans }: Props) {
                               </div>
                             )) : (
                               <div className={cn(
-                                "text-[10px] px-1 py-0.5 rounded text-center font-medium",
+                                 "text-[10px] px-1 py-0.5 rounded text-center font-medium",
                                 hasOverdue ? "bg-destructive/10 text-destructive" :
                                 allPaid ? "bg-primary/10 text-primary" :
                                 "bg-muted text-muted-foreground"
@@ -203,7 +203,7 @@ export function LoanCollectionCalendar({ loans }: Props) {
                                 {events.length} cuotas
                               </div>
                             )}
-                            <div className="text-[9px] text-muted-foreground text-center font-mono">
+                            <div className="truncate text-center text-[8px] font-mono text-muted-foreground sm:text-[9px]">
                               {formatCurrency(dayTotal)}
                             </div>
                           </div>

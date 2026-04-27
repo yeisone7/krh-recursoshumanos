@@ -161,7 +161,7 @@ export function LoanPortfolioDashboard({ loans }: Props) {
   return (
     <div className="space-y-6">
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KPICard
           title="Cartera Total"
           value={formatCurrency(totalPortfolio)}
@@ -201,7 +201,7 @@ export function LoanPortfolioDashboard({ loans }: Props) {
           </CardHeader>
           <CardContent>
             {distributionByType.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[280px] w-full">
+              <ChartContainer config={chartConfig} className="h-[240px] w-full sm:h-[280px]">
                 <PieChart>
                   <Pie
                     data={distributionByType}
@@ -212,7 +212,7 @@ export function LoanPortfolioDashboard({ loans }: Props) {
                     paddingAngle={3}
                     dataKey="value"
                     nameKey="name"
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                   >
                     {distributionByType.map((_, i) => (
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -236,7 +236,7 @@ export function LoanPortfolioDashboard({ loans }: Props) {
           </CardHeader>
           <CardContent>
             {countByType.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[280px] w-full">
+              <ChartContainer config={chartConfig} className="h-[240px] w-full sm:h-[280px]">
                 <BarChart data={countByType}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
@@ -265,7 +265,7 @@ export function LoanPortfolioDashboard({ loans }: Props) {
           </CardHeader>
           <CardContent>
             {projections.some(p => p.projected > 0) ? (
-              <ChartContainer config={chartConfig} className="h-[280px] w-full">
+              <ChartContainer config={chartConfig} className="h-[240px] w-full sm:h-[280px]">
                 <AreaChart data={projections}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
@@ -306,7 +306,7 @@ export function LoanPortfolioDashboard({ loans }: Props) {
           </CardHeader>
           <CardContent>
             {delinquencyBreakdown.some(d => d.value > 0) ? (
-              <ChartContainer config={chartConfig} className="h-[280px] w-full">
+              <ChartContainer config={chartConfig} className="h-[240px] w-full sm:h-[280px]">
                 <BarChart data={delinquencyBreakdown} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                   <XAxis type="number" tickFormatter={formatShortCurrency} tick={{ fontSize: 11 }} className="fill-muted-foreground" />
