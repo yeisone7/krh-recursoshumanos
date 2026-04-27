@@ -85,7 +85,7 @@ export default function ConfiguracionLaboral() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Settings className="w-6 h-6" />
@@ -93,7 +93,7 @@ export default function ConfiguracionLaboral() {
           </h1>
           <p className="text-muted-foreground">Parámetros de nómina y recargos según legislación colombiana</p>
         </div>
-        <Button onClick={handleSave} disabled={upsert.isPending}>
+        <Button onClick={handleSave} disabled={upsert.isPending} className="w-full sm:w-auto">
           {upsert.isPending ? 'Guardando...' : 'Guardar Cambios'}
         </Button>
       </div>
@@ -101,7 +101,7 @@ export default function ConfiguracionLaboral() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* Jornada */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">Jornada</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -139,7 +139,7 @@ export default function ConfiguracionLaboral() {
 
         {/* Nocturno */}
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">Jornada Nocturna</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -164,7 +164,7 @@ export default function ConfiguracionLaboral() {
 
         {/* Recargos */}
         <Card className="md:col-span-2">
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">Porcentajes de Recargo</CardTitle>
           </CardHeader>
           <CardContent>
