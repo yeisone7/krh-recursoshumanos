@@ -27,6 +27,7 @@ import {
 } from 'recharts';
 import {
   Activity,
+  AlertTriangle,
   BarChart3,
   Briefcase,
   CalendarDays,
@@ -104,6 +105,17 @@ function isWithinRange(date: Date | null, startDate: string, endDate: string) {
 
 function getCandidateCenterId(candidate: any) {
   return candidate.vacancies?.operation_center_id || candidate.vacancies?.operation_centers?.id || null;
+}
+
+function getCandidateLastActivityDate(candidate: any) {
+  const stepDates = (candidate.selection_steps || [])
+    .flatMap((step: any) => [step.completed_date, step.updated_at, step.created_at, step.scheduled_date])
+    .map(asDate)
+    .filter(Boolean) as Date[];
+  const baseDates = [candidate.updated_at, candidate.application_date, candidate.created_at].map(asDate).filter(Boolean) as Date[];
+  const dates = [...stepDates, ...baseDates];
+  if (!dates.length) return null;
+  return dates.sort((a, b) => b.getTime() - a.getTime())[0];
 }
 
 function periodKey(date: Date, period: 'week' | 'month') {
