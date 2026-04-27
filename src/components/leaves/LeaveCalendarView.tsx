@@ -63,8 +63,11 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
             <Button variant="outline" size="icon" onClick={handlePrevMonth}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="min-w-0 flex-1 text-center text-sm font-medium capitalize sm:min-w-[200px] sm:text-lg">
-              {format(currentMonth, 'MMMM yyyy', { locale: es })}
+            <span className="hidden min-w-0 flex-1 text-center text-sm font-medium capitalize sm:block sm:min-w-[200px] sm:text-lg">
+              {format(currentDate, 'MMMM yyyy', { locale: es })}
+            </span>
+            <span className="min-w-0 flex-1 text-center text-sm font-medium sm:hidden">
+              {format(weekStart, 'd MMM', { locale: es })} - {format(weekEnd, 'd MMM', { locale: es })}
             </span>
             <Button variant="outline" size="icon" onClick={handleNextMonth}>
               <ChevronRight className="h-4 w-4" />
@@ -100,7 +103,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
                 className={cn(
                   'h-16 overflow-hidden rounded-md border p-1 sm:h-24',
                   isToday && 'ring-2 ring-primary',
-                  !isSameMonth(day, currentMonth) && 'bg-muted/50'
+                  !isSameMonth(day, currentDate) && 'bg-muted/50'
                 )}
               >
                 <div className={cn(
