@@ -47,7 +47,7 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
       >
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           {/* Left section: Back button + Avatar + Info */}
-          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
             <Button
               variant="ghost"
               size="icon"
@@ -57,7 +57,7 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
               <ArrowLeft className="w-5 h-5" />
             </Button>
 
-            <Avatar className="h-28 w-28 shrink-0 self-center sm:h-20 sm:w-20 sm:self-start">
+            <Avatar className="-mt-1 h-28 w-28 shrink-0 self-center sm:mt-0 sm:h-20 sm:w-20 sm:self-start">
               <AvatarImage src={employee.avatar_url || undefined} alt={fullName} />
               <AvatarFallback className="text-2xl font-semibold bg-primary text-primary-foreground">
                 {initials}
