@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { employeeDocumentTypeLabels, type EmployeeDocumentType } from '@/types/employee';
 
 export interface UnifiedAlert {
   id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'cesantias' | 'inventory_low_stock' | 'dotation_renewal';
+  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'cesantias' | 'inventory_low_stock' | 'dotation_renewal' | 'document';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
@@ -16,6 +17,7 @@ export interface UnifiedAlert {
   // For navigation
   navigateTo?: string;
   employeeId?: string;
+  status?: 'pendiente' | 'notificada' | 'cerrada';
 }
 
 function calculateDaysRemaining(dateStr: string | null): number | null {
@@ -234,6 +236,44 @@ export function useUnifiedAlerts() {
               employeeId: employee.id,
             });
           }
+        }
+      }
+
+      // 4B. Fetch employee document expiry alerts with workflow status
+      const { data: documentAlerts } = await supabase
+        .from('document_expiry_alerts')
+        .select('id, employee_id, document_id, expires_at, status, created_at, employee_documents(document_type, document_name, file_name)')
+        .eq('company_id', currentCompanyId!)
+        .neq('status', 'cerrada');
+
+      if (documentAlerts) {
+        for (const docAlert of documentAlerts as any[]) {
+          const employee = employeeMap.get(docAlert.employee_id);
+          if (!employee) continue;
+
+          const daysRemaining = calculateDaysRemaining(docAlert.expires_at);
+          if (daysRemaining === null || daysRemaining > 30) continue;
+
+          const isExpired = daysRemaining < 0;
+          const doc = docAlert.employee_documents;
+          const docType = doc?.document_type as EmployeeDocumentType | undefined;
+          const docName = doc?.document_name || (docType ? employeeDocumentTypeLabels[docType] : null) || doc?.file_name || 'Documento';
+
+          alerts.push({
+            id: `document-${docAlert.id}`,
+            type: 'document',
+            level: isExpired ? 'critical' : getAlertLevel(daysRemaining),
+            title: isExpired ? 'Documento vencido' : 'Documento por vencer',
+            description: `${docName} ${isExpired ? 'venció hace' : 'vence en'} ${Math.abs(daysRemaining)} días`,
+            daysRemaining,
+            entityName: `${employee.first_name} ${employee.last_name}`,
+            entityId: docAlert.document_id,
+            eventDate: docAlert.expires_at,
+            createdAt: docAlert.created_at,
+            navigateTo: `/empleados/${docAlert.employee_id}/360?tab=documents`,
+            employeeId: employee.id,
+            status: docAlert.status,
+          });
         }
       }
 

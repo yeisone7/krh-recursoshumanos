@@ -34,6 +34,7 @@ const typeIcons: Record<UnifiedAlert['type'], React.ElementType> = {
   incapacity: HeartPulse,
   vacation: Palmtree,
   cesantias: Landmark,
+  document: FileText,
   inventory_low_stock: Warehouse,
   dotation_renewal: Package,
 };
@@ -47,6 +48,7 @@ const typeLabels: Record<UnifiedAlert['type'], string> = {
   incapacity: 'Incapacidad',
   vacation: 'Vacaciones',
   cesantias: 'Cesantías',
+  document: 'Documento',
   inventory_low_stock: 'Stock Bajo',
   dotation_renewal: 'Renovación Dotación',
 };
@@ -99,6 +101,11 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
           <Badge variant="outline" className="text-xs bg-muted">
             {typeLabels[alert.type]}
           </Badge>
+          {alert.status && (
+            <Badge variant="outline" className="text-xs bg-muted">
+              {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
+            </Badge>
+          )}
         </div>
         <p className="text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{alert.entityName}</span>
