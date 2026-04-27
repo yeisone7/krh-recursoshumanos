@@ -177,20 +177,20 @@ export default function Vacaciones() {
 
       {/* Main Content with Tabs */}
       <Tabs defaultValue="requests" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="requests" className="flex items-center gap-2">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto sm:flex-wrap">
+          <TabsTrigger value="requests" className="min-h-10 gap-2 px-2 text-xs sm:text-sm">
             <FileText className="h-4 w-4" />
             Solicitudes
           </TabsTrigger>
-          <TabsTrigger value="balances" className="flex items-center gap-2">
+          <TabsTrigger value="balances" className="min-h-10 gap-2 px-2 text-xs sm:text-sm">
             <Users className="h-4 w-4" />
             Saldos
           </TabsTrigger>
-          <TabsTrigger value="calendar" className="flex items-center gap-2">
+          <TabsTrigger value="calendar" className="min-h-10 gap-2 px-2 text-xs sm:text-sm">
             <Calendar className="h-4 w-4" />
             Calendario
           </TabsTrigger>
-          <TabsTrigger value="alerts" className="flex items-center gap-2">
+          <TabsTrigger value="alerts" className="min-h-10 gap-2 px-2 text-xs sm:text-sm">
             <AlertTriangle className="h-4 w-4" />
             Alertas
           </TabsTrigger>
