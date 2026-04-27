@@ -251,6 +251,8 @@ export function useCreateDocument() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['employee_documents', variables.employeeId] });
       queryClient.invalidateQueries({ queryKey: ['employee_v2', variables.employeeId] });
+      queryClient.invalidateQueries({ queryKey: ['unified-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['employee_360_alerts', variables.employeeId] });
     },
   });
 }
@@ -271,6 +273,8 @@ export function useDeleteDocument() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['employee_documents', data.employeeId] });
       queryClient.invalidateQueries({ queryKey: ['employee_v2', data.employeeId] });
+      queryClient.invalidateQueries({ queryKey: ['unified-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['employee_360_alerts', data.employeeId] });
     },
   });
 }

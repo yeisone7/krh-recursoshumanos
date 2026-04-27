@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { differenceInDays, parseISO, format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { employeeDocumentTypeLabels, type EmployeeDocumentType } from '@/types/employee';
 
 export type AlertLevel = 'critical' | 'warning' | 'info';
 export type AlertType = 
@@ -308,19 +309,11 @@ export function useEmployee360Alerts(employeeId: string | undefined) {
 
       // Process Documents with expiry
       if (documentsRes.data) {
-        const docTypeLabels: Record<string, string> = {
-          cedula: 'Cédula',
-          libreta_militar: 'Libreta militar',
-          pasaporte: 'Pasaporte',
-          visa: 'Visa',
-          permiso_trabajo: 'Permiso de trabajo',
-        };
-
         for (const doc of documentsRes.data) {
           const daysRemaining = calculateDaysRemaining(doc.expiry_date);
           if (daysRemaining !== null && daysRemaining >= -30 && daysRemaining <= 60) {
             const isExpired = daysRemaining < 0;
-            const label = docTypeLabels[doc.document_type] || doc.document_name || 'Documento';
+            const label = doc.document_name || employeeDocumentTypeLabels[doc.document_type as EmployeeDocumentType] || 'Documento';
 
             alerts.push({
               id: `doc-${doc.id}`,
