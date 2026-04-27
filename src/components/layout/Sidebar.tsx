@@ -172,6 +172,7 @@ const personnelNavItems: NavItem[] = [
 const seleccionNavItems: NavItem[] = [
   { label: 'Requisiciones', icon: <ClipboardList className="w-5 h-5" />, href: '/requisiciones', moduleCode: 'requisiciones' },
   { label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion', moduleCode: 'seleccion' },
+  { label: 'Analítica Selección', icon: <BarChart3 className="w-5 h-5" />, href: '/seleccion/analitica', moduleCode: 'seleccion' },
 ];
 
 const timeManagementNavItems: NavItem[] = [
