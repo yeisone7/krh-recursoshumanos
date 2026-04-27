@@ -530,7 +530,7 @@ export default function Prestamos() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Tipo de Préstamo</Label>
                 <Select value={formData.loan_type} onValueChange={v => setFormData(p => ({ ...p, loan_type: v }))}>
@@ -547,7 +547,7 @@ export default function Prestamos() {
                 <Input type="date" value={formData.start_date} onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))} />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label>Monto Total *</Label>
                 <Input type="number" min="0" value={formData.total_amount} onChange={e => setFormData(p => ({ ...p, total_amount: e.target.value }))} placeholder="0" />
@@ -566,8 +566,8 @@ export default function Prestamos() {
             {Number(formData.total_amount) > 0 && Number(formData.installments) > 0 && (
               <Card className="bg-muted/50">
                 <CardContent className="pt-3 pb-2 text-sm space-y-1">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Total con intereses:</span><span className="font-medium">{formatCurrency(Number(formData.total_amount) * (1 + Number(formData.interest_rate) / 100))}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Valor por cuota:</span><span className="font-medium">{formatCurrency((Number(formData.total_amount) * (1 + Number(formData.interest_rate) / 100)) / Number(formData.installments))}</span></div>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:justify-between"><span className="text-muted-foreground">Total con intereses:</span><span className="font-medium">{formatCurrency(Number(formData.total_amount) * (1 + Number(formData.interest_rate) / 100))}</span></div>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:justify-between"><span className="text-muted-foreground">Valor por cuota:</span><span className="font-medium">{formatCurrency((Number(formData.total_amount) * (1 + Number(formData.interest_rate) / 100)) / Number(formData.installments))}</span></div>
                 </CardContent>
               </Card>
             )}
@@ -581,7 +581,7 @@ export default function Prestamos() {
               <Textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2} />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
             <Button variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>Cancelar</Button>
             <Button onClick={handleSave} disabled={!formData.employee_id || !formData.total_amount || !formData.installments}>
               {editing ? 'Actualizar' : 'Registrar'}
