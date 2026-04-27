@@ -96,7 +96,7 @@ function bucketDays(days: number) {
 }
 
 function isWithinRange(date: Date | null, startDate: string, endDate: string) {
-  if (!date) return false;
+  if (!date) return !startDate && !endDate;
   if (startDate && date < new Date(`${startDate}T00:00:00`)) return false;
   if (endDate && date > new Date(`${endDate}T23:59:59`)) return false;
   return true;
