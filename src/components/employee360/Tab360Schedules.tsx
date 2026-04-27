@@ -85,7 +85,7 @@ export function Tab360Schedules({ timeConfigs, isLoading }: Tab360SchedulesProps
           {activeConfig ? (
             <div className="space-y-4">
               {/* Mode Badge */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                 <span className="text-sm text-muted-foreground">Modalidad:</span>
                 <Badge 
                   variant={activeConfig.mode === 'administrative' ? 'default' : 'secondary'}
@@ -150,7 +150,7 @@ export function Tab360Schedules({ timeConfigs, isLoading }: Tab360SchedulesProps
               )}
 
               {/* Dates */}
-              <div className="flex items-center gap-4 text-sm">
+              <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:gap-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
                   <span className="text-muted-foreground">Desde:</span>
@@ -197,6 +197,7 @@ export function Tab360Schedules({ timeConfigs, isLoading }: Tab360SchedulesProps
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -231,6 +232,7 @@ export function Tab360Schedules({ timeConfigs, isLoading }: Tab360SchedulesProps
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       )}
