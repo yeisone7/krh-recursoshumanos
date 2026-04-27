@@ -349,27 +349,27 @@ export default function Permisos() {
                 {typeConfigs.map((config) => (
                   <div
                     key={config.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                    className="flex flex-col gap-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors sm:flex-row sm:items-center sm:justify-between"
                     onClick={() => handleConfigClick(config)}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <div 
-                        className="w-4 h-4 rounded-full"
+                        className="w-4 h-4 shrink-0 rounded-full"
                         style={{ backgroundColor: config.color }}
                       />
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-medium">{config.display_name}</p>
                         <p className="text-sm text-muted-foreground">
                           {config.description || 'Sin descripción'}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right text-sm">
+                    <div className="flex items-start justify-between gap-3 pl-7 sm:items-center sm:pl-0">
+                      <div className="text-left text-sm sm:text-right">
                         <p className="text-muted-foreground">
                           {config.max_days_per_year ? `${config.max_days_per_year} días/año` : 'Sin límite'}
                         </p>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2 sm:justify-end">
                           {config.is_paid && <Badge variant="outline">Remunerado</Badge>}
                           {config.requires_document && <Badge variant="secondary">Doc. requerido</Badge>}
                         </div>
