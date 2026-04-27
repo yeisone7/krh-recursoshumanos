@@ -60,7 +60,10 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-base sm:text-lg">Calendario de Permisos</CardTitle>
           <div className="flex items-center justify-between gap-2 sm:justify-end">
-            <Button variant="outline" size="icon" onClick={handlePrevMonth}>
+            <Button className="hidden sm:inline-flex" variant="outline" size="icon" onClick={handlePrevMonth}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button className="sm:hidden" variant="outline" size="icon" onClick={handlePrevWeek}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="hidden min-w-0 flex-1 text-center text-sm font-medium capitalize sm:block sm:min-w-[200px] sm:text-lg">
@@ -69,15 +72,72 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
             <span className="min-w-0 flex-1 text-center text-sm font-medium sm:hidden">
               {format(weekStart, 'd MMM', { locale: es })} - {format(weekEnd, 'd MMM', { locale: es })}
             </span>
-            <Button variant="outline" size="icon" onClick={handleNextMonth}>
+            <Button className="hidden sm:inline-flex" variant="outline" size="icon" onClick={handleNextMonth}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button className="sm:hidden" variant="outline" size="icon" onClick={handleNextWeek}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+        <div className="space-y-2 sm:hidden">
+          {weekDaysList.map(day => {
+            const dayRequests = getRequestsForDay(day);
+            const isToday = isSameDay(day, new Date());
+
+            return (
+              <div
+                key={day.toISOString()}
+                className={cn(
+                  'rounded-md border p-3',
+                  isToday && 'ring-2 ring-primary'
+                )}
+              >
+                <div className={cn('mb-2 flex items-center justify-between text-sm font-medium', isToday && 'text-primary')}>
+                  <span className="capitalize">{format(day, 'EEE d', { locale: es })}</span>
+                  <Badge variant="outline">{dayRequests.length}</Badge>
+                </div>
+                <div className="space-y-2">
+                  {dayRequests.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sin permisos</p>
+                  ) : (
+                    dayRequests.map(request => {
+                      const color = getTypeColor(request.leave_type);
+                      const employeeName = request.employees_v2
+                        ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}`
+                        : 'Empleado';
+
+                      return (
+                        <button
+                          key={request.id}
+                          type="button"
+                          className={cn(
+                            'w-full rounded-md border px-3 py-2 text-left text-xs transition-opacity hover:opacity-80',
+                            request.status === 'pendiente' && 'border-dashed opacity-70'
+                          )}
+                          style={{
+                            backgroundColor: `${color}20`,
+                            borderColor: color,
+                            color,
+                          }}
+                          onClick={() => onSelectRequest?.(request)}
+                        >
+                          <span className="block font-medium">{employeeName}</span>
+                          <span className="block opacity-90">{LEAVE_TYPE_LABELS[request.leave_type]} • {request.total_days} días</span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
         {/* Week Days Header */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="mb-2 hidden grid-cols-7 gap-1 sm:grid">
           {weekDays.map(day => (
             <div key={day} className="py-2 text-center text-xs font-medium text-muted-foreground sm:text-sm">
               {day}
@@ -86,7 +146,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="hidden grid-cols-7 gap-1 sm:grid">
           {/* Empty cells for days before month start */}
           {emptyDays.map((_, index) => (
             <div key={`empty-${index}`} className="h-16 rounded-md bg-muted/30 sm:h-24" />
