@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import {
   Plus, Search, Trash2, Gavel, AlertTriangle, Pencil,
-  DollarSign, PauseCircle, PlayCircle, CheckCircle
+  DollarSign, PauseCircle, PlayCircle, CheckCircle, Accessibility
 } from 'lucide-react';
 import { useDeductions, useCreateDeduction, useUpdateDeduction, useDeleteDeduction, type EmployeeDeduction } from '@/hooks/useDeductions';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -54,6 +54,9 @@ export default function Descuentos() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<EmployeeDeduction | null>(null);
+  const [accessibleMode, setAccessibleMode] = useState(false);
+  const textSize = accessibleMode ? 'text-base' : 'text-sm';
+  const helperTextSize = accessibleMode ? 'text-sm' : 'text-xs';
 
   const [formData, setFormData] = useState({
     employee_id: '',
@@ -145,9 +148,22 @@ export default function Descuentos() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Descuentos</h1>
-        <p className="text-muted-foreground">Gestión de descuentos judiciales, por responsabilidad y otros</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Descuentos</h1>
+          <p className="text-muted-foreground">Gestión de descuentos judiciales, por responsabilidad y otros</p>
+        </div>
+        <Button
+          type="button"
+          variant={accessibleMode ? 'default' : 'outline'}
+          className="w-full sm:w-auto"
+          aria-pressed={accessibleMode}
+          aria-label={accessibleMode ? 'Desactivar modo accesible' : 'Activar modo accesible'}
+          onClick={() => setAccessibleMode(prev => !prev)}
+        >
+          <Accessibility className="w-4 h-4 mr-2" aria-hidden="true" />
+          Modo accesible
+        </Button>
       </div>
 
       {/* KPIs */}
