@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { employeeDocumentTypeLabels, type EmployeeDocumentType } from '@/types/employee';
 
 export interface UnifiedAlert {
   id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'cesantias' | 'inventory_low_stock' | 'dotation_renewal';
+  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'cesantias' | 'inventory_low_stock' | 'dotation_renewal' | 'document';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
@@ -16,6 +17,7 @@ export interface UnifiedAlert {
   // For navigation
   navigateTo?: string;
   employeeId?: string;
+  status?: 'pendiente' | 'notificada' | 'cerrada';
 }
 
 function calculateDaysRemaining(dateStr: string | null): number | null {
