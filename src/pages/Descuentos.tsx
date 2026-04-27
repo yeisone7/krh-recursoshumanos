@@ -151,7 +151,7 @@ export default function Descuentos() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center gap-2">
@@ -201,13 +201,13 @@ export default function Descuentos() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-4 pb-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
+            <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Buscar por empleado o descripción..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
             </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full lg:w-[180px]">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -217,7 +217,7 @@ export default function Descuentos() {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={openCreate}>
+            <Button onClick={openCreate} className="sm:col-span-2 lg:col-span-1 lg:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Descuento
             </Button>
@@ -226,7 +226,7 @@ export default function Descuentos() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -309,6 +309,83 @@ export default function Descuentos() {
         </CardContent>
       </Card>
 
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Cargando...</CardContent></Card>
+        ) : filtered.length === 0 ? (
+          <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No se encontraron descuentos</CardContent></Card>
+        ) : filtered.map(d => (
+          <Card key={d.id}>
+            <CardContent className="space-y-4 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{d.employees_v2?.first_name} {d.employees_v2?.last_name}</p>
+                  <p className="text-xs text-muted-foreground">{d.employees_v2?.document_number}</p>
+                </div>
+                <Badge className={`shrink-0 text-xs border ${STATUS_COLORS[d.status]}`} variant="outline">
+                  {STATUS_LABELS[d.status]}
+                </Badge>
+              </div>
+
+              <div className="space-y-2">
+                <Badge variant="outline" className="text-xs">{DEDUCTION_TYPE_LABELS[d.deduction_type] || d.deduction_type}</Badge>
+                <p className="text-sm text-foreground">{d.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="rounded-md bg-muted/50 p-2">
+                  <p className="text-xs text-muted-foreground">Monto</p>
+                  <p className="font-medium">
+                    {d.is_percentage ? `${d.percentage_value}%` : formatCurrency(Number(d.amount))}
+                    {d.is_recurring && <span className="ml-1 text-xs text-muted-foreground">/mes</span>}
+                  </p>
+                </div>
+                <div className="rounded-md bg-muted/50 p-2">
+                  <p className="text-xs text-muted-foreground">Entidad</p>
+                  <p className="truncate font-medium">{d.entity_name || '—'}</p>
+                </div>
+                <div className="col-span-2 rounded-md bg-muted/50 p-2">
+                  <p className="text-xs text-muted-foreground">Referencia</p>
+                  <p className="truncate font-medium">{d.reference_number || '—'}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-2">
+                {d.status !== 'finalizado' && d.status !== 'cancelado' && (
+                  <Button size="sm" variant="outline" onClick={() => toggleStatus(d)}>
+                    {d.status === 'activo' ? <PauseCircle className="w-4 h-4 mr-1 text-warning" /> : <PlayCircle className="w-4 h-4 mr-1 text-primary" />}
+                    {d.status === 'activo' ? 'Pausar' : 'Reactivar'}
+                  </Button>
+                )}
+                {d.status === 'activo' && (
+                  <Button size="sm" variant="outline" onClick={() => finalize(d)}>
+                    <CheckCircle className="w-4 h-4 mr-1 text-primary" /> Finalizar
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" onClick={() => openEdit(d)}>
+                  <Pencil className="w-4 h-4 mr-1" /> Editar
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="text-destructive"><Trash2 className="w-4 h-4 mr-1" /> Eliminar</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar descuento?</AlertDialogTitle>
+                      <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteDeduction.mutate(d.id)}>Eliminar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       {/* Form Dialog */}
       <Dialog open={showForm} onOpenChange={o => { if (!o) { setShowForm(false); resetForm(); } }}>
         <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
@@ -327,7 +404,7 @@ export default function Descuentos() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Tipo de Descuento *</Label>
                 <Select value={formData.deduction_type} onValueChange={v => setFormData(p => ({ ...p, deduction_type: v }))}>
@@ -352,7 +429,7 @@ export default function Descuentos() {
               <Switch checked={formData.is_percentage} onCheckedChange={v => setFormData(p => ({ ...p, is_percentage: v }))} />
               <Label>Es porcentaje del salario</Label>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>{formData.is_percentage ? 'Porcentaje (%)' : 'Monto Fijo ($)'} *</Label>
                 <Input type="number" min="0" step="0.01" value={formData.is_percentage ? formData.percentage_value : formData.amount} onChange={e => {
@@ -369,7 +446,7 @@ export default function Descuentos() {
               <Switch checked={formData.is_recurring} onCheckedChange={v => setFormData(p => ({ ...p, is_recurring: v }))} />
               <Label>Descuento recurrente (cada período de nómina)</Label>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Entidad</Label>
                 <Input value={formData.entity_name} onChange={e => setFormData(p => ({ ...p, entity_name: e.target.value }))} placeholder="Ej: Juzgado 3° Civil" />
@@ -384,7 +461,7 @@ export default function Descuentos() {
               <Textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2} />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
             <Button variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>Cancelar</Button>
             <Button onClick={handleSave} disabled={!formData.employee_id || !formData.description || (!formData.amount && !formData.percentage_value)}>
               {editing ? 'Actualizar' : 'Registrar'}
