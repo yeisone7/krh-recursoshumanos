@@ -377,6 +377,9 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isContractFormOpen, setIsContractFormOpen] = useState(false);
+  const [openDocumentFolders, setOpenDocumentFolders] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(employeeDocumentFolderOrder.map((folder) => [folder, true]))
+  );
   const [contractPreselect, setContractPreselect] = useState<{
     id: string;
     name: string;
@@ -460,7 +463,21 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
     }
   };
 
+  const handleOpenDocument = async (doc: EmployeeDocument) => {
+    try {
+      await openEmployeeDocument(doc);
+    } catch {
+      toast({ title: 'Error al abrir documento', variant: 'destructive' });
+    }
+  };
+
   const employeeFullName = employee ? getEmployeeFullName(employee) : '';
+  const documentsByFolder = employeeDocumentFolderOrder.reduce((acc, folder) => ({ ...acc, [folder]: [] as EmployeeDocument[] }), {} as Record<string, EmployeeDocument[]>);
+  employee?.documents?.forEach((doc) => {
+    const folder = normalizeEmployeeDocumentFolder(doc.document_type);
+    if (!documentsByFolder[folder]) documentsByFolder[folder] = [];
+    documentsByFolder[folder].push(doc);
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
