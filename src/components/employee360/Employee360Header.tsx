@@ -43,30 +43,30 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card-elevated p-6"
+        className="card-elevated p-4 sm:p-6"
       >
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           {/* Left section: Back button + Avatar + Info */}
-          <div className="flex items-start gap-4">
+          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/empleados')}
-              className="shrink-0 -ml-2"
+              className="shrink-0 self-start sm:-ml-2"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
 
-            <Avatar className="w-20 h-20 shrink-0">
+            <Avatar className="h-16 w-16 shrink-0 sm:h-20 sm:w-20">
               <AvatarImage src={employee.avatar_url || undefined} alt={fullName} />
               <AvatarFallback className="text-2xl font-semibold bg-primary text-primary-foreground">
                 {initials}
               </AvatarFallback>
             </Avatar>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-display font-bold text-foreground">
+            <div className="min-w-0 space-y-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <h1 className="break-words text-xl font-display font-bold text-foreground sm:text-2xl">
                   {fullName}
                 </h1>
                 <Badge 
@@ -81,7 +81,7 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
                 </Badge>
               </div>
 
-              <p className="text-lg text-muted-foreground">
+              <p className="break-words text-base text-muted-foreground sm:text-lg">
                 {employee.work_info?.position_name || 'Sin cargo asignado'}
               </p>
 
@@ -89,13 +89,13 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
                 {operationCenter?.name && (
                   <div className="flex items-center gap-1.5">
                     <Building2 className="w-4 h-4" />
-                    <span>{operationCenter.name}</span>
+                    <span className="break-words">{operationCenter.name}</span>
                   </div>
                 )}
                 {employee.areas?.name && (
                   <div className="flex items-center gap-1.5">
                     <Briefcase className="w-4 h-4" />
-                    <span>{employee.areas.name}</span>
+                    <span className="break-words">{employee.areas.name}</span>
                   </div>
                 )}
                 {hireDate && (
@@ -119,7 +119,7 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
                     className="flex items-center gap-1.5 text-primary hover:underline"
                   >
                     <Mail className="w-4 h-4" />
-                    <span>{employee.contact.email}</span>
+                    <span className="break-all">{employee.contact.email}</span>
                   </a>
                 )}
                 {employee.contact?.mobile && (
@@ -142,12 +142,13 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
           </div>
 
           {/* Right section: Actions */}
-          <div className="flex items-center gap-2 lg:shrink-0">
-            <Button variant="outline" onClick={() => setIsEditOpen(true)}>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center lg:shrink-0">
+            <Button className="w-full sm:w-auto" variant="outline" onClick={() => setIsEditOpen(true)}>
               <Edit className="w-4 h-4 mr-2" />
               Editar
             </Button>
             <Button 
+              className="w-full sm:w-auto"
               variant="outline" 
               onClick={() => navigate(`/empleados/${employee.id}/360?tab=documents`)}
             >

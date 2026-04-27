@@ -428,9 +428,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
-        <DialogHeader className="px-6 pt-6 pb-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shrink-0">
-          <DialogTitle className="font-display text-xl flex items-center gap-2 text-primary-foreground">
+        <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-4xl flex-col overflow-hidden p-0">
+        <DialogHeader className="shrink-0 bg-gradient-to-r from-primary to-primary/80 px-4 pb-4 pt-6 text-primary-foreground sm:px-6">
+          <DialogTitle className="flex items-center gap-2 pr-6 font-display text-lg text-primary-foreground sm:text-xl">
             <Building className="w-5 h-5" />
             {isEditMode ? 'Editar Empleado' : 'Nuevo Empleado'}
           </DialogTitle>
@@ -445,8 +445,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         <Form {...form}>
           <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
-              <div className="px-6 pt-2">
-                <TabsList className="w-full h-auto flex-wrap gap-1 bg-primary/5 border border-primary/10 p-1.5 rounded-lg">
+              <div className="px-4 pt-2 sm:px-6">
+                <TabsList className="grid h-auto w-full grid-cols-4 gap-1 rounded-lg border border-primary/10 bg-primary/5 p-1.5 sm:flex sm:flex-wrap">
                   {tabItems.map((tab) => {
                     const errorCount = getTabErrorCount(tab.value);
                     const hasErrors = tabsWithErrors.has(tab.value);
@@ -456,7 +456,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         key={tab.value}
                         value={tab.value}
                         className={cn(
-                          "flex-1 min-w-[90px] gap-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all relative",
+                          "min-h-9 gap-1.5 px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all relative sm:min-w-[90px] sm:flex-1",
                           hasErrors && "text-destructive data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground"
                         )}
                       >
@@ -473,7 +473,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 </TabsList>
               </div>
 
-              <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 scrollbar-themed" style={{ maxHeight: 'calc(90vh - 260px)' }}>
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 scrollbar-themed sm:px-6" style={{ maxHeight: 'calc(90vh - 260px)' }}>
                 {/* A. IDENTITY TAB */}
                 <TabsContent value="identity" className="mt-0 space-y-6">
                   {/* Photo Section */}
@@ -1347,7 +1347,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 }
                               }}
                               value={field.value}
-                              className="grid grid-cols-2 gap-4"
+                              className="grid grid-cols-1 gap-4 sm:grid-cols-2"
                             >
                               <label
                                 className={cn(
@@ -1861,14 +1861,14 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
               </div>
 
               {/* Footer */}
-              <div className="flex justify-end gap-3 p-6 border-t border-border bg-muted/30">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <div className="flex flex-col-reverse gap-3 border-t border-border bg-muted/30 p-4 sm:flex-row sm:justify-end sm:p-6">
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={createEmployee.isPending || updateEmployee.isPending}
-                  className="gradient-primary text-primary-foreground shadow-md"
+                  className="gradient-primary w-full text-primary-foreground shadow-md sm:w-auto"
                 >
                   {createEmployee.isPending || updateEmployee.isPending ? 'Guardando...' : (isEditMode ? 'Guardar Cambios' : 'Crear Empleado')}
                 </Button>

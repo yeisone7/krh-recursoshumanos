@@ -72,7 +72,7 @@ function KPICard({ icon, label, value, sublabel, variant = 'default', delay = 0 
 export function Employee360KPIs({ kpis, isLoading }: Employee360KPIsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="card-elevated p-4">
             <Skeleton className="h-8 w-16 mb-2" />
@@ -96,7 +96,7 @@ export function Employee360KPIs({ kpis, isLoading }: Employee360KPIsProps) {
     : null;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
       <KPICard
         icon={<Calendar className="w-6 h-6" />}
         label="Antigüedad"
