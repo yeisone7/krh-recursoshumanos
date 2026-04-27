@@ -57,21 +57,22 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
               <ArrowLeft className="w-5 h-5" />
             </Button>
 
-            <Avatar className="h-16 w-16 shrink-0 sm:h-20 sm:w-20">
+            <Avatar className="h-28 w-28 shrink-0 self-center sm:h-20 sm:w-20 sm:self-start">
               <AvatarImage src={employee.avatar_url || undefined} alt={fullName} />
               <AvatarFallback className="text-2xl font-semibold bg-primary text-primary-foreground">
                 {initials}
               </AvatarFallback>
             </Avatar>
 
-            <div className="min-w-0 space-y-2">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                <h1 className="break-words text-xl font-display font-bold text-foreground sm:text-2xl">
+            <div className="min-w-0 space-y-3 sm:space-y-2">
+              <div className="space-y-2 sm:flex sm:items-center sm:gap-3 sm:space-y-0">
+                <h1 className="break-words text-2xl font-display font-bold text-foreground sm:text-2xl">
                   {fullName}
                 </h1>
                 <Badge 
                   variant="outline" 
                   className={cn(
+                    'hidden sm:inline-flex',
                     employee.is_active 
                       ? 'bg-success-light text-success border-success/20'
                       : 'bg-muted text-muted-foreground'
@@ -81,26 +82,39 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
                 </Badge>
               </div>
 
-              <p className="break-words text-base text-muted-foreground sm:text-lg">
-                {employee.work_info?.position_name || 'Sin cargo asignado'}
-              </p>
+              <div className="flex min-w-0 items-center justify-between gap-3 sm:block">
+                <p className="min-w-0 break-words text-lg text-muted-foreground sm:text-lg">
+                  {employee.work_info?.position_name || 'Sin cargo asignado'}
+                </p>
+                <Badge 
+                  variant="outline" 
+                  className={cn(
+                    'shrink-0 sm:hidden',
+                    employee.is_active 
+                      ? 'bg-success-light text-success border-success/20'
+                      : 'bg-muted text-muted-foreground'
+                  )}
+                >
+                  {employee.is_active ? 'Activo' : 'Inactivo'}
+                </Badge>
+              </div>
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 {operationCenter?.name && (
-                  <div className="flex items-center gap-1.5">
-                    <Building2 className="w-4 h-4" />
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <Building2 className="w-4 h-4 shrink-0" />
                     <span className="break-words">{operationCenter.name}</span>
                   </div>
                 )}
                 {employee.areas?.name && (
-                  <div className="flex items-center gap-1.5">
-                    <Briefcase className="w-4 h-4" />
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <Briefcase className="w-4 h-4 shrink-0" />
                     <span className="break-words">{employee.areas.name}</span>
                   </div>
                 )}
                 {hireDate && (
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" />
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <Calendar className="w-4 h-4 shrink-0" />
                     <span>Desde {hireDate}</span>
                   </div>
                 )}
@@ -116,24 +130,24 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
                 {employee.contact?.email && (
                   <a 
                     href={`mailto:${employee.contact.email}`}
-                    className="flex items-center gap-1.5 text-primary hover:underline"
+                    className="flex min-w-0 items-center gap-1.5 text-primary hover:underline"
                   >
-                    <Mail className="w-4 h-4" />
+                    <Mail className="w-4 h-4 shrink-0" />
                     <span className="break-all">{employee.contact.email}</span>
                   </a>
                 )}
                 {employee.contact?.mobile && (
                   <a 
                     href={`tel:${employee.contact.mobile}`}
-                    className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+                    className="flex min-w-0 items-center gap-1.5 text-muted-foreground hover:text-foreground"
                   >
-                    <Phone className="w-4 h-4" />
+                    <Phone className="w-4 h-4 shrink-0" />
                     <span>{employee.contact.mobile}</span>
                   </a>
                 )}
                 {employee.contact?.residence_city && (
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <MapPin className="w-4 h-4" />
+                  <div className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                    <MapPin className="w-4 h-4 shrink-0" />
                     <span>{employee.contact.residence_city}, {employee.contact.residence_department}</span>
                   </div>
                 )}
