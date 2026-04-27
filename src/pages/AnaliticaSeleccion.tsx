@@ -556,15 +556,50 @@ export default function AnaliticaSeleccion() {
         </div>
       </motion.div>
 
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid gap-3 md:grid-cols-[1.4fr_1fr_1fr]">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <Filter className="h-4 w-4" /> Centro de operación
+              </div>
+              <Select value={centerFilter} onValueChange={setCenterFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos los centros" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los centros</SelectItem>
+                  {centerOptions.map((center) => (
+                    <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <CalendarDays className="h-4 w-4" /> Desde
+              </div>
+              <Input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <CalendarDays className="h-4 w-4" /> Hasta
+              </div>
+              <Input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard title="Requisiciones" value={analytics.kpis.requisitions} detail={`${analytics.kpis.requestedPositions} cupos solicitados`} icon={Briefcase} trend="neutral" />
-        <KpiCard title="Vacantes activas" value={analytics.kpis.activeVacancies} detail={`${analytics.kpis.totalPositions} posiciones publicadas`} icon={Target} trend="up" />
-        <KpiCard title="Candidatos" value={analytics.kpis.candidates} detail={`${numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)} por vacante`} icon={Users} trend="up" />
+        <KpiCard title="Requisiciones activas" value={analytics.kpis.activeRequisitions} detail={`${analytics.kpis.requisitions} requisiciones filtradas`} icon={Briefcase} trend="neutral" />
+        <KpiCard title="Vacantes abiertas" value={analytics.kpis.activeVacancies} detail={`${analytics.kpis.totalPositions} posiciones publicadas`} icon={Target} trend="up" />
+        <KpiCard title="Candidatos en proceso" value={analytics.kpis.inProcessCandidates} detail={`${numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)} por vacante`} icon={Users} trend="up" />
+        <KpiCard title="Tasa de avance" value={`${analytics.kpis.advanceRate}%`} detail="Promedio del embudo aplicado-contratado" icon={TrendingUp} trend={analytics.kpis.advanceRate >= 45 ? 'up' : 'down'} />
+        <KpiCard title="Tiempo prom. cobertura" value={`${analytics.kpis.avgTimeToFill} días`} detail="Promedio de vacantes cerradas" icon={Clock} />
         <KpiCard title="Contratados" value={analytics.kpis.hiredCandidates} detail={`${analytics.kpis.hireRate}% conversión`} icon={UserCheck} trend={analytics.kpis.hireRate >= 15 ? 'up' : 'down'} />
         <KpiCard title="Tasa selección" value={`${analytics.kpis.selectionRate}%`} detail="Seleccionados + contratados" icon={CheckCircle2} />
         <KpiCard title="Tasa descarte" value={`${analytics.kpis.rejectionRate}%`} detail="No seleccionados o retirados" icon={Gauge} />
-        <KpiCard title="Tiempo cierre" value={`${analytics.kpis.avgTimeToFill} días`} detail="Promedio de vacantes cerradas" icon={Clock} />
-        <KpiCard title="Edad vacante" value={`${analytics.kpis.avgOpenDays} días`} detail="Promedio de vacantes abiertas" icon={Activity} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
