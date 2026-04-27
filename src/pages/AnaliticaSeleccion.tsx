@@ -91,6 +91,17 @@ function bucketDays(days: number) {
   return '+30 días';
 }
 
+function periodKey(date: Date, period: 'week' | 'month') {
+  const normalized = period === 'week' ? startOfWeek(date, { weekStartsOn: 1 }) : startOfMonth(date);
+  return format(normalized, 'yyyy-MM-dd');
+}
+
+function periodLabel(date: Date, period: 'week' | 'month') {
+  return period === 'week'
+    ? format(date, "'Sem' d MMM", { locale: es })
+    : format(date, 'MMM yy', { locale: es });
+}
+
 function groupCount<T>(items: T[], getKey: (item: T) => string | null | undefined) {
   return Object.entries(
     items.reduce<Record<string, number>>((acc, item) => {
