@@ -1,0 +1,13 @@
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'certificados_laborales_academicos';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'proceso_seleccion';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'certificados_residencia';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'afiliaciones';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'examenes_ocupacionales';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'carne_vacunas';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'consulta_antecedentes';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'dotacion';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'contratos_otrosi';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'certificados_bancarios';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'documentos_retiro';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'inducciones_cursos';
+ALTER TYPE public.employee_document_type ADD VALUE IF NOT EXISTS 'licencia_cursos';
