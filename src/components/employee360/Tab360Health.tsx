@@ -56,16 +56,16 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
       className="space-y-6"
     >
       <Tabs defaultValue="exams" className="w-full">
-        <TabsList>
-          <TabsTrigger value="exams" className="flex items-center gap-2">
+        <TabsList className="grid h-auto w-full grid-cols-1 gap-1 sm:inline-flex sm:w-auto">
+          <TabsTrigger value="exams" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Stethoscope className="w-4 h-4" />
             Exámenes ({exams.length})
           </TabsTrigger>
-          <TabsTrigger value="certifications" className="flex items-center gap-2">
+          <TabsTrigger value="certifications" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Award className="w-4 h-4" />
             Certificaciones ({certifications.length})
           </TabsTrigger>
-          <TabsTrigger value="vaccinations" className="flex items-center gap-2">
+          <TabsTrigger value="vaccinations" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Syringe className="w-4 h-4" />
             Vacunas ({vaccinations.length})
           </TabsTrigger>
@@ -88,7 +88,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                       <CardContent className="p-4">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                           <div className="space-y-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <Stethoscope className="w-4 h-4 text-primary" />
                               <h4 className="font-medium">
                                 {examTypeLabels[exam.exam_type] || exam.exam_type}
@@ -115,7 +115,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                           </div>
 
                           {exam.next_exam_date && (
-                            <div className="text-right">
+                            <div className="text-left md:text-right">
                               <p className="text-sm text-muted-foreground">Próximo examen</p>
                               <p className="font-medium">
                                 {format(new Date(exam.next_exam_date), "d MMM yyyy", { locale: es })}
@@ -163,7 +163,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                       <CardContent className="p-4">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                           <div className="space-y-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <Award className="w-4 h-4 text-primary" />
                               <h4 className="font-medium">
                                 {certificationTypeLabels[cert.certification_type] || cert.certification_type}
@@ -193,7 +193,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                             )}
                           </div>
 
-                          <div className="text-right space-y-1">
+                          <div className="space-y-1 text-left md:text-right">
                             {cert.issue_date && (
                               <p className="text-sm">
                                 <span className="text-muted-foreground">Emisión: </span>
@@ -243,7 +243,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                     <CardContent className="p-4">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="space-y-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <Syringe className="w-4 h-4 text-primary" />
                             <h4 className="font-medium">
                               {vaccineTypeLabels[vac.vaccine_type] || vac.vaccine_type}
@@ -260,7 +260,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                           )}
                         </div>
 
-                        <div className="text-right space-y-1">
+                        <div className="space-y-1 text-left md:text-right">
                           <p className="text-sm">
                             <span className="text-muted-foreground">Aplicación: </span>
                             {format(new Date(vac.application_date), "d MMM yyyy", { locale: es })}
