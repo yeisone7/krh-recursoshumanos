@@ -239,6 +239,44 @@ export function useUnifiedAlerts() {
         }
       }
 
+      // 4B. Fetch employee document expiry alerts with workflow status
+      const { data: documentAlerts } = await supabase
+        .from('document_expiry_alerts')
+        .select('id, employee_id, document_id, expires_at, status, created_at, employee_documents(document_type, document_name, file_name)')
+        .eq('company_id', currentCompanyId!)
+        .neq('status', 'cerrada');
+
+      if (documentAlerts) {
+        for (const docAlert of documentAlerts as any[]) {
+          const employee = employeeMap.get(docAlert.employee_id);
+          if (!employee) continue;
+
+          const daysRemaining = calculateDaysRemaining(docAlert.expires_at);
+          if (daysRemaining === null || daysRemaining > 30) continue;
+
+          const isExpired = daysRemaining < 0;
+          const doc = docAlert.employee_documents;
+          const docType = doc?.document_type as EmployeeDocumentType | undefined;
+          const docName = doc?.document_name || (docType ? employeeDocumentTypeLabels[docType] : null) || doc?.file_name || 'Documento';
+
+          alerts.push({
+            id: `document-${docAlert.id}`,
+            type: 'document',
+            level: isExpired ? 'critical' : getAlertLevel(daysRemaining),
+            title: isExpired ? 'Documento vencido' : 'Documento por vencer',
+            description: `${docName} ${isExpired ? 'venció hace' : 'vence en'} ${Math.abs(daysRemaining)} días`,
+            daysRemaining,
+            entityName: `${employee.first_name} ${employee.last_name}`,
+            entityId: docAlert.document_id,
+            eventDate: docAlert.expires_at,
+            createdAt: docAlert.created_at,
+            navigateTo: `/empleados/${docAlert.employee_id}/360?tab=documents`,
+            employeeId: employee.id,
+            status: docAlert.status,
+          });
+        }
+      }
+
       // 5. Fetch incapacity alerts
       const { data: incapacities } = await supabase
         .from('employee_incapacities')
