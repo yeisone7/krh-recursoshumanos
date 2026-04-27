@@ -407,13 +407,13 @@ export default function Descuentos() {
       <Dialog open={showForm} onOpenChange={o => { if (!o) { setShowForm(false); resetForm(); } }}>
         <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar Descuento' : 'Nuevo Descuento'}</DialogTitle>
+            <DialogTitle className={accessibleMode ? 'text-xl' : ''}>{editing ? 'Editar Descuento' : 'Nuevo Descuento'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Empleado *</Label>
               <Select value={formData.employee_id} onValueChange={v => setFormData(p => ({ ...p, employee_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
+                <SelectTrigger className={accessibleMode ? 'h-12 text-base' : ''} aria-label="Seleccionar empleado para el descuento"><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
                 <SelectContent>
                   {employees.filter(e => e.is_active).map(e => (
                     <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name} - {e.document_number}</SelectItem>
@@ -425,7 +425,7 @@ export default function Descuentos() {
               <div className="space-y-2">
                 <Label>Tipo de Descuento *</Label>
                 <Select value={formData.deduction_type} onValueChange={v => setFormData(p => ({ ...p, deduction_type: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className={accessibleMode ? 'h-12 text-base' : ''} aria-label="Seleccionar tipo de descuento"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(DEDUCTION_TYPE_LABELS).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
@@ -435,15 +435,15 @@ export default function Descuentos() {
               </div>
               <div className="space-y-2">
                 <Label>Fecha Inicio *</Label>
-                <Input type="date" value={formData.start_date} onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))} />
+                <Input type="date" value={formData.start_date} onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))} className={accessibleMode ? 'h-12 text-base' : ''} />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Descripción *</Label>
-              <Input value={formData.description} onChange={e => setFormData(p => ({ ...p, description: e.target.value }))} placeholder="Ej: Embargo alimentario Juzgado 3° Civil" />
+              <Input value={formData.description} onChange={e => setFormData(p => ({ ...p, description: e.target.value }))} placeholder="Ej: Embargo alimentario Juzgado 3° Civil" className={accessibleMode ? 'h-12 text-base' : ''} />
             </div>
             <div className="flex items-center gap-3">
-              <Switch checked={formData.is_percentage} onCheckedChange={v => setFormData(p => ({ ...p, is_percentage: v }))} />
+              <Switch checked={formData.is_percentage} onCheckedChange={v => setFormData(p => ({ ...p, is_percentage: v }))} aria-label="Indicar si el descuento es porcentaje del salario" />
               <Label>Es porcentaje del salario</Label>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -452,30 +452,30 @@ export default function Descuentos() {
                 <Input type="number" min="0" step="0.01" value={formData.is_percentage ? formData.percentage_value : formData.amount} onChange={e => {
                   if (formData.is_percentage) setFormData(p => ({ ...p, percentage_value: e.target.value, amount: e.target.value }));
                   else setFormData(p => ({ ...p, amount: e.target.value }));
-                }} />
+                }} className={accessibleMode ? 'h-12 text-base' : ''} />
               </div>
               <div className="space-y-2">
                 <Label>Fecha Fin</Label>
-                <Input type="date" value={formData.end_date} onChange={e => setFormData(p => ({ ...p, end_date: e.target.value }))} />
+                <Input type="date" value={formData.end_date} onChange={e => setFormData(p => ({ ...p, end_date: e.target.value }))} className={accessibleMode ? 'h-12 text-base' : ''} />
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Switch checked={formData.is_recurring} onCheckedChange={v => setFormData(p => ({ ...p, is_recurring: v }))} />
+              <Switch checked={formData.is_recurring} onCheckedChange={v => setFormData(p => ({ ...p, is_recurring: v }))} aria-label="Indicar si el descuento es recurrente" />
               <Label>Descuento recurrente (cada período de nómina)</Label>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Entidad</Label>
-                <Input value={formData.entity_name} onChange={e => setFormData(p => ({ ...p, entity_name: e.target.value }))} placeholder="Ej: Juzgado 3° Civil" />
+                <Input value={formData.entity_name} onChange={e => setFormData(p => ({ ...p, entity_name: e.target.value }))} placeholder="Ej: Juzgado 3° Civil" className={accessibleMode ? 'h-12 text-base' : ''} />
               </div>
               <div className="space-y-2">
                 <Label>N° de Referencia</Label>
-                <Input value={formData.reference_number} onChange={e => setFormData(p => ({ ...p, reference_number: e.target.value }))} placeholder="Ej: RAD-2026-001" />
+                <Input value={formData.reference_number} onChange={e => setFormData(p => ({ ...p, reference_number: e.target.value }))} placeholder="Ej: RAD-2026-001" className={accessibleMode ? 'h-12 text-base' : ''} />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Observaciones</Label>
-              <Textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2} />
+              <Textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2} className={accessibleMode ? 'text-base' : ''} />
             </div>
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
