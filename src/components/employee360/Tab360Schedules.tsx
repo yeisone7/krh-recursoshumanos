@@ -112,8 +112,7 @@ export function Tab360Schedules({ timeConfigs, isLoading }: Tab360SchedulesProps
                     <CalendarClock className="w-4 h-4" />
                     {activeConfig.work_schedules.name}
                   </div>
-                  <div className="overflow-x-auto pb-1">
-                  <div className="grid min-w-[520px] grid-cols-4 gap-4 text-sm md:min-w-0">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground">Días:</span>
                       <p className="font-medium">{formatDays(activeConfig.work_schedules.days_of_week)}</p>
@@ -130,7 +129,6 @@ export function Tab360Schedules({ timeConfigs, isLoading }: Tab360SchedulesProps
                       <span className="text-muted-foreground">Descanso:</span>
                       <p className="font-medium">{activeConfig.work_schedules.break_minutes} min</p>
                     </div>
-                  </div>
                   </div>
                 </div>
               )}
@@ -200,7 +198,7 @@ export function Tab360Schedules({ timeConfigs, isLoading }: Tab360SchedulesProps
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-            <Table className="min-w-[640px]">
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Modalidad</TableHead>

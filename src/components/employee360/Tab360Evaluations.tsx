@@ -106,8 +106,7 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
     >
       {/* KPIs Row */}
       {evals.length > 0 && (
-        <div className="overflow-x-auto pb-1">
-        <div className="grid min-w-[640px] grid-cols-4 gap-4 md:min-w-0">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-4 pb-4 px-4">
               <div className="flex items-center gap-3">
@@ -162,7 +161,6 @@ export function Tab360Evaluations({ evaluations, isLoading }: Tab360EvaluationsP
               </div>
             </CardContent>
           </Card>
-        </div>
         </div>
       )}
 
