@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import {
   Plus, Search, Trash2, Gavel, AlertTriangle, Pencil,
-  DollarSign, PauseCircle, PlayCircle, CheckCircle
+  DollarSign, PauseCircle, PlayCircle, CheckCircle, Accessibility
 } from 'lucide-react';
 import { useDeductions, useCreateDeduction, useUpdateDeduction, useDeleteDeduction, type EmployeeDeduction } from '@/hooks/useDeductions';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -54,6 +54,9 @@ export default function Descuentos() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<EmployeeDeduction | null>(null);
+  const [accessibleMode, setAccessibleMode] = useState(false);
+  const textSize = accessibleMode ? 'text-base' : 'text-sm';
+  const helperTextSize = accessibleMode ? 'text-sm' : 'text-xs';
 
   const [formData, setFormData] = useState({
     employee_id: '',
@@ -145,9 +148,22 @@ export default function Descuentos() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Descuentos</h1>
-        <p className="text-muted-foreground">Gestión de descuentos judiciales, por responsabilidad y otros</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Descuentos</h1>
+          <p className="text-muted-foreground">Gestión de descuentos judiciales, por responsabilidad y otros</p>
+        </div>
+        <Button
+          type="button"
+          variant={accessibleMode ? 'default' : 'outline'}
+          className="w-full sm:w-auto"
+          aria-pressed={accessibleMode}
+          aria-label={accessibleMode ? 'Desactivar modo accesible' : 'Activar modo accesible'}
+          onClick={() => setAccessibleMode(prev => !prev)}
+        >
+          <Accessibility className="w-4 h-4 mr-2" aria-hidden="true" />
+          Modo accesible
+        </Button>
       </div>
 
       {/* KPIs */}
@@ -203,11 +219,12 @@ export default function Descuentos() {
         <CardContent className="pt-4 pb-3">
           <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
             <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Buscar por empleado o descripción..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              <Label htmlFor="deductions-search" className="sr-only">Buscar descuentos por empleado o descripción</Label>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              <Input id="deductions-search" aria-label="Buscar descuentos por empleado o descripción" placeholder="Buscar por empleado o descripción..." value={search} onChange={e => setSearch(e.target.value)} className={`pl-9 ${accessibleMode ? 'h-12 text-base' : ''}`} />
             </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full lg:w-[180px]">
+              <SelectTrigger className={`w-full lg:w-[180px] ${accessibleMode ? 'h-12 text-base' : ''}`} aria-label="Filtrar descuentos por tipo">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -217,8 +234,8 @@ export default function Descuentos() {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={openCreate} className="sm:col-span-2 lg:col-span-1 lg:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button onClick={openCreate} className={`sm:col-span-2 lg:col-span-1 lg:w-auto ${accessibleMode ? 'h-12 text-base' : ''}`} aria-label="Crear nuevo descuento">
+              <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
               Nuevo Descuento
             </Button>
           </div>
@@ -315,59 +332,59 @@ export default function Descuentos() {
         ) : filtered.length === 0 ? (
           <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No se encontraron descuentos</CardContent></Card>
         ) : filtered.map(d => (
-          <Card key={d.id}>
+          <Card key={d.id} tabIndex={0} role="article" aria-label={`Descuento de ${d.employees_v2?.first_name || ''} ${d.employees_v2?.last_name || ''}: ${d.description}. Estado ${STATUS_LABELS[d.status]}`} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
             <CardContent className="space-y-4 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{d.employees_v2?.first_name} {d.employees_v2?.last_name}</p>
-                  <p className="text-xs text-muted-foreground">{d.employees_v2?.document_number}</p>
+                  <p className={`truncate font-semibold ${textSize}`}>{d.employees_v2?.first_name} {d.employees_v2?.last_name}</p>
+                  <p className={`${helperTextSize} text-muted-foreground`}>{d.employees_v2?.document_number}</p>
                 </div>
-                <Badge className={`shrink-0 text-xs border ${STATUS_COLORS[d.status]}`} variant="outline">
+                <Badge className={`shrink-0 border ${accessibleMode ? 'text-sm' : 'text-xs'} ${STATUS_COLORS[d.status]}`} variant="outline" aria-label={`Estado ${STATUS_LABELS[d.status]}`}>
                   {STATUS_LABELS[d.status]}
                 </Badge>
               </div>
 
               <div className="space-y-2">
-                <Badge variant="outline" className="text-xs">{DEDUCTION_TYPE_LABELS[d.deduction_type] || d.deduction_type}</Badge>
-                <p className="text-sm text-foreground">{d.description}</p>
+                <Badge variant="outline" className={accessibleMode ? 'text-sm' : 'text-xs'}>{DEDUCTION_TYPE_LABELS[d.deduction_type] || d.deduction_type}</Badge>
+                <p className={`${textSize} text-foreground`}>{d.description}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className={`grid grid-cols-1 gap-2 ${textSize} ${accessibleMode ? '' : 'min-[380px]:grid-cols-2'}`}>
                 <div className="rounded-md bg-muted/50 p-2">
-                  <p className="text-xs text-muted-foreground">Monto</p>
+                  <p className={`${helperTextSize} text-muted-foreground`}>Monto</p>
                   <p className="font-medium">
                     {d.is_percentage ? `${d.percentage_value}%` : formatCurrency(Number(d.amount))}
-                    {d.is_recurring && <span className="ml-1 text-xs text-muted-foreground">/mes</span>}
+                    {d.is_recurring && <span className={`ml-1 ${helperTextSize} text-muted-foreground`}>/mes</span>}
                   </p>
                 </div>
                 <div className="rounded-md bg-muted/50 p-2">
-                  <p className="text-xs text-muted-foreground">Entidad</p>
+                  <p className={`${helperTextSize} text-muted-foreground`}>Entidad</p>
                   <p className="truncate font-medium">{d.entity_name || '—'}</p>
                 </div>
-                <div className="col-span-2 rounded-md bg-muted/50 p-2">
-                  <p className="text-xs text-muted-foreground">Referencia</p>
+                <div className={`${accessibleMode ? '' : 'min-[380px]:col-span-2'} rounded-md bg-muted/50 p-2`}>
+                  <p className={`${helperTextSize} text-muted-foreground`}>Referencia</p>
                   <p className="truncate font-medium">{d.reference_number || '—'}</p>
                 </div>
               </div>
 
               <div className="flex flex-wrap justify-end gap-2">
                 {d.status !== 'finalizado' && d.status !== 'cancelado' && (
-                  <Button size="sm" variant="outline" onClick={() => toggleStatus(d)}>
-                    {d.status === 'activo' ? <PauseCircle className="w-4 h-4 mr-1 text-warning" /> : <PlayCircle className="w-4 h-4 mr-1 text-primary" />}
+                  <Button size="sm" variant="outline" onClick={() => toggleStatus(d)} className={accessibleMode ? 'min-h-11 text-base' : ''} aria-label={`${d.status === 'activo' ? 'Pausar' : 'Reactivar'} descuento de ${d.employees_v2?.first_name || ''} ${d.employees_v2?.last_name || ''}`}>
+                    {d.status === 'activo' ? <PauseCircle className="w-4 h-4 mr-1 text-warning" aria-hidden="true" /> : <PlayCircle className="w-4 h-4 mr-1 text-primary" aria-hidden="true" />}
                     {d.status === 'activo' ? 'Pausar' : 'Reactivar'}
                   </Button>
                 )}
                 {d.status === 'activo' && (
-                  <Button size="sm" variant="outline" onClick={() => finalize(d)}>
-                    <CheckCircle className="w-4 h-4 mr-1 text-primary" /> Finalizar
+                  <Button size="sm" variant="outline" onClick={() => finalize(d)} className={accessibleMode ? 'min-h-11 text-base' : ''} aria-label={`Finalizar descuento de ${d.employees_v2?.first_name || ''} ${d.employees_v2?.last_name || ''}`}>
+                    <CheckCircle className="w-4 h-4 mr-1 text-primary" aria-hidden="true" /> Finalizar
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => openEdit(d)}>
-                  <Pencil className="w-4 h-4 mr-1" /> Editar
+                <Button size="sm" variant="outline" onClick={() => openEdit(d)} className={accessibleMode ? 'min-h-11 text-base' : ''} aria-label={`Editar descuento de ${d.employees_v2?.first_name || ''} ${d.employees_v2?.last_name || ''}`}>
+                  <Pencil className="w-4 h-4 mr-1" aria-hidden="true" /> Editar
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="outline" className="text-destructive"><Trash2 className="w-4 h-4 mr-1" /> Eliminar</Button>
+                    <Button size="sm" variant="outline" className={`text-destructive ${accessibleMode ? 'min-h-11 text-base' : ''}`} aria-label={`Eliminar descuento de ${d.employees_v2?.first_name || ''} ${d.employees_v2?.last_name || ''}`}><Trash2 className="w-4 h-4 mr-1" aria-hidden="true" /> Eliminar</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
@@ -390,13 +407,13 @@ export default function Descuentos() {
       <Dialog open={showForm} onOpenChange={o => { if (!o) { setShowForm(false); resetForm(); } }}>
         <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar Descuento' : 'Nuevo Descuento'}</DialogTitle>
+            <DialogTitle className={accessibleMode ? 'text-xl' : ''}>{editing ? 'Editar Descuento' : 'Nuevo Descuento'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Empleado *</Label>
               <Select value={formData.employee_id} onValueChange={v => setFormData(p => ({ ...p, employee_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
+                <SelectTrigger className={accessibleMode ? 'h-12 text-base' : ''} aria-label="Seleccionar empleado para el descuento"><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
                 <SelectContent>
                   {employees.filter(e => e.is_active).map(e => (
                     <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name} - {e.document_number}</SelectItem>
@@ -408,7 +425,7 @@ export default function Descuentos() {
               <div className="space-y-2">
                 <Label>Tipo de Descuento *</Label>
                 <Select value={formData.deduction_type} onValueChange={v => setFormData(p => ({ ...p, deduction_type: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className={accessibleMode ? 'h-12 text-base' : ''} aria-label="Seleccionar tipo de descuento"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(DEDUCTION_TYPE_LABELS).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
@@ -418,15 +435,15 @@ export default function Descuentos() {
               </div>
               <div className="space-y-2">
                 <Label>Fecha Inicio *</Label>
-                <Input type="date" value={formData.start_date} onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))} />
+                <Input type="date" value={formData.start_date} onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))} className={accessibleMode ? 'h-12 text-base' : ''} />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Descripción *</Label>
-              <Input value={formData.description} onChange={e => setFormData(p => ({ ...p, description: e.target.value }))} placeholder="Ej: Embargo alimentario Juzgado 3° Civil" />
+              <Input value={formData.description} onChange={e => setFormData(p => ({ ...p, description: e.target.value }))} placeholder="Ej: Embargo alimentario Juzgado 3° Civil" className={accessibleMode ? 'h-12 text-base' : ''} />
             </div>
             <div className="flex items-center gap-3">
-              <Switch checked={formData.is_percentage} onCheckedChange={v => setFormData(p => ({ ...p, is_percentage: v }))} />
+              <Switch checked={formData.is_percentage} onCheckedChange={v => setFormData(p => ({ ...p, is_percentage: v }))} aria-label="Indicar si el descuento es porcentaje del salario" />
               <Label>Es porcentaje del salario</Label>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -435,30 +452,30 @@ export default function Descuentos() {
                 <Input type="number" min="0" step="0.01" value={formData.is_percentage ? formData.percentage_value : formData.amount} onChange={e => {
                   if (formData.is_percentage) setFormData(p => ({ ...p, percentage_value: e.target.value, amount: e.target.value }));
                   else setFormData(p => ({ ...p, amount: e.target.value }));
-                }} />
+                }} className={accessibleMode ? 'h-12 text-base' : ''} />
               </div>
               <div className="space-y-2">
                 <Label>Fecha Fin</Label>
-                <Input type="date" value={formData.end_date} onChange={e => setFormData(p => ({ ...p, end_date: e.target.value }))} />
+                <Input type="date" value={formData.end_date} onChange={e => setFormData(p => ({ ...p, end_date: e.target.value }))} className={accessibleMode ? 'h-12 text-base' : ''} />
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Switch checked={formData.is_recurring} onCheckedChange={v => setFormData(p => ({ ...p, is_recurring: v }))} />
+              <Switch checked={formData.is_recurring} onCheckedChange={v => setFormData(p => ({ ...p, is_recurring: v }))} aria-label="Indicar si el descuento es recurrente" />
               <Label>Descuento recurrente (cada período de nómina)</Label>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Entidad</Label>
-                <Input value={formData.entity_name} onChange={e => setFormData(p => ({ ...p, entity_name: e.target.value }))} placeholder="Ej: Juzgado 3° Civil" />
+                <Input value={formData.entity_name} onChange={e => setFormData(p => ({ ...p, entity_name: e.target.value }))} placeholder="Ej: Juzgado 3° Civil" className={accessibleMode ? 'h-12 text-base' : ''} />
               </div>
               <div className="space-y-2">
                 <Label>N° de Referencia</Label>
-                <Input value={formData.reference_number} onChange={e => setFormData(p => ({ ...p, reference_number: e.target.value }))} placeholder="Ej: RAD-2026-001" />
+                <Input value={formData.reference_number} onChange={e => setFormData(p => ({ ...p, reference_number: e.target.value }))} placeholder="Ej: RAD-2026-001" className={accessibleMode ? 'h-12 text-base' : ''} />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Observaciones</Label>
-              <Textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2} />
+              <Textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2} className={accessibleMode ? 'text-base' : ''} />
             </div>
           </div>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
