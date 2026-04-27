@@ -193,7 +193,7 @@ export function DocumentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" />
@@ -212,17 +212,17 @@ export function DocumentFormDialog({
               name="documentType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tipo de Documento *</FormLabel>
+                  <FormLabel>Carpeta *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar tipo" />
+                        <SelectValue placeholder="Seleccionar carpeta" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-background">
-                      {Object.entries(employeeDocumentTypeLabels).map(([value, label]) => (
+                      {employeeDocumentFolderOrder.map((value) => (
                         <SelectItem key={value} value={value}>
-                          {label}
+                          {employeeDocumentTypeLabels[value]}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -232,62 +232,64 @@ export function DocumentFormDialog({
               )}
             />
 
-            {/* Document Name (for "otro" type) */}
-            {watchType === 'otro' && (
-              <FormField
-                control={form.control}
-                name="documentName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre del Documento</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ej: Carta de recomendación" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
             {/* File Upload */}
             <div className="space-y-2">
-              <FormLabel>Archivo *</FormLabel>
-              {selectedFile ? (
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <FileText className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
-                    <span className="text-sm truncate">{selectedFile.name}</span>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">
-                      ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                    </span>
-                  </div>
-                  <Button type="button" variant="ghost" size="icon" onClick={clearFile}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
-                  <input
-                    id="file-input"
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.webp"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  <label htmlFor="file-input" className="cursor-pointer">
-                    <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Clic para seleccionar o arrastrar archivo
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      PDF, JPG, PNG o WebP (máx. 10MB)
-                    </p>
-                  </label>
+              <FormLabel>Archivos *</FormLabel>
+              <div className="border-2 border-dashed rounded-lg p-5 text-center hover:bg-muted/50 transition-colors">
+                <input
+                  id="file-input"
+                  type="file"
+                  multiple
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <label htmlFor="file-input" className="cursor-pointer">
+                  <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    Clic para seleccionar uno o varios archivos
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PDF, JPG, PNG o WebP (máx. 10MB por archivo)
+                  </p>
+                </label>
+              </div>
+              {selectedFiles.length > 0 && (
+                <div className="space-y-2 rounded-lg border bg-muted/30 p-2">
+                  {selectedFiles.map((file, index) => (
+                    <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 rounded-md bg-background p-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                      </div>
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFile(index)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* Expiry Date */}
+            <FormField
+              control={form.control}
+              name="hasExpiry"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start gap-3 rounded-lg border p-3">
+                  <FormControl>
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Este documento tiene vencimiento</FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            {hasExpiry && (
             <FormField
               control={form.control}
               name="expiryDate"
@@ -319,7 +321,7 @@ export function DocumentFormDialog({
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
-                        className="pointer-events-auto"
+                        className={cn('p-3 pointer-events-auto')}
                       />
                     </PopoverContent>
                   </Popover>
@@ -327,6 +329,7 @@ export function DocumentFormDialog({
                 </FormItem>
               )}
             />
+            )}
 
             {/* Observations */}
             <FormField
