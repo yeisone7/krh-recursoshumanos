@@ -132,8 +132,59 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
           </div>
         ) : (
           <div className="space-y-2">
+            <div className="space-y-2 sm:hidden">
+              {mobileWeekDays.map((day) => {
+                const dayRequests = getRequestsForDay(day);
+                const isCurrentDay = isToday(day);
+
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className={cn(
+                      'rounded-md border p-3 transition-colors',
+                      isCurrentDay && 'ring-2 ring-primary'
+                    )}
+                  >
+                    <div className={cn('mb-2 flex items-center justify-between text-sm font-medium', isCurrentDay && 'text-primary')}>
+                      <span className="capitalize">{format(day, 'EEE d', { locale: es })}</span>
+                      <Badge variant="outline">{dayRequests.length}</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {dayRequests.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Sin vacaciones</p>
+                      ) : (
+                        dayRequests.map((request) => {
+                          const colors = employeeColorMap.get(request.employee_id) || EMPLOYEE_COLORS[0];
+                          const employeeName = request.employee
+                            ? `${request.employee.first_name} ${request.employee.last_name}`
+                            : 'Empleado';
+
+                          return (
+                            <button
+                              key={request.id}
+                              onClick={() => onRequestClick?.(request)}
+                              className={cn(
+                                'w-full rounded-md px-3 py-2 text-left text-xs font-medium transition-opacity hover:opacity-80',
+                                colors.bg,
+                                colors.text
+                              )}
+                            >
+                              <span className="block">{employeeName}</span>
+                              <span className="block font-normal opacity-90">
+                                {request.business_days} días hábiles • {request.status}
+                              </span>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             {/* Week days header */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="hidden grid-cols-7 gap-1 sm:grid">
               {weekDays.map((day) => (
                 <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
                   {day}
@@ -142,7 +193,7 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="hidden grid-cols-7 gap-1 sm:grid">
               {calendarDays.map((day) => {
                 const dayRequests = getRequestsForDay(day);
                 const isCurrentMonth = isSameMonth(day, currentDate);
