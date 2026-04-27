@@ -1072,7 +1072,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                               onClick={() => setOpenDocumentFolders((current) => ({ ...current, [folder]: !isOpen }))}
                             >
                               {isOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
-                              <Folder className="h-4 w-4 shrink-0 text-primary" />
+                              <Folder className="h-4 w-4 shrink-0 text-warning" />
                               <span className="min-w-0 flex-1 truncate text-sm font-medium">{employeeDocumentTypeLabels[folder]}</span>
                               <Badge variant="secondary" className="h-5 text-[10px]">{docs.length}</Badge>
                             </button>
