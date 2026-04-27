@@ -468,7 +468,7 @@
 }
 
 @media (display-mode: standalone) {
-  #app-launch-screen {
+  body.app-standalone:not(.app-ready) #app-launch-screen {
     display: grid;
   }
 }
