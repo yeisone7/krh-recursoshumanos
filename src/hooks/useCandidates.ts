@@ -34,7 +34,7 @@ export function useCandidates(vacancyId?: string) {
         .from('candidates')
         .select(`
           *,
-          vacancies!inner(id, position_title, company_id, operation_centers(name)),
+          vacancies!inner(id, position_title, company_id, operation_center_id, operation_centers(id, name)),
           selection_steps(*)
         `)
         .eq('vacancies.company_id', currentCompanyId!)
