@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { format, subMonths, subWeeks, startOfMonth, startOfWeek, differenceInCalendarDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -29,8 +29,10 @@ import {
   Activity,
   BarChart3,
   Briefcase,
+  CalendarDays,
   CheckCircle2,
   Clock,
+  Filter,
   Gauge,
   Target,
   TrendingDown,
@@ -43,6 +45,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useRequisitions } from '@/hooks/useRequisitions';
 import { useVacancies } from '@/hooks/useVacancies';
@@ -89,6 +93,17 @@ function bucketDays(days: number) {
   if (days <= 15) return '8-15 días';
   if (days <= 30) return '16-30 días';
   return '+30 días';
+}
+
+function isWithinRange(date: Date | null, startDate: string, endDate: string) {
+  if (!date) return !startDate && !endDate;
+  if (startDate && date < new Date(`${startDate}T00:00:00`)) return false;
+  if (endDate && date > new Date(`${endDate}T23:59:59`)) return false;
+  return true;
+}
+
+function getCandidateCenterId(candidate: any) {
+  return candidate.vacancies?.operation_center_id || candidate.vacancies?.operation_centers?.id || null;
 }
 
 function periodKey(date: Date, period: 'week' | 'month') {
@@ -186,10 +201,45 @@ export default function AnaliticaSeleccion() {
   const { data: vacancies = [], isLoading: loadingVacancies } = useVacancies();
   const { data: candidates = [], isLoading: loadingCandidates } = useCandidates();
   const { data: requisitions = [], isLoading: loadingRequisitions } = useRequisitions();
+  const [centerFilter, setCenterFilter] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const isLoading = loadingVacancies || loadingCandidates || loadingRequisitions;
 
+  const centerOptions = useMemo(() => {
+    const centers = new Map<string, string>();
+    vacancies.forEach((item: any) => {
+      if (item.operation_center_id && item.operation_centers?.name) centers.set(item.operation_center_id, item.operation_centers.name);
+    });
+    requisitions.forEach((item: any) => {
+      if (item.operation_center_id && item.operation_centers?.name) centers.set(item.operation_center_id, item.operation_centers.name);
+    });
+    return Array.from(centers.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [vacancies, requisitions]);
+
+  const filteredRequisitions = useMemo(() => requisitions.filter((item: any) => {
+    const matchesCenter = centerFilter === 'all' || item.operation_center_id === centerFilter;
+    const matchesDate = isWithinRange(asDate(item.fecha_requisicion || item.created_at), startDate, endDate);
+    return matchesCenter && matchesDate;
+  }), [requisitions, centerFilter, startDate, endDate]);
+
+  const filteredVacancies = useMemo(() => vacancies.filter((item: any) => {
+    const matchesCenter = centerFilter === 'all' || item.operation_center_id === centerFilter;
+    const matchesDate = isWithinRange(asDate(item.open_date || item.created_at), startDate, endDate);
+    return matchesCenter && matchesDate;
+  }), [vacancies, centerFilter, startDate, endDate]);
+
+  const filteredCandidates = useMemo(() => candidates.filter((item: any) => {
+    const matchesCenter = centerFilter === 'all' || getCandidateCenterId(item) === centerFilter;
+    const matchesDate = isWithinRange(asDate(item.application_date || item.created_at), startDate, endDate);
+    return matchesCenter && matchesDate;
+  }), [candidates, centerFilter, startDate, endDate]);
+
   const analytics = useMemo(() => {
+    const vacancies = filteredVacancies;
+    const candidates = filteredCandidates;
+    const requisitions = filteredRequisitions;
     const today = new Date();
     const monthStarts = Array.from({ length: 6 }, (_, index) => startOfMonth(subMonths(today, 5 - index)));
     const monthKey = (date: Date) => format(date, 'yyyy-MM');
@@ -260,6 +310,7 @@ export default function AnaliticaSeleccion() {
     const peakWeeklyOpenings = weeklyCoverageTrend.reduce((peak, item) => item.aperturas > peak.aperturas ? item : peak, weeklyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
     const peakMonthlyCoverage = monthlyCoverageTrend.reduce((peak, item) => item.cobertura > peak.cobertura ? item : peak, monthlyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
 
+    const activeRequisitions = requisitions.filter((item: any) => !['rechazada', 'cancelada', 'cerrada', 'finalizada'].includes(String(item.estado_requisicion || '').toLowerCase()));
     const activeVacancies = vacancies.filter((item: any) => ['open', 'in_process'].includes(item.status));
     const closedVacancies = vacancies.filter((item: any) => item.actual_close_date && item.open_date);
     const hiredCandidates = candidates.filter((item: any) => item.status === 'hired');
@@ -370,6 +421,12 @@ export default function AnaliticaSeleccion() {
       { key: 'oferta', name: 'Oferta' },
       { key: 'contratado', name: 'Contratado' },
     ] as const;
+    const advanceRate = candidates.length
+      ? Math.round(candidates.reduce((sum: number, candidate: any) => {
+          const reachedIndex = recruitmentStages.reduce((max, stage, index) => candidateReachedStage(candidate, stage.key) ? index : max, 0);
+          return sum + (reachedIndex / (recruitmentStages.length - 1)) * 100;
+        }, 0) / candidates.length)
+      : 0;
     const recruitmentFunnel = recruitmentStages.map((stage, index) => {
       const value = candidates.filter((candidate: any) => candidateReachedStage(candidate, stage.key)).length;
       const previous = index === 0 ? value : candidates.filter((candidate: any) => candidateReachedStage(candidate, recruitmentStages[index - 1].key)).length;
@@ -450,12 +507,15 @@ export default function AnaliticaSeleccion() {
       insights,
       kpis: {
         requisitions: requisitions.length,
+        activeRequisitions: activeRequisitions.length,
         requestedPositions,
         vacancies: vacancies.length,
         activeVacancies: activeVacancies.length,
         totalPositions,
         candidates: candidates.length,
+        inProcessCandidates: inProcessCandidates.length,
         hiredCandidates: hiredCandidates.length,
+        advanceRate,
         hireRate,
         selectionRate,
         rejectionRate,
@@ -464,7 +524,7 @@ export default function AnaliticaSeleccion() {
         avgCandidatesPerVacancy,
       },
     };
-  }, [vacancies, candidates, requisitions]);
+  }, [filteredVacancies, filteredCandidates, filteredRequisitions]);
 
   if (isLoading) {
     return (
@@ -496,15 +556,50 @@ export default function AnaliticaSeleccion() {
         </div>
       </motion.div>
 
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid gap-3 md:grid-cols-[1.4fr_1fr_1fr]">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <Filter className="h-4 w-4" /> Centro de operación
+              </div>
+              <Select value={centerFilter} onValueChange={setCenterFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos los centros" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los centros</SelectItem>
+                  {centerOptions.map((center) => (
+                    <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <CalendarDays className="h-4 w-4" /> Desde
+              </div>
+              <Input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <CalendarDays className="h-4 w-4" /> Hasta
+              </div>
+              <Input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard title="Requisiciones" value={analytics.kpis.requisitions} detail={`${analytics.kpis.requestedPositions} cupos solicitados`} icon={Briefcase} trend="neutral" />
-        <KpiCard title="Vacantes activas" value={analytics.kpis.activeVacancies} detail={`${analytics.kpis.totalPositions} posiciones publicadas`} icon={Target} trend="up" />
-        <KpiCard title="Candidatos" value={analytics.kpis.candidates} detail={`${numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)} por vacante`} icon={Users} trend="up" />
+        <KpiCard title="Requisiciones activas" value={analytics.kpis.activeRequisitions} detail={`${analytics.kpis.requisitions} requisiciones filtradas`} icon={Briefcase} trend="neutral" />
+        <KpiCard title="Vacantes abiertas" value={analytics.kpis.activeVacancies} detail={`${analytics.kpis.totalPositions} posiciones publicadas`} icon={Target} trend="up" />
+        <KpiCard title="Candidatos en proceso" value={analytics.kpis.inProcessCandidates} detail={`${numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)} por vacante`} icon={Users} trend="up" />
+        <KpiCard title="Tasa de avance" value={`${analytics.kpis.advanceRate}%`} detail="Promedio del embudo aplicado-contratado" icon={TrendingUp} trend={analytics.kpis.advanceRate >= 45 ? 'up' : 'down'} />
+        <KpiCard title="Tiempo prom. cobertura" value={`${analytics.kpis.avgTimeToFill} días`} detail="Promedio de vacantes cerradas" icon={Clock} />
         <KpiCard title="Contratados" value={analytics.kpis.hiredCandidates} detail={`${analytics.kpis.hireRate}% conversión`} icon={UserCheck} trend={analytics.kpis.hireRate >= 15 ? 'up' : 'down'} />
         <KpiCard title="Tasa selección" value={`${analytics.kpis.selectionRate}%`} detail="Seleccionados + contratados" icon={CheckCircle2} />
         <KpiCard title="Tasa descarte" value={`${analytics.kpis.rejectionRate}%`} detail="No seleccionados o retirados" icon={Gauge} />
-        <KpiCard title="Tiempo cierre" value={`${analytics.kpis.avgTimeToFill} días`} detail="Promedio de vacantes cerradas" icon={Clock} />
-        <KpiCard title="Edad vacante" value={`${analytics.kpis.avgOpenDays} días`} detail="Promedio de vacantes abiertas" icon={Activity} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
