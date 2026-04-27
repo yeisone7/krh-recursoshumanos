@@ -24,6 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -41,16 +42,17 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateDocument } from '@/hooks/useEmployeeHealth';
 import { supabase } from '@/integrations/supabase/client';
-import { employeeDocumentTypeLabels, type EmployeeDocumentType } from '@/types/employee';
+import { employeeDocumentFolderOrder, employeeDocumentTypeLabels } from '@/types/employee';
 
 const formSchema = z.object({
-  documentType: z.enum([
-    'contrato', 'hoja_vida', 'cedula', 'certificado_laboral',
-    'certificado_estudio', 'antecedentes', 'carta_residencia', 'carta_banco', 'otro'
-  ] as const, { required_error: 'Seleccione el tipo de documento' }),
+  documentType: z.enum(employeeDocumentFolderOrder, { required_error: 'Seleccione la carpeta' }),
   documentName: z.string().max(100).optional(),
+  hasExpiry: z.boolean().default(false),
   expiryDate: z.date().optional(),
   observations: z.string().max(500).optional(),
+}).refine((data) => !data.hasExpiry || !!data.expiryDate, {
+  message: 'Seleccione la fecha de vencimiento',
+  path: ['expiryDate'],
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -77,7 +79,7 @@ export function DocumentFormDialog({
 }: DocumentFormDialogProps) {
   const { toast } = useToast();
   const createDocument = useCreateDocument();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const form = useForm<FormData>({
@@ -85,48 +87,58 @@ export function DocumentFormDialog({
     defaultValues: {
       documentType: undefined,
       documentName: '',
+      hasExpiry: false,
       observations: '',
     },
   });
 
-  const watchType = form.watch('documentType');
+  const hasExpiry = form.watch('hasExpiry');
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      toast({
-        title: 'Tipo de archivo no permitido',
-        description: 'Solo se permiten archivos PDF, JPG, PNG o WebP',
-        variant: 'destructive',
-      });
-      return;
-    }
+    const validFiles = files.filter((file) => {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        toast({
+          title: 'Tipo de archivo no permitido',
+          description: `${file.name}: solo se permiten PDF, JPG, PNG o WebP`,
+          variant: 'destructive',
+        });
+        return false;
+      }
 
-    if (file.size > MAX_SIZE) {
-      toast({
-        title: 'Archivo muy grande',
-        description: 'El tamaño máximo permitido es 10MB',
-        variant: 'destructive',
-      });
-      return;
-    }
+      if (file.size > MAX_SIZE) {
+        toast({
+          title: 'Archivo muy grande',
+          description: `${file.name}: el tamaño máximo permitido es 10MB`,
+          variant: 'destructive',
+        });
+        return false;
+      }
 
-    setSelectedFile(file);
+      return true;
+    });
+
+    setSelectedFiles((current) => [...current, ...validFiles]);
+    e.target.value = '';
   };
 
-  const clearFile = () => {
-    setSelectedFile(null);
+  const removeFile = (index: number) => {
+    setSelectedFiles((current) => current.filter((_, fileIndex) => fileIndex !== index));
+  };
+
+  const clearFiles = () => {
+    setSelectedFiles([]);
     const input = document.getElementById('file-input') as HTMLInputElement;
     if (input) input.value = '';
   };
 
   const onSubmit = async (data: FormData) => {
-    if (!selectedFile) {
+    if (selectedFiles.length === 0) {
       toast({
-        title: 'Archivo requerido',
-        description: 'Debe seleccionar un archivo para subir',
+        title: 'Archivos requeridos',
+        description: 'Debe seleccionar al menos un archivo para subir',
         variant: 'destructive',
       });
       return;
@@ -135,43 +147,37 @@ export function DocumentFormDialog({
     try {
       setUploading(true);
 
-      // Upload file to storage - path must start with company_id for RLS policy
-      const fileExt = selectedFile.name.split('.').pop();
-      const sanitizedFileName = selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const filePath = `${companyId}/employees/${employeeId}/${data.documentType}_${Date.now()}_${sanitizedFileName}`;
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, selectedFile);
+      for (const [index, file] of selectedFiles.entries()) {
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filePath = `${companyId}/employees/${employeeId}/${data.documentType}_${Date.now()}_${index}_${sanitizedFileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
-
-      // Create document record
-      await createDocument.mutateAsync({
-        employeeId,
-        companyId,
-        documentType: data.documentType,
-        documentName: data.documentName || employeeDocumentTypeLabels[data.documentType],
-        fileUrl: urlData.publicUrl,
-        fileName: selectedFile.name,
-        fileSize: selectedFile.size,
-        mimeType: selectedFile.type,
-        expiryDate: data.expiryDate,
-        observations: data.observations,
-      });
+        await createDocument.mutateAsync({
+          employeeId,
+          companyId,
+          documentType: data.documentType,
+          documentName: data.documentName || employeeDocumentTypeLabels[data.documentType],
+          fileUrl: filePath,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+          expiryDate: data.hasExpiry ? data.expiryDate : undefined,
+          observations: data.observations,
+        });
+      }
 
       toast({
-        title: 'Documento guardado',
-        description: 'El documento se ha cargado correctamente',
+        title: selectedFiles.length === 1 ? 'Documento guardado' : 'Documentos guardados',
+        description: `${selectedFiles.length} archivo${selectedFiles.length !== 1 ? 's' : ''} cargado${selectedFiles.length !== 1 ? 's' : ''} correctamente`,
       });
 
       form.reset();
-      setSelectedFile(null);
+      clearFiles();
       onOpenChange(false);
       onSuccess?.();
     } catch (error: any) {
