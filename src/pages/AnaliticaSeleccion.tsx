@@ -661,6 +661,47 @@ export default function AnaliticaSeleccion() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base font-semibold">
             <BarChart3 className="h-5 w-5 text-primary" />
+            Conversión detallada por fuente de convocatoria
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {analytics.sourceConversion.length > 0 ? analytics.sourceConversion.map((source: any) => (
+              <div key={source.source} className="rounded-md border p-3">
+                <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="font-medium text-foreground">{source.source}</p>
+                  <Badge variant="outline" className="w-fit">{source.contratadoPct}% contratación</Badge>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-5">
+                  {[
+                    ['Aplicado', source.aplicado, 100],
+                    ['Evaluado', source.evaluado, source.evaluadoPct],
+                    ['Entrevista', source.entrevista, source.entrevistaPct],
+                    ['Oferta', source.oferta, source.ofertaPct],
+                    ['Contratado', source.contratado, source.contratadoPct],
+                  ].map(([label, value, pct]) => (
+                    <div key={label as string} className="rounded-md bg-muted/50 p-2">
+                      <div className="flex items-center justify-between gap-2 text-xs">
+                        <span className="text-muted-foreground">{label}</span>
+                        <span className="font-medium text-foreground">{value}</span>
+                      </div>
+                      <Progress value={Number(pct)} className="mt-2 h-1.5" />
+                      <p className="mt-1 text-[11px] text-muted-foreground">{pct}%</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )) : (
+              <p className="text-sm text-muted-foreground">Aún no hay candidatos con fuente de convocatoria registrada.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <BarChart3 className="h-5 w-5 text-primary" />
             Desempeño por etapa de selección
           </CardTitle>
         </CardHeader>
