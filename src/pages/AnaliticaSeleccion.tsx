@@ -417,6 +417,55 @@ export default function AnaliticaSeleccion() {
       promedio: Math.round(entry.values.reduce((sum, value) => sum + value, 0) / entry.values.length),
     })).sort((a, b) => b.promedio - a.promedio).slice(0, 8);
 
+    const demandByPosition = Object.values(
+      vacancies.reduce<Record<string, { cargo: string; demanda: number; vacantes: number; candidatos: number; contratados: number; cobertura: number }>>((acc: any, vacancy: any) => {
+        const cargo = formatStatus(vacancy.position_title || vacancy.personnel_requisitions?.cargo_solicitado || 'Sin cargo');
+        if (!acc[cargo]) acc[cargo] = { cargo, demanda: 0, vacantes: 0, candidatos: 0, contratados: 0, cobertura: 0 };
+        const vacancyCandidates = candidates.filter((candidate: any) => candidate.vacancy_id === vacancy.id);
+        const positions = vacancy.positions_count || 1;
+        acc[cargo].demanda += positions;
+        acc[cargo].vacantes += 1;
+        acc[cargo].candidatos += vacancyCandidates.length;
+        acc[cargo].contratados += vacancyCandidates.filter((candidate: any) => candidate.status === 'hired').length;
+        acc[cargo].cobertura = percent(acc[cargo].contratados, acc[cargo].demanda);
+        return acc;
+      }, {})
+    ).sort((a, b) => b.demanda - a.demanda).slice(0, 10);
+
+    const coverageByPosition = [...demandByPosition]
+      .sort((a, b) => b.cobertura - a.cobertura || b.demanda - a.demanda)
+      .slice(0, 8);
+
+    const demandByShift = Object.values(
+      vacancies.reduce<Record<string, { jornada: string; demanda: number; candidatos: number; contratados: number; cobertura: number }>>((acc: any, vacancy: any) => {
+        const jornada = formatStatus(vacancy.shift_type || 'Sin jornada');
+        if (!acc[jornada]) acc[jornada] = { jornada, demanda: 0, candidatos: 0, contratados: 0, cobertura: 0 };
+        const vacancyCandidates = candidates.filter((candidate: any) => candidate.vacancy_id === vacancy.id);
+        acc[jornada].demanda += vacancy.positions_count || 1;
+        acc[jornada].candidatos += vacancyCandidates.length;
+        acc[jornada].contratados += vacancyCandidates.filter((candidate: any) => candidate.status === 'hired').length;
+        acc[jornada].cobertura = percent(acc[jornada].contratados, acc[jornada].demanda);
+        return acc;
+      }, {})
+    ).sort((a, b) => b.demanda - a.demanda).slice(0, 8);
+
+    const stagnationAlerts = inProcessCandidates
+      .map((candidate: any) => {
+        const lastActivity = getCandidateLastActivityDate(candidate);
+        const stagnantDays = lastActivity ? Math.max(0, differenceInCalendarDays(today, lastActivity)) : 0;
+        return {
+          id: candidate.id,
+          name: `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || candidate.document_number || 'Candidato sin nombre',
+          vacancy: candidate.vacancies?.position_title || 'Vacante sin cargo',
+          source: formatStatus(candidate.source || 'Sin fuente'),
+          status: formatStatus(candidate.status),
+          stagnantDays,
+        };
+      })
+      .filter((candidate) => candidate.stagnantDays >= 7)
+      .sort((a, b) => b.stagnantDays - a.stagnantDays)
+      .slice(0, 8);
+
     const funnel = [
       { name: 'Requisiciones', value: requisitions.length },
       { name: 'Vacantes', value: vacancies.length },
@@ -516,6 +565,10 @@ export default function AnaliticaSeleccion() {
       aging,
       stepsByType,
       salaryByArea,
+      demandByPosition,
+      coverageByPosition,
+      demandByShift,
+      stagnationAlerts,
       insights,
       kpis: {
         requisitions: requisitions.length,
