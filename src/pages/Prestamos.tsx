@@ -210,21 +210,21 @@ export default function Prestamos() {
       </div>
 
       <Tabs defaultValue="listado" className="space-y-4">
-        <TabsList className="flex-wrap h-auto gap-1">
-          <TabsTrigger value="listado">
-            <Receipt className="w-4 h-4 mr-2" />
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto sm:flex-wrap">
+          <TabsTrigger value="listado" className="min-h-10 px-2 text-xs sm:text-sm">
+            <Receipt className="w-4 h-4 mr-1.5 sm:mr-2" />
             Listado
           </TabsTrigger>
-          <TabsTrigger value="dashboard">
-            <BarChart3 className="w-4 h-4 mr-2" />
+          <TabsTrigger value="dashboard" className="min-h-10 px-2 text-xs sm:text-sm">
+            <BarChart3 className="w-4 h-4 mr-1.5 sm:mr-2" />
             Dashboard
           </TabsTrigger>
-          <TabsTrigger value="calendario">
-            <CreditCard className="w-4 h-4 mr-2" />
+          <TabsTrigger value="calendario" className="min-h-10 px-2 text-xs sm:text-sm">
+            <CreditCard className="w-4 h-4 mr-1.5 sm:mr-2" />
             Calendario
           </TabsTrigger>
-          <TabsTrigger value="riesgo">
-            <AlertTriangle className="w-4 h-4 mr-2" />
+          <TabsTrigger value="riesgo" className="min-h-10 px-2 text-xs sm:text-sm">
+            <AlertTriangle className="w-4 h-4 mr-1.5 sm:mr-2" />
             Scoring
           </TabsTrigger>
         </TabsList>
