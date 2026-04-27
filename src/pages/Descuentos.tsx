@@ -309,6 +309,83 @@ export default function Descuentos() {
         </CardContent>
       </Card>
 
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">Cargando...</CardContent></Card>
+        ) : filtered.length === 0 ? (
+          <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No se encontraron descuentos</CardContent></Card>
+        ) : filtered.map(d => (
+          <Card key={d.id}>
+            <CardContent className="space-y-4 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{d.employees_v2?.first_name} {d.employees_v2?.last_name}</p>
+                  <p className="text-xs text-muted-foreground">{d.employees_v2?.document_number}</p>
+                </div>
+                <Badge className={`shrink-0 text-xs border ${STATUS_COLORS[d.status]}`} variant="outline">
+                  {STATUS_LABELS[d.status]}
+                </Badge>
+              </div>
+
+              <div className="space-y-2">
+                <Badge variant="outline" className="text-xs">{DEDUCTION_TYPE_LABELS[d.deduction_type] || d.deduction_type}</Badge>
+                <p className="text-sm text-foreground">{d.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="rounded-md bg-muted/50 p-2">
+                  <p className="text-xs text-muted-foreground">Monto</p>
+                  <p className="font-medium">
+                    {d.is_percentage ? `${d.percentage_value}%` : formatCurrency(Number(d.amount))}
+                    {d.is_recurring && <span className="ml-1 text-xs text-muted-foreground">/mes</span>}
+                  </p>
+                </div>
+                <div className="rounded-md bg-muted/50 p-2">
+                  <p className="text-xs text-muted-foreground">Entidad</p>
+                  <p className="truncate font-medium">{d.entity_name || '—'}</p>
+                </div>
+                <div className="col-span-2 rounded-md bg-muted/50 p-2">
+                  <p className="text-xs text-muted-foreground">Referencia</p>
+                  <p className="truncate font-medium">{d.reference_number || '—'}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-2">
+                {d.status !== 'finalizado' && d.status !== 'cancelado' && (
+                  <Button size="sm" variant="outline" onClick={() => toggleStatus(d)}>
+                    {d.status === 'activo' ? <PauseCircle className="w-4 h-4 mr-1 text-warning" /> : <PlayCircle className="w-4 h-4 mr-1 text-primary" />}
+                    {d.status === 'activo' ? 'Pausar' : 'Reactivar'}
+                  </Button>
+                )}
+                {d.status === 'activo' && (
+                  <Button size="sm" variant="outline" onClick={() => finalize(d)}>
+                    <CheckCircle className="w-4 h-4 mr-1 text-primary" /> Finalizar
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" onClick={() => openEdit(d)}>
+                  <Pencil className="w-4 h-4 mr-1" /> Editar
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="text-destructive"><Trash2 className="w-4 h-4 mr-1" /> Eliminar</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Eliminar descuento?</AlertDialogTitle>
+                      <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteDeduction.mutate(d.id)}>Eliminar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       {/* Form Dialog */}
       <Dialog open={showForm} onOpenChange={o => { if (!o) { setShowForm(false); resetForm(); } }}>
         <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
