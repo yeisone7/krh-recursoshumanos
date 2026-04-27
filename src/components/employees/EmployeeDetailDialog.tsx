@@ -354,6 +354,20 @@ function WorkInfoHistoryCard({ employeeId }: { employeeId: string }) {
   );
 }
 
+function getDocumentFilePath(fileUrl: string) {
+  if (fileUrl.includes('storage/v1/object/public/documents/')) return fileUrl.split('storage/v1/object/public/documents/')[1];
+  if (fileUrl.includes('storage/v1/object/documents/')) return fileUrl.split('storage/v1/object/documents/')[1];
+  if (fileUrl.startsWith('documents/')) return fileUrl.replace('documents/', '');
+  return fileUrl;
+}
+
+async function openEmployeeDocument(doc: EmployeeDocument) {
+  const path = getDocumentFilePath(doc.file_url);
+  const { data, error } = await supabase.storage.from('documents').createSignedUrl(path, 3600);
+  if (error) throw error;
+  window.open(data.signedUrl, '_blank');
+}
+
 export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: EmployeeDetailDialogProps) {
   const { data: employee, isLoading, refetch } = useEmployee(employeeId || undefined);
   const [isEditOpen, setIsEditOpen] = useState(false);
