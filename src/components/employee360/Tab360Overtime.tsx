@@ -75,8 +75,7 @@ export function Tab360Overtime({ overtime, isLoading }: Tab360OvertimeProps) {
       className="space-y-6"
     >
       {/* Summary Cards */}
-      <div className="overflow-x-auto pb-1">
-      <div className="grid min-w-[760px] grid-cols-4 gap-4 md:min-w-0">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -132,7 +131,6 @@ export function Tab360Overtime({ overtime, isLoading }: Tab360OvertimeProps) {
             </div>
           </CardContent>
         </Card>
-      </div>
       </div>
 
       {/* Overtime List */}

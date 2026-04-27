@@ -114,8 +114,7 @@ export function Tab360TimeOff({ vacations, leaves, isLoadingVacations, isLoading
       className="space-y-6"
     >
       {/* Vacation Balance Cards */}
-      <div className="overflow-x-auto pb-1">
-      <div className="grid min-w-[760px] grid-cols-4 gap-4 md:min-w-0">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -179,7 +178,6 @@ export function Tab360TimeOff({ vacations, leaves, isLoadingVacations, isLoading
             </div>
           </CardContent>
         </Card>
-      </div>
       </div>
 
       {/* Requests Tabs */}
