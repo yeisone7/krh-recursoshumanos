@@ -404,7 +404,7 @@ export default function Descuentos() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Tipo de Descuento *</Label>
                 <Select value={formData.deduction_type} onValueChange={v => setFormData(p => ({ ...p, deduction_type: v }))}>
@@ -429,7 +429,7 @@ export default function Descuentos() {
               <Switch checked={formData.is_percentage} onCheckedChange={v => setFormData(p => ({ ...p, is_percentage: v }))} />
               <Label>Es porcentaje del salario</Label>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>{formData.is_percentage ? 'Porcentaje (%)' : 'Monto Fijo ($)'} *</Label>
                 <Input type="number" min="0" step="0.01" value={formData.is_percentage ? formData.percentage_value : formData.amount} onChange={e => {
@@ -446,7 +446,7 @@ export default function Descuentos() {
               <Switch checked={formData.is_recurring} onCheckedChange={v => setFormData(p => ({ ...p, is_recurring: v }))} />
               <Label>Descuento recurrente (cada período de nómina)</Label>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Entidad</Label>
                 <Input value={formData.entity_name} onChange={e => setFormData(p => ({ ...p, entity_name: e.target.value }))} placeholder="Ej: Juzgado 3° Civil" />
@@ -461,7 +461,7 @@ export default function Descuentos() {
               <Textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2} />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
             <Button variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>Cancelar</Button>
             <Button onClick={handleSave} disabled={!formData.employee_id || !formData.description || (!formData.amount && !formData.percentage_value)}>
               {editing ? 'Actualizar' : 'Registrar'}
