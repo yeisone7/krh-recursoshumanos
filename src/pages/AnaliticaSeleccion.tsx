@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { format, subMonths, startOfMonth, differenceInCalendarDays } from 'date-fns';
+import { format, subMonths, subWeeks, startOfMonth, startOfWeek, differenceInCalendarDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   Area,
@@ -19,6 +19,7 @@ import {
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -88,6 +89,17 @@ function bucketDays(days: number) {
   if (days <= 15) return '8-15 días';
   if (days <= 30) return '16-30 días';
   return '+30 días';
+}
+
+function periodKey(date: Date, period: 'week' | 'month') {
+  const normalized = period === 'week' ? startOfWeek(date, { weekStartsOn: 1 }) : startOfMonth(date);
+  return format(normalized, 'yyyy-MM-dd');
+}
+
+function periodLabel(date: Date, period: 'week' | 'month') {
+  return period === 'week'
+    ? format(date, "'Sem' d MMM", { locale: es })
+    : format(date, 'MMM yy', { locale: es });
 }
 
 function groupCount<T>(items: T[], getKey: (item: T) => string | null | undefined) {
@@ -182,6 +194,39 @@ export default function AnaliticaSeleccion() {
     const monthStarts = Array.from({ length: 6 }, (_, index) => startOfMonth(subMonths(today, 5 - index)));
     const monthKey = (date: Date) => format(date, 'yyyy-MM');
     const monthLabel = (date: Date) => format(date, 'MMM yy', { locale: es });
+    const buildCoverageTrend = (period: 'week' | 'month') => {
+      const periods = Array.from({ length: period === 'week' ? 12 : 6 }, (_, index) =>
+        period === 'week'
+          ? startOfWeek(subWeeks(today, 11 - index), { weekStartsOn: 1 })
+          : startOfMonth(subMonths(today, 5 - index))
+      );
+
+      return periods.map((periodStart) => {
+        const key = periodKey(periodStart, period);
+        const opened = vacancies.filter((item: any) => {
+          const date = asDate(item.open_date || item.created_at);
+          return date && periodKey(date, period) === key;
+        }).length;
+        const closedItems = vacancies.filter((item: any) => {
+          const date = asDate(item.actual_close_date);
+          return date && periodKey(date, period) === key;
+        });
+        const avgCoverage = closedItems.length
+          ? Math.round(closedItems.reduce((sum: number, item: any) => {
+              const openDate = asDate(item.open_date);
+              const closeDate = asDate(item.actual_close_date);
+              return openDate && closeDate ? sum + Math.max(0, differenceInCalendarDays(closeDate, openDate)) : sum;
+            }, 0) / closedItems.length)
+          : 0;
+
+        return {
+          period: periodLabel(periodStart, period),
+          aperturas: opened,
+          cierres: closedItems.length,
+          cobertura: avgCoverage,
+        };
+      });
+    };
 
     const trend = monthStarts.map((month) => {
       const key = monthKey(month);
@@ -210,6 +255,10 @@ export default function AnaliticaSeleccion() {
         contratados: hiredCount,
       };
     });
+    const weeklyCoverageTrend = buildCoverageTrend('week');
+    const monthlyCoverageTrend = buildCoverageTrend('month');
+    const peakWeeklyOpenings = weeklyCoverageTrend.reduce((peak, item) => item.aperturas > peak.aperturas ? item : peak, weeklyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
+    const peakMonthlyCoverage = monthlyCoverageTrend.reduce((peak, item) => item.cobertura > peak.cobertura ? item : peak, monthlyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
 
     const activeVacancies = vacancies.filter((item: any) => ['open', 'in_process'].includes(item.status));
     const closedVacancies = vacancies.filter((item: any) => item.actual_close_date && item.open_date);
@@ -381,6 +430,10 @@ export default function AnaliticaSeleccion() {
 
     return {
       trend,
+      weeklyCoverageTrend,
+      monthlyCoverageTrend,
+      peakWeeklyOpenings,
+      peakMonthlyCoverage,
       funnel,
       recruitmentFunnel,
       sourceConversion,
@@ -492,6 +545,40 @@ export default function AnaliticaSeleccion() {
               <Bar dataKey="vacantes" name="Vacantes" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
               <Area type="monotone" dataKey="candidatos" name="Candidatos" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.16} />
               <Line type="monotone" dataKey="contratados" name="Contratados" stroke="hsl(var(--success))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Tendencia semanal: aperturas, cierres y cobertura" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.weeklyCoverageTrend} margin={{ left: -20, right: 18, top: 10, bottom: 24 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="period" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => name === 'Tiempo cobertura' ? `${value} días` : value} />
+              <Legend />
+              <ReferenceLine yAxisId="left" x={analytics.peakWeeklyOpenings.period} stroke="hsl(var(--destructive))" strokeDasharray="4 4" label={{ value: 'Pico aperturas', fontSize: 11 }} />
+              <Area yAxisId="left" type="monotone" dataKey="aperturas" name="Aperturas" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.18} />
+              <Bar yAxisId="left" dataKey="cierres" name="Cierres" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="cobertura" name="Tiempo cobertura" stroke="hsl(var(--warning))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Comparativo mensual: volumen vs tiempo de cobertura" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.monthlyCoverageTrend} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => name === 'Tiempo cobertura' ? `${value} días` : value} />
+              <Legend />
+              <ReferenceLine yAxisId="right" x={analytics.peakMonthlyCoverage.period} stroke="hsl(var(--warning))" strokeDasharray="4 4" label={{ value: 'Pico cobertura', fontSize: 11 }} />
+              <Bar yAxisId="left" dataKey="aperturas" name="Aperturas" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="cierres" name="Cierres" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
+              <Area yAxisId="right" type="monotone" dataKey="cobertura" name="Tiempo cobertura" stroke="hsl(var(--warning))" fill="hsl(var(--warning))" fillOpacity={0.18} />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
