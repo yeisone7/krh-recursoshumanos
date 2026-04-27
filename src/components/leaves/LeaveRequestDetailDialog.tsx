@@ -417,11 +417,12 @@ export function LeaveRequestDetailDialog({
                       className="mt-1"
                     />
                   </div>
-                  <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setShowRejectForm(false)}>
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Button className="w-full sm:w-auto" variant="outline" onClick={() => setShowRejectForm(false)}>
                       Volver
                     </Button>
                     <Button 
+                      className="w-full sm:w-auto"
                       variant="destructive" 
                       onClick={handleReject}
                       disabled={rejectRequest.isPending}
@@ -443,11 +444,12 @@ export function LeaveRequestDetailDialog({
                       className="mt-1"
                     />
                   </div>
-                  <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setShowCancelForm(false)}>
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Button className="w-full sm:w-auto" variant="outline" onClick={() => setShowCancelForm(false)}>
                       Volver
                     </Button>
                     <Button 
+                      className="w-full sm:w-auto"
                       variant="secondary" 
                       onClick={handleCancel}
                       disabled={cancelRequest.isPending}
@@ -467,6 +469,7 @@ export function LeaveRequestDetailDialog({
               {!showCancelForm ? (
                 <div className="flex justify-end">
                   <Button 
+                    className="w-full sm:w-auto"
                     variant="outline" 
                     onClick={() => setShowCancelForm(true)}
                   >
@@ -484,11 +487,12 @@ export function LeaveRequestDetailDialog({
                       className="mt-1"
                     />
                   </div>
-                  <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setShowCancelForm(false)}>
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Button className="w-full sm:w-auto" variant="outline" onClick={() => setShowCancelForm(false)}>
                       Volver
                     </Button>
                     <Button 
+                      className="w-full sm:w-auto"
                       variant="destructive" 
                       onClick={handleCancel}
                       disabled={cancelRequest.isPending}
