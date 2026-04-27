@@ -102,6 +102,24 @@ function groupCount<T>(items: T[], getKey: (item: T) => string | null | undefine
     .sort((a, b) => b.value - a.value);
 }
 
+function candidateReachedStage(candidate: any, stage: 'aplicado' | 'evaluado' | 'entrevista' | 'oferta' | 'contratado') {
+  const status = String(candidate.status || '').toLowerCase();
+  const currentStep = String(candidate.current_step || '').toLowerCase();
+  const steps = Array.isArray(candidate.selection_steps) ? candidate.selection_steps : [];
+  const hasStep = (terms: string[]) => steps.some((step: any) => {
+    const type = String(step.step_type || '').toLowerCase();
+    const stepStatus = String(step.status || '').toLowerCase();
+    const result = String(step.result || '').toLowerCase();
+    return terms.some((term) => type.includes(term) || stepStatus.includes(term) || result.includes(term));
+  });
+
+  if (stage === 'aplicado') return true;
+  if (stage === 'contratado') return status === 'hired';
+  if (stage === 'oferta') return ['selected', 'hired'].includes(status) || currentStep.includes('offer') || currentStep.includes('oferta') || hasStep(['offer', 'oferta']);
+  if (stage === 'entrevista') return ['selected', 'hired'].includes(status) || currentStep.includes('interview') || currentStep.includes('entrevista') || hasStep(['interview', 'entrevista']);
+  return Boolean(candidate.final_score || hasStep(['evaluation', 'evaluacion', 'evaluación', 'test', 'prueba', 'assessment', 'score']) || ['selected', 'hired'].includes(status));
+}
+
 function ChartCard({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <Card className={cn('overflow-hidden', className)}>
