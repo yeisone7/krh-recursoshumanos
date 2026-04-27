@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChevronLeft, ChevronRight, DollarSign } from 'lucide-react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay, isSameMonth, isToday, addDays } from 'date-fns';
+import { format, addMonths, subMonths, addWeeks, subWeeks, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, getDay, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { EmployeeLoan } from '@/hooks/useLoans';
@@ -36,10 +36,14 @@ export function LoanCollectionCalendar({ loans }: Props) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const activeLoans = useMemo(() => loans.filter(l => ['activo', 'aprobado'].includes(l.status)), [loans]);
 
-  // Generate installment events for the current month
+  // Generate installment events for the current month and visible mobile week
   const eventsByDay = useMemo(() => {
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const weekStart = startOfWeek(currentMonth, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(currentMonth, { weekStartsOn: 1 });
+    const start = monthStart < weekStart ? monthStart : weekStart;
+    const end = monthEnd > weekEnd ? monthEnd : weekEnd;
     const map: Record<string, InstallmentEvent[]> = {};
     const today = new Date();
 
@@ -84,11 +88,18 @@ export function LoanCollectionCalendar({ loans }: Props) {
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
   const startDayOfWeek = getDay(monthStart); // 0=Sun
+  const mobileWeekDays = eachDayOfInterval({
+    start: startOfWeek(currentMonth, { weekStartsOn: 1 }),
+    end: endOfWeek(currentMonth, { weekStartsOn: 1 }),
+  });
+  const mobileTitle = `${format(mobileWeekDays[0], 'd MMM', { locale: es })} – ${format(mobileWeekDays[6], 'd MMM', { locale: es })}`;
 
   // Monthly totals
   const monthlyTotal = useMemo(() => {
     let expected = 0, collected = 0, overdue = 0;
-    Object.values(eventsByDay).forEach(events => {
+    Object.entries(eventsByDay).forEach(([date, events]) => {
+      const day = new Date(`${date}T00:00:00`);
+      if (day < monthStart || day > monthEnd) return;
       events.forEach(e => {
         expected += e.amount;
         if (e.isPaid) collected += e.amount;
