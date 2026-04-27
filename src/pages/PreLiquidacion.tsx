@@ -252,26 +252,28 @@ export default function PreLiquidacion() {
       {/* Period selector */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-end gap-4 flex-wrap">
+          <div className="grid gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end">
             <div className="space-y-2">
               <Label>Fecha inicio</Label>
-              <Input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setCalculated(false); }} />
+              <Input className="w-full" type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setCalculated(false); }} />
             </div>
             <div className="space-y-2">
               <Label>Fecha fin</Label>
-              <Input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setCalculated(false); }} />
+              <Input className="w-full" type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setCalculated(false); }} />
             </div>
-            <Button onClick={handleCalculate}>
+            <Button onClick={handleCalculate} className="w-full lg:w-auto">
               <Calculator className="w-4 h-4 mr-2" />
               Calcular
             </Button>
-            <PreLiquidationExport rows={rows} startDate={startDate} endDate={endDate} />
+            <div className="w-full lg:w-auto">
+              <PreLiquidationExport rows={rows} startDate={startDate} endDate={endDate} />
+            </div>
             
             {/* Close period button */}
             {rows.length > 0 && rowsWithDeductions.length > 0 && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="default" disabled={closePeriodMutation.isPending}>
+                  <Button variant="default" disabled={closePeriodMutation.isPending} className="w-full lg:w-auto">
                     {closePeriodMutation.isPending ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : (

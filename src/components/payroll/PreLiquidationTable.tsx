@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { PreLiquidationRow } from '@/types/payroll';
 
 interface Props {
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
+  const isMobile = useIsMobile();
+
   const fmt = (value: number, isOvertimeHours = false) => {
     if (isOvertimeHours) {
       return value.toFixed(1);
@@ -31,6 +34,79 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
       <div className="text-center py-12 text-muted-foreground">
         No hay datos para mostrar. Seleccione un período y haga clic en "Calcular".
       </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <TooltipProvider>
+        <div className="space-y-3">
+          {rows.map(row => {
+            const conceptos = [
+              { label: 'Jornada', value: fmt(row.jornada) },
+              { label: 'Dom. Trab.', value: fmt(row.dominicalTrabajado) },
+              { label: 'Fest. Trab.', value: fmt(row.festivoTrabajado) },
+              { label: 'Desc. Rem.', value: fmt(row.descansoRemunerado) },
+              { label: 'HEDO', value: row.hedo > 0 ? row.hedo.toFixed(1) : '-' },
+              { label: 'HENO', value: row.heno > 0 ? row.heno.toFixed(1) : '-' },
+              { label: 'HEDF', value: row.hedf > 0 ? row.hedf.toFixed(1) : '-' },
+              { label: 'HENF', value: row.henf > 0 ? row.henf.toFixed(1) : '-' },
+              { label: 'RN', value: row.rn > 0 ? row.rn.toFixed(1) : '-' },
+              { label: 'RNF', value: row.rnf > 0 ? row.rnf.toFixed(1) : '-' },
+              { label: 'Incap.', value: row.incapacidad > 0 ? row.incapacidad : '-' },
+              { label: 'Vac.', value: row.vacaciones > 0 ? row.vacaciones : '-' },
+              { label: 'Perm.', value: row.permiso > 0 ? row.permiso : '-' },
+            ];
+
+            return (
+              <div key={row.employeeId} className="rounded-lg border bg-card p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-2">
+                      {row.hasWarning && <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />}
+                      <h3 className="truncate text-sm font-semibold text-card-foreground">{row.employeeName}</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{row.documentNumber}</p>
+                  </div>
+                  <Badge variant={row.hasWarning ? 'destructive' : 'secondary'} className="shrink-0">
+                    {row.totalDias} días
+                  </Badge>
+                </div>
+
+                {row.hasWarning && row.warningMessage && (
+                  <div className="mt-3 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                    {row.warningMessage}
+                  </div>
+                )}
+
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {conceptos.map(item => (
+                    <div key={item.label} className="rounded-md bg-muted/50 px-2 py-2 text-center">
+                      <div className="text-[11px] leading-tight text-muted-foreground">{item.label}</div>
+                      <div className="mt-1 text-sm font-medium text-foreground">{item.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-2 text-sm">
+                  <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
+                    <span className="text-muted-foreground">Préstamos</span>
+                    <span className="font-medium text-foreground">{fmtMoney(row.loanDeduction)}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
+                    <span className="text-muted-foreground">Descuentos</span>
+                    <span className="font-medium text-foreground">{fmtMoney(row.deductionTotal)}</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border border-primary/20 bg-primary/5 px-3 py-2">
+                    <span className="font-medium text-foreground">Total deducciones</span>
+                    <span className="font-semibold text-primary">{fmtMoney(row.totalDeducciones)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </TooltipProvider>
     );
   }
 
