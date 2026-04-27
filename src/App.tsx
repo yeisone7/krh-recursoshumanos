@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -80,6 +81,8 @@ import {
 } from "./pages/catalogos";
 import NotFound from "./pages/NotFound";
 
+const AnaliticaSeleccion = lazy(() => import("./pages/AnaliticaSeleccion"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -142,6 +145,7 @@ const App = () => (
                         <Route path="/dotacion" element={<P module="dotacion"><Dotacion /></P>} />
                         <Route path="/examenes" element={<P module="examenes"><Examenes /></P>} />
                         <Route path="/seleccion" element={<P module="seleccion"><Seleccion /></P>} />
+                        <Route path="/seleccion/analitica" element={<P module="seleccion"><Suspense fallback={null}><AnaliticaSeleccion /></Suspense></P>} />
                         <Route path="/requisiciones" element={<P module="requisiciones"><Requisiciones /></P>} />
                         <Route path="/centros" element={<P module="centros"><Centros /></P>} />
                         <Route path="/centros/fichas" element={<P module="centros"><CentrosFichas /></P>} />
