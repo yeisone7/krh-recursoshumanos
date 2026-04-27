@@ -549,6 +549,40 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
+        <ChartCard title="Tendencia semanal: aperturas, cierres y cobertura" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.weeklyCoverageTrend} margin={{ left: -20, right: 18, top: 10, bottom: 24 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="period" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => name === 'Tiempo cobertura' ? `${value} días` : value} />
+              <Legend />
+              <ReferenceLine yAxisId="left" x={analytics.peakWeeklyOpenings.period} stroke="hsl(var(--destructive))" strokeDasharray="4 4" label={{ value: 'Pico aperturas', fontSize: 11 }} />
+              <Area yAxisId="left" type="monotone" dataKey="aperturas" name="Aperturas" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.18} />
+              <Bar yAxisId="left" dataKey="cierres" name="Cierres" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="cobertura" name="Tiempo cobertura" stroke="hsl(var(--warning))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Comparativo mensual: volumen vs tiempo de cobertura" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.monthlyCoverageTrend} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => name === 'Tiempo cobertura' ? `${value} días` : value} />
+              <Legend />
+              <ReferenceLine yAxisId="right" x={analytics.peakMonthlyCoverage.period} stroke="hsl(var(--warning))" strokeDasharray="4 4" label={{ value: 'Pico cobertura', fontSize: 11 }} />
+              <Bar yAxisId="left" dataKey="aperturas" name="Aperturas" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="cierres" name="Cierres" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
+              <Area yAxisId="right" type="monotone" dataKey="cobertura" name="Tiempo cobertura" stroke="hsl(var(--warning))" fill="hsl(var(--warning))" fillOpacity={0.18} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
         <ChartCard title="Embudo de conversión">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.funnel} layout="vertical" margin={{ left: 18, right: 16, top: 8, bottom: 8 }}>
