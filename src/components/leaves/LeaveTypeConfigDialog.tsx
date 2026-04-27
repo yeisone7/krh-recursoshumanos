@@ -107,7 +107,7 @@ export function LeaveTypeConfigDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Configurar: {config.display_name}</DialogTitle>
         </DialogHeader>
@@ -142,7 +142,7 @@ export function LeaveTypeConfigDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="max_days_per_year"
@@ -193,7 +193,7 @@ export function LeaveTypeConfigDialog({
                   <FormControl>
                     <div className="flex items-center gap-2">
                       <Input type="color" {...field} className="w-16 h-10 p-1" />
-                      <Input {...field} placeholder="#3B82F6" className="flex-1" />
+                      <Input {...field} placeholder="#3B82F6" className="min-w-0 flex-1" />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -206,8 +206,8 @@ export function LeaveTypeConfigDialog({
                 control={form.control}
                 name="is_paid"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
-                    <div>
+                  <FormItem className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
                       <FormLabel>Remunerado</FormLabel>
                       <FormDescription>El empleado recibe salario durante el permiso</FormDescription>
                     </div>
@@ -222,8 +222,8 @@ export function LeaveTypeConfigDialog({
                 control={form.control}
                 name="requires_document"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
-                    <div>
+                  <FormItem className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
                       <FormLabel>Requiere Documento</FormLabel>
                       <FormDescription>Se debe adjuntar soporte</FormDescription>
                     </div>
@@ -254,8 +254,8 @@ export function LeaveTypeConfigDialog({
                 control={form.control}
                 name="allows_half_day"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
-                    <div>
+                  <FormItem className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
                       <FormLabel>Permite Medio Día</FormLabel>
                       <FormDescription>Se puede solicitar solo medio día</FormDescription>
                     </div>
@@ -270,8 +270,8 @@ export function LeaveTypeConfigDialog({
                 control={form.control}
                 name="allows_hours"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
-                    <div>
+                  <FormItem className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
                       <FormLabel>Permite Horas</FormLabel>
                       <FormDescription>Se puede solicitar por horas</FormDescription>
                     </div>
@@ -286,8 +286,8 @@ export function LeaveTypeConfigDialog({
                 control={form.control}
                 name="is_active"
                 render={({ field }) => (
-                  <FormItem className="flex items-center justify-between">
-                    <div>
+                  <FormItem className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
                       <FormLabel>Activo</FormLabel>
                       <FormDescription>Disponible para nuevas solicitudes</FormDescription>
                     </div>
@@ -299,11 +299,11 @@ export function LeaveTypeConfigDialog({
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={updateConfig.isPending}>
+              <Button type="submit" className="w-full sm:w-auto" disabled={updateConfig.isPending}>
                 {updateConfig.isPending ? 'Guardando...' : 'Guardar'}
               </Button>
             </div>

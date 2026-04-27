@@ -31,7 +31,7 @@ export function LeaveAlertsPanel({ onViewRequest }: LeaveAlertsPanelProps) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-center gap-3 text-muted-foreground">
+        <div className="flex items-start gap-3 text-muted-foreground sm:items-center">
             <CheckCircle className="h-5 w-5 text-primary" />
             <span>No hay solicitudes de permiso pendientes</span>
           </div>
@@ -43,8 +43,8 @@ export function LeaveAlertsPanel({ onViewRequest }: LeaveAlertsPanelProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="flex min-w-0 items-center gap-2 text-base sm:text-lg">
             <Clock className="h-5 w-5" />
             Solicitudes Pendientes
           </CardTitle>
@@ -72,13 +72,13 @@ export function LeaveAlertsPanel({ onViewRequest }: LeaveAlertsPanelProps) {
                 }`}
                 onClick={() => onViewRequest?.(request.id)}
               >
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2">
                       {urgency === 'critical' && (
                         <AlertTriangle className="h-4 w-4 text-destructive" />
                       )}
-                      <span className="font-medium">{employeeName}</span>
+                      <span className="truncate font-medium">{employeeName}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {LEAVE_TYPE_LABELS[request.leave_type]} • {request.total_days} días
@@ -87,7 +87,7 @@ export function LeaveAlertsPanel({ onViewRequest }: LeaveAlertsPanelProps) {
                       {format(new Date(request.start_date), 'dd MMM', { locale: es })} - {format(new Date(request.end_date), 'dd MMM yyyy', { locale: es })}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <Badge variant={urgency === 'critical' ? 'destructive' : urgency === 'warning' ? 'secondary' : 'outline'}>
                       {daysWaiting === 0 ? 'Hoy' : `${daysWaiting}d esperando`}
                     </Badge>

@@ -186,7 +186,7 @@ export function LeaveRequestFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Nueva Solicitud de Permiso</DialogTitle>
         </DialogHeader>
@@ -307,7 +307,7 @@ export function LeaveRequestFormDialog({
             />
 
             {/* Dates */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="start_date"
@@ -320,7 +320,7 @@ export function LeaveRequestFormDialog({
                           <Button
                             variant="outline"
                             className={cn(
-                              'w-full pl-3 text-left font-normal',
+                              'w-full justify-start whitespace-normal pl-3 text-left font-normal',
                               !field.value && 'text-muted-foreground'
                             )}
                           >
@@ -361,7 +361,7 @@ export function LeaveRequestFormDialog({
                           <Button
                             variant="outline"
                             className={cn(
-                              'w-full pl-3 text-left font-normal',
+                              'w-full justify-start whitespace-normal pl-3 text-left font-normal',
                               !field.value && 'text-muted-foreground'
                             )}
                           >
@@ -396,7 +396,7 @@ export function LeaveRequestFormDialog({
 
             {/* Time fields for hours duration */}
             {watchDurationType === 'horas' && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="start_time"
@@ -516,11 +516,11 @@ export function LeaveRequestFormDialog({
             <AbsenceConflictAlert conflicts={leaveConflicts} />
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createRequest.isPending || isUploading || hasLeaveConflicts}>
+              <Button type="submit" className="w-full sm:w-auto" disabled={createRequest.isPending || isUploading || hasLeaveConflicts}>
                 {isUploading ? 'Subiendo documento...' : createRequest.isPending ? 'Creando...' : 'Crear Solicitud'}
               </Button>
             </div>

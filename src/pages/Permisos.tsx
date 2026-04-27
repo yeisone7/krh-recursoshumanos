@@ -95,72 +95,72 @@ export default function Permisos() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Permisos y Licencias</h1>
-          <p className="text-muted-foreground">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold sm:text-3xl">Permisos y Licencias</h1>
+          <p className="text-sm text-muted-foreground sm:text-base">
             Gestión de solicitudes de permisos y licencias
           </p>
         </div>
-        <Button onClick={() => setShowNewRequestDialog(true)}>
+        <Button className="w-full sm:w-auto" onClick={() => setShowNewRequestDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nueva Solicitud
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+          <CardContent className="p-3 sm:pt-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Pendientes</p>
                 <p className="text-2xl font-bold">{pendingCount}</p>
               </div>
-              <Badge variant="outline" className="h-8">
+              <Badge variant="outline" className="h-7 w-fit sm:h-8">
                 Por revisar
               </Badge>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+          <CardContent className="p-3 sm:pt-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Aprobados (mes)</p>
                 <p className="text-2xl font-bold">
                   {requests.filter(r => r.status === 'aprobado').length}
                 </p>
               </div>
-              <Badge className="h-8">Aprobados</Badge>
+              <Badge className="h-7 w-fit sm:h-8">Aprobados</Badge>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+          <CardContent className="p-3 sm:pt-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Rechazados (mes)</p>
                 <p className="text-2xl font-bold">
                   {requests.filter(r => r.status === 'rechazado').length}
                 </p>
               </div>
-              <Badge variant="destructive" className="h-8">Rechazados</Badge>
+              <Badge variant="destructive" className="h-7 w-fit sm:h-8">Rechazados</Badge>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+          <CardContent className="p-3 sm:pt-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Tipos Activos</p>
                 <p className="text-2xl font-bold">
                   {typeConfigs.filter(c => c.is_active).length}
                 </p>
               </div>
-              <Badge variant="secondary" className="h-8">Configurados</Badge>
+              <Badge variant="secondary" className="h-7 w-fit sm:h-8">Configurados</Badge>
             </div>
           </CardContent>
         </Card>
@@ -168,25 +168,25 @@ export default function Permisos() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="solicitudes" className="flex items-center gap-2">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto sm:flex-wrap">
+          <TabsTrigger value="solicitudes" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <List className="h-4 w-4" />
             Solicitudes
             {pendingCount > 0 && (
-              <Badge variant="destructive" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+              <Badge variant="destructive" className="ml-0 h-5 min-w-5 px-1 flex items-center justify-center text-xs sm:ml-1">
                 {pendingCount}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="calendario" className="flex items-center gap-2">
+          <TabsTrigger value="calendario" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Calendar className="h-4 w-4" />
             Calendario
           </TabsTrigger>
-          <TabsTrigger value="alertas" className="flex items-center gap-2">
+          <TabsTrigger value="alertas" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Filter className="h-4 w-4" />
             Alertas
           </TabsTrigger>
-          <TabsTrigger value="configuracion" className="flex items-center gap-2">
+          <TabsTrigger value="configuracion" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Settings className="h-4 w-4" />
             Configuración
           </TabsTrigger>
@@ -349,27 +349,27 @@ export default function Permisos() {
                 {typeConfigs.map((config) => (
                   <div
                     key={config.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                    className="flex flex-col gap-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors sm:flex-row sm:items-center sm:justify-between"
                     onClick={() => handleConfigClick(config)}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <div 
-                        className="w-4 h-4 rounded-full"
+                        className="w-4 h-4 shrink-0 rounded-full"
                         style={{ backgroundColor: config.color }}
                       />
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-medium">{config.display_name}</p>
                         <p className="text-sm text-muted-foreground">
                           {config.description || 'Sin descripción'}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right text-sm">
+                    <div className="flex items-start justify-between gap-3 pl-7 sm:items-center sm:pl-0">
+                      <div className="text-left text-sm sm:text-right">
                         <p className="text-muted-foreground">
                           {config.max_days_per_year ? `${config.max_days_per_year} días/año` : 'Sin límite'}
                         </p>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2 sm:justify-end">
                           {config.is_paid && <Badge variant="outline">Remunerado</Badge>}
                           {config.requires_document && <Badge variant="secondary">Doc. requerido</Badge>}
                         </div>
