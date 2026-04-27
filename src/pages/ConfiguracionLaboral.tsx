@@ -109,17 +109,19 @@ export default function ConfiguracionLaboral() {
               <Label>Jornada máxima semanal (horas)</Label>
               <Input
                 type="number"
+                min="0"
                 value={form.max_weekly_hours}
-                onChange={e => setForm(f => ({ ...f, max_weekly_hours: e.target.value }))}
+                onChange={e => setForm(f => ({ ...f, max_weekly_hours: sanitizeNonNegative(e.target.value) }))}
               />
             </div>
             <div className="space-y-2">
               <Label>Jornada diaria ordinaria (horas)</Label>
               <Input
                 type="number"
+                min="0"
                 step="0.5"
                 value={form.daily_hours}
-                onChange={e => setForm(f => ({ ...f, daily_hours: e.target.value }))}
+                onChange={e => setForm(f => ({ ...f, daily_hours: sanitizeNonNegative(e.target.value) }))}
               />
             </div>
             <div className="space-y-2">
@@ -172,8 +174,9 @@ export default function ConfiguracionLaboral() {
                   <Label className="text-xs">{label}</Label>
                   <Input
                     type="number"
+                    min="0"
                     value={form[key]}
-                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                    onChange={e => setForm(f => ({ ...f, [key]: sanitizeNonNegative(e.target.value) }))}
                   />
                 </div>
               ))}
