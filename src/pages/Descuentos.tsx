@@ -219,11 +219,12 @@ export default function Descuentos() {
         <CardContent className="pt-4 pb-3">
           <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
             <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Buscar por empleado o descripción..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              <Label htmlFor="deductions-search" className="sr-only">Buscar descuentos por empleado o descripción</Label>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              <Input id="deductions-search" aria-label="Buscar descuentos por empleado o descripción" placeholder="Buscar por empleado o descripción..." value={search} onChange={e => setSearch(e.target.value)} className={`pl-9 ${accessibleMode ? 'h-12 text-base' : ''}`} />
             </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full lg:w-[180px]">
+              <SelectTrigger className={`w-full lg:w-[180px] ${accessibleMode ? 'h-12 text-base' : ''}`} aria-label="Filtrar descuentos por tipo">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -233,8 +234,8 @@ export default function Descuentos() {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={openCreate} className="sm:col-span-2 lg:col-span-1 lg:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button onClick={openCreate} className={`sm:col-span-2 lg:col-span-1 lg:w-auto ${accessibleMode ? 'h-12 text-base' : ''}`} aria-label="Crear nuevo descuento">
+              <Plus className="w-4 h-4 mr-2" aria-hidden="true" />
               Nuevo Descuento
             </Button>
           </div>
