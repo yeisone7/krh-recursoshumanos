@@ -95,6 +95,17 @@ function bucketDays(days: number) {
   return '+30 días';
 }
 
+function isWithinRange(date: Date | null, startDate: string, endDate: string) {
+  if (!date) return false;
+  if (startDate && date < new Date(`${startDate}T00:00:00`)) return false;
+  if (endDate && date > new Date(`${endDate}T23:59:59`)) return false;
+  return true;
+}
+
+function getCandidateCenterId(candidate: any) {
+  return candidate.vacancies?.operation_center_id || candidate.vacancies?.operation_centers?.id || null;
+}
+
 function periodKey(date: Date, period: 'week' | 'month') {
   const normalized = period === 'week' ? startOfWeek(date, { weekStartsOn: 1 }) : startOfMonth(date);
   return format(normalized, 'yyyy-MM-dd');
