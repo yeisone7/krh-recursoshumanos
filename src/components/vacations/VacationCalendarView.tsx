@@ -4,6 +4,7 @@ import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useVacationCalendar } from '@/hooks/useVacations';
@@ -45,6 +46,12 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   }, [currentDate, view]);
 
+  const mobileWeekDays = useMemo(() => {
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+    return eachDayOfInterval({ start: weekStart, end: weekEnd });
+  }, [currentDate]);
+
   // Assign a consistent color to each employee
   const employeeColorMap = useMemo(() => {
     if (!requests) return new Map<string, typeof EMPLOYEE_COLORS[0]>();
@@ -62,6 +69,8 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
   const goToNext = () => {
     setCurrentDate(view === 'week' ? addWeeks(currentDate, 1) : addMonths(currentDate, 1));
   };
+  const goToPreviousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
+  const goToNextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
   const goToToday = () => setCurrentDate(new Date());
 
   const getRequestsForDay = (day: Date) => {
@@ -79,43 +88,103 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
     ? `${format(calendarDays[0], 'd MMM', { locale: es })} – ${format(calendarDays[6], 'd MMM yyyy', { locale: es })}`
     : format(currentDate, 'MMMM yyyy', { locale: es });
 
+  const mobileTitle = `${format(mobileWeekDays[0], 'd MMM', { locale: es })} – ${format(mobileWeekDays[6], 'd MMM yyyy', { locale: es })}`;
+
   const maxVisible = view === 'week' ? 10 : 3;
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <CardTitle className="text-lg font-semibold capitalize">
-            {viewTitle}
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <CardTitle className="text-base font-semibold capitalize sm:text-lg">
+            <span className="sm:hidden">{mobileTitle}</span>
+            <span className="hidden sm:inline">{viewTitle}</span>
           </CardTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-2 sm:justify-end">
             <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week')}>
-              <TabsList className="h-8">
+              <TabsList className="hidden h-8 sm:inline-flex">
                 <TabsTrigger value="month" className="text-xs px-3">Mes</TabsTrigger>
                 <TabsTrigger value="week" className="text-xs px-3">Semana</TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button variant="outline" size="sm" onClick={goToToday}>
+            <Button variant="outline" size="sm" className="h-8" onClick={goToToday}>
               Hoy
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevious}>
+            <Button variant="outline" size="icon" className="hidden h-8 w-8 sm:inline-flex" onClick={goToPrevious}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNext}>
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={goToPreviousWeek}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="hidden h-8 w-8 sm:inline-flex" onClick={goToNext}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={goToNextWeek}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
         {isLoading ? (
           <div className="h-96 flex items-center justify-center text-muted-foreground">
             Cargando...
           </div>
         ) : (
           <div className="space-y-2">
+            <div className="space-y-2 sm:hidden">
+              {mobileWeekDays.map((day) => {
+                const dayRequests = getRequestsForDay(day);
+                const isCurrentDay = isToday(day);
+
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className={cn(
+                      'rounded-md border p-3 transition-colors',
+                      isCurrentDay && 'ring-2 ring-primary'
+                    )}
+                  >
+                    <div className={cn('mb-2 flex items-center justify-between text-sm font-medium', isCurrentDay && 'text-primary')}>
+                      <span className="capitalize">{format(day, 'EEE d', { locale: es })}</span>
+                      <Badge variant="outline">{dayRequests.length}</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {dayRequests.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Sin vacaciones</p>
+                      ) : (
+                        dayRequests.map((request) => {
+                          const colors = employeeColorMap.get(request.employee_id) || EMPLOYEE_COLORS[0];
+                          const employeeName = request.employee
+                            ? `${request.employee.first_name} ${request.employee.last_name}`
+                            : 'Empleado';
+
+                          return (
+                            <button
+                              key={request.id}
+                              onClick={() => onRequestClick?.(request)}
+                              className={cn(
+                                'w-full rounded-md px-3 py-2 text-left text-xs font-medium transition-opacity hover:opacity-80',
+                                colors.bg,
+                                colors.text
+                              )}
+                            >
+                              <span className="block">{employeeName}</span>
+                              <span className="block font-normal opacity-90">
+                                {request.business_days} días hábiles • {request.status}
+                              </span>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             {/* Week days header */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="hidden grid-cols-7 gap-1 sm:grid">
               {weekDays.map((day) => (
                 <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
                   {day}
@@ -124,7 +193,7 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
             </div>
 
             {/* Calendar grid */}
-            <div className="grid grid-cols-7 gap-1">
+            <div className="hidden grid-cols-7 gap-1 sm:grid">
               {calendarDays.map((day) => {
                 const dayRequests = getRequestsForDay(day);
                 const isCurrentMonth = isSameMonth(day, currentDate);
