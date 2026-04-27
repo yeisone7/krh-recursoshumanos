@@ -140,7 +140,7 @@ export function LoanRiskScoring({ loans }: Props) {
   return (
     <div className="space-y-4">
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {(Object.entries(summary) as [EmployeeRisk['riskLevel'], number][]).map(([level, count]) => {
           const cfg = RISK_CONFIG[level];
           const Icon = cfg.icon;
@@ -191,7 +191,7 @@ export function LoanRiskScoring({ loans }: Props) {
                 const cfg = RISK_CONFIG[emp.riskLevel];
                 const Icon = cfg.icon;
                 return (
-                  <div key={emp.employeeId} className="flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
+                  <div key={emp.employeeId} className="flex flex-col gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors sm:flex-row sm:items-center sm:gap-4">
                     {/* Risk indicator */}
                     <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", cfg.bg)}>
                       <Icon className={cn("w-5 h-5", cfg.color)} />
@@ -199,13 +199,13 @@ export function LoanRiskScoring({ loans }: Props) {
 
                     {/* Employee info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium text-sm truncate">{emp.employeeName}</span>
                         <Badge variant="outline" className={cn("text-[10px] px-1.5", cfg.color)}>
                           {cfg.label} ({emp.score})
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
                         <span>{emp.activeLoans} préstamo(s)</span>
                         <span>•</span>
                         <span>{formatCurrency(emp.totalBalance)} pendiente</span>
@@ -227,8 +227,8 @@ export function LoanRiskScoring({ loans }: Props) {
                     </div>
 
                     {/* Score bar */}
-                    <div className="w-24 shrink-0">
-                      <div className="text-xs text-right text-muted-foreground mb-1">{emp.onTimeRate.toFixed(0)}% al día</div>
+                    <div className="w-full shrink-0 sm:w-24">
+                      <div className="text-xs text-left text-muted-foreground mb-1 sm:text-right">{emp.onTimeRate.toFixed(0)}% al día</div>
                       <Progress value={emp.score} className="h-2" />
                     </div>
                   </div>
