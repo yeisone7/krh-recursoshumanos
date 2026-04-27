@@ -39,14 +39,14 @@ function RequestCard({ request, type }: { request: any; type: 'vacation' | 'leav
 
   return (
     <div className="p-4 border rounded-lg space-y-2">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
           {type === 'vacation' ? (
             <Umbrella className="w-4 h-4 text-primary" />
           ) : (
             <Clock className="w-4 h-4 text-primary" />
           )}
-          <span className="font-medium">
+          <span className="break-words font-medium">
             {type === 'vacation' 
               ? (request.request_type === 'vacaciones' ? 'Vacaciones' : 'Vacaciones en Dinero')
               : (leaveTypeLabels[request.leave_type] || request.leave_type)
@@ -59,7 +59,7 @@ function RequestCard({ request, type }: { request: any; type: 'vacation' | 'leav
         </Badge>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 text-sm">
+      <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
         <div>
           <p className="text-muted-foreground">Desde</p>
           <p className="font-medium">
@@ -182,12 +182,12 @@ export function Tab360TimeOff({ vacations, leaves, isLoadingVacations, isLoading
 
       {/* Requests Tabs */}
       <Tabs defaultValue="vacations" className="w-full">
-        <TabsList>
-          <TabsTrigger value="vacations" className="flex items-center gap-2">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto">
+          <TabsTrigger value="vacations" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Umbrella className="w-4 h-4" />
             Vacaciones ({vacations?.requests?.length || 0})
           </TabsTrigger>
-          <TabsTrigger value="leaves" className="flex items-center gap-2">
+          <TabsTrigger value="leaves" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Clock className="w-4 h-4" />
             Permisos ({leaves.length})
           </TabsTrigger>
