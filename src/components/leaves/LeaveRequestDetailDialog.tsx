@@ -174,17 +174,17 @@ export function LeaveRequestDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 pr-6 sm:flex-row sm:items-center sm:justify-between sm:pr-0">
             <DialogTitle>Detalle de Solicitud</DialogTitle>
-            <Badge variant={getStatusBadgeVariant(request.status)}>
+            <Badge className="w-fit" variant={getStatusBadgeVariant(request.status)}>
               {LEAVE_STATUS_LABELS[request.status]}
             </Badge>
           </div>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6">
           {/* Employee Info */}
           <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -199,7 +199,7 @@ export function LeaveRequestDetailDialog({
           </div>
 
           {/* Leave Type & Duration */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Tipo de Permiso</p>
               <p className="font-medium">{LEAVE_TYPE_LABELS[request.leave_type]}</p>
@@ -213,7 +213,7 @@ export function LeaveRequestDetailDialog({
           <Separator />
 
           {/* Dates */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-muted-foreground" />
               <div>
@@ -281,10 +281,10 @@ export function LeaveRequestDetailDialog({
           <div>
             <p className="text-sm text-muted-foreground mb-2">Documento de Soporte</p>
             {request.document_url ? (
-              <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+            <div className="flex flex-col gap-3 p-3 border rounded-lg bg-muted/50 sm:flex-row sm:items-center sm:gap-2">
                 <FileText className="h-4 w-4 text-primary shrink-0" />
                 <span className="text-sm truncate flex-1">{request.document_name || 'Documento adjunto'}</span>
-                <Button variant="outline" size="sm" onClick={handleDownloadDocument}>
+                <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={handleDownloadDocument}>
                   <Download className="w-4 h-4 mr-1" />
                   Descargar
                 </Button>
@@ -381,7 +381,7 @@ export function LeaveRequestDetailDialog({
                     />
                   </div>
                   
-                  <div className="flex justify-end gap-3">
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                     <Button 
                       variant="outline" 
                       onClick={() => setShowCancelForm(true)}
@@ -417,11 +417,12 @@ export function LeaveRequestDetailDialog({
                       className="mt-1"
                     />
                   </div>
-                  <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setShowRejectForm(false)}>
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Button className="w-full sm:w-auto" variant="outline" onClick={() => setShowRejectForm(false)}>
                       Volver
                     </Button>
                     <Button 
+                      className="w-full sm:w-auto"
                       variant="destructive" 
                       onClick={handleReject}
                       disabled={rejectRequest.isPending}
@@ -443,11 +444,12 @@ export function LeaveRequestDetailDialog({
                       className="mt-1"
                     />
                   </div>
-                  <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setShowCancelForm(false)}>
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Button className="w-full sm:w-auto" variant="outline" onClick={() => setShowCancelForm(false)}>
                       Volver
                     </Button>
                     <Button 
+                      className="w-full sm:w-auto"
                       variant="secondary" 
                       onClick={handleCancel}
                       disabled={cancelRequest.isPending}
@@ -467,6 +469,7 @@ export function LeaveRequestDetailDialog({
               {!showCancelForm ? (
                 <div className="flex justify-end">
                   <Button 
+                    className="w-full sm:w-auto"
                     variant="outline" 
                     onClick={() => setShowCancelForm(true)}
                   >
@@ -484,11 +487,12 @@ export function LeaveRequestDetailDialog({
                       className="mt-1"
                     />
                   </div>
-                  <div className="flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => setShowCancelForm(false)}>
+                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <Button className="w-full sm:w-auto" variant="outline" onClick={() => setShowCancelForm(false)}>
                       Volver
                     </Button>
                     <Button 
+                      className="w-full sm:w-auto"
                       variant="destructive" 
                       onClick={handleCancel}
                       disabled={cancelRequest.isPending}

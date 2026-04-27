@@ -51,14 +51,14 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Calendario de Permisos</CardTitle>
-          <div className="flex items-center gap-2">
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="text-base sm:text-lg">Calendario de Permisos</CardTitle>
+          <div className="flex items-center justify-between gap-2 sm:justify-end">
             <Button variant="outline" size="icon" onClick={handlePrevMonth}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-lg font-medium min-w-[200px] text-center">
+            <span className="min-w-0 flex-1 text-center text-sm font-medium capitalize sm:min-w-[200px] sm:text-lg">
               {format(currentMonth, 'MMMM yyyy', { locale: es })}
             </span>
             <Button variant="outline" size="icon" onClick={handleNextMonth}>
@@ -67,11 +67,11 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
         {/* Week Days Header */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {weekDays.map(day => (
-            <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
+            <div key={day} className="py-2 text-center text-xs font-medium text-muted-foreground sm:text-sm">
               {day}
             </div>
           ))}
@@ -81,7 +81,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
         <div className="grid grid-cols-7 gap-1">
           {/* Empty cells for days before month start */}
           {emptyDays.map((_, index) => (
-            <div key={`empty-${index}`} className="h-24 bg-muted/30 rounded-md" />
+            <div key={`empty-${index}`} className="h-16 rounded-md bg-muted/30 sm:h-24" />
           ))}
 
           {/* Days of the month */}
@@ -93,18 +93,18 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
               <div
                 key={day.toISOString()}
                 className={cn(
-                  'h-24 p-1 border rounded-md overflow-hidden',
+                  'h-16 overflow-hidden rounded-md border p-1 sm:h-24',
                   isToday && 'ring-2 ring-primary',
                   !isSameMonth(day, currentMonth) && 'bg-muted/50'
                 )}
               >
                 <div className={cn(
-                  'text-sm font-medium mb-1',
+                  'mb-1 text-xs font-medium sm:text-sm',
                   isToday && 'text-primary'
                 )}>
                   {format(day, 'd')}
                 </div>
-                <div className="space-y-0.5 overflow-y-auto max-h-16">
+                <div className="max-h-10 space-y-0.5 overflow-y-auto sm:max-h-16">
                   {dayRequests.slice(0, 3).map(request => {
                     const color = getTypeColor(request.leave_type);
                     const employeeName = request.employees_v2
@@ -115,7 +115,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
                       <div
                         key={request.id}
                         className={cn(
-                          'text-xs px-1 py-0.5 rounded truncate cursor-pointer hover:opacity-80 transition-opacity',
+                          'rounded px-1 py-0.5 text-[10px] truncate cursor-pointer hover:opacity-80 transition-opacity sm:text-xs',
                           request.status === 'pendiente' && 'opacity-60 border border-dashed'
                         )}
                         style={{ 
@@ -131,7 +131,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
                     );
                   })}
                   {dayRequests.length > 3 && (
-                    <div className="text-xs text-muted-foreground text-center">
+                      <div className="text-center text-[10px] text-muted-foreground sm:text-xs">
                       +{dayRequests.length - 3} más
                     </div>
                   )}
