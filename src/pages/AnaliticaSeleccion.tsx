@@ -510,6 +510,41 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
+        <ChartCard title="Embudo de reclutamiento por etapa" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.recruitmentFunnel} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => name === 'Volumen' ? value : `${value}%`} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="value" name="Volumen" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="totalPercent" name="% del total" stroke="hsl(var(--success))" strokeWidth={3} />
+              <Line yAxisId="right" type="monotone" dataKey="stepPercent" name="% etapa anterior" stroke="hsl(var(--warning))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Conversión por fuente de convocatoria" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.sourceConversion} margin={{ left: -20, right: 18, top: 10, bottom: 36 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="source" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => String(name).includes('%') ? `${value}%` : value} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="aplicado" name="Aplicado" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="evaluado" name="Evaluado" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="entrevista" name="Entrevista" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="oferta" name="Oferta" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="contratado" name="Contratado" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="contratadoPct" name="% contratado" stroke="hsl(var(--foreground))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
         <ChartCard title="Salud integral del proceso">
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart data={analytics.radar} outerRadius="72%">
