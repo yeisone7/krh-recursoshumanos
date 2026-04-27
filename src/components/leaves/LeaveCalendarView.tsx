@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,13 +14,16 @@ interface LeaveCalendarViewProps {
 }
 
 export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
   const { data: requests = [] } = useLeaveRequests();
   const { data: typeConfigs = [] } = useLeaveTypeConfigs();
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
+  const weekDaysList = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   // Only show approved and pending requests
   const activeRequests = useMemo(() => {
@@ -40,8 +43,10 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
     return config?.color || '#3B82F6';
   };
 
-  const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const handleNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  const handlePrevMonth = () => setCurrentDate(date => subMonths(date, 1));
+  const handleNextMonth = () => setCurrentDate(date => addMonths(date, 1));
+  const handlePrevWeek = () => setCurrentDate(date => subWeeks(date, 1));
+  const handleNextWeek = () => setCurrentDate(date => addWeeks(date, 1));
 
   // Get first day of week offset (0 = Sunday)
   const firstDayOfWeek = monthStart.getDay();
