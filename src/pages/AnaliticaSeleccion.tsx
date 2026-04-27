@@ -201,10 +201,45 @@ export default function AnaliticaSeleccion() {
   const { data: vacancies = [], isLoading: loadingVacancies } = useVacancies();
   const { data: candidates = [], isLoading: loadingCandidates } = useCandidates();
   const { data: requisitions = [], isLoading: loadingRequisitions } = useRequisitions();
+  const [centerFilter, setCenterFilter] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const isLoading = loadingVacancies || loadingCandidates || loadingRequisitions;
 
+  const centerOptions = useMemo(() => {
+    const centers = new Map<string, string>();
+    vacancies.forEach((item: any) => {
+      if (item.operation_center_id && item.operation_centers?.name) centers.set(item.operation_center_id, item.operation_centers.name);
+    });
+    requisitions.forEach((item: any) => {
+      if (item.operation_center_id && item.operation_centers?.name) centers.set(item.operation_center_id, item.operation_centers.name);
+    });
+    return Array.from(centers.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [vacancies, requisitions]);
+
+  const filteredRequisitions = useMemo(() => requisitions.filter((item: any) => {
+    const matchesCenter = centerFilter === 'all' || item.operation_center_id === centerFilter;
+    const matchesDate = isWithinRange(asDate(item.fecha_requisicion || item.created_at), startDate, endDate);
+    return matchesCenter && matchesDate;
+  }), [requisitions, centerFilter, startDate, endDate]);
+
+  const filteredVacancies = useMemo(() => vacancies.filter((item: any) => {
+    const matchesCenter = centerFilter === 'all' || item.operation_center_id === centerFilter;
+    const matchesDate = isWithinRange(asDate(item.open_date || item.created_at), startDate, endDate);
+    return matchesCenter && matchesDate;
+  }), [vacancies, centerFilter, startDate, endDate]);
+
+  const filteredCandidates = useMemo(() => candidates.filter((item: any) => {
+    const matchesCenter = centerFilter === 'all' || getCandidateCenterId(item) === centerFilter;
+    const matchesDate = isWithinRange(asDate(item.application_date || item.created_at), startDate, endDate);
+    return matchesCenter && matchesDate;
+  }), [candidates, centerFilter, startDate, endDate]);
+
   const analytics = useMemo(() => {
+    const vacancies = filteredVacancies;
+    const candidates = filteredCandidates;
+    const requisitions = filteredRequisitions;
     const today = new Date();
     const monthStarts = Array.from({ length: 6 }, (_, index) => startOfMonth(subMonths(today, 5 - index)));
     const monthKey = (date: Date) => format(date, 'yyyy-MM');
@@ -275,6 +310,7 @@ export default function AnaliticaSeleccion() {
     const peakWeeklyOpenings = weeklyCoverageTrend.reduce((peak, item) => item.aperturas > peak.aperturas ? item : peak, weeklyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
     const peakMonthlyCoverage = monthlyCoverageTrend.reduce((peak, item) => item.cobertura > peak.cobertura ? item : peak, monthlyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
 
+    const activeRequisitions = requisitions.filter((item: any) => !['rechazada', 'cancelada', 'cerrada', 'finalizada'].includes(String(item.estado_requisicion || '').toLowerCase()));
     const activeVacancies = vacancies.filter((item: any) => ['open', 'in_process'].includes(item.status));
     const closedVacancies = vacancies.filter((item: any) => item.actual_close_date && item.open_date);
     const hiredCandidates = candidates.filter((item: any) => item.status === 'hired');
@@ -385,6 +421,12 @@ export default function AnaliticaSeleccion() {
       { key: 'oferta', name: 'Oferta' },
       { key: 'contratado', name: 'Contratado' },
     ] as const;
+    const advanceRate = candidates.length
+      ? Math.round(candidates.reduce((sum: number, candidate: any) => {
+          const reachedIndex = recruitmentStages.reduce((max, stage, index) => candidateReachedStage(candidate, stage.key) ? index : max, 0);
+          return sum + (reachedIndex / (recruitmentStages.length - 1)) * 100;
+        }, 0) / candidates.length)
+      : 0;
     const recruitmentFunnel = recruitmentStages.map((stage, index) => {
       const value = candidates.filter((candidate: any) => candidateReachedStage(candidate, stage.key)).length;
       const previous = index === 0 ? value : candidates.filter((candidate: any) => candidateReachedStage(candidate, recruitmentStages[index - 1].key)).length;
@@ -465,12 +507,15 @@ export default function AnaliticaSeleccion() {
       insights,
       kpis: {
         requisitions: requisitions.length,
+        activeRequisitions: activeRequisitions.length,
         requestedPositions,
         vacancies: vacancies.length,
         activeVacancies: activeVacancies.length,
         totalPositions,
         candidates: candidates.length,
+        inProcessCandidates: inProcessCandidates.length,
         hiredCandidates: hiredCandidates.length,
+        advanceRate,
         hireRate,
         selectionRate,
         rejectionRate,
@@ -479,7 +524,7 @@ export default function AnaliticaSeleccion() {
         avgCandidatesPerVacancy,
       },
     };
-  }, [vacancies, candidates, requisitions]);
+  }, [filteredVacancies, filteredCandidates, filteredRequisitions]);
 
   if (isLoading) {
     return (
