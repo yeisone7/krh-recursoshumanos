@@ -12,7 +12,29 @@ export type RiskLevel = 'I' | 'II' | 'III' | 'IV' | 'V';
 export type CertificationType = 'licencia_conduccion' | 'manejo_defensivo' | 'manipulacion_alimentos' | 'psicosensometrico' | 'bpm' | 'trabajo_alturas' | 'primeros_auxilios' | 'otro';
 export type VaccineType = 'TT' | 'HA' | 'HB' | 'FA' | 'TIFO' | 'COVID' | 'INFLUENZA' | 'otro';
 export type PayrollType = 'quincenal' | 'mensual';
-export type EmployeeDocumentType = 'contrato' | 'hoja_vida' | 'cedula' | 'certificado_laboral' | 'certificado_estudio' | 'antecedentes' | 'carta_residencia' | 'carta_banco' | 'otro';
+export type EmployeeDocumentType =
+  | 'contrato'
+  | 'hoja_vida'
+  | 'cedula'
+  | 'certificado_laboral'
+  | 'certificado_estudio'
+  | 'antecedentes'
+  | 'carta_residencia'
+  | 'carta_banco'
+  | 'otro'
+  | 'certificados_laborales_academicos'
+  | 'proceso_seleccion'
+  | 'certificados_residencia'
+  | 'afiliaciones'
+  | 'examenes_ocupacionales'
+  | 'carne_vacunas'
+  | 'consulta_antecedentes'
+  | 'dotacion'
+  | 'contratos_otrosi'
+  | 'certificados_bancarios'
+  | 'documentos_retiro'
+  | 'inducciones_cursos'
+  | 'licencia_cursos';
 export type LinkType = 'indefinido' | 'fijo' | 'obra_labor' | 'aprendizaje' | 'servicios' | 'temporal';
 export type DocumentType = 'CC' | 'CE' | 'TI' | 'PA' | 'PEP';
 
@@ -107,7 +129,52 @@ export const employeeDocumentTypeLabels: Record<EmployeeDocumentType, string> = 
   carta_residencia: 'Carta de Residencia',
   carta_banco: 'Carta del Banco',
   otro: 'Otro',
+  certificados_laborales_academicos: 'Certificados Laborales y Académicos',
+  proceso_seleccion: 'Proceso de Selección',
+  certificados_residencia: 'Certificados de Residencia',
+  afiliaciones: 'Afiliaciones',
+  examenes_ocupacionales: 'Exámenes Ocupacionales',
+  carne_vacunas: 'Carné de Vacunas',
+  consulta_antecedentes: 'Consulta de Antecedentes',
+  dotacion: 'Dotación',
+  contratos_otrosi: 'Contratos y Otro sí',
+  certificados_bancarios: 'Certificados Bancarios',
+  documentos_retiro: 'Documentos de Retiro',
+  inducciones_cursos: 'Inducciones y Cursos',
+  licencia_cursos: 'Licencia y Cursos',
 };
+
+export const employeeDocumentFolderOrder = [
+  'hoja_vida',
+  'certificados_laborales_academicos',
+  'proceso_seleccion',
+  'certificados_residencia',
+  'afiliaciones',
+  'examenes_ocupacionales',
+  'carne_vacunas',
+  'consulta_antecedentes',
+  'dotacion',
+  'contratos_otrosi',
+  'certificados_bancarios',
+  'documentos_retiro',
+  'inducciones_cursos',
+  'licencia_cursos',
+] as const satisfies readonly EmployeeDocumentType[];
+
+export function normalizeEmployeeDocumentFolder(type: EmployeeDocumentType): EmployeeDocumentType {
+  const legacyMap: Partial<Record<EmployeeDocumentType, EmployeeDocumentType>> = {
+    contrato: 'contratos_otrosi',
+    certificado_laboral: 'certificados_laborales_academicos',
+    certificado_estudio: 'certificados_laborales_academicos',
+    antecedentes: 'consulta_antecedentes',
+    carta_residencia: 'certificados_residencia',
+    carta_banco: 'certificados_bancarios',
+    cedula: 'proceso_seleccion',
+    otro: 'proceso_seleccion',
+  };
+
+  return legacyMap[type] || type;
+}
 
 // =====================================================
 // ZOD SCHEMAS FOR FORM VALIDATION
