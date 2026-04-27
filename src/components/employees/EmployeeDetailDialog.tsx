@@ -38,6 +38,9 @@ import {
   History,
   ScrollText,
   ArrowRightLeft,
+  ChevronDown,
+  ChevronRight,
+  Folder,
 } from 'lucide-react';
 import { OnboardingChecklist } from '@/components/employees/OnboardingChecklist';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -79,6 +82,9 @@ import {
   certificationTypeLabels,
   vaccineTypeLabels,
   employeeDocumentTypeLabels,
+  employeeDocumentFolderOrder,
+  normalizeEmployeeDocumentFolder,
+  type EmployeeDocument,
   getEmployeeFullName,
   familyRelationshipLabels,
 } from '@/types/employee';
@@ -348,6 +354,20 @@ function WorkInfoHistoryCard({ employeeId }: { employeeId: string }) {
   );
 }
 
+function getDocumentFilePath(fileUrl: string) {
+  if (fileUrl.includes('storage/v1/object/public/documents/')) return fileUrl.split('storage/v1/object/public/documents/')[1];
+  if (fileUrl.includes('storage/v1/object/documents/')) return fileUrl.split('storage/v1/object/documents/')[1];
+  if (fileUrl.startsWith('documents/')) return fileUrl.replace('documents/', '');
+  return fileUrl;
+}
+
+async function openEmployeeDocument(doc: EmployeeDocument) {
+  const path = getDocumentFilePath(doc.file_url);
+  const { data, error } = await supabase.storage.from('documents').createSignedUrl(path, 3600);
+  if (error) throw error;
+  window.open(data.signedUrl, '_blank');
+}
+
 export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: EmployeeDetailDialogProps) {
   const { data: employee, isLoading, refetch } = useEmployee(employeeId || undefined);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -357,6 +377,9 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isContractFormOpen, setIsContractFormOpen] = useState(false);
+  const [openDocumentFolders, setOpenDocumentFolders] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(employeeDocumentFolderOrder.map((folder) => [folder, true]))
+  );
   const [contractPreselect, setContractPreselect] = useState<{
     id: string;
     name: string;
@@ -440,7 +463,21 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
     }
   };
 
+  const handleOpenDocument = async (doc: EmployeeDocument) => {
+    try {
+      await openEmployeeDocument(doc);
+    } catch {
+      toast({ title: 'Error al abrir documento', variant: 'destructive' });
+    }
+  };
+
   const employeeFullName = employee ? getEmployeeFullName(employee) : '';
+  const documentsByFolder = employeeDocumentFolderOrder.reduce((acc, folder) => ({ ...acc, [folder]: [] as EmployeeDocument[] }), {} as Record<string, EmployeeDocument[]>);
+  employee?.documents?.forEach((doc) => {
+    const folder = normalizeEmployeeDocumentFolder(doc.document_type);
+    if (!documentsByFolder[folder]) documentsByFolder[folder] = [];
+    documentsByFolder[folder].push(doc);
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1022,41 +1059,65 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       </Button>
                     }
                   >
-                    {employee.documents && employee.documents.length > 0 ? (
-                      <div className="space-y-2">
-                        {employee.documents.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 group hover:bg-muted/80 transition-colors">
-                            <div className="flex-1 min-w-0">
-                              <span className="font-medium text-sm">
-                                {doc.document_name || employeeDocumentTypeLabels[doc.document_type]}
-                              </span>
-                              <span className="text-xs text-muted-foreground block truncate">
-                                {doc.file_name} • {format(new Date(doc.upload_date), 'PP', { locale: es })}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {doc.expiry_date && (
-                                <Badge variant={new Date(doc.expiry_date) < new Date() ? 'destructive' : 'outline'} className="text-[11px]">
-                                  Vence: {format(new Date(doc.expiry_date), 'PP', { locale: es })}
-                                </Badge>
-                              )}
-                              <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                                <ExternalLink className="w-4 h-4" />
-                              </a>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteDocument(doc.id)}>
-                                <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                              </Button>
-                            </div>
+                    <div className="space-y-1">
+                      {employeeDocumentFolderOrder.map((folder) => {
+                        const docs = documentsByFolder[folder] || [];
+                        const isOpen = openDocumentFolders[folder] ?? true;
+
+                        return (
+                          <div key={folder} className="relative">
+                            <button
+                              type="button"
+                              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted/60"
+                              onClick={() => setOpenDocumentFolders((current) => ({ ...current, [folder]: !isOpen }))}
+                            >
+                              {isOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                              <Folder className="h-4 w-4 shrink-0 text-primary" />
+                              <span className="min-w-0 flex-1 truncate text-sm font-medium">{employeeDocumentTypeLabels[folder]}</span>
+                              <Badge variant="secondary" className="h-5 text-[10px]">{docs.length}</Badge>
+                            </button>
+
+                            {isOpen && (
+                              <div className="ml-5 border-l border-border pl-3">
+                                {docs.length > 0 ? docs.map((doc) => (
+                                  <div key={doc.id} className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border">
+                                    <div className="flex flex-col gap-2 rounded-lg bg-muted/50 p-2.5 transition-colors hover:bg-muted/80 sm:flex-row sm:items-center sm:justify-between">
+                                      <div className="min-w-0 flex-1">
+                                        <span className="block truncate text-sm font-medium">
+                                          {doc.document_name || employeeDocumentTypeLabels[doc.document_type]}
+                                        </span>
+                                        <span className="block truncate text-xs text-muted-foreground">
+                                          {doc.file_name} • {format(new Date(doc.upload_date), 'PP', { locale: es })}
+                                        </span>
+                                      </div>
+                                      <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
+                                        {doc.expiry_date && (
+                                          <Badge variant={new Date(doc.expiry_date) < new Date() ? 'destructive' : 'outline'} className="text-[11px]">
+                                            Vence: {format(new Date(doc.expiry_date), 'PP', { locale: es })}
+                                          </Badge>
+                                        )}
+                                        <div className="flex items-center gap-1">
+                                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDocument(doc)} title="Abrir documento">
+                                            <ExternalLink className="h-4 w-4" />
+                                          </Button>
+                                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteDocument(doc.id)} title="Eliminar documento">
+                                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )) : (
+                                  <div className="relative py-2 pl-1 text-xs text-muted-foreground before:absolute before:-left-3 before:top-4 before:h-px before:w-3 before:bg-border">
+                                    Sin documentos
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-10 text-muted-foreground">
-                        <FileText className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                        <p className="text-sm">No hay documentos cargados</p>
-                        <p className="text-xs mt-1">Haz clic en "Cargar" para agregar documentos</p>
-                      </div>
-                    )}
+                        );
+                      })}
+                    </div>
                   </SectionCard>
                 </TabsContent>
 

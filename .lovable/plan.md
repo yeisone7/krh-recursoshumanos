@@ -1,46 +1,48 @@
-Plan para ajustar la vista **Jornadas** en móvil:
+Plan aprobado para Docs en Empleados
 
-1. **Vista principal de Jornadas**
-   - Reorganizar el encabezado y botones superiores para que en móvil no se amontonen.
-   - Ajustar las pestañas de Calendario, Horarios, Turnos y Ciclos para que sean usables en pantallas pequeñas.
-   - Mantener escritorio sin cambios visuales importantes.
+1. Carga múltiple de documentos
+- Actualizar el modal “Cargar Documento” para aceptar varios archivos en una sola operación.
+- Mantener validaciones por archivo: PDF, JPG, PNG o WebP, máximo 10MB.
+- Mostrar una lista de archivos seleccionados con nombre, tamaño y opción para quitar cada archivo antes de guardar.
+- Al guardar, subir cada archivo y crear un registro independiente por documento.
 
-2. **Listados de Horarios, Turnos y Ciclos**
-   - En móvil, reemplazar las tablas compactadas por tarjetas tipo `MobileCardList`.
-   - Mostrar en cada tarjeta la información clave: nombre, horario/duración, estado, días, descripción y acciones.
-   - Conservar tabla en tablet/escritorio.
+2. Fecha de vencimiento
+- Mantener el campo “Fecha de Vencimiento” dentro del modal con selector de calendario.
+- Agregar una opción clara: “Este documento tiene vencimiento”.
+- Si está activada, se muestra/requiere la fecha de vencimiento.
+- Si no está activada, el documento queda como “Sin vencimiento”.
+- Cuando se carguen varios archivos juntos, compartirán la misma carpeta y la misma fecha de vencimiento. Si necesitan fechas diferentes, se cargarán en operaciones separadas.
 
-3. **Calendario de turnos**
-   - Compactar controles superiores en móvil: periodo, selector 15d/Mes, modalidad y centro.
-   - Evitar desbordes horizontales innecesarios fuera de la grilla del calendario.
-   - Mantener la grilla con scroll horizontal interno, ya que el calendario por días lo requiere.
-   - Hacer que la vista de pantalla completa también use padding y controles adecuados para móvil.
+3. Organización visual en carpetas
+- Reemplazar la lista plana por una vista tipo árbol.
+- Usar las carpetas solicitadas, en este orden:
+  1. Hoja de Vida
+  2. Certificados Laborales y Académicos
+  3. Proceso de Selección
+  4. Certificados de Residencia
+  5. Afiliaciones
+  6. Exámenes Ocupacionales
+  7. Carné de Vacunas
+  8. Consulta de Antecedentes
+  9. Dotación
+  10. Contratos y Otro sí
+  11. Certificados Bancarios
+  12. Documentos de Retiro
+  13. Inducciones y Cursos
+  14. Licencia y Cursos
+- Mostrar icono de carpeta, contador de documentos, líneas/indentación tipo árbol y documentos desplegables.
+- Conservar carpetas sin documentos para que siempre se vea la estructura completa.
 
-4. **Modales internos de Jornadas**
-   - Revisar y ajustar estos modales para móvil:
-     - Nuevo/editar horario administrativo.
-     - Nuevo/editar turno operativo.
-     - Nuevo/editar ciclo de rotación.
-     - Generar turnos desde ciclo.
-     - Generar ciclo a todos los empleados.
-     - Exportar planilla de turnos.
-   - Aplicar `max-h-[90vh]`, scroll nativo interno y botones apilables cuando falte espacio.
-   - Evitar `ScrollArea` en formularios complejos, siguiendo el patrón del proyecto.
+4. Compatibilidad con documentos existentes
+- Mapear los tipos actuales hacia las nuevas carpetas cuando aplique.
+- Mantener las acciones actuales de abrir documento y eliminar documento.
 
-5. **Validación**
-   - Ejecutar verificación TypeScript.
-   - Revisar específicamente móvil de 390px de ancho, que coincide con tu vista actual.
+5. Ajustes técnicos
+- Actualizar el catálogo de tipos de documento de empleado para soportar las nuevas carpetas.
+- Actualizar TypeScript, labels, formulario y vista Docs.
+- Aplicar una migración de esquema para agregar los nuevos valores permitidos al catálogo de tipos de documento.
+- Conservar las reglas actuales de seguridad por empresa y permisos.
 
-Detalles técnicos:
-- Archivos principales a modificar:
-  - `src/pages/Jornadas.tsx`
-  - `src/components/schedules/ShiftCalendar.tsx`
-  - `src/components/schedules/ShiftFormDialog.tsx`
-  - `src/components/schedules/ShiftCycleFormDialog.tsx`
-  - `src/components/schedules/CycleGeneratorDialog.tsx`
-  - `src/components/schedules/BulkCycleGeneratorDialog.tsx`
-  - `src/components/schedules/ShiftReportExport.tsx`
-- Reutilizar componentes existentes:
-  - `MobileCardList`
-  - `useIsMobile`
-  - patrones de formularios con `overflow-y-auto` nativo.
+6. Responsividad móvil
+- Adaptar el modal, selector de archivos y árbol para pantallas pequeñas.
+- Evitar desbordes con nombres largos truncados, botones compactos y espaciado táctil adecuado.
