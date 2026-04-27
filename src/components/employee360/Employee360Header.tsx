@@ -43,8 +43,20 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card-elevated p-4 sm:p-6"
+        className="card-elevated relative p-4 sm:p-6"
       >
+        <Badge 
+          variant="outline" 
+          className={cn(
+            'absolute right-4 top-4 inline-flex sm:hidden',
+            employee.is_active 
+              ? 'bg-success-light text-success border-success/20'
+              : 'bg-muted text-muted-foreground'
+          )}
+        >
+          {employee.is_active ? 'Activo' : 'Inactivo'}
+        </Badge>
+
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           {/* Left section: Back button + Avatar + Info */}
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
@@ -82,21 +94,10 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
                 </Badge>
               </div>
 
-              <div className="flex min-w-0 items-center justify-between gap-3 sm:block">
+              <div className="min-w-0">
                 <p className="min-w-0 break-words text-lg text-muted-foreground sm:text-lg">
                   {employee.work_info?.position_name || 'Sin cargo asignado'}
                 </p>
-                <Badge 
-                  variant="outline" 
-                  className={cn(
-                    'shrink-0 sm:hidden',
-                    employee.is_active 
-                      ? 'bg-success-light text-success border-success/20'
-                      : 'bg-muted text-muted-foreground'
-                  )}
-                >
-                  {employee.is_active ? 'Activo' : 'Inactivo'}
-                </Badge>
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
