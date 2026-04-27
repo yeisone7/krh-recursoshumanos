@@ -27,6 +27,13 @@ export default function ConfiguracionLaboral() {
     surcharge_dominical: '75',
   });
 
+  const sanitizeNonNegative = (value: string) => {
+    if (value === '') return '';
+    const numericValue = Number(value);
+    if (Number.isNaN(numericValue)) return '';
+    return String(Math.max(0, numericValue));
+  };
+
   useEffect(() => {
     if (config) {
       setForm({
@@ -50,15 +57,15 @@ export default function ConfiguracionLaboral() {
     try {
       await upsert.mutateAsync({
         ...form,
-        max_weekly_hours: Number(form.max_weekly_hours || 0),
-        daily_hours: Number(form.daily_hours || 0),
-        surcharge_hedo: Number(form.surcharge_hedo || 0),
-        surcharge_heno: Number(form.surcharge_heno || 0),
-        surcharge_rn: Number(form.surcharge_rn || 0),
-        surcharge_hedf: Number(form.surcharge_hedf || 0),
-        surcharge_henf: Number(form.surcharge_henf || 0),
-        surcharge_rnf: Number(form.surcharge_rnf || 0),
-        surcharge_dominical: Number(form.surcharge_dominical || 0),
+        max_weekly_hours: Math.max(0, Number(form.max_weekly_hours || 0)),
+        daily_hours: Math.max(0, Number(form.daily_hours || 0)),
+        surcharge_hedo: Math.max(0, Number(form.surcharge_hedo || 0)),
+        surcharge_heno: Math.max(0, Number(form.surcharge_heno || 0)),
+        surcharge_rn: Math.max(0, Number(form.surcharge_rn || 0)),
+        surcharge_hedf: Math.max(0, Number(form.surcharge_hedf || 0)),
+        surcharge_henf: Math.max(0, Number(form.surcharge_henf || 0)),
+        surcharge_rnf: Math.max(0, Number(form.surcharge_rnf || 0)),
+        surcharge_dominical: Math.max(0, Number(form.surcharge_dominical || 0)),
       });
       toast({ title: 'Configuración guardada correctamente' });
     } catch (err: any) {
