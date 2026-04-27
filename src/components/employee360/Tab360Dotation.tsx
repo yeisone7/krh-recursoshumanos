@@ -72,7 +72,8 @@ export function Tab360Dotation({ dotation, isLoading }: Tab360DotationProps) {
       className="space-y-6"
     >
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="overflow-x-auto pb-1">
+      <div className="grid min-w-[760px] grid-cols-4 gap-4 md:min-w-0">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -128,6 +129,7 @@ export function Tab360Dotation({ dotation, isLoading }: Tab360DotationProps) {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
 
       {/* Dotation List */}
