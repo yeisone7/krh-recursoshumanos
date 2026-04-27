@@ -4,6 +4,7 @@ import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useVacationCalendar } from '@/hooks/useVacations';
@@ -45,6 +46,12 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   }, [currentDate, view]);
 
+  const mobileWeekDays = useMemo(() => {
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+    return eachDayOfInterval({ start: weekStart, end: weekEnd });
+  }, [currentDate]);
+
   // Assign a consistent color to each employee
   const employeeColorMap = useMemo(() => {
     if (!requests) return new Map<string, typeof EMPLOYEE_COLORS[0]>();
@@ -62,6 +69,8 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
   const goToNext = () => {
     setCurrentDate(view === 'week' ? addWeeks(currentDate, 1) : addMonths(currentDate, 1));
   };
+  const goToPreviousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
+  const goToNextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
   const goToToday = () => setCurrentDate(new Date());
 
   const getRequestsForDay = (day: Date) => {
@@ -78,6 +87,8 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
   const viewTitle = view === 'week'
     ? `${format(calendarDays[0], 'd MMM', { locale: es })} – ${format(calendarDays[6], 'd MMM yyyy', { locale: es })}`
     : format(currentDate, 'MMMM yyyy', { locale: es });
+
+  const mobileTitle = `${format(mobileWeekDays[0], 'd MMM', { locale: es })} – ${format(mobileWeekDays[6], 'd MMM yyyy', { locale: es })}`;
 
   const maxVisible = view === 'week' ? 10 : 3;
 
