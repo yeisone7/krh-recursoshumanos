@@ -74,7 +74,7 @@ function asDate(value: string | null | undefined) {
 function formatStatus(value: string | null | undefined) {
   if (!value) return 'Sin estado';
   return value
-    .replaceAll('_', ' ')
+    .replace(/_/g, ' ')
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
