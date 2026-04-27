@@ -9017,6 +9017,19 @@ export type Database = {
         | "carta_residencia"
         | "carta_banco"
         | "otro"
+        | "certificados_laborales_academicos"
+        | "proceso_seleccion"
+        | "certificados_residencia"
+        | "afiliaciones"
+        | "examenes_ocupacionales"
+        | "carne_vacunas"
+        | "consulta_antecedentes"
+        | "dotacion"
+        | "contratos_otrosi"
+        | "certificados_bancarios"
+        | "documentos_retiro"
+        | "inducciones_cursos"
+        | "licencia_cursos"
       employee_status: "active" | "suspended" | "retired" | "en_retiro"
       employee_time_mode: "administrative" | "shift"
       evaluation_cycle_status: "draft" | "active" | "completed" | "cancelled"
@@ -9423,6 +9436,19 @@ export const Constants = {
         "carta_residencia",
         "carta_banco",
         "otro",
+        "certificados_laborales_academicos",
+        "proceso_seleccion",
+        "certificados_residencia",
+        "afiliaciones",
+        "examenes_ocupacionales",
+        "carne_vacunas",
+        "consulta_antecedentes",
+        "dotacion",
+        "contratos_otrosi",
+        "certificados_bancarios",
+        "documentos_retiro",
+        "inducciones_cursos",
+        "licencia_cursos",
       ],
       employee_status: ["active", "suspended", "retired", "en_retiro"],
       employee_time_mode: ["administrative", "shift"],
