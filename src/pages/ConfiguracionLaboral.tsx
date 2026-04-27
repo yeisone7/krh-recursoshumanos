@@ -103,7 +103,7 @@ export default function ConfiguracionLaboral() {
               <Input
                 type="number"
                 value={form.max_weekly_hours}
-                onChange={e => setForm(f => ({ ...f, max_weekly_hours: Number(e.target.value) }))}
+                onChange={e => setForm(f => ({ ...f, max_weekly_hours: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
@@ -112,7 +112,7 @@ export default function ConfiguracionLaboral() {
                 type="number"
                 step="0.5"
                 value={form.daily_hours}
-                onChange={e => setForm(f => ({ ...f, daily_hours: parseFloat(e.target.value) || 0 }))}
+                onChange={e => setForm(f => ({ ...f, daily_hours: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
@@ -166,7 +166,7 @@ export default function ConfiguracionLaboral() {
                   <Input
                     type="number"
                     value={form[key]}
-                    onChange={e => setForm(f => ({ ...f, [key]: Number(e.target.value) }))}
+                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
                   />
                 </div>
               ))}
