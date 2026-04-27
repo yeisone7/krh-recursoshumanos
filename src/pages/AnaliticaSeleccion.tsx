@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { format, subMonths, subWeeks, startOfMonth, startOfWeek, differenceInCalendarDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -29,8 +29,10 @@ import {
   Activity,
   BarChart3,
   Briefcase,
+  CalendarDays,
   CheckCircle2,
   Clock,
+  Filter,
   Gauge,
   Target,
   TrendingDown,
@@ -43,6 +45,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useRequisitions } from '@/hooks/useRequisitions';
 import { useVacancies } from '@/hooks/useVacancies';
