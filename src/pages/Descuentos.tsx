@@ -332,37 +332,37 @@ export default function Descuentos() {
         ) : filtered.length === 0 ? (
           <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">No se encontraron descuentos</CardContent></Card>
         ) : filtered.map(d => (
-          <Card key={d.id}>
+          <Card key={d.id} tabIndex={0} role="article" aria-label={`Descuento de ${d.employees_v2?.first_name || ''} ${d.employees_v2?.last_name || ''}: ${d.description}. Estado ${STATUS_LABELS[d.status]}`} className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
             <CardContent className="space-y-4 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{d.employees_v2?.first_name} {d.employees_v2?.last_name}</p>
-                  <p className="text-xs text-muted-foreground">{d.employees_v2?.document_number}</p>
+                  <p className={`truncate font-semibold ${textSize}`}>{d.employees_v2?.first_name} {d.employees_v2?.last_name}</p>
+                  <p className={`${helperTextSize} text-muted-foreground`}>{d.employees_v2?.document_number}</p>
                 </div>
-                <Badge className={`shrink-0 text-xs border ${STATUS_COLORS[d.status]}`} variant="outline">
+                <Badge className={`shrink-0 border ${accessibleMode ? 'text-sm' : 'text-xs'} ${STATUS_COLORS[d.status]}`} variant="outline" aria-label={`Estado ${STATUS_LABELS[d.status]}`}>
                   {STATUS_LABELS[d.status]}
                 </Badge>
               </div>
 
               <div className="space-y-2">
-                <Badge variant="outline" className="text-xs">{DEDUCTION_TYPE_LABELS[d.deduction_type] || d.deduction_type}</Badge>
-                <p className="text-sm text-foreground">{d.description}</p>
+                <Badge variant="outline" className={accessibleMode ? 'text-sm' : 'text-xs'}>{DEDUCTION_TYPE_LABELS[d.deduction_type] || d.deduction_type}</Badge>
+                <p className={`${textSize} text-foreground`}>{d.description}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className={`grid grid-cols-1 gap-2 ${textSize} ${accessibleMode ? '' : 'min-[380px]:grid-cols-2'}`}>
                 <div className="rounded-md bg-muted/50 p-2">
-                  <p className="text-xs text-muted-foreground">Monto</p>
+                  <p className={`${helperTextSize} text-muted-foreground`}>Monto</p>
                   <p className="font-medium">
                     {d.is_percentage ? `${d.percentage_value}%` : formatCurrency(Number(d.amount))}
-                    {d.is_recurring && <span className="ml-1 text-xs text-muted-foreground">/mes</span>}
+                    {d.is_recurring && <span className={`ml-1 ${helperTextSize} text-muted-foreground`}>/mes</span>}
                   </p>
                 </div>
                 <div className="rounded-md bg-muted/50 p-2">
-                  <p className="text-xs text-muted-foreground">Entidad</p>
+                  <p className={`${helperTextSize} text-muted-foreground`}>Entidad</p>
                   <p className="truncate font-medium">{d.entity_name || '—'}</p>
                 </div>
-                <div className="col-span-2 rounded-md bg-muted/50 p-2">
-                  <p className="text-xs text-muted-foreground">Referencia</p>
+                <div className={`${accessibleMode ? '' : 'min-[380px]:col-span-2'} rounded-md bg-muted/50 p-2`}>
+                  <p className={`${helperTextSize} text-muted-foreground`}>Referencia</p>
                   <p className="truncate font-medium">{d.reference_number || '—'}</p>
                 </div>
               </div>
