@@ -139,19 +139,72 @@ export function LoanCollectionCalendar({ loans }: Props) {
       <Card>
         <CardHeader className="pb-2 px-3 sm:px-6">
           <div className="flex items-center justify-between gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(m => subMonths(m, 1))}>
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(m => window.matchMedia('(max-width: 639px)').matches ? subWeeks(m, 1) : subMonths(m, 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <CardTitle className="text-sm sm:text-base capitalize text-center">
-              {format(currentMonth, 'MMMM yyyy', { locale: es })}
+              <span className="sm:hidden">{mobileTitle}</span>
+              <span className="hidden sm:inline">{format(currentMonth, 'MMMM yyyy', { locale: es })}</span>
             </CardTitle>
-            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(m => addMonths(m, 1))}>
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(m => window.matchMedia('(max-width: 639px)').matches ? addWeeks(m, 1) : addMonths(m, 1))}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </CardHeader>
         <CardContent className="px-2 sm:px-6">
-          <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
+          <div className="space-y-2 sm:hidden">
+            {mobileWeekDays.map(day => {
+              const key = format(day, 'yyyy-MM-dd');
+              const events = eventsByDay[key] || [];
+              const dayTotal = events.reduce((s, e) => s + e.amount, 0);
+
+              return (
+                <div
+                  key={key}
+                  className={cn(
+                    'rounded-md border bg-card p-3',
+                    isToday(day) && 'ring-2 ring-primary ring-offset-1 ring-offset-background'
+                  )}
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className={cn('text-sm font-semibold capitalize', isToday(day) ? 'text-primary' : 'text-foreground')}>
+                        {format(day, 'EEEE d', { locale: es })}
+                      </p>
+                      {events.length > 0 && <p className="text-xs text-muted-foreground">{formatCurrency(dayTotal)}</p>}
+                    </div>
+                    <Badge variant="outline" className="shrink-0 text-xs">
+                      {events.length} cuotas
+                    </Badge>
+                  </div>
+
+                  {events.length > 0 ? (
+                    <div className="space-y-2">
+                      {events.map((e, i) => (
+                        <div key={i} className="rounded-md bg-muted/50 p-2">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="break-words text-sm font-medium text-foreground">{e.employeeName}</p>
+                              <p className="text-xs text-muted-foreground">{e.loanType} · #{e.installmentNumber}/{e.totalInstallments}</p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="text-xs font-mono text-foreground">{formatCurrency(e.amount)}</p>
+                              {e.isPaid && <Badge variant="outline" className="mt-1 text-[10px] border-primary text-primary">Pagado</Badge>}
+                              {e.isOverdue && <Badge variant="destructive" className="mt-1 text-[10px]">Mora</Badge>}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sin cuotas programadas</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="hidden grid-cols-7 gap-px bg-border rounded-lg overflow-hidden sm:grid">
             {/* Day headers */}
             {dayNames.map(d => (
               <div key={d} className="bg-muted p-1.5 text-center text-[10px] font-medium text-muted-foreground sm:p-2 sm:text-xs">
