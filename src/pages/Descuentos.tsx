@@ -151,7 +151,7 @@ export default function Descuentos() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center gap-2">
@@ -201,13 +201,13 @@ export default function Descuentos() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-4 pb-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
+            <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Buscar por empleado o descripción..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
             </div>
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full lg:w-[180px]">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -217,7 +217,7 @@ export default function Descuentos() {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={openCreate}>
+            <Button onClick={openCreate} className="sm:col-span-2 lg:col-span-1 lg:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Descuento
             </Button>
@@ -226,7 +226,7 @@ export default function Descuentos() {
       </Card>
 
       {/* Table */}
-      <Card>
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
