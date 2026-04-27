@@ -369,22 +369,22 @@ export default function Descuentos() {
 
               <div className="flex flex-wrap justify-end gap-2">
                 {d.status !== 'finalizado' && d.status !== 'cancelado' && (
-                  <Button size="sm" variant="outline" onClick={() => toggleStatus(d)}>
-                    {d.status === 'activo' ? <PauseCircle className="w-4 h-4 mr-1 text-warning" /> : <PlayCircle className="w-4 h-4 mr-1 text-primary" />}
+                  <Button size="sm" variant="outline" onClick={() => toggleStatus(d)} className={accessibleMode ? 'min-h-11 text-base' : ''} aria-label={`${d.status === 'activo' ? 'Pausar' : 'Reactivar'} descuento de ${d.employees_v2?.first_name || ''} ${d.employees_v2?.last_name || ''}`}>
+                    {d.status === 'activo' ? <PauseCircle className="w-4 h-4 mr-1 text-warning" aria-hidden="true" /> : <PlayCircle className="w-4 h-4 mr-1 text-primary" aria-hidden="true" />}
                     {d.status === 'activo' ? 'Pausar' : 'Reactivar'}
                   </Button>
                 )}
                 {d.status === 'activo' && (
-                  <Button size="sm" variant="outline" onClick={() => finalize(d)}>
-                    <CheckCircle className="w-4 h-4 mr-1 text-primary" /> Finalizar
+                  <Button size="sm" variant="outline" onClick={() => finalize(d)} className={accessibleMode ? 'min-h-11 text-base' : ''} aria-label={`Finalizar descuento de ${d.employees_v2?.first_name || ''} ${d.employees_v2?.last_name || ''}`}>
+                    <CheckCircle className="w-4 h-4 mr-1 text-primary" aria-hidden="true" /> Finalizar
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => openEdit(d)}>
-                  <Pencil className="w-4 h-4 mr-1" /> Editar
+                <Button size="sm" variant="outline" onClick={() => openEdit(d)} className={accessibleMode ? 'min-h-11 text-base' : ''} aria-label={`Editar descuento de ${d.employees_v2?.first_name || ''} ${d.employees_v2?.last_name || ''}`}>
+                  <Pencil className="w-4 h-4 mr-1" aria-hidden="true" /> Editar
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="outline" className="text-destructive"><Trash2 className="w-4 h-4 mr-1" /> Eliminar</Button>
+                    <Button size="sm" variant="outline" className={`text-destructive ${accessibleMode ? 'min-h-11 text-base' : ''}`} aria-label={`Eliminar descuento de ${d.employees_v2?.first_name || ''} ${d.employees_v2?.last_name || ''}`}><Trash2 className="w-4 h-4 mr-1" aria-hidden="true" /> Eliminar</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
