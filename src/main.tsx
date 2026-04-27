@@ -13,6 +13,10 @@ document.documentElement.style.colorScheme = initialTheme;
 
 createRoot(document.getElementById("root")!).render(<App />);
 
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  document.body.classList.add('app-standalone');
+}
+
 window.requestAnimationFrame(() => {
   window.setTimeout(() => document.body.classList.add("app-ready"), 450);
 });
