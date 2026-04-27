@@ -123,7 +123,8 @@ export function Tab360Contracts({ contracts, isLoading }: Tab360ContractsProps) 
               </CardHeader>
               
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="overflow-x-auto pb-1">
+                <div className="grid min-w-[640px] grid-cols-4 gap-4 md:min-w-0">
                   <div>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> Inicio
@@ -157,6 +158,7 @@ export function Tab360Contracts({ contracts, isLoading }: Tab360ContractsProps) 
                       {contract.trial_period_days ? `${contract.trial_period_days} días` : 'Sin período'}
                     </p>
                   </div>
+                </div>
                 </div>
 
                 {/* Extensions */}

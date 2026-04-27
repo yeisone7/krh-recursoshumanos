@@ -72,13 +72,15 @@ function KPICard({ icon, label, value, sublabel, variant = 'default', delay = 0 
 export function Employee360KPIs({ kpis, isLoading }: Employee360KPIsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
+      <div className="overflow-x-auto pb-1">
+      <div className="grid min-w-[900px] grid-cols-6 gap-3 lg:min-w-0 lg:gap-4">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="card-elevated p-4">
             <Skeleton className="h-8 w-16 mb-2" />
             <Skeleton className="h-4 w-24" />
           </div>
         ))}
+      </div>
       </div>
     );
   }
@@ -96,7 +98,8 @@ export function Employee360KPIs({ kpis, isLoading }: Employee360KPIsProps) {
     : null;
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
+    <div className="overflow-x-auto pb-1">
+    <div className="grid min-w-[900px] grid-cols-6 gap-3 lg:min-w-0 lg:gap-4">
       <KPICard
         icon={<Calendar className="w-6 h-6" />}
         label="Antigüedad"
@@ -146,6 +149,7 @@ export function Employee360KPIs({ kpis, isLoading }: Employee360KPIsProps) {
         variant={kpis.activeDisciplinaryProcesses > 0 ? 'warning' : 'default'}
         delay={0.25}
       />
+    </div>
     </div>
   );
 }
