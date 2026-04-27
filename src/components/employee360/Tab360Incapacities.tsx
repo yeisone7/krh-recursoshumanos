@@ -77,7 +77,8 @@ export function Tab360Incapacities({ incapacities, isLoading }: Tab360Incapaciti
       className="space-y-6"
     >
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="overflow-x-auto pb-1">
+      <div className="grid min-w-[760px] grid-cols-4 gap-4 md:min-w-0">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -133,6 +134,7 @@ export function Tab360Incapacities({ incapacities, isLoading }: Tab360Incapaciti
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
 
       {/* Incapacity List */}
@@ -207,7 +209,8 @@ export function Tab360Incapacities({ incapacities, isLoading }: Tab360Incapaciti
                   </div>
 
                   {/* Day breakdown */}
-                  <div className="mt-4 pt-4 border-t grid grid-cols-4 gap-2 text-sm text-center">
+                  <div className="mt-4 overflow-x-auto border-t pt-4">
+                  <div className="grid min-w-[480px] grid-cols-4 gap-2 text-center text-sm sm:min-w-0">
                     <div>
                       <p className="text-muted-foreground">Empleador</p>
                       <p className="font-medium">{inc.employer_days} días</p>
@@ -224,6 +227,7 @@ export function Tab360Incapacities({ incapacities, isLoading }: Tab360Incapaciti
                       <p className="text-muted-foreground">AFP</p>
                       <p className="font-medium">{inc.afp_days} días</p>
                     </div>
+                  </div>
                   </div>
                 </CardContent>
               </Card>
