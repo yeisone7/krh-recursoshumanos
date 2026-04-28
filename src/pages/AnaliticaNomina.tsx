@@ -260,12 +260,15 @@ export default function AnaliticaNomina() {
 
   const centerNameMap = useMemo(() => new Map(centerOptions.map((center) => [center.id, center.name])), [centerOptions]);
 
+  const selectedAlertTypeKey = NOVELTY_TYPE_LABELS[selectedAlertType] || selectedAlertType;
+  const selectedAlertCenterKey = selectedAlertCenter === 'all' ? 'Sin centro' : centerNameMap.get(selectedAlertCenter) || 'Sin centro';
+
   const updateTypeAlertThreshold = (field: 'volume' | 'severity', value: number) => {
     setTypeAlertThresholds((prev) => ({
       ...prev,
-      [selectedAlertType]: {
-        volume: prev[selectedAlertType]?.volume ?? volumeThreshold,
-        severity: prev[selectedAlertType]?.severity ?? severityThreshold,
+      [selectedAlertTypeKey]: {
+        volume: prev[selectedAlertTypeKey]?.volume ?? volumeThreshold,
+        severity: prev[selectedAlertTypeKey]?.severity ?? severityThreshold,
         [field]: value,
       },
     }));
@@ -274,9 +277,9 @@ export default function AnaliticaNomina() {
   const updateCenterAlertThreshold = (field: 'volume' | 'severity', value: number) => {
     setCenterAlertThresholds((prev) => ({
       ...prev,
-      [selectedAlertCenter]: {
-        volume: prev[selectedAlertCenter]?.volume ?? volumeThreshold,
-        severity: prev[selectedAlertCenter]?.severity ?? severityThreshold,
+      [selectedAlertCenterKey]: {
+        volume: prev[selectedAlertCenterKey]?.volume ?? volumeThreshold,
+        severity: prev[selectedAlertCenterKey]?.severity ?? severityThreshold,
         [field]: value,
       },
     }));
