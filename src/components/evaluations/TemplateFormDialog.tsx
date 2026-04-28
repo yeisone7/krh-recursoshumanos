@@ -155,7 +155,7 @@ export function TemplateFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto scrollbar-themed">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-4 scrollbar-themed sm:p-6">
         <DialogHeader>
           <DialogTitle>
             {template ? 'Editar Plantilla' : 'Nueva Plantilla de Evaluación'}
@@ -165,9 +165,9 @@ export function TemplateFormDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Row 1: Name + Active toggle + Positions */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-4">
-                <div className="flex items-end gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
                   <FormField
                     control={form.control}
                     name="name"
@@ -295,12 +295,13 @@ export function TemplateFormDialog({
 
             {/* Criteria */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h4 className="font-medium">Competencias / Criterios</h4>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="w-full sm:w-auto"
                   onClick={() => appendCriteria({ ...emptyCriteria })}
                 >
                   <Plus className="w-4 h-4 mr-1" />
