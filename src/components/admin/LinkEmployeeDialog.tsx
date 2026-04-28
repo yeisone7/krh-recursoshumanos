@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Search, Link, Unlink } from 'lucide-react';
@@ -85,8 +84,8 @@ export function LinkEmployeeDialog({ open, onOpenChange, userId, userEmail }: Li
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-lg">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Link className="h-5 w-5" />
             Vincular Empleado al Portal
@@ -102,20 +101,20 @@ export function LinkEmployeeDialog({ open, onOpenChange, userId, userEmail }: Li
         </DialogHeader>
 
         {existingLink ? (
-          <div className="space-y-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <div className="p-4 rounded-lg border bg-muted/50">
               <p className="text-sm text-muted-foreground mb-2">Empleado vinculado actualmente:</p>
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <Avatar>
                   <AvatarFallback>
                     {existingLink.employees_v2?.first_name?.[0]}{existingLink.employees_v2?.last_name?.[0]}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="font-medium">
+                <div className="min-w-0">
+                  <p className="break-words font-medium">
                     {existingLink.employees_v2?.first_name} {existingLink.employees_v2?.last_name}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="break-words text-sm text-muted-foreground">
                     {existingLink.employees_v2?.document_number}
                   </p>
                 </div>
@@ -133,7 +132,7 @@ export function LinkEmployeeDialog({ open, onOpenChange, userId, userEmail }: Li
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -144,7 +143,7 @@ export function LinkEmployeeDialog({ open, onOpenChange, userId, userEmail }: Li
               />
             </div>
 
-            <ScrollArea className="h-64 border rounded-lg">
+            <div className="max-h-[45dvh] overflow-y-auto rounded-lg border">
               {loadingEmployees ? (
                 <div className="p-4 text-center text-muted-foreground">
                   Cargando empleados...
@@ -182,15 +181,16 @@ export function LinkEmployeeDialog({ open, onOpenChange, userId, userEmail }: Li
                   ))}
                 </div>
               )}
-            </ScrollArea>
+            </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
               <Button 
                 onClick={handleLink}
                 disabled={!selectedEmployeeId || linkMutation.isPending}
+                className="w-full sm:w-auto"
               >
                 <Link className="h-4 w-4 mr-2" />
                 {linkMutation.isPending ? 'Vinculando...' : 'Vincular Empleado'}

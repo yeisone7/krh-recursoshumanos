@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAssignCompany, useRemoveCompanyAssignment, type AdminUser } from '@/hooks/useAdminUsers';
 import { toast } from 'sonner';
 import { Building2 } from 'lucide-react';
@@ -80,15 +79,15 @@ export function UserCompanyDialog({ user, open, onOpenChange }: UserCompanyDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Asignar Empresas</DialogTitle>
           <DialogDescription>
             Selecciona las empresas a las que tendrá acceso este usuario.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4 pr-1">
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="text-sm text-muted-foreground">Empresas actuales:</span>
             {user?.companies.length === 0 && (
@@ -108,40 +107,41 @@ export function UserCompanyDialog({ user, open, onOpenChange }: UserCompanyDialo
               <p>No hay empresas disponibles</p>
             </div>
           ) : (
-            <ScrollArea className="h-[300px] pr-4">
+            <div className="max-h-[45dvh] overflow-y-auto pr-1">
               <div className="space-y-3">
                 {allCompanies.map(company => (
                   <div
                     key={company.id}
-                    className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                    className="flex min-w-0 items-start space-x-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
                   >
                     <Checkbox
                       id={`company-${company.id}`}
                       checked={selectedCompanies.includes(company.id)}
                       onCheckedChange={(checked) => handleToggle(company.id, !!checked)}
                     />
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <Label htmlFor={`company-${company.id}`} className="font-medium cursor-pointer">
                         {company.name}
                       </Label>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="break-words text-sm text-muted-foreground">
                         NIT: {company.nit}
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Cancelar
           </Button>
           <Button
             onClick={handleSave}
             disabled={assignCompany.isPending || removeCompany.isPending}
+            className="w-full sm:w-auto"
           >
             {assignCompany.isPending || removeCompany.isPending ? 'Guardando...' : 'Guardar Cambios'}
           </Button>
