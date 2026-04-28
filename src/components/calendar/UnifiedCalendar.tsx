@@ -188,14 +188,14 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
       </div>
 
       {/* Main layout: Calendar + Sidebar */}
-      <div className="flex-1 min-h-0 flex gap-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:gap-4">
         {/* Calendar Card */}
-        <Card className="flex-1 min-w-0 flex flex-col">
+        <Card className="flex min-h-[560px] min-w-0 flex-1 flex-col sm:min-h-[640px] lg:min-h-0">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 pt-4 pb-3">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold capitalize">{viewTitle}</h2>
-              <div className="flex items-center gap-1">
+          <div className="flex flex-col gap-3 px-3 pb-3 pt-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:justify-start">
+              <h2 className="text-base font-semibold capitalize sm:text-lg">{viewTitle}</h2>
+              <div className="flex items-center gap-1 self-start sm:self-auto">
                 <Button variant="ghost" size="sm" onClick={goToToday} className="h-7 text-xs">
                   Hoy
                 </Button>
@@ -208,18 +208,18 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week' | 'agenda')}>
-                <TabsList className="h-8">
-                  <TabsTrigger value="agenda" className="text-xs px-3 gap-1">
+                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:inline-flex sm:w-auto">
+                  <TabsTrigger value="agenda" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
                     <List className="h-3.5 w-3.5" />
                     Agenda
                   </TabsTrigger>
-                  <TabsTrigger value="month" className="text-xs px-3 gap-1">
+                  <TabsTrigger value="month" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Mes
                   </TabsTrigger>
-                  <TabsTrigger value="week" className="text-xs px-3 gap-1">
+                  <TabsTrigger value="week" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Semana
                   </TabsTrigger>
@@ -228,7 +228,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5">
+                  <Button variant="outline" size="sm" className="h-8 w-full gap-1.5 sm:w-auto">
                     <Filter className="h-3.5 w-3.5" />
                     Filtros
                     {enabledTypes.length < 5 && (
@@ -238,7 +238,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-56" align="end">
+                <PopoverContent className="w-[calc(100vw-2rem)] max-w-56" align="end">
                   <div className="space-y-3">
                     <p className="text-sm font-medium">Tipos de evento</p>
                     {(Object.keys(EVENT_TYPE_LABELS) as CalendarEventType[]).map((type) => (
@@ -266,7 +266,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
           <Separator />
 
           {/* Calendar body */}
-          <CardContent className="flex-1 overflow-hidden p-3">
+          <CardContent className="min-h-0 flex-1 overflow-hidden p-2 sm:p-3">
             {isLoading ? (
               <div className="h-full flex items-center justify-center text-muted-foreground">
                 Cargando eventos...
