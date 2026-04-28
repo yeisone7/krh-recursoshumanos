@@ -252,6 +252,11 @@ export default function AnaliticaNomina() {
     return employeeCenterMap.get(novelty.employee_id) === centerFilter;
   }), [novelties, centerFilter, employeeCenterMap]);
 
+  const filteredComparisonNovelties = useMemo(() => comparisonNovelties.filter((novelty: any) => {
+    if (centerFilter === 'all') return true;
+    return employeeCenterMap.get(novelty.employee_id) === centerFilter;
+  }), [comparisonNovelties, centerFilter, employeeCenterMap]);
+
   const filteredConfigs = useMemo(() => timeConfigs.filter((config: any) => {
     if (centerFilter === 'all') return true;
     return employeeCenterMap.get(config.employee_id) === centerFilter;
@@ -278,6 +283,33 @@ export default function AnaliticaNomina() {
       const multiplier = defaultImpactMultiplier[item.novelty_type] ?? 1;
       return Number(item.hours || 0) * hourlyRate * multiplier;
     };
+    const buildMonthlyTrend = (sourceAssignments: any[], sourceNovelties: any[], suffix = '') => {
+      const keys = new Set<string>();
+      sourceAssignments.forEach((item: any) => keys.add(periodKey(item.assignment_date)));
+      sourceNovelties.forEach((item: any) => keys.add(periodKey(item.novelty_date)));
+      return Array.from(keys).sort().map((key) => {
+        const monthAssignments = sourceAssignments.filter((item: any) => periodKey(item.assignment_date) === key);
+        const monthNovelties = sourceNovelties.filter((item: any) => periodKey(item.novelty_date) === key);
+        const currentCount = monthNovelties.length;
+        const previousMonthKey = shiftMonth(key, 1);
+        const previousCount = sourceNovelties.filter((item: any) => periodKey(item.novelty_date) === previousMonthKey).length;
+        return {
+          periodo: `${periodLabel(key)}${suffix}`,
+          periodoBase: periodLabel(key),
+          asignaciones: monthAssignments.length,
+          jornadas: monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length,
+          descansos: monthAssignments.filter((item: any) => item.shifts?.is_rest_day).length,
+          novedades: currentCount,
+          altasNovedades: Math.max(0, currentCount - previousCount),
+          bajasNovedades: Math.max(0, previousCount - currentCount),
+          empleadosImpactados: new Set(monthNovelties.map((item: any) => item.employee_id)).size,
+          horasPorJornada: Math.round((monthNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) / Math.max(1, monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length)) * 10) / 10,
+          montoEstimado: Math.round(monthNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0)),
+          horasExtra: Math.round(monthNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
+          ausencias: Math.round(monthNovelties.filter((item: any) => absenceTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
+        };
+      });
+    };
     const noveltyHours = filteredNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
     const estimatedImpact = filteredNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0);
     const overtimeHours = filteredNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
@@ -287,25 +319,8 @@ export default function AnaliticaNomina() {
     const overtimeRate = percent(overtimeHours, Math.max(1, plannedHours + overtimeHours));
     const absenceRate = percent(absenceHours, Math.max(1, plannedHours));
 
-    const monthKeys = new Set<string>();
-    assignments.forEach((item: any) => monthKeys.add(periodKey(item.assignment_date)));
-    filteredNovelties.forEach((item: any) => monthKeys.add(periodKey(item.novelty_date)));
-    const monthlyTrend = Array.from(monthKeys).sort().map((key) => {
-      const monthAssignments = assignments.filter((item: any) => periodKey(item.assignment_date) === key);
-      const monthNovelties = filteredNovelties.filter((item: any) => periodKey(item.novelty_date) === key);
-      return {
-        periodo: periodLabel(key),
-        asignaciones: monthAssignments.length,
-        jornadas: monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length,
-        descansos: monthAssignments.filter((item: any) => item.shifts?.is_rest_day).length,
-        novedades: monthNovelties.length,
-        empleadosImpactados: new Set(monthNovelties.map((item: any) => item.employee_id)).size,
-        horasPorJornada: Math.round((monthNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) / Math.max(1, monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length)) * 10) / 10,
-        montoEstimado: Math.round(monthNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0)),
-        horasExtra: Math.round(monthNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
-        ausencias: Math.round(monthNovelties.filter((item: any) => absenceTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
-      };
-    });
+    const monthlyTrend = buildMonthlyTrend(assignments, filteredNovelties);
+    const comparisonMonthlyTrend = buildMonthlyTrend(comparisonAssignments, filteredComparisonNovelties, ' ant.');
 
     const weekdayBehavior = Array.from({ length: 7 }, (_, day) => {
       const dayAssignments = assignments.filter((item: any) => asDate(item.assignment_date)?.getDay() === day);
