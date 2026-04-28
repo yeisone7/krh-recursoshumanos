@@ -228,7 +228,25 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
 
   if (isLoading) {
     return (
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <>
+      <div className="space-y-3 md:hidden">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="card-elevated space-y-3 p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-4 w-32 rounded bg-muted animate-pulse" />
+                <div className="h-3 w-44 rounded bg-muted animate-pulse" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-10 rounded bg-muted animate-pulse" />
+              <div className="h-10 rounded bg-muted animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
         <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow>
@@ -264,12 +282,13 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
           </TableBody>
         </Table>
       </div>
+      </>
     );
   }
 
   if (users.length === 0) {
     return (
-      <div className="rounded-lg border border-border p-12 text-center">
+      <div className="rounded-lg border border-border p-6 text-center sm:p-12">
         <Shield className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold mb-2">Sin usuarios</h3>
         <p className="text-muted-foreground">
