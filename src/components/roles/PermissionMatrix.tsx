@@ -138,20 +138,20 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onBack}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3 sm:items-center">
+          <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div>
-            <h3 className="text-lg font-semibold">Permisos: {role.name}</h3>
+          <div className="min-w-0">
+            <h3 className="text-base sm:text-lg font-semibold break-words">Permisos: {role.name}</h3>
             <p className="text-sm text-muted-foreground">
               {selectedCount} de {totalPerms} permisos seleccionados
               {role.is_system && ' (rol de sistema — todos los permisos)'}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
           {!role.is_system && (
             <>
               <Button variant="outline" size="sm" onClick={selectAll}>
@@ -166,6 +166,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
           <Button
             onClick={handleSave}
             disabled={!hasChanges || role.is_system || setPermissions.isPending}
+            className="col-span-2 sm:col-span-1"
           >
             <Save className="w-4 h-4 mr-2" />
             Guardar
@@ -174,9 +175,9 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           {/* Header row */}
-          <div className="grid grid-cols-[1fr_repeat(5,80px)] items-center border-b bg-muted/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="grid min-w-[620px] grid-cols-[minmax(180px,1fr)_repeat(5,72px)] sm:grid-cols-[1fr_repeat(5,80px)] items-center border-b bg-muted/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <span>Módulo</span>
             <span className="text-center">Todos</span>
             {ACTION_ORDER.map(a => (
@@ -194,7 +195,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
               return (
                 <div key={mod.id}>
                   {/* Module row */}
-                  <div className="grid grid-cols-[1fr_repeat(5,80px)] items-center px-4 py-2.5 hover:bg-muted/20 transition-colors">
+                  <div className="grid min-w-[620px] grid-cols-[minmax(180px,1fr)_repeat(5,72px)] sm:grid-cols-[1fr_repeat(5,80px)] items-center px-4 py-2.5 hover:bg-muted/20 transition-colors">
                     <div className="flex items-center gap-2">
                       {hasChildren ? (
                         <button onClick={() => toggleExpanded(mod.id)} className="p-0.5">
@@ -232,7 +233,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
                   {hasChildren && isExpanded && children.map(child => (
                     <div
                       key={child.id}
-                      className="grid grid-cols-[1fr_repeat(5,80px)] items-center px-4 py-2 pl-12 bg-muted/10 hover:bg-muted/20 transition-colors"
+                      className="grid min-w-[620px] grid-cols-[minmax(180px,1fr)_repeat(5,72px)] sm:grid-cols-[1fr_repeat(5,80px)] items-center px-4 py-2 pl-12 bg-muted/10 hover:bg-muted/20 transition-colors"
                     >
                       <span className="text-sm text-muted-foreground">{child.name}</span>
                       <div className="flex justify-center">
