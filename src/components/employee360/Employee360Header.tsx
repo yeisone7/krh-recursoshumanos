@@ -43,12 +43,15 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card-elevated relative p-4 sm:p-6"
+        className="card-elevated relative overflow-hidden p-4 sm:p-6"
       >
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(hsl(var(--primary)/0.16)_1px,transparent_1px)] [background-size:16px_16px]" />
+        <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full border border-primary/20" />
+        <div className="pointer-events-none absolute right-8 -top-28 h-56 w-56 rounded-full border border-success/20" />
         <Badge 
           variant="outline" 
           className={cn(
-            'absolute right-4 top-4 inline-flex sm:hidden',
+            'absolute right-4 top-4 z-10 inline-flex sm:hidden',
             employee.is_active 
               ? 'bg-success-light text-success border-success/20'
               : 'bg-muted text-muted-foreground'
@@ -57,7 +60,7 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
           {employee.is_active ? 'Activo' : 'Inactivo'}
         </Badge>
 
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           {/* Left section: Back button + Avatar + Info */}
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
             <Button
