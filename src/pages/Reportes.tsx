@@ -47,17 +47,17 @@ export default function Reportes() {
       </div>
 
       {/* Categorized Tabs */}
-      <Tabs defaultValue="personal" className="w-full">
-        <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
-        <TabsList className="inline-flex h-auto min-w-max justify-start gap-1 bg-muted/50 p-1 sm:w-full sm:min-w-0 sm:flex-wrap">
+      <Tabs defaultValue="personal" className="w-full min-w-0">
+        <div className="min-w-0 overflow-hidden">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1 sm:grid-cols-3 lg:grid-cols-7">
           {TABS.map(({ value, label, icon: Icon }) => (
             <TabsTrigger
               key={value}
               value={value}
-              className="flex shrink-0 items-center gap-1.5 px-2.5 text-xs sm:px-3 sm:text-sm data-[state=active]:bg-background"
+              className="min-w-0 justify-start gap-1.5 px-2 text-xs sm:px-3 sm:text-sm data-[state=active]:bg-background"
             >
-              <Icon className="h-4 w-4" />
-              {label}
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 truncate">{label}</span>
             </TabsTrigger>
           ))}
         </TabsList>
