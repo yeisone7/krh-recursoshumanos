@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
-import { Stethoscope, Syringe, Award, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Stethoscope, Syringe, Award, Calendar, AlertTriangle, CheckCircle2, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { EmployeeV2WithRelations, certificationTypeLabels, vaccineTypeLabels } from '@/types/employee';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -26,6 +27,7 @@ const examTypeLabels: Record<string, string> = {
 const examResultLabels: Record<string, { label: string; color: string }> = {
   apto: { label: 'Apto', color: 'bg-success-light text-success' },
   apto_con_restricciones: { label: 'Apto con Restricciones', color: 'bg-warning-light text-warning' },
+  apto_restricciones: { label: 'Apto con Restricciones', color: 'bg-warning-light text-warning' },
   no_apto: { label: 'No Apto', color: 'bg-destructive/10 text-destructive' },
   pendiente: { label: 'Pendiente', color: 'bg-muted text-muted-foreground' },
 };
