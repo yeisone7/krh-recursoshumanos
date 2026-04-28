@@ -157,7 +157,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
   const maxVisible = view === 'week' ? 8 : 3;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-3 sm:gap-4">
       {/* Summary KPI Row */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
         {(Object.keys(EVENT_TYPE_LABELS) as CalendarEventType[]).map((type) => {
@@ -190,7 +190,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
       {/* Main layout: Calendar + Sidebar */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:gap-4">
         {/* Calendar Card */}
-        <Card className="flex min-h-[560px] min-w-0 flex-1 flex-col sm:min-h-[640px] lg:min-h-0">
+        <Card className="flex min-h-[420px] min-w-0 flex-1 flex-col sm:min-h-[640px] lg:min-h-0">
           {/* Header */}
           <div className="flex flex-col gap-3 px-3 pb-3 pt-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:justify-start">
@@ -208,18 +208,18 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
               <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week' | 'agenda')}>
-                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:inline-flex sm:w-auto">
-                  <TabsTrigger value="agenda" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
+                <TabsList className="flex h-auto w-full max-w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:inline-flex sm:w-auto">
+                  <TabsTrigger value="agenda" className="min-h-8 shrink-0 gap-1 px-2.5 text-xs whitespace-nowrap sm:px-3">
                     <List className="h-3.5 w-3.5" />
                     Agenda
                   </TabsTrigger>
-                  <TabsTrigger value="month" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
+                  <TabsTrigger value="month" className="min-h-8 shrink-0 gap-1 px-2.5 text-xs whitespace-nowrap sm:px-3">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Mes
                   </TabsTrigger>
-                  <TabsTrigger value="week" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
+                  <TabsTrigger value="week" className="min-h-8 shrink-0 gap-1 px-2.5 text-xs whitespace-nowrap sm:px-3">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Semana
                   </TabsTrigger>
