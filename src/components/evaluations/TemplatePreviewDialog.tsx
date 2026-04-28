@@ -58,7 +58,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          'flex max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]',
+          'flex max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:h-auto sm:max-h-[90vh] [&>button.absolute]:fixed [&>button.absolute]:right-3 [&>button.absolute]:top-[max(0.75rem,env(safe-area-inset-top))] [&>button.absolute]:z-[60] [&>button.absolute]:h-9 [&>button.absolute]:w-9 [&>button.absolute]:rounded-full [&>button.absolute]:border [&>button.absolute]:border-border [&>button.absolute]:bg-background/95 [&>button.absolute]:text-foreground [&>button.absolute]:shadow-lg [&>button.absolute]:backdrop-blur sm:[&>button.absolute]:right-4 sm:[&>button.absolute]:top-4',
           isMobileFullscreen
             ? 'h-[100dvh] w-screen rounded-none border-0 sm:w-full sm:rounded-lg sm:border'
             : 'h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)]'
