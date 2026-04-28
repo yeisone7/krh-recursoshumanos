@@ -880,7 +880,7 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground truncate">{currentCompany?.name || 'Seleccionar empresa'}</p>
                  <p className="text-[11px] text-muted-foreground truncate">{userEmail || userName}</p>
-                 <p className="text-[10px] font-normal leading-tight text-primary/70 truncate">v{APP_VERSION_LABEL}</p>
+                 <p className="text-[10px] font-normal leading-tight text-muted-foreground/70 truncate">v{APP_VERSION_LABEL}</p>
               </div>
             }
             {!collapsed &&
