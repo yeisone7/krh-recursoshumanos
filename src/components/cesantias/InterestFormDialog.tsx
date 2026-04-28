@@ -160,7 +160,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>
             {interest ? 'Editar Pago de Intereses' : 'Nuevo Pago de Intereses'}
@@ -169,7 +169,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="employee_id"
@@ -206,7 +206,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <FormField
                 control={form.control}
                 name="cesantias_balance"
@@ -264,7 +264,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="due_date"
@@ -321,7 +321,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="grid grid-cols-1 gap-2 pt-4 sm:flex sm:justify-end">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
