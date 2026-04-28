@@ -44,6 +44,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -74,6 +75,18 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', { style: 'currency', cu
 const overtimeTypes = new Set<NoveltyType>(['hedo', 'heno', 'hedf', 'henf', 'rn', 'rnf', 'dominical_trabajado', 'festivo_trabajado']);
 const absenceTypes = new Set<NoveltyType>(['incapacidad', 'vacaciones', 'permiso']);
 const regularTypes = new Set<NoveltyType>(['jornada', 'descanso_remunerado']);
+
+const alertStatusLabels = {
+  pendiente: 'Pendiente',
+  notificada: 'Notificada',
+  cerrada: 'Cerrada',
+};
+
+const alertStatusStyles = {
+  pendiente: 'bg-warning-light text-warning border-warning/20',
+  notificada: 'bg-primary-light text-primary border-primary/20',
+  cerrada: 'bg-success-light text-success border-success/20',
+};
 
 const defaultImpactMultiplier: Record<string, number> = {
   jornada: 1,
@@ -198,6 +211,7 @@ export default function AnaliticaNomina() {
   const [comparisonMode, setComparisonMode] = useState<'actual' | 'mes_anterior'>('actual');
   const [volumeThreshold, setVolumeThreshold] = useState(10);
   const [severityThreshold, setSeverityThreshold] = useState(1000000);
+  const [alertStatusOverrides, setAlertStatusOverrides] = useState<Record<string, 'pendiente' | 'notificada' | 'cerrada'>>({});
   const comparisonStartDate = startDate ? shiftMonth(startDate, 1) : '';
   const comparisonEndDate = endDate ? shiftMonth(endDate, 1) : '';
 
@@ -325,6 +339,8 @@ export default function AnaliticaNomina() {
 
     const monthlyTrend = buildMonthlyTrend(assignments, filteredNovelties);
     const comparisonMonthlyTrend = buildMonthlyTrend(comparisonAssignments, filteredComparisonNovelties, ' ant.');
+    const historicalAverageNovelties = monthlyTrend.length ? monthlyTrend.reduce((sum, month) => sum + month.novedades, 0) / monthlyTrend.length : 0;
+    const historicalAverageImpact = monthlyTrend.length ? monthlyTrend.reduce((sum, month) => sum + month.montoEstimado, 0) / monthlyTrend.length : 0;
 
     const weekdayBehavior = Array.from({ length: 7 }, (_, day) => {
       const dayAssignments = assignments.filter((item: any) => asDate(item.assignment_date)?.getDay() === day);
@@ -451,6 +467,60 @@ export default function AnaliticaNomina() {
       .filter((item: any) => item.prioridad !== 'Normal')
       .slice(0, 6)
       .map((item: any) => `${item.prioridad}: ${item.name} supera umbral con ${item.volumen} novedades y ${currencyFormatter.format(item.impacto)} estimados.`);
+    const automaticAlerts = [
+      ...monthlyTrend.flatMap((month, index) => {
+        const previous = monthlyTrend[index - 1];
+        const noveltyVariation = previous ? percent(Math.abs(month.novedades - previous.novedades), Math.max(1, previous.novedades)) : 0;
+        const impactVariation = previous ? percent(Math.abs(month.montoEstimado - previous.montoEstimado), Math.max(1, previous.montoEstimado)) : 0;
+        return [
+          month.novedades >= Math.max(volumeThreshold, historicalAverageNovelties * 1.6) && month.novedades > 0 ? {
+            id: `pico-novedades-${month.periodo}`,
+            tipo: 'Pico inusual de novedades',
+            severidad: month.novedades >= historicalAverageNovelties * 2 ? 'Crítica' : 'Alta',
+            estado: 'pendiente' as const,
+            periodo: month.periodo,
+            detalle: `${month.novedades} novedades frente a un promedio de ${numberFormatter.format(historicalAverageNovelties)}.`,
+            valor: `${month.novedades} novedades`,
+          } : null,
+          previous && noveltyVariation >= 45 && month.novedades !== previous.novedades ? {
+            id: `variacion-novedades-${month.periodo}`,
+            tipo: 'Variación brusca mes a mes',
+            severidad: noveltyVariation >= 80 ? 'Crítica' : 'Alta',
+            estado: 'pendiente' as const,
+            periodo: month.periodo,
+            detalle: `${month.novedades > previous.novedades ? 'Aumento' : 'Disminución'} de ${noveltyVariation}% contra ${previous.periodo}.`,
+            valor: `${month.novedades - previous.novedades > 0 ? '+' : ''}${month.novedades - previous.novedades}`,
+          } : null,
+          previous && impactVariation >= 50 && month.montoEstimado > Math.max(severityThreshold, historicalAverageImpact) ? {
+            id: `variacion-impacto-${month.periodo}`,
+            tipo: 'Variación brusca de impacto',
+            severidad: impactVariation >= 100 ? 'Crítica' : 'Alta',
+            estado: 'pendiente' as const,
+            periodo: month.periodo,
+            detalle: `Impacto cambia ${impactVariation}% contra ${previous.periodo}.`,
+            valor: currencyFormatter.format(month.montoEstimado),
+          } : null,
+        ];
+      }),
+      coverage > 0 && coverage < 70 ? {
+        id: 'empate-cobertura-baja',
+        tipo: 'Empate de cobertura',
+        severidad: coverage < 50 ? 'Crítica' : 'Alta',
+        estado: 'pendiente' as const,
+        periodo: `${periodLabel(periodKey(startDate))} - ${periodLabel(periodKey(endDate))}`,
+        detalle: `Cobertura en ${coverage}% con ${withoutAssignments} empleados sin asignación detectada.`,
+        valor: `${coverage}%`,
+      } : null,
+      manualAssignments > generatedAssignments && generatedAssignments > 0 ? {
+        id: 'empate-cobertura-manual-ciclo',
+        tipo: 'Empate de cobertura',
+        severidad: manualAssignments > generatedAssignments * 1.5 ? 'Alta' : 'Media',
+        estado: 'notificada' as const,
+        periodo: `${periodLabel(periodKey(startDate))} - ${periodLabel(periodKey(endDate))}`,
+        detalle: `Programación manual supera ciclo automático: ${manualAssignments} vs ${generatedAssignments}.`,
+        valor: `${percent(manualAssignments, assignments.length)}% manual`,
+      } : null,
+    ].filter(Boolean) as Array<{ id: string; tipo: string; severidad: string; estado: 'pendiente' | 'notificada' | 'cerrada'; periodo: string; detalle: string; valor: string }>;
     const alerts = [
       withoutAssignments > 0 ? `${withoutAssignments} empleados activos en tiempo no tienen asignaciones en el rango.` : null,
       highLoadEmployees > 0 ? `${highLoadEmployees} empleados concentran una carga alta de novedades.` : null,
@@ -498,6 +568,7 @@ export default function AnaliticaNomina() {
       heatmap,
       insights,
       alerts,
+      automaticAlerts,
     };
   }, [assignments, centerNameMap, comparisonAssignments, comparisonMode, employeeCenterMap, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, severityThreshold, shiftCycles, shifts, startDate, endDate, volumeThreshold, workSchedules]);
 
@@ -634,6 +705,47 @@ export default function AnaliticaNomina() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <AlertTriangle className="h-5 w-5 text-warning" /> Alertas automáticas de nómina
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {analytics.automaticAlerts.length === 0 ? (
+            <div className="rounded-md border border-border p-4 text-sm text-muted-foreground">
+              No se detectan picos inusuales, empates de cobertura ni variaciones bruscas con los filtros actuales.
+            </div>
+          ) : analytics.automaticAlerts.map((alert) => {
+            const status = alertStatusOverrides[alert.id] || alert.estado;
+            return (
+              <div key={alert.id} className="rounded-md border border-border p-3">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground">{alert.tipo}</p>
+                      <Badge variant="outline" className={cn(
+                        alert.severidad === 'Crítica' && 'bg-destructive/10 text-destructive border-destructive/20',
+                        alert.severidad === 'Alta' && 'bg-warning-light text-warning border-warning/20',
+                        alert.severidad === 'Media' && 'bg-primary-light text-primary border-primary/20'
+                      )}>{alert.severidad}</Badge>
+                      <Badge variant="outline" className={alertStatusStyles[status]}>{alertStatusLabels[status]}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{alert.periodo} · {alert.valor}</p>
+                    <p className="text-sm text-foreground">{alert.detalle}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <Button size="sm" variant={status === 'pendiente' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'pendiente' }))}>Pendiente</Button>
+                    <Button size="sm" variant={status === 'notificada' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'notificada' }))}>Notificada</Button>
+                    <Button size="sm" variant={status === 'cerrada' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'cerrada' }))}>Cerrada</Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 xl:grid-cols-2">
         {[{ title: 'Priorización por tipo de novedad', rows: analytics.impactRankingByType }, { title: 'Priorización por centro', rows: analytics.impactRankingByCenter }].map((section) => (
