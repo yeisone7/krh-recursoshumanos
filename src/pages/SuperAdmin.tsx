@@ -91,16 +91,17 @@ export default function SuperAdmin() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Panel Super-Administrador</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-foreground sm:text-2xl">Panel Super-Administrador</h1>
           <p className="text-muted-foreground">Gestión global de empresas, usuarios y roles del sistema</p>
         </div>
       </div>
 
       <Tabs defaultValue="companies" className="space-y-4">
-        <TabsList>
+        <div className="scrollbar-hide w-full overflow-x-auto pb-1">
+        <TabsList className="inline-flex h-auto min-w-max justify-start sm:grid sm:w-full sm:grid-cols-3">
           <TabsTrigger value="companies" className="gap-2">
             <Building2 className="w-4 h-4" />
             Empresas
@@ -114,32 +115,33 @@ export default function SuperAdmin() {
             Roles
           </TabsTrigger>
         </TabsList>
+        </div>
 
         {/* Companies Tab */}
         <TabsContent value="companies" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex w-full items-center gap-2 sm:max-w-sm">
               <Search className="w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por nombre o NIT..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="max-w-sm"
+                className="min-w-0 flex-1"
               />
             </div>
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
                   Nueva Empresa
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
+              <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
+                <DialogHeader className="shrink-0">
                   <DialogTitle>Crear Nueva Empresa</DialogTitle>
                   <DialogDescription>Ingresa los datos de la nueva empresa</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
                   <div>
                     <Label>Nombre *</Label>
                     <Input value={newCompany.name} onChange={e => setNewCompany(p => ({ ...p, name: e.target.value }))} placeholder="Mi Empresa S.A.S" />
@@ -148,7 +150,7 @@ export default function SuperAdmin() {
                     <Label>NIT *</Label>
                     <Input value={newCompany.nit} onChange={e => setNewCompany(p => ({ ...p, nit: e.target.value }))} placeholder="900123456-7" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <Label>Correo</Label>
                       <Input value={newCompany.email} onChange={e => setNewCompany(p => ({ ...p, email: e.target.value }))} placeholder="empresa@ejemplo.com" />
@@ -163,10 +165,11 @@ export default function SuperAdmin() {
                     <Input value={newCompany.address} onChange={e => setNewCompany(p => ({ ...p, address: e.target.value }))} placeholder="Calle 123 #45-67" />
                   </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
                   <Button
                     onClick={() => createCompanyMutation.mutate()}
                     disabled={!newCompany.name || !newCompany.nit || createCompanyMutation.isPending}
+                    className="w-full sm:w-auto"
                   >
                     {createCompanyMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                     Crear Empresa
@@ -182,8 +185,8 @@ export default function SuperAdmin() {
             </div>
           ) : (
             <Card>
-              <CardContent className="p-0">
-                <Table>
+              <CardContent className="p-0 overflow-x-auto">
+                <Table className="min-w-[760px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Empresa</TableHead>
@@ -242,7 +245,7 @@ export default function SuperAdmin() {
         {/* Users Tab */}
         <TabsContent value="users" className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => setInviteDialogOpen(true)}>
+            <Button onClick={() => setInviteDialogOpen(true)} className="w-full sm:w-auto">
               <UserPlus className="w-4 h-4 mr-2" />
               Invitar Usuario
             </Button>

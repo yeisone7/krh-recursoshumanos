@@ -86,15 +86,15 @@ export function UserRoleDialog({ user, open, onOpenChange }: UserRoleDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Gestionar Roles</DialogTitle>
           <DialogDescription>
             Usuario: <span className="font-medium">{user?.display_name || user?.email || user?.id.slice(0, 8) + '...'}</span>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4 pr-1">
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="text-sm text-muted-foreground">Roles actuales:</span>
             {!isLoading && currentRoleIds.length === 0 && (
@@ -118,18 +118,18 @@ export function UserRoleDialog({ user, open, onOpenChange }: UserRoleDialogProps
               </p>
             ) : (
               activeRoles.map(role => (
-                <div key={role.id} className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
+                <div key={role.id} className="flex min-w-0 items-start space-x-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50">
                   <Checkbox
                     id={`role-${role.id}`}
                     checked={selectedRoleIds.includes(role.id)}
                     onCheckedChange={(checked) => handleToggle(role.id, !!checked)}
                   />
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <Label htmlFor={`role-${role.id}`} className="font-medium cursor-pointer">
                       {role.name}
                     </Label>
                     {role.description && (
-                      <p className="text-sm text-muted-foreground">{role.description}</p>
+                      <p className="break-words text-sm text-muted-foreground">{role.description}</p>
                     )}
                   </div>
                 </div>
@@ -138,11 +138,11 @@ export function UserRoleDialog({ user, open, onOpenChange }: UserRoleDialogProps
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={isSaving || isLoading}>
+          <Button onClick={handleSave} disabled={isSaving || isLoading} className="w-full sm:w-auto">
             {isSaving ? 'Guardando...' : 'Guardar Cambios'}
           </Button>
         </DialogFooter>
