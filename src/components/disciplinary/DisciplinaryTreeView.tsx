@@ -82,16 +82,16 @@ export function DisciplinaryTreeView({
       {grouped.map(([centerName, centerProcesses]) => (
         <div
           key={centerName}
-          className="border rounded-xl bg-card overflow-hidden"
+          className="overflow-hidden rounded-xl border bg-card"
         >
           {/* Center header */}
           <button
             onClick={() => toggle(centerName)}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+            className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition-colors hover:bg-muted/50 sm:px-4"
           >
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-primary" />
-              <span className="font-semibold text-sm uppercase tracking-wide">
+            <div className="flex min-w-0 items-center gap-2">
+              <Building2 className="h-4 w-4 shrink-0 text-primary" />
+              <span className="truncate text-sm font-semibold uppercase tracking-wide">
                 {centerName}
               </span>
               <Badge
@@ -114,14 +114,14 @@ export function DisciplinaryTreeView({
               {centerProcesses.map((process) => (
                 <div
                   key={process.id}
-                  className="flex items-center justify-between px-6 py-3 hover:bg-muted/30 cursor-pointer transition-colors border-b last:border-b-0"
+                  className="flex cursor-pointer flex-col gap-3 border-b px-3 py-3 transition-colors last:border-b-0 hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between sm:px-6"
                   onClick={() => onOpenDetail(process.id)}
                 >
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <span className="font-medium text-sm whitespace-nowrap">
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-4">
+                    <span className="text-sm font-medium whitespace-nowrap">
                       {process.case_number}
                     </span>
-                    <span className="text-sm text-muted-foreground truncate">
+                    <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground sm:flex-none">
                       {process.employee
                         ? `${process.employee.first_name} ${process.employee.last_name}`
                         : '-'}
@@ -134,7 +134,7 @@ export function DisciplinaryTreeView({
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
                     <Badge className={getStatusColor(process.status)}>
                       {disciplinaryStatusLabels[process.status]}
                     </Badge>

@@ -113,21 +113,22 @@ export function DisciplinaryDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="text-xl">
+        <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh] sm:p-6">
+          <DialogHeader className="px-4 pb-3 pt-4 pr-12 sm:px-0 sm:pb-4 sm:pt-0 sm:pr-0">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <DialogTitle className="truncate text-lg sm:text-xl">
                   Proceso {process.case_number}
                 </DialogTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   {process.employee?.first_name} {process.employee?.last_name}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="w-full sm:w-auto"
                   onClick={handleExportPdf}
                   disabled={isExporting}
                 >
@@ -144,9 +145,9 @@ export function DisciplinaryDetailDialog({
             </div>
           </DialogHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-0 sm:pb-0 sm:pr-2">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-5">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="evidence">Evidencias</TabsTrigger>
                 <TabsTrigger value="defenses">Descargos</TabsTrigger>
@@ -160,13 +161,13 @@ export function DisciplinaryDetailDialog({
                 {nextAction && process.status !== 'cerrado' && (
                   <Card className="border-primary/20 bg-primary/5">
                     <CardContent className="py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-center gap-2">
                           <ChevronRight className="h-5 w-5 text-primary" />
                           <span className="font-medium">Siguiente paso:</span>
                           <span className="text-muted-foreground">{nextAction}</span>
                         </div>
-                        <Button onClick={handleAdvanceStatus} disabled={advanceStatus.isPending}>
+                        <Button onClick={handleAdvanceStatus} disabled={advanceStatus.isPending} className="w-full sm:w-auto">
                           {advanceStatus.isPending ? 'Procesando...' : nextAction}
                         </Button>
                       </div>
@@ -175,7 +176,7 @@ export function DisciplinaryDetailDialog({
                 )}
 
                 {/* Info Cards */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -184,15 +185,15 @@ export function DisciplinaryDetailDialog({
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between">
                         <span className="text-muted-foreground">Fecha de los hechos:</span>
                         <span>{formatDate(process.fault_date)}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between">
                         <span className="text-muted-foreground">Apertura:</span>
                         <span>{formatDate(process.opening_date)}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between">
                         <span className="text-muted-foreground">Notificación:</span>
                         <span>{formatDate(process.notification_date)}</span>
                       </div>
@@ -279,10 +280,10 @@ export function DisciplinaryDetailDialog({
 
               {/* TAB: Evidence */}
               <TabsContent value="evidence" className="space-y-4 mt-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-medium">Evidencias del Proceso</h3>
                   {!isClosed && (
-                    <Button size="sm" onClick={() => setShowEvidenceForm(true)}>
+                    <Button size="sm" onClick={() => setShowEvidenceForm(true)} className="w-full sm:w-auto">
                       <Plus className="h-4 w-4 mr-1" />
                       Agregar Evidencia
                     </Button>
@@ -294,8 +295,8 @@ export function DisciplinaryDetailDialog({
                     {process.evidence.map((ev) => (
                       <Card key={ev.id}>
                         <CardContent className="py-4">
-                          <div className="flex justify-between items-start">
-                            <div>
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0">
                               <Badge variant="outline" className="mb-2">
                                 {ev.evidence_type}
                               </Badge>
@@ -306,7 +307,7 @@ export function DisciplinaryDetailDialog({
                               </p>
                             </div>
                             {ev.file_url && (
-                              <Button size="sm" variant="outline" asChild>
+                              <Button size="sm" variant="outline" asChild className="w-full sm:w-auto">
                                 <a href={ev.file_url} target="_blank" rel="noopener noreferrer">
                                   Ver Archivo
                                 </a>
@@ -328,15 +329,15 @@ export function DisciplinaryDetailDialog({
 
               {/* TAB: Defenses */}
               <TabsContent value="defenses" className="space-y-4 mt-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-medium">Descargos del Empleado</h3>
                   {!isClosed && (
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => setShowTokenDialog(true)}>
+                    <div className="grid grid-cols-1 gap-2 sm:flex">
+                      <Button size="sm" variant="outline" onClick={() => setShowTokenDialog(true)} className="w-full sm:w-auto">
                         <Link className="h-4 w-4 mr-1" />
                         Enviar Enlace
                       </Button>
-                      <Button size="sm" onClick={() => setShowDefenseForm(true)}>
+                      <Button size="sm" onClick={() => setShowDefenseForm(true)} className="w-full sm:w-auto">
                         <Plus className="h-4 w-4 mr-1" />
                         Registrar Descargos
                       </Button>
@@ -349,8 +350,8 @@ export function DisciplinaryDetailDialog({
                     {process.defenses.map((def) => (
                       <Card key={def.id}>
                         <CardContent className="py-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
+                          <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex flex-wrap items-center gap-2">
                               <Badge variant="outline">{def.defense_type === 'escrito' ? 'Escrito' : 'Oral'}</Badge>
                               {(def as any).submitted_via_token && (
                                 <Badge variant="secondary" className="text-xs">Vía Enlace</Badge>
@@ -390,7 +391,7 @@ export function DisciplinaryDetailDialog({
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                           <span className="text-sm text-muted-foreground">Sanción:</span>
                           <p className="font-medium">{sanctionTypeLabels[process.sanction_type]}</p>
@@ -433,7 +434,7 @@ export function DisciplinaryDetailDialog({
                               <Scale className="h-4 w-4" />
                               Apelación
                             </h4>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                               <div>
                                 <span className="text-muted-foreground">Fecha:</span>
                                 <p>{formatDate(process.appeal_date)}</p>
@@ -469,7 +470,7 @@ export function DisciplinaryDetailDialog({
                       <Gavel className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p>Aún no se ha tomado una decisión en este proceso</p>
                       {process.status === 'analisis' && !isClosed && (
-                        <Button className="mt-4" onClick={() => setShowDecisionForm(true)}>
+                              <Button className="mt-4 w-full sm:w-auto" onClick={() => setShowDecisionForm(true)}>
                           Registrar Decisión
                         </Button>
                       )}
@@ -494,8 +495,8 @@ export function DisciplinaryDetailDialog({
                           <div className="absolute left-2.5 w-3 h-3 rounded-full bg-primary border-2 border-background" />
                           <Card>
                             <CardContent className="py-3">
-                              <div className="flex justify-between items-start">
-                                <div>
+                              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="min-w-0">
                                   <p className="font-medium text-sm">{item.description}</p>
                                   {item.new_status && (
                                     <Badge variant="outline" className="mt-1">
@@ -503,7 +504,7 @@ export function DisciplinaryDetailDialog({
                                     </Badge>
                                   )}
                                 </div>
-                                <div className="text-right text-xs text-muted-foreground">
+                                <div className="text-left text-xs text-muted-foreground sm:text-right">
                                   <p>{format(new Date(item.action_date), 'Pp', { locale: es })}</p>
                                   {item.performed_by_name && <p>{item.performed_by_name}</p>}
                                 </div>
