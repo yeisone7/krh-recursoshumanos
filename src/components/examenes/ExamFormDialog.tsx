@@ -119,7 +119,7 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:w-full sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-xl">
             <Stethoscope className="w-5 h-5 text-primary" />
@@ -130,16 +130,16 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="general" className="flex items-center gap-2">
+              <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-3">
+                <TabsTrigger value="general" className="flex shrink-0 items-center gap-2 whitespace-nowrap text-xs sm:text-sm">
                   <FileText className="w-4 h-4" />
                   General
                 </TabsTrigger>
-                <TabsTrigger value="resultado" className="flex items-center gap-2">
+                <TabsTrigger value="resultado" className="flex shrink-0 items-center gap-2 whitespace-nowrap text-xs sm:text-sm">
                   <Stethoscope className="w-4 h-4" />
                   Resultado
                 </TabsTrigger>
-                <TabsTrigger value="proveedor" className="flex items-center gap-2">
+                <TabsTrigger value="proveedor" className="flex shrink-0 items-center gap-2 whitespace-nowrap text-xs sm:text-sm">
                   <Building2 className="w-4 h-4" />
                   Proveedor
                 </TabsTrigger>
@@ -397,7 +397,7 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
               </TabsContent>
             </Tabs>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="grid grid-cols-1 gap-2 border-t pt-4 sm:flex sm:justify-end sm:gap-3">
               <Button type="button" variant="outline" onClick={handleClose}>
                 Cancelar
               </Button>
