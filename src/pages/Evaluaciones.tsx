@@ -333,9 +333,9 @@ export default function Evaluaciones() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Evaluación de Desempeño</h1>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Evaluación de Desempeño</h1>
           <p className="text-muted-foreground mt-1">
             Gestión de evaluaciones y desarrollo profesional
           </p>
@@ -345,17 +345,18 @@ export default function Evaluaciones() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="cycles" className="gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList className="grid h-auto w-full grid-cols-3 sm:w-auto">
+            <TabsTrigger value="cycles" className="gap-2 px-2 sm:px-3">
               <Calendar className="h-4 w-4" />
               Ciclos
             </TabsTrigger>
-            <TabsTrigger value="evaluations" className="gap-2">
+            <TabsTrigger value="evaluations" className="gap-2 px-2 sm:px-3">
               <ClipboardCheck className="h-4 w-4" />
-              Evaluaciones
+              <span className="hidden xs:inline">Evaluaciones</span>
+              <span className="xs:hidden">Eval.</span>
             </TabsTrigger>
-            <TabsTrigger value="templates" className="gap-2">
+            <TabsTrigger value="templates" className="gap-2 px-2 sm:px-3">
               <FileText className="h-4 w-4" />
               Plantillas
             </TabsTrigger>
@@ -376,9 +377,12 @@ export default function Evaluaciones() {
             }}
           >
             <Plus className="h-4 w-4 mr-2" />
-            {activeTab === 'templates' && 'Nueva Plantilla'}
-            {activeTab === 'cycles' && 'Nuevo Ciclo'}
-            {activeTab === 'evaluations' && 'Nueva Evaluación'}
+            <span className="sm:hidden">Nuevo</span>
+            <span className="hidden sm:inline">
+              {activeTab === 'templates' && 'Nueva Plantilla'}
+              {activeTab === 'cycles' && 'Nuevo Ciclo'}
+              {activeTab === 'evaluations' && 'Nueva Evaluación'}
+            </span>
             
           </Button>
         </div>
