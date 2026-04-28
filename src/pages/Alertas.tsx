@@ -184,17 +184,17 @@ export default function Alertas() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4 sm:space-y-6">
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+        className="flex min-w-0 flex-col gap-4 md:flex-row md:items-center md:justify-between"
       >
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Centro de Alertas</h1>
-          <p className="text-muted-foreground mt-1">Monitoreo centralizado de vencimientos y eventos críticos</p>
+        <div className="min-w-0">
+          <h1 className="break-words font-display text-xl font-bold text-foreground sm:text-2xl">Centro de Alertas</h1>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">Monitoreo centralizado de vencimientos y eventos críticos</p>
         </div>
       </motion.div>
 
@@ -276,8 +276,8 @@ export default function Alertas() {
         transition={{ duration: 0.3, delay: 0.3 }}
         className="card-elevated p-4"
       >
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
+        <div className="flex min-w-0 flex-col gap-3 md:flex-row md:gap-4">
+          <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
@@ -287,9 +287,9 @@ export default function Alertas() {
               className="pl-10"
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex min-w-0 gap-3">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full min-w-0 md:w-[180px]">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
