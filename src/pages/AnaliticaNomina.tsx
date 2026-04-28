@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { format, startOfMonth, eachDayOfInterval, differenceInCalendarDays, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
