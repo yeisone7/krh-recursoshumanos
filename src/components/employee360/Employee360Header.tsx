@@ -46,6 +46,7 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
         className="card-elevated relative overflow-hidden p-4 sm:p-6"
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(hsl(var(--primary)/0.16)_1px,transparent_1px)] [background-size:16px_16px]" />
+        <div className="pointer-events-none absolute -right-5 top-6 h-28 w-28 rounded-full bg-success/10 sm:-right-8 sm:top-8 sm:h-36 sm:w-36" />
         <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full border border-success/25" />
         <div className="pointer-events-none absolute right-8 -top-28 h-56 w-56 rounded-full border border-success/20" />
         <Badge 
