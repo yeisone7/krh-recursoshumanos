@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { useEvaluations } from '@/hooks/useEvaluations';
 import { EVALUATION_STATUS_LABELS } from '@/types/evaluation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const COLORS = ['hsl(var(--primary))', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
 
@@ -30,6 +31,7 @@ function getScoreColor(score: number) {
 export default function AnaliticasEvaluaciones() {
   const { evaluations, cycles, templates } = useEvaluations();
   const [compareCycleId, setCompareCycleId] = useState<string>('');
+  const isMobile = useIsMobile();
 
   const completedEvals = evaluations.filter(e => e.status === 'submitted' || e.status === 'reviewed' || e.status === 'approved');
   const pendingEvals = evaluations.filter(e => e.status === 'pending');
@@ -174,22 +176,22 @@ export default function AnaliticasEvaluaciones() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Analíticas de Evaluaciones</h1>
-        <p className="text-muted-foreground">Métricas, tendencias y comparativos del desempeño organizacional</p>
+        <h1 className="text-2xl font-bold sm:text-3xl">Analíticas de Evaluaciones</h1>
+        <p className="mt-1 text-sm text-muted-foreground sm:text-base">Métricas, tendencias y comparativos del desempeño organizacional</p>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 sm:gap-4">
         {kpis.map((kpi, i) => (
           <motion.div key={kpi.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="p-4 sm:pt-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">{kpi.label}</p>
-                    <p className="text-3xl font-bold">{kpi.value}</p>
+                    <p className="text-2xl font-bold sm:text-3xl">{kpi.value}</p>
                     <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
                   </div>
                   <kpi.icon className={`h-8 w-8 ${kpi.color}`} />
