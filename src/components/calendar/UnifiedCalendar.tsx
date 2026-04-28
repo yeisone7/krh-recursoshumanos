@@ -273,7 +273,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
               </div>
             ) : view === 'agenda' ? (
               /* ───── Agenda / List View ───── */
-              <ScrollArea className="h-full">
+              <div className="h-full overflow-y-auto">
                 <div className="space-y-1">
                   {events.length === 0 ? (
                     <div className="py-16 text-center text-muted-foreground">
@@ -355,7 +355,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                     })()
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             ) : (
               <div className="h-full flex flex-col">
                 {/* Weekday header */}
@@ -371,7 +371,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                 </div>
 
                 {/* Grid */}
-                <ScrollArea className="flex-1">
+                <div className="min-h-0 flex-1 overflow-y-auto">
                   <div className="grid grid-cols-7 gap-1">
                     {calendarDays.map((day) => {
                       const dayEvents = getEventsForDay(day);
@@ -462,7 +462,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                       );
                     })}
                   </div>
-                </ScrollArea>
+                </div>
               </div>
             )}
           </CardContent>
@@ -482,7 +482,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
             )}
           </div>
           <Separator />
-          <ScrollArea className="flex-1">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="p-4 space-y-2">
               {selectedDayEvents.length === 0 ? (
                 <div className="py-10 text-center text-muted-foreground">
@@ -525,7 +525,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                 ))
               )}
             </div>
-          </ScrollArea>
+          </div>
           {/* Bottom summary */}
           <Separator />
           <div className="p-3 flex flex-wrap gap-1.5">
