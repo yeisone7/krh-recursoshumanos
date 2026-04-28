@@ -84,17 +84,17 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       className={cn(
-        "flex items-center gap-4 p-5 rounded-xl border transition-all duration-200 hover:shadow-md card-elevated",
+        "flex flex-col gap-3 rounded-xl border p-4 transition-all duration-200 hover:shadow-md card-elevated sm:flex-row sm:items-center sm:gap-4 sm:p-5",
         styles.border
       )}
     >
-      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0", styles.bg)}>
+      <div className={cn("h-10 w-10 shrink-0 rounded-xl flex items-center justify-center sm:h-12 sm:w-12", styles.bg)}>
         <Icon className={cn("w-6 h-6", styles.icon)} />
       </div>
       
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1 self-stretch sm:self-auto">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <p className="font-semibold text-foreground">{alert.title}</p>
+          <p className="min-w-0 break-words font-semibold text-foreground">{alert.title}</p>
           <Badge variant="outline" className={cn("text-xs", styles.badge)}>
             {isExpired ? `Vencido hace ${Math.abs(alert.daysRemaining)} días` : `${alert.daysRemaining} días`}
           </Badge>
@@ -107,7 +107,7 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
             </Badge>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="break-words text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{alert.entityName}</span>
           {' • '}
           {alert.description}
@@ -119,11 +119,11 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
         )}
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
         <Button 
           variant="outline" 
           size="sm" 
-          className="gap-1.5"
+          className="w-full gap-1.5 sm:w-auto"
           onClick={() => onNavigate(alert.navigateTo || '/')}
         >
           <ExternalLink className="w-3.5 h-3.5" />
