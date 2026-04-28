@@ -74,7 +74,7 @@ export default function Seguridad() {
         transition={{ delay: 0.1 }}
       >
           <Tabs defaultValue="roles" className="space-y-4 min-w-0">
-          <div className="w-full overflow-x-auto pb-1">
+          <div className="scrollbar-hide w-full overflow-x-auto pb-1">
             <TabsList className="inline-flex h-auto min-w-max justify-start">
               <TabsTrigger value="roles" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
                 <ShieldCheck className="w-4 h-4" />
