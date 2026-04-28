@@ -53,7 +53,7 @@ export function RoleFormDialog({ open, onOpenChange, editingRole }: RoleFormDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{editingRole ? 'Editar Rol' : 'Nuevo Rol'}</DialogTitle>
           <DialogDescription>
@@ -83,11 +83,12 @@ export function RoleFormDialog({ open, onOpenChange, editingRole }: RoleFormDial
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">Cancelar</Button>
           <Button
             onClick={handleSubmit}
             disabled={!name.trim() || createRole.isPending || updateRole.isPending}
+            className="w-full sm:w-auto"
           >
             {editingRole ? 'Guardar' : 'Crear Rol'}
           </Button>
