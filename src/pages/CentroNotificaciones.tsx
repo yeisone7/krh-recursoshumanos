@@ -99,13 +99,13 @@ export default function CentroNotificaciones() {
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Centro de Notificaciones</h1>
+        <div className="min-w-0">
+          <h1 className="break-words font-display text-xl font-bold text-foreground sm:text-2xl">Centro de Notificaciones</h1>
           <p className="text-muted-foreground mt-1">
             {canManageCompanyHistory ? 'Historial de alertas y envíos de la empresa por usuario' : 'Historial de tus alertas y envíos'}
           </p>
         </div>
-        <Button variant="outline" onClick={refetch} disabled={isLoading} className="gap-2">
+        <Button variant="outline" onClick={refetch} disabled={isLoading} className="w-full gap-2 sm:w-auto">
           <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} /> Actualizar
         </Button>
       </motion.div>
@@ -118,11 +118,11 @@ export default function CentroNotificaciones() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="px-4 sm:px-6">
           <CardTitle>Historial</CardTitle>
           <CardDescription>Filtra por usuario, estado, canal, correo o asunto.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-4 sm:px-6">
           <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -152,10 +152,14 @@ export default function CentroNotificaciones() {
             </Select>
           </div>
 
-          <Tabs defaultValue="alerts">
-            <TabsList>
-              <TabsTrigger value="alerts">Alertas en app</TabsTrigger>
-              <TabsTrigger value="deliveries">Correos y envíos</TabsTrigger>
+          <Tabs defaultValue="alerts" className="space-y-4">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1">
+              <TabsTrigger value="alerts" className="min-w-0 px-2 text-xs sm:text-sm">
+                <span className="min-w-0 truncate">Alertas en app</span>
+              </TabsTrigger>
+              <TabsTrigger value="deliveries" className="min-w-0 px-2 text-xs sm:text-sm">
+                <span className="min-w-0 truncate">Correos y envíos</span>
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="alerts">
               <Table>
