@@ -137,10 +137,10 @@ export function EvaluationKanbanBoard({
     <div className="space-y-4">
       {/* Filter */}
       {showCycleFilter && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <Select value={cycleFilter} onValueChange={setCycleFilter}>
-            <SelectTrigger className="w-[240px]">
+            <SelectTrigger className="w-full sm:w-[240px]">
               <SelectValue placeholder="Filtrar por ciclo" />
             </SelectTrigger>
             <SelectContent>
@@ -155,7 +155,7 @@ export function EvaluationKanbanBoard({
 
       {/* Kanban Board */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-5 gap-3 min-h-[500px]">
+        <div className="grid min-h-[500px] grid-cols-[repeat(5,minmax(220px,1fr))] gap-3 overflow-x-auto pb-2 lg:grid-cols-5">
           {COLUMNS.map((col) => {
             const items = grouped[col.status] || [];
             return (
