@@ -15,6 +15,7 @@ import { useExamCatalog, useDeleteExamCatalogItem, useUpdateExamCatalogItem } fr
 import { ExamCatalogFormDialog } from './ExamCatalogFormDialog';
 import type { ExamCatalogItem } from '@/hooks/useExamCatalog';
 import { Switch } from '@/components/ui/switch';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 export function ExamCatalogTab() {
   const { data: catalog = [], isLoading } = useExamCatalog();
@@ -75,14 +76,14 @@ export function ExamCatalogTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Catálogo de Exámenes</h2>
           <p className="text-sm text-muted-foreground">
             Tipos de exámenes médicos que se pueden aplicar a los empleados
           </p>
         </div>
-        <Button onClick={handleNew} className="gap-2">
+        <Button onClick={handleNew} className="w-full gap-2 sm:w-auto">
           <Plus className="w-4 h-4" /> Nuevo Examen
         </Button>
       </div>
@@ -109,7 +110,8 @@ export function ExamCatalogTab() {
         </div>
       ) : (
         <div className="card-elevated">
-          <Table>
+          <div className="hidden overflow-x-auto sm:block">
+          <Table className="min-w-[720px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
@@ -158,6 +160,31 @@ export function ExamCatalogTab() {
               ))}
             </TableBody>
           </Table>
+          </div>
+
+          <MobileCardList
+            className="p-3 sm:hidden"
+            items={filteredCatalog.map((item) => ({
+              id: item.id,
+              title: item.name,
+              subtitle: item.description || 'Sin descripción',
+              badge: item.code ? <Badge variant="outline" className="text-xs">{item.code}</Badge> : undefined,
+              fields: [
+                { label: 'Estado', value: item.is_active ? 'Activo' : 'Inactivo' },
+              ],
+              actions: (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
+                    <Pencil className="w-4 h-4 mr-2" /> Editar
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteId(item.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </>
+              ),
+              itemClassName: !item.is_active ? 'opacity-60' : undefined,
+            }))}
+          />
 
           {filteredCatalog.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
@@ -174,7 +201,7 @@ export function ExamCatalogTab() {
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar tipo de examen</AlertDialogTitle>
             <AlertDialogDescription>
