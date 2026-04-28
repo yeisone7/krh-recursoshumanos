@@ -153,7 +153,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>
             {withdrawal ? 'Editar Retiro Parcial' : 'Nuevo Retiro Parcial'}
@@ -162,7 +162,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="employee_id"
@@ -199,7 +199,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="withdrawal_reason"
@@ -243,7 +243,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="amount_requested"
@@ -287,7 +287,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="beneficiary_name"
@@ -317,7 +317,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <FormField
                 control={form.control}
                 name="status"
@@ -397,7 +397,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="grid grid-cols-1 gap-2 pt-4 sm:flex sm:justify-end">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>

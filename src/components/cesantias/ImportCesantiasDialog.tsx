@@ -229,7 +229,7 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-4xl overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5" />
@@ -242,7 +242,7 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
 
         {step === 'upload' && (
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center space-y-4">
+            <div className="space-y-4 rounded-lg border-2 border-dashed border-muted-foreground/25 p-4 text-center sm:p-8">
               <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground mb-2">
@@ -262,11 +262,11 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center sm:justify-between">
               <p className="text-sm text-muted-foreground">
                 ¿No tienes la plantilla?
               </p>
-              <Button variant="outline" size="sm" onClick={downloadTemplate}>
+              <Button variant="outline" size="sm" onClick={downloadTemplate} className="w-full sm:w-auto">
                 <Download className="w-4 h-4 mr-2" />
                 Descargar Plantilla
               </Button>
@@ -284,7 +284,7 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
 
         {step === 'preview' && (
           <div className="space-y-4">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
               <Badge variant="secondary" className="gap-1">
                 <CheckCircle className="w-3 h-3" /> {validCount} válidas
               </Badge>
@@ -298,8 +298,8 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
               </span>
             </div>
 
-            <div className="max-h-[400px] overflow-auto border rounded-lg">
-              <Table>
+            <div className="max-h-[400px] overflow-auto rounded-lg border">
+              <Table className="min-w-[760px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12">#</TableHead>
@@ -353,7 +353,7 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
               </Table>
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
               <Button variant="outline" onClick={() => { setParsedRows([]); setStep('upload'); }}>
                 Volver
               </Button>
