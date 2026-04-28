@@ -271,6 +271,9 @@ export default function AnaliticaNomina() {
 
   const selectedAlertTypeKey = NOVELTY_TYPE_LABELS[selectedAlertType] || selectedAlertType;
   const selectedAlertCenterKey = selectedAlertCenter === 'all' ? 'Sin centro' : centerNameMap.get(selectedAlertCenter) || 'Sin centro';
+  const selectedTypeSeverity = typeAlertThresholds[selectedAlertTypeKey]?.severity ?? severityThreshold;
+  const selectedCenterSeverity = centerAlertThresholds[selectedAlertCenterKey]?.severity ?? severityThreshold;
+  const severityValidationMessage = 'La severidad mínima debe ser mayor a COP 0.';
 
   const updateTypeAlertThreshold = (field: 'volume' | 'severity', value: number) => {
     setTypeAlertThresholds((prev) => ({
@@ -713,7 +716,8 @@ export default function AnaliticaNomina() {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><DollarSign className="h-4 w-4" /> Severidad global</div>
-                    <Input inputMode="numeric" value={formatCopInput(severityThreshold)} onChange={(event) => setSeverityThreshold(parseCopInput(event.target.value))} aria-label="Severidad global en pesos colombianos" />
+                    <Input inputMode="numeric" value={formatCopInput(severityThreshold)} onChange={(event) => setSeverityThreshold(parseCopInput(event.target.value))} aria-label="Severidad global en pesos colombianos" aria-invalid={severityThreshold <= 0} className={cn(severityThreshold <= 0 && 'border-destructive focus-visible:ring-destructive')} />
+                    {severityThreshold <= 0 && <p className="text-xs text-destructive">{severityValidationMessage}</p>}
                   </div>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2 xl:col-span-2">
@@ -730,7 +734,8 @@ export default function AnaliticaNomina() {
                       </div>
                       <div className="space-y-1">
                         <span className="text-[11px] font-medium text-muted-foreground">Severidad mínima COP</span>
-                        <Input inputMode="numeric" placeholder="COP 1.000.000" aria-label="Severidad mínima por tipo en pesos colombianos" value={formatCopInput(typeAlertThresholds[selectedAlertTypeKey]?.severity ?? severityThreshold)} onChange={(event) => updateTypeAlertThreshold('severity', parseCopInput(event.target.value))} />
+                        <Input inputMode="numeric" placeholder="COP 1.000.000" aria-label="Severidad mínima por tipo en pesos colombianos" aria-invalid={selectedTypeSeverity <= 0} value={formatCopInput(selectedTypeSeverity)} onChange={(event) => updateTypeAlertThreshold('severity', parseCopInput(event.target.value))} className={cn(selectedTypeSeverity <= 0 && 'border-destructive focus-visible:ring-destructive')} />
+                        {selectedTypeSeverity <= 0 && <p className="text-xs text-destructive">{severityValidationMessage}</p>}
                       </div>
                     </div>
                   </div>
@@ -750,7 +755,8 @@ export default function AnaliticaNomina() {
                       </div>
                       <div className="space-y-1">
                         <span className="text-[11px] font-medium text-muted-foreground">Severidad mínima COP</span>
-                        <Input inputMode="numeric" placeholder="COP 1.000.000" aria-label="Severidad mínima por centro en pesos colombianos" value={formatCopInput(centerAlertThresholds[selectedAlertCenterKey]?.severity ?? severityThreshold)} onChange={(event) => updateCenterAlertThreshold('severity', parseCopInput(event.target.value))} />
+                        <Input inputMode="numeric" placeholder="COP 1.000.000" aria-label="Severidad mínima por centro en pesos colombianos" aria-invalid={selectedCenterSeverity <= 0} value={formatCopInput(selectedCenterSeverity)} onChange={(event) => updateCenterAlertThreshold('severity', parseCopInput(event.target.value))} className={cn(selectedCenterSeverity <= 0 && 'border-destructive focus-visible:ring-destructive')} />
+                        {selectedCenterSeverity <= 0 && <p className="text-xs text-destructive">{severityValidationMessage}</p>}
                       </div>
                     </div>
                   </div>
