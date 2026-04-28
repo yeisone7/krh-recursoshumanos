@@ -162,6 +162,30 @@ export default function CentroNotificaciones() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="alerts">
+              <div className="space-y-3 md:hidden">
+                {filteredNotifications.map((item) => (
+                  <div key={item.id} className="rounded-lg border bg-card p-3 space-y-3">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground break-words">{userDisplayMap[item.user_id] || item.user_id}</p>
+                      <p className="font-medium break-words">{item.title}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{item.message}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline">{typeLabels[item.type] || item.type}</Badge>
+                      <Badge variant={item.is_read ? 'secondary' : 'default'}>{item.is_read ? 'Leída' : 'Sin leer'}</Badge>
+                    </div>
+                    <div className="flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                      <span>{formatDate(item.created_at)}</span>
+                      <div className="flex gap-2">
+                        {!item.is_read && <Button variant="outline" size="sm" className="flex-1" onClick={() => handleMarkRead(item.id)}><Check className="h-4 w-4" /> Leer</Button>}
+                        <Button variant="outline" size="sm" className="flex-1 text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4" /> Eliminar</Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {filteredNotifications.length === 0 && <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">No hay alertas con estos filtros.</div>}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Alerta</TableHead><TableHead>Tipo</TableHead><TableHead>Estado</TableHead><TableHead>Fecha</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
                 <TableBody>
@@ -181,6 +205,7 @@ export default function CentroNotificaciones() {
                   {filteredNotifications.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No hay alertas con estos filtros.</TableCell></TableRow>}
                 </TableBody>
               </Table>
+              </div>
             </TabsContent>
             <TabsContent value="deliveries">
               <Table>
