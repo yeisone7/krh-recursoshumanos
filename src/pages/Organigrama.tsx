@@ -28,36 +28,36 @@ export default function Organigrama() {
   const areasForChart = areas.map(a => ({ id: a.id, name: a.name }));
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Organigrama</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl font-bold text-foreground sm:text-2xl">Organigrama</h1>
+        <p className="text-sm text-muted-foreground sm:text-base">
           Visualización de la estructura organizacional por cargos
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-2">
+          <CardHeader className="pb-2 px-4 pt-4 sm:px-6 sm:pt-6">
+            <CardDescription className="flex items-center gap-2 text-xs sm:text-sm">
               <Briefcase className="w-4 h-4" />
               Total Cargos
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-primary">{activePositions.length}</div>
+          <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
+            <div className="text-2xl font-bold text-primary sm:text-3xl">{activePositions.length}</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-2">
+          <CardHeader className="pb-2 px-4 pt-4 sm:px-6 sm:pt-6">
+            <CardDescription className="flex items-center gap-2 text-xs sm:text-sm">
               <GitBranch className="w-4 h-4" />
               Con Cargo Superior
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-success">{positionsWithParent}</div>
+          <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
+            <div className="text-2xl font-bold text-success sm:text-3xl">{positionsWithParent}</div>
             <p className="text-xs text-muted-foreground">
               de {activePositions.length} cargos activos
             </p>
@@ -65,14 +65,14 @@ export default function Organigrama() {
         </Card>
 
         <Card>
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-2">
+          <CardHeader className="pb-2 px-4 pt-4 sm:px-6 sm:pt-6">
+            <CardDescription className="flex items-center gap-2 text-xs sm:text-sm">
               <Users className="w-4 h-4" />
               Cargos Raíz
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-warning">{rootPositions}</div>
+          <CardContent className="px-4 pb-4 sm:px-6 sm:pb-6">
+            <div className="text-2xl font-bold text-warning sm:text-3xl">{rootPositions}</div>
             <p className="text-xs text-muted-foreground">
               sin cargo superior asignado
             </p>
@@ -81,13 +81,13 @@ export default function Organigrama() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Estructura Organizacional</CardTitle>
-          <CardDescription>
+        <CardHeader className="px-4 py-4 sm:px-6 sm:py-6">
+          <CardTitle className="text-base sm:text-lg">Estructura Organizacional</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Haz clic en un cargo para expandir o contraer sus cargos subordinados
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0 pb-4 sm:px-6 sm:pb-6">
           <OrgChart
             positions={positions}
             areas={areasForChart}
