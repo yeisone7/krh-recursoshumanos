@@ -333,9 +333,9 @@ export default function Evaluaciones() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Evaluación de Desempeño</h1>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Evaluación de Desempeño</h1>
           <p className="text-muted-foreground mt-1">
             Gestión de evaluaciones y desarrollo profesional
           </p>
@@ -345,17 +345,18 @@ export default function Evaluaciones() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="cycles" className="gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList className="grid h-auto w-full grid-cols-3 sm:w-auto">
+            <TabsTrigger value="cycles" className="gap-2 px-2 sm:px-3">
               <Calendar className="h-4 w-4" />
               Ciclos
             </TabsTrigger>
-            <TabsTrigger value="evaluations" className="gap-2">
+            <TabsTrigger value="evaluations" className="gap-2 px-2 sm:px-3">
               <ClipboardCheck className="h-4 w-4" />
-              Evaluaciones
+              <span className="hidden sm:inline">Evaluaciones</span>
+              <span className="sm:hidden">Eval.</span>
             </TabsTrigger>
-            <TabsTrigger value="templates" className="gap-2">
+            <TabsTrigger value="templates" className="gap-2 px-2 sm:px-3">
               <FileText className="h-4 w-4" />
               Plantillas
             </TabsTrigger>
@@ -376,9 +377,12 @@ export default function Evaluaciones() {
             }}
           >
             <Plus className="h-4 w-4 mr-2" />
-            {activeTab === 'templates' && 'Nueva Plantilla'}
-            {activeTab === 'cycles' && 'Nuevo Ciclo'}
-            {activeTab === 'evaluations' && 'Nueva Evaluación'}
+            <span className="sm:hidden">Nuevo</span>
+            <span className="hidden sm:inline">
+              {activeTab === 'templates' && 'Nueva Plantilla'}
+              {activeTab === 'cycles' && 'Nuevo Ciclo'}
+              {activeTab === 'evaluations' && 'Nueva Evaluación'}
+            </span>
             
           </Button>
         </div>
@@ -386,10 +390,10 @@ export default function Evaluaciones() {
         {/* Cycles Tab */}
         <TabsContent value="cycles">
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle>Ciclos de Evaluación</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               {loadingCycles ? (
                 <p className="text-muted-foreground">Cargando...</p>
               ) : cycles.length === 0 ? (
@@ -397,7 +401,7 @@ export default function Evaluaciones() {
                   No hay ciclos de evaluación configurados
                 </p>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-md border sm:border-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -489,11 +493,11 @@ export default function Evaluaciones() {
         {/* Evaluations Tab */}
         <TabsContent value="evaluations">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardHeader className="flex flex-col gap-3 p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
               <CardTitle>Evaluaciones de Desempeño</CardTitle>
-              <div className="flex items-center gap-3">
+              <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto lg:items-center">
                 <Select value={evaluationCycleFilter} onValueChange={setEvaluationCycleFilter}>
-                  <SelectTrigger className="w-[220px]">
+                  <SelectTrigger className="w-full sm:w-[220px]">
                     <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                     <SelectValue placeholder="Filtrar por ciclo" />
                   </SelectTrigger>
@@ -505,11 +509,11 @@ export default function Evaluaciones() {
                   </SelectContent>
                 </Select>
                 {/* View mode toggle */}
-                <div className="flex items-center border rounded-md">
+                <div className="grid grid-cols-2 border rounded-md sm:flex sm:items-center">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-8 w-8 rounded-r-none ${evalViewMode === 'kanban' ? 'bg-muted' : ''}`}
+                    className={`h-9 w-full rounded-r-none sm:h-8 sm:w-8 ${evalViewMode === 'kanban' ? 'bg-muted' : ''}`}
                     onClick={() => setEvalViewMode('kanban')}
                     title="Vista Kanban"
                   >
@@ -518,7 +522,7 @@ export default function Evaluaciones() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-8 w-8 rounded-l-none ${evalViewMode === 'table' ? 'bg-muted' : ''}`}
+                    className={`h-9 w-full rounded-l-none sm:h-8 sm:w-8 ${evalViewMode === 'table' ? 'bg-muted' : ''}`}
                     onClick={() => setEvalViewMode('table')}
                     title="Vista Lista"
                   >
@@ -527,7 +531,7 @@ export default function Evaluaciones() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               {evalViewMode === 'kanban' ? (
                 <EvaluationKanbanBoard
                   evaluations={filteredEvaluations}
@@ -587,8 +591,8 @@ export default function Evaluaciones() {
 
         {/* Templates Tab */}
         <TabsContent value="templates">
-          <div>
-            <div className="flex items-center justify-between mb-4">
+            <div>
+            <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="text-lg font-semibold">Plantillas de Evaluación</h3>
               {(() => {
                 const allPositions = Array.from(
@@ -598,12 +602,12 @@ export default function Evaluaciones() {
                 );
                 if (allPositions.length === 0) return null;
                 return (
-                  <div className="flex items-center gap-2">
+                  <div className="flex w-full items-center gap-2 sm:w-auto">
                     <Filter className="h-4 w-4 text-muted-foreground" />
                     <select
                       value={templatePositionFilter}
                       onChange={(e) => setTemplatePositionFilter(e.target.value)}
-                      className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:w-auto"
                     >
                       <option value="">Todos los cargos</option>
                       {allPositions.map(p => (

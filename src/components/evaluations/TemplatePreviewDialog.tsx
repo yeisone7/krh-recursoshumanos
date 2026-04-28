@@ -46,11 +46,11 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto scrollbar-themed p-0">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-0 scrollbar-themed">
         {/* Hero header */}
-        <div className="bg-gradient-to-br from-[#3b3a59] via-[#4a4870] to-[#5a587a] px-6 pt-6 pb-5 rounded-t-lg">
+        <div className="bg-gradient-to-br from-[#3b3a59] via-[#4a4870] to-[#5a587a] px-4 pt-4 pb-5 rounded-t-lg sm:px-6 sm:pt-6">
           <DialogHeader>
-            <div className="flex items-start gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
               <div className="p-2.5 rounded-xl bg-white/15 backdrop-blur-sm">
                 <FileText className="h-6 w-6 text-white" />
               </div>
@@ -87,7 +87,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
           )}
 
           {/* Quick stats */}
-          <div className="flex gap-4 mt-4">
+          <div className="flex flex-wrap gap-3 mt-4 sm:gap-4">
             <div className="flex items-center gap-1.5 text-white/70 text-sm">
               <Layers className="h-4 w-4" />
               <span className="font-medium text-white">{criteria.length}</span> criterios
@@ -102,11 +102,11 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-2 mt-4">
+          <div className="grid gap-2 mt-4 sm:flex">
             <Button
               size="sm"
               variant="secondary"
-              className="bg-white/15 text-white border-white/20 hover:bg-white/25"
+              className="w-full bg-white/15 text-white border-white/20 hover:bg-white/25 sm:w-auto"
               onClick={() => generateTemplatePdf(template)}
             >
               <Download className="h-4 w-4 mr-1.5" />
@@ -116,7 +116,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
               <Button
                 size="sm"
                 variant="secondary"
-                className="bg-white/15 text-white border-white/20 hover:bg-white/25"
+                className="w-full bg-white/15 text-white border-white/20 hover:bg-white/25 sm:w-auto"
                 onClick={() => {
                   onDuplicate(template);
                   onOpenChange(false);
@@ -130,7 +130,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
         </div>
         </div>
 
-        <div className="px-6 py-5 space-y-6">
+        <div className="px-4 py-5 space-y-6 sm:px-6">
           {/* Criteria section */}
           <section>
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
@@ -229,7 +229,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                 <Star className="h-4 w-4 text-amber-500" />
                 Tabla de Calificación
               </h3>
-              <div className="border rounded-lg overflow-hidden">
+              <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
