@@ -40,7 +40,7 @@ export function MobileCardList({ items, emptyMessage = 'No hay registros', class
         <div
           key={item.id}
           className={cn(
-            "card-elevated p-4 space-y-3 transition-all",
+            "card-elevated min-w-0 p-4 space-y-3 transition-all",
             item.onClick && "cursor-pointer hover:border-primary/30 active:scale-[0.99]",
             item.itemClassName
           )}
@@ -49,9 +49,9 @@ export function MobileCardList({ items, emptyMessage = 'No hay registros', class
           {/* Header: title + badge */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <div className="font-medium text-foreground">{item.title}</div>
+              <div className="break-words font-medium text-foreground">{item.title}</div>
               {item.subtitle && (
-                <div className="text-sm text-muted-foreground mt-0.5">{item.subtitle}</div>
+                <div className="mt-0.5 break-words text-sm text-muted-foreground">{item.subtitle}</div>
               )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -66,9 +66,9 @@ export function MobileCardList({ items, emptyMessage = 'No hay registros', class
           {item.fields && item.fields.length > 0 && (
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
               {item.fields.map((field, idx) => (
-                <div key={idx} className={cn("text-sm", field.className)}>
+                <div key={idx} className={cn("min-w-0 text-sm", field.className)}>
                   <span className="text-muted-foreground text-xs">{field.label}</span>
-                  <div className="font-medium text-foreground">{field.value}</div>
+                  <div className="break-words font-medium text-foreground">{field.value}</div>
                 </div>
               ))}
             </div>
@@ -76,7 +76,7 @@ export function MobileCardList({ items, emptyMessage = 'No hay registros', class
 
           {/* Actions */}
           {item.actions && (
-            <div className="flex items-center justify-end gap-1 pt-1 border-t border-border">
+            <div className="flex items-center justify-stretch gap-2 border-t border-border pt-2 [&>*]:flex-1 sm:justify-end sm:[&>*]:flex-none">
               {item.actions}
             </div>
           )}
