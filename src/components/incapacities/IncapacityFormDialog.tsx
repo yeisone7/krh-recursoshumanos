@@ -389,7 +389,7 @@ export function IncapacityFormDialog({
                   )}
                 />
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="cie10_code"
@@ -426,7 +426,7 @@ export function IncapacityFormDialog({
                   />
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="treating_doctor"
@@ -521,11 +521,11 @@ export function IncapacityFormDialog({
             {/* Absence Conflict Alert */}
             <AbsenceConflictAlert conflicts={incapConflicts} />
             
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="grid grid-cols-2 gap-3 pt-4 border-t sm:flex sm:justify-end">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading || hasIncapConflicts}>
+              <Button type="submit" disabled={isLoading || hasIncapConflicts} className="w-full sm:w-auto">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditing ? 'Actualizar' : 'Registrar'}
               </Button>
