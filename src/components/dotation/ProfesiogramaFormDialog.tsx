@@ -120,9 +120,9 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl flex items-center gap-2">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
+        <DialogHeader className="pr-12">
+          <DialogTitle className="font-display text-lg flex items-center gap-2 sm:text-xl">
             <ClipboardList className="w-5 h-5 text-primary" />
             {isEditing ? 'Editar Profesiograma' : 'Nuevo Profesiograma'}
           </DialogTitle>
@@ -131,9 +131,9 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto space-y-4 pr-1">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
           {/* Center + Position selectors */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Centro de Operación *</Label>
               <SearchableSelect
@@ -162,7 +162,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
 
           {/* Items list */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <Label>Artículos de Dotación</Label>
                 {items.length > 0 && (
@@ -182,7 +182,8 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                 <p className="text-sm">No hay artículos. Haz clic en "Agregar" para comenzar.</p>
               </div>
             ) : (
-              <Table>
+              <div className="overflow-x-auto overscroll-x-contain">
+              <Table className="min-w-[560px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Artículo</TableHead>
@@ -238,11 +239,12 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+        <div className="grid grid-cols-1 gap-3 pt-4 border-t mt-4 sm:flex sm:justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={isPending} className="gap-2">
             <ClipboardList className="w-4 h-4" />
