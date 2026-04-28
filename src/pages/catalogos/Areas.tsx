@@ -17,6 +17,7 @@ import {
 
 import { useAreas } from '@/hooks/useSystemConfig';
 import { AreaFormDialog } from '@/components/config';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import type { Area } from '@/types/config';
 
 export default function CatalogosAreas() {
@@ -26,26 +27,26 @@ export default function CatalogosAreas() {
   const { data: areas = [], isLoading } = useAreas();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
+        <div className="flex items-start gap-3 sm:items-center">
+          <div className="shrink-0 rounded-lg bg-primary/10 p-2">
             <Users className="w-6 h-6 text-primary" />
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Áreas / Departamentos</h1>
+          <div className="min-w-0">
+            <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Áreas / Departamentos</h1>
             <p className="text-muted-foreground mt-1">Gestiona la estructura organizacional</p>
           </div>
         </div>
       </motion.div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <CardTitle>Listado de Áreas</CardTitle>
             <CardDescription>Áreas y departamentos de la organización</CardDescription>
           </div>
-          <Button onClick={() => { setSelectedArea(null); setShowAreaForm(true); }}>
+          <Button onClick={() => { setSelectedArea(null); setShowAreaForm(true); }} className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />Nueva Área
           </Button>
         </CardHeader>
@@ -57,7 +58,39 @@ export default function CatalogosAreas() {
               No hay áreas registradas. Crea la primera.
             </div>
           ) : (
-            <Table>
+            <>
+            <MobileCardList
+              className="md:hidden"
+              items={areas.map((area) => ({
+                id: area.id,
+                title: area.name,
+                subtitle: area.description || 'Sin descripción',
+                badge: (
+                  <Badge
+                    variant="outline"
+                    className={area.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-muted'}
+                  >
+                    {area.is_active ? 'Activa' : 'Inactiva'}
+                  </Badge>
+                ),
+                fields: [
+                  { label: 'Código', value: area.code || '—' },
+                  { label: 'Estado', value: area.is_active ? 'Activa' : 'Inactiva' },
+                ],
+                actions: (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setSelectedArea(area); setShowAreaForm(true); }}
+                  >
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Editar
+                  </Button>
+                ),
+              }))}
+            />
+            <div className="hidden overflow-x-auto md:block">
+            <Table className="min-w-[720px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
@@ -94,6 +127,8 @@ export default function CatalogosAreas() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
