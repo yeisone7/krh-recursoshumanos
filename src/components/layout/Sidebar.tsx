@@ -810,25 +810,6 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       </nav>
 
       {/* User section */}
-        <div className="border-t border-sidebar-border bg-sidebar px-3 py-2">
-          {isCollapsed ? (
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <div className="mx-auto flex h-7 w-11 items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent/40 text-[10px] font-bold text-sidebar-foreground/70">
-                  v
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8} className="rounded-lg border border-border bg-popover px-3 py-2 text-popover-foreground shadow-lg">
-                Versión {APP_VERSION_LABEL}
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            <div className="flex items-center justify-between rounded-md border border-sidebar-border bg-sidebar-accent/30 px-3 py-1.5 text-[11px] font-bold text-sidebar-foreground/65">
-              <span>Versión de la app</span>
-              <span className="font-mono">v{APP_VERSION_LABEL}</span>
-            </div>
-          )}
-        </div>
         <CompanyUserSection collapsed={isCollapsed} onNavigate={onNavigate} />
     </motion.aside>
     </TooltipProvider>);
@@ -898,7 +879,8 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
             {!collapsed &&
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground truncate">{currentCompany?.name || 'Seleccionar empresa'}</p>
-                 <p className="text-[11px] text-muted-foreground truncate">{userName}</p>
+                 <p className="text-[11px] text-muted-foreground truncate">{userEmail || userName}</p>
+                 <p className="text-[10px] font-semibold leading-tight text-primary/70 truncate">v{APP_VERSION_LABEL}</p>
               </div>
             }
             {!collapsed &&
