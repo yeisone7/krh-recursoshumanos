@@ -32,15 +32,15 @@ const TABS = [
 
 export default function Reportes() {
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-primary/10">
-          <FileBarChart className="w-6 h-6 text-primary" />
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="shrink-0 rounded-lg bg-primary/10 p-2">
+          <FileBarChart className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Reportes</h1>
-          <p className="text-muted-foreground">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-foreground sm:text-2xl">Reportes</h1>
+          <p className="text-sm text-muted-foreground sm:text-base">
             Genera y exporta reportes en Excel y PDF por categoría
           </p>
         </div>
@@ -48,22 +48,24 @@ export default function Reportes() {
 
       {/* Categorized Tabs */}
       <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
+        <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+        <TabsList className="inline-flex h-auto min-w-max justify-start gap-1 bg-muted/50 p-1 sm:w-full sm:min-w-0 sm:flex-wrap">
           {TABS.map(({ value, label, icon: Icon }) => (
             <TabsTrigger
               key={value}
               value={value}
-              className="flex items-center gap-1.5 text-xs sm:text-sm data-[state=active]:bg-background"
+              className="flex shrink-0 items-center gap-1.5 px-2.5 text-xs sm:px-3 sm:text-sm data-[state=active]:bg-background"
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="h-4 w-4" />
               {label}
             </TabsTrigger>
           ))}
         </TabsList>
+        </div>
 
         {/* Personal */}
         <TabsContent value="personal">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <EmployeeReport />
             <MedicalExamsReport />
           </div>
@@ -71,7 +73,7 @@ export default function Reportes() {
 
         {/* Selección */}
         <TabsContent value="seleccion">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <SelectionProcessReport />
             <SelectionDiversityReport />
           </div>
@@ -79,7 +81,7 @@ export default function Reportes() {
 
         {/* Contratos */}
         <TabsContent value="contratos">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <ContractsExpiringSoonReport />
             <ContractExtensionsReport />
           </div>
@@ -87,7 +89,7 @@ export default function Reportes() {
 
         {/* Ausencias */}
         <TabsContent value="ausencias">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <VacationReport />
             <LeavesReport />
             <IncapacityReport />
@@ -96,7 +98,7 @@ export default function Reportes() {
 
         {/* Nómina */}
         <TabsContent value="nomina">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <OvertimeReport />
             <CesantiasReport />
             <LoansReport />
@@ -106,7 +108,7 @@ export default function Reportes() {
 
         {/* Desarrollo */}
         <TabsContent value="desarrollo">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <TrainingReport />
             <DisciplinaryReport />
           </div>
@@ -114,7 +116,7 @@ export default function Reportes() {
 
         {/* Dotación */}
         <TabsContent value="dotacion">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <DotationReport />
             <InventoryMovementsReport />
           </div>
