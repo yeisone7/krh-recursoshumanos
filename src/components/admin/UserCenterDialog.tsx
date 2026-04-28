@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAssignCenter, useRemoveCenterAssignment, type AdminUser } from '@/hooks/useAdminUsers';
 import { toast } from 'sonner';
@@ -70,15 +69,15 @@ export function UserCenterDialog({ user, open, onOpenChange }: UserCenterDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Asignar Centros de Operación</DialogTitle>
           <DialogDescription>
             Usuario: <span className="font-medium">{user?.id.slice(0, 8)}...</span>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4 pr-1">
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="text-sm text-muted-foreground">Centros actuales:</span>
             {user?.centers.length === 0 && (
@@ -99,23 +98,23 @@ export function UserCenterDialog({ user, open, onOpenChange }: UserCenterDialogP
               <p className="text-sm">Crea centros desde la página de Centros</p>
             </div>
           ) : (
-            <ScrollArea className="h-[300px] pr-4">
+            <div className="max-h-[45dvh] overflow-y-auto pr-1">
               <div className="space-y-3">
                 {centers.map(center => (
                   <div 
                     key={center.id} 
-                    className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                    className="flex min-w-0 items-start space-x-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
                   >
                     <Checkbox
                       id={center.id}
                       checked={selectedCenters.includes(center.id)}
                       onCheckedChange={(checked) => handleCenterToggle(center.id, !!checked)}
                     />
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <Label htmlFor={center.id} className="font-medium cursor-pointer">
                         {center.name}
                       </Label>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="break-words text-sm text-muted-foreground">
                         {center.city && `${center.city}`}
                         {center.department && `, ${center.department}`}
                       </p>
@@ -123,17 +122,18 @@ export function UserCenterDialog({ user, open, onOpenChange }: UserCenterDialogP
                   </div>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Cancelar
           </Button>
           <Button 
             onClick={handleSave}
             disabled={assignCenter.isPending || removeCenter.isPending}
+            className="w-full sm:w-auto"
           >
             {assignCenter.isPending || removeCenter.isPending ? 'Guardando...' : 'Guardar Cambios'}
           </Button>
