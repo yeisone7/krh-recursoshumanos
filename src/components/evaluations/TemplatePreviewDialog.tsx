@@ -58,7 +58,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          'flex max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:h-auto sm:max-h-[90vh] [&>button.absolute]:fixed [&>button.absolute]:right-2.5 [&>button.absolute]:top-[max(0.5rem,env(safe-area-inset-top))] [&>button.absolute]:z-[60] [&>button.absolute]:flex [&>button.absolute]:h-10 [&>button.absolute]:w-10 [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:rounded-full [&>button.absolute]:border [&>button.absolute]:border-background/25 [&>button.absolute]:bg-foreground [&>button.absolute]:text-background [&>button.absolute]:opacity-100 [&>button.absolute]:shadow-md [&>button.absolute]:ring-0 [&>button.absolute]:ring-offset-0 [&>button.absolute]:backdrop-blur [&>button.absolute]:hover:bg-foreground/90 [&>button.absolute]:focus:ring-2 [&>button.absolute]:focus:ring-ring [&>button.absolute]:focus:ring-offset-2 [&>button.absolute_svg]:h-4 [&>button.absolute_svg]:w-4 sm:[&>button.absolute]:right-4 sm:[&>button.absolute]:top-4',
+          'flex max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:h-auto sm:max-h-[90vh] [&>button.absolute]:fixed [&>button.absolute]:right-2.5 [&>button.absolute]:top-[max(0.5rem,env(safe-area-inset-top))] [&>button.absolute]:z-[60] [&>button.absolute]:flex [&>button.absolute]:h-10 [&>button.absolute]:w-10 [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:rounded-full [&>button.absolute]:border-0 [&>button.absolute]:bg-accent [&>button.absolute]:text-accent-foreground [&>button.absolute]:opacity-100 [&>button.absolute]:shadow-md [&>button.absolute]:ring-0 [&>button.absolute]:ring-offset-0 [&>button.absolute]:backdrop-blur [&>button.absolute]:hover:bg-accent/90 [&>button.absolute]:focus:ring-2 [&>button.absolute]:focus:ring-ring [&>button.absolute]:focus:ring-offset-2 [&>button.absolute_svg]:h-4 [&>button.absolute_svg]:w-4 sm:[&>button.absolute]:right-4 sm:[&>button.absolute]:top-4',
           isMobileFullscreen
             ? 'h-[100dvh] w-screen rounded-none border-0 sm:w-full sm:rounded-lg sm:border'
             : 'h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)]'
@@ -98,7 +98,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                   type="button"
                   size="icon"
                   variant="secondary"
-                  className="h-8 w-8 border-background/25 bg-foreground text-background shadow-sm hover:bg-foreground/90 sm:hidden"
+                  className="h-8 w-8 border-primary/20 bg-primary/10 text-primary hover:bg-primary/15 sm:hidden"
                   aria-label={isMobileFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
                   title={isMobileFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
                   onClick={() => setIsMobileFullscreen(prev => !prev)}
@@ -142,7 +142,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
             <Button
               size="sm"
               variant="secondary"
-              className="w-full border-background/25 bg-foreground text-background shadow-sm hover:bg-foreground/90 sm:w-auto"
+              className="w-full border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover sm:w-auto"
               onClick={() => generateTemplatePdf(template)}
             >
               <Download className="h-4 w-4 mr-1.5" />
@@ -152,7 +152,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
               <Button
                 size="sm"
                 variant="secondary"
-                className="w-full border-background/25 bg-foreground text-background shadow-sm hover:bg-foreground/90 sm:w-auto"
+                className="w-full border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover sm:w-auto"
                 onClick={() => {
                   onDuplicate(template);
                   onOpenChange(false);
