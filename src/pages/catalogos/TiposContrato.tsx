@@ -27,11 +27,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download } from 'lucide-react';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2 } from 'lucide-react';
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
 import { ContractPlaceholdersInfo } from '@/components/contracts/ContractPlaceholdersInfo';
 import { MobileCardList } from '@/components/shared/MobileCardList';
+import { supabase } from '@/integrations/supabase/client';
+import PizZip from 'pizzip';
 
 const codeColors = [
   'bg-primary/10 text-primary border-primary/20',
@@ -56,6 +59,12 @@ export default function TiposContrato() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<ContractTypeConfig | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [previewItem, setPreviewItem] = useState<ContractTypeConfig | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewText, setPreviewText] = useState<string>('');
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewKind, setPreviewKind] = useState<'pdf' | 'docx' | 'unsupported' | null>(null);
 
   const filteredData = data.filter(item =>
     item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,6 +132,54 @@ export default function TiposContrato() {
   const handleNewClick = () => {
     setEditItem(null);
     setIsFormOpen(true);
+  };
+
+  const extractDocxText = async (blob: Blob) => {
+    const zip = new PizZip(await blob.arrayBuffer());
+    const xml = zip.file('word/document.xml')?.asText();
+    if (!xml) return 'No se pudo leer el contenido de la plantilla.';
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    return Array.from(doc.getElementsByTagName('w:p'))
+      .map((p) => Array.from(p.getElementsByTagName('w:t')).map((t) => t.textContent || '').join(''))
+      .filter(Boolean)
+      .join('\n\n');
+  };
+
+  const handlePreview = async (item: ContractTypeConfig) => {
+    if (!item.template_url || !item.template_file_name) return;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewItem(item);
+    setPreviewLoading(true);
+    setPreviewUrl(null);
+    setPreviewText('');
+    setPreviewError(null);
+    setPreviewKind(null);
+    try {
+      const { data: blob, error } = await supabase.storage.from('documents').download(item.template_url);
+      if (error) throw error;
+      const extension = item.template_file_name.split('.').pop()?.toLowerCase();
+      if (extension === 'pdf') {
+        setPreviewKind('pdf');
+        setPreviewUrl(URL.createObjectURL(blob));
+      } else if (extension === 'docx') {
+        setPreviewKind('docx');
+        setPreviewText(await extractDocxText(blob));
+      } else {
+        setPreviewKind('unsupported');
+        setPreviewError('La vista previa está disponible para PDF y DOCX. Puedes descargar este archivo para revisarlo.');
+      }
+    } catch (error) {
+      console.error('Preview error:', error);
+      setPreviewError('No se pudo cargar la vista previa de la plantilla.');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const closePreview = () => {
+    setPreviewItem(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
   };
 
   return (
@@ -200,6 +257,12 @@ export default function TiposContrato() {
                         Editar
                       </DropdownMenuItem>
                       {item.template_url && (
+                        <DropdownMenuItem onClick={() => handlePreview(item)}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Vista previa
+                        </DropdownMenuItem>
+                      )}
+                      {item.template_url && (
                         <DropdownMenuItem onClick={() => downloadTemplate(item.template_url!, item.template_file_name!)}>
                           <Download className="w-4 h-4 mr-2" />
                           Descargar Plantilla
@@ -249,7 +312,7 @@ export default function TiposContrato() {
                           variant="ghost"
                           size="sm"
                           className="h-auto py-1 px-2 text-xs"
-                          onClick={() => item.template_url && downloadTemplate(item.template_url, item.template_file_name!)}
+                          onClick={() => item.template_url && handlePreview(item)}
                         >
                           <FileText className="w-3 h-3 mr-1 text-primary" />
                           <span className="text-primary truncate max-w-[100px]">
@@ -277,6 +340,12 @@ export default function TiposContrato() {
                             <Pencil className="w-4 h-4 mr-2" />
                             Editar
                           </DropdownMenuItem>
+                          {item.template_url && (
+                            <DropdownMenuItem onClick={() => handlePreview(item)}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              Vista previa
+                            </DropdownMenuItem>
+                          )}
                           {item.template_url && (
                             <DropdownMenuItem 
                               onClick={() => downloadTemplate(item.template_url!, item.template_file_name!)}
@@ -313,6 +382,43 @@ export default function TiposContrato() {
         isLoading={isCreating || isUpdating}
         editItem={editItem}
       />
+
+      <Dialog open={!!previewItem} onOpenChange={(open) => { if (!open) closePreview(); }}>
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-4xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 px-4 pt-4 sm:px-6 sm:pt-6">
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" />
+              Vista previa de plantilla
+            </DialogTitle>
+            {previewItem && <p className="break-words text-sm text-muted-foreground">{previewItem.template_file_name}</p>}
+          </DialogHeader>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+            {previewLoading ? (
+              <div className="flex min-h-[320px] items-center justify-center text-muted-foreground">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Cargando vista previa...
+              </div>
+            ) : previewError ? (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">{previewError}</div>
+            ) : previewKind === 'pdf' && previewUrl ? (
+              <iframe title="Vista previa de plantilla" src={previewUrl} className="h-[65dvh] w-full rounded-lg border border-border bg-background" />
+            ) : previewKind === 'docx' ? (
+              <pre className="min-h-[320px] whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/30 p-4 text-sm text-foreground font-sans">{previewText || 'La plantilla no contiene texto visible.'}</pre>
+            ) : null}
+          </div>
+
+          <DialogFooter className="shrink-0 flex-col-reverse gap-2 border-t border-border px-4 py-4 sm:flex-row sm:gap-0 sm:px-6">
+            <Button variant="outline" onClick={closePreview} className="w-full sm:w-auto">Cerrar</Button>
+            {previewItem?.template_url && (
+              <Button onClick={() => downloadTemplate(previewItem.template_url!, previewItem.template_file_name || 'plantilla.docx')} className="w-full sm:w-auto">
+                <Download className="mr-2 h-4 w-4" />
+                Descargar
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden">
