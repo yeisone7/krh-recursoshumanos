@@ -171,9 +171,9 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
-        <div className="px-6 pt-6 pb-4 shrink-0">
-          <DialogHeader className="flex flex-row items-start gap-4">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl flex-col overflow-hidden p-0 sm:w-full">
+        <div className="shrink-0 px-4 pb-4 pt-5 sm:px-6 sm:pt-6">
+          <DialogHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <Stethoscope className="w-6 h-6 text-primary" />
             </div>
@@ -198,7 +198,7 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
                 </span>
               </p>
             </div>
-            <Button variant="outline" size="sm" className="gap-1.5 shrink-0" onClick={handleExportPdf}>
+            <Button variant="outline" size="sm" className="w-full shrink-0 gap-1.5 sm:w-auto" onClick={handleExportPdf}>
               <FileDown className="w-4 h-4" /> Exportar
             </Button>
           </DialogHeader>
@@ -206,13 +206,13 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
 
         <Separator />
 
-        <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5 space-y-5">
+        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
           {/* Items */}
           <div className="space-y-2">
             {transaction.items.map((item) => {
               const rs = resultStyles[item.result] || resultStyles.pendiente;
               return (
-                <div key={item.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:bg-muted/30 transition-colors">
+                <div key={item.id} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
                       <Stethoscope className="w-4 h-4 text-muted-foreground" />
@@ -240,7 +240,7 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
               <FileText className="w-4 h-4 text-primary" />
               Información de la Aplicación
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex items-center gap-3 rounded-lg border border-border p-3">
                 <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
                 <div className="min-w-0">
@@ -288,12 +288,12 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
             <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleUploadPdf} />
 
             {documentUrl ? (
-              <div className="flex items-center gap-3 rounded-lg border border-border p-3 bg-muted/30">
+              <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center">
                 <FileText className="w-5 h-5 text-destructive shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">Documento PDF</p>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="grid w-full grid-cols-3 gap-1 sm:flex sm:w-auto sm:shrink-0 sm:items-center">
                   <Button variant="outline" size="sm" className="gap-1.5" asChild>
                     <a href={documentUrl} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="w-3.5 h-3.5" /> Ver
