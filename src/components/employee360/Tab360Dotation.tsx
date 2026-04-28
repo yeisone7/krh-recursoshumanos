@@ -3,6 +3,7 @@ import { Package, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -51,16 +52,9 @@ export function Tab360Dotation({ dotation, isLoading }: Tab360DotationProps) {
     );
   }
 
-  // Group by item type
-  const grouped = dotation.reduce((acc: Record<string, any[]>, item) => {
-    const type = item.item_type || 'otro';
-    if (!acc[type]) acc[type] = [];
-    acc[type].push(item);
-    return acc;
-  }, {});
-
-  const expiredCount = dotation.filter(d => new Date(d.expiration_date) < new Date()).length;
-  const expiringSoonCount = dotation.filter(d => {
+  const allItems = dotation.flatMap((delivery) => delivery.items || []);
+  const expiredCount = allItems.filter(d => new Date(d.expiration_date) < new Date()).length;
+  const expiringSoonCount = allItems.filter(d => {
     const days = differenceInDays(new Date(d.expiration_date), new Date());
     return days >= 0 && days <= 30;
   }).length;
@@ -94,8 +88,8 @@ export function Tab360Dotation({ dotation, isLoading }: Tab360DotationProps) {
                 <CheckCircle2 className="w-5 h-5 text-success" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{dotation.length - expiredCount}</p>
-                <p className="text-sm text-muted-foreground">Vigentes</p>
+                <p className="text-2xl font-bold">{allItems.length - expiredCount}</p>
+                <p className="text-sm text-muted-foreground">Artículos Vigentes</p>
               </div>
             </div>
           </CardContent>
@@ -130,84 +124,78 @@ export function Tab360Dotation({ dotation, isLoading }: Tab360DotationProps) {
         </Card>
       </div>
 
-      {/* Dotation List */}
-      <div className="space-y-3">
-        {dotation.map((item, index) => {
-          const daysToExpire = differenceInDays(new Date(item.expiration_date), new Date());
-          const isExpired = daysToExpire < 0;
-          const isExpiringSoon = daysToExpire >= 0 && daysToExpire <= 30;
+      <Accordion type="multiple" className="space-y-3">
+        {dotation.map((delivery, index) => {
+          const items = delivery.items || [];
+          const hasValidDate = delivery.delivery_date && !isNaN(new Date(delivery.delivery_date).getTime());
+          const deliveryExpired = items.some((item: any) => differenceInDays(new Date(item.expiration_date), new Date()) < 0);
+          const deliveryExpiringSoon = !deliveryExpired && items.some((item: any) => {
+            const days = differenceInDays(new Date(item.expiration_date), new Date());
+            return days >= 0 && days <= 30;
+          });
+          const status = deliveryExpired
+            ? { label: 'Con vencidos', className: 'bg-destructive/10 text-destructive border-destructive/20' }
+            : deliveryExpiringSoon
+              ? { label: 'Por vencer', className: 'bg-warning-light text-warning border-warning/20' }
+              : { label: 'Vigente', className: 'bg-success-light text-success border-success/20' };
 
           return (
             <motion.div
-              key={item.id}
+              key={delivery.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Card className={cn(
-                isExpired && 'border-destructive/50 bg-destructive/5',
-                isExpiringSoon && 'border-warning/50 bg-warning/5'
-              )}>
-                <CardContent className="p-4">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Package className="w-4 h-4 text-primary" />
-                        <h4 className="font-medium">{item.item_name}</h4>
-                        <Badge variant="secondary">
-                          {itemTypeLabels[item.item_type] || item.item_type}
-                        </Badge>
-                        {item.size && (
-                          <Badge variant="outline">Talla: {item.size}</Badge>
-                        )}
-                        {item.quantity > 1 && (
-                          <Badge variant="outline">Cantidad: {item.quantity}</Badge>
-                        )}
-                        {isExpired && (
-                          <Badge variant="destructive">Vencido</Badge>
-                        )}
-                        {isExpiringSoon && (
-                          <Badge variant="outline" className="bg-warning-light text-warning">
-                            Por vencer
-                          </Badge>
-                        )}
+              <AccordionItem value={delivery.id} className="rounded-lg border bg-card px-4 shadow-sm">
+                <AccordionTrigger className="gap-3 py-4 text-left hover:no-underline">
+                  <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Package className="h-4 w-4 text-primary" />
+                        <h4 className="font-medium">Entrega de dotación</h4>
+                        <Badge variant="outline" className={cn('text-xs', status.className)}>{status.label}</Badge>
                       </div>
-
-                      {item.item_description && (
-                        <p className="text-sm text-muted-foreground">{item.item_description}</p>
-                      )}
-
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          <span>Entrega: {format(new Date(item.delivery_date), "d MMM yyyy", { locale: es })}</span>
-                        </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{hasValidDate ? format(new Date(delivery.delivery_date), "d MMM yyyy", { locale: es }) : 'Sin fecha'}</span>
+                        <span>{items.length} artículo(s)</span>
+                        {delivery.delivered_by && <span>Entregó: {delivery.delivered_by}</span>}
                       </div>
-                    </div>
-
-                    <div className="text-right space-y-1">
-                      <p className="text-sm">
-                        <span className="text-muted-foreground">Vence: </span>
-                        <span className={cn(
-                          isExpired && 'text-destructive font-medium',
-                          isExpiringSoon && 'text-warning font-medium'
-                        )}>
-                          {format(new Date(item.expiration_date), "d MMM yyyy", { locale: es })}
-                        </span>
-                      </p>
-                      {!isExpired && (
-                        <p className="text-xs text-muted-foreground">
-                          {daysToExpire} días restantes
-                        </p>
-                      )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-3">
+                  {delivery.observations && <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">{delivery.observations}</p>}
+                  {items.map((item: any) => {
+                    const daysToExpire = differenceInDays(new Date(item.expiration_date), new Date());
+                    const isExpired = daysToExpire < 0;
+                    const isExpiringSoon = daysToExpire >= 0 && daysToExpire <= 30;
+
+                    return (
+                      <div key={item.id} className={cn('rounded-lg border p-3', isExpired && 'border-destructive/50 bg-destructive/5', isExpiringSoon && 'border-warning/50 bg-warning/5')}>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0 space-y-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h5 className="font-medium">{item.item_name}</h5>
+                              <Badge variant="secondary">{itemTypeLabels[item.item_type] || item.item_type}</Badge>
+                              {item.size && <Badge variant="outline">Talla: {item.size}</Badge>}
+                              {item.quantity > 1 && <Badge variant="outline">Cantidad: {item.quantity}</Badge>}
+                            </div>
+                            {item.item_description && <p className="text-sm text-muted-foreground">{item.item_description}</p>}
+                          </div>
+                          <div className="space-y-1 text-sm sm:text-right">
+                            <p><span className="text-muted-foreground">Vence: </span><span className={cn(isExpired && 'font-medium text-destructive', isExpiringSoon && 'font-medium text-warning')}>{format(new Date(item.expiration_date), "d MMM yyyy", { locale: es })}</span></p>
+                            {!isExpired && <p className="text-xs text-muted-foreground">{daysToExpire} días restantes</p>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </AccordionContent>
+              </AccordionItem>
             </motion.div>
           );
         })}
-      </div>
+      </Accordion>
     </motion.div>
   );
 }
