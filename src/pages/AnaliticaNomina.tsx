@@ -45,10 +45,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import { useContracts } from '@/hooks/useContracts';
 import { useEmployees } from '@/hooks/useEmployees';
 import { usePayrollConfig } from '@/hooks/usePayrollConfig';
@@ -216,6 +218,9 @@ export default function AnaliticaNomina() {
   const [typeAlertThresholds, setTypeAlertThresholds] = useState<Record<string, { volume: number; severity: number }>>({});
   const [centerAlertThresholds, setCenterAlertThresholds] = useState<Record<string, { volume: number; severity: number }>>({});
   const [alertStatusOverrides, setAlertStatusOverrides] = useState<Record<string, 'pendiente' | 'notificada' | 'cerrada'>>({});
+  const [alertCloseReasons, setAlertCloseReasons] = useState<Record<string, string>>({});
+  const [closingAlert, setClosingAlert] = useState<{ id: string; tipo: string } | null>(null);
+  const [closeReasonDraft, setCloseReasonDraft] = useState('');
   const comparisonStartDate = startDate ? shiftMonth(startDate, 1) : '';
   const comparisonEndDate = endDate ? shiftMonth(endDate, 1) : '';
 
@@ -283,6 +288,20 @@ export default function AnaliticaNomina() {
         [field]: value,
       },
     }));
+  };
+
+  const openCloseReasonDialog = (alert: { id: string; tipo: string }) => {
+    setClosingAlert(alert);
+    setCloseReasonDraft(alertCloseReasons[alert.id] || '');
+  };
+
+  const confirmCloseWithReason = () => {
+    const reason = closeReasonDraft.trim().slice(0, 500);
+    if (!closingAlert || reason.length < 3) return;
+    setAlertStatusOverrides((prev) => ({ ...prev, [closingAlert.id]: 'cerrada' }));
+    setAlertCloseReasons((prev) => ({ ...prev, [closingAlert.id]: reason }));
+    setClosingAlert(null);
+    setCloseReasonDraft('');
   };
 
   const salaryByEmployee = useMemo(() => {
