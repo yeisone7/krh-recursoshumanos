@@ -98,7 +98,7 @@ export function RecoveryFormDialog({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Gestionar Recobro</DialogTitle>
           <DialogDescription>
@@ -131,7 +131,7 @@ export function RecoveryFormDialog({
               )}
             />
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="filing_date"
@@ -183,7 +183,7 @@ export function RecoveryFormDialog({
               />
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="expected_payment_date"
@@ -295,11 +295,11 @@ export function RecoveryFormDialog({
               )}
             />
             
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="grid grid-cols-2 gap-3 pt-4 border-t sm:flex sm:justify-end">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Guardar
               </Button>
