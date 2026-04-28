@@ -448,6 +448,7 @@ export default function Dotacion() {
                 )}
               </div>
             ) : (
+              <>
               <div className="hidden overflow-x-auto overscroll-x-contain sm:block">
               <Table className="min-w-[560px]">
                 <TableHeader>
@@ -589,6 +590,7 @@ export default function Dotacion() {
                   );
                 })}
               </div>
+              </>
             )}
           </div>
         </motion.div>
