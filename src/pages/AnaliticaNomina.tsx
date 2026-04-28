@@ -31,6 +31,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  DollarSign,
   Filter,
   Gauge,
   Moon,
@@ -47,7 +48,9 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useContracts } from '@/hooks/useContracts';
 import { useEmployees } from '@/hooks/useEmployees';
+import { usePayrollConfig } from '@/hooks/usePayrollConfig';
 import { usePayrollNovelties } from '@/hooks/usePayrollNovelties';
 import { useEmployeeTimeConfigs, useShiftAssignments, useShiftCycles, useShifts, useWorkSchedules } from '@/hooks/useSchedules';
 import { cn } from '@/lib/utils';
@@ -66,10 +69,27 @@ const chartColors = [
 
 const numberFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 });
 const integerFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+const currencyFormatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
 const overtimeTypes = new Set<NoveltyType>(['hedo', 'heno', 'hedf', 'henf', 'rn', 'rnf', 'dominical_trabajado', 'festivo_trabajado']);
 const absenceTypes = new Set<NoveltyType>(['incapacidad', 'vacaciones', 'permiso']);
 const regularTypes = new Set<NoveltyType>(['jornada', 'descanso_remunerado']);
+
+const defaultImpactMultiplier: Record<string, number> = {
+  jornada: 1,
+  hedo: 1.25,
+  heno: 1.75,
+  hedf: 1.75,
+  henf: 2.1,
+  rn: 0.35,
+  rnf: 1.1,
+  dominical_trabajado: 1.75,
+  festivo_trabajado: 1.75,
+  descanso_remunerado: 1,
+  incapacidad: 1,
+  vacaciones: 1,
+  permiso: 1,
+};
 
 function asDate(value: string | null | undefined) {
   if (!value) return null;
