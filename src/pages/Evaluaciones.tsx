@@ -183,6 +183,12 @@ export default function Evaluaciones() {
     ? Math.round(compareEvaluations.reduce((s, e) => s + (e.overall_score || 0), 0) / compareEvaluations.length)
     : 0;
 
+  const newButtonLabel = activeTab === 'templates'
+    ? 'Nueva Plantilla'
+    : activeTab === 'cycles'
+      ? 'Nuevo Ciclo'
+      : 'Nueva Evaluación';
+
   const handleDelete = () => {
     if (!itemToDelete) return;
     
@@ -345,7 +351,8 @@ export default function Evaluaciones() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="sticky top-0 z-30 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList className="grid h-auto w-full grid-cols-3 sm:w-auto">
             <TabsTrigger value="cycles" className="gap-2 px-2 sm:px-3">
               <Calendar className="h-4 w-4" />
@@ -378,13 +385,10 @@ export default function Evaluaciones() {
           >
             <Plus className="h-4 w-4 mr-2" />
             <span className="sm:hidden">Nuevo</span>
-            <span className="hidden sm:inline">
-              {activeTab === 'templates' && 'Nueva Plantilla'}
-              {activeTab === 'cycles' && 'Nuevo Ciclo'}
-              {activeTab === 'evaluations' && 'Nueva Evaluación'}
-            </span>
+            <span className="hidden sm:inline">{newButtonLabel}</span>
             
           </Button>
+          </div>
         </div>
 
         {/* Cycles Tab */}
