@@ -607,6 +607,38 @@ export default function AnaliticaNomina() {
       )}
 
       <div className="grid gap-4 xl:grid-cols-2">
+        {[{ title: 'Priorización por tipo de novedad', rows: analytics.impactRankingByType }, { title: 'Priorización por centro', rows: analytics.impactRankingByCenter }].map((section) => (
+          <Card key={section.title}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">{section.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {section.rows.map((row: any) => (
+                <div key={row.name} className="rounded-md border border-border p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{row.name}</p>
+                      <p className="text-xs text-muted-foreground">{row.volumen} novedades · {numberFormatter.format(row.horas)} horas · {row.empleados} empleados</p>
+                    </div>
+                    <Badge variant="outline" className={cn(
+                      row.prioridad === 'Crítica' && 'bg-destructive/10 text-destructive border-destructive/20',
+                      row.prioridad === 'Alta' && 'bg-warning-light text-warning border-warning/20',
+                      row.prioridad === 'Normal' && 'bg-success-light text-success border-success/20'
+                    )}>{row.prioridad}</Badge>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-3 text-xs">
+                    <span className="text-muted-foreground">Impacto estimado</span>
+                    <span className="font-semibold text-foreground">{currencyFormatter.format(row.impacto)}</span>
+                  </div>
+                  <Progress value={Math.min(100, percent(row.impacto, Math.max(severityThreshold, row.impacto)))} className="mt-2 h-2" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard title="Tendencia mensual de jornadas y novedades" className="xl:col-span-2">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.monthlyTrend} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
