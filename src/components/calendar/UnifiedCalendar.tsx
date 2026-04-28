@@ -157,7 +157,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
   const maxVisible = view === 'week' ? 8 : 3;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-3 sm:gap-4">
       {/* Summary KPI Row */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
         {(Object.keys(EVENT_TYPE_LABELS) as CalendarEventType[]).map((type) => {
@@ -190,7 +190,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
       {/* Main layout: Calendar + Sidebar */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:gap-4">
         {/* Calendar Card */}
-        <Card className="flex min-h-[560px] min-w-0 flex-1 flex-col sm:min-h-[640px] lg:min-h-0">
+        <Card className="flex min-h-[420px] min-w-0 flex-1 flex-col sm:min-h-[640px] lg:min-h-0">
           {/* Header */}
           <div className="flex flex-col gap-3 px-3 pb-3 pt-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:justify-start">
@@ -208,18 +208,18 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
               <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week' | 'agenda')}>
-                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:inline-flex sm:w-auto">
-                  <TabsTrigger value="agenda" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
+                <TabsList className="flex h-auto w-full max-w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:inline-flex sm:w-auto">
+                  <TabsTrigger value="agenda" className="min-h-8 shrink-0 gap-1 px-2.5 text-xs whitespace-nowrap sm:px-3">
                     <List className="h-3.5 w-3.5" />
                     Agenda
                   </TabsTrigger>
-                  <TabsTrigger value="month" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
+                  <TabsTrigger value="month" className="min-h-8 shrink-0 gap-1 px-2.5 text-xs whitespace-nowrap sm:px-3">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Mes
                   </TabsTrigger>
-                  <TabsTrigger value="week" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
+                  <TabsTrigger value="week" className="min-h-8 shrink-0 gap-1 px-2.5 text-xs whitespace-nowrap sm:px-3">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Semana
                   </TabsTrigger>
@@ -296,7 +296,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                         const date = new Date(dateKey);
                         return (
                           <div key={dateKey} className="mb-4">
-                            <div className="flex items-center gap-2 mb-2 sticky top-0 bg-card z-10 py-1">
+                            <div className="sticky top-0 z-10 mb-2 flex min-w-0 items-center gap-2 bg-card py-1">
                               <div
                                 className={cn(
                                   'flex items-center justify-center w-10 h-10 rounded-lg text-sm font-bold',
@@ -307,15 +307,15 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                               >
                                 {format(date, 'd')}
                               </div>
-                              <div>
-                                <p className="text-sm font-semibold capitalize">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold capitalize">
                                   {format(date, 'EEEE', { locale: es })}
                                 </p>
-                                <p className="text-[11px] text-muted-foreground capitalize">
+                                <p className="truncate text-[11px] text-muted-foreground capitalize">
                                   {format(date, "d 'de' MMMM yyyy", { locale: es })}
                                 </p>
                               </div>
-                              <Badge variant="secondary" className="ml-auto text-[10px]">
+                              <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
                                 {dayEvents.length} {dayEvents.length === 1 ? 'evento' : 'eventos'}
                               </Badge>
                             </div>
@@ -324,7 +324,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                                 <button
                                   key={event.id}
                                   onClick={() => handleEventClick(event)}
-                                  className="group flex w-[calc(100%-12px)] items-start gap-3 rounded-lg border p-3 text-left transition-all hover:border-primary/30 hover:shadow-sm"
+                                  className="group flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all hover:border-primary/30 hover:shadow-sm sm:w-[calc(100%-12px)] sm:gap-3 sm:p-3"
                                 >
                                   <div className={cn('rounded-md p-1.5 mt-0.5 shrink-0', event.bgColor, event.color)}>
                                     {EVENT_ICONS[event.type]}
@@ -345,7 +345,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                                       )}
                                     </div>
                                   </div>
-                                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1" />
+                                   <ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100" />
                                 </button>
                               ))}
                             </div>
@@ -357,7 +357,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                 </div>
               </div>
             ) : (
-              <div className="h-full flex flex-col">
+              <div className="flex h-full min-w-0 flex-col overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {/* Weekday header */}
                 <div className="mb-1 grid min-w-[640px] grid-cols-7 gap-1 sm:min-w-0">
                   {weekDays.map((day) => (
@@ -371,7 +371,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                 </div>
 
                 {/* Grid */}
-                <div className="min-h-0 flex-1 overflow-y-auto">
+                <div className="min-h-0 min-w-[640px] flex-1 overflow-y-auto sm:min-w-0">
                   <div className="grid min-w-[640px] grid-cols-7 gap-1 sm:min-w-0">
                     {calendarDays.map((day) => {
                       const dayEvents = getEventsForDay(day);
@@ -385,7 +385,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                           onClick={() => setSelectedDay(day)}
                           className={cn(
                             'p-1.5 border rounded-lg transition-all text-left',
-                            view === 'week' ? 'min-h-[180px]' : 'min-h-[72px] sm:min-h-[85px]',
+                            view === 'week' ? 'min-h-[150px] sm:min-h-[180px]' : 'min-h-[72px] sm:min-h-[85px]',
                             isCurrentMonth ? 'bg-background hover:bg-accent/30' : 'bg-muted/20',
                             isSelected && 'ring-2 ring-primary/60 bg-primary/5',
                             isCurrentDay && !isSelected && 'ring-1 ring-primary/40',
