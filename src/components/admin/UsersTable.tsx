@@ -292,7 +292,71 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border">
+      <MobileCardList
+        className="md:hidden"
+        emptyMessage="No se encontraron usuarios"
+        items={filteredUsers.map(user => ({
+          id: user.id,
+          title: (
+            <span>
+              {getUserDisplayName(user)}
+              {user.id === currentUser?.id && <span className="ml-1.5 text-xs text-muted-foreground">(Tú)</span>}
+            </span>
+          ),
+          subtitle: user.email || 'Sin correo registrado',
+          badge: (
+            <Badge
+              variant={user.is_active ? 'outline' : 'secondary'}
+              className={user.is_active ? 'bg-success-light text-success border-success/20' : 'bg-muted text-muted-foreground'}
+            >
+              {user.is_active ? 'Activo' : 'Inactivo'}
+            </Badge>
+          ),
+          fields: [
+            {
+              label: 'Roles',
+              value: user.custom_roles.length === 0 && user.roles.length === 0 ? (
+                <span className="text-muted-foreground italic">Sin roles</span>
+              ) : (
+                <div className="flex flex-wrap gap-1">
+                  {user.custom_roles.map(role => <Badge key={role} variant="secondary" className="text-xs">{role}</Badge>)}
+                  {user.roles.map(role => (
+                    <Badge key={role} variant={ROLE_LABELS[role]?.variant || 'outline'} className="text-xs">
+                      {ROLE_LABELS[role]?.label || role}
+                    </Badge>
+                  ))}
+                </div>
+              ),
+              className: 'col-span-2',
+            },
+            {
+              label: 'Empresas',
+              value: user.companies.length === 0 ? '—' : `${user.companies.length}`,
+            },
+            {
+              label: 'Centros',
+              value: user.centers.length === 0 ? 'Todos' : `${user.centers.length}`,
+            },
+          ],
+          actions: (
+            <>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={user.is_active}
+                  onCheckedChange={() => handleToggleStatus(user)}
+                  disabled={user.id === currentUser?.id || toggleStatus.isPending}
+                  className="data-[state=checked]:bg-success"
+                />
+                <span className="text-sm text-muted-foreground">Estado</span>
+              </div>
+              {renderActionsMenu(user)}
+            </>
+          ),
+          itemClassName: !user.is_active ? 'opacity-60' : undefined,
+        }))}
+      />
+
+      <div className="hidden overflow-hidden rounded-lg border border-border md:block">
         <div className="overflow-auto max-h-[600px]">
         <Table className="min-w-[860px]">
           <TableHeader>
@@ -399,58 +463,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleManageRoles(user)}>
-                        <Shield className="w-4 h-4 mr-2" />
-                        Gestionar Roles
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleManageCenters(user)}>
-                        <MapPin className="w-4 h-4 mr-2" />
-                        Asignar Centros
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleManageCompanies(user)}>
-                        <Building2 className="w-4 h-4 mr-2" />
-                        Asignar Empresas
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleLinkEmployee(user)}>
-                        <Link className="w-4 h-4 mr-2" />
-                        Vincular Empleado
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={() => handleToggleStatus(user)}
-                        disabled={user.id === currentUser?.id}
-                      >
-                        {user.is_active ? (
-                          <>
-                            <UserMinus className="w-4 h-4 mr-2" />
-                            Desactivar Usuario
-                          </>
-                        ) : (
-                          <>
-                            <UserCheck className="w-4 h-4 mr-2" />
-                            Activar Usuario
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="text-destructive"
-                        onClick={() => handleRemoveFromCompany(user)}
-                        disabled={user.id === currentUser?.id}
-                      >
-                        <UserX className="w-4 h-4 mr-2" />
-                        Eliminar de Empresa
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {renderActionsMenu(user)}
                 </TableCell>
               </TableRow>
             ))}
