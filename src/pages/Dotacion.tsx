@@ -256,7 +256,7 @@ export default function Dotacion() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -265,8 +265,8 @@ export default function Dotacion() {
         className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
       >
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Gestión de Dotación</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Gestión de Dotación</h1>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
             Administra las entregas de dotación, controla vencimientos y genera alertas automáticas
           </p>
         </div>
@@ -287,25 +287,25 @@ export default function Dotacion() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="-mx-1 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <TabsList className="inline-flex h-auto min-w-max">
-          <TabsTrigger value="entregas" className="gap-2">
+        <TabsList className="inline-flex h-auto min-w-max p-1">
+          <TabsTrigger value="entregas" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
             <Package className="w-4 h-4" /> Entregas
           </TabsTrigger>
           {inventoryEnabled && (
-            <TabsTrigger value="inventario" className="gap-2">
+            <TabsTrigger value="inventario" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
               <Warehouse className="w-4 h-4" /> Inventario
               {lowStockCount > 0 && (
                 <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">{lowStockCount}</Badge>
               )}
             </TabsTrigger>
           )}
-          <TabsTrigger value="profesiograma" className="gap-2">
+          <TabsTrigger value="profesiograma" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
             <ClipboardList className="w-4 h-4" /> Profesiograma
           </TabsTrigger>
-          <TabsTrigger value="cumplimiento" className="gap-2">
+          <TabsTrigger value="cumplimiento" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
             <ShieldCheck className="w-4 h-4" /> Cumplimiento
           </TabsTrigger>
-          <TabsTrigger value="ajustes" className="gap-2">
+          <TabsTrigger value="ajustes" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
             <Settings className="w-4 h-4" /> Ajustes
           </TabsTrigger>
         </TabsList>
