@@ -353,8 +353,8 @@ export default function Evaluaciones() {
             </TabsTrigger>
             <TabsTrigger value="evaluations" className="gap-2 px-2 sm:px-3">
               <ClipboardCheck className="h-4 w-4" />
-              <span className="hidden xs:inline">Evaluaciones</span>
-              <span className="xs:hidden">Eval.</span>
+              <span className="hidden sm:inline">Evaluaciones</span>
+              <span className="sm:hidden">Eval.</span>
             </TabsTrigger>
             <TabsTrigger value="templates" className="gap-2 px-2 sm:px-3">
               <FileText className="h-4 w-4" />
