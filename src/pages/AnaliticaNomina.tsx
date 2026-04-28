@@ -337,6 +337,19 @@ export default function AnaliticaNomina() {
     const noveltyTypes = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type);
     const noveltyHoursByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, (item: any) => Number(item.hours || 0));
     const estimatedImpactByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, getEstimatedImpact);
+    const shiftDistributionTrend = monthlyTrend.map((month) => ({
+      periodo: month.periodo,
+      jornadas: month.jornadas,
+      descansos: month.descansos,
+      manual: assignments.filter((item: any) => periodLabel(periodKey(item.assignment_date)) === month.periodo && item.source === 'manual').length,
+      ciclo: assignments.filter((item: any) => periodLabel(periodKey(item.assignment_date)) === month.periodo && item.source === 'cycle').length,
+    }));
+    const impactEvolution = monthlyTrend.map((month, index) => ({
+      periodo: month.periodo,
+      impactoActual: month.montoEstimado,
+      impactoMesAnterior: comparisonMode === 'mes_anterior' ? comparisonMonthlyTrend[index]?.montoEstimado || 0 : undefined,
+      variacion: comparisonMode === 'mes_anterior' ? month.montoEstimado - (comparisonMonthlyTrend[index]?.montoEstimado || 0) : month.montoEstimado - (monthlyTrend[index - 1]?.montoEstimado || 0),
+    }));
     const shiftDemand = groupByName(assignments, (item: any) => item.shifts?.name || (item.shifts?.is_rest_day ? 'Descanso' : 'Sin turno')).slice(0, 8);
     const sourceMix = groupByName(assignments, (item: any) => item.source === 'cycle' ? 'Ciclo automático' : 'Manual');
     const noveltySourceMix = groupByName(filteredNovelties, (item: any) => item.source === 'auto' ? 'Automático' : 'Manual');
@@ -413,6 +426,9 @@ export default function AnaliticaNomina() {
         overtimeRate,
       },
       monthlyTrend,
+      comparisonMonthlyTrend,
+      shiftDistributionTrend,
+      impactEvolution,
       weekdayBehavior,
       noveltyTypes,
       noveltyHoursByType,
@@ -426,7 +442,7 @@ export default function AnaliticaNomina() {
       insights,
       alerts,
     };
-  }, [assignments, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, shiftCycles, shifts, startDate, endDate, workSchedules]);
+  }, [assignments, comparisonAssignments, comparisonMode, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, shiftCycles, shifts, startDate, endDate, workSchedules]);
 
   if (isLoading) {
     return (
