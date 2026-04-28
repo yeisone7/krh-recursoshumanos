@@ -163,16 +163,16 @@ export function SecurityTab({
                   Cerrar todas las sesiones
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
+              <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden sm:max-w-lg">
+                <AlertDialogHeader className="min-h-0 shrink overflow-y-auto pr-1">
                   <AlertDialogTitle>¿Cerrar sesión en todos los dispositivos?</AlertDialogTitle>
                   <AlertDialogDescription>
                     Se cerrarán todas las sesiones activas de tu cuenta. Tendrás que iniciar sesión nuevamente en cada dispositivo.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleSignOutAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                <AlertDialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+                  <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleSignOutAll} className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto">
                     Sí, cerrar todas
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -198,8 +198,8 @@ export function SecurityTab({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg border">
-            <div>
+          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border">
+            <div className="min-w-0">
               <Label className="text-sm font-medium">Activar cierre automático por inactividad</Label>
               <p className="text-xs text-muted-foreground mt-1">
                 El sistema detecta movimientos del ratón, teclado y scroll
@@ -214,7 +214,7 @@ export function SecurityTab({
           {inactivityEnabled && (
             <div className="p-4 rounded-lg border space-y-3">
               <Label>Tiempo de inactividad (minutos)</Label>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                 <Input
                   type="number"
                   min={1}
