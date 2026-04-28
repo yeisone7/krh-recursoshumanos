@@ -189,6 +189,19 @@ export default function Evaluaciones() {
       ? 'Nuevo Ciclo'
       : 'Nueva Evaluación';
 
+  const handleNewAction = () => {
+    if (activeTab === 'templates') {
+      setSelectedTemplate(null);
+      setTemplateDialogOpen(true);
+    } else if (activeTab === 'cycles') {
+      setSelectedCycle(null);
+      setCycleDialogOpen(true);
+    } else if (activeTab === 'evaluations') {
+      setSelectedEvaluation(null);
+      setEvaluationDialogOpen(true);
+    }
+  };
+
   const handleDelete = () => {
     if (!itemToDelete) return;
     
@@ -369,20 +382,7 @@ export default function Evaluaciones() {
             </TabsTrigger>
           </TabsList>
 
-          <Button
-            onClick={() => {
-              if (activeTab === 'templates') {
-                setSelectedTemplate(null);
-                setTemplateDialogOpen(true);
-              } else if (activeTab === 'cycles') {
-                setSelectedCycle(null);
-                setCycleDialogOpen(true);
-              } else if (activeTab === 'evaluations') {
-                setSelectedEvaluation(null);
-                setEvaluationDialogOpen(true);
-              }
-            }}
-          >
+          <Button onClick={handleNewAction}>
             <Plus className="h-4 w-4 mr-2" />
             <span className="sm:hidden">Nuevo</span>
             <span className="hidden sm:inline">{newButtonLabel}</span>
@@ -793,6 +793,18 @@ export default function Evaluaciones() {
         </TabsContent>
 
       </Tabs>
+
+      <Button
+        type="button"
+        size="icon"
+        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg sm:hidden"
+        onClick={handleNewAction}
+        aria-label={newButtonLabel}
+        title={newButtonLabel}
+      >
+        <Plus className="h-6 w-6" />
+        <span className="sr-only">{newButtonLabel}</span>
+      </Button>
 
       {/* Dialogs */}
       <TemplateFormDialog
