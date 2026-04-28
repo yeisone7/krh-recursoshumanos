@@ -176,6 +176,12 @@ export default function TiposContrato() {
     }
   };
 
+  const closePreview = () => {
+    setPreviewItem(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -377,7 +383,7 @@ export default function TiposContrato() {
         editItem={editItem}
       />
 
-      <Dialog open={!!previewItem} onOpenChange={(open) => { if (!open) { setPreviewItem(null); if (previewUrl) URL.revokeObjectURL(previewUrl); setPreviewUrl(null); } }}>
+      <Dialog open={!!previewItem} onOpenChange={(open) => { if (!open) closePreview(); }}>
         <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-4xl flex-col overflow-hidden p-0">
           <DialogHeader className="shrink-0 px-4 pt-4 sm:px-6 sm:pt-6">
             <DialogTitle className="flex items-center gap-2">
@@ -403,7 +409,7 @@ export default function TiposContrato() {
           </div>
 
           <DialogFooter className="shrink-0 flex-col-reverse gap-2 border-t border-border px-4 py-4 sm:flex-row sm:gap-0 sm:px-6">
-            <Button variant="outline" onClick={() => setPreviewItem(null)} className="w-full sm:w-auto">Cerrar</Button>
+            <Button variant="outline" onClick={closePreview} className="w-full sm:w-auto">Cerrar</Button>
             {previewItem?.template_url && (
               <Button onClick={() => downloadTemplate(previewItem.template_url!, previewItem.template_file_name || 'plantilla.docx')} className="w-full sm:w-auto">
                 <Download className="mr-2 h-4 w-4" />
