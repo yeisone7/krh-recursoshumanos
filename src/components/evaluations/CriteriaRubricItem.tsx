@@ -39,12 +39,12 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
       <div className="flex gap-2 items-start">
         <GripVertical className="w-4 h-4 mt-2 text-muted-foreground cursor-grab shrink-0" />
 
-        <div className="flex-1 grid grid-cols-4 gap-2">
+        <div className="flex-1 grid gap-2 sm:grid-cols-4">
           <FormField
             control={form.control}
             name={`criteria.${index}.name`}
             render={({ field }) => (
-              <FormItem className="col-span-2">
+              <FormItem className="sm:col-span-2">
                 <FormControl>
                   <Input placeholder="Ej: Trabajo en Equipo" {...field} />
                 </FormControl>
@@ -101,7 +101,7 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
             Rúbricas por nivel
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="ml-6 space-y-2 pt-2">
+        <CollapsibleContent className="space-y-2 pt-2 sm:ml-6">
           {LEVEL_LABELS.map(({ level, label }) => (
             <FormField
               key={level}
