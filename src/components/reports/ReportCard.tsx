@@ -29,36 +29,36 @@ export function ReportCard({
   headerExtra,
 }: ReportCardProps) {
   return (
-    <Card className={cn('', className)}>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+    <Card className={cn('min-w-0 overflow-hidden', className)}>
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="shrink-0 rounded-lg bg-primary/10 p-2 text-primary">
               {icon}
             </div>
-            <div>
-              <CardTitle className="text-lg">{title}</CardTitle>
-              <CardDescription>{description}</CardDescription>
+            <div className="min-w-0">
+              <CardTitle className="break-words text-base sm:text-lg">{title}</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">{description}</CardDescription>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex shrink-0 flex-row items-center justify-between gap-2 sm:flex-col sm:items-end">
             {headerExtra}
             {recordCount !== undefined && (
-              <div className="text-right">
-                <span className="text-2xl font-bold text-primary">{recordCount}</span>
+              <div className="text-left sm:text-right">
+                <span className="text-xl font-bold text-primary sm:text-2xl">{recordCount}</span>
                 <p className="text-xs text-muted-foreground">registros</p>
               </div>
             )}
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 p-4 pt-0 sm:p-6 sm:pt-0">
         {children}
         
-        <div className="flex gap-2 pt-2">
+        <div className="grid gap-2 pt-2 sm:grid-cols-2">
           <Button
             variant="outline"
-            className="flex-1"
+            className="w-full min-w-0"
             onClick={onExportExcel}
             disabled={isLoading || recordCount === 0}
           >
@@ -67,11 +67,11 @@ export function ReportCard({
             ) : (
               <FileSpreadsheet className="w-4 h-4 mr-2" />
             )}
-            Exportar Excel
+            <span className="truncate">Exportar Excel</span>
           </Button>
           <Button
             variant="outline"
-            className="flex-1"
+            className="w-full min-w-0"
             onClick={onExportPDF}
             disabled={isLoading || recordCount === 0}
           >
@@ -80,7 +80,7 @@ export function ReportCard({
             ) : (
               <FileText className="w-4 h-4 mr-2" />
             )}
-            Exportar PDF
+            <span className="truncate">Exportar PDF</span>
           </Button>
         </div>
       </CardContent>
