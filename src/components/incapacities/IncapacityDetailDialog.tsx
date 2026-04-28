@@ -372,7 +372,7 @@ export function IncapacityDetailDialog({
               <TabsContent value="recovery" className="space-y-4 mt-4">
                 <Card>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <CardTitle className="text-base flex items-center gap-2">
                           <Clock className="h-4 w-4" />
@@ -382,7 +382,7 @@ export function IncapacityDetailDialog({
                           Gestión del recobro ante {incapacity.origin === 'laboral' ? 'ARL' : 'EPS'}
                         </CardDescription>
                       </div>
-                      <Button size="sm" onClick={() => setShowRecoveryDialog(true)}>
+                      <Button size="sm" onClick={() => setShowRecoveryDialog(true)} className="w-full sm:w-auto">
                         <Edit className="h-4 w-4 mr-1" />
                         Actualizar
                       </Button>
@@ -395,7 +395,7 @@ export function IncapacityDetailDialog({
                       </Badge>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
                       {incapacity.filing_date && (
                         <div>
                           <p className="text-sm text-muted-foreground">Fecha Radicación</p>
@@ -497,10 +497,10 @@ export function IncapacityDetailDialog({
               <TabsContent value="history" className="space-y-4 mt-4">
                 <Card>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <CardTitle className="text-base">Historial de Prórrogas</CardTitle>
                       {!incapacity.is_extension && (
-                        <Button size="sm" onClick={() => setShowExtensionDialog(true)}>
+                        <Button size="sm" onClick={() => setShowExtensionDialog(true)} className="w-full sm:w-auto">
                           <Plus className="h-4 w-4 mr-1" />
                           Agregar Prórroga
                         </Button>
