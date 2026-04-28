@@ -309,19 +309,23 @@ export default function Alertas() {
       </motion.div>
 
       {/* Tabs and Alerts List */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="all">Todas</TabsTrigger>
-          <TabsTrigger value="critical" className="gap-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0 space-y-4">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1 sm:inline-flex sm:w-auto">
+          <TabsTrigger value="all" className="min-w-0 px-2 text-xs sm:text-sm">Todas</TabsTrigger>
+          <TabsTrigger value="critical" className="min-w-0 gap-1 px-2 text-xs sm:text-sm">
             Críticas
             {stats.criticalCount > 0 && (
-              <span className="ml-1 bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
+              <span className="ml-1 rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
                 {stats.criticalCount}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="warning">Advertencias</TabsTrigger>
-          <TabsTrigger value="info">Informativas</TabsTrigger>
+          <TabsTrigger value="warning" className="min-w-0 px-2 text-xs sm:text-sm">
+            <span className="truncate">Advertencias</span>
+          </TabsTrigger>
+          <TabsTrigger value="info" className="min-w-0 px-2 text-xs sm:text-sm">
+            <span className="truncate">Informativas</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-3">
