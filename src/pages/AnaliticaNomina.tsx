@@ -843,7 +843,7 @@ export default function AnaliticaNomina() {
                     <span className="text-muted-foreground">Impacto estimado</span>
                     <span className="font-semibold text-foreground">{currencyFormatter.format(row.impacto)}</span>
                   </div>
-                  <Progress value={Math.min(100, percent(row.impacto, Math.max(severityThreshold, row.impacto)))} className="mt-2 h-2" />
+                  <Progress value={Math.min(100, percent(row.impacto, Math.max(row.severityThreshold, row.impacto)))} className="mt-2 h-2" />
                 </div>
               ))}
             </CardContent>
