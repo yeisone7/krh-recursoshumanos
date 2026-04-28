@@ -280,10 +280,10 @@ export function DisciplinaryDetailDialog({
 
               {/* TAB: Evidence */}
               <TabsContent value="evidence" className="space-y-4 mt-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-medium">Evidencias del Proceso</h3>
                   {!isClosed && (
-                    <Button size="sm" onClick={() => setShowEvidenceForm(true)}>
+                    <Button size="sm" onClick={() => setShowEvidenceForm(true)} className="w-full sm:w-auto">
                       <Plus className="h-4 w-4 mr-1" />
                       Agregar Evidencia
                     </Button>
@@ -295,8 +295,8 @@ export function DisciplinaryDetailDialog({
                     {process.evidence.map((ev) => (
                       <Card key={ev.id}>
                         <CardContent className="py-4">
-                          <div className="flex justify-between items-start">
-                            <div>
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="min-w-0">
                               <Badge variant="outline" className="mb-2">
                                 {ev.evidence_type}
                               </Badge>
@@ -307,7 +307,7 @@ export function DisciplinaryDetailDialog({
                               </p>
                             </div>
                             {ev.file_url && (
-                              <Button size="sm" variant="outline" asChild>
+                              <Button size="sm" variant="outline" asChild className="w-full sm:w-auto">
                                 <a href={ev.file_url} target="_blank" rel="noopener noreferrer">
                                   Ver Archivo
                                 </a>
@@ -329,15 +329,15 @@ export function DisciplinaryDetailDialog({
 
               {/* TAB: Defenses */}
               <TabsContent value="defenses" className="space-y-4 mt-4">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-medium">Descargos del Empleado</h3>
                   {!isClosed && (
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => setShowTokenDialog(true)}>
+                    <div className="grid grid-cols-1 gap-2 sm:flex">
+                      <Button size="sm" variant="outline" onClick={() => setShowTokenDialog(true)} className="w-full sm:w-auto">
                         <Link className="h-4 w-4 mr-1" />
                         Enviar Enlace
                       </Button>
-                      <Button size="sm" onClick={() => setShowDefenseForm(true)}>
+                      <Button size="sm" onClick={() => setShowDefenseForm(true)} className="w-full sm:w-auto">
                         <Plus className="h-4 w-4 mr-1" />
                         Registrar Descargos
                       </Button>
