@@ -157,7 +157,7 @@ export function IncapacityFormDialog({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? 'Editar Incapacidad' : isExtension ? 'Registrar Prórroga' : 'Nueva Incapacidad'}
@@ -172,7 +172,7 @@ export function IncapacityFormDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid h-auto w-full grid-cols-3">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="clinical">Clínico</TabsTrigger>
                 <TabsTrigger value="payment">Pago</TabsTrigger>
@@ -239,7 +239,7 @@ export function IncapacityFormDialog({
                   )}
                 />
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="start_date"
@@ -319,7 +319,7 @@ export function IncapacityFormDialog({
                     control={form.control}
                     name="is_extension"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                         <FormControl>
                           <input
                             type="checkbox"
