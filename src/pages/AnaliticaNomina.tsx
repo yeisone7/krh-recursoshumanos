@@ -341,6 +341,23 @@ export default function AnaliticaNomina() {
     const noveltyTypes = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type);
     const noveltyHoursByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, (item: any) => Number(item.hours || 0));
     const estimatedImpactByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, getEstimatedImpact);
+    const buildImpactRanking = (getKey: (item: any) => string) => Object.values(filteredNovelties.reduce<Record<string, any>>((acc, item: any) => {
+      const name = getKey(item);
+      if (!acc[name]) acc[name] = { name, volumen: 0, horas: 0, impacto: 0, empleados: new Set<string>() };
+      acc[name].volumen += 1;
+      acc[name].horas += Number(item.hours || 0);
+      acc[name].impacto += getEstimatedImpact(item);
+      acc[name].empleados.add(item.employee_id);
+      return acc;
+    }, {})).map((item: any) => ({
+      ...item,
+      horas: Math.round(item.horas * 10) / 10,
+      impacto: Math.round(item.impacto),
+      empleados: item.empleados.size,
+      prioridad: item.volumen >= volumeThreshold && item.impacto >= severityThreshold ? 'Crítica' : item.volumen >= volumeThreshold || item.impacto >= severityThreshold ? 'Alta' : 'Normal',
+    })).sort((a: any, b: any) => b.impacto - a.impacto || b.volumen - a.volumen).slice(0, 8);
+    const impactRankingByType = buildImpactRanking((item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type || 'Sin tipo');
+    const impactRankingByCenter = buildImpactRanking((item: any) => centerNameMap.get(employeeCenterMap.get(item.employee_id) as string) || 'Sin centro');
     const shiftDistributionTrend = monthlyTrend.map((month) => ({
       periodo: month.periodo,
       jornadas: month.jornadas,
@@ -403,11 +420,16 @@ export default function AnaliticaNomina() {
       },
     ];
 
+    const thresholdAlerts = [...impactRankingByType, ...impactRankingByCenter]
+      .filter((item: any) => item.prioridad !== 'Normal')
+      .slice(0, 6)
+      .map((item: any) => `${item.prioridad}: ${item.name} supera umbral con ${item.volumen} novedades y ${currencyFormatter.format(item.impacto)} estimados.`);
     const alerts = [
       withoutAssignments > 0 ? `${withoutAssignments} empleados activos en tiempo no tienen asignaciones en el rango.` : null,
       highLoadEmployees > 0 ? `${highLoadEmployees} empleados concentran una carga alta de novedades.` : null,
       restDays > assignedWorkDays * 0.35 ? 'La proporción de descansos programados supera el patrón esperado.' : null,
       manualAssignments > generatedAssignments && assignments.length > 0 ? 'Predomina la programación manual sobre ciclos automáticos.' : null,
+      ...thresholdAlerts,
     ].filter(Boolean) as string[];
 
     return {
@@ -437,6 +459,8 @@ export default function AnaliticaNomina() {
       noveltyTypes,
       noveltyHoursByType,
       estimatedImpactByType,
+      impactRankingByType,
+      impactRankingByCenter,
       shiftDemand,
       sourceMix,
       noveltySourceMix,
@@ -446,7 +470,7 @@ export default function AnaliticaNomina() {
       insights,
       alerts,
     };
-  }, [assignments, comparisonAssignments, comparisonMode, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, shiftCycles, shifts, startDate, endDate, workSchedules]);
+  }, [assignments, centerNameMap, comparisonAssignments, comparisonMode, employeeCenterMap, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, severityThreshold, shiftCycles, shifts, startDate, endDate, volumeThreshold, workSchedules]);
 
   if (isLoading) {
     return (
