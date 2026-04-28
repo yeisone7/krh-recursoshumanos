@@ -35,6 +35,7 @@ const examResultLabels: Record<string, { label: string; color: string }> = {
 export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) {
   const certifications = employee.certifications || [];
   const vaccinations = employee.vaccinations || [];
+  const examItemCount = exams.reduce((total, exam) => total + ((exam.items || []).length || 0), 0);
 
   if (isLoading) {
     return (
@@ -61,7 +62,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
         <TabsList className="grid h-auto w-full grid-cols-1 gap-1 sm:inline-flex sm:w-auto">
           <TabsTrigger value="exams" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Stethoscope className="w-4 h-4" />
-            Exámenes ({exams.length})
+            Exámenes ({examItemCount})
           </TabsTrigger>
           <TabsTrigger value="certifications" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Award className="w-4 h-4" />
