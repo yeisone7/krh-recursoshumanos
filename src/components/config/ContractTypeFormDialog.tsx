@@ -120,14 +120,15 @@ export function ContractTypeFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-lg">
+        <DialogHeader className="shrink-0">
           <DialogTitle>
             {editItem ? 'Editar Tipo de Contrato' : 'Nuevo Tipo de Contrato'}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="contractType">Código *</Label>
               <Input
@@ -166,8 +167,8 @@ export function ContractTypeFormDialog({
           </div>
 
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+            <div className="flex items-center justify-between gap-2 sm:justify-start">
               <Switch
                 id="requiresEndDate"
                 checked={requiresEndDate}
@@ -175,7 +176,7 @@ export function ContractTypeFormDialog({
               />
               <Label htmlFor="requiresEndDate">Requiere Fecha Fin</Label>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-2 sm:justify-start">
               <Switch
                 id="isActive"
                 checked={isActive}
@@ -193,12 +194,12 @@ export function ContractTypeFormDialog({
             </p>
             
             {existingTemplateFileName && !templateFile && (
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 rounded-lg bg-muted p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-2">
                   <FileText className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-medium">{existingTemplateFileName}</span>
+                  <span className="break-words text-sm font-medium">{existingTemplateFileName}</span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex justify-end gap-2">
                   {editItem?.template_url && onDownloadTemplate && (
                     <Button
                       type="button"
@@ -222,11 +223,11 @@ export function ContractTypeFormDialog({
             )}
 
             {templateFile && (
-              <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 rounded-lg border border-success/20 bg-success/10 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-2">
                   <FileText className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm font-medium text-emerald-700">{templateFile.name}</span>
-                  <span className="text-xs text-emerald-500">
+                  <span className="break-words text-sm font-medium text-success">{templateFile.name}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
                     ({(templateFile.size / 1024).toFixed(1)} KB)
                   </span>
                 </div>
@@ -278,11 +279,13 @@ export function ContractTypeFormDialog({
             />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          </div>
+
+          <DialogFooter className="shrink-0 flex-col-reverse gap-2 pt-4 sm:flex-row sm:gap-0">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading || !contractType.trim() || !displayName.trim()}>
+            <Button type="submit" disabled={isLoading || !contractType.trim() || !displayName.trim()} className="w-full sm:w-auto">
               {isLoading ? 'Guardando...' : editItem ? 'Actualizar' : 'Crear'}
             </Button>
           </DialogFooter>
