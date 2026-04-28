@@ -296,7 +296,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                         const date = new Date(dateKey);
                         return (
                           <div key={dateKey} className="mb-4">
-                            <div className="flex items-center gap-2 mb-2 sticky top-0 bg-card z-10 py-1">
+                            <div className="sticky top-0 z-10 mb-2 flex min-w-0 items-center gap-2 bg-card py-1">
                               <div
                                 className={cn(
                                   'flex items-center justify-center w-10 h-10 rounded-lg text-sm font-bold',
@@ -307,15 +307,15 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                               >
                                 {format(date, 'd')}
                               </div>
-                              <div>
-                                <p className="text-sm font-semibold capitalize">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold capitalize">
                                   {format(date, 'EEEE', { locale: es })}
                                 </p>
-                                <p className="text-[11px] text-muted-foreground capitalize">
+                                <p className="truncate text-[11px] text-muted-foreground capitalize">
                                   {format(date, "d 'de' MMMM yyyy", { locale: es })}
                                 </p>
                               </div>
-                              <Badge variant="secondary" className="ml-auto text-[10px]">
+                              <Badge variant="secondary" className="ml-auto shrink-0 text-[10px]">
                                 {dayEvents.length} {dayEvents.length === 1 ? 'evento' : 'eventos'}
                               </Badge>
                             </div>
@@ -324,7 +324,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                                 <button
                                   key={event.id}
                                   onClick={() => handleEventClick(event)}
-                                  className="group flex w-[calc(100%-12px)] items-start gap-3 rounded-lg border p-3 text-left transition-all hover:border-primary/30 hover:shadow-sm"
+                                  className="group flex w-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-all hover:border-primary/30 hover:shadow-sm sm:w-[calc(100%-12px)] sm:gap-3 sm:p-3"
                                 >
                                   <div className={cn('rounded-md p-1.5 mt-0.5 shrink-0', event.bgColor, event.color)}>
                                     {EVENT_ICONS[event.type]}
@@ -345,7 +345,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                                       )}
                                     </div>
                                   </div>
-                                  <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1" />
+                                   <ExternalLink className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100" />
                                 </button>
                               ))}
                             </div>
