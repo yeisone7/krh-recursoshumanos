@@ -350,8 +350,8 @@ export function DisciplinaryDetailDialog({
                     {process.defenses.map((def) => (
                       <Card key={def.id}>
                         <CardContent className="py-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
+                          <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex flex-wrap items-center gap-2">
                               <Badge variant="outline">{def.defense_type === 'escrito' ? 'Escrito' : 'Oral'}</Badge>
                               {(def as any).submitted_via_token && (
                                 <Badge variant="secondary" className="text-xs">Vía Enlace</Badge>
@@ -391,7 +391,7 @@ export function DisciplinaryDetailDialog({
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
+                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                           <span className="text-sm text-muted-foreground">Sanción:</span>
                           <p className="font-medium">{sanctionTypeLabels[process.sanction_type]}</p>
@@ -434,7 +434,7 @@ export function DisciplinaryDetailDialog({
                               <Scale className="h-4 w-4" />
                               Apelación
                             </h4>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                               <div>
                                 <span className="text-muted-foreground">Fecha:</span>
                                 <p>{formatDate(process.appeal_date)}</p>
@@ -470,7 +470,7 @@ export function DisciplinaryDetailDialog({
                       <Gavel className="h-8 w-8 mx-auto mb-2 opacity-50" />
                       <p>Aún no se ha tomado una decisión en este proceso</p>
                       {process.status === 'analisis' && !isClosed && (
-                        <Button className="mt-4" onClick={() => setShowDecisionForm(true)}>
+                              <Button className="mt-4 w-full sm:w-auto" onClick={() => setShowDecisionForm(true)}>
                           Registrar Decisión
                         </Button>
                       )}
@@ -495,8 +495,8 @@ export function DisciplinaryDetailDialog({
                           <div className="absolute left-2.5 w-3 h-3 rounded-full bg-primary border-2 border-background" />
                           <Card>
                             <CardContent className="py-3">
-                              <div className="flex justify-between items-start">
-                                <div>
+                              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="min-w-0">
                                   <p className="font-medium text-sm">{item.description}</p>
                                   {item.new_status && (
                                     <Badge variant="outline" className="mt-1">
@@ -504,7 +504,7 @@ export function DisciplinaryDetailDialog({
                                     </Badge>
                                   )}
                                 </div>
-                                <div className="text-right text-xs text-muted-foreground">
+                                <div className="text-left text-xs text-muted-foreground sm:text-right">
                                   <p>{format(new Date(item.action_date), 'Pp', { locale: es })}</p>
                                   {item.performed_by_name && <p>{item.performed_by_name}</p>}
                                 </div>
