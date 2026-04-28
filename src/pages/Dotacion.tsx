@@ -286,7 +286,7 @@ export default function Dotacion() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="overflow-x-auto pb-1 -mx-1 px-1">
+        <div className="-mx-1 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <TabsList className="inline-flex h-auto min-w-max">
           <TabsTrigger value="entregas" className="gap-2">
             <Package className="w-4 h-4" /> Entregas
