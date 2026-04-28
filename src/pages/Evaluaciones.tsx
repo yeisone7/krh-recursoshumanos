@@ -591,8 +591,8 @@ export default function Evaluaciones() {
 
         {/* Templates Tab */}
         <TabsContent value="templates">
-          <div>
-            <div className="flex items-center justify-between mb-4">
+            <div>
+            <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="text-lg font-semibold">Plantillas de Evaluación</h3>
               {(() => {
                 const allPositions = Array.from(
@@ -602,12 +602,12 @@ export default function Evaluaciones() {
                 );
                 if (allPositions.length === 0) return null;
                 return (
-                  <div className="flex items-center gap-2">
+                  <div className="flex w-full items-center gap-2 sm:w-auto">
                     <Filter className="h-4 w-4 text-muted-foreground" />
                     <select
                       value={templatePositionFilter}
                       onChange={(e) => setTemplatePositionFilter(e.target.value)}
-                      className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:w-auto"
                     >
                       <option value="">Todos los cargos</option>
                       {allPositions.map(p => (
