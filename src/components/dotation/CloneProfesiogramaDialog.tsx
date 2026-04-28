@@ -135,8 +135,8 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
+        <DialogHeader className="pr-12">
           <DialogTitle className="flex items-center gap-2">
             <Copy className="w-5 h-5 text-primary" />
             Clonación Masiva de Profesiograma
@@ -166,7 +166,7 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
             <p className="text-xs font-medium text-primary uppercase tracking-wider flex items-center gap-1">
               <Building2 className="w-3.5 h-3.5" /> Acción rápida: Todos los centros
             </p>
-            <div className="flex items-end gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:items-end">
               <div className="flex-1 space-y-1">
                 <Label className="text-xs">Cargo a aplicar</Label>
                 <Select value={quickPositionId} onValueChange={setQuickPositionId}>
@@ -181,7 +181,7 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1 h-9 whitespace-nowrap border-primary/30 text-primary hover:bg-primary-light"
+                  className="gap-1 h-9 whitespace-nowrap border-primary/30 text-primary hover:bg-primary-light"
                 onClick={() => handleSelectAllCenters(quickPositionId)}
               >
                 <Building2 className="w-3.5 h-3.5" />
@@ -216,7 +216,7 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
                     </Button>
                   )}
                   <p className="text-xs text-muted-foreground font-medium">Destino {idx + 1}</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Centro</Label>
                       <Select value={dest.centerId} onValueChange={(v) => updateDestination(idx, 'centerId', v)}>
@@ -255,11 +255,11 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t mt-2">
+        <div className="grid grid-cols-1 gap-3 pt-4 border-t mt-2 sm:flex sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
             {validDestinations.length} destino{validDestinations.length !== 1 ? 's' : ''} válido{validDestinations.length !== 1 ? 's' : ''}
           </p>
-          <div className="flex gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:flex">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button onClick={handleClone} disabled={isCloning || validDestinations.length === 0} className="gap-2">
               {isCloning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
