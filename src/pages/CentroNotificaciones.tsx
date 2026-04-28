@@ -208,6 +208,25 @@ export default function CentroNotificaciones() {
               </div>
             </TabsContent>
             <TabsContent value="deliveries">
+              <div className="space-y-3 md:hidden">
+                {filteredLogs.map((item) => (
+                  <div key={item.id} className="rounded-lg border bg-card p-3 space-y-3">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground break-words">{item.recipient_user_id ? userDisplayMap[item.recipient_user_id] || item.recipient_user_id : '-'}</p>
+                      <p className="font-medium break-words">{item.subject || item.template_name || '-'}</p>
+                      {item.recipient_email && <p className="text-sm text-muted-foreground break-words">{item.recipient_email}</p>}
+                      {item.error_message && <p className="text-sm text-destructive line-clamp-2">{item.error_message}</p>}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline">{item.channel}</Badge>
+                      <Badge variant="outline" className={statusStyles[item.status] || 'bg-muted text-muted-foreground'}>{item.status}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{formatDate(item.created_at)}</p>
+                  </div>
+                ))}
+                {filteredLogs.length === 0 && <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">No hay envíos registrados con estos filtros.</div>}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Destinatario</TableHead><TableHead>Canal</TableHead><TableHead>Asunto</TableHead><TableHead>Estado</TableHead><TableHead>Fecha</TableHead></TableRow></TableHeader>
                 <TableBody>
@@ -224,6 +243,7 @@ export default function CentroNotificaciones() {
                   {filteredLogs.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No hay envíos registrados con estos filtros.</TableCell></TableRow>}
                 </TableBody>
               </Table>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
