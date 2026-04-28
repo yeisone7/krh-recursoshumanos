@@ -237,16 +237,16 @@ export default function Incapacidades() {
         {/* Table */}
         <div className="lg:col-span-3">
           <Card>
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
+            <CardHeader className="p-4 sm:p-6">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div className="min-w-0">
                   <CardTitle>Listado de Incapacidades</CardTitle>
                   <CardDescription>
                     {filteredIncapacities?.length || 0} registro(s)
                   </CardDescription>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative flex-1 min-w-[150px]">
+                <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto xl:items-center">
+                  <div className="relative w-full sm:flex-1 xl:w-64 xl:flex-none">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Buscar..."
@@ -260,9 +260,9 @@ export default function Incapacidades() {
                       (originFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0)
                     }
                   >
-                    <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="grid gap-2 sm:grid-cols-2">
                       <Select value={originFilter} onValueChange={setOriginFilter}>
-                        <SelectTrigger className="w-full sm:w-[140px]">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Origen" />
                         </SelectTrigger>
                         <SelectContent>
@@ -272,7 +272,7 @@ export default function Incapacidades() {
                         </SelectContent>
                       </Select>
                       <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full sm:w-[160px]">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Estado Recobro" />
                         </SelectTrigger>
                         <SelectContent>
@@ -287,7 +287,7 @@ export default function Incapacidades() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               {isLoading ? (
                 <div className="space-y-2">
                   {[1, 2, 3, 4, 5].map((i) => (
