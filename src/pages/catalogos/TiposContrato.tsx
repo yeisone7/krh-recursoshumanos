@@ -31,6 +31,7 @@ import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download } from
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
 import { ContractPlaceholdersInfo } from '@/components/contracts/ContractPlaceholdersInfo';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 const codeColors = [
   'bg-primary/10 text-primary border-primary/20',
@@ -125,17 +126,17 @@ export default function TiposContrato() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Tipos de Contrato</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Tipos de Contrato</h1>
           <p className="text-muted-foreground">
             Configure los tipos de contrato disponibles y sus plantillas
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <ContractPlaceholdersInfo />
-          <Button onClick={handleNewClick}>
+          <Button onClick={handleNewClick} className="w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Tipo
           </Button>
@@ -144,14 +145,14 @@ export default function TiposContrato() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <CardTitle>Catálogo de Tipos de Contrato</CardTitle>
               <CardDescription>
                 {filteredData.length} tipo(s) configurado(s)
               </CardDescription>
             </div>
-            <div className="relative w-64">
+            <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar..."
@@ -172,7 +173,49 @@ export default function TiposContrato() {
               No se encontraron tipos de contrato
             </div>
           ) : (
-            <Table>
+            <>
+            <MobileCardList
+              className="md:hidden"
+              emptyMessage="No se encontraron tipos de contrato"
+              items={filteredData.map((item) => ({
+                id: item.id,
+                title: item.display_name,
+                subtitle: item.description || 'Sin descripción',
+                badge: <Badge variant={item.is_active ? 'default' : 'secondary'}>{item.is_active ? 'Activo' : 'Inactivo'}</Badge>,
+                fields: [
+                  { label: 'Código', value: <code className={`text-xs px-2 py-1 rounded-md border font-medium ${getCodeColor(item.contract_type)}`}>{item.contract_type}</code>, className: 'col-span-2' },
+                  { label: 'Plantilla', value: item.template_file_name || 'Sin plantilla', className: 'col-span-2' },
+                ],
+                actions: (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <MoreHorizontal className="w-4 h-4 mr-2" />
+                        Acciones
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-background border shadow-lg">
+                      <DropdownMenuItem onClick={() => handleEdit(item)}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Editar
+                      </DropdownMenuItem>
+                      {item.template_url && (
+                        <DropdownMenuItem onClick={() => downloadTemplate(item.template_url!, item.template_file_name!)}>
+                          <Download className="w-4 h-4 mr-2" />
+                          Descargar Plantilla
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={() => setDeleteId(item.id)} className="text-destructive focus:text-destructive">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ),
+              }))}
+            />
+            <div className="hidden overflow-x-auto md:block">
+            <Table className="min-w-[760px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
@@ -256,6 +299,8 @@ export default function TiposContrato() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -270,16 +315,16 @@ export default function TiposContrato() {
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden">
+          <AlertDialogHeader className="shrink-0">
             <AlertDialogTitle>¿Eliminar tipo de contrato?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. El tipo de contrato será eliminado permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto">
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
