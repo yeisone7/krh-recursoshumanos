@@ -66,26 +66,26 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
       >
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-themed">
         {/* Hero header */}
-        <div className="bg-gradient-to-br from-[#3b3a59] via-[#4a4870] to-[#5a587a] px-4 pt-4 pb-3 rounded-t-lg sm:px-6 sm:pt-6 sm:pb-5">
+        <div className="rounded-t-lg bg-gradient-to-br from-primary/95 via-primary/85 to-primary/75 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-6 sm:pb-5 sm:pt-6">
           <DialogHeader>
-            <div className="flex flex-col gap-3 pr-10 sm:flex-row sm:items-start sm:pr-0">
-              <div className="p-2.5 rounded-xl bg-white/15 backdrop-blur-sm">
-                <FileText className="h-6 w-6 text-white" />
+            <div className="flex items-start gap-3 pr-12 sm:pr-0">
+              <div className="shrink-0 rounded-xl bg-primary-foreground/15 p-2.5 backdrop-blur-sm">
+                <FileText className="h-5 w-5 text-primary-foreground sm:h-6 sm:w-6" />
               </div>
               <div className="flex-1 min-w-0">
-                <DialogTitle className="text-xl font-bold text-white leading-tight">
+                <DialogTitle className="text-lg font-bold leading-tight text-primary-foreground sm:text-xl">
                   {template.name}
                 </DialogTitle>
                 {template.description && (
-                  <p className="text-white/70 text-sm mt-1 line-clamp-3 sm:line-clamp-none">{template.description}</p>
+                  <p className="mt-1 line-clamp-3 text-sm text-primary-foreground/70 sm:line-clamp-none">{template.description}</p>
                 )}
               </div>
-              <div className="flex items-center gap-2 self-start">
+              <div className="flex shrink-0 items-center gap-2 self-start pt-0.5">
                 <Badge
                   className={
                     template.is_active
-                      ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30 hover:bg-emerald-500/30'
-                      : 'bg-white/10 text-white/60 border-white/20'
+                      ? 'hidden border-emerald-400/30 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30 xs:inline-flex sm:inline-flex'
+                      : 'hidden border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground/60 xs:inline-flex sm:inline-flex'
                   }
                 >
                   {template.is_active ? 'Activa' : 'Inactiva'}
@@ -94,7 +94,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                   type="button"
                   size="icon"
                   variant="secondary"
-                  className="h-8 w-8 bg-white/15 text-white border-white/20 hover:bg-white/25 sm:hidden"
+                  className="h-8 w-8 border-primary-foreground/20 bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25 sm:hidden"
                   aria-label={isMobileFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
                   title={isMobileFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
                   onClick={() => setIsMobileFullscreen(prev => !prev)}
