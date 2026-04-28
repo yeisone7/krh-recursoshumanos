@@ -108,6 +108,12 @@ function periodLabel(key: string) {
   return format(new Date(`${key}T00:00:00`), 'MMM yy', { locale: es });
 }
 
+function shiftMonth(value: string, months: number) {
+  const date = asDate(value);
+  if (!date) return value;
+  return format(subMonths(date, months), 'yyyy-MM-dd');
+}
+
 function hoursBetween(start?: string | null, end?: string | null, breakMinutes = 0) {
   if (!start || !end) return 0;
   const [sh, sm] = start.slice(0, 5).split(':').map(Number);
@@ -189,6 +195,9 @@ export default function AnaliticaNomina() {
   const [centerFilter, setCenterFilter] = useState('all');
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
+  const [comparisonMode, setComparisonMode] = useState<'actual' | 'mes_anterior'>('actual');
+  const comparisonStartDate = startDate ? shiftMonth(startDate, 1) : '';
+  const comparisonEndDate = endDate ? shiftMonth(endDate, 1) : '';
 
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
   const { data: contracts = [], isLoading: loadingContracts } = useContracts();
@@ -202,12 +211,21 @@ export default function AnaliticaNomina() {
     endDate: endDate || undefined,
     centerId: centerFilter === 'all' ? undefined : centerFilter,
   });
+  const { data: comparisonAssignments = [], isLoading: loadingComparisonAssignments } = useShiftAssignments({
+    startDate: comparisonMode === 'mes_anterior' ? comparisonStartDate || undefined : undefined,
+    endDate: comparisonMode === 'mes_anterior' ? comparisonEndDate || undefined : undefined,
+    centerId: centerFilter === 'all' ? undefined : centerFilter,
+  });
   const { data: novelties = [], isLoading: loadingNovelties } = usePayrollNovelties({
     startDate: startDate || undefined,
     endDate: endDate || undefined,
   });
+  const { data: comparisonNovelties = [], isLoading: loadingComparisonNovelties } = usePayrollNovelties({
+    startDate: comparisonMode === 'mes_anterior' ? comparisonStartDate || undefined : undefined,
+    endDate: comparisonMode === 'mes_anterior' ? comparisonEndDate || undefined : undefined,
+  });
 
-  const isLoading = loadingEmployees || loadingContracts || loadingPayrollConfig || loadingSchedules || loadingShifts || loadingCycles || loadingConfigs || loadingAssignments || loadingNovelties;
+  const isLoading = loadingEmployees || loadingContracts || loadingPayrollConfig || loadingSchedules || loadingShifts || loadingCycles || loadingConfigs || loadingAssignments || loadingComparisonAssignments || loadingNovelties || loadingComparisonNovelties;
 
   const centerOptions = useMemo(() => {
     const centers = new Map<string, string>();
