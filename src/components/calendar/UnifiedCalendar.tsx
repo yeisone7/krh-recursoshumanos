@@ -34,7 +34,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
   Popover,
@@ -158,9 +157,9 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
   const maxVisible = view === 'week' ? 8 : 3;
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       {/* Summary KPI Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
         {(Object.keys(EVENT_TYPE_LABELS) as CalendarEventType[]).map((type) => {
           const isActive = enabledTypes.includes(type);
           return (
@@ -168,17 +167,17 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
               key={type}
               onClick={() => toggleEventType(type)}
               className={cn(
-                'flex items-center gap-3 rounded-xl border px-4 py-3 transition-all text-left',
+                'min-w-0 rounded-xl border px-3 py-2.5 text-left transition-all sm:flex sm:items-center sm:gap-3 sm:px-4 sm:py-3',
                 isActive
                   ? 'bg-white shadow-sm border-border dark:bg-background'
                   : 'bg-white/60 border-transparent opacity-60 dark:bg-muted/40',
               )}
             >
-              <div className={cn('rounded-lg p-2', EVENT_STYLES[type].bgColor, EVENT_STYLES[type].color)}>
+              <div className={cn('mb-2 inline-flex rounded-lg p-2 sm:mb-0', EVENT_STYLES[type].bgColor, EVENT_STYLES[type].color)}>
                 {EVENT_ICONS[type]}
               </div>
               <div className="min-w-0">
-                <p className="text-lg font-bold leading-none">{typeCounts[type]}</p>
+                <p className="text-base font-bold leading-none sm:text-lg">{typeCounts[type]}</p>
                 <p className="text-[11px] text-muted-foreground truncate mt-0.5">
                   {EVENT_TYPE_LABELS[type]}
                 </p>
@@ -189,14 +188,14 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
       </div>
 
       {/* Main layout: Calendar + Sidebar */}
-      <div className="flex-1 min-h-0 flex gap-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:gap-4">
         {/* Calendar Card */}
-        <Card className="flex-1 min-w-0 flex flex-col">
+        <Card className="flex min-h-[560px] min-w-0 flex-1 flex-col sm:min-h-[640px] lg:min-h-0">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 pt-4 pb-3">
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold capitalize">{viewTitle}</h2>
-              <div className="flex items-center gap-1">
+          <div className="flex flex-col gap-3 px-3 pb-3 pt-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:justify-start">
+              <h2 className="text-base font-semibold capitalize sm:text-lg">{viewTitle}</h2>
+              <div className="flex items-center gap-1 self-start sm:self-auto">
                 <Button variant="ghost" size="sm" onClick={goToToday} className="h-7 text-xs">
                   Hoy
                 </Button>
@@ -209,18 +208,18 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week' | 'agenda')}>
-                <TabsList className="h-8">
-                  <TabsTrigger value="agenda" className="text-xs px-3 gap-1">
+                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:inline-flex sm:w-auto">
+                  <TabsTrigger value="agenda" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
                     <List className="h-3.5 w-3.5" />
                     Agenda
                   </TabsTrigger>
-                  <TabsTrigger value="month" className="text-xs px-3 gap-1">
+                  <TabsTrigger value="month" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Mes
                   </TabsTrigger>
-                  <TabsTrigger value="week" className="text-xs px-3 gap-1">
+                  <TabsTrigger value="week" className="shrink-0 gap-1 px-3 text-xs whitespace-nowrap">
                     <CalendarIcon className="h-3.5 w-3.5" />
                     Semana
                   </TabsTrigger>
@@ -229,7 +228,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5">
+                  <Button variant="outline" size="sm" className="h-8 w-full gap-1.5 sm:w-auto">
                     <Filter className="h-3.5 w-3.5" />
                     Filtros
                     {enabledTypes.length < 5 && (
@@ -239,7 +238,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-56" align="end">
+                <PopoverContent className="w-[calc(100vw-2rem)] max-w-56" align="end">
                   <div className="space-y-3">
                     <p className="text-sm font-medium">Tipos de evento</p>
                     {(Object.keys(EVENT_TYPE_LABELS) as CalendarEventType[]).map((type) => (
@@ -267,14 +266,14 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
           <Separator />
 
           {/* Calendar body */}
-          <CardContent className="flex-1 overflow-hidden p-3">
+          <CardContent className="min-h-0 flex-1 overflow-hidden p-2 sm:p-3">
             {isLoading ? (
               <div className="h-full flex items-center justify-center text-muted-foreground">
                 Cargando eventos...
               </div>
             ) : view === 'agenda' ? (
               /* ───── Agenda / List View ───── */
-              <ScrollArea className="h-full">
+              <div className="h-full overflow-y-auto">
                 <div className="space-y-1">
                   {events.length === 0 ? (
                     <div className="py-16 text-center text-muted-foreground">
@@ -320,18 +319,18 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                                 {dayEvents.length} {dayEvents.length === 1 ? 'evento' : 'eventos'}
                               </Badge>
                             </div>
-                            <div className="space-y-1.5 pl-2 border-l-2 border-muted ml-5">
+                            <div className="ml-2 space-y-1.5 border-l-2 border-muted pl-2 sm:ml-5">
                               {dayEvents.map((event) => (
                                 <button
                                   key={event.id}
                                   onClick={() => handleEventClick(event)}
-                                  className="w-[calc(100%-12px)] text-left rounded-lg border p-3 transition-all hover:shadow-sm hover:border-primary/30 group flex items-start gap-3"
+                                  className="group flex w-[calc(100%-12px)] items-start gap-3 rounded-lg border p-3 text-left transition-all hover:border-primary/30 hover:shadow-sm"
                                 >
                                   <div className={cn('rounded-md p-1.5 mt-0.5 shrink-0', event.bgColor, event.color)}>
                                     {EVENT_ICONS[event.type]}
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-medium truncate">{event.title}</p>
+                                    <p className="break-words text-sm font-medium sm:truncate">{event.title}</p>
                                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                                       {event.description}
                                     </p>
@@ -356,11 +355,11 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                     })()
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             ) : (
               <div className="h-full flex flex-col">
                 {/* Weekday header */}
-                <div className="grid grid-cols-7 gap-1 mb-1">
+                <div className="mb-1 grid min-w-[640px] grid-cols-7 gap-1 sm:min-w-0">
                   {weekDays.map((day) => (
                     <div
                       key={day}
@@ -372,8 +371,8 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                 </div>
 
                 {/* Grid */}
-                <ScrollArea className="flex-1">
-                  <div className="grid grid-cols-7 gap-1">
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  <div className="grid min-w-[640px] grid-cols-7 gap-1 sm:min-w-0">
                     {calendarDays.map((day) => {
                       const dayEvents = getEventsForDay(day);
                       const isCurrentMonth = isSameMonth(day, currentDate);
@@ -386,7 +385,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                           onClick={() => setSelectedDay(day)}
                           className={cn(
                             'p-1.5 border rounded-lg transition-all text-left',
-                            view === 'week' ? 'min-h-[180px]' : 'min-h-[85px]',
+                            view === 'week' ? 'min-h-[180px]' : 'min-h-[72px] sm:min-h-[85px]',
                             isCurrentMonth ? 'bg-background hover:bg-accent/30' : 'bg-muted/20',
                             isSelected && 'ring-2 ring-primary/60 bg-primary/5',
                             isCurrentDay && !isSelected && 'ring-1 ring-primary/40',
@@ -463,11 +462,43 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                       );
                     })}
                   </div>
-                </ScrollArea>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Mobile selected day detail */}
+        {view !== 'agenda' && (
+          <Card className="lg:hidden">
+            <div className="px-4 pb-3 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agenda del día</p>
+              <p className="mt-1 text-base font-bold capitalize">{format(selectedDay, "EEEE d 'de' MMMM", { locale: es })}</p>
+            </div>
+            <Separator />
+            <div className="max-h-[320px] space-y-2 overflow-y-auto p-4">
+              {selectedDayEvents.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <CalendarIcon className="mx-auto mb-2 h-8 w-8 opacity-40" />
+                  <p className="text-sm">Sin eventos este día</p>
+                </div>
+              ) : (
+                selectedDayEvents.map((event) => (
+                  <button key={event.id} onClick={() => handleEventClick(event)} className="w-full rounded-lg border p-3 text-left transition-all hover:border-primary/30">
+                    <div className="flex items-start gap-2.5">
+                      <div className={cn('mt-0.5 shrink-0 rounded-md p-1.5', event.bgColor, event.color)}>{EVENT_ICONS[event.type]}</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words text-sm font-medium">{event.title}</p>
+                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{event.description}</p>
+                        <Badge variant="outline" className="mt-1.5 px-1.5 py-0 text-[10px]">{EVENT_TYPE_LABELS[event.type]}</Badge>
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </Card>
+        )}
 
         {/* Sidebar: Selected day detail */}
         <Card className="hidden lg:flex w-[300px] flex-col shrink-0">
@@ -483,7 +514,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
             )}
           </div>
           <Separator />
-          <ScrollArea className="flex-1">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="p-4 space-y-2">
               {selectedDayEvents.length === 0 ? (
                 <div className="py-10 text-center text-muted-foreground">
@@ -526,7 +557,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                 ))
               )}
             </div>
-          </ScrollArea>
+          </div>
           {/* Bottom summary */}
           <Separator />
           <div className="p-3 flex flex-wrap gap-1.5">
