@@ -142,7 +142,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
             <Button
               size="sm"
               variant="secondary"
-              className="w-full border-primary/35 bg-primary/12 text-primary shadow-sm hover:bg-primary/18 sm:w-auto"
+              className="w-full border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover sm:w-auto"
               onClick={() => generateTemplatePdf(template)}
             >
               <Download className="h-4 w-4 mr-1.5" />
@@ -152,7 +152,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
               <Button
                 size="sm"
                 variant="secondary"
-                className="w-full border-primary/35 bg-primary/12 text-primary shadow-sm hover:bg-primary/18 sm:w-auto"
+                className="w-full border-primary bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover sm:w-auto"
                 onClick={() => {
                   onDuplicate(template);
                   onOpenChange(false);
