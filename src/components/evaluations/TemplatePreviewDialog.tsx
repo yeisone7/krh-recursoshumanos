@@ -112,9 +112,9 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
           {/* Positions badges */}
           {template.positions && template.positions.length > 0 && (
             <div className="relative z-10 flex max-h-16 items-center gap-2 mt-3 flex-wrap overflow-y-auto pr-1 sm:mt-4 sm:max-h-none sm:overflow-visible">
-              <Briefcase className="h-4 w-4 text-muted-foreground" />
+              <Briefcase className="h-4 w-4 text-warning" />
               {template.positions.map(p => (
-                <Badge key={p.id} variant="outline" className="border-primary/20 bg-background/70 text-xs text-foreground backdrop-blur-sm">
+                <Badge key={p.id} variant="outline" className="border-warning/35 bg-warning-light text-xs text-warning-foreground backdrop-blur-sm">
                   {p.name}
                 </Badge>
               ))}
