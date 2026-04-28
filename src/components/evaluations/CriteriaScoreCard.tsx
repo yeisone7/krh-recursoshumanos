@@ -32,7 +32,7 @@ export function CriteriaScoreCard({
 
   return (
     <Card className="border bg-card">
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="space-y-3 p-3 sm:p-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
@@ -59,7 +59,7 @@ export function CriteriaScoreCard({
         </div>
 
         {/* Level selector */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
           {LEVEL_OPTIONS.map((option) => {
             const desc = criteria[option.key] || '';
             const isSelected = selectedLevel === option.value;
@@ -69,7 +69,7 @@ export function CriteriaScoreCard({
                 type="button"
                 onClick={() => onLevelChange(option.value)}
                 className={cn(
-                  'relative rounded-lg border-2 p-2.5 text-left transition-all text-xs',
+                  'relative rounded-lg border-2 p-2.5 text-left text-xs transition-all',
                   isSelected
                     ? `${option.color} ring-2 ring-primary/30`
                     : 'border-border hover:border-muted-foreground/40 bg-muted/20'
