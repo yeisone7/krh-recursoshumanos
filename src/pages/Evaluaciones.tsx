@@ -794,18 +794,6 @@ export default function Evaluaciones() {
 
       </Tabs>
 
-      <Button
-        type="button"
-        size="icon"
-        className="fixed bottom-36 right-4 z-40 h-14 w-14 rounded-full shadow-lg sm:hidden"
-        onClick={handleNewAction}
-        aria-label={newButtonLabel}
-        title={newButtonLabel}
-      >
-        <Plus className="h-6 w-6" />
-        <span className="sr-only">{newButtonLabel}</span>
-      </Button>
-
       {/* Dialogs */}
       <TemplateFormDialog
         open={templateDialogOpen}
