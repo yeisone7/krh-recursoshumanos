@@ -611,7 +611,7 @@ export default function AnaliticaNomina() {
       alerts,
       automaticAlerts,
     };
-  }, [assignments, centerNameMap, comparisonAssignments, comparisonMode, employeeCenterMap, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, severityThreshold, shiftCycles, shifts, startDate, endDate, volumeThreshold, workSchedules]);
+  }, [assignments, centerAlertThresholds, centerNameMap, comparisonAssignments, comparisonMode, employeeCenterMap, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, severityThreshold, shiftCycles, shifts, startDate, endDate, typeAlertThresholds, volumeThreshold, workSchedules]);
 
   if (isLoading) {
     return (
@@ -687,6 +687,37 @@ export default function AnaliticaNomina() {
                 <DollarSign className="h-4 w-4" /> Umbral severidad
               </div>
               <Input type="number" min={0} step={100000} value={severityThreshold} onChange={(event) => setSeverityThreshold(Number(event.target.value) || 0)} />
+            </div>
+            <div className="space-y-2 xl:col-span-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <AlertTriangle className="h-4 w-4" /> Alerta por tipo
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <Select value={selectedAlertType} onValueChange={(value: NoveltyType) => setSelectedAlertType(value)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(NOVELTY_TYPE_LABELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Input type="number" min={1} value={typeAlertThresholds[selectedAlertTypeKey]?.volume ?? volumeThreshold} onChange={(event) => updateTypeAlertThreshold('volume', Number(event.target.value) || 1)} />
+                <Input type="number" min={0} step={100000} value={typeAlertThresholds[selectedAlertTypeKey]?.severity ?? severityThreshold} onChange={(event) => updateTypeAlertThreshold('severity', Number(event.target.value) || 0)} />
+              </div>
+            </div>
+            <div className="space-y-2 xl:col-span-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <Gauge className="h-4 w-4" /> Alerta por centro
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <Select value={selectedAlertCenter} onValueChange={setSelectedAlertCenter}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Sin centro</SelectItem>
+                    {centerOptions.map((center) => <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Input type="number" min={1} value={centerAlertThresholds[selectedAlertCenterKey]?.volume ?? volumeThreshold} onChange={(event) => updateCenterAlertThreshold('volume', Number(event.target.value) || 1)} />
+                <Input type="number" min={0} step={100000} value={centerAlertThresholds[selectedAlertCenterKey]?.severity ?? severityThreshold} onChange={(event) => updateCenterAlertThreshold('severity', Number(event.target.value) || 0)} />
+              </div>
             </div>
           </div>
         </CardContent>
