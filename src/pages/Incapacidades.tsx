@@ -111,37 +111,38 @@ export default function Incapacidades() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight">Incapacidades</h1>
           <p className="text-muted-foreground">
             Gestión de incapacidades médicas y recobros
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowExportDialog(true)}>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+          <Button variant="outline" onClick={() => setShowExportDialog(true)} className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
-          <Button onClick={() => setShowFormDialog(true)}>
+          <Button onClick={() => setShowFormDialog(true)} className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
-            Nueva Incapacidad
+            <span className="sm:hidden">Nueva</span>
+            <span className="hidden sm:inline">Nueva Incapacidad</span>
           </Button>
         </div>
       </div>
       
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
               <CardTitle className="text-sm font-medium">Activas</CardTitle>
               <Stethoscope className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <div className="text-2xl font-bold">{stats?.totalActive || 0}</div>
               <p className="text-xs text-muted-foreground">En curso actualmente</p>
             </CardContent>
@@ -153,12 +154,12 @@ export default function Incapacidades() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
         >
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
               <CardTitle className="text-sm font-medium">Este Mes</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <div className="text-2xl font-bold">{stats?.totalThisMonth || 0}</div>
               <p className="text-xs text-muted-foreground">{stats?.totalDaysThisMonth || 0} días</p>
             </CardContent>
@@ -170,12 +171,12 @@ export default function Incapacidades() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
               <CardTitle className="text-sm font-medium">Recobros Pendientes</CardTitle>
               <AlertTriangle className="h-4 w-4 text-warning" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <div className="text-2xl font-bold text-warning">{stats?.pendingRecovery || 0}</div>
               <p className="text-xs text-muted-foreground">
                 {formatCurrency(stats?.pendingRecoveryAmount || 0)}
@@ -189,13 +190,13 @@ export default function Incapacidades() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
         >
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
               <CardTitle className="text-sm font-medium">Por Origen</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline gap-2">
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <span className="text-lg font-bold">{stats?.byOrigin?.comun || 0}</span>
                 <span className="text-xs text-muted-foreground">Común</span>
                 <span className="text-lg font-bold ml-2">{stats?.byOrigin?.laboral || 0}</span>
@@ -210,12 +211,12 @@ export default function Incapacidades() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
               <CardTitle className="text-sm font-medium">Duración Promedio</CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <div className="text-2xl font-bold">{stats?.avgDuration || 0}</div>
               <p className="text-xs text-muted-foreground">días</p>
             </CardContent>
