@@ -84,10 +84,10 @@ export function CesantiasReport() {
       </div>
       
       {/* Summary */}
-      <div className="grid grid-cols-4 gap-3 p-3 rounded-lg bg-muted/50">
+      <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/50 p-3 sm:grid-cols-4">
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Total</p>
-          <p className="text-sm font-semibold">
+          <p className="break-words text-sm font-semibold">
             ${totalCesantias.toLocaleString('es-CO')}
           </p>
         </div>
@@ -100,7 +100,7 @@ export function CesantiasReport() {
           <p className="text-sm font-semibold text-amber-600">{pending}</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-muted-foreground">Intereses Pagados</p>
+          <p className="text-xs text-muted-foreground">Intereses</p>
           <p className="text-sm font-semibold text-blue-600">{interestsPaid}</p>
         </div>
       </div>
