@@ -91,7 +91,7 @@ export function DotationComplianceTab() {
       </div>
 
       {/* Global KPIs */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="hidden gap-4 sm:grid sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard icon={Users} label="Empleados evaluados" value={totalEmployees} color="primary" />
         <KpiCard icon={CheckCircle} label="100% cumplimiento" value={totalCompliant} color="success" />
         <KpiCard icon={AlertTriangle} label="Cumplimiento parcial" value={totalPartial} color="warning" />
@@ -99,7 +99,7 @@ export function DotationComplianceTab() {
       </div>
 
       {/* Global progress */}
-      <div className="card-elevated p-4">
+      <div className="card-elevated hidden p-4 sm:block">
         <div className="flex items-start justify-between gap-3 mb-2">
           <span className="text-sm font-medium">Cumplimiento global de dotación obligatoria</span>
           <span className="text-sm font-bold">{globalPercentage}%</span>
