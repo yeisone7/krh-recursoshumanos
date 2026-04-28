@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -69,11 +68,11 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
   if (!profile && !showForm) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
+          <DialogHeader className="shrink-0">
             <DialogTitle>Perfil del Cargo — {positionName}</DialogTitle>
           </DialogHeader>
-          <div className="text-center py-8 space-y-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-8 text-center">
             <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
             <p className="text-muted-foreground">Este cargo aún no tiene un perfil configurado.</p>
             <Button onClick={() => { setFormMode('create'); setShowForm(true); }}>
@@ -95,12 +94,12 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-          <DialogHeader className="px-6 pt-6 flex flex-row items-center justify-between">
-            <div>
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-4xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 px-4 pt-4 sm:px-6 sm:pt-6">
+            <div className="min-w-0">
               <DialogTitle>Perfil del Cargo — {positionName}</DialogTitle>
               {profile && (
-                <div className="flex items-center gap-2 mt-1">
+                <div className="mt-1 flex flex-wrap items-center gap-2">
                   <Badge variant="outline">Versión {profile.version}</Badge>
                   {profile.is_current && <Badge className="bg-success/10 text-success border-success/20">Vigente</Badge>}
                   {profile.effective_date && (
@@ -113,9 +112,9 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
             </div>
           </DialogHeader>
 
-          <div className="flex gap-0 border-t">
+          <div className="flex min-h-0 flex-1 flex-col gap-0 border-t md:flex-row">
             {/* Sidebar versiones */}
-            <div className="w-48 border-r bg-muted/30 p-3 space-y-1">
+            <div className="shrink-0 space-y-1 overflow-x-auto border-b bg-muted/30 p-3 md:w-48 md:overflow-visible md:border-b-0 md:border-r">
               <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground mb-2">
                 <History className="w-3 h-3" />Versiones
               </div>
@@ -151,10 +150,10 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
             </div>
 
             {/* Content */}
-            <ScrollArea className="flex-1 max-h-[70vh]">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               <Tabs defaultValue="profile" className="w-full">
-                <div className="px-5 pt-4 pb-0">
-                  <TabsList className="h-8">
+                <div className="scrollbar-hide overflow-x-auto px-4 pt-4 pb-0 sm:px-5">
+                  <TabsList className="h-8 min-w-max">
                     <TabsTrigger value="profile" className="text-xs gap-1"><FileText className="w-3 h-3" />Perfil</TabsTrigger>
                     <TabsTrigger value="onboarding" className="text-xs gap-1"><ListChecks className="w-3 h-3" />Onboarding</TabsTrigger>
                     <TabsTrigger value="annexes" className="text-xs gap-1"><Building2 className="w-3 h-3" />Anexos por Centro</TabsTrigger>
@@ -257,10 +256,10 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                   )}
 
                   {/* Aprobaciones */}
-                  <Card>
+                    <Card>
                     <CardContent className="pt-4">
                       <SectionTitle>6. Aprobaciones</SectionTitle>
-                      <div className="grid grid-cols-3 gap-4 text-sm text-center">
+                        <div className="grid grid-cols-1 gap-4 text-center text-sm sm:grid-cols-3">
                         <div><p className="text-muted-foreground">Elaborado por</p><p className="font-medium">{profile.elaborated_by || '—'}</p></div>
                         <div><p className="text-muted-foreground">Revisado por</p><p className="font-medium">{profile.reviewed_by || '—'}</p></div>
                         <div><p className="text-muted-foreground">Aprobado por</p><p className="font-medium">{profile.approved_by || '—'}</p></div>
@@ -281,7 +280,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                   </div>
                 </TabsContent>
               </Tabs>
-            </ScrollArea>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
