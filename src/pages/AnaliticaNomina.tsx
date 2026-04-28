@@ -721,8 +721,14 @@ export default function AnaliticaNomina() {
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>{Object.entries(NOVELTY_TYPE_LABELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
                       </Select>
-                      <Input type="number" min={1} value={typeAlertThresholds[selectedAlertTypeKey]?.volume ?? volumeThreshold} onChange={(event) => updateTypeAlertThreshold('volume', Number(event.target.value) || 1)} />
-                      <Input type="number" min={0} step={100000} value={typeAlertThresholds[selectedAlertTypeKey]?.severity ?? severityThreshold} onChange={(event) => updateTypeAlertThreshold('severity', Number(event.target.value) || 0)} />
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-medium text-muted-foreground">Volumen mínimo</span>
+                        <Input type="number" min={1} placeholder="Ej. 10 novedades" aria-label="Volumen mínimo por tipo" value={typeAlertThresholds[selectedAlertTypeKey]?.volume ?? volumeThreshold} onChange={(event) => updateTypeAlertThreshold('volume', Number(event.target.value) || 1)} />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-medium text-muted-foreground">Severidad mínima COP</span>
+                        <Input type="number" min={0} step={100000} placeholder="Ej. 1000000" aria-label="Severidad mínima por tipo en pesos" value={typeAlertThresholds[selectedAlertTypeKey]?.severity ?? severityThreshold} onChange={(event) => updateTypeAlertThreshold('severity', Number(event.target.value) || 0)} />
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-2 rounded-md border border-border/70 p-3">
@@ -735,8 +741,14 @@ export default function AnaliticaNomina() {
                           {centerOptions.map((center) => <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
-                      <Input type="number" min={1} value={centerAlertThresholds[selectedAlertCenterKey]?.volume ?? volumeThreshold} onChange={(event) => updateCenterAlertThreshold('volume', Number(event.target.value) || 1)} />
-                      <Input type="number" min={0} step={100000} value={centerAlertThresholds[selectedAlertCenterKey]?.severity ?? severityThreshold} onChange={(event) => updateCenterAlertThreshold('severity', Number(event.target.value) || 0)} />
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-medium text-muted-foreground">Volumen mínimo</span>
+                        <Input type="number" min={1} placeholder="Ej. 10 novedades" aria-label="Volumen mínimo por centro" value={centerAlertThresholds[selectedAlertCenterKey]?.volume ?? volumeThreshold} onChange={(event) => updateCenterAlertThreshold('volume', Number(event.target.value) || 1)} />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-medium text-muted-foreground">Severidad mínima COP</span>
+                        <Input type="number" min={0} step={100000} placeholder="Ej. 1000000" aria-label="Severidad mínima por centro en pesos" value={centerAlertThresholds[selectedAlertCenterKey]?.severity ?? severityThreshold} onChange={(event) => updateCenterAlertThreshold('severity', Number(event.target.value) || 0)} />
+                      </div>
                     </div>
                   </div>
                 </div>
