@@ -46,9 +46,10 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-0 sm:flex sm:h-auto sm:max-h-[90vh] sm:flex-col sm:overflow-hidden">
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-themed">
         {/* Hero header */}
-        <div className="shrink-0 bg-gradient-to-br from-[#3b3a59] via-[#4a4870] to-[#5a587a] px-4 pt-4 pb-3 rounded-t-lg sm:px-6 sm:pt-6 sm:pb-5">
+        <div className="bg-gradient-to-br from-[#3b3a59] via-[#4a4870] to-[#5a587a] px-4 pt-4 pb-3 rounded-t-lg sm:px-6 sm:pt-6 sm:pb-5">
           <DialogHeader>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
               <div className="p-2.5 rounded-xl bg-white/15 backdrop-blur-sm">
@@ -130,7 +131,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
           </div>
         </div>
 
-        <div className="space-y-6 px-4 py-5 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain sm:px-6 sm:scrollbar-themed">
+        <div className="space-y-6 px-4 py-5 sm:px-6">
           {/* Criteria section */}
           <section>
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
@@ -272,6 +273,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
               </div>
             </section>
           )}
+        </div>
         </div>
       </DialogContent>
     </Dialog>
