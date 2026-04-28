@@ -88,8 +88,8 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Invitar Usuario</DialogTitle>
           <DialogDescription>
             Envía una invitación por correo electrónico para unirse a la empresa.
@@ -97,12 +97,12 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="min-h-0 flex-1 space-y-6 overflow-y-auto pr-1">
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="min-w-0">
                   <FormLabel>Correo Electrónico</FormLabel>
                   <FormControl>
                     <Input placeholder="usuario@empresa.com" {...field} />
@@ -138,7 +138,7 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
                           control={form.control}
                           name="roles"
                           render={({ field }) => (
-                            <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormItem className="flex min-w-0 items-start space-x-3 space-y-0">
                               <FormControl>
                                 <Checkbox
                                   checked={field.value?.includes(role.id)}
@@ -150,10 +150,10 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
                                   }}
                                 />
                               </FormControl>
-                              <FormLabel className="font-normal cursor-pointer">
+                              <FormLabel className="min-w-0 cursor-pointer break-words font-normal">
                                 {role.name}
                                 {role.description && (
-                                  <span className="text-muted-foreground text-xs ml-2">
+                                  <span className="ml-0 block text-xs text-muted-foreground sm:ml-2 sm:inline">
                                     — {role.description}
                                   </span>
                                 )}
@@ -169,11 +169,11 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
               )}
             />
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading || activeRoles.length === 0}>
+              <Button type="submit" disabled={isLoading || activeRoles.length === 0} className="w-full sm:w-auto">
                 {isLoading ? 'Enviando...' : 'Enviar Invitación'}
               </Button>
             </DialogFooter>
