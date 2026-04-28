@@ -182,31 +182,32 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
       if (txError) throw txError;
 
       const txs = (transactions as any[]) || [];
-      if (txs.length > 0) {
-        const { data: items, error: itemsError } = await supabase
+      const [itemsResult, legacyResult] = await Promise.all([
+        txs.length > 0
+          ? supabase
           .from('exam_delivery_items' as any)
           .select('id, transaction_id, exam_catalog_id, exam_name, result, concept, restrictions, expiration_date, document_url')
-          .in('transaction_id', txs.map((tx) => tx.id));
-        if (itemsError) throw itemsError;
+              .in('transaction_id', txs.map((tx) => tx.id))
+          : Promise.resolve({ data: [], error: null }),
+        supabase
+          .from('medical_exams')
+          .select('*')
+          .eq('employee_id', employeeId!)
+          .order('exam_date', { ascending: false }),
+      ]);
+      if (itemsResult.error) throw itemsResult.error;
+      if (legacyResult.error) throw legacyResult.error;
 
-        const itemsByTransaction = new Map<string, any[]>();
-        for (const item of ((items as any[]) || [])) {
-          if (!itemsByTransaction.has(item.transaction_id)) itemsByTransaction.set(item.transaction_id, []);
-          itemsByTransaction.get(item.transaction_id)!.push(item);
-        }
-
-        return txs.map((tx) => ({ ...tx, items: itemsByTransaction.get(tx.id) || [] }));
+      const itemsByTransaction = new Map<string, any[]>();
+      for (const item of ((itemsResult.data as any[]) || [])) {
+        if (!itemsByTransaction.has(item.transaction_id)) itemsByTransaction.set(item.transaction_id, []);
+        itemsByTransaction.get(item.transaction_id)!.push(item);
       }
 
-      const { data: legacyExams, error: legacyError } = await supabase
-        .from('medical_exams')
-        .select('*')
-        .eq('employee_id', employeeId!)
-        .order('exam_date', { ascending: false });
-      if (legacyError) throw legacyError;
+      const transactionGroups = txs.map((tx) => ({ ...tx, items: itemsByTransaction.get(tx.id) || [] }));
 
       const grouped = new Map<string, any>();
-      for (const exam of legacyExams || []) {
+      for (const exam of legacyResult.data || []) {
         const key = `${exam.exam_date}-${exam.exam_type}-${exam.provider || ''}-${exam.doctor_name || ''}`;
         if (!grouped.has(key)) {
           grouped.set(key, {
@@ -232,7 +233,9 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
         });
       }
 
-      return Array.from(grouped.values());
+      return [...transactionGroups, ...Array.from(grouped.values())].sort(
+        (a, b) => new Date(b.exam_date).getTime() - new Date(a.exam_date).getTime(),
+      );
     },
     enabled: !!employeeId && ['health', 'kpis'].includes(activeTab),
   });
