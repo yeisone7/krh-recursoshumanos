@@ -879,7 +879,7 @@ export default function Configuracion() {
         <TabsContent value="watermark">
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Stamp className="h-5 w-5 text-primary" />
                 </div>
@@ -891,8 +891,8 @@ export default function Configuracion() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Enable/Disable */}
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="space-y-0.5">
+              <div className="flex items-start justify-between gap-4 p-4 border rounded-lg">
+                <div className="min-w-0 space-y-0.5">
                   <Label className="text-base font-medium">Activar marca de agua</Label>
                   <p className="text-sm text-muted-foreground">
                     Agrega automáticamente el logo a las imágenes, mapas mentales e infografías generadas
@@ -914,7 +914,7 @@ export default function Configuracion() {
                     Sube un logo PNG transparente. Si no subes uno, se usará el logo por defecto de Petrocasinos.
                   </p>
 
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-col items-start gap-4 sm:flex-row">
                     {/* Preview */}
                     <div className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30 overflow-hidden flex-shrink-0">
                       {watermarkLogoUrl ? (
@@ -931,7 +931,7 @@ export default function Configuracion() {
                       )}
                     </div>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex w-full flex-col gap-2 sm:w-auto">
                       <input
                         ref={logoInputRef}
                         type="file"
@@ -967,7 +967,7 @@ export default function Configuracion() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1.5">Posición del logo</Label>
                   <Select value={watermarkPosition} onValueChange={(v) => setWatermarkPosition(v as WatermarkPosition)}>
-                    <SelectTrigger className="w-64">
+                    <SelectTrigger className="w-full sm:w-64">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -978,7 +978,7 @@ export default function Configuracion() {
                   </Select>
 
                   {/* Visual position indicator */}
-                  <div className="w-48 h-32 border rounded-lg bg-muted/20 relative mt-3">
+                  <div className="relative mt-3 h-32 w-full max-w-48 border rounded-lg bg-muted/20">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className="text-xs text-muted-foreground/50">Imagen</span>
                     </div>
@@ -994,7 +994,7 @@ export default function Configuracion() {
                 </div>
               </div>
 
-              <Button onClick={handleSaveWatermarkConfig} disabled={savingWatermark}>
+              <Button onClick={handleSaveWatermarkConfig} disabled={savingWatermark} className="w-full sm:w-auto">
                 {savingWatermark ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Guardar Configuración
               </Button>
