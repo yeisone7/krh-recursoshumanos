@@ -232,7 +232,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border">
+      <DialogContent className="left-0 top-0 flex h-[100dvh] max-h-[100dvh] w-screen max-w-2xl translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 p-0 sm:left-[50%] sm:top-[50%] sm:h-auto sm:max-h-[90vh] sm:w-full sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:border">
         {/* Header — inspired by training preview */}
         <div className="px-4 pt-5 pb-4 shrink-0 sm:px-6 sm:pt-6">
           <DialogHeader className="flex flex-row items-start gap-3 pr-12 sm:gap-4">
@@ -267,7 +267,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
         <Separator />
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-4 sm:px-6 sm:py-5 sm:space-y-5">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-4 sm:px-6 sm:py-5 sm:space-y-5">
           {/* Items as cards */}
           <div className="space-y-2">
             {transaction.items.map((item) => {
@@ -372,16 +372,16 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
                   <p className="text-xs text-muted-foreground">Archivo adjunto a esta entrega</p>
                 </div>
                 <div className="grid grid-cols-3 gap-1 sm:flex sm:items-center sm:shrink-0">
-                  <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                  <Button variant="outline" size="sm" className="w-full gap-1.5 sm:w-auto" asChild>
                     <a href={documentUrl} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="w-3.5 h-3.5" />
                       Ver
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPdf}>
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPdf}>
                     <Upload className="w-3.5 h-3.5" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={handleRemoveDocument} className="text-destructive hover:text-destructive">
+                  <Button variant="ghost" size="sm" onClick={handleRemoveDocument} className="w-full text-destructive hover:text-destructive sm:w-auto">
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </div>
@@ -436,16 +436,16 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
         </div>
 
         {/* Footer — fixed at bottom */}
-        <div className="shrink-0 border-t border-border px-4 py-4 grid grid-cols-1 gap-3 bg-background sm:flex sm:items-center sm:justify-between sm:px-6">
-          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+        <div className="shrink-0 border-t border-border bg-background px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] grid grid-cols-1 gap-3 sm:flex sm:items-center sm:justify-between sm:px-6 sm:pb-4">
+          <p className="min-w-0 text-xs text-muted-foreground flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
-            {hasValidDate ? format(new Date(transaction.delivery_date), 'dd MMM yyyy', { locale: es }) : '—'} Entrega
+            <span className="truncate">{hasValidDate ? format(new Date(transaction.delivery_date), 'dd MMM yyyy', { locale: es }) : '—'} Entrega</span>
           </p>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
               Cerrar
             </Button>
-            <Button size="sm" onClick={handleExportPdf} disabled={isExporting} className="gap-1.5">
+            <Button size="sm" onClick={handleExportPdf} disabled={isExporting} className="w-full gap-1.5 sm:w-auto">
               <FileDown className="w-4 h-4" />
               {isExporting ? 'Generando...' : 'Acta PDF'}
             </Button>
