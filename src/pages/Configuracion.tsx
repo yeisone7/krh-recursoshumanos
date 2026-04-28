@@ -356,30 +356,32 @@ export default function Configuracion() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 overflow-x-hidden p-4 sm:space-y-6 sm:p-0">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="font-display text-2xl font-bold text-foreground">Configuración</h1>
-        <p className="text-muted-foreground mt-1">Administra la configuración del sistema</p>
+        <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Configuración</h1>
+        <p className="mt-1 text-sm text-muted-foreground sm:text-base">Administra la configuración del sistema</p>
       </motion.div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="company" className="gap-2">
-            <Building2 className="w-4 h-4" /><span className="hidden sm:inline">Empresa</span>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0">
+        <div className="scrollbar-hide w-full overflow-x-auto pb-1">
+        <TabsList className="inline-flex h-auto min-w-max justify-start sm:grid sm:w-full sm:grid-cols-5">
+          <TabsTrigger value="company" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <Building2 className="w-4 h-4" /><span>Empresa</span>
           </TabsTrigger>
-          <TabsTrigger value="alerts" className="gap-2">
-            <Bell className="w-4 h-4" /><span className="hidden sm:inline">Alertas</span>
+          <TabsTrigger value="alerts" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <Bell className="w-4 h-4" /><span>Alertas</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
-            <Shield className="w-4 h-4" /><span className="hidden sm:inline">Seguridad</span>
+          <TabsTrigger value="security" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <Shield className="w-4 h-4" /><span>Seguridad</span>
           </TabsTrigger>
-          <TabsTrigger value="ai" className="gap-2">
-            <Brain className="w-4 h-4" /><span className="hidden sm:inline">IA</span>
+          <TabsTrigger value="ai" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <Brain className="w-4 h-4" /><span>IA</span>
           </TabsTrigger>
-          <TabsTrigger value="watermark" className="gap-2">
-            <Stamp className="w-4 h-4" /><span className="hidden sm:inline">Marca de agua</span>
+          <TabsTrigger value="watermark" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <Stamp className="w-4 h-4" /><span>Marca de agua</span>
           </TabsTrigger>
         </TabsList>
+        </div>
 
         {/* Company Tab */}
         <TabsContent value="company">
