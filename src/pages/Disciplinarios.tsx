@@ -140,59 +140,59 @@ export default function Disciplinarios() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight">Procesos Disciplinarios</h1>
-          <p className="text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
             Gestión de procesos disciplinarios según normativa colombiana
           </p>
         </div>
-        <Button onClick={() => setShowFormDialog(true)}>
+        <Button onClick={() => setShowFormDialog(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Proceso
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 sm:gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-6 sm:pb-2">
             <CardTitle className="text-sm font-medium">Total Procesos</CardTitle>
             <Scale className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
             <div className="text-2xl font-bold">{stats?.total || 0}</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-6 sm:pb-2">
             <CardTitle className="text-sm font-medium">En Curso</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
             <div className="text-2xl font-bold text-primary">{stats?.active || 0}</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-6 sm:pb-2">
             <CardTitle className="text-sm font-medium">Cerrados</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
             <div className="text-2xl font-bold text-primary">{stats?.closed || 0}</div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-6 sm:pb-2">
             <CardTitle className="text-sm font-medium">Faltas Graves</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
             <div className="text-2xl font-bold text-destructive">
               {(stats?.byFault?.grave || 0) + (stats?.byFault?.gravisima || 0)}
             </div>
@@ -201,7 +201,7 @@ export default function Disciplinarios() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(260px,1fr)_180px_160px_200px] lg:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -213,7 +213,7 @@ export default function Disciplinarios() {
         </div>
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Estado" />
           </SelectTrigger>
           <SelectContent>
@@ -227,7 +227,7 @@ export default function Disciplinarios() {
         </Select>
 
         <Select value={faultFilter} onValueChange={setFaultFilter}>
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Tipo de falta" />
           </SelectTrigger>
           <SelectContent>
@@ -241,7 +241,7 @@ export default function Disciplinarios() {
         </Select>
 
         <Select value={centerFilter} onValueChange={setCenterFilter}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Centro de operación" />
           </SelectTrigger>
           <SelectContent>
@@ -302,7 +302,7 @@ export default function Disciplinarios() {
 
       {/* Delete confirmation */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100vw-1rem)] sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar proceso disciplinario?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -310,8 +310,8 @@ export default function Disciplinarios() {
               Esta acción quedará registrada en la auditoría.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="mt-0">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
