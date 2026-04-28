@@ -66,11 +66,11 @@ export function EvaluationTreeView({
             {/* Center Header */}
             <button
               onClick={() => toggleCenter(centerName)}
-              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors text-left"
+              className="w-full flex items-start justify-between gap-3 px-4 py-3 hover:bg-muted/40 transition-colors text-left"
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex min-w-0 items-start gap-2.5">
                 <Briefcase className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold uppercase tracking-wide">{centerName}</span>
+                <span className="break-words text-sm font-semibold uppercase tracking-wide">{centerName}</span>
                 <Badge className="bg-primary text-primary-foreground text-[10px] h-5 min-w-[20px] justify-center rounded-full">
                   {total}
                 </Badge>
@@ -105,11 +105,11 @@ export function EvaluationTreeView({
                           {/* Cycle Header */}
                           <button
                             onClick={() => toggleCycle(cycleKey)}
-                            className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/40 transition-colors text-left"
+                            className="w-full flex items-start justify-between gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors text-left"
                           >
-                            <div className="flex items-center gap-2">
+                            <div className="flex min-w-0 items-start gap-2">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm font-medium">{cycleName}</span>
+                              <span className="break-words text-sm font-medium">{cycleName}</span>
                               <Badge variant="secondary" className="text-[10px] rounded-full">{evals.length}</Badge>
                             </div>
                             {isCycleOpen
@@ -129,7 +129,7 @@ export function EvaluationTreeView({
                                 className="overflow-hidden"
                               >
                                 <div className="px-3 pb-3">
-                                  <div className="border rounded-lg overflow-hidden">
+                                  <div className="overflow-x-auto rounded-lg border">
                                     <Table>
                                       <TableHeader>
                                         <TableRow>

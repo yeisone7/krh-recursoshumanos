@@ -204,11 +204,11 @@ export function ApplyEvaluationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-3">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden p-0">
+        <DialogHeader className="px-4 pt-4 pb-3 sm:px-6 sm:pt-6">
           <DialogTitle className="text-lg">Aplicar Evaluación</DialogTitle>
           <DialogDescription className="sr-only">Calificar al empleado criterio por criterio</DialogDescription>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mt-1">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1 sm:gap-3">
             <div className="flex items-center gap-1.5">
               <User className="h-3.5 w-3.5" />
               <span className="font-medium text-foreground">
@@ -237,10 +237,10 @@ export function ApplyEvaluationDialog({
             </p>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 overflow-y-auto px-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6">
             <div className="space-y-6 py-4">
               {/* Score summary bar */}
-              <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
+              <div className="flex flex-col gap-2 bg-muted/50 rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm">
                   <span className="text-muted-foreground">Progreso: </span>
                   <span className="font-medium">{scoredCount}/{criteria.length} criterios</span>
@@ -410,14 +410,15 @@ export function ApplyEvaluationDialog({
 
         {/* Footer */}
         <Separator />
-        <div className="flex items-center justify-end gap-2 px-6 py-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+        <div className="grid grid-cols-1 gap-2 px-4 py-4 sm:grid-cols-3 sm:px-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving} className="w-full">
             Cancelar
           </Button>
           <Button
             variant="secondary"
             onClick={() => handleSave(false)}
             disabled={saving || criteria.length === 0}
+            className="w-full"
           >
             <Save className="h-4 w-4 mr-1.5" />
             Guardar Progreso
@@ -425,6 +426,7 @@ export function ApplyEvaluationDialog({
           <Button
             onClick={() => handleSave(true)}
             disabled={saving || criteria.length === 0}
+            className="w-full"
           >
             <SendHorizonal className="h-4 w-4 mr-1.5" />
             Finalizar
