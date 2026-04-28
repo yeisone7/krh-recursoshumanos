@@ -71,6 +71,40 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
 
 const numberFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 });
 
+const spanishLabels: Record<string, string> = {
+  applied: 'Aplicado',
+  evaluated: 'Evaluado',
+  interview: 'Entrevista',
+  offer: 'Oferta',
+  hired: 'Contratado',
+  selected: 'Seleccionado',
+  not_selected: 'No seleccionado',
+  withdrawn: 'Retirado',
+  rejected: 'Rechazado',
+  open: 'Abierta',
+  in_process: 'En proceso',
+  closed: 'Cerrada',
+  cancelled: 'Cancelada',
+  approved: 'Aprobada',
+  pending: 'Pendiente',
+  completed: 'Completada',
+  new_position: 'Cargo nuevo',
+  replacement: 'Reemplazo',
+  temporary: 'Temporal',
+  full_time: 'Tiempo completo',
+  part_time: 'Medio tiempo',
+  day: 'Diurna',
+  night: 'Nocturna',
+  mixed: 'Mixta',
+  rotating: 'Rotativa',
+  linkedin: 'LinkedIn',
+  referral: 'Referido',
+  referrals: 'Referidos',
+  website: 'Sitio web',
+  job_board: 'Portal de empleo',
+  source: 'Fuente',
+};
+
 function asDate(value: string | null | undefined) {
   if (!value) return null;
   const date = new Date(value);
@@ -79,8 +113,11 @@ function asDate(value: string | null | undefined) {
 
 function formatStatus(value: string | null | undefined) {
   if (!value) return 'Sin estado';
+  const normalized = value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (spanishLabels[normalized]) return spanishLabels[normalized];
   return value
     .replace(/_/g, ' ')
+    .toLowerCase()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
