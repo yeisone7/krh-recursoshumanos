@@ -49,7 +49,7 @@ export function DisciplinaryReport() {
       onExportExcel={handleExportExcel}
       onExportPDF={handleExportPDF}
     >
-      <div className="grid grid-cols-3 gap-4 p-3 rounded-lg bg-muted/50">
+      <div className="grid gap-3 rounded-lg bg-muted/50 p-3 sm:grid-cols-3 sm:gap-4">
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Leves</p>
           <p className="text-sm font-semibold">{faultCounts['Leve'] || 0}</p>
