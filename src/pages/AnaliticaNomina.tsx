@@ -44,6 +44,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -74,6 +75,18 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', { style: 'currency', cu
 const overtimeTypes = new Set<NoveltyType>(['hedo', 'heno', 'hedf', 'henf', 'rn', 'rnf', 'dominical_trabajado', 'festivo_trabajado']);
 const absenceTypes = new Set<NoveltyType>(['incapacidad', 'vacaciones', 'permiso']);
 const regularTypes = new Set<NoveltyType>(['jornada', 'descanso_remunerado']);
+
+const alertStatusLabels = {
+  pendiente: 'Pendiente',
+  notificada: 'Notificada',
+  cerrada: 'Cerrada',
+};
+
+const alertStatusStyles = {
+  pendiente: 'bg-warning-light text-warning border-warning/20',
+  notificada: 'bg-primary-light text-primary border-primary/20',
+  cerrada: 'bg-success-light text-success border-success/20',
+};
 
 const defaultImpactMultiplier: Record<string, number> = {
   jornada: 1,
@@ -198,6 +211,7 @@ export default function AnaliticaNomina() {
   const [comparisonMode, setComparisonMode] = useState<'actual' | 'mes_anterior'>('actual');
   const [volumeThreshold, setVolumeThreshold] = useState(10);
   const [severityThreshold, setSeverityThreshold] = useState(1000000);
+  const [alertStatusOverrides, setAlertStatusOverrides] = useState<Record<string, 'pendiente' | 'notificada' | 'cerrada'>>({});
   const comparisonStartDate = startDate ? shiftMonth(startDate, 1) : '';
   const comparisonEndDate = endDate ? shiftMonth(endDate, 1) : '';
 
