@@ -31,6 +31,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  DollarSign,
   Filter,
   Gauge,
   Moon,
@@ -47,7 +48,9 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useContracts } from '@/hooks/useContracts';
 import { useEmployees } from '@/hooks/useEmployees';
+import { usePayrollConfig } from '@/hooks/usePayrollConfig';
 import { usePayrollNovelties } from '@/hooks/usePayrollNovelties';
 import { useEmployeeTimeConfigs, useShiftAssignments, useShiftCycles, useShifts, useWorkSchedules } from '@/hooks/useSchedules';
 import { cn } from '@/lib/utils';
@@ -66,10 +69,27 @@ const chartColors = [
 
 const numberFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 });
 const integerFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
+const currencyFormatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
 const overtimeTypes = new Set<NoveltyType>(['hedo', 'heno', 'hedf', 'henf', 'rn', 'rnf', 'dominical_trabajado', 'festivo_trabajado']);
 const absenceTypes = new Set<NoveltyType>(['incapacidad', 'vacaciones', 'permiso']);
 const regularTypes = new Set<NoveltyType>(['jornada', 'descanso_remunerado']);
+
+const defaultImpactMultiplier: Record<string, number> = {
+  jornada: 1,
+  hedo: 1.25,
+  heno: 1.75,
+  hedf: 1.75,
+  henf: 2.1,
+  rn: 0.35,
+  rnf: 1.1,
+  dominical_trabajado: 1.75,
+  festivo_trabajado: 1.75,
+  descanso_remunerado: 1,
+  incapacidad: 1,
+  vacaciones: 1,
+  permiso: 1,
+};
 
 function asDate(value: string | null | undefined) {
   if (!value) return null;
@@ -171,6 +191,8 @@ export default function AnaliticaNomina() {
   const [endDate, setEndDate] = useState(defaultEnd);
 
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
+  const { data: contracts = [], isLoading: loadingContracts } = useContracts();
+  const { data: payrollConfig, isLoading: loadingPayrollConfig } = usePayrollConfig();
   const { data: workSchedules = [], isLoading: loadingSchedules } = useWorkSchedules();
   const { data: shifts = [], isLoading: loadingShifts } = useShifts();
   const { data: shiftCycles = [], isLoading: loadingCycles } = useShiftCycles();
@@ -185,7 +207,7 @@ export default function AnaliticaNomina() {
     endDate: endDate || undefined,
   });
 
-  const isLoading = loadingEmployees || loadingSchedules || loadingShifts || loadingCycles || loadingConfigs || loadingAssignments || loadingNovelties;
+  const isLoading = loadingEmployees || loadingContracts || loadingPayrollConfig || loadingSchedules || loadingShifts || loadingCycles || loadingConfigs || loadingAssignments || loadingNovelties;
 
   const centerOptions = useMemo(() => {
     const centers = new Map<string, string>();
@@ -197,6 +219,15 @@ export default function AnaliticaNomina() {
   }, [employees]);
 
   const employeeCenterMap = useMemo(() => new Map(employees.map((employee: any) => [employee.id, employee.work_info?.operation_center_id || employee.operation_centers?.id || null])), [employees]);
+
+  const salaryByEmployee = useMemo(() => {
+    const map = new Map<string, number>();
+    contracts.forEach((contract: any) => {
+      const salary = Number(contract.salary || 0);
+      if (contract.employee_id && salary > 0 && !map.has(contract.employee_id)) map.set(contract.employee_id, salary);
+    });
+    return map;
+  }, [contracts]);
 
   const filteredNovelties = useMemo(() => novelties.filter((novelty: any) => {
     if (centerFilter === 'all') return true;
@@ -221,7 +252,16 @@ export default function AnaliticaNomina() {
     const manualAssignments = assignments.filter((item: any) => item.source === 'manual').length;
     const generatedAssignments = assignments.filter((item: any) => item.source === 'cycle').length;
     const plannedHours = assignments.reduce((sum: number, item: any) => sum + (item.shifts?.is_rest_day ? 0 : hoursBetween(item.shifts?.start_time, item.shifts?.end_time, item.shifts?.break_minutes || 0)), 0);
+    const averageMonthlySalary = salaryByEmployee.size ? Array.from(salaryByEmployee.values()).reduce((sum, salary) => sum + salary, 0) / salaryByEmployee.size : 0;
+    const fallbackHourlyRate = averageMonthlySalary ? averageMonthlySalary / Math.max(1, (payrollConfig?.daily_hours || 8) * 30) : 0;
+    const getEstimatedImpact = (item: any) => {
+      const salary = salaryByEmployee.get(item.employee_id) || averageMonthlySalary;
+      const hourlyRate = salary ? salary / Math.max(1, (payrollConfig?.daily_hours || 8) * 30) : fallbackHourlyRate;
+      const multiplier = defaultImpactMultiplier[item.novelty_type] ?? 1;
+      return Number(item.hours || 0) * hourlyRate * multiplier;
+    };
     const noveltyHours = filteredNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
+    const estimatedImpact = filteredNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0);
     const overtimeHours = filteredNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
     const absenceHours = filteredNovelties.filter((item: any) => absenceTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
     const regularHours = filteredNovelties.filter((item: any) => regularTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
@@ -241,6 +281,9 @@ export default function AnaliticaNomina() {
         jornadas: monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length,
         descansos: monthAssignments.filter((item: any) => item.shifts?.is_rest_day).length,
         novedades: monthNovelties.length,
+        empleadosImpactados: new Set(monthNovelties.map((item: any) => item.employee_id)).size,
+        horasPorJornada: Math.round((monthNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) / Math.max(1, monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length)) * 10) / 10,
+        montoEstimado: Math.round(monthNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0)),
         horasExtra: Math.round(monthNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
         ausencias: Math.round(monthNovelties.filter((item: any) => absenceTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
       };
@@ -260,6 +303,7 @@ export default function AnaliticaNomina() {
 
     const noveltyTypes = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type);
     const noveltyHoursByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, (item: any) => Number(item.hours || 0));
+    const estimatedImpactByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, getEstimatedImpact);
     const shiftDemand = groupByName(assignments, (item: any) => item.shifts?.name || (item.shifts?.is_rest_day ? 'Descanso' : 'Sin turno')).slice(0, 8);
     const sourceMix = groupByName(assignments, (item: any) => item.source === 'cycle' ? 'Ciclo automático' : 'Manual');
     const noveltySourceMix = groupByName(filteredNovelties, (item: any) => item.source === 'auto' ? 'Automático' : 'Manual');
@@ -328,6 +372,10 @@ export default function AnaliticaNomina() {
         overtimeHours: Math.round(overtimeHours * 10) / 10,
         absenceHours: Math.round(absenceHours * 10) / 10,
         regularHours: Math.round(regularHours * 10) / 10,
+        totalNovelties: filteredNovelties.length,
+        impactedEmployees: new Set(filteredNovelties.map((item: any) => item.employee_id)).size,
+        hoursPerWorkday: Math.round((noveltyHours / Math.max(1, assignedWorkDays)) * 10) / 10,
+        estimatedImpact: Math.round(estimatedImpact),
         coverage,
         overtimeRate,
       },
@@ -335,6 +383,7 @@ export default function AnaliticaNomina() {
       weekdayBehavior,
       noveltyTypes,
       noveltyHoursByType,
+      estimatedImpactByType,
       shiftDemand,
       sourceMix,
       noveltySourceMix,
@@ -344,7 +393,7 @@ export default function AnaliticaNomina() {
       insights,
       alerts,
     };
-  }, [assignments, filteredConfigs, filteredNovelties, shiftCycles, shifts, startDate, endDate, workSchedules]);
+  }, [assignments, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, shiftCycles, shifts, startDate, endDate, workSchedules]);
 
   if (isLoading) {
     return (
@@ -402,6 +451,10 @@ export default function AnaliticaNomina() {
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard title="Novedades mensuales" value={analytics.kpis.totalNovelties} detail="Total en el rango filtrado" icon={BarChart3} trend="neutral" />
+        <KpiCard title="Horas por jornada" value={numberFormatter.format(analytics.kpis.hoursPerWorkday)} detail="Horas de novedades / jornadas" icon={Clock} trend={analytics.kpis.hoursPerWorkday <= 1 ? 'up' : 'down'} />
+        <KpiCard title="Empleados impactados" value={analytics.kpis.impactedEmployees} detail="Con al menos una novedad" icon={Users} trend="neutral" />
+        <KpiCard title="Monto estimado afectado" value={currencyFormatter.format(analytics.kpis.estimatedImpact)} detail="Estimado por salario y tipo" icon={DollarSign} trend={analytics.kpis.estimatedImpact > 0 ? 'down' : 'neutral'} />
         <KpiCard title="Empleados programables" value={analytics.kpis.activeEmployeeCount} detail="Con configuración de tiempo activa" icon={Users} trend="neutral" />
         <KpiCard title="Cobertura jornadas" value={`${analytics.kpis.coverage}%`} detail={`${integerFormatter.format(analytics.kpis.assignedWorkDays)} jornadas laborales asignadas`} icon={CheckCircle2} trend={analytics.kpis.coverage >= 85 ? 'up' : 'down'} />
         <KpiCard title="Horas programadas" value={integerFormatter.format(analytics.kpis.plannedHours)} detail="Estimadas desde turnos asignados" icon={Clock} trend="neutral" />
@@ -470,6 +523,23 @@ export default function AnaliticaNomina() {
           </ResponsiveContainer>
         </ChartCard>
 
+        <ChartCard title="KPIs mensuales: novedades, empleados e impacto" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.monthlyTrend} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => name === 'Monto estimado' ? currencyFormatter.format(Number(value)) : value} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="novedades" name="Novedades" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="empleadosImpactados" name="Empleados impactados" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="left" type="monotone" dataKey="horasPorJornada" name="Horas por jornada" stroke="hsl(var(--warning))" strokeWidth={3} />
+              <Area yAxisId="right" type="monotone" dataKey="montoEstimado" name="Monto estimado" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.18} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
         <ChartCard title="Comportamiento por día de la semana">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.weekdayBehavior} margin={{ left: -20, right: 12, top: 8, bottom: 0 }}>
@@ -518,6 +588,18 @@ export default function AnaliticaNomina() {
               <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11 }} />
               <Tooltip />
               <Bar dataKey="value" name="Horas" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Monto estimado por tipo de novedad">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.estimatedImpactByType.slice(0, 8)} layout="vertical" margin={{ left: 34, right: 16, top: 8, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(value) => `$${Number(value) / 1000000}M`} />
+              <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11 }} />
+              <Tooltip formatter={(value) => currencyFormatter.format(Number(value))} />
+              <Bar dataKey="value" name="Monto estimado" fill="hsl(var(--success))" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
