@@ -27,11 +27,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download } from 'lucide-react';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2 } from 'lucide-react';
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
 import { ContractPlaceholdersInfo } from '@/components/contracts/ContractPlaceholdersInfo';
 import { MobileCardList } from '@/components/shared/MobileCardList';
+import { supabase } from '@/integrations/supabase/client';
+import PizZip from 'pizzip';
 
 const codeColors = [
   'bg-primary/10 text-primary border-primary/20',
@@ -56,6 +59,12 @@ export default function TiposContrato() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<ContractTypeConfig | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [previewItem, setPreviewItem] = useState<ContractTypeConfig | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewText, setPreviewText] = useState<string>('');
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewKind, setPreviewKind] = useState<'pdf' | 'docx' | 'unsupported' | null>(null);
 
   const filteredData = data.filter(item =>
     item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,6 +132,48 @@ export default function TiposContrato() {
   const handleNewClick = () => {
     setEditItem(null);
     setIsFormOpen(true);
+  };
+
+  const extractDocxText = async (blob: Blob) => {
+    const zip = new PizZip(await blob.arrayBuffer());
+    const xml = zip.file('word/document.xml')?.asText();
+    if (!xml) return 'No se pudo leer el contenido de la plantilla.';
+    const doc = new DOMParser().parseFromString(xml, 'application/xml');
+    return Array.from(doc.getElementsByTagName('w:p'))
+      .map((p) => Array.from(p.getElementsByTagName('w:t')).map((t) => t.textContent || '').join(''))
+      .filter(Boolean)
+      .join('\n\n');
+  };
+
+  const handlePreview = async (item: ContractTypeConfig) => {
+    if (!item.template_url || !item.template_file_name) return;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewItem(item);
+    setPreviewLoading(true);
+    setPreviewUrl(null);
+    setPreviewText('');
+    setPreviewError(null);
+    setPreviewKind(null);
+    try {
+      const { data: blob, error } = await supabase.storage.from('documents').download(item.template_url);
+      if (error) throw error;
+      const extension = item.template_file_name.split('.').pop()?.toLowerCase();
+      if (extension === 'pdf') {
+        setPreviewKind('pdf');
+        setPreviewUrl(URL.createObjectURL(blob));
+      } else if (extension === 'docx') {
+        setPreviewKind('docx');
+        setPreviewText(await extractDocxText(blob));
+      } else {
+        setPreviewKind('unsupported');
+        setPreviewError('La vista previa está disponible para PDF y DOCX. Puedes descargar este archivo para revisarlo.');
+      }
+    } catch (error) {
+      console.error('Preview error:', error);
+      setPreviewError('No se pudo cargar la vista previa de la plantilla.');
+    } finally {
+      setPreviewLoading(false);
+    }
   };
 
   return (
