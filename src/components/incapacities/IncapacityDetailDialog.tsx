@@ -568,16 +568,16 @@ export function IncapacityDetailDialog({
           
           <Separator className="my-4" />
           
-          <div className="flex justify-between">
-            <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+            <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)} className="w-full sm:w-auto">
               <Trash2 className="h-4 w-4 mr-1" />
               Eliminar
             </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="grid grid-cols-2 gap-2 sm:flex">
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cerrar
               </Button>
-              <Button onClick={() => setShowEditDialog(true)}>
+              <Button onClick={() => setShowEditDialog(true)} className="w-full sm:w-auto">
                 <Edit className="h-4 w-4 mr-1" />
                 Editar
               </Button>
