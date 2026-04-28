@@ -20,6 +20,7 @@ import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { UsersTable } from '@/components/admin/UsersTable';
 import { InviteUserDialog } from '@/components/admin/InviteUserDialog';
 import { RolesManager } from '@/components/roles/RolesManager';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 export default function SuperAdmin() {
   const { user } = useAuth();
@@ -184,7 +185,43 @@ export default function SuperAdmin() {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : (
-            <Card>
+            <>
+            <MobileCardList
+              className="md:hidden"
+              emptyMessage="No se encontraron empresas"
+              items={filteredCompanies.map(company => ({
+                id: company.id,
+                title: company.name,
+                subtitle: company.address || 'Sin dirección registrada',
+                badge: <Badge variant="outline">{company.nit}</Badge>,
+                fields: [
+                  {
+                    label: 'Contacto',
+                    value: (
+                      <div className="space-y-0.5">
+                        <p>{company.email || '—'}</p>
+                        <p className="text-muted-foreground">{company.phone || '—'}</p>
+                      </div>
+                    ),
+                    className: 'col-span-2',
+                  },
+                  {
+                    label: 'Usuarios',
+                    value: (
+                      <span className="inline-flex items-center gap-1">
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                        {userCountMap[company.id] || 0}
+                      </span>
+                    ),
+                  },
+                  {
+                    label: 'Creada',
+                    value: new Date(company.created_at).toLocaleDateString('es-CO'),
+                  },
+                ],
+              }))}
+            />
+            <Card className="hidden md:block">
               <CardContent className="p-0 overflow-x-auto">
                 <Table className="min-w-[760px]">
                   <TableHeader>
@@ -239,6 +276,7 @@ export default function SuperAdmin() {
                 </Table>
               </CardContent>
             </Card>
+            </>
           )}
         </TabsContent>
 
