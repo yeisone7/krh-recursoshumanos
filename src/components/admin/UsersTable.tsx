@@ -175,8 +175,8 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-border">
-        <Table>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow>
               <TableHead>Usuario</TableHead>
@@ -239,9 +239,9 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         />
       </div>
 
-      <div className="rounded-lg border border-border overflow-hidden">
+      <div className="overflow-hidden rounded-lg border border-border">
         <div className="overflow-auto max-h-[600px]">
-        <Table>
+        <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead>Usuario</TableHead>
@@ -433,8 +433,8 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
 
       {/* Deactivation Confirmation Dialog */}
       <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden">
+          <AlertDialogHeader className="shrink-0">
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-warning" />
               Desactivar Usuario
@@ -445,7 +445,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          <div className="space-y-4 py-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4 pr-1">
             <div className="space-y-2">
               <Label htmlFor="reason">Motivo de desactivación (opcional)</Label>
               <Textarea
@@ -459,11 +459,11 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             </div>
           </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => userToToggle && confirmToggleStatus(userToToggle, false, deactivateReason)}
-              className="bg-warning text-warning-foreground hover:bg-warning/90"
+              className="w-full bg-warning text-warning-foreground hover:bg-warning/90 sm:w-auto"
             >
               <UserMinus className="w-4 h-4 mr-2" />
               Desactivar
