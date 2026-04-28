@@ -174,13 +174,65 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
   const examsQuery = useQuery({
     queryKey: ['employee_360_exams', employeeId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: transactions, error: txError } = await supabase
+        .from('exam_delivery_transactions' as any)
+        .select('*')
+        .eq('employee_id', employeeId!)
+        .order('exam_date', { ascending: false });
+      if (txError) throw txError;
+
+      const txs = (transactions as any[]) || [];
+      if (txs.length > 0) {
+        const { data: items, error: itemsError } = await supabase
+          .from('exam_delivery_items' as any)
+          .select('id, transaction_id, exam_catalog_id, exam_name, result, concept, restrictions, expiration_date, document_url')
+          .in('transaction_id', txs.map((tx) => tx.id));
+        if (itemsError) throw itemsError;
+
+        const itemsByTransaction = new Map<string, any[]>();
+        for (const item of ((items as any[]) || [])) {
+          if (!itemsByTransaction.has(item.transaction_id)) itemsByTransaction.set(item.transaction_id, []);
+          itemsByTransaction.get(item.transaction_id)!.push(item);
+        }
+
+        return txs.map((tx) => ({ ...tx, items: itemsByTransaction.get(tx.id) || [] }));
+      }
+
+      const { data: legacyExams, error: legacyError } = await supabase
         .from('medical_exams')
         .select('*')
         .eq('employee_id', employeeId!)
         .order('exam_date', { ascending: false });
-      if (error) throw error;
-      return data;
+      if (legacyError) throw legacyError;
+
+      const grouped = new Map<string, any>();
+      for (const exam of legacyExams || []) {
+        const key = `${exam.exam_date}-${exam.exam_type}-${exam.provider || ''}-${exam.doctor_name || ''}`;
+        if (!grouped.has(key)) {
+          grouped.set(key, {
+            id: key,
+            employee_id: exam.employee_id,
+            exam_date: exam.exam_date,
+            exam_type: exam.exam_type,
+            provider: exam.provider,
+            doctor_name: exam.doctor_name,
+            observations: exam.observations,
+            document_url: exam.document_url,
+            items: [],
+          });
+        }
+        grouped.get(key).items.push({
+          id: exam.id,
+          exam_name: exam.exam_type,
+          result: exam.result,
+          concept: exam.concept,
+          restrictions: exam.restrictions,
+          expiration_date: exam.expiration_date || exam.next_exam_date,
+          document_url: exam.document_url,
+        });
+      }
+
+      return Array.from(grouped.values());
     },
     enabled: !!employeeId && ['health', 'kpis'].includes(activeTab),
   });
@@ -189,13 +241,56 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
   const dotationQuery = useQuery({
     queryKey: ['employee_360_dotation', employeeId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const [{ data: transactions, error: txError }, { data: deliveries, error: deliveriesError }] = await Promise.all([
+        supabase
+          .from('dotation_delivery_transactions')
+          .select('*')
+          .eq('employee_id', employeeId!)
+          .order('delivery_date', { ascending: false }),
+        supabase
         .from('dotation_deliveries')
         .select('*')
         .eq('employee_id', employeeId!)
-        .order('delivery_date', { ascending: false });
-      if (error) throw error;
-      return data;
+          .order('delivery_date', { ascending: false }),
+      ]);
+      if (txError) throw txError;
+      if (deliveriesError) throw deliveriesError;
+
+      const itemsByTransaction = new Map<string, any[]>();
+      const legacyGroups = new Map<string, any>();
+
+      for (const item of deliveries || []) {
+        if (item.transaction_id) {
+          if (!itemsByTransaction.has(item.transaction_id)) itemsByTransaction.set(item.transaction_id, []);
+          itemsByTransaction.get(item.transaction_id)!.push(item);
+          continue;
+        }
+
+        const key = `legacy-${item.delivery_date}-${item.delivered_by || ''}-${item.received_by || ''}`;
+        if (!legacyGroups.has(key)) {
+          legacyGroups.set(key, {
+            id: key,
+            employee_id: item.employee_id,
+            delivery_date: item.delivery_date,
+            delivered_by: item.delivered_by,
+            received_by: item.received_by,
+            observations: item.observations,
+            document_url: item.document_url,
+            signature_url: item.signature_url,
+            items: [],
+          });
+        }
+        legacyGroups.get(key).items.push(item);
+      }
+
+      const groupedTransactions = (transactions || []).map((tx) => ({
+        ...tx,
+        items: itemsByTransaction.get(tx.id) || [],
+      }));
+
+      return [...groupedTransactions, ...Array.from(legacyGroups.values())].sort(
+        (a, b) => new Date(b.delivery_date).getTime() - new Date(a.delivery_date).getTime(),
+      );
     },
     enabled: !!employeeId && activeTab === 'dotation',
   });
