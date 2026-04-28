@@ -66,26 +66,30 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
       >
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-themed">
         {/* Hero header */}
-        <div className="rounded-t-lg bg-gradient-to-br from-primary/95 via-primary/85 to-primary/75 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-6 sm:pb-5 sm:pt-6">
-          <DialogHeader>
+        <div className="relative overflow-hidden rounded-t-lg bg-gradient-to-br from-accent-light via-background to-accent px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-6 sm:pb-5 sm:pt-6">
+          <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:radial-gradient(hsl(var(--primary)/0.28)_1px,transparent_1px)] [background-size:18px_18px]" />
+          <div className="pointer-events-none absolute -right-14 -top-16 h-44 w-44 rounded-full border border-primary/25" />
+          <div className="pointer-events-none absolute -right-2 top-3 h-24 w-24 rounded-full border border-primary/20" />
+          <div className="pointer-events-none absolute left-6 top-5 h-16 w-16 rounded-full border border-primary/15 bg-primary/5" />
+          <DialogHeader className="relative z-10">
             <div className="flex items-start gap-3 pr-12 sm:pr-0">
-              <div className="shrink-0 rounded-xl bg-primary-foreground/15 p-2.5 backdrop-blur-sm">
-                <FileText className="h-5 w-5 text-primary-foreground sm:h-6 sm:w-6" />
+              <div className="shrink-0 rounded-xl border border-primary/15 bg-primary/10 p-2.5 backdrop-blur-sm">
+                <FileText className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
               </div>
               <div className="flex-1 min-w-0">
-                <DialogTitle className="text-lg font-bold leading-tight text-primary-foreground sm:text-xl">
+                <DialogTitle className="text-lg font-bold leading-tight text-foreground sm:text-xl">
                   {template.name}
                 </DialogTitle>
                 {template.description && (
-                  <p className="mt-1 line-clamp-3 text-sm text-primary-foreground/70 sm:line-clamp-none">{template.description}</p>
+                  <p className="mt-1 line-clamp-3 text-sm text-muted-foreground sm:line-clamp-none">{template.description}</p>
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-2 self-start pt-0.5">
                 <Badge
                   className={
                     template.is_active
-                      ? 'hidden border-emerald-400/30 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30 xs:inline-flex sm:inline-flex'
-                      : 'hidden border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground/60 xs:inline-flex sm:inline-flex'
+                      ? 'hidden border-primary/20 bg-primary/10 text-primary hover:bg-primary/15 xs:inline-flex sm:inline-flex'
+                      : 'hidden border-destructive/20 bg-destructive/10 text-destructive xs:inline-flex sm:inline-flex'
                   }
                 >
                   {template.is_active ? 'Activa' : 'Inactiva'}
@@ -94,7 +98,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                   type="button"
                   size="icon"
                   variant="secondary"
-                  className="h-8 w-8 border-primary-foreground/20 bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25 sm:hidden"
+                  className="h-8 w-8 border-primary/20 bg-primary/10 text-primary hover:bg-primary/15 sm:hidden"
                   aria-label={isMobileFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
                   title={isMobileFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
                   onClick={() => setIsMobileFullscreen(prev => !prev)}
@@ -107,10 +111,10 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
 
           {/* Positions badges */}
           {template.positions && template.positions.length > 0 && (
-            <div className="flex max-h-16 items-center gap-2 mt-3 flex-wrap overflow-y-auto pr-1 sm:mt-4 sm:max-h-none sm:overflow-visible">
-              <Briefcase className="h-4 w-4 text-white/50" />
+            <div className="relative z-10 flex max-h-16 items-center gap-2 mt-3 flex-wrap overflow-y-auto pr-1 sm:mt-4 sm:max-h-none sm:overflow-visible">
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
               {template.positions.map(p => (
-                <Badge key={p.id} variant="outline" className="text-xs text-white/80 border-white/25 bg-white/10">
+                <Badge key={p.id} variant="outline" className="border-primary/20 bg-background/70 text-xs text-foreground backdrop-blur-sm">
                   {p.name}
                 </Badge>
               ))}
@@ -118,27 +122,27 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
           )}
 
           {/* Quick stats */}
-          <div className="flex flex-wrap gap-3 mt-3 sm:mt-4 sm:gap-4">
-            <div className="flex items-center gap-1.5 text-white/70 text-sm">
+          <div className="relative z-10 flex flex-wrap gap-3 mt-3 sm:mt-4 sm:gap-4">
+            <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
               <Layers className="h-4 w-4" />
-              <span className="font-medium text-white">{criteria.length}</span> criterios
+              <span className="font-medium text-foreground">{criteria.length}</span> criterios
             </div>
-            <div className="flex items-center gap-1.5 text-white/70 text-sm">
+            <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
               <ClipboardCheck className="h-4 w-4" />
-              <span className="font-medium text-white">{questions.length}</span> preguntas
+              <span className="font-medium text-foreground">{questions.length}</span> preguntas
             </div>
-            <div className="flex items-center gap-1.5 text-white/70 text-sm">
+            <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
               <BarChart3 className="h-4 w-4" />
-              <span className="font-medium text-white">{ratingScale.length}</span> niveles
+              <span className="font-medium text-foreground">{ratingScale.length}</span> niveles
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="grid grid-cols-1 gap-2 mt-3 sm:mt-4 sm:flex">
+          <div className="relative z-10 grid grid-cols-1 gap-2 mt-3 sm:mt-4 sm:flex">
             <Button
               size="sm"
               variant="secondary"
-              className="w-full bg-white/15 text-white border-white/20 hover:bg-white/25 sm:w-auto"
+              className="w-full border-primary/20 bg-background/80 text-foreground hover:bg-background sm:w-auto"
               onClick={() => generateTemplatePdf(template)}
             >
               <Download className="h-4 w-4 mr-1.5" />
@@ -148,7 +152,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
               <Button
                 size="sm"
                 variant="secondary"
-                className="w-full bg-white/15 text-white border-white/20 hover:bg-white/25 sm:w-auto"
+                className="w-full border-primary/20 bg-background/80 text-foreground hover:bg-background sm:w-auto"
                 onClick={() => {
                   onDuplicate(template);
                   onOpenChange(false);
