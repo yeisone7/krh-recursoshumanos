@@ -18,6 +18,7 @@ import {
 import { DepositFormDialog, InterestFormDialog, WithdrawalFormDialog, ImportCesantiasDialog } from '@/components/cesantias';
 import { cesantiasStatusLabels, withdrawalReasonLabels, withdrawalStatusLabels } from '@/types/cesantias';
 import type { CesantiasDeposit, CesantiasInterestPayment, CesantiasWithdrawal } from '@/types/cesantias';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
@@ -76,7 +77,7 @@ export default function Cesantias() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Cesantías</h1>
           <p className="text-muted-foreground">
@@ -89,7 +90,7 @@ export default function Cesantias() {
           onValueChange={(v) => setSelectedYear(parseInt(v))}
           placeholder="Año"
           searchPlaceholder="Buscar año..."
-          triggerClassName="w-32"
+          triggerClassName="w-full sm:w-32"
         />
       </div>
 
@@ -167,7 +168,7 @@ export default function Cesantias() {
 
       {/* Tabs */}
       <Tabs defaultValue="deposits" className="space-y-4">
-        <TabsList>
+        <TabsList className="w-full justify-start overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto">
           <TabsTrigger value="deposits">Depósitos al Fondo</TabsTrigger>
           <TabsTrigger value="interests">Intereses</TabsTrigger>
           <TabsTrigger value="withdrawals">Retiros Parciales</TabsTrigger>
@@ -176,18 +177,18 @@ export default function Cesantias() {
         {/* Deposits Tab */}
         <TabsContent value="deposits">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>Depósitos de Cesantías {selectedYear}</CardTitle>
                 <CardDescription>
                   Consignación al fondo antes del 14 de febrero del año siguiente
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowImportDeposits(true)}>
+              <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+                <Button variant="outline" onClick={() => setShowImportDeposits(true)} className="w-full sm:w-auto">
                   <Upload className="w-4 h-4 mr-2" />Importar
                 </Button>
-                <Button onClick={() => { setSelectedDeposit(null); setShowDepositForm(true); }}>
+                <Button onClick={() => { setSelectedDeposit(null); setShowDepositForm(true); }} className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />Nuevo Depósito
                 </Button>
               </div>
@@ -200,7 +201,9 @@ export default function Cesantias() {
                   No hay depósitos registrados para {selectedYear}
                 </p>
               ) : (
-                <Table>
+                <>
+                <div className="hidden overflow-x-auto sm:block">
+                <Table className="min-w-[900px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Empleado</TableHead>
@@ -242,6 +245,29 @@ export default function Cesantias() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
+                <MobileCardList
+                  className="sm:hidden"
+                  items={deposits.map((deposit) => ({
+                    id: deposit.id,
+                    title: `${deposit.employee?.first_name || ''} ${deposit.employee?.last_name || ''}`.trim() || 'Empleado',
+                    subtitle: deposit.fund_name,
+                    badge: getStatusBadge(deposit.status, deposit.is_late),
+                    fields: [
+                      { label: 'Valor cesantías', value: formatCurrency(deposit.cesantias_amount), className: 'col-span-2' },
+                      { label: 'Salario base', value: formatCurrency(deposit.base_salary) },
+                      { label: 'Días', value: deposit.days_worked },
+                      { label: 'Fecha límite', value: format(new Date(deposit.due_date), 'dd MMM yyyy', { locale: es }) },
+                    ],
+                    actions: (
+                      <Button size="sm" variant="outline" onClick={() => { setSelectedDeposit(deposit); setShowDepositForm(true); }}>
+                        <Edit2 className="w-4 h-4 mr-2" />Editar
+                      </Button>
+                    ),
+                  }))}
+                  emptyMessage={`No hay depósitos registrados para ${selectedYear}`}
+                />
+                </>
               )}
             </CardContent>
           </Card>
@@ -250,18 +276,18 @@ export default function Cesantias() {
         {/* Interests Tab */}
         <TabsContent value="interests">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>Intereses sobre Cesantías {selectedYear}</CardTitle>
                 <CardDescription>
                   Pago del 12% anual directamente al empleado antes del 31 de enero
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowImportInterests(true)}>
+              <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+                <Button variant="outline" onClick={() => setShowImportInterests(true)} className="w-full sm:w-auto">
                   <Upload className="w-4 h-4 mr-2" />Importar
                 </Button>
-                <Button onClick={() => { setSelectedInterest(null); setShowInterestForm(true); }}>
+                <Button onClick={() => { setSelectedInterest(null); setShowInterestForm(true); }} className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />Nuevo Pago
                 </Button>
               </div>
@@ -274,7 +300,9 @@ export default function Cesantias() {
                   No hay pagos de intereses registrados para {selectedYear}
                 </p>
               ) : (
-                <Table>
+                <>
+                <div className="hidden overflow-x-auto sm:block">
+                <Table className="min-w-[900px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Empleado</TableHead>
@@ -322,6 +350,28 @@ export default function Cesantias() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
+                <MobileCardList
+                  className="sm:hidden"
+                  items={interests.map((interest) => ({
+                    id: interest.id,
+                    title: `${interest.employee?.first_name || ''} ${interest.employee?.last_name || ''}`.trim() || 'Empleado',
+                    subtitle: `${interest.interest_rate}% · ${interest.days_accrued} días`,
+                    badge: interest.is_paid ? getStatusBadge('depositado', interest.is_late) : getStatusBadge('pendiente'),
+                    fields: [
+                      { label: 'Valor intereses', value: formatCurrency(interest.interest_amount), className: 'col-span-2' },
+                      { label: 'Saldo cesantías', value: formatCurrency(interest.cesantias_balance) },
+                      { label: 'Fecha límite', value: format(new Date(interest.due_date), 'dd MMM yyyy', { locale: es }) },
+                    ],
+                    actions: (
+                      <Button size="sm" variant="outline" onClick={() => { setSelectedInterest(interest); setShowInterestForm(true); }}>
+                        <Edit2 className="w-4 h-4 mr-2" />Editar
+                      </Button>
+                    ),
+                  }))}
+                  emptyMessage={`No hay pagos de intereses registrados para ${selectedYear}`}
+                />
+                </>
               )}
             </CardContent>
           </Card>
@@ -330,14 +380,14 @@ export default function Cesantias() {
         {/* Withdrawals Tab */}
         <TabsContent value="withdrawals">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>Retiros Parciales de Cesantías</CardTitle>
                 <CardDescription>
                   Solicitudes para vivienda, educación o terminación de contrato
                 </CardDescription>
               </div>
-              <Button onClick={() => { setSelectedWithdrawal(null); setShowWithdrawalForm(true); }}>
+              <Button onClick={() => { setSelectedWithdrawal(null); setShowWithdrawalForm(true); }} className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />Nueva Solicitud
               </Button>
             </CardHeader>
@@ -349,7 +399,9 @@ export default function Cesantias() {
                   No hay solicitudes de retiro registradas
                 </p>
               ) : (
-                <Table>
+                <>
+                <div className="hidden overflow-x-auto sm:block">
+                <Table className="min-w-[900px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Empleado</TableHead>
@@ -397,6 +449,29 @@ export default function Cesantias() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
+                <MobileCardList
+                  className="sm:hidden"
+                  items={withdrawals.map((withdrawal) => ({
+                    id: withdrawal.id,
+                    title: `${withdrawal.employee?.first_name || ''} ${withdrawal.employee?.last_name || ''}`.trim() || 'Empleado',
+                    subtitle: withdrawal.fund_name,
+                    badge: getStatusBadge(withdrawal.status),
+                    fields: [
+                      { label: 'Solicitado', value: formatCurrency(withdrawal.amount_requested), className: 'col-span-2' },
+                      { label: 'Aprobado', value: withdrawal.amount_approved ? formatCurrency(withdrawal.amount_approved) : '-' },
+                      { label: 'Solicitud', value: format(new Date(withdrawal.request_date), 'dd MMM yyyy', { locale: es }) },
+                      { label: 'Motivo', value: withdrawalReasonLabels[withdrawal.withdrawal_reason], className: 'col-span-2' },
+                    ],
+                    actions: (
+                      <Button size="sm" variant="outline" onClick={() => { setSelectedWithdrawal(withdrawal); setShowWithdrawalForm(true); }}>
+                        <Edit2 className="w-4 h-4 mr-2" />Editar
+                      </Button>
+                    ),
+                  }))}
+                  emptyMessage="No hay solicitudes de retiro registradas"
+                />
+                </>
               )}
             </CardContent>
           </Card>
