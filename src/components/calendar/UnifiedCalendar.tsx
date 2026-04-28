@@ -34,7 +34,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
   Popover,
@@ -158,9 +157,9 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
   const maxVisible = view === 'week' ? 8 : 3;
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-4">
       {/* Summary KPI Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
         {(Object.keys(EVENT_TYPE_LABELS) as CalendarEventType[]).map((type) => {
           const isActive = enabledTypes.includes(type);
           return (
@@ -168,17 +167,17 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
               key={type}
               onClick={() => toggleEventType(type)}
               className={cn(
-                'flex items-center gap-3 rounded-xl border px-4 py-3 transition-all text-left',
+                'min-w-0 rounded-xl border px-3 py-2.5 text-left transition-all sm:flex sm:items-center sm:gap-3 sm:px-4 sm:py-3',
                 isActive
                   ? 'bg-white shadow-sm border-border dark:bg-background'
                   : 'bg-white/60 border-transparent opacity-60 dark:bg-muted/40',
               )}
             >
-              <div className={cn('rounded-lg p-2', EVENT_STYLES[type].bgColor, EVENT_STYLES[type].color)}>
+              <div className={cn('mb-2 inline-flex rounded-lg p-2 sm:mb-0', EVENT_STYLES[type].bgColor, EVENT_STYLES[type].color)}>
                 {EVENT_ICONS[type]}
               </div>
               <div className="min-w-0">
-                <p className="text-lg font-bold leading-none">{typeCounts[type]}</p>
+                <p className="text-base font-bold leading-none sm:text-lg">{typeCounts[type]}</p>
                 <p className="text-[11px] text-muted-foreground truncate mt-0.5">
                   {EVENT_TYPE_LABELS[type]}
                 </p>
