@@ -30,6 +30,7 @@ import { ExamTransactionFormDialog } from '@/components/examenes/ExamTransaction
 import { ExamTransactionDetailDialog } from '@/components/examenes/ExamTransactionDetailDialog';
 import { ExamAlertsCard } from '@/components/examenes/ExamAlertsCard';
 import type { ExamAlert } from '@/components/examenes/ExamAlertsCard';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import { useExamTransactions, useDeleteExamTransaction } from '@/hooks/useExamTransactions';
 import type { ExamTransaction } from '@/hooks/useExamTransactions';
 import { useOperationCenters, useCompanies } from '@/hooks/useCompanies';
@@ -183,22 +184,22 @@ export default function Examenes() {
           <p className="text-muted-foreground mt-1">Gestión de exámenes médicos ocupacionales, catálogo y profesiogramas</p>
         </div>
         {activeTab === 'aplicaciones' && (
-          <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+          <Button onClick={() => setIsFormOpen(true)} className="w-full gap-2 sm:w-auto">
             <Plus className="w-4 h-4" /> Nueva Aplicación
           </Button>
         )}
       </motion.div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="aplicaciones" className="gap-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0">
+        <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:inline-flex sm:w-auto">
+          <TabsTrigger value="aplicaciones" className="shrink-0 gap-2 whitespace-nowrap text-xs sm:text-sm">
             <Stethoscope className="w-4 h-4" /> Aplicaciones
           </TabsTrigger>
-          <TabsTrigger value="catalogo" className="gap-2">
+          <TabsTrigger value="catalogo" className="shrink-0 gap-2 whitespace-nowrap text-xs sm:text-sm">
             <ClipboardList className="w-4 h-4" /> Catálogo
           </TabsTrigger>
-          <TabsTrigger value="profesiograma" className="gap-2">
+          <TabsTrigger value="profesiograma" className="shrink-0 gap-2 whitespace-nowrap text-xs sm:text-sm">
             <ShieldCheck className="w-4 h-4" /> Profesiograma
           </TabsTrigger>
         </TabsList>
@@ -239,7 +240,7 @@ export default function Examenes() {
                   />
                 </div>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="w-[160px] h-10 text-sm">
+                  <SelectTrigger className="h-10 w-full text-sm md:w-[160px]">
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
                   <SelectContent>
