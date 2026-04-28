@@ -67,15 +67,15 @@ export function ClonePositionProfileDialog({ open, onOpenChange, sourceProfile, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Clonar Perfil de Cargo</DialogTitle>
           <DialogDescription>
             Duplicar el perfil de <strong>{sourcePositionName}</strong> a otro cargo.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-2 pr-1">
           <div>
             <Label>Cargo destino</Label>
             <Select value={targetPositionId} onValueChange={setTargetPositionId}>
@@ -91,9 +91,9 @@ export function ClonePositionProfileDialog({ open, onOpenChange, sourceProfile, 
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleClone} disabled={!targetPositionId || createProfile.isPending}>
+        <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">Cancelar</Button>
+          <Button onClick={handleClone} disabled={!targetPositionId || createProfile.isPending} className="w-full sm:w-auto">
             {createProfile.isPending ? 'Clonando...' : 'Clonar Perfil'}
           </Button>
         </DialogFooter>

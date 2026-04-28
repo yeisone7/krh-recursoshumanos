@@ -78,19 +78,19 @@ export default function CatalogosCargos() {
   const profileCount = positions.filter((p: any) => hasProfile(p.id)).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
+            <div className="shrink-0 rounded-lg bg-primary/10 p-2">
               <Briefcase className="w-6 h-6 text-primary" />
             </div>
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">Cargos</h1>
+            <div className="min-w-0">
+              <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Cargos</h1>
               <p className="text-muted-foreground mt-1">Gestiona los cargos y perfiles de la organización</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="text-xs gap-1">
               <Users className="w-3 h-3" />{positions.length} cargos
             </Badge>
@@ -104,7 +104,7 @@ export default function CatalogosCargos() {
       {/* Search & Filters */}
       <Card>
         <CardContent className="pt-4 pb-3">
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col gap-3 lg:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -115,7 +115,7 @@ export default function CatalogosCargos() {
               />
             </div>
             <Select value={filterArea} onValueChange={setFilterArea}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full lg:w-[180px]">
                 <SelectValue placeholder="Área" />
               </SelectTrigger>
               <SelectContent>
@@ -126,7 +126,7 @@ export default function CatalogosCargos() {
               </SelectContent>
             </Select>
             <Select value={filterProfile} onValueChange={setFilterProfile}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full lg:w-[160px]">
                 <SelectValue placeholder="Perfil" />
               </SelectTrigger>
               <SelectContent>
@@ -136,7 +136,7 @@ export default function CatalogosCargos() {
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-full lg:w-[140px]">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
@@ -147,7 +147,7 @@ export default function CatalogosCargos() {
             </Select>
           </div>
           {hasActiveFilters && (
-            <div className="flex items-center gap-2 mt-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="text-xs text-muted-foreground">{filteredPositions.length} de {positions.length} cargos</span>
               <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={clearFilters}>
                 <X className="w-3 h-3 mr-1" />Limpiar filtros
@@ -158,21 +158,21 @@ export default function CatalogosCargos() {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <CardTitle>Listado de Cargos</CardTitle>
             <CardDescription>Cargos y posiciones disponibles</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             {/* View mode toggle */}
-            <div className="flex items-center border rounded-md">
+            <div className="flex w-full items-center rounded-md border sm:w-auto">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
                       size="sm" 
                       variant={viewMode === 'table' ? 'default' : 'ghost'} 
-                      className="h-8 px-2 rounded-r-none"
+                      className="h-8 flex-1 rounded-r-none px-2 sm:flex-none"
                       onClick={() => setViewMode('table')}
                     >
                       <TableIcon className="w-4 h-4" />
@@ -185,7 +185,7 @@ export default function CatalogosCargos() {
                     <Button 
                       size="sm" 
                       variant={viewMode === 'agenda' ? 'default' : 'ghost'} 
-                      className="h-8 px-2 rounded-l-none"
+                      className="h-8 flex-1 rounded-l-none px-2 sm:flex-none"
                       onClick={() => setViewMode('agenda')}
                     >
                       <LayoutList className="w-4 h-4" />
@@ -195,7 +195,7 @@ export default function CatalogosCargos() {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <Button onClick={() => { setSelectedPosition(null); setShowPositionForm(true); }}>
+            <Button onClick={() => { setSelectedPosition(null); setShowPositionForm(true); }} className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />Nuevo Cargo
             </Button>
           </div>
@@ -208,7 +208,8 @@ export default function CatalogosCargos() {
               {positions.length === 0 ? 'No hay cargos registrados. Crea el primero.' : 'No se encontraron cargos con los filtros aplicados.'}
             </div>
           ) : viewMode === 'table' ? (
-            <Table>
+            <div className="overflow-x-auto">
+            <Table className="min-w-[860px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Cargo</TableHead>
@@ -275,6 +276,7 @@ export default function CatalogosCargos() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           ) : (
             /* Agenda / List View */
             <div className="space-y-3">
@@ -285,12 +287,12 @@ export default function CatalogosCargos() {
                     key={pos.id}
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="border rounded-lg p-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                    className="cursor-pointer rounded-lg border p-4 transition-colors hover:bg-muted/30"
                     onClick={() => setProfileTarget({ id: pos.id, name: pos.name, area: pos.areas?.name })}
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
                           <h3 className="font-semibold text-foreground truncate">{pos.name}</h3>
                           {pos.code && <Badge variant="outline" className="text-[10px] shrink-0">{pos.code}</Badge>}
                           <Badge 
@@ -300,7 +302,7 @@ export default function CatalogosCargos() {
                             {pos.is_active ? 'Activo' : 'Inactivo'}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+                        <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                           {pos.areas?.name && <span>📁 {pos.areas.name}</span>}
                           {pos.level && <span>📊 Nivel {pos.level}</span>}
                         </div>
@@ -333,7 +335,7 @@ export default function CatalogosCargos() {
                           <p className="text-xs text-muted-foreground italic">Sin perfil configurado</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 ml-3 shrink-0">
+                      <div className="flex shrink-0 items-center justify-between gap-1 sm:ml-3 sm:justify-end">
                         <Badge 
                           variant="outline" 
                           className={hasProfile(pos.id) ? 'bg-success/10 text-success border-success/20' : 'bg-muted text-muted-foreground'}
