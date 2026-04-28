@@ -493,11 +493,11 @@ export default function Evaluaciones() {
         {/* Evaluations Tab */}
         <TabsContent value="evaluations">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardHeader className="flex flex-col gap-3 p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
               <CardTitle>Evaluaciones de Desempeño</CardTitle>
-              <div className="flex items-center gap-3">
+              <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto lg:items-center">
                 <Select value={evaluationCycleFilter} onValueChange={setEvaluationCycleFilter}>
-                  <SelectTrigger className="w-[220px]">
+                  <SelectTrigger className="w-full sm:w-[220px]">
                     <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
                     <SelectValue placeholder="Filtrar por ciclo" />
                   </SelectTrigger>
@@ -509,11 +509,11 @@ export default function Evaluaciones() {
                   </SelectContent>
                 </Select>
                 {/* View mode toggle */}
-                <div className="flex items-center border rounded-md">
+                <div className="grid grid-cols-2 border rounded-md sm:flex sm:items-center">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-8 w-8 rounded-r-none ${evalViewMode === 'kanban' ? 'bg-muted' : ''}`}
+                    className={`h-9 w-full rounded-r-none sm:h-8 sm:w-8 ${evalViewMode === 'kanban' ? 'bg-muted' : ''}`}
                     onClick={() => setEvalViewMode('kanban')}
                     title="Vista Kanban"
                   >
@@ -522,7 +522,7 @@ export default function Evaluaciones() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`h-8 w-8 rounded-l-none ${evalViewMode === 'table' ? 'bg-muted' : ''}`}
+                    className={`h-9 w-full rounded-l-none sm:h-8 sm:w-8 ${evalViewMode === 'table' ? 'bg-muted' : ''}`}
                     onClick={() => setEvalViewMode('table')}
                     title="Vista Lista"
                   >
@@ -531,7 +531,7 @@ export default function Evaluaciones() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               {evalViewMode === 'kanban' ? (
                 <EvaluationKanbanBoard
                   evaluations={filteredEvaluations}
