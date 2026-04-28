@@ -227,7 +227,7 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
           result: exam.result,
           concept: exam.concept,
           restrictions: exam.restrictions,
-          expiration_date: exam.expiration_date || exam.next_exam_date,
+          expiration_date: exam.expiration_date,
           document_url: exam.document_url,
         });
       }
