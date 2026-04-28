@@ -160,7 +160,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto sm:w-full">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto p-4 sm:w-full sm:p-6">
         <DialogHeader>
           <DialogTitle>
             {interest ? 'Editar Pago de Intereses' : 'Nuevo Pago de Intereses'}
@@ -169,7 +169,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               <FormField
                 control={form.control}
                 name="employee_id"
@@ -206,7 +206,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
               <FormField
                 control={form.control}
                 name="cesantias_balance"
@@ -264,7 +264,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
               )}
             />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               <FormField
                 control={form.control}
                 name="due_date"
@@ -321,7 +321,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
               )}
             />
 
-            <div className="grid grid-cols-1 gap-2 pt-4 sm:flex sm:justify-end">
+            <div className="sticky bottom-0 -mx-4 grid grid-cols-1 gap-2 border-t border-border bg-background/95 px-4 pt-3 pb-1 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:pt-4 sm:backdrop-blur-0">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
