@@ -825,11 +825,16 @@ export default function AnaliticaNomina() {
                     </div>
                     <p className="text-xs text-muted-foreground">{alert.periodo} · {alert.valor}</p>
                     <p className="text-sm text-foreground">{alert.detalle}</p>
+                    {status === 'cerrada' && alertCloseReasons[alert.id] && (
+                      <p className="rounded-md border border-success/20 bg-success-light p-2 text-xs text-success">
+                        Motivo de cierre: {alertCloseReasons[alert.id]}
+                      </p>
+                    )}
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2">
                     <Button size="sm" variant={status === 'pendiente' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'pendiente' }))}>Pendiente</Button>
                     <Button size="sm" variant={status === 'notificada' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'notificada' }))}>Notificada</Button>
-                    <Button size="sm" variant={status === 'cerrada' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'cerrada' }))}>Cerrada</Button>
+                    <Button size="sm" variant={status === 'cerrada' ? 'default' : 'outline'} onClick={() => openCloseReasonDialog(alert)}>Cerrar con motivo</Button>
                   </div>
                 </div>
               </div>
@@ -837,6 +842,32 @@ export default function AnaliticaNomina() {
           })}
         </CardContent>
       </Card>
+
+      <Dialog open={!!closingAlert} onOpenChange={(open) => !open && setClosingAlert(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Cerrar alerta con motivo</DialogTitle>
+            <DialogDescription>{closingAlert?.tipo}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Textarea
+              value={closeReasonDraft}
+              onChange={(event) => setCloseReasonDraft(event.target.value.slice(0, 500))}
+              maxLength={500}
+              placeholder="Describe la justificación del cierre"
+              className="min-h-28"
+            />
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Requerido, mínimo 3 caracteres</span>
+              <span>{closeReasonDraft.trim().length}/500</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setClosingAlert(null)}>Cancelar</Button>
+            <Button onClick={confirmCloseWithReason} disabled={closeReasonDraft.trim().length < 3}>Guardar cierre</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 xl:grid-cols-2">
         {[{ title: 'Priorización por tipo de novedad', rows: analytics.impactRankingByType }, { title: 'Priorización por centro', rows: analytics.impactRankingByCenter }].map((section) => (
