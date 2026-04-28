@@ -153,30 +153,30 @@ export function IncapacityDetailDialog({
               
               {/* General Tab */}
               <TabsContent value="general" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
                   <Card>
-                    <CardHeader className="pb-2">
+                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                       <CardDescription>Días Totales</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
                       <p className="text-2xl font-bold">{incapacity.total_days}</p>
                     </CardContent>
                   </Card>
                   
                   <Card>
-                    <CardHeader className="pb-2">
+                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                       <CardDescription>Días Cadena</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
                       <p className="text-2xl font-bold">{totalChainDays}</p>
                     </CardContent>
                   </Card>
                   
                   <Card>
-                    <CardHeader className="pb-2">
+                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                       <CardDescription>Días Restantes</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
                       <p className={`text-2xl font-bold ${daysRemaining < 0 ? 'text-muted-foreground' : daysRemaining <= 3 ? 'text-destructive' : ''}`}>
                         {daysRemaining < 0 ? 'Finalizada' : daysRemaining}
                       </p>
@@ -184,11 +184,11 @@ export function IncapacityDetailDialog({
                   </Card>
                   
                   <Card>
-                    <CardHeader className="pb-2">
+                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                       <CardDescription>Valor Total</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">{formatCurrency(incapacity.total_amount)}</p>
+                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+                      <p className="break-words text-xl font-bold sm:text-2xl">{formatCurrency(incapacity.total_amount)}</p>
                     </CardContent>
                   </Card>
                 </div>
