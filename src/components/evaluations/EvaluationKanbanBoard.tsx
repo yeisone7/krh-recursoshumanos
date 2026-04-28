@@ -4,7 +4,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -155,7 +154,7 @@ export function EvaluationKanbanBoard({
 
       {/* Kanban Board */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid min-h-[500px] grid-cols-[repeat(5,minmax(220px,1fr))] gap-3 overflow-x-auto pb-2 lg:grid-cols-5">
+        <div className="grid min-h-[500px] grid-cols-[repeat(5,minmax(240px,1fr))] gap-3 overflow-x-auto overscroll-x-contain pb-2 lg:grid-cols-5">
           {COLUMNS.map((col) => {
             const items = grouped[col.status] || [];
             return (
