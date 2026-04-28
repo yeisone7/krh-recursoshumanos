@@ -47,11 +47,11 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-0 overflow-hidden">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border">
         {/* Hero header */}
-        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 pt-6 pb-4">
-          <DialogHeader className="space-y-1">
-            <DialogTitle className="font-display text-xl flex items-center gap-2.5">
+        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-4 pt-5 pb-4 sm:px-6 sm:pt-6">
+          <DialogHeader className="space-y-1 pr-12">
+            <DialogTitle className="font-display text-lg flex items-center gap-2.5 sm:text-xl">
               <div className="p-2 rounded-lg bg-primary/10">
                 <ClipboardList className="w-5 h-5 text-primary" />
               </div>
@@ -62,7 +62,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 gap-3 mt-4 sm:grid-cols-2 sm:gap-4">
             <div className="flex items-start gap-2.5">
               <Building2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
               <div>
@@ -79,7 +79,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
             </div>
           </div>
 
-          <div className="flex items-center gap-4 mt-3 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               Creado {format(new Date(data.created_at), "dd MMM yyyy", { locale: es })}
@@ -92,7 +92,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
         </div>
 
         {/* Summary strip */}
-        <div className="px-6 py-3 border-y border-border bg-muted/20 flex items-center gap-2 flex-wrap">
+        <div className="px-4 py-3 border-y border-border bg-muted/20 flex items-center gap-2 flex-wrap sm:px-6">
           <Badge variant="secondary" className="gap-1.5 py-1">
             <Package className="w-3.5 h-3.5" />
             {data.items.length} artículo{data.items.length !== 1 ? 's' : ''}
@@ -112,7 +112,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
         </div>
 
         {/* Items */}
-        <div className="px-6 pb-6 max-h-[45vh] overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 sm:px-6">
           {data.items.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               <div className="p-3 rounded-full bg-muted/50 w-fit mx-auto mb-3">
@@ -138,7 +138,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
                       return (
                         <div
                           key={item.id}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border/60 bg-card hover:bg-accent/30 transition-colors group"
+                          className="flex flex-col gap-2 px-3 py-2.5 rounded-lg border border-border/60 bg-card hover:bg-accent/30 transition-colors group sm:flex-row sm:items-center sm:gap-3"
                         >
                           <div className={`w-2 h-2 rounded-full shrink-0 ${isReq ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />
                           <div className="flex-1 min-w-0">
@@ -156,7 +156,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
                               <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{item.notes}</p>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
                             <span className="text-sm font-semibold font-mono tabular-nums bg-muted/50 px-2 py-0.5 rounded">
                               ×{item.quantity}
                             </span>

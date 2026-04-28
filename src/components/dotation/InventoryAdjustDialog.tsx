@@ -49,8 +49,8 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm">
+        <DialogHeader className="pr-12">
           <DialogTitle>Ajustar Stock</DialogTitle>
           <DialogDescription>
             {item.item_name}{item.size ? ` (${item.size})` : ''} — Stock actual: {item.quantity_available}
@@ -58,7 +58,7 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Button
               type="button"
               variant={adjustType === 'add' ? 'default' : 'outline'}
@@ -115,7 +115,7 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="grid grid-cols-1 gap-3 pt-2 sm:flex sm:justify-end">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button onClick={handleSubmit} disabled={adjustMutation.isPending}>
               Confirmar

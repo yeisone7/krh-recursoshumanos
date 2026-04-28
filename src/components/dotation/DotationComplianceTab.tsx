@@ -66,7 +66,7 @@ export function DotationComplianceTab() {
   return (
     <div className="space-y-6">
       {/* Header with export */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Cumplimiento de Dotación</h2>
           <p className="text-sm text-muted-foreground">
@@ -91,7 +91,7 @@ export function DotationComplianceTab() {
       </div>
 
       {/* Global KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard icon={Users} label="Empleados evaluados" value={totalEmployees} color="primary" />
         <KpiCard icon={CheckCircle} label="100% cumplimiento" value={totalCompliant} color="success" />
         <KpiCard icon={AlertTriangle} label="Cumplimiento parcial" value={totalPartial} color="warning" />
@@ -100,7 +100,7 @@ export function DotationComplianceTab() {
 
       {/* Global progress */}
       <div className="card-elevated p-4">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-start justify-between gap-3 mb-2">
           <span className="text-sm font-medium">Cumplimiento global de dotación obligatoria</span>
           <span className="text-sm font-bold">{globalPercentage}%</span>
         </div>
@@ -146,15 +146,15 @@ function CenterCard({ center, index }: { center: CenterCompliance; index: number
       className="card-elevated"
     >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="w-full p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors rounded-t-xl">
+        <CollapsibleTrigger className="w-full p-4 flex flex-col items-stretch gap-3 hover:bg-muted/30 transition-colors rounded-t-xl sm:flex-row sm:items-center sm:gap-4">
           {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
 
           <div className="flex-1 text-left">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-semibold text-foreground">{center.centerName}</h3>
               <Badge variant="outline" className="text-xs">{center.totalEmployees} empleados</Badge>
             </div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex flex-col gap-1 mt-2 sm:flex-row sm:items-center sm:gap-2">
               <Progress value={center.percentage} className="h-2 flex-1 max-w-xs" />
               <span className="text-xs font-medium text-muted-foreground">
                 {center.fullyCompliant}/{center.totalEmployees} al 100%
@@ -162,7 +162,7 @@ function CenterCard({ center, index }: { center: CenterCompliance; index: number
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             {center.nonCompliant > 0 && (
               <Badge variant="destructive" className="text-xs">{center.nonCompliant} sin dotación</Badge>
             )}
@@ -173,8 +173,8 @@ function CenterCard({ center, index }: { center: CenterCompliance; index: number
         </CollapsibleTrigger>
 
         <CollapsibleContent>
-          <div className="border-t border-border">
-            <Table>
+          <div className="border-t border-border overflow-x-auto overscroll-x-contain">
+            <Table className="min-w-[720px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Empleado</TableHead>

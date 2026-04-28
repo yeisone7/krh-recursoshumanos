@@ -262,7 +262,7 @@ export default function Dotacion() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+        className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
       >
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Gestión de Dotación</h1>
@@ -271,12 +271,12 @@ export default function Dotacion() {
           </p>
         </div>
         {activeTab === 'entregas' && (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsBulkOpen(true)} className="gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:flex">
+            <Button variant="outline" onClick={() => setIsBulkOpen(true)} className="w-full gap-2 md:w-auto">
               <Users className="w-4 h-4" />
               Entrega Masiva
             </Button>
-            <Button onClick={() => setIsFormOpen(true)} className="gap-2">
+            <Button onClick={() => setIsFormOpen(true)} className="w-full gap-2 md:w-auto">
               <Plus className="w-4 h-4" />
               Nueva Entrega
             </Button>
@@ -286,7 +286,8 @@ export default function Dotacion() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <div className="overflow-x-auto pb-1 -mx-1 px-1">
+        <TabsList className="inline-flex h-auto min-w-max">
           <TabsTrigger value="entregas" className="gap-2">
             <Package className="w-4 h-4" /> Entregas
           </TabsTrigger>
@@ -308,11 +309,12 @@ export default function Dotacion() {
             <Settings className="w-4 h-4" /> Ajustes
           </TabsTrigger>
         </TabsList>
+        </div>
 
         <TabsContent value="entregas" className="mt-6 space-y-6">
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -410,9 +412,9 @@ export default function Dotacion() {
                     className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
                   />
                 </div>
-                <div className="flex gap-3">
+                <div className="grid grid-cols-[1fr_auto] gap-3 sm:flex">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[140px] h-10 text-sm border-border">
+                    <SelectTrigger className="h-10 w-full text-sm border-border sm:w-[140px]">
                       <SelectValue placeholder="Estado" />
                     </SelectTrigger>
                     <SelectContent>
@@ -446,8 +448,8 @@ export default function Dotacion() {
                 )}
               </div>
             ) : (
-              <div className="overflow-x-auto">
-              <Table>
+              <div className="overflow-x-auto overscroll-x-contain">
+              <Table className="min-w-[560px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Empleado</TableHead>
@@ -564,7 +566,7 @@ export default function Dotacion() {
 
         <TabsContent value="ajustes" className="mt-6">
           <div className="max-w-2xl space-y-6">
-            <div className="card-elevated p-6 space-y-4">
+            <div className="card-elevated p-4 space-y-4 sm:p-6">
               <div>
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <Warehouse className="w-5 h-5 text-primary" />
@@ -574,7 +576,7 @@ export default function Dotacion() {
                   Activa o desactiva el control de inventario de dotación. Si se desactiva, la pestaña de inventario no será visible y no se descontarán existencias al registrar entregas.
                 </p>
               </div>
-              <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+              <div className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
                 <div className="space-y-0.5">
                   <Label className="text-sm font-medium">Habilitar inventario de dotación</Label>
                   <p className="text-xs text-muted-foreground">Controla existencias por centro, artículo y talla</p>
@@ -600,7 +602,7 @@ export default function Dotacion() {
 
               {inventoryEnabled && (
                 <>
-                  <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+                  <div className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-sm font-medium">Descontar inventario automáticamente</Label>
                       <p className="text-xs text-muted-foreground">Al registrar una entrega, se descuenta automáticamente del stock disponible</p>
@@ -621,7 +623,7 @@ export default function Dotacion() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+                  <div className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-sm font-medium">Bloquear entregas sin stock suficiente</Label>
                       <p className="text-xs text-muted-foreground">Impide registrar entregas cuando no hay existencias suficientes en el inventario</p>

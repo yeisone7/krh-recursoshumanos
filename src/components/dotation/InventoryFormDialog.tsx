@@ -108,8 +108,8 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] max-w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-lg">
+        <DialogHeader className="pr-12">
           <DialogTitle className="flex items-center gap-2">
             <Package className="w-5 h-5 text-primary" />
             {editItem ? 'Editar Artículo' : 'Nuevo Artículo de Inventario'}
@@ -120,7 +120,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 overflow-y-auto pr-1">
             <FormField
               control={form.control}
               name="operation_center_id"
@@ -194,7 +194,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="quantity_available"
@@ -236,7 +236,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
               />
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="grid grid-cols-1 gap-3 pt-4 border-t sm:flex sm:justify-end">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>

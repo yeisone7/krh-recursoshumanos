@@ -232,10 +232,10 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden max-h-[90vh] flex flex-col">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border">
         {/* Header — inspired by training preview */}
-        <div className="px-6 pt-6 pb-4 shrink-0">
-          <DialogHeader className="flex flex-row items-start gap-4">
+        <div className="px-4 pt-5 pb-4 shrink-0 sm:px-6 sm:pt-6">
+          <DialogHeader className="flex flex-row items-start gap-3 pr-12 sm:gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <Package className="w-6 h-6 text-primary" />
             </div>
@@ -252,7 +252,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
               <DialogTitle className="font-display text-lg text-foreground leading-tight">
                 {employeeName}
               </DialogTitle>
-              <p className="text-muted-foreground text-sm flex items-center gap-3">
+              <p className="text-muted-foreground text-sm flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span>C.C. {transaction.employees?.document_number}</span>
                 <span>·</span>
                 <span className="flex items-center gap-1">
@@ -267,7 +267,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
         <Separator />
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5 space-y-5">
+        <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-4 sm:px-6 sm:py-5 sm:space-y-5">
           {/* Items as cards */}
           <div className="space-y-2">
             {transaction.items.map((item) => {
@@ -280,7 +280,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
               const daysRem = hasExpDate ? getDaysRemaining(item.expiration_date) : 0;
 
               return (
-                <div key={item.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4 hover:bg-muted/30 transition-colors">
+                <div key={item.id} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
                       <Package className="w-4 h-4 text-muted-foreground" />
@@ -294,7 +294,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center justify-between gap-3 sm:justify-end sm:shrink-0">
                     {hasExpDate && (
                       <span className="text-xs text-muted-foreground hidden sm:inline">
                         Vence {format(new Date(item.expiration_date), 'dd/MM/yyyy')}
@@ -317,7 +317,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
               <FileText className="w-4 h-4 text-primary" />
               Información de Entrega
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex items-center gap-3 rounded-lg border border-border p-3">
                 <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
                 <div className="min-w-0">
@@ -365,13 +365,13 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
             />
 
             {documentUrl ? (
-              <div className="flex items-center gap-3 rounded-lg border border-border p-3 bg-muted/30">
+              <div className="flex flex-col gap-3 rounded-lg border border-border p-3 bg-muted/30 sm:flex-row sm:items-center">
                 <FileText className="w-5 h-5 text-destructive shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">Documento PDF</p>
                   <p className="text-xs text-muted-foreground">Archivo adjunto a esta entrega</p>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="grid grid-cols-3 gap-1 sm:flex sm:items-center sm:shrink-0">
                   <Button variant="outline" size="sm" className="gap-1.5" asChild>
                     <a href={documentUrl} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -436,12 +436,12 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
         </div>
 
         {/* Footer — fixed at bottom */}
-        <div className="shrink-0 border-t border-border px-6 py-4 flex items-center justify-between bg-background">
+        <div className="shrink-0 border-t border-border px-4 py-4 grid grid-cols-1 gap-3 bg-background sm:flex sm:items-center sm:justify-between sm:px-6">
           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
             {hasValidDate ? format(new Date(transaction.delivery_date), 'dd MMM yyyy', { locale: es }) : '—'} Entrega
           </p>
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
             <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
               Cerrar
             </Button>

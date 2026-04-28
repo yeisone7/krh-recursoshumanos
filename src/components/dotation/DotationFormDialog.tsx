@@ -232,9 +232,9 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl flex items-center gap-2">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
+        <DialogHeader className="pr-12">
+          <DialogTitle className="font-display text-lg flex items-center gap-2 sm:text-xl">
             <Package className="w-5 h-5 text-primary" />
             Nueva Entrega de Dotación
           </DialogTitle>
@@ -243,23 +243,23 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="employee" className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 mb-4 bg-primary/5 border border-primary/10">
-            <TabsTrigger value="employee" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+        <Tabs defaultValue="employee" className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          <TabsList className="grid h-auto w-full grid-cols-3 mb-4 bg-primary/5 border border-primary/10">
+            <TabsTrigger value="employee" className="min-w-0 gap-1 px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground sm:gap-2 sm:text-sm">
               <User className="w-4 h-4" /> Empleado
             </TabsTrigger>
-            <TabsTrigger value="items" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
+            <TabsTrigger value="items" className="min-w-0 gap-1 px-2 text-xs data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground sm:gap-2 sm:text-sm">
               <Package className="w-4 h-4" /> Artículos
               {selectedItems.length > 0 && (
                 <Badge className="ml-1 h-5 px-1.5 text-xs bg-secondary text-secondary-foreground">{selectedItems.length}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="delivery" className="gap-2 data-[state=active]:bg-tertiary data-[state=active]:text-white">
+            <TabsTrigger value="delivery" className="min-w-0 gap-1 px-2 text-xs data-[state=active]:bg-tertiary data-[state=active]:text-primary-foreground sm:gap-2 sm:text-sm">
               <FileText className="w-4 h-4" /> Entrega
             </TabsTrigger>
           </TabsList>
 
-          <div className="flex-1 overflow-y-auto pr-2">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2">
             {/* Employee Tab */}
             <TabsContent value="employee" className="space-y-4 mt-0">
               <div className="space-y-2">
@@ -332,8 +332,8 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                       <History className="w-4 h-4" />
                       Últimas entregas ({empDeliveries.length} total)
                     </div>
-                    <div className="border border-border rounded-lg overflow-hidden">
-                      <Table>
+                    <div className="border border-border rounded-lg overflow-x-auto overscroll-x-contain">
+                      <Table className="min-w-[460px]">
                         <TableHeader>
                           <TableRow>
                             <TableHead className="text-xs py-2">Artículo</TableHead>
@@ -357,7 +357,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
               })()}
             </TabsContent>
             <TabsContent value="items" className="space-y-4 mt-0">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <Label>Artículos a entregar</Label>
                 <Button type="button" variant="outline" size="sm" onClick={addManualItem} className="gap-1">
                   <Plus className="w-3 h-3" /> Agregar Manual
@@ -379,11 +379,11 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                     <div
                       key={idx}
                       className={cn(
-                        'border rounded-lg p-3 space-y-2 transition-colors',
+                        'border rounded-lg p-3 space-y-3 transition-colors',
                         item.selected ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/20 opacity-60'
                       )}
                     >
-                       <div className="flex items-center gap-3 flex-wrap">
+                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
                          <Checkbox
                            checked={item.selected}
                            onCheckedChange={(v) => updateItem(idx, 'selected', !!v)}
@@ -410,19 +410,19 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                              />
                            </div>
                          )}
-                         <div className="flex items-center gap-2 shrink-0">
+                          <div className="grid w-full grid-cols-[72px_1fr_auto] items-center gap-2 sm:flex sm:w-auto sm:shrink-0">
                            <Input
                              type="number"
                              min={1}
                              value={item.quantity}
                              onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
-                             className="h-9 w-16"
+                              className="h-9 w-full sm:w-16"
                            />
                            <Select
                              value={item.size || '__none__'}
                              onValueChange={(v) => updateItem(idx, 'size', v === '__none__' ? undefined : v)}
                            >
-                             <SelectTrigger className="h-9 w-20">
+                              <SelectTrigger className="h-9 w-full sm:w-20">
                                <SelectValue placeholder="Talla" />
                              </SelectTrigger>
                              <SelectContent>
@@ -445,7 +445,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
             {/* Delivery Tab */}
             <TabsContent value="delivery" className="space-y-4 mt-0">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col space-y-2">
                   <Label>Fecha de Entrega *</Label>
                   <Popover>
@@ -540,7 +540,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
           </div>
         </Tabs>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-primary/10 mt-4">
+        <div className="grid grid-cols-1 gap-3 pt-4 border-t border-primary/10 mt-4 sm:flex sm:justify-end">
           <Button variant="outline" onClick={() => { handleReset(); onOpenChange(false); }}>
             Cancelar
           </Button>
