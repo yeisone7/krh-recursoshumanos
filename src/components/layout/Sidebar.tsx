@@ -61,6 +61,9 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import petroVerdeLogo from '@/assets/petrocasinos-sidebar-icon-new.png';
 
+const APP_VERSION = import.meta.env.VITE_APP_VERSION || 'dev';
+const APP_VERSION_LABEL = APP_VERSION === 'dev' ? 'dev' : APP_VERSION.slice(0, 8);
+
 interface NavItem {
   label: string;
   icon: React.ReactNode;
@@ -807,6 +810,25 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       </nav>
 
       {/* User section */}
+        <div className="border-t border-sidebar-border bg-sidebar px-3 py-2">
+          {isCollapsed ? (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <div className="mx-auto flex h-7 w-11 items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent/40 text-[10px] font-bold text-sidebar-foreground/70">
+                  v
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8} className="rounded-lg border border-border bg-popover px-3 py-2 text-popover-foreground shadow-lg">
+                Versión {APP_VERSION_LABEL}
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <div className="flex items-center justify-between rounded-md border border-sidebar-border bg-sidebar-accent/30 px-3 py-1.5 text-[11px] font-bold text-sidebar-foreground/65">
+              <span>Versión de la app</span>
+              <span className="font-mono">v{APP_VERSION_LABEL}</span>
+            </div>
+          )}
+        </div>
         <CompanyUserSection collapsed={isCollapsed} onNavigate={onNavigate} />
     </motion.aside>
     </TooltipProvider>);
