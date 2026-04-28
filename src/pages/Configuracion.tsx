@@ -356,30 +356,32 @@ export default function Configuracion() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 overflow-x-hidden p-4 sm:space-y-6 sm:p-0">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="font-display text-2xl font-bold text-foreground">Configuración</h1>
-        <p className="text-muted-foreground mt-1">Administra la configuración del sistema</p>
+        <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Configuración</h1>
+        <p className="mt-1 text-sm text-muted-foreground sm:text-base">Administra la configuración del sistema</p>
       </motion.div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="company" className="gap-2">
-            <Building2 className="w-4 h-4" /><span className="hidden sm:inline">Empresa</span>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0">
+        <div className="scrollbar-hide w-full overflow-x-auto pb-1">
+        <TabsList className="inline-flex h-auto min-w-max justify-start sm:grid sm:w-full sm:grid-cols-5">
+          <TabsTrigger value="company" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <Building2 className="w-4 h-4" /><span>Empresa</span>
           </TabsTrigger>
-          <TabsTrigger value="alerts" className="gap-2">
-            <Bell className="w-4 h-4" /><span className="hidden sm:inline">Alertas</span>
+          <TabsTrigger value="alerts" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <Bell className="w-4 h-4" /><span>Alertas</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
-            <Shield className="w-4 h-4" /><span className="hidden sm:inline">Seguridad</span>
+          <TabsTrigger value="security" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <Shield className="w-4 h-4" /><span>Seguridad</span>
           </TabsTrigger>
-          <TabsTrigger value="ai" className="gap-2">
-            <Brain className="w-4 h-4" /><span className="hidden sm:inline">IA</span>
+          <TabsTrigger value="ai" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <Brain className="w-4 h-4" /><span>IA</span>
           </TabsTrigger>
-          <TabsTrigger value="watermark" className="gap-2">
-            <Stamp className="w-4 h-4" /><span className="hidden sm:inline">Marca de agua</span>
+          <TabsTrigger value="watermark" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+            <Stamp className="w-4 h-4" /><span>Marca de agua</span>
           </TabsTrigger>
         </TabsList>
+        </div>
 
         {/* Company Tab */}
         <TabsContent value="company">
@@ -597,7 +599,7 @@ export default function Configuracion() {
                       </p>
                     </div>
                     <Select value={hiringNotifRoleId} onValueChange={setHiringNotifRoleId}>
-                      <SelectTrigger className="w-[220px]">
+                      <SelectTrigger className="w-full sm:w-[220px]">
                         <SelectValue placeholder="Seleccionar rol" />
                       </SelectTrigger>
                       <SelectContent>
@@ -611,7 +613,7 @@ export default function Configuracion() {
                 </CardContent>
               </Card>
 
-              <Button onClick={handleSaveAlertConfig} disabled={updateConfig.isPending}>
+              <Button onClick={handleSaveAlertConfig} disabled={updateConfig.isPending} className="w-full sm:w-auto">
                 {updateConfig.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />Guardar Configuración
               </Button>
@@ -626,7 +628,7 @@ export default function Configuracion() {
         <TabsContent value="ai">
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Brain className="h-5 w-5 text-primary" />
                 </div>
@@ -675,7 +677,7 @@ export default function Configuracion() {
                           Google Gemini API Key
                           <span className="text-muted-foreground font-normal">(Opcional)</span>
                         </Label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                           <div className="relative flex-1">
                             <Input
                               type={showGeminiKey ? 'text' : 'password'}
@@ -720,7 +722,7 @@ export default function Configuracion() {
                   <button
                     type="button"
                     onClick={() => setAiModel('openai')}
-                    className="w-full flex items-start gap-4 p-4 text-left"
+                            className="w-full flex items-start gap-3 p-4 text-left sm:gap-4"
                   >
                     <div className="flex items-center gap-3 mt-0.5">
                       <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
@@ -745,7 +747,7 @@ export default function Configuracion() {
                           OpenAI API Key
                           <span className="text-muted-foreground font-normal">(Opcional)</span>
                         </Label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                           <div className="relative flex-1">
                             <Input
                               type={showOpenaiKey ? 'text' : 'password'}
@@ -774,7 +776,7 @@ export default function Configuracion() {
 
               {/* HeyGen Avatar Card */}
               <div className="w-full rounded-xl border-2 border-border bg-card">
-                <div className="flex items-start gap-4 p-4">
+                <div className="flex items-start gap-3 p-4 sm:gap-4">
                   <div className="flex items-center gap-3 mt-0.5">
                     <div className="h-10 w-10 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
                       <Video className="h-5 w-5 text-violet-600 dark:text-violet-400" />
@@ -793,7 +795,7 @@ export default function Configuracion() {
                       <Key className="h-3.5 w-3.5 text-muted-foreground" />
                       HeyGen API Key
                     </Label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <div className="relative flex-1">
                         <Input
                           type={showHeygenKey ? 'text' : 'password'}
@@ -865,7 +867,7 @@ export default function Configuracion() {
                 </div>
               </div>
 
-              <Button onClick={handleSaveAiConfig} disabled={savingAi} className="bg-primary hover:bg-primary/90">
+              <Button onClick={handleSaveAiConfig} disabled={savingAi} className="w-full bg-primary hover:bg-primary/90 sm:w-auto">
                 {savingAi ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Guardar Configuración IA
               </Button>
@@ -877,7 +879,7 @@ export default function Configuracion() {
         <TabsContent value="watermark">
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Stamp className="h-5 w-5 text-primary" />
                 </div>
@@ -889,8 +891,8 @@ export default function Configuracion() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Enable/Disable */}
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="space-y-0.5">
+              <div className="flex items-start justify-between gap-4 p-4 border rounded-lg">
+                <div className="min-w-0 space-y-0.5">
                   <Label className="text-base font-medium">Activar marca de agua</Label>
                   <p className="text-sm text-muted-foreground">
                     Agrega automáticamente el logo a las imágenes, mapas mentales e infografías generadas
@@ -912,7 +914,7 @@ export default function Configuracion() {
                     Sube un logo PNG transparente. Si no subes uno, se usará el logo por defecto de Petrocasinos.
                   </p>
 
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-col items-start gap-4 sm:flex-row">
                     {/* Preview */}
                     <div className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30 overflow-hidden flex-shrink-0">
                       {watermarkLogoUrl ? (
@@ -929,7 +931,7 @@ export default function Configuracion() {
                       )}
                     </div>
 
-                    <div className="flex flex-col gap-2">
+                    <div className="flex w-full flex-col gap-2 sm:w-auto">
                       <input
                         ref={logoInputRef}
                         type="file"
@@ -965,7 +967,7 @@ export default function Configuracion() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1.5">Posición del logo</Label>
                   <Select value={watermarkPosition} onValueChange={(v) => setWatermarkPosition(v as WatermarkPosition)}>
-                    <SelectTrigger className="w-64">
+                    <SelectTrigger className="w-full sm:w-64">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -976,7 +978,7 @@ export default function Configuracion() {
                   </Select>
 
                   {/* Visual position indicator */}
-                  <div className="w-48 h-32 border rounded-lg bg-muted/20 relative mt-3">
+                  <div className="relative mt-3 h-32 w-full max-w-48 border rounded-lg bg-muted/20">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <span className="text-xs text-muted-foreground/50">Imagen</span>
                     </div>
@@ -992,7 +994,7 @@ export default function Configuracion() {
                 </div>
               </div>
 
-              <Button onClick={handleSaveWatermarkConfig} disabled={savingWatermark}>
+              <Button onClick={handleSaveWatermarkConfig} disabled={savingWatermark} className="w-full sm:w-auto">
                 {savingWatermark ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Guardar Configuración
               </Button>
