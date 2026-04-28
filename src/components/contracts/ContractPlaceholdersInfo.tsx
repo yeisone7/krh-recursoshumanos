@@ -8,7 +8,6 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 
 interface PlaceholderInfo {
@@ -83,13 +82,13 @@ export function ContractPlaceholdersInfo() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" className="w-full gap-2 sm:w-auto">
           <Info className="w-4 h-4" />
           Placeholders
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[85vh]">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-2xl flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Info className="w-5 h-5 text-primary" />
             Placeholders para Plantillas
@@ -98,7 +97,7 @@ export function ContractPlaceholdersInfo() {
             Utilice estos marcadores en sus plantillas de Word (.docx). Serán reemplazados automáticamente con los datos del contrato.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="h-[60vh] pr-4">
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1 sm:pr-4">
           <div className="space-y-6">
             {placeholderCategories.map((category) => (
               <div key={category.title} className="space-y-3">
@@ -131,7 +130,7 @@ export function ContractPlaceholdersInfo() {
               </div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
