@@ -125,7 +125,7 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1rem)] max-w-lg flex-col overflow-hidden p-4 sm:w-full sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Download className="w-5 h-5 text-primary" />
@@ -159,7 +159,7 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
                   className="w-full h-9 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Select value={centerFilter} onValueChange={setCenterFilter}>
                   <SelectTrigger className="flex-1 h-8 text-xs">
                     <SelectValue placeholder="Centro" />
@@ -201,7 +201,7 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
             )}
 
             {/* Scrollable list */}
-            <div className="flex-1 min-h-0 overflow-y-auto max-h-[400px] space-y-2 pr-1">
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 sm:max-h-[400px]">
               {filteredProfs.length === 0 ? (
                 <div className="text-center py-6 text-muted-foreground">
                   <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -250,11 +250,11 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
           </>
         )}
 
-        <div className="flex items-center justify-between pt-4 border-t mt-2">
+        <div className="mt-2 grid grid-cols-1 gap-3 border-t pt-4 sm:flex sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
             Se crearán sin exámenes asignados
           </p>
-          <div className="flex gap-3">
+          <div className="grid grid-cols-1 gap-2 sm:flex sm:gap-3">
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
             <Button
               onClick={handleImport}
