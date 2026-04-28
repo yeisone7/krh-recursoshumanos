@@ -205,19 +205,19 @@ export default function AnaliticasEvaluaciones() {
       {/* Trend + Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle>Tendencia Mensual</CardTitle>
             <CardDescription>Evaluaciones completadas y pendientes (últimos 12 meses)</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
+            <ResponsiveContainer width="100%" height={isMobile ? 260 : 300}>
               <ComposedChart data={monthlyTrend}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" domain={[0, 100]} />
+                <XAxis dataKey="month" tick={{ fontSize: isMobile ? 10 : 12 }} interval={isMobile ? 1 : 0} />
+                <YAxis yAxisId="left" width={isMobile ? 28 : 40} tick={{ fontSize: isMobile ? 10 : 12 }} />
+                <YAxis yAxisId="right" orientation="right" domain={[0, 100]} width={isMobile ? 28 : 40} tick={{ fontSize: isMobile ? 10 : 12 }} />
                 <Tooltip />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: isMobile ? 11 : 12 }} />
                 <Bar yAxisId="left" dataKey="completadas" fill="hsl(var(--primary))" name="Completadas" radius={[4, 4, 0, 0]} />
                 <Bar yAxisId="left" dataKey="pendientes" fill="#f59e0b" name="Pendientes" radius={[4, 4, 0, 0]} />
                 <Line yAxisId="right" type="monotone" dataKey="promedio" stroke="#10b981" strokeWidth={2} name="Puntaje Promedio" dot={{ r: 3 }} />
@@ -227,11 +227,11 @@ export default function AnaliticasEvaluaciones() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Distribución por Estado</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardHeader className="p-4 sm:p-6"><CardTitle>Distribución por Estado</CardTitle></CardHeader>
+          <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
+            <ResponsiveContainer width="100%" height={isMobile ? 240 : 300}>
               <PieChart>
-                <Pie data={byStatus} cx="50%" cy="50%" outerRadius={90} innerRadius={50} dataKey="value" label={({ name, value }) => `${name} (${value})`}>
+                <Pie data={byStatus} cx="50%" cy="50%" outerRadius={isMobile ? 72 : 90} innerRadius={isMobile ? 40 : 50} dataKey="value" label={isMobile ? false : ({ name, value }) => `${name} (${value})`}>
                   {byStatus.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip />
