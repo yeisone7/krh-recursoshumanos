@@ -65,7 +65,7 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] overflow-y-auto p-4 sm:max-w-lg sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5 text-primary" />
@@ -80,7 +80,7 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
           {/* Preset Ranges */}
           <div className="space-y-2">
             <Label>Rangos rápidos</Label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {presetRanges.map((range) => (
                 <Button
                   key={range.label}
@@ -91,6 +91,7 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
                     setEndDate(range.end);
                   }}
                   className={cn(
+                    'w-full sm:w-auto',
                     startDate.getTime() === range.start.getTime() &&
                     endDate.getTime() === range.end.getTime() &&
                     'bg-primary text-primary-foreground'
@@ -192,11 +193,11 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="grid grid-cols-2 gap-3 sm:flex sm:gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button onClick={handleExport} disabled={exportMutation.isPending}>
+          <Button onClick={handleExport} disabled={exportMutation.isPending} className="w-full sm:w-auto">
             {exportMutation.isPending ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
