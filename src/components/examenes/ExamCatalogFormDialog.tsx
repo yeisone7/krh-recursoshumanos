@@ -79,7 +79,7 @@ export function ExamCatalogFormDialog({ open, onOpenChange, item }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-md overflow-y-auto p-4 sm:w-full sm:p-6">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? 'Editar Tipo de Examen' : 'Nuevo Tipo de Examen'}
@@ -130,7 +130,7 @@ export function ExamCatalogFormDialog({ open, onOpenChange, item }: Props) {
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4">
+            <div className="grid grid-cols-1 gap-2 pt-4 sm:flex sm:justify-end sm:gap-3">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
