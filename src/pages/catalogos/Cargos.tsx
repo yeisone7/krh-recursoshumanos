@@ -22,6 +22,7 @@ import {
 import { usePositions, useAreas } from '@/hooks/useSystemConfig';
 import { usePositionProfiles, useCurrentPositionProfile } from '@/hooks/usePositionProfiles';
 import { PositionFormDialog, PositionProfileDetailDialog } from '@/components/config';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import type { Position } from '@/types/config';
 
 type ViewMode = 'table' | 'agenda';
@@ -207,7 +208,57 @@ export default function CatalogosCargos() {
             <div className="text-center py-8 text-muted-foreground">
               {positions.length === 0 ? 'No hay cargos registrados. Crea el primero.' : 'No se encontraron cargos con los filtros aplicados.'}
             </div>
-          ) : viewMode === 'table' ? (
+          ) : (
+            <>
+            <MobileCardList
+              className="md:hidden"
+              emptyMessage="No se encontraron cargos"
+              items={filteredPositions.map((pos: any) => ({
+                id: pos.id,
+                title: pos.name,
+                subtitle: pos.areas?.name || 'Sin área asignada',
+                badge: (
+                  <Badge
+                    variant="outline"
+                    className={pos.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-muted'}
+                  >
+                    {pos.is_active ? 'Activo' : 'Inactivo'}
+                  </Badge>
+                ),
+                fields: [
+                  { label: 'Área', value: pos.areas?.name || '—', className: 'col-span-2' },
+                  { label: 'Código', value: pos.code || '—' },
+                  { label: 'Nivel', value: pos.level || '—' },
+                  {
+                    label: 'Perfil',
+                    value: hasProfile(pos.id) ? 'Configurado' : 'Sin perfil',
+                    className: 'col-span-2',
+                  },
+                ],
+                actions: (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setProfileTarget({ id: pos.id, name: pos.name, area: pos.areas?.name })}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Perfil
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => { setSelectedPosition(pos); setShowPositionForm(true); }}
+                    >
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
+                  </>
+                ),
+              }))}
+            />
+            <div className="hidden md:block">
+          {viewMode === 'table' ? (
             <div className="overflow-x-auto">
             <Table className="min-w-[860px]">
               <TableHeader>
@@ -355,6 +406,9 @@ export default function CatalogosCargos() {
                 );
               })}
             </div>
+          )}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
