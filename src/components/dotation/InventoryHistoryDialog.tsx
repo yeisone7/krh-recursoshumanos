@@ -30,8 +30,8 @@ export function InventoryHistoryDialog({ open, onOpenChange, item }: InventoryHi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg flex flex-col max-h-[85vh]">
-        <DialogHeader>
+      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[85vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
+        <DialogHeader className="pr-12">
           <DialogTitle className="flex items-center gap-2">
             <History className="w-5 h-5 text-primary" />
             Historial de Movimientos
@@ -50,7 +50,7 @@ export function InventoryHistoryDialog({ open, onOpenChange, item }: InventoryHi
               No hay movimientos registrados para este artículo.
             </div>
           ) : (
-            <div className="space-y-1 pr-3">
+            <div className="space-y-1 pr-1 sm:pr-3">
               {movements.map((mov) => {
                 const cfg = movementConfig[mov.movement_type] || defaultConfig;
                 const Icon = cfg.icon;
