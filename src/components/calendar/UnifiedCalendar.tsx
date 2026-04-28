@@ -319,18 +319,18 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                                 {dayEvents.length} {dayEvents.length === 1 ? 'evento' : 'eventos'}
                               </Badge>
                             </div>
-                            <div className="space-y-1.5 pl-2 border-l-2 border-muted ml-5">
+                            <div className="ml-2 space-y-1.5 border-l-2 border-muted pl-2 sm:ml-5">
                               {dayEvents.map((event) => (
                                 <button
                                   key={event.id}
                                   onClick={() => handleEventClick(event)}
-                                  className="w-[calc(100%-12px)] text-left rounded-lg border p-3 transition-all hover:shadow-sm hover:border-primary/30 group flex items-start gap-3"
+                                  className="group flex w-[calc(100%-12px)] items-start gap-3 rounded-lg border p-3 text-left transition-all hover:border-primary/30 hover:shadow-sm"
                                 >
                                   <div className={cn('rounded-md p-1.5 mt-0.5 shrink-0', event.bgColor, event.color)}>
                                     {EVENT_ICONS[event.type]}
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-medium truncate">{event.title}</p>
+                                    <p className="break-words text-sm font-medium sm:truncate">{event.title}</p>
                                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                                       {event.description}
                                     </p>
@@ -372,7 +372,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
 
                 {/* Grid */}
                 <div className="min-h-0 flex-1 overflow-y-auto">
-                  <div className="grid grid-cols-7 gap-1">
+                  <div className="grid min-w-[640px] grid-cols-7 gap-1 sm:min-w-0">
                     {calendarDays.map((day) => {
                       const dayEvents = getEventsForDay(day);
                       const isCurrentMonth = isSameMonth(day, currentDate);
@@ -385,7 +385,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                           onClick={() => setSelectedDay(day)}
                           className={cn(
                             'p-1.5 border rounded-lg transition-all text-left',
-                            view === 'week' ? 'min-h-[180px]' : 'min-h-[85px]',
+                            view === 'week' ? 'min-h-[180px]' : 'min-h-[72px] sm:min-h-[85px]',
                             isCurrentMonth ? 'bg-background hover:bg-accent/30' : 'bg-muted/20',
                             isSelected && 'ring-2 ring-primary/60 bg-primary/5',
                             isCurrentDay && !isSelected && 'ring-1 ring-primary/40',
