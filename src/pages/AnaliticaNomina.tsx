@@ -393,7 +393,7 @@ export default function AnaliticaNomina() {
       insights,
       alerts,
     };
-  }, [assignments, filteredConfigs, filteredNovelties, shiftCycles, shifts, startDate, endDate, workSchedules]);
+  }, [assignments, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, shiftCycles, shifts, startDate, endDate, workSchedules]);
 
   if (isLoading) {
     return (
@@ -451,6 +451,10 @@ export default function AnaliticaNomina() {
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard title="Novedades mensuales" value={analytics.kpis.totalNovelties} detail="Total en el rango filtrado" icon={BarChart3} trend="neutral" />
+        <KpiCard title="Horas por jornada" value={numberFormatter.format(analytics.kpis.hoursPerWorkday)} detail="Horas de novedades / jornadas" icon={Clock} trend={analytics.kpis.hoursPerWorkday <= 1 ? 'up' : 'down'} />
+        <KpiCard title="Empleados impactados" value={analytics.kpis.impactedEmployees} detail="Con al menos una novedad" icon={Users} trend="neutral" />
+        <KpiCard title="Monto estimado afectado" value={currencyFormatter.format(analytics.kpis.estimatedImpact)} detail="Estimado por salario y tipo" icon={DollarSign} trend={analytics.kpis.estimatedImpact > 0 ? 'down' : 'neutral'} />
         <KpiCard title="Empleados programables" value={analytics.kpis.activeEmployeeCount} detail="Con configuración de tiempo activa" icon={Users} trend="neutral" />
         <KpiCard title="Cobertura jornadas" value={`${analytics.kpis.coverage}%`} detail={`${integerFormatter.format(analytics.kpis.assignedWorkDays)} jornadas laborales asignadas`} icon={CheckCircle2} trend={analytics.kpis.coverage >= 85 ? 'up' : 'down'} />
         <KpiCard title="Horas programadas" value={integerFormatter.format(analytics.kpis.plannedHours)} detail="Estimadas desde turnos asignados" icon={Clock} trend="neutral" />
@@ -515,6 +519,23 @@ export default function AnaliticaNomina() {
               <Bar yAxisId="left" dataKey="descansos" name="Descansos" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
               <Area yAxisId="right" type="monotone" dataKey="horasExtra" name="Horas extra" stroke="hsl(var(--warning))" fill="hsl(var(--warning))" fillOpacity={0.18} />
               <Line yAxisId="right" type="monotone" dataKey="ausencias" name="Ausencias" stroke="hsl(var(--destructive))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="KPIs mensuales: novedades, empleados e impacto" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.monthlyTrend} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => name === 'Monto estimado' ? currencyFormatter.format(Number(value)) : value} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="novedades" name="Novedades" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="empleadosImpactados" name="Empleados impactados" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="left" type="monotone" dataKey="horasPorJornada" name="Horas por jornada" stroke="hsl(var(--warning))" strokeWidth={3} />
+              <Area yAxisId="right" type="monotone" dataKey="montoEstimado" name="Monto estimado" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.18} />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
