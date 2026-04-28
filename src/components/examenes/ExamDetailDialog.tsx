@@ -55,7 +55,7 @@ export function ExamDetailDialog({ exam, open, onOpenChange }: ExamDetailDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:w-full sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-xl">
             <Stethoscope className="w-5 h-5 text-primary" />
@@ -93,7 +93,7 @@ export function ExamDetailDialog({ exam, open, onOpenChange }: ExamDetailDialogP
           </div>
 
           {/* Dates Info */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             <div className="card-elevated p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-4 h-4 text-primary" />
@@ -173,7 +173,7 @@ export function ExamDetailDialog({ exam, open, onOpenChange }: ExamDetailDialogP
               <Building2 className="w-4 h-4 text-primary" />
               <h4 className="font-semibold text-foreground">Información del Proveedor</h4>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">IPS / Proveedor</p>
                 <p className="font-medium text-foreground">{exam.provider}</p>
