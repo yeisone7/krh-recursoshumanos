@@ -161,13 +161,13 @@ export function DisciplinaryDetailDialog({
                 {nextAction && process.status !== 'cerrado' && (
                   <Card className="border-primary/20 bg-primary/5">
                     <CardContent className="py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-center gap-2">
                           <ChevronRight className="h-5 w-5 text-primary" />
                           <span className="font-medium">Siguiente paso:</span>
                           <span className="text-muted-foreground">{nextAction}</span>
                         </div>
-                        <Button onClick={handleAdvanceStatus} disabled={advanceStatus.isPending}>
+                        <Button onClick={handleAdvanceStatus} disabled={advanceStatus.isPending} className="w-full sm:w-auto">
                           {advanceStatus.isPending ? 'Procesando...' : nextAction}
                         </Button>
                       </div>
@@ -176,7 +176,7 @@ export function DisciplinaryDetailDialog({
                 )}
 
                 {/* Info Cards */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -185,15 +185,15 @@ export function DisciplinaryDetailDialog({
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between">
                         <span className="text-muted-foreground">Fecha de los hechos:</span>
                         <span>{formatDate(process.fault_date)}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between">
                         <span className="text-muted-foreground">Apertura:</span>
                         <span>{formatDate(process.opening_date)}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between">
                         <span className="text-muted-foreground">Notificación:</span>
                         <span>{formatDate(process.notification_date)}</span>
                       </div>
