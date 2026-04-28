@@ -408,16 +408,16 @@ export default function AnaliticasEvaluaciones() {
 
       {/* Comparativo */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
+        <CardHeader className="flex flex-col gap-3 p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="min-w-0">
             <CardTitle>Resumen Comparativo</CardTitle>
             <CardDescription className="mt-1">
               Compara puntajes de todos los empleados evaluados en un ciclo
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto lg:items-center">
             <Select value={compareCycleId} onValueChange={setCompareCycleId}>
-              <SelectTrigger className="w-[240px]">
+              <SelectTrigger className="w-full sm:w-[240px]">
                 <SelectValue placeholder="Seleccionar ciclo" />
               </SelectTrigger>
               <SelectContent>
@@ -427,14 +427,14 @@ export default function AnaliticasEvaluaciones() {
               </SelectContent>
             </Select>
             {compareEvaluations.length > 0 && (
-              <Button variant="outline" size="sm" onClick={handleExportComparative}>
+              <Button variant="outline" size="sm" onClick={handleExportComparative} className="w-full sm:w-auto">
                 <FileSpreadsheet className="h-4 w-4 mr-1.5" />
                 Excel
               </Button>
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
           {!compareCycleId ? (
             <p className="text-muted-foreground text-center py-8">
               Selecciona un ciclo para ver el comparativo
@@ -445,7 +445,7 @@ export default function AnaliticasEvaluaciones() {
             </p>
           ) : (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
                 <div className="bg-muted/50 rounded-lg p-3 text-center">
                   <p className="text-xs text-muted-foreground">Promedio</p>
                   <p className="text-2xl font-bold text-foreground">{compareAvg}/100</p>
@@ -462,7 +462,8 @@ export default function AnaliticasEvaluaciones() {
                 </div>
               </div>
 
-              <Table>
+              <div className="w-full overflow-x-auto rounded-md border">
+              <Table className="min-w-[680px] table-fixed sm:table-auto">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">#</TableHead>
@@ -502,6 +503,7 @@ export default function AnaliticasEvaluaciones() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </div>
           )}
         </CardContent>
