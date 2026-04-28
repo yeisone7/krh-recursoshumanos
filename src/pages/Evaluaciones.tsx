@@ -797,7 +797,7 @@ export default function Evaluaciones() {
       <Button
         type="button"
         size="icon"
-        className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg sm:hidden"
+        className="fixed bottom-36 right-4 z-40 h-14 w-14 rounded-full shadow-lg sm:hidden"
         onClick={handleNewAction}
         aria-label={newButtonLabel}
         title={newButtonLabel}
