@@ -377,6 +377,43 @@ export default function TiposContrato() {
         editItem={editItem}
       />
 
+      <Dialog open={!!previewItem} onOpenChange={(open) => { if (!open) { setPreviewItem(null); if (previewUrl) URL.revokeObjectURL(previewUrl); setPreviewUrl(null); } }}>
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-4xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 px-4 pt-4 sm:px-6 sm:pt-6">
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" />
+              Vista previa de plantilla
+            </DialogTitle>
+            {previewItem && <p className="break-words text-sm text-muted-foreground">{previewItem.template_file_name}</p>}
+          </DialogHeader>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+            {previewLoading ? (
+              <div className="flex min-h-[320px] items-center justify-center text-muted-foreground">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Cargando vista previa...
+              </div>
+            ) : previewError ? (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">{previewError}</div>
+            ) : previewKind === 'pdf' && previewUrl ? (
+              <iframe title="Vista previa de plantilla" src={previewUrl} className="h-[65dvh] w-full rounded-lg border border-border bg-background" />
+            ) : previewKind === 'docx' ? (
+              <pre className="min-h-[320px] whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/30 p-4 text-sm text-foreground font-sans">{previewText || 'La plantilla no contiene texto visible.'}</pre>
+            ) : null}
+          </div>
+
+          <DialogFooter className="shrink-0 flex-col-reverse gap-2 border-t border-border px-4 py-4 sm:flex-row sm:gap-0 sm:px-6">
+            <Button variant="outline" onClick={() => setPreviewItem(null)} className="w-full sm:w-auto">Cerrar</Button>
+            {previewItem?.template_url && (
+              <Button onClick={() => downloadTemplate(previewItem.template_url!, previewItem.template_file_name || 'plantilla.docx')} className="w-full sm:w-auto">
+                <Download className="mr-2 h-4 w-4" />
+                Descargar
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden">
           <AlertDialogHeader className="shrink-0">
