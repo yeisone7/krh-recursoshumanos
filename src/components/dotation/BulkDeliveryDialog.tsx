@@ -20,7 +20,6 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -200,9 +199,9 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl flex items-center gap-2">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-3xl flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
+        <DialogHeader className="pr-12">
+          <DialogTitle className="font-display text-lg flex items-center gap-2 sm:text-xl">
             <Users className="w-5 h-5 text-primary" />
             Entrega Masiva por Centro
           </DialogTitle>
@@ -212,7 +211,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
         </DialogHeader>
 
         {step === 'config' ? (
-          <div className="space-y-5 py-2">
+          <div className="space-y-5 overflow-y-auto py-2 pr-1">
             <div className="space-y-2">
               <Label>Centro de Operación *</Label>
               <SearchableSelect
@@ -223,7 +222,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Fecha de Entrega *</Label>
                 <Popover>
@@ -293,8 +292,8 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
             </div>
 
             {/* Table */}
-            <ScrollArea className="flex-1 border rounded-lg">
-              <Table>
+            <div className="flex-1 min-h-0 overflow-auto rounded-lg border overscroll-x-contain">
+              <Table className="min-w-[760px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">
@@ -346,10 +345,10 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
                   ))}
                 </TableBody>
               </Table>
-            </ScrollArea>
+            </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-2 border-t">
+            <div className="grid grid-cols-1 gap-2 pt-2 border-t sm:flex sm:items-center sm:justify-between">
               <Button variant="outline" onClick={() => setStep('config')}>
                 ← Volver
               </Button>

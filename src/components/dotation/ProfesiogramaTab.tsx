@@ -220,16 +220,16 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Profesiograma de Dotación</h2>
           <p className="text-sm text-muted-foreground">
             Define qué dotación corresponde a cada combinación de Centro + Cargo
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
           {selectedIds.size > 0 && (
-            <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5">
+            <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)} className="col-span-2 gap-1.5 sm:col-span-1">
               <Trash2 className="w-4 h-4" /> Eliminar ({selectedIds.size})
             </Button>
           )}
@@ -239,7 +239,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)} className="gap-1.5">
             <Upload className="w-4 h-4" /> Importar
           </Button>
-          <Button onClick={handleNew} className="gap-2">
+          <Button onClick={handleNew} className="col-span-2 gap-2 sm:col-span-1">
             <Plus className="w-4 h-4" /> Nuevo
           </Button>
         </div>
@@ -260,7 +260,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
             />
           </div>
           <Select value={centerFilter} onValueChange={setCenterFilter}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
+            <SelectTrigger className="h-9 w-full text-sm sm:w-[180px]">
               <SelectValue placeholder="Centro" />
             </SelectTrigger>
             <SelectContent>
@@ -271,7 +271,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
             </SelectContent>
           </Select>
           <Select value={positionFilter} onValueChange={setPositionFilter}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
+            <SelectTrigger className="h-9 w-full text-sm sm:w-[180px]">
               <SelectValue placeholder="Cargo" />
             </SelectTrigger>
             <SelectContent>
@@ -289,7 +289,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
         <div className="text-center py-12 text-muted-foreground card-elevated">
           <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>No hay profesiogramas configurados</p>
-          <div className="flex justify-center gap-2 mt-4">
+          <div className="grid grid-cols-1 gap-2 mt-4 sm:flex sm:justify-center">
             <Button onClick={handleNew} className="gap-2">
               <Plus className="w-4 h-4" /> Crear Profesiograma
             </Button>
@@ -341,7 +341,8 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                 </div>
               </div>
               {!collapsedCenters.has(group.centerId) && (
-              <Table>
+              <div className="overflow-x-auto overscroll-x-contain">
+              <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">
@@ -420,6 +421,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                   ))}
                 </TableBody>
               </Table>
+              </div>
               )}
             </div>
           ))}
@@ -459,14 +461,14 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
 
       {/* Single delete */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar profesiograma?</AlertDialogTitle>
             <AlertDialogDescription>
               Se eliminará este profesiograma y todos sus artículos asociados. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
               Eliminar
@@ -477,14 +479,14 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
 
       {/* Bulk delete */}
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar {selectedIds.size} profesiograma{selectedIds.size > 1 ? 's' : ''}?</AlertDialogTitle>
             <AlertDialogDescription>
               Se eliminarán los profesiogramas seleccionados y todos sus artículos asociados. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
             <AlertDialogCancel disabled={isBulkDeleting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleBulkDelete} disabled={isBulkDeleting} className="bg-destructive text-destructive-foreground gap-2">
               {isBulkDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
