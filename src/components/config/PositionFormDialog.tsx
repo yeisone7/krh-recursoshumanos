@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -140,13 +141,14 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
+        <DialogHeader className="shrink-0">
           <DialogTitle>{isEditing ? 'Editar Cargo' : 'Nuevo Cargo'}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto pr-1" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             <FormField
               control={form.control}
               name="name"
@@ -161,7 +163,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="code"
@@ -255,7 +257,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="min_salary"
@@ -321,17 +323,19 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            </div>
+
+            <DialogFooter className="shrink-0 flex-col-reverse gap-2 pt-4 sm:flex-row sm:gap-0">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createPosition.isPending || updatePosition.isPending}>
+              <Button type="submit" disabled={createPosition.isPending || updatePosition.isPending} className="w-full sm:w-auto">
                 {(createPosition.isPending || updatePosition.isPending) && (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 )}
                 {isEditing ? 'Guardar' : 'Crear'}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>
