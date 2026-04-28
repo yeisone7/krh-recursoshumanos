@@ -136,14 +136,14 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Profesiograma de Exámenes Médicos</h2>
           <p className="text-sm text-muted-foreground">
             Define qué exámenes médicos corresponden a cada combinación de Centro + Cargo
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:items-center">
           {selectedIds.size > 0 && (
             <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)} className="gap-1.5">
               <Trash2 className="w-4 h-4" /> Eliminar ({selectedIds.size})
@@ -171,7 +171,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
             />
           </div>
           <Select value={centerFilter} onValueChange={setCenterFilter}>
-            <SelectTrigger className="w-[180px] h-9 text-sm">
+            <SelectTrigger className="h-9 w-full text-sm sm:w-[180px]">
               <SelectValue placeholder="Centro" />
             </SelectTrigger>
             <SelectContent>
@@ -224,7 +224,9 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                 </div>
               </div>
               {!collapsedCenters.has(group.centerId) && (
-                <Table>
+                <>
+                <div className="hidden overflow-x-auto sm:block">
+                <Table className="min-w-[680px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10">
@@ -291,6 +293,37 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
+                <div className="space-y-3 p-3 sm:hidden">
+                  {group.items.map((prof) => (
+                    <div key={prof.id} className={`card-elevated min-w-0 space-y-3 p-3 ${selectedIds.has(prof.id) ? 'border-primary/30 bg-primary/5' : ''}`}>
+                      <div className="flex items-start gap-3">
+                        <Checkbox checked={selectedIds.has(prof.id)} onCheckedChange={() => toggleSelect(prof.id)} />
+                        <div className="min-w-0 flex-1">
+                          <p className="break-words text-sm font-medium text-foreground">{prof.positions?.name || getPositionName(prof.position_id)}</p>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {prof.items.slice(0, 3).map((item, i) => (
+                              <Badge key={i} variant={item.is_required ? 'secondary' : 'outline'} className={`text-xs ${!item.is_required ? 'border-dashed' : ''}`}>
+                                {item.exam_catalog?.name || 'Examen'}{!item.is_required && ' ⓘ'}
+                              </Badge>
+                            ))}
+                            {prof.items.length > 3 && <Badge variant="outline" className="text-xs">+{prof.items.length - 3} más</Badge>}
+                            {prof.items.length === 0 && <span className="text-sm text-muted-foreground">Sin exámenes</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 border-t border-border pt-2">
+                        <Button variant="outline" size="sm" className="flex-1" onClick={() => handleEdit(prof)}>
+                          <Pencil className="w-4 h-4 mr-2" /> Editar
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteId(prof.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                </>
               )}
             </div>
           ))}
@@ -306,7 +339,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar profesiograma</AlertDialogTitle>
             <AlertDialogDescription>
@@ -323,7 +356,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
       </AlertDialog>
 
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar {selectedIds.size} profesiograma(s)</AlertDialogTitle>
             <AlertDialogDescription>
