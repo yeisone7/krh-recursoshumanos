@@ -146,12 +146,12 @@ export function OrgChart({ positions, areas, employees, isLoading }: OrgChartPro
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center gap-6 p-8">
-        <Skeleton className="h-32 w-64" />
-        <div className="flex gap-8">
-          <Skeleton className="h-32 w-48" />
-          <Skeleton className="h-32 w-48" />
-          <Skeleton className="h-32 w-48" />
+      <div className="flex flex-col items-center gap-4 p-4 sm:gap-6 sm:p-8">
+        <Skeleton className="h-28 w-full max-w-64 sm:h-32" />
+        <div className="grid w-full max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-8">
+          <Skeleton className="h-28 w-full sm:h-32" />
+          <Skeleton className="h-28 w-full sm:h-32" />
+          <Skeleton className="h-28 w-full sm:h-32" />
         </div>
       </div>
     );
@@ -159,10 +159,10 @@ export function OrgChart({ positions, areas, employees, isLoading }: OrgChartPro
 
   if (positionTree.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-        <Briefcase className="w-16 h-16 mb-4 opacity-50" />
-        <p className="text-lg font-medium">No hay cargos configurados</p>
-        <p className="text-sm">
+      <div className="flex flex-col items-center justify-center px-4 py-12 text-center text-muted-foreground sm:py-16">
+        <Briefcase className="w-12 h-12 mb-4 opacity-50 sm:h-16 sm:w-16" />
+        <p className="text-base font-medium sm:text-lg">No hay cargos configurados</p>
+        <p className="max-w-md text-sm">
           Configura los cargos y asigna cargos superiores en Configuración para ver el organigrama
         </p>
       </div>
@@ -170,8 +170,8 @@ export function OrgChart({ positions, areas, employees, isLoading }: OrgChartPro
   }
 
   return (
-    <div className="w-full">
-      <div className="flex justify-end gap-2 mb-6">
+    <div className="w-full min-w-0">
+      <div className="mb-4 flex flex-wrap justify-end gap-2 px-4 sm:mb-6 sm:px-0">
         <button onClick={expandAll} className="text-sm text-primary hover:underline">
           Expandir todo
         </button>
@@ -181,12 +181,12 @@ export function OrgChart({ positions, areas, employees, isLoading }: OrgChartPro
         </button>
       </div>
 
-      <div className="overflow-x-auto pb-8">
-        <div className="inline-flex flex-col items-center min-w-full px-8">
+      <div className="overflow-x-auto overscroll-x-contain pb-6 [scrollbar-width:none] sm:pb-8 [&::-webkit-scrollbar]:hidden">
+        <div className="inline-flex min-w-max flex-col items-center px-4 sm:min-w-full sm:px-8">
           {positionTree.length === 1 ? (
             renderNode(positionTree[0], 0)
           ) : (
-            <div className="flex gap-12">
+            <div className="flex gap-6 sm:gap-12">
               {positionTree.map(root => renderNode(root, 0))}
             </div>
           )}
