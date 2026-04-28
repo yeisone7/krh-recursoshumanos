@@ -747,7 +747,7 @@ export default function Configuracion() {
                           OpenAI API Key
                           <span className="text-muted-foreground font-normal">(Opcional)</span>
                         </Label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                           <div className="relative flex-1">
                             <Input
                               type={showOpenaiKey ? 'text' : 'password'}
@@ -776,7 +776,7 @@ export default function Configuracion() {
 
               {/* HeyGen Avatar Card */}
               <div className="w-full rounded-xl border-2 border-border bg-card">
-                <div className="flex items-start gap-4 p-4">
+                <div className="flex items-start gap-3 p-4 sm:gap-4">
                   <div className="flex items-center gap-3 mt-0.5">
                     <div className="h-10 w-10 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
                       <Video className="h-5 w-5 text-violet-600 dark:text-violet-400" />
@@ -795,7 +795,7 @@ export default function Configuracion() {
                       <Key className="h-3.5 w-3.5 text-muted-foreground" />
                       HeyGen API Key
                     </Label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <div className="relative flex-1">
                         <Input
                           type={showHeygenKey ? 'text' : 'password'}
@@ -867,7 +867,7 @@ export default function Configuracion() {
                 </div>
               </div>
 
-              <Button onClick={handleSaveAiConfig} disabled={savingAi} className="bg-primary hover:bg-primary/90">
+              <Button onClick={handleSaveAiConfig} disabled={savingAi} className="w-full bg-primary hover:bg-primary/90 sm:w-auto">
                 {savingAi ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Guardar Configuración IA
               </Button>
