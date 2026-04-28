@@ -231,7 +231,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
             <Collapsible defaultOpen>
               <SectionHeader icon={GraduationCap} num={2} label="Perfil del Cargo" count={form.specific_knowledge.length + form.skills.length} />
               <CollapsibleContent className="space-y-4 pt-4 pl-1">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <FieldLabel>Nivel de Educación</FieldLabel>
                     <Select value={form.education_level} onValueChange={v => updateField('education_level', v)}>
@@ -255,7 +255,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
 
                 {/* Conocimientos */}
                 <div className="rounded-lg border border-border/50 p-4 bg-muted/20">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-sm font-medium text-foreground">Conocimientos Específicos</span>
                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={addKnowledge}>
                       <Plus className="w-3 h-3 mr-1" />Agregar
@@ -266,10 +266,10 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                   )}
                   <div className="space-y-2">
                     {form.specific_knowledge.map((k, i) => (
-                      <div key={i} className="flex gap-2 items-center">
+                      <div key={i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Input className="flex-1" placeholder="Tema" value={k.topic} onChange={e => updateKnowledge(i, 'topic', e.target.value)} />
                         <Select value={k.level} onValueChange={v => updateKnowledge(i, 'level', v)}>
-                          <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="w-full sm:w-[120px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="básico">Básico</SelectItem>
                             <SelectItem value="intermedio">Intermedio</SelectItem>
@@ -286,7 +286,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
 
                 {/* Competencias */}
                 <div className="rounded-lg border border-border/50 p-4 bg-muted/20">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <span className="text-sm font-medium text-foreground">Competencias / Habilidades</span>
                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={addSkill}>
                       <Plus className="w-3 h-3 mr-1" />Agregar
@@ -297,10 +297,10 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                   )}
                   <div className="space-y-2">
                     {form.skills.map((s, i) => (
-                      <div key={i} className="flex gap-2 items-center">
+                      <div key={i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Input className="flex-1" placeholder="Competencia" value={s.name} onChange={e => updateSkill(i, 'name', e.target.value)} />
                         <Select value={s.level} onValueChange={v => updateSkill(i, 'level', v)}>
-                          <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="w-full sm:w-[120px]"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="bajo">Bajo</SelectItem>
                             <SelectItem value="medio">Medio</SelectItem>
