@@ -173,22 +173,22 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0 rounded-xl overflow-hidden">
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-xl p-0">
         {/* Header */}
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/50">
-          <div className="flex items-center gap-3">
+        <DialogHeader className="border-b border-border/50 px-4 pb-4 pt-4 sm:px-6 sm:pt-6">
+          <div className="flex min-w-0 items-center gap-3">
             <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${isEditing ? 'bg-secondary/10' : 'bg-primary/10'}`}>
               <TitleIcon className={`h-5 w-5 ${isEditing ? 'text-secondary' : 'text-primary'}`} />
             </div>
-            <div>
+            <div className="min-w-0">
               <DialogTitle className="text-base font-semibold">{titleText}</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-0.5">{positionName}</p>
+              <p className="mt-0.5 break-words text-sm text-muted-foreground">{positionName}</p>
             </div>
           </div>
         </DialogHeader>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           <div className="space-y-5">
 
             {/* 1. Identificación */}
@@ -204,7 +204,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     onChange={e => updateField('purpose', e.target.value)}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <FieldLabel>Reporta a</FieldLabel>
                     <Input className="mt-1.5" placeholder="Cargo del jefe inmediato" value={form.reports_to} onChange={e => updateField('reports_to', e.target.value)} />
@@ -214,7 +214,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <Input className="mt-1.5" placeholder="Cargos bajo supervisión" value={form.supervises} onChange={e => updateField('supervises', e.target.value)} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <FieldLabel>N° de Cargos</FieldLabel>
                     <Input className="mt-1.5" type="number" min={1} value={form.num_positions} onChange={e => updateField('num_positions', parseInt(e.target.value) || 1)} />
