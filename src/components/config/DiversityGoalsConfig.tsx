@@ -65,7 +65,7 @@ export function DiversityGoalsConfig() {
   return (
     <Card className="border-accent/30">
       <CardHeader>
-        <div className="flex items-center gap-3">
+        <div className="flex items-start gap-3">
           <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center">
             <Target className="h-5 w-5 text-accent-foreground" />
           </div>
@@ -73,7 +73,7 @@ export function DiversityGoalsConfig() {
             <CardTitle className="text-base">Metas de Diversidad e Inclusión</CardTitle>
             <CardDescription>Objetivos porcentuales mínimos para procesos de selección</CardDescription>
           </div>
-          <Switch checked={goals.enabled} onCheckedChange={(v) => setGoals(g => ({ ...g, enabled: v }))} />
+          <Switch className="shrink-0" checked={goals.enabled} onCheckedChange={(v) => setGoals(g => ({ ...g, enabled: v }))} />
         </div>
       </CardHeader>
       {goals.enabled && (
@@ -97,7 +97,7 @@ export function DiversityGoalsConfig() {
           </div>
 
           <div className="p-3 border rounded-lg space-y-3 bg-muted/30">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-3">
               <Label className="text-xs font-medium flex items-center gap-1.5">
                 <Info className="w-3.5 h-3.5 text-muted-foreground" />
                 Alertar cuando el proceso no cumpla con las metas
@@ -112,7 +112,7 @@ export function DiversityGoalsConfig() {
                 <Label className="text-xs text-muted-foreground">
                   Alertar al cerrar vacante si algún indicador está por debajo del umbral
                 </Label>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <Input
                     type="number"
                     min={0}
@@ -127,7 +127,7 @@ export function DiversityGoalsConfig() {
             )}
           </div>
 
-          <Button onClick={handleSave} disabled={updateConfig.isPending} size="sm">
+          <Button onClick={handleSave} disabled={updateConfig.isPending} size="sm" className="w-full sm:w-auto">
             {updateConfig.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             Guardar Metas
           </Button>
