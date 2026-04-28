@@ -167,11 +167,11 @@ export default function Cesantias() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="deposits" className="space-y-4">
-        <TabsList className="w-full justify-start overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto">
-          <TabsTrigger value="deposits">Depósitos al Fondo</TabsTrigger>
-          <TabsTrigger value="interests">Intereses</TabsTrigger>
-          <TabsTrigger value="withdrawals">Retiros Parciales</TabsTrigger>
+      <Tabs defaultValue="deposits" className="space-y-4 min-w-0">
+        <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:inline-flex sm:w-auto">
+          <TabsTrigger value="deposits" className="shrink-0 whitespace-nowrap text-xs sm:text-sm">Depósitos al Fondo</TabsTrigger>
+          <TabsTrigger value="interests" className="shrink-0 whitespace-nowrap text-xs sm:text-sm">Intereses</TabsTrigger>
+          <TabsTrigger value="withdrawals" className="shrink-0 whitespace-nowrap text-xs sm:text-sm">Retiros Parciales</TabsTrigger>
         </TabsList>
 
         {/* Deposits Tab */}

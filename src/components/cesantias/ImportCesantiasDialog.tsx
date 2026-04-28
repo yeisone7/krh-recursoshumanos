@@ -229,9 +229,9 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-4xl overflow-y-auto sm:w-full">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-4xl overflow-y-auto p-4 sm:w-full sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <FileSpreadsheet className="w-5 h-5" />
             {title}
           </DialogTitle>
@@ -255,7 +255,7 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-                <Button onClick={() => fileInputRef.current?.click()}>
+                <Button onClick={() => fileInputRef.current?.click()} className="w-full sm:w-auto">
                   <Upload className="w-4 h-4 mr-2" />
                   Seleccionar Archivo
                 </Button>
@@ -298,7 +298,7 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
               </span>
             </div>
 
-            <div className="max-h-[400px] overflow-auto rounded-lg border">
+            <div className="max-h-[55vh] overflow-auto rounded-lg border sm:max-h-[400px]">
               <Table className="min-w-[760px]">
                 <TableHeader>
                   <TableRow>
@@ -353,7 +353,7 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
               </Table>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
+            <div className="sticky bottom-0 -mx-4 grid grid-cols-1 gap-2 border-t border-border bg-background/95 px-4 pt-3 pb-1 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-0">
               <Button variant="outline" onClick={() => { setParsedRows([]); setStep('upload'); }}>
                 Volver
               </Button>
@@ -368,7 +368,7 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
           <div className="space-y-4 text-center py-6">
             <CheckCircle className="w-16 h-16 mx-auto text-success" />
             <h3 className="text-lg font-semibold">Importación Completada</h3>
-            <div className="flex justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4">
               <Badge className="bg-success/20 text-success">{importResult.success} importados</Badge>
               {importResult.errors > 0 && (
                 <Badge variant="destructive">{importResult.errors} con errores</Badge>
