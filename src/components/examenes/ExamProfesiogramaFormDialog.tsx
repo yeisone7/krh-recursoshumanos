@@ -177,6 +177,7 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
                 <p className="text-sm">No hay exámenes. Haz clic en "Agregar" para comenzar.</p>
               </div>
             ) : (
+              <>
               <div className="hidden overflow-x-auto sm:block">
               <Table className="min-w-[520px]">
                 <TableHeader>
@@ -249,6 +250,7 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
                   </div>
                 ))}
               </div>
+              </>
             )}
           </div>
         </div>
