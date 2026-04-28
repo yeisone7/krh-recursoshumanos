@@ -154,7 +154,7 @@ export function SecurityTab({
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={signingOutAll}>
+            <Button variant="destructive" disabled={signingOutAll} className="w-full sm:w-auto">
                   {signingOutAll ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
@@ -235,7 +235,7 @@ export function SecurityTab({
             </div>
           )}
 
-          <Button onClick={handleSaveTimeout} disabled={savingTimeout}>
+          <Button onClick={handleSaveTimeout} disabled={savingTimeout} className="w-full sm:w-auto">
             {savingTimeout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             Guardar Configuración
           </Button>
@@ -311,7 +311,7 @@ export function SecurityTab({
             </div>
           )}
 
-          <Button onClick={handleSaveLockout} disabled={savingLockout}>
+          <Button onClick={handleSaveLockout} disabled={savingLockout} className="w-full sm:w-auto">
             {savingLockout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             Guardar Configuración
           </Button>
@@ -365,7 +365,7 @@ export function SecurityTab({
             </div>
           )}
 
-          <Button onClick={handleSaveUpdateCheck} disabled={savingUpdateCheck}>
+          <Button onClick={handleSaveUpdateCheck} disabled={savingUpdateCheck} className="w-full sm:w-auto">
             {savingUpdateCheck ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             Guardar Configuración
           </Button>
