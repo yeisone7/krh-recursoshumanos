@@ -101,13 +101,14 @@ export function DecisionFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-lg flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
+        <DialogHeader className="px-4 pb-3 pt-4 pr-12 sm:px-6 sm:pt-6">
           <DialogTitle>Registrar Decisión</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6">
             <FormField
               control={form.control}
               name="sanction_type"
@@ -134,7 +135,7 @@ export function DecisionFormDialog({
             />
 
             {needsSuspensionDates && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="sanction_days"
@@ -242,15 +243,17 @@ export function DecisionFormDialog({
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-4">
+            </div>
+            <div className="grid grid-cols-1 gap-2 border-t bg-background p-4 sm:flex sm:justify-end sm:px-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                className="w-full sm:w-auto"
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={setDecision.isPending}>
+              <Button type="submit" disabled={setDecision.isPending} className="w-full sm:w-auto">
                 {setDecision.isPending ? 'Guardando...' : 'Registrar Decisión'}
               </Button>
             </div>
