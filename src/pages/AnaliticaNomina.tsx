@@ -75,6 +75,9 @@ const numberFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 
 const integerFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 const currencyFormatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
+const formatCopInput = (value: number) => `COP ${integerFormatter.format(value || 0)}`;
+const parseCopInput = (value: string) => Number(value.replace(/\D/g, '')) || 0;
+
 const overtimeTypes = new Set<NoveltyType>(['hedo', 'heno', 'hedf', 'henf', 'rn', 'rnf', 'dominical_trabajado', 'festivo_trabajado']);
 const absenceTypes = new Set<NoveltyType>(['incapacidad', 'vacaciones', 'permiso']);
 const regularTypes = new Set<NoveltyType>(['jornada', 'descanso_remunerado']);
@@ -710,7 +713,7 @@ export default function AnaliticaNomina() {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><DollarSign className="h-4 w-4" /> Severidad global</div>
-                    <Input type="number" min={0} step={100000} value={severityThreshold} onChange={(event) => setSeverityThreshold(Number(event.target.value) || 0)} />
+                    <Input inputMode="numeric" value={formatCopInput(severityThreshold)} onChange={(event) => setSeverityThreshold(parseCopInput(event.target.value))} aria-label="Severidad global en pesos colombianos" />
                   </div>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2 xl:col-span-2">
@@ -727,7 +730,7 @@ export default function AnaliticaNomina() {
                       </div>
                       <div className="space-y-1">
                         <span className="text-[11px] font-medium text-muted-foreground">Severidad mínima COP</span>
-                        <Input type="number" min={0} step={100000} placeholder="Ej. 1000000" aria-label="Severidad mínima por tipo en pesos" value={typeAlertThresholds[selectedAlertTypeKey]?.severity ?? severityThreshold} onChange={(event) => updateTypeAlertThreshold('severity', Number(event.target.value) || 0)} />
+                        <Input inputMode="numeric" placeholder="COP 1.000.000" aria-label="Severidad mínima por tipo en pesos colombianos" value={formatCopInput(typeAlertThresholds[selectedAlertTypeKey]?.severity ?? severityThreshold)} onChange={(event) => updateTypeAlertThreshold('severity', parseCopInput(event.target.value))} />
                       </div>
                     </div>
                   </div>
@@ -747,7 +750,7 @@ export default function AnaliticaNomina() {
                       </div>
                       <div className="space-y-1">
                         <span className="text-[11px] font-medium text-muted-foreground">Severidad mínima COP</span>
-                        <Input type="number" min={0} step={100000} placeholder="Ej. 1000000" aria-label="Severidad mínima por centro en pesos" value={centerAlertThresholds[selectedAlertCenterKey]?.severity ?? severityThreshold} onChange={(event) => updateCenterAlertThreshold('severity', Number(event.target.value) || 0)} />
+                        <Input inputMode="numeric" placeholder="COP 1.000.000" aria-label="Severidad mínima por centro en pesos colombianos" value={formatCopInput(centerAlertThresholds[selectedAlertCenterKey]?.severity ?? severityThreshold)} onChange={(event) => updateCenterAlertThreshold('severity', parseCopInput(event.target.value))} />
                       </div>
                     </div>
                   </div>
