@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
-import { Stethoscope, Syringe, Award, Calendar, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Stethoscope, Syringe, Award, Calendar, AlertTriangle, CheckCircle2, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { EmployeeV2WithRelations, certificationTypeLabels, vaccineTypeLabels } from '@/types/employee';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -26,6 +27,7 @@ const examTypeLabels: Record<string, string> = {
 const examResultLabels: Record<string, { label: string; color: string }> = {
   apto: { label: 'Apto', color: 'bg-success-light text-success' },
   apto_con_restricciones: { label: 'Apto con Restricciones', color: 'bg-warning-light text-warning' },
+  apto_restricciones: { label: 'Apto con Restricciones', color: 'bg-warning-light text-warning' },
   no_apto: { label: 'No Apto', color: 'bg-destructive/10 text-destructive' },
   pendiente: { label: 'Pendiente', color: 'bg-muted text-muted-foreground' },
 };
@@ -33,6 +35,7 @@ const examResultLabels: Record<string, { label: string; color: string }> = {
 export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) {
   const certifications = employee.certifications || [];
   const vaccinations = employee.vaccinations || [];
+  const examItemCount = exams.reduce((total, exam) => total + ((exam.items || []).length || 0), 0);
 
   if (isLoading) {
     return (
@@ -59,7 +62,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
         <TabsList className="grid h-auto w-full grid-cols-1 gap-1 sm:inline-flex sm:w-auto">
           <TabsTrigger value="exams" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Stethoscope className="w-4 h-4" />
-            Exámenes ({exams.length})
+            Exámenes ({examItemCount})
           </TabsTrigger>
           <TabsTrigger value="certifications" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
             <Award className="w-4 h-4" />
@@ -73,9 +76,10 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
 
         <TabsContent value="exams" className="mt-4">
           {exams.length > 0 ? (
-            <div className="space-y-3">
+            <Accordion type="multiple" className="space-y-3">
               {exams.map((exam: any, index: number) => {
-                const result = examResultLabels[exam.result] || examResultLabels.pendiente;
+                const items = exam.items || [];
+                const hasValidDate = exam.exam_date && !isNaN(new Date(exam.exam_date).getTime());
 
                 return (
                   <motion.div
@@ -84,51 +88,63 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                   >
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div className="space-y-2">
+                    <AccordionItem value={exam.id} className="rounded-lg border bg-card px-4 shadow-sm">
+                      <AccordionTrigger className="gap-3 py-4 text-left hover:no-underline">
+                        <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="min-w-0 space-y-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <Stethoscope className="w-4 h-4 text-primary" />
-                              <h4 className="font-medium">
-                                {examTypeLabels[exam.exam_type] || exam.exam_type}
-                              </h4>
-                              <Badge variant="outline" className={result.color}>
-                                {result.label}
-                              </Badge>
+                              <Stethoscope className="h-4 w-4 text-primary" />
+                              <h4 className="font-medium">{examTypeLabels[exam.exam_type] || exam.exam_type}</h4>
+                              <Badge variant="secondary">{items.length} examen(es)</Badge>
                             </div>
-
-                            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3" />
-                                <span>{format(new Date(exam.exam_date), "d MMM yyyy", { locale: es })}</span>
-                              </div>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{hasValidDate ? format(new Date(exam.exam_date), "d MMM yyyy", { locale: es }) : 'Sin fecha'}</span>
                               {exam.provider && <span>Proveedor: {exam.provider}</span>}
+                              {exam.doctor_name && <span>Médico: {exam.doctor_name}</span>}
                             </div>
-
-                            {exam.restrictions && (
-                              <p className="text-sm text-warning flex items-center gap-1">
-                                <AlertTriangle className="w-3 h-3" />
-                                {exam.restrictions}
-                              </p>
-                            )}
                           </div>
-
-                          {exam.next_exam_date && (
-                            <div className="text-left md:text-right">
-                              <p className="text-sm text-muted-foreground">Próximo examen</p>
-                              <p className="font-medium">
-                                {format(new Date(exam.next_exam_date), "d MMM yyyy", { locale: es })}
-                              </p>
-                            </div>
-                          )}
                         </div>
-                      </CardContent>
-                    </Card>
+                      </AccordionTrigger>
+                      <AccordionContent className="space-y-3">
+                        {exam.observations && <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">{exam.observations}</p>}
+                        {items.map((item: any) => {
+                          const result = examResultLabels[item.result] || examResultLabels.pendiente;
+                          const hasExpiration = item.expiration_date && !isNaN(new Date(item.expiration_date).getTime());
+
+                          return (
+                            <div key={item.id} className="rounded-lg border p-3">
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div className="min-w-0 space-y-2">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h5 className="font-medium">{item.exam_name}</h5>
+                                    <Badge variant="outline" className={result.color}>{result.label}</Badge>
+                                  </div>
+                                  {item.concept && <p className="text-sm text-muted-foreground">{item.concept}</p>}
+                                  {item.restrictions && (
+                                    <p className="flex items-start gap-1 text-sm text-warning">
+                                      <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                                      <span>{item.restrictions}</span>
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="space-y-2 text-sm sm:text-right">
+                                  {hasExpiration && <p><span className="text-muted-foreground">Vence: </span>{format(new Date(item.expiration_date), "d MMM yyyy", { locale: es })}</p>}
+                                  {item.document_url && (
+                                    <a href={item.document_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+                                      <FileText className="h-3 w-3" /> Documento
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </AccordionContent>
+                    </AccordionItem>
                   </motion.div>
                 );
               })}
-            </div>
+            </Accordion>
           ) : (
             <Card>
               <CardContent className="p-8 text-center">
