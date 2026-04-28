@@ -241,7 +241,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-2xl overflow-y-auto sm:w-full">
         <DialogHeader>
           <DialogTitle>
             {deposit ? 'Editar Depósito de Cesantías' : 'Nuevo Depósito de Cesantías'}
@@ -250,7 +250,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="employee_id"
@@ -287,7 +287,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="calculation_start_date"
@@ -317,7 +317,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <FormField
                 control={form.control}
                 name="base_salary"
@@ -361,7 +361,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="fund_name"
@@ -397,7 +397,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <FormField
                 control={form.control}
                 name="due_date"
@@ -461,7 +461,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="grid grid-cols-1 gap-2 pt-4 sm:flex sm:justify-end">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
