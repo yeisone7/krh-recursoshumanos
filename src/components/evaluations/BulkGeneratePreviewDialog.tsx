@@ -110,14 +110,15 @@ export function BulkGeneratePreviewDialog({
           </div>
         ) : (
           <ScrollArea className="max-h-[350px] rounded-md border">
-            <Table>
+            <div className="w-full overflow-x-auto">
+            <Table className="min-w-[760px] table-fixed sm:table-auto">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-10">#</TableHead>
-                  <TableHead>Empleado</TableHead>
-                  <TableHead>Documento</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Centro</TableHead>
+                  <TableHead className="w-[210px]">Empleado</TableHead>
+                  <TableHead className="w-[130px]">Documento</TableHead>
+                  <TableHead className="w-[190px]">Cargo</TableHead>
+                  <TableHead className="w-[190px]">Centro</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -125,21 +126,22 @@ export function BulkGeneratePreviewDialog({
                   <TableRow key={emp.id}>
                     <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                     <TableCell className="font-medium text-sm">
-                      {emp.first_name} {emp.last_name}
+                      <span className="block max-w-[200px] truncate">{emp.first_name} {emp.last_name}</span>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {emp.document_number}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {emp.work_info?.position_name || '-'}
+                      <span className="block max-w-[180px] truncate">{emp.work_info?.position_name || '-'}</span>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {emp.work_info?.operation_centers?.name || '-'}
+                      <span className="block max-w-[180px] truncate">{emp.work_info?.operation_centers?.name || '-'}</span>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            </div>
           </ScrollArea>
         )}
 
