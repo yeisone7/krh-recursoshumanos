@@ -706,6 +706,47 @@ export default function AnaliticaNomina() {
         </Card>
       )}
 
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <AlertTriangle className="h-5 w-5 text-warning" /> Alertas automáticas de nómina
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {analytics.automaticAlerts.length === 0 ? (
+            <div className="rounded-md border border-border p-4 text-sm text-muted-foreground">
+              No se detectan picos inusuales, empates de cobertura ni variaciones bruscas con los filtros actuales.
+            </div>
+          ) : analytics.automaticAlerts.map((alert) => {
+            const status = alertStatusOverrides[alert.id] || alert.estado;
+            return (
+              <div key={alert.id} className="rounded-md border border-border p-3">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold text-foreground">{alert.tipo}</p>
+                      <Badge variant="outline" className={cn(
+                        alert.severidad === 'Crítica' && 'bg-destructive/10 text-destructive border-destructive/20',
+                        alert.severidad === 'Alta' && 'bg-warning-light text-warning border-warning/20',
+                        alert.severidad === 'Media' && 'bg-primary-light text-primary border-primary/20'
+                      )}>{alert.severidad}</Badge>
+                      <Badge variant="outline" className={alertStatusStyles[status]}>{alertStatusLabels[status]}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{alert.periodo} · {alert.valor}</p>
+                    <p className="text-sm text-foreground">{alert.detalle}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <Button size="sm" variant={status === 'pendiente' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'pendiente' }))}>Pendiente</Button>
+                    <Button size="sm" variant={status === 'notificada' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'notificada' }))}>Notificada</Button>
+                    <Button size="sm" variant={status === 'cerrada' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'cerrada' }))}>Cerrada</Button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 xl:grid-cols-2">
         {[{ title: 'Priorización por tipo de novedad', rows: analytics.impactRankingByType }, { title: 'Priorización por centro', rows: analytics.impactRankingByCenter }].map((section) => (
           <Card key={section.title}>
