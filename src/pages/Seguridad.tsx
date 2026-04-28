@@ -55,14 +55,14 @@ export default function Seguridad() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-2xl font-bold text-foreground">Seguridad</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Seguridad</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Auditoría y políticas de seguridad del sistema
         </p>
       </motion.div>
@@ -73,25 +73,27 @@ export default function Seguridad() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-          <Tabs defaultValue="roles" className="space-y-4">
-          <TabsList>
-              <TabsTrigger value="roles" className="gap-2">
+          <Tabs defaultValue="roles" className="space-y-4 min-w-0">
+          <div className="w-full overflow-x-auto pb-1">
+            <TabsList className="inline-flex h-auto min-w-max justify-start">
+              <TabsTrigger value="roles" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
                 <ShieldCheck className="w-4 h-4" />
                 Roles y permisos
               </TabsTrigger>
-              <TabsTrigger value="quick-permissions" className="gap-2">
+              <TabsTrigger value="quick-permissions" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
                 <ShieldCheck className="w-4 h-4" />
                 Permisos rápidos
               </TabsTrigger>
-            <TabsTrigger value="audit" className="gap-2">
+            <TabsTrigger value="audit" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
               <History className="w-4 h-4" />
               Auditoría
             </TabsTrigger>
-            <TabsTrigger value="info" className="gap-2">
+            <TabsTrigger value="info" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
               <Info className="w-4 h-4" />
               Información
             </TabsTrigger>
           </TabsList>
+          </div>
 
           <TabsContent value="roles" className="space-y-4">
             <RolesManager />
