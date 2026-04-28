@@ -89,7 +89,7 @@ export default function Reportes() {
 
         {/* Ausencias */}
         <TabsContent value="ausencias">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <VacationReport />
             <LeavesReport />
             <IncapacityReport />
@@ -98,7 +98,7 @@ export default function Reportes() {
 
         {/* Nómina */}
         <TabsContent value="nomina">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <OvertimeReport />
             <CesantiasReport />
             <LoansReport />
@@ -108,7 +108,7 @@ export default function Reportes() {
 
         {/* Desarrollo */}
         <TabsContent value="desarrollo">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <TrainingReport />
             <DisciplinaryReport />
           </div>
@@ -116,7 +116,7 @@ export default function Reportes() {
 
         {/* Dotación */}
         <TabsContent value="dotacion">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <DotationReport />
             <InventoryMovementsReport />
           </div>
