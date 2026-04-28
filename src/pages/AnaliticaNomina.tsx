@@ -43,6 +43,7 @@ import {
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -657,88 +658,91 @@ export default function AnaliticaNomina() {
       </motion.div>
 
       <Card>
-        <CardContent className="p-4">
-          <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <Filter className="h-4 w-4" /> Centro de operación
-              </div>
-              <Select value={centerFilter} onValueChange={setCenterFilter}>
-                <SelectTrigger><SelectValue placeholder="Todos los centros" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los centros</SelectItem>
-                  {centerOptions.map((center) => <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <CalendarDays className="h-4 w-4" /> Desde
-              </div>
-              <Input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <CalendarDays className="h-4 w-4" /> Hasta
-              </div>
-              <Input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <TrendingUp className="h-4 w-4" /> Comparación
-              </div>
-              <Select value={comparisonMode} onValueChange={(value: 'actual' | 'mes_anterior') => setComparisonMode(value)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="actual">Solo período actual</SelectItem>
-                  <SelectItem value="mes_anterior">Contra mes anterior</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <AlertTriangle className="h-4 w-4" /> Umbral volumen
-              </div>
-              <Input type="number" min={1} value={volumeThreshold} onChange={(event) => setVolumeThreshold(Number(event.target.value) || 1)} />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <DollarSign className="h-4 w-4" /> Umbral severidad
-              </div>
-              <Input type="number" min={0} step={100000} value={severityThreshold} onChange={(event) => setSeverityThreshold(Number(event.target.value) || 0)} />
-            </div>
-            <div className="space-y-2 xl:col-span-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <AlertTriangle className="h-4 w-4" /> Alerta por tipo
-              </div>
-              <div className="grid gap-2 sm:grid-cols-3">
-                <Select value={selectedAlertType} onValueChange={(value: NoveltyType) => setSelectedAlertType(value)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(NOVELTY_TYPE_LABELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Input type="number" min={1} value={typeAlertThresholds[selectedAlertTypeKey]?.volume ?? volumeThreshold} onChange={(event) => updateTypeAlertThreshold('volume', Number(event.target.value) || 1)} />
-                <Input type="number" min={0} step={100000} value={typeAlertThresholds[selectedAlertTypeKey]?.severity ?? severityThreshold} onChange={(event) => updateTypeAlertThreshold('severity', Number(event.target.value) || 0)} />
-              </div>
-            </div>
-            <div className="space-y-2 xl:col-span-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <Gauge className="h-4 w-4" /> Alerta por centro
-              </div>
-              <div className="grid gap-2 sm:grid-cols-3">
-                <Select value={selectedAlertCenter} onValueChange={setSelectedAlertCenter}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Sin centro</SelectItem>
-                    {centerOptions.map((center) => <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Input type="number" min={1} value={centerAlertThresholds[selectedAlertCenterKey]?.volume ?? volumeThreshold} onChange={(event) => updateCenterAlertThreshold('volume', Number(event.target.value) || 1)} />
-                <Input type="number" min={0} step={100000} value={centerAlertThresholds[selectedAlertCenterKey]?.severity ?? severityThreshold} onChange={(event) => updateCenterAlertThreshold('severity', Number(event.target.value) || 0)} />
-              </div>
-            </div>
-          </div>
+        <CardContent className="p-3 sm:p-4">
+          <Accordion type="multiple" defaultValue={["periodo"]} className="space-y-2">
+            <AccordionItem value="periodo" className="rounded-md border border-border px-3">
+              <AccordionTrigger className="py-3 text-sm hover:no-underline">
+                <span className="flex items-center gap-2"><Filter className="h-4 w-4 text-primary" /> Filtros del periodo</span>
+              </AccordionTrigger>
+              <AccordionContent className="grid gap-3 pb-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="space-y-2 sm:col-span-2 xl:col-span-1">
+                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><Filter className="h-4 w-4" /> Centro</div>
+                  <Select value={centerFilter} onValueChange={setCenterFilter}>
+                    <SelectTrigger><SelectValue placeholder="Todos los centros" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los centros</SelectItem>
+                      {centerOptions.map((center) => <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2 xl:col-span-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><CalendarDays className="h-4 w-4" /> Desde</div>
+                    <Input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><CalendarDays className="h-4 w-4" /> Hasta</div>
+                    <Input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><TrendingUp className="h-4 w-4" /> Comparación</div>
+                  <Select value={comparisonMode} onValueChange={(value: 'actual' | 'mes_anterior') => setComparisonMode(value)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="actual">Solo período actual</SelectItem>
+                      <SelectItem value="mes_anterior">Contra mes anterior</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="alertas" className="rounded-md border border-border px-3">
+              <AccordionTrigger className="py-3 text-sm hover:no-underline">
+                <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-warning" /> Configuración de alertas</span>
+              </AccordionTrigger>
+              <AccordionContent className="grid gap-3 pb-3 xl:grid-cols-2">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><AlertTriangle className="h-4 w-4" /> Volumen global</div>
+                    <Input type="number" min={1} value={volumeThreshold} onChange={(event) => setVolumeThreshold(Number(event.target.value) || 1)} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><DollarSign className="h-4 w-4" /> Severidad global</div>
+                    <Input type="number" min={0} step={100000} value={severityThreshold} onChange={(event) => setSeverityThreshold(Number(event.target.value) || 0)} />
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2 xl:col-span-2">
+                  <div className="space-y-2 rounded-md border border-border/70 p-3">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><AlertTriangle className="h-4 w-4" /> Por tipo de novedad</div>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <Select value={selectedAlertType} onValueChange={(value: NoveltyType) => setSelectedAlertType(value)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>{Object.entries(NOVELTY_TYPE_LABELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
+                      </Select>
+                      <Input type="number" min={1} value={typeAlertThresholds[selectedAlertTypeKey]?.volume ?? volumeThreshold} onChange={(event) => updateTypeAlertThreshold('volume', Number(event.target.value) || 1)} />
+                      <Input type="number" min={0} step={100000} value={typeAlertThresholds[selectedAlertTypeKey]?.severity ?? severityThreshold} onChange={(event) => updateTypeAlertThreshold('severity', Number(event.target.value) || 0)} />
+                    </div>
+                  </div>
+                  <div className="space-y-2 rounded-md border border-border/70 p-3">
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><Gauge className="h-4 w-4" /> Por centro</div>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <Select value={selectedAlertCenter} onValueChange={setSelectedAlertCenter}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Sin centro</SelectItem>
+                          {centerOptions.map((center) => <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Input type="number" min={1} value={centerAlertThresholds[selectedAlertCenterKey]?.volume ?? volumeThreshold} onChange={(event) => updateCenterAlertThreshold('volume', Number(event.target.value) || 1)} />
+                      <Input type="number" min={0} step={100000} value={centerAlertThresholds[selectedAlertCenterKey]?.severity ?? severityThreshold} onChange={(event) => updateCenterAlertThreshold('severity', Number(event.target.value) || 0)} />
+                    </div>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </CardContent>
       </Card>
 
