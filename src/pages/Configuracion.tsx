@@ -599,7 +599,7 @@ export default function Configuracion() {
                       </p>
                     </div>
                     <Select value={hiringNotifRoleId} onValueChange={setHiringNotifRoleId}>
-                      <SelectTrigger className="w-[220px]">
+                      <SelectTrigger className="w-full sm:w-[220px]">
                         <SelectValue placeholder="Seleccionar rol" />
                       </SelectTrigger>
                       <SelectContent>
@@ -613,7 +613,7 @@ export default function Configuracion() {
                 </CardContent>
               </Card>
 
-              <Button onClick={handleSaveAlertConfig} disabled={updateConfig.isPending}>
+              <Button onClick={handleSaveAlertConfig} disabled={updateConfig.isPending} className="w-full sm:w-auto">
                 {updateConfig.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />Guardar Configuración
               </Button>
@@ -628,7 +628,7 @@ export default function Configuracion() {
         <TabsContent value="ai">
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Brain className="h-5 w-5 text-primary" />
                 </div>
@@ -677,7 +677,7 @@ export default function Configuracion() {
                           Google Gemini API Key
                           <span className="text-muted-foreground font-normal">(Opcional)</span>
                         </Label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
                           <div className="relative flex-1">
                             <Input
                               type={showGeminiKey ? 'text' : 'password'}
@@ -722,7 +722,7 @@ export default function Configuracion() {
                   <button
                     type="button"
                     onClick={() => setAiModel('openai')}
-                    className="w-full flex items-start gap-4 p-4 text-left"
+                            className="w-full flex items-start gap-3 p-4 text-left sm:gap-4"
                   >
                     <div className="flex items-center gap-3 mt-0.5">
                       <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
