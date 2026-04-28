@@ -45,10 +45,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import { useContracts } from '@/hooks/useContracts';
 import { useEmployees } from '@/hooks/useEmployees';
 import { usePayrollConfig } from '@/hooks/usePayrollConfig';
@@ -216,6 +218,9 @@ export default function AnaliticaNomina() {
   const [typeAlertThresholds, setTypeAlertThresholds] = useState<Record<string, { volume: number; severity: number }>>({});
   const [centerAlertThresholds, setCenterAlertThresholds] = useState<Record<string, { volume: number; severity: number }>>({});
   const [alertStatusOverrides, setAlertStatusOverrides] = useState<Record<string, 'pendiente' | 'notificada' | 'cerrada'>>({});
+  const [alertCloseReasons, setAlertCloseReasons] = useState<Record<string, string>>({});
+  const [closingAlert, setClosingAlert] = useState<{ id: string; tipo: string } | null>(null);
+  const [closeReasonDraft, setCloseReasonDraft] = useState('');
   const comparisonStartDate = startDate ? shiftMonth(startDate, 1) : '';
   const comparisonEndDate = endDate ? shiftMonth(endDate, 1) : '';
 
@@ -283,6 +288,20 @@ export default function AnaliticaNomina() {
         [field]: value,
       },
     }));
+  };
+
+  const openCloseReasonDialog = (alert: { id: string; tipo: string }) => {
+    setClosingAlert(alert);
+    setCloseReasonDraft(alertCloseReasons[alert.id] || '');
+  };
+
+  const confirmCloseWithReason = () => {
+    const reason = closeReasonDraft.trim().slice(0, 500);
+    if (!closingAlert || reason.length < 3) return;
+    setAlertStatusOverrides((prev) => ({ ...prev, [closingAlert.id]: 'cerrada' }));
+    setAlertCloseReasons((prev) => ({ ...prev, [closingAlert.id]: reason }));
+    setClosingAlert(null);
+    setCloseReasonDraft('');
   };
 
   const salaryByEmployee = useMemo(() => {
@@ -806,11 +825,16 @@ export default function AnaliticaNomina() {
                     </div>
                     <p className="text-xs text-muted-foreground">{alert.periodo} · {alert.valor}</p>
                     <p className="text-sm text-foreground">{alert.detalle}</p>
+                    {status === 'cerrada' && alertCloseReasons[alert.id] && (
+                      <p className="rounded-md border border-success/20 bg-success-light p-2 text-xs text-success">
+                        Motivo de cierre: {alertCloseReasons[alert.id]}
+                      </p>
+                    )}
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2">
                     <Button size="sm" variant={status === 'pendiente' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'pendiente' }))}>Pendiente</Button>
                     <Button size="sm" variant={status === 'notificada' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'notificada' }))}>Notificada</Button>
-                    <Button size="sm" variant={status === 'cerrada' ? 'default' : 'outline'} onClick={() => setAlertStatusOverrides((prev) => ({ ...prev, [alert.id]: 'cerrada' }))}>Cerrada</Button>
+                    <Button size="sm" variant={status === 'cerrada' ? 'default' : 'outline'} onClick={() => openCloseReasonDialog(alert)}>Cerrar con motivo</Button>
                   </div>
                 </div>
               </div>
@@ -818,6 +842,32 @@ export default function AnaliticaNomina() {
           })}
         </CardContent>
       </Card>
+
+      <Dialog open={!!closingAlert} onOpenChange={(open) => !open && setClosingAlert(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Cerrar alerta con motivo</DialogTitle>
+            <DialogDescription>{closingAlert?.tipo}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Textarea
+              value={closeReasonDraft}
+              onChange={(event) => setCloseReasonDraft(event.target.value.slice(0, 500))}
+              maxLength={500}
+              placeholder="Describe la justificación del cierre"
+              className="min-h-28"
+            />
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Requerido, mínimo 3 caracteres</span>
+              <span>{closeReasonDraft.trim().length}/500</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setClosingAlert(null)}>Cancelar</Button>
+            <Button onClick={confirmCloseWithReason} disabled={closeReasonDraft.trim().length < 3}>Guardar cierre</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 xl:grid-cols-2">
         {[{ title: 'Priorización por tipo de novedad', rows: analytics.impactRankingByType }, { title: 'Priorización por centro', rows: analytics.impactRankingByCenter }].map((section) => (
