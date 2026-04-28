@@ -341,6 +341,33 @@ export default function AnaliticaNomina() {
     const noveltyTypes = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type);
     const noveltyHoursByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, (item: any) => Number(item.hours || 0));
     const estimatedImpactByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, getEstimatedImpact);
+    const employeeModeMap = new Map(activeConfigs.map((item: any) => [item.employee_id, item.mode === 'shift' ? 'Turnos' : 'Oficina']));
+    const jornadaBreakdown = Object.values(filteredNovelties.reduce<Record<string, any>>((acc, item: any) => {
+      const jornada = employeeModeMap.get(item.employee_id) || 'Sin jornada';
+      if (!acc[jornada]) acc[jornada] = { jornada, horas: 0, novedades: 0, impacto: 0, empleados: new Set<string>() };
+      acc[jornada].horas += Number(item.hours || 0);
+      acc[jornada].novedades += 1;
+      acc[jornada].impacto += getEstimatedImpact(item);
+      acc[jornada].empleados.add(item.employee_id);
+      return acc;
+    }, {})).map((item: any) => ({
+      ...item,
+      horas: Math.round(item.horas * 10) / 10,
+      impacto: Math.round(item.impacto),
+      proporcionImpacto: percent(item.impacto, estimatedImpact),
+      empleados: item.empleados.size,
+    })).sort((a: any, b: any) => b.impacto - a.impacto);
+    const jornadaHeatmap = noveltyTypes.slice(0, 6).map((type) => {
+      const row: any = { tipo: type.name };
+      jornadaBreakdown.forEach((jornada: any) => {
+        const impact = filteredNovelties
+          .filter((item: any) => (NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type) === type.name && (employeeModeMap.get(item.employee_id) || 'Sin jornada') === jornada.jornada)
+          .reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0);
+        row[jornada.jornada] = Math.round(impact);
+        row[`${jornada.jornada}Pct`] = percent(impact, estimatedImpact);
+      });
+      return row;
+    });
     const buildImpactRanking = (getKey: (item: any) => string) => Object.values(filteredNovelties.reduce<Record<string, any>>((acc, item: any) => {
       const name = getKey(item);
       if (!acc[name]) acc[name] = { name, volumen: 0, horas: 0, impacto: 0, empleados: new Set<string>() };
@@ -459,6 +486,8 @@ export default function AnaliticaNomina() {
       noveltyTypes,
       noveltyHoursByType,
       estimatedImpactByType,
+      jornadaBreakdown,
+      jornadaHeatmap,
       impactRankingByType,
       impactRankingByCenter,
       shiftDemand,
