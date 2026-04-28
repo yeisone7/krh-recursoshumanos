@@ -32,7 +32,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -117,19 +116,19 @@ export function IncapacityDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="flex items-center gap-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <DialogTitle className="flex items-start gap-2 leading-tight">
                   <Stethoscope className="h-5 w-5" />
-                  Incapacidad - {employeeName}
+                  <span>Incapacidad - {employeeName}</span>
                 </DialogTitle>
                 <DialogDescription>
                   {format(new Date(incapacity.start_date), "d 'de' MMMM, yyyy", { locale: es })} - {format(endDate, "d 'de' MMMM, yyyy", { locale: es })}
                 </DialogDescription>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                 <Badge variant={incapacity.origin === 'laboral' ? 'destructive' : 'secondary'}>
                   {incapacityOriginLabels[incapacity.origin]}
                 </Badge>
@@ -142,42 +141,42 @@ export function IncapacityDetailDialog({
             </div>
           </DialogHeader>
           
-          <ScrollArea className="flex-1">
+          <div className="min-h-0">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="payment">Pagos</TabsTrigger>
-                <TabsTrigger value="recovery">Recobro</TabsTrigger>
-                <TabsTrigger value="documents">Documentos</TabsTrigger>
-                <TabsTrigger value="history">Historial</TabsTrigger>
+              <TabsList className="flex h-auto w-full justify-start overflow-x-auto">
+                <TabsTrigger value="general" className="shrink-0">General</TabsTrigger>
+                <TabsTrigger value="payment" className="shrink-0">Pagos</TabsTrigger>
+                <TabsTrigger value="recovery" className="shrink-0">Recobro</TabsTrigger>
+                <TabsTrigger value="documents" className="shrink-0">Documentos</TabsTrigger>
+                <TabsTrigger value="history" className="shrink-0">Historial</TabsTrigger>
               </TabsList>
               
               {/* General Tab */}
               <TabsContent value="general" className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
                   <Card>
-                    <CardHeader className="pb-2">
+                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                       <CardDescription>Días Totales</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
                       <p className="text-2xl font-bold">{incapacity.total_days}</p>
                     </CardContent>
                   </Card>
                   
                   <Card>
-                    <CardHeader className="pb-2">
+                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                       <CardDescription>Días Cadena</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
                       <p className="text-2xl font-bold">{totalChainDays}</p>
                     </CardContent>
                   </Card>
                   
                   <Card>
-                    <CardHeader className="pb-2">
+                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                       <CardDescription>Días Restantes</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
                       <p className={`text-2xl font-bold ${daysRemaining < 0 ? 'text-muted-foreground' : daysRemaining <= 3 ? 'text-destructive' : ''}`}>
                         {daysRemaining < 0 ? 'Finalizada' : daysRemaining}
                       </p>
@@ -185,11 +184,11 @@ export function IncapacityDetailDialog({
                   </Card>
                   
                   <Card>
-                    <CardHeader className="pb-2">
+                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
                       <CardDescription>Valor Total</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-2xl font-bold">{formatCurrency(incapacity.total_amount)}</p>
+                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+                      <p className="break-words text-xl font-bold sm:text-2xl">{formatCurrency(incapacity.total_amount)}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -373,7 +372,7 @@ export function IncapacityDetailDialog({
               <TabsContent value="recovery" className="space-y-4 mt-4">
                 <Card>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <CardTitle className="text-base flex items-center gap-2">
                           <Clock className="h-4 w-4" />
@@ -383,7 +382,7 @@ export function IncapacityDetailDialog({
                           Gestión del recobro ante {incapacity.origin === 'laboral' ? 'ARL' : 'EPS'}
                         </CardDescription>
                       </div>
-                      <Button size="sm" onClick={() => setShowRecoveryDialog(true)}>
+                      <Button size="sm" onClick={() => setShowRecoveryDialog(true)} className="w-full sm:w-auto">
                         <Edit className="h-4 w-4 mr-1" />
                         Actualizar
                       </Button>
@@ -396,7 +395,7 @@ export function IncapacityDetailDialog({
                       </Badge>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
                       {incapacity.filing_date && (
                         <div>
                           <p className="text-sm text-muted-foreground">Fecha Radicación</p>
@@ -498,10 +497,10 @@ export function IncapacityDetailDialog({
               <TabsContent value="history" className="space-y-4 mt-4">
                 <Card>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <CardTitle className="text-base">Historial de Prórrogas</CardTitle>
                       {!incapacity.is_extension && (
-                        <Button size="sm" onClick={() => setShowExtensionDialog(true)}>
+                        <Button size="sm" onClick={() => setShowExtensionDialog(true)} className="w-full sm:w-auto">
                           <Plus className="h-4 w-4 mr-1" />
                           Agregar Prórroga
                         </Button>
@@ -565,20 +564,20 @@ export function IncapacityDetailDialog({
                 </Card>
               </TabsContent>
             </Tabs>
-          </ScrollArea>
+          </div>
           
           <Separator className="my-4" />
           
-          <div className="flex justify-between">
-            <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+            <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)} className="w-full sm:w-auto">
               <Trash2 className="h-4 w-4 mr-1" />
               Eliminar
             </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="grid grid-cols-2 gap-2 sm:flex">
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cerrar
               </Button>
-              <Button onClick={() => setShowEditDialog(true)}>
+              <Button onClick={() => setShowEditDialog(true)} className="w-full sm:w-auto">
                 <Edit className="h-4 w-4 mr-1" />
                 Editar
               </Button>
