@@ -262,7 +262,9 @@ export default function Examenes() {
                 )}
               </div>
             ) : (
-              <Table>
+              <>
+              <div className="hidden overflow-x-auto sm:block">
+              <Table className="min-w-[820px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Empleado</TableHead>
@@ -326,6 +328,46 @@ export default function Examenes() {
                   })}
                 </TableBody>
               </Table>
+              </div>
+              <MobileCardList
+                className="sm:hidden"
+                items={filteredTransactions.map((tx) => {
+                  const itemsSummary = tx.items.length <= 2
+                    ? tx.items.map(i => i.exam_name).join(', ')
+                    : `${tx.items[0].exam_name}, ${tx.items[1].exam_name} +${tx.items.length - 2} más`;
+                  const badgeStyle = examTypeBadgeStyles[tx.exam_type] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
+
+                  return {
+                    id: tx.id,
+                    title: `${tx.employees?.first_name || ''} ${tx.employees?.last_name || ''}`.trim() || 'Empleado',
+                    subtitle: tx.employees?.operation_centers?.name || 'Sin centro',
+                    badge: (
+                      <Badge variant="outline" className={cn('text-xs border', badgeStyle.bg, badgeStyle.text, badgeStyle.border)}>
+                        {examTypeLabels[tx.exam_type as ExamType] || tx.exam_type}
+                      </Badge>
+                    ),
+                    fields: [
+                      { label: 'Exámenes', value: itemsSummary, className: 'col-span-2' },
+                      { label: 'Cantidad', value: `${tx.items.length} examen(es)` },
+                      { label: 'Fecha', value: format(new Date(tx.exam_date), 'dd/MM/yyyy') },
+                    ],
+                    actions: (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => handleView(tx.id)}>
+                          <Eye className="w-4 h-4 mr-2" /> Ver
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleExportPdf(tx)} title="Exportar orden">
+                          <FileDown className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteConfirmId(tx.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    ),
+                  };
+                })}
+              />
+              </>
             )}
           </div>
         </TabsContent>
@@ -347,7 +389,7 @@ export default function Examenes() {
       <ExamTransactionDetailDialog open={isDetailOpen} onOpenChange={setIsDetailOpen} transaction={selectedTransaction} />
 
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar aplicación de exámenes</AlertDialogTitle>
             <AlertDialogDescription>¿Estás seguro? Se eliminarán todos los exámenes de esta aplicación. Esta acción no se puede deshacer.</AlertDialogDescription>
