@@ -251,6 +251,12 @@ export default function TiposContrato() {
                         Editar
                       </DropdownMenuItem>
                       {item.template_url && (
+                        <DropdownMenuItem onClick={() => handlePreview(item)}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Vista previa
+                        </DropdownMenuItem>
+                      )}
+                      {item.template_url && (
                         <DropdownMenuItem onClick={() => downloadTemplate(item.template_url!, item.template_file_name!)}>
                           <Download className="w-4 h-4 mr-2" />
                           Descargar Plantilla
@@ -300,7 +306,7 @@ export default function TiposContrato() {
                           variant="ghost"
                           size="sm"
                           className="h-auto py-1 px-2 text-xs"
-                          onClick={() => item.template_url && downloadTemplate(item.template_url, item.template_file_name!)}
+                          onClick={() => item.template_url && handlePreview(item)}
                         >
                           <FileText className="w-3 h-3 mr-1 text-primary" />
                           <span className="text-primary truncate max-w-[100px]">
@@ -328,6 +334,12 @@ export default function TiposContrato() {
                             <Pencil className="w-4 h-4 mr-2" />
                             Editar
                           </DropdownMenuItem>
+                          {item.template_url && (
+                            <DropdownMenuItem onClick={() => handlePreview(item)}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              Vista previa
+                            </DropdownMenuItem>
+                          )}
                           {item.template_url && (
                             <DropdownMenuItem 
                               onClick={() => downloadTemplate(item.template_url!, item.template_file_name!)}
