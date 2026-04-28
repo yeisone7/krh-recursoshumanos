@@ -204,7 +204,7 @@ export function ApplyEvaluationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden p-0">
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
         <DialogHeader className="px-4 pt-4 pb-3 sm:px-6 sm:pt-6">
           <DialogTitle className="text-lg">Aplicar Evaluación</DialogTitle>
           <DialogDescription className="sr-only">Calificar al empleado criterio por criterio</DialogDescription>
@@ -409,8 +409,7 @@ export function ApplyEvaluationDialog({
         )}
 
         {/* Footer */}
-        <Separator />
-        <div className="grid grid-cols-1 gap-2 px-4 py-4 sm:grid-cols-3 sm:px-6">
+        <div className="grid grid-cols-1 gap-2 border-t bg-background px-4 py-4 sm:grid-cols-3 sm:px-6">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving} className="w-full">
             Cancelar
           </Button>
