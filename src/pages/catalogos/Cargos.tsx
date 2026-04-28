@@ -78,19 +78,19 @@ export default function CatalogosCargos() {
   const profileCount = positions.filter((p: any) => hasProfile(p.id)).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3 sm:items-center">
+            <div className="shrink-0 rounded-lg bg-primary/10 p-2">
               <Briefcase className="w-6 h-6 text-primary" />
             </div>
-            <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">Cargos</h1>
+            <div className="min-w-0">
+              <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Cargos</h1>
               <p className="text-muted-foreground mt-1">Gestiona los cargos y perfiles de la organización</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="text-xs gap-1">
               <Users className="w-3 h-3" />{positions.length} cargos
             </Badge>
@@ -104,7 +104,7 @@ export default function CatalogosCargos() {
       {/* Search & Filters */}
       <Card>
         <CardContent className="pt-4 pb-3">
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col gap-3 lg:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -115,7 +115,7 @@ export default function CatalogosCargos() {
               />
             </div>
             <Select value={filterArea} onValueChange={setFilterArea}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full lg:w-[180px]">
                 <SelectValue placeholder="Área" />
               </SelectTrigger>
               <SelectContent>
@@ -126,7 +126,7 @@ export default function CatalogosCargos() {
               </SelectContent>
             </Select>
             <Select value={filterProfile} onValueChange={setFilterProfile}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full lg:w-[160px]">
                 <SelectValue placeholder="Perfil" />
               </SelectTrigger>
               <SelectContent>
@@ -136,7 +136,7 @@ export default function CatalogosCargos() {
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-full lg:w-[140px]">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
@@ -147,7 +147,7 @@ export default function CatalogosCargos() {
             </Select>
           </div>
           {hasActiveFilters && (
-            <div className="flex items-center gap-2 mt-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="text-xs text-muted-foreground">{filteredPositions.length} de {positions.length} cargos</span>
               <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={clearFilters}>
                 <X className="w-3 h-3 mr-1" />Limpiar filtros
