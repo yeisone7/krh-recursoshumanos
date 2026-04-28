@@ -72,7 +72,7 @@ export function IncapacityReport() {
       onExportExcel={handleExportExcel}
       onExportPDF={handleExportPDF}
     >
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
         <div className="space-y-2">
           <Label>Fecha Inicio</Label>
           <Popover>
@@ -85,10 +85,10 @@ export function IncapacityReport() {
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {startDate ? format(startDate, 'PPP', { locale: es }) : 'Seleccionar'}
+                <span className="truncate">{startDate ? format(startDate, 'PPP', { locale: es }) : 'Seleccionar'}</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-[calc(100vw-2rem)] p-0 sm:w-auto" align="start">
               <Calendar
                 mode="single"
                 selected={startDate}
@@ -111,10 +111,10 @@ export function IncapacityReport() {
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {endDate ? format(endDate, 'PPP', { locale: es }) : 'Seleccionar'}
+                <span className="truncate">{endDate ? format(endDate, 'PPP', { locale: es }) : 'Seleccionar'}</span>
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-[calc(100vw-2rem)] p-0 sm:w-auto" align="start">
               <Calendar
                 mode="single"
                 selected={endDate}
@@ -127,7 +127,7 @@ export function IncapacityReport() {
       </div>
       
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-4 p-3 rounded-lg bg-muted/50">
+      <div className="grid gap-3 rounded-lg bg-muted/50 p-3 sm:grid-cols-3 sm:gap-4">
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Total</p>
           <p className="text-sm font-semibold">
