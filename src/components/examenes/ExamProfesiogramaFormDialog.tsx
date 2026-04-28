@@ -117,7 +117,7 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:w-full sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             <ClipboardList className="w-5 h-5 text-primary" />
@@ -128,8 +128,8 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
           </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[60vh] overflow-y-auto space-y-4 pr-1">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4 pr-1 sm:max-h-[60vh] sm:overflow-y-auto">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             <div className="space-y-2">
               <Label>Centro de Operación *</Label>
               <SearchableSelect
@@ -177,7 +177,9 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
                 <p className="text-sm">No hay exámenes. Haz clic en "Agregar" para comenzar.</p>
               </div>
             ) : (
-              <Table>
+              <>
+              <div className="hidden overflow-x-auto sm:block">
+              <Table className="min-w-[520px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Examen</TableHead>
@@ -223,11 +225,37 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
                   ))}
                 </TableBody>
               </Table>
+              </div>
+              <div className="space-y-2 sm:hidden">
+                {items.map((item, idx) => (
+                  <div key={idx} className="rounded-lg border border-border p-3 space-y-3">
+                    <SearchableSelect
+                      options={activeExams
+                        .filter(e => e.id === item.exam_catalog_id || !items.some(i => i.exam_catalog_id === e.id))
+                        .map(e => ({ value: e.id, label: e.code ? `${e.name} (${e.code})` : e.name }))}
+                      value={item.exam_catalog_id}
+                      onValueChange={(v) => updateItem(idx, 'exam_catalog_id', v)}
+                      placeholder="Seleccionar examen"
+                      searchPlaceholder="Buscar examen..."
+                    />
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <Switch checked={item.is_required} onCheckedChange={(v) => updateItem(idx, 'is_required', v)} />
+                        <span className="text-sm text-muted-foreground">Obligatorio</span>
+                      </div>
+                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => removeItem(idx)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t mt-4">
+        <div className="sticky bottom-0 -mx-4 grid grid-cols-1 gap-2 border-t border-border bg-background/95 px-4 pt-3 pb-1 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:pt-4 sm:backdrop-blur-0">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={isPending} className="gap-2">
             <ClipboardList className="w-4 h-4" />

@@ -174,7 +174,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl flex-col overflow-hidden p-4 sm:w-full sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             <Stethoscope className="w-5 h-5 text-primary" />
@@ -185,23 +185,23 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="employee" className="flex-1 overflow-hidden flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 mb-4 bg-primary/5 border border-primary/10">
-            <TabsTrigger value="employee" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+        <Tabs defaultValue="employee" className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <TabsList className="mb-4 flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain border border-primary/10 bg-primary/5 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-3">
+            <TabsTrigger value="employee" className="shrink-0 gap-2 whitespace-nowrap text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground sm:text-sm">
               <User className="w-4 h-4" /> Empleado
             </TabsTrigger>
-            <TabsTrigger value="exams" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
+            <TabsTrigger value="exams" className="shrink-0 gap-2 whitespace-nowrap text-xs data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground sm:text-sm">
               <Stethoscope className="w-4 h-4" /> Exámenes
               {selectedItems.length > 0 && (
                 <Badge className="ml-1 h-5 px-1.5 text-xs bg-secondary text-secondary-foreground">{selectedItems.length}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="details" className="gap-2 data-[state=active]:bg-tertiary data-[state=active]:text-white">
+            <TabsTrigger value="details" className="shrink-0 gap-2 whitespace-nowrap text-xs data-[state=active]:bg-tertiary data-[state=active]:text-white sm:text-sm">
               <FileText className="w-4 h-4" /> Detalles
             </TabsTrigger>
           </TabsList>
 
-          <div className="flex-1 overflow-y-auto pr-2">
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1 sm:pr-2">
             <TabsContent value="employee" className="space-y-4 mt-0">
               <div className="space-y-2">
                 <Label>Empleado *</Label>
@@ -374,7 +374,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                 </Popover>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                 <div className="space-y-2">
                   <Label>Proveedor / IPS</Label>
                   <Input value={provider} onChange={(e) => setProvider(e.target.value)} placeholder="Nombre del proveedor" />
@@ -393,7 +393,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
           </div>
         </Tabs>
 
-        <div className="flex justify-end gap-3 pt-4 border-t mt-2">
+        <div className="-mx-4 grid grid-cols-1 gap-2 border-t px-4 pt-3 sm:mx-0 sm:flex sm:justify-end sm:gap-3 sm:px-0 sm:pt-4">
           <Button variant="outline" onClick={() => { handleReset(); onOpenChange(false); }}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2">
             <Stethoscope className="w-4 h-4" />
