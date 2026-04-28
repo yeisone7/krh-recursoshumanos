@@ -339,6 +339,8 @@ export default function AnaliticaNomina() {
 
     const monthlyTrend = buildMonthlyTrend(assignments, filteredNovelties);
     const comparisonMonthlyTrend = buildMonthlyTrend(comparisonAssignments, filteredComparisonNovelties, ' ant.');
+    const historicalAverageNovelties = monthlyTrend.length ? monthlyTrend.reduce((sum, month) => sum + month.novedades, 0) / monthlyTrend.length : 0;
+    const historicalAverageImpact = monthlyTrend.length ? monthlyTrend.reduce((sum, month) => sum + month.montoEstimado, 0) / monthlyTrend.length : 0;
 
     const weekdayBehavior = Array.from({ length: 7 }, (_, day) => {
       const dayAssignments = assignments.filter((item: any) => asDate(item.assignment_date)?.getDay() === day);
@@ -465,6 +467,60 @@ export default function AnaliticaNomina() {
       .filter((item: any) => item.prioridad !== 'Normal')
       .slice(0, 6)
       .map((item: any) => `${item.prioridad}: ${item.name} supera umbral con ${item.volumen} novedades y ${currencyFormatter.format(item.impacto)} estimados.`);
+    const automaticAlerts = [
+      ...monthlyTrend.flatMap((month, index) => {
+        const previous = monthlyTrend[index - 1];
+        const noveltyVariation = previous ? percent(Math.abs(month.novedades - previous.novedades), Math.max(1, previous.novedades)) : 0;
+        const impactVariation = previous ? percent(Math.abs(month.montoEstimado - previous.montoEstimado), Math.max(1, previous.montoEstimado)) : 0;
+        return [
+          month.novedades >= Math.max(volumeThreshold, historicalAverageNovelties * 1.6) && month.novedades > 0 ? {
+            id: `pico-novedades-${month.periodo}`,
+            tipo: 'Pico inusual de novedades',
+            severidad: month.novedades >= historicalAverageNovelties * 2 ? 'Crítica' : 'Alta',
+            estado: 'pendiente' as const,
+            periodo: month.periodo,
+            detalle: `${month.novedades} novedades frente a un promedio de ${numberFormatter.format(historicalAverageNovelties)}.`,
+            valor: `${month.novedades} novedades`,
+          } : null,
+          previous && noveltyVariation >= 45 && month.novedades !== previous.novedades ? {
+            id: `variacion-novedades-${month.periodo}`,
+            tipo: 'Variación brusca mes a mes',
+            severidad: noveltyVariation >= 80 ? 'Crítica' : 'Alta',
+            estado: 'pendiente' as const,
+            periodo: month.periodo,
+            detalle: `${month.novedades > previous.novedades ? 'Aumento' : 'Disminución'} de ${noveltyVariation}% contra ${previous.periodo}.`,
+            valor: `${month.novedades - previous.novedades > 0 ? '+' : ''}${month.novedades - previous.novedades}`,
+          } : null,
+          previous && impactVariation >= 50 && month.montoEstimado > Math.max(severityThreshold, historicalAverageImpact) ? {
+            id: `variacion-impacto-${month.periodo}`,
+            tipo: 'Variación brusca de impacto',
+            severidad: impactVariation >= 100 ? 'Crítica' : 'Alta',
+            estado: 'pendiente' as const,
+            periodo: month.periodo,
+            detalle: `Impacto cambia ${impactVariation}% contra ${previous.periodo}.`,
+            valor: currencyFormatter.format(month.montoEstimado),
+          } : null,
+        ];
+      }),
+      coverage > 0 && coverage < 70 ? {
+        id: 'empate-cobertura-baja',
+        tipo: 'Empate de cobertura',
+        severidad: coverage < 50 ? 'Crítica' : 'Alta',
+        estado: 'pendiente' as const,
+        periodo: `${periodLabel(periodKey(startDate))} - ${periodLabel(periodKey(endDate))}`,
+        detalle: `Cobertura en ${coverage}% con ${withoutAssignments} empleados sin asignación detectada.`,
+        valor: `${coverage}%`,
+      } : null,
+      manualAssignments > generatedAssignments && generatedAssignments > 0 ? {
+        id: 'empate-cobertura-manual-ciclo',
+        tipo: 'Empate de cobertura',
+        severidad: manualAssignments > generatedAssignments * 1.5 ? 'Alta' : 'Media',
+        estado: 'notificada' as const,
+        periodo: `${periodLabel(periodKey(startDate))} - ${periodLabel(periodKey(endDate))}`,
+        detalle: `Programación manual supera ciclo automático: ${manualAssignments} vs ${generatedAssignments}.`,
+        valor: `${percent(manualAssignments, assignments.length)}% manual`,
+      } : null,
+    ].filter(Boolean) as Array<{ id: string; tipo: string; severidad: string; estado: 'pendiente' | 'notificada' | 'cerrada'; periodo: string; detalle: string; valor: string }>;
     const alerts = [
       withoutAssignments > 0 ? `${withoutAssignments} empleados activos en tiempo no tienen asignaciones en el rango.` : null,
       highLoadEmployees > 0 ? `${highLoadEmployees} empleados concentran una carga alta de novedades.` : null,
@@ -512,6 +568,7 @@ export default function AnaliticaNomina() {
       heatmap,
       insights,
       alerts,
+      automaticAlerts,
     };
   }, [assignments, centerNameMap, comparisonAssignments, comparisonMode, employeeCenterMap, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, severityThreshold, shiftCycles, shifts, startDate, endDate, volumeThreshold, workSchedules]);
 
