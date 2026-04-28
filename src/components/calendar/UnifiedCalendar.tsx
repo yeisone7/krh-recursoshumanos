@@ -357,7 +357,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                 </div>
               </div>
             ) : (
-              <div className="h-full flex flex-col">
+              <div className="flex h-full min-w-0 flex-col overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {/* Weekday header */}
                 <div className="mb-1 grid min-w-[640px] grid-cols-7 gap-1 sm:min-w-0">
                   {weekDays.map((day) => (
@@ -371,7 +371,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                 </div>
 
                 {/* Grid */}
-                <div className="min-h-0 flex-1 overflow-y-auto">
+                <div className="min-h-0 min-w-[640px] flex-1 overflow-y-auto sm:min-w-0">
                   <div className="grid min-w-[640px] grid-cols-7 gap-1 sm:min-w-0">
                     {calendarDays.map((day) => {
                       const dayEvents = getEventsForDay(day);
@@ -385,7 +385,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                           onClick={() => setSelectedDay(day)}
                           className={cn(
                             'p-1.5 border rounded-lg transition-all text-left',
-                            view === 'week' ? 'min-h-[180px]' : 'min-h-[72px] sm:min-h-[85px]',
+                            view === 'week' ? 'min-h-[150px] sm:min-h-[180px]' : 'min-h-[72px] sm:min-h-[85px]',
                             isCurrentMonth ? 'bg-background hover:bg-accent/30' : 'bg-muted/20',
                             isSelected && 'ring-2 ring-primary/60 bg-primary/5',
                             isCurrentDay && !isSelected && 'ring-1 ring-primary/40',
