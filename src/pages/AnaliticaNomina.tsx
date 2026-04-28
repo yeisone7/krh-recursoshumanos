@@ -592,6 +592,18 @@ export default function AnaliticaNomina() {
           </ResponsiveContainer>
         </ChartCard>
 
+        <ChartCard title="Monto estimado por tipo de novedad">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.estimatedImpactByType.slice(0, 8)} layout="vertical" margin={{ left: 34, right: 16, top: 8, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(value) => `$${Number(value) / 1000000}M`} />
+              <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11 }} />
+              <Tooltip formatter={(value) => currencyFormatter.format(Number(value))} />
+              <Bar dataKey="value" name="Monto estimado" fill="hsl(var(--success))" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
         <ChartCard title="Ranking de demanda por turno">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.shiftDemand} margin={{ left: -20, right: 12, top: 8, bottom: 36 }}>
