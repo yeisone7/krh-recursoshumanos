@@ -191,6 +191,8 @@ export default function AnaliticaNomina() {
   const [endDate, setEndDate] = useState(defaultEnd);
 
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
+  const { data: contracts = [], isLoading: loadingContracts } = useContracts();
+  const { data: payrollConfig, isLoading: loadingPayrollConfig } = usePayrollConfig();
   const { data: workSchedules = [], isLoading: loadingSchedules } = useWorkSchedules();
   const { data: shifts = [], isLoading: loadingShifts } = useShifts();
   const { data: shiftCycles = [], isLoading: loadingCycles } = useShiftCycles();
@@ -205,7 +207,7 @@ export default function AnaliticaNomina() {
     endDate: endDate || undefined,
   });
 
-  const isLoading = loadingEmployees || loadingSchedules || loadingShifts || loadingCycles || loadingConfigs || loadingAssignments || loadingNovelties;
+  const isLoading = loadingEmployees || loadingContracts || loadingPayrollConfig || loadingSchedules || loadingShifts || loadingCycles || loadingConfigs || loadingAssignments || loadingNovelties;
 
   const centerOptions = useMemo(() => {
     const centers = new Map<string, string>();
@@ -217,6 +219,15 @@ export default function AnaliticaNomina() {
   }, [employees]);
 
   const employeeCenterMap = useMemo(() => new Map(employees.map((employee: any) => [employee.id, employee.work_info?.operation_center_id || employee.operation_centers?.id || null])), [employees]);
+
+  const salaryByEmployee = useMemo(() => {
+    const map = new Map<string, number>();
+    contracts.forEach((contract: any) => {
+      const salary = Number(contract.salary || 0);
+      if (contract.employee_id && salary > 0 && !map.has(contract.employee_id)) map.set(contract.employee_id, salary);
+    });
+    return map;
+  }, [contracts]);
 
   const filteredNovelties = useMemo(() => novelties.filter((novelty: any) => {
     if (centerFilter === 'all') return true;
@@ -241,7 +252,16 @@ export default function AnaliticaNomina() {
     const manualAssignments = assignments.filter((item: any) => item.source === 'manual').length;
     const generatedAssignments = assignments.filter((item: any) => item.source === 'cycle').length;
     const plannedHours = assignments.reduce((sum: number, item: any) => sum + (item.shifts?.is_rest_day ? 0 : hoursBetween(item.shifts?.start_time, item.shifts?.end_time, item.shifts?.break_minutes || 0)), 0);
+    const averageMonthlySalary = salaryByEmployee.size ? Array.from(salaryByEmployee.values()).reduce((sum, salary) => sum + salary, 0) / salaryByEmployee.size : 0;
+    const fallbackHourlyRate = averageMonthlySalary ? averageMonthlySalary / Math.max(1, (payrollConfig?.daily_hours || 8) * 30) : 0;
+    const getEstimatedImpact = (item: any) => {
+      const salary = salaryByEmployee.get(item.employee_id) || averageMonthlySalary;
+      const hourlyRate = salary ? salary / Math.max(1, (payrollConfig?.daily_hours || 8) * 30) : fallbackHourlyRate;
+      const multiplier = defaultImpactMultiplier[item.novelty_type] ?? 1;
+      return Number(item.hours || 0) * hourlyRate * multiplier;
+    };
     const noveltyHours = filteredNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
+    const estimatedImpact = filteredNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0);
     const overtimeHours = filteredNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
     const absenceHours = filteredNovelties.filter((item: any) => absenceTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
     const regularHours = filteredNovelties.filter((item: any) => regularTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
@@ -261,6 +281,9 @@ export default function AnaliticaNomina() {
         jornadas: monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length,
         descansos: monthAssignments.filter((item: any) => item.shifts?.is_rest_day).length,
         novedades: monthNovelties.length,
+        empleadosImpactados: new Set(monthNovelties.map((item: any) => item.employee_id)).size,
+        horasPorJornada: Math.round((monthNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) / Math.max(1, monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length)) * 10) / 10,
+        montoEstimado: Math.round(monthNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0)),
         horasExtra: Math.round(monthNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
         ausencias: Math.round(monthNovelties.filter((item: any) => absenceTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
       };
@@ -280,6 +303,7 @@ export default function AnaliticaNomina() {
 
     const noveltyTypes = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type);
     const noveltyHoursByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, (item: any) => Number(item.hours || 0));
+    const estimatedImpactByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, getEstimatedImpact);
     const shiftDemand = groupByName(assignments, (item: any) => item.shifts?.name || (item.shifts?.is_rest_day ? 'Descanso' : 'Sin turno')).slice(0, 8);
     const sourceMix = groupByName(assignments, (item: any) => item.source === 'cycle' ? 'Ciclo automático' : 'Manual');
     const noveltySourceMix = groupByName(filteredNovelties, (item: any) => item.source === 'auto' ? 'Automático' : 'Manual');
@@ -348,6 +372,10 @@ export default function AnaliticaNomina() {
         overtimeHours: Math.round(overtimeHours * 10) / 10,
         absenceHours: Math.round(absenceHours * 10) / 10,
         regularHours: Math.round(regularHours * 10) / 10,
+        totalNovelties: filteredNovelties.length,
+        impactedEmployees: new Set(filteredNovelties.map((item: any) => item.employee_id)).size,
+        hoursPerWorkday: Math.round((noveltyHours / Math.max(1, assignedWorkDays)) * 10) / 10,
+        estimatedImpact: Math.round(estimatedImpact),
         coverage,
         overtimeRate,
       },
@@ -355,6 +383,7 @@ export default function AnaliticaNomina() {
       weekdayBehavior,
       noveltyTypes,
       noveltyHoursByType,
+      estimatedImpactByType,
       shiftDemand,
       sourceMix,
       noveltySourceMix,
