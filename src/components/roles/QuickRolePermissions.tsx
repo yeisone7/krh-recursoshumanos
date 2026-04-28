@@ -142,7 +142,7 @@ export function QuickRolePermissions() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" />
           Administración rápida de permisos
@@ -151,7 +151,7 @@ export function QuickRolePermissions() {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto rounded-lg border border-border">
-          <Table>
+          <Table className="min-w-[920px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-52">Rol</TableHead>
