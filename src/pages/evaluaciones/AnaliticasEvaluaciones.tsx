@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { useEvaluations } from '@/hooks/useEvaluations';
 import { EVALUATION_STATUS_LABELS } from '@/types/evaluation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const COLORS = ['hsl(var(--primary))', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
 
@@ -30,6 +31,7 @@ function getScoreColor(score: number) {
 export default function AnaliticasEvaluaciones() {
   const { evaluations, cycles, templates } = useEvaluations();
   const [compareCycleId, setCompareCycleId] = useState<string>('');
+  const isMobile = useIsMobile();
 
   const completedEvals = evaluations.filter(e => e.status === 'submitted' || e.status === 'reviewed' || e.status === 'approved');
   const pendingEvals = evaluations.filter(e => e.status === 'pending');
@@ -174,22 +176,22 @@ export default function AnaliticasEvaluaciones() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Analíticas de Evaluaciones</h1>
-        <p className="text-muted-foreground">Métricas, tendencias y comparativos del desempeño organizacional</p>
+        <h1 className="text-2xl font-bold sm:text-3xl">Analíticas de Evaluaciones</h1>
+        <p className="mt-1 text-sm text-muted-foreground sm:text-base">Métricas, tendencias y comparativos del desempeño organizacional</p>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 sm:gap-4">
         {kpis.map((kpi, i) => (
           <motion.div key={kpi.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="p-4 sm:pt-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">{kpi.label}</p>
-                    <p className="text-3xl font-bold">{kpi.value}</p>
+                    <p className="text-2xl font-bold sm:text-3xl">{kpi.value}</p>
                     <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
                   </div>
                   <kpi.icon className={`h-8 w-8 ${kpi.color}`} />
@@ -203,19 +205,19 @@ export default function AnaliticasEvaluaciones() {
       {/* Trend + Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle>Tendencia Mensual</CardTitle>
             <CardDescription>Evaluaciones completadas y pendientes (últimos 12 meses)</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
+            <ResponsiveContainer width="100%" height={isMobile ? 260 : 300}>
               <ComposedChart data={monthlyTrend}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" domain={[0, 100]} />
+                <XAxis dataKey="month" tick={{ fontSize: isMobile ? 10 : 12 }} interval={isMobile ? 1 : 0} />
+                <YAxis yAxisId="left" width={isMobile ? 28 : 40} tick={{ fontSize: isMobile ? 10 : 12 }} />
+                <YAxis yAxisId="right" orientation="right" domain={[0, 100]} width={isMobile ? 28 : 40} tick={{ fontSize: isMobile ? 10 : 12 }} />
                 <Tooltip />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: isMobile ? 11 : 12 }} />
                 <Bar yAxisId="left" dataKey="completadas" fill="hsl(var(--primary))" name="Completadas" radius={[4, 4, 0, 0]} />
                 <Bar yAxisId="left" dataKey="pendientes" fill="#f59e0b" name="Pendientes" radius={[4, 4, 0, 0]} />
                 <Line yAxisId="right" type="monotone" dataKey="promedio" stroke="#10b981" strokeWidth={2} name="Puntaje Promedio" dot={{ r: 3 }} />
@@ -225,11 +227,11 @@ export default function AnaliticasEvaluaciones() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Distribución por Estado</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardHeader className="p-4 sm:p-6"><CardTitle>Distribución por Estado</CardTitle></CardHeader>
+          <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
+            <ResponsiveContainer width="100%" height={isMobile ? 240 : 300}>
               <PieChart>
-                <Pie data={byStatus} cx="50%" cy="50%" outerRadius={90} innerRadius={50} dataKey="value" label={({ name, value }) => `${name} (${value})`}>
+                <Pie data={byStatus} cx="50%" cy="50%" outerRadius={isMobile ? 72 : 90} innerRadius={isMobile ? 40 : 50} dataKey="value" label={isMobile ? false : ({ name, value }) => `${name} (${value})`}>
                   {byStatus.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip />
@@ -242,21 +244,21 @@ export default function AnaliticasEvaluaciones() {
       {/* By Cycle + Score Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle>Comparativo por Ciclo</CardTitle>
             <CardDescription>Total vs completadas por ciclo de evaluación</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
             {byCycle.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">Sin datos de ciclos</p>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 300 : 300}>
                 <ComposedChart data={byCycle} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 12 }} />
+                  <XAxis type="number" tick={{ fontSize: isMobile ? 10 : 12 }} />
+                  <YAxis dataKey="name" type="category" width={isMobile ? 82 : 130} tick={{ fontSize: isMobile ? 10 : 12 }} />
                   <Tooltip />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: isMobile ? 11 : 12 }} />
                   <Bar dataKey="total" fill="hsl(var(--primary))" name="Total" radius={[0, 4, 4, 0]} />
                   <Bar dataKey="completadas" fill="#10b981" name="Completadas" radius={[0, 4, 4, 0]} />
                 </ComposedChart>
@@ -266,16 +268,16 @@ export default function AnaliticasEvaluaciones() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle>Distribución de Puntajes</CardTitle>
             <CardDescription>Rangos de calificación según escala</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
+            <ResponsiveContainer width="100%" height={isMobile ? 240 : 300}>
               <BarChart data={scoreDistribution}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis dataKey="name" tick={{ fontSize: isMobile ? 10 : 12 }} />
+                <YAxis width={isMobile ? 28 : 40} tick={{ fontSize: isMobile ? 10 : 12 }} />
                 <Tooltip />
                 <Bar dataKey="cantidad" name="Evaluaciones" radius={[4, 4, 0, 0]}>
                   {scoreDistribution.map((_, i) => (
@@ -406,16 +408,16 @@ export default function AnaliticasEvaluaciones() {
 
       {/* Comparativo */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
+        <CardHeader className="flex flex-col gap-3 p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+          <div className="min-w-0">
             <CardTitle>Resumen Comparativo</CardTitle>
             <CardDescription className="mt-1">
               Compara puntajes de todos los empleados evaluados en un ciclo
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto lg:items-center">
             <Select value={compareCycleId} onValueChange={setCompareCycleId}>
-              <SelectTrigger className="w-[240px]">
+              <SelectTrigger className="w-full sm:w-[240px]">
                 <SelectValue placeholder="Seleccionar ciclo" />
               </SelectTrigger>
               <SelectContent>
@@ -425,14 +427,14 @@ export default function AnaliticasEvaluaciones() {
               </SelectContent>
             </Select>
             {compareEvaluations.length > 0 && (
-              <Button variant="outline" size="sm" onClick={handleExportComparative}>
+              <Button variant="outline" size="sm" onClick={handleExportComparative} className="w-full sm:w-auto">
                 <FileSpreadsheet className="h-4 w-4 mr-1.5" />
                 Excel
               </Button>
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
           {!compareCycleId ? (
             <p className="text-muted-foreground text-center py-8">
               Selecciona un ciclo para ver el comparativo
@@ -443,7 +445,7 @@ export default function AnaliticasEvaluaciones() {
             </p>
           ) : (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
                 <div className="bg-muted/50 rounded-lg p-3 text-center">
                   <p className="text-xs text-muted-foreground">Promedio</p>
                   <p className="text-2xl font-bold text-foreground">{compareAvg}/100</p>
@@ -460,7 +462,8 @@ export default function AnaliticasEvaluaciones() {
                 </div>
               </div>
 
-              <Table>
+              <div className="w-full overflow-x-auto rounded-md border">
+              <Table className="min-w-[680px] table-fixed sm:table-auto">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10">#</TableHead>
@@ -500,6 +503,7 @@ export default function AnaliticasEvaluaciones() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </div>
           )}
         </CardContent>
