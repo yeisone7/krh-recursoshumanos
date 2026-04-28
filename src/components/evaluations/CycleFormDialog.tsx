@@ -111,15 +111,16 @@ export function CycleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-lg flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
+        <DialogHeader className="px-4 pb-3 pt-4 sm:px-6 sm:pt-6">
           <DialogTitle>
             {cycle ? 'Editar Ciclo' : 'Nuevo Ciclo de Evaluación'}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6">
             <FormField
               control={form.control}
               name="name"
@@ -258,7 +259,8 @@ export function CycleFormDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-2 pt-4 sm:flex sm:justify-end">
+            </div>
+            <div className="grid grid-cols-2 gap-2 border-t bg-background p-4 sm:flex sm:justify-end sm:px-6">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>

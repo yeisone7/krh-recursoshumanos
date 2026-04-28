@@ -155,15 +155,16 @@ export function TemplateFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-4 scrollbar-themed sm:p-6">
-        <DialogHeader>
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
+        <DialogHeader className="px-4 pb-3 pt-4 sm:px-6 sm:pt-6">
           <DialogTitle>
             {template ? 'Editar Plantilla' : 'Nueva Plantilla de Evaluación'}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pb-4 scrollbar-themed sm:px-6">
             {/* Row 1: Name + Active toggle + Positions */}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-4">
@@ -441,7 +442,8 @@ export function TemplateFormDialog({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 pt-4 sm:flex sm:justify-end">
+            </div>
+            <div className="grid grid-cols-2 gap-2 border-t bg-background p-4 sm:flex sm:justify-end sm:px-6">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>

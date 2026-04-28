@@ -64,8 +64,8 @@ export function BulkGeneratePreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-2xl flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[85vh]">
+        <DialogHeader className="px-4 pb-3 pt-4 sm:px-6 sm:pt-6">
           <DialogTitle className="flex items-center gap-2">
             <UsersRound className="h-5 w-5 text-primary" />
             Generar Evaluaciones Masivas
@@ -75,6 +75,7 @@ export function BulkGeneratePreviewDialog({
           </DialogDescription>
         </DialogHeader>
 
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6">
         {/* Summary */}
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="bg-muted/50 rounded-lg p-3">
@@ -145,7 +146,8 @@ export function BulkGeneratePreviewDialog({
           </ScrollArea>
         )}
 
-        <DialogFooter className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
+        </div>
+        <DialogFooter className="grid grid-cols-2 gap-2 border-t bg-background p-4 sm:flex sm:gap-2 sm:px-6">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="w-full sm:w-auto">
             Cancelar
           </Button>
