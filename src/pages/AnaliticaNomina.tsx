@@ -196,6 +196,8 @@ export default function AnaliticaNomina() {
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
   const [comparisonMode, setComparisonMode] = useState<'actual' | 'mes_anterior'>('actual');
+  const [volumeThreshold, setVolumeThreshold] = useState(10);
+  const [severityThreshold, setSeverityThreshold] = useState(1000000);
   const comparisonStartDate = startDate ? shiftMonth(startDate, 1) : '';
   const comparisonEndDate = endDate ? shiftMonth(endDate, 1) : '';
 
@@ -237,6 +239,8 @@ export default function AnaliticaNomina() {
   }, [employees]);
 
   const employeeCenterMap = useMemo(() => new Map(employees.map((employee: any) => [employee.id, employee.work_info?.operation_center_id || employee.operation_centers?.id || null])), [employees]);
+
+  const centerNameMap = useMemo(() => new Map(centerOptions.map((center) => [center.id, center.name])), [centerOptions]);
 
   const salaryByEmployee = useMemo(() => {
     const map = new Map<string, number>();
