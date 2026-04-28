@@ -196,6 +196,8 @@ export default function AnaliticaNomina() {
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
   const [comparisonMode, setComparisonMode] = useState<'actual' | 'mes_anterior'>('actual');
+  const [volumeThreshold, setVolumeThreshold] = useState(10);
+  const [severityThreshold, setSeverityThreshold] = useState(1000000);
   const comparisonStartDate = startDate ? shiftMonth(startDate, 1) : '';
   const comparisonEndDate = endDate ? shiftMonth(endDate, 1) : '';
 
@@ -237,6 +239,8 @@ export default function AnaliticaNomina() {
   }, [employees]);
 
   const employeeCenterMap = useMemo(() => new Map(employees.map((employee: any) => [employee.id, employee.work_info?.operation_center_id || employee.operation_centers?.id || null])), [employees]);
+
+  const centerNameMap = useMemo(() => new Map(centerOptions.map((center) => [center.id, center.name])), [centerOptions]);
 
   const salaryByEmployee = useMemo(() => {
     const map = new Map<string, number>();
@@ -337,6 +341,23 @@ export default function AnaliticaNomina() {
     const noveltyTypes = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type);
     const noveltyHoursByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, (item: any) => Number(item.hours || 0));
     const estimatedImpactByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, getEstimatedImpact);
+    const buildImpactRanking = (getKey: (item: any) => string) => Object.values(filteredNovelties.reduce<Record<string, any>>((acc, item: any) => {
+      const name = getKey(item);
+      if (!acc[name]) acc[name] = { name, volumen: 0, horas: 0, impacto: 0, empleados: new Set<string>() };
+      acc[name].volumen += 1;
+      acc[name].horas += Number(item.hours || 0);
+      acc[name].impacto += getEstimatedImpact(item);
+      acc[name].empleados.add(item.employee_id);
+      return acc;
+    }, {})).map((item: any) => ({
+      ...item,
+      horas: Math.round(item.horas * 10) / 10,
+      impacto: Math.round(item.impacto),
+      empleados: item.empleados.size,
+      prioridad: item.volumen >= volumeThreshold && item.impacto >= severityThreshold ? 'Crítica' : item.volumen >= volumeThreshold || item.impacto >= severityThreshold ? 'Alta' : 'Normal',
+    })).sort((a: any, b: any) => b.impacto - a.impacto || b.volumen - a.volumen).slice(0, 8);
+    const impactRankingByType = buildImpactRanking((item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type || 'Sin tipo');
+    const impactRankingByCenter = buildImpactRanking((item: any) => centerNameMap.get(employeeCenterMap.get(item.employee_id) as string) || 'Sin centro');
     const shiftDistributionTrend = monthlyTrend.map((month) => ({
       periodo: month.periodo,
       jornadas: month.jornadas,
@@ -399,11 +420,16 @@ export default function AnaliticaNomina() {
       },
     ];
 
+    const thresholdAlerts = [...impactRankingByType, ...impactRankingByCenter]
+      .filter((item: any) => item.prioridad !== 'Normal')
+      .slice(0, 6)
+      .map((item: any) => `${item.prioridad}: ${item.name} supera umbral con ${item.volumen} novedades y ${currencyFormatter.format(item.impacto)} estimados.`);
     const alerts = [
       withoutAssignments > 0 ? `${withoutAssignments} empleados activos en tiempo no tienen asignaciones en el rango.` : null,
       highLoadEmployees > 0 ? `${highLoadEmployees} empleados concentran una carga alta de novedades.` : null,
       restDays > assignedWorkDays * 0.35 ? 'La proporción de descansos programados supera el patrón esperado.' : null,
       manualAssignments > generatedAssignments && assignments.length > 0 ? 'Predomina la programación manual sobre ciclos automáticos.' : null,
+      ...thresholdAlerts,
     ].filter(Boolean) as string[];
 
     return {
@@ -433,6 +459,8 @@ export default function AnaliticaNomina() {
       noveltyTypes,
       noveltyHoursByType,
       estimatedImpactByType,
+      impactRankingByType,
+      impactRankingByCenter,
       shiftDemand,
       sourceMix,
       noveltySourceMix,
@@ -442,7 +470,7 @@ export default function AnaliticaNomina() {
       insights,
       alerts,
     };
-  }, [assignments, comparisonAssignments, comparisonMode, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, shiftCycles, shifts, startDate, endDate, workSchedules]);
+  }, [assignments, centerNameMap, comparisonAssignments, comparisonMode, employeeCenterMap, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, severityThreshold, shiftCycles, shifts, startDate, endDate, volumeThreshold, workSchedules]);
 
   if (isLoading) {
     return (
@@ -470,7 +498,7 @@ export default function AnaliticaNomina() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                 <Filter className="h-4 w-4" /> Centro de operación
@@ -506,6 +534,18 @@ export default function AnaliticaNomina() {
                   <SelectItem value="mes_anterior">Contra mes anterior</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <AlertTriangle className="h-4 w-4" /> Umbral volumen
+              </div>
+              <Input type="number" min={1} value={volumeThreshold} onChange={(event) => setVolumeThreshold(Number(event.target.value) || 1)} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <DollarSign className="h-4 w-4" /> Umbral severidad
+              </div>
+              <Input type="number" min={0} step={100000} value={severityThreshold} onChange={(event) => setSeverityThreshold(Number(event.target.value) || 0)} />
             </div>
           </div>
         </CardContent>
@@ -565,6 +605,38 @@ export default function AnaliticaNomina() {
           </CardContent>
         </Card>
       )}
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {[{ title: 'Priorización por tipo de novedad', rows: analytics.impactRankingByType }, { title: 'Priorización por centro', rows: analytics.impactRankingByCenter }].map((section) => (
+          <Card key={section.title}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">{section.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {section.rows.map((row: any) => (
+                <div key={row.name} className="rounded-md border border-border p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{row.name}</p>
+                      <p className="text-xs text-muted-foreground">{row.volumen} novedades · {numberFormatter.format(row.horas)} horas · {row.empleados} empleados</p>
+                    </div>
+                    <Badge variant="outline" className={cn(
+                      row.prioridad === 'Crítica' && 'bg-destructive/10 text-destructive border-destructive/20',
+                      row.prioridad === 'Alta' && 'bg-warning-light text-warning border-warning/20',
+                      row.prioridad === 'Normal' && 'bg-success-light text-success border-success/20'
+                    )}>{row.prioridad}</Badge>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-3 text-xs">
+                    <span className="text-muted-foreground">Impacto estimado</span>
+                    <span className="font-semibold text-foreground">{currencyFormatter.format(row.impacto)}</span>
+                  </div>
+                  <Progress value={Math.min(100, percent(row.impacto, Math.max(severityThreshold, row.impacto)))} className="mt-2 h-2" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard title="Tendencia mensual de jornadas y novedades" className="xl:col-span-2">
@@ -708,6 +780,33 @@ export default function AnaliticaNomina() {
               <Tooltip formatter={(value) => currencyFormatter.format(Number(value))} />
               <Bar dataKey="value" name="Monto estimado" fill="hsl(var(--success))" radius={[0, 4, 4, 0]} />
             </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Top impacto por tipo de novedad">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.impactRankingByType} layout="vertical" margin={{ left: 34, right: 16, top: 8, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(value) => `$${Number(value) / 1000000}M`} />
+              <YAxis dataKey="name" type="category" width={118} tick={{ fontSize: 11 }} />
+              <Tooltip formatter={(value, name) => name === 'Impacto' ? currencyFormatter.format(Number(value)) : value} />
+              <Bar dataKey="impacto" name="Impacto" fill="hsl(var(--warning))" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Top impacto por centro de operación">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.impactRankingByCenter} margin={{ left: -20, right: 18, top: 8, bottom: 36 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" angle={-20} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} tickFormatter={(value) => `$${Number(value) / 1000000}M`} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => name === 'Impacto' ? currencyFormatter.format(Number(value)) : value} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="impacto" name="Impacto" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="volumen" name="Volumen" stroke="hsl(var(--destructive))" strokeWidth={3} />
+            </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
 
