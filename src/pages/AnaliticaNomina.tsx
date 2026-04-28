@@ -498,7 +498,7 @@ export default function AnaliticaNomina() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                 <Filter className="h-4 w-4" /> Centro de operación
@@ -534,6 +534,18 @@ export default function AnaliticaNomina() {
                   <SelectItem value="mes_anterior">Contra mes anterior</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <AlertTriangle className="h-4 w-4" /> Umbral volumen
+              </div>
+              <Input type="number" min={1} value={volumeThreshold} onChange={(event) => setVolumeThreshold(Number(event.target.value) || 1)} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <DollarSign className="h-4 w-4" /> Umbral severidad
+              </div>
+              <Input type="number" min={0} step={100000} value={severityThreshold} onChange={(event) => setSeverityThreshold(Number(event.target.value) || 0)} />
             </div>
           </div>
         </CardContent>
@@ -736,6 +748,33 @@ export default function AnaliticaNomina() {
               <Tooltip formatter={(value) => currencyFormatter.format(Number(value))} />
               <Bar dataKey="value" name="Monto estimado" fill="hsl(var(--success))" radius={[0, 4, 4, 0]} />
             </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Top impacto por tipo de novedad">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.impactRankingByType} layout="vertical" margin={{ left: 34, right: 16, top: 8, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(value) => `$${Number(value) / 1000000}M`} />
+              <YAxis dataKey="name" type="category" width={118} tick={{ fontSize: 11 }} />
+              <Tooltip formatter={(value, name) => name === 'Impacto' ? currencyFormatter.format(Number(value)) : value} />
+              <Bar dataKey="impacto" name="Impacto" fill="hsl(var(--warning))" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Top impacto por centro de operación">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.impactRankingByCenter} margin={{ left: -20, right: 18, top: 8, bottom: 36 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" angle={-20} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} tickFormatter={(value) => `$${Number(value) / 1000000}M`} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => name === 'Impacto' ? currencyFormatter.format(Number(value)) : value} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="impacto" name="Impacto" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="volumen" name="Volumen" stroke="hsl(var(--destructive))" strokeWidth={3} />
+            </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
 
