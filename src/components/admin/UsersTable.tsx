@@ -41,6 +41,7 @@ import { useRemoveCompanyAssignment, useToggleUserStatus, type AdminUser } from 
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 // Helper to get display name with fallbacks
 function getUserDisplayName(user: AdminUser): string {
@@ -92,6 +93,58 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const removeCompany = useRemoveCompanyAssignment();
   const toggleStatus = useToggleUserStatus();
+
+  const renderActionsMenu = (user: AdminUser) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => handleManageRoles(user)}>
+          <Shield className="w-4 h-4 mr-2" />
+          Gestionar Roles
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleManageCenters(user)}>
+          <MapPin className="w-4 h-4 mr-2" />
+          Asignar Centros
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleManageCompanies(user)}>
+          <Building2 className="w-4 h-4 mr-2" />
+          Asignar Empresas
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleLinkEmployee(user)}>
+          <Link className="w-4 h-4 mr-2" />
+          Vincular Empleado
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => handleToggleStatus(user)} disabled={user.id === currentUser?.id}>
+          {user.is_active ? (
+            <>
+              <UserMinus className="w-4 h-4 mr-2" />
+              Desactivar Usuario
+            </>
+          ) : (
+            <>
+              <UserCheck className="w-4 h-4 mr-2" />
+              Activar Usuario
+            </>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="text-destructive"
+          onClick={() => handleRemoveFromCompany(user)}
+          disabled={user.id === currentUser?.id}
+        >
+          <UserX className="w-4 h-4 mr-2" />
+          Eliminar de Empresa
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users;
@@ -175,7 +228,25 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
 
   if (isLoading) {
     return (
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <>
+      <div className="space-y-3 md:hidden">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="card-elevated space-y-3 p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-4 w-32 rounded bg-muted animate-pulse" />
+                <div className="h-3 w-44 rounded bg-muted animate-pulse" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-10 rounded bg-muted animate-pulse" />
+              <div className="h-10 rounded bg-muted animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
         <Table className="min-w-[860px]">
           <TableHeader>
             <TableRow>
@@ -211,12 +282,13 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
           </TableBody>
         </Table>
       </div>
+      </>
     );
   }
 
   if (users.length === 0) {
     return (
-      <div className="rounded-lg border border-border p-12 text-center">
+      <div className="rounded-lg border border-border p-6 text-center sm:p-12">
         <Shield className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold mb-2">Sin usuarios</h3>
         <p className="text-muted-foreground">
@@ -239,7 +311,71 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border">
+      <MobileCardList
+        className="md:hidden"
+        emptyMessage="No se encontraron usuarios"
+        items={filteredUsers.map(user => ({
+          id: user.id,
+          title: (
+            <span>
+              {getUserDisplayName(user)}
+              {user.id === currentUser?.id && <span className="ml-1.5 text-xs text-muted-foreground">(Tú)</span>}
+            </span>
+          ),
+          subtitle: user.email || 'Sin correo registrado',
+          badge: (
+            <Badge
+              variant={user.is_active ? 'outline' : 'secondary'}
+              className={user.is_active ? 'bg-success-light text-success border-success/20' : 'bg-muted text-muted-foreground'}
+            >
+              {user.is_active ? 'Activo' : 'Inactivo'}
+            </Badge>
+          ),
+          fields: [
+            {
+              label: 'Roles',
+              value: user.custom_roles.length === 0 && user.roles.length === 0 ? (
+                <span className="text-muted-foreground italic">Sin roles</span>
+              ) : (
+                <div className="flex flex-wrap gap-1">
+                  {user.custom_roles.map(role => <Badge key={role} variant="secondary" className="text-xs">{role}</Badge>)}
+                  {user.roles.map(role => (
+                    <Badge key={role} variant={ROLE_LABELS[role]?.variant || 'outline'} className="text-xs">
+                      {ROLE_LABELS[role]?.label || role}
+                    </Badge>
+                  ))}
+                </div>
+              ),
+              className: 'col-span-2',
+            },
+            {
+              label: 'Empresas',
+              value: user.companies.length === 0 ? '—' : `${user.companies.length}`,
+            },
+            {
+              label: 'Centros',
+              value: user.centers.length === 0 ? 'Todos' : `${user.centers.length}`,
+            },
+          ],
+          actions: (
+            <>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={user.is_active}
+                  onCheckedChange={() => handleToggleStatus(user)}
+                  disabled={user.id === currentUser?.id || toggleStatus.isPending}
+                  className="data-[state=checked]:bg-success"
+                />
+                <span className="text-sm text-muted-foreground">Estado</span>
+              </div>
+              {renderActionsMenu(user)}
+            </>
+          ),
+          itemClassName: !user.is_active ? 'opacity-60' : undefined,
+        }))}
+      />
+
+      <div className="hidden overflow-hidden rounded-lg border border-border md:block">
         <div className="overflow-auto max-h-[600px]">
         <Table className="min-w-[860px]">
           <TableHeader>
@@ -346,58 +482,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleManageRoles(user)}>
-                        <Shield className="w-4 h-4 mr-2" />
-                        Gestionar Roles
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleManageCenters(user)}>
-                        <MapPin className="w-4 h-4 mr-2" />
-                        Asignar Centros
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleManageCompanies(user)}>
-                        <Building2 className="w-4 h-4 mr-2" />
-                        Asignar Empresas
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleLinkEmployee(user)}>
-                        <Link className="w-4 h-4 mr-2" />
-                        Vincular Empleado
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={() => handleToggleStatus(user)}
-                        disabled={user.id === currentUser?.id}
-                      >
-                        {user.is_active ? (
-                          <>
-                            <UserMinus className="w-4 h-4 mr-2" />
-                            Desactivar Usuario
-                          </>
-                        ) : (
-                          <>
-                            <UserCheck className="w-4 h-4 mr-2" />
-                            Activar Usuario
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="text-destructive"
-                        onClick={() => handleRemoveFromCompany(user)}
-                        disabled={user.id === currentUser?.id}
-                      >
-                        <UserX className="w-4 h-4 mr-2" />
-                        Eliminar de Empresa
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {renderActionsMenu(user)}
                 </TableCell>
               </TableRow>
             ))}
