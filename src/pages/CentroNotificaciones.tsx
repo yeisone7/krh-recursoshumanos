@@ -110,7 +110,7 @@ export default function CentroNotificaciones() {
         </Button>
       </motion.div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="hidden gap-4 md:grid md:grid-cols-4">
         <Card><CardContent className="p-4 flex items-center gap-3"><Bell className="h-5 w-5 text-primary" /><div><p className="text-2xl font-bold">{stats.totalNotifications}</p><p className="text-sm text-muted-foreground">Alertas</p></div></CardContent></Card>
         <Card><CardContent className="p-4 flex items-center gap-3"><Users className="h-5 w-5 text-warning" /><div><p className="text-2xl font-bold">{stats.unread}</p><p className="text-sm text-muted-foreground">Sin leer</p></div></CardContent></Card>
         <Card><CardContent className="p-4 flex items-center gap-3"><Mail className="h-5 w-5 text-info" /><div><p className="text-2xl font-bold">{stats.emails}</p><p className="text-sm text-muted-foreground">Correos</p></div></CardContent></Card>
