@@ -82,6 +82,7 @@ import {
 import NotFound from "./pages/NotFound";
 
 const AnaliticaSeleccion = lazy(() => import("./pages/AnaliticaSeleccion"));
+const AnaliticaNomina = lazy(() => import("./pages/AnaliticaNomina"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -150,6 +151,7 @@ const App = () => (
                         <Route path="/centros" element={<P module="centros"><Centros /></P>} />
                         <Route path="/centros/fichas" element={<P module="centros"><CentrosFichas /></P>} />
                         <Route path="/jornadas" element={<P module="jornadas"><Jornadas /></P>} />
+                        <Route path="/nomina/analitica" element={<P module="novedades"><Suspense fallback={null}><AnaliticaNomina /></Suspense></P>} />
                         <Route path="/disciplinarios" element={<P module="disciplinarios"><Disciplinarios /></P>} />
                         <Route path="/vacaciones" element={<P module="vacaciones"><Vacaciones /></P>} />
                         <Route path="/permisos" element={<P module="permisos"><Permisos /></P>} />
