@@ -65,13 +65,14 @@ export function AppealFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-lg flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
+        <DialogHeader className="px-4 pb-3 pt-4 pr-12 sm:px-6 sm:pt-6">
           <DialogTitle>Registrar Apelación</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6">
             <FormField
               control={form.control}
               name="appeal_date"
@@ -130,15 +131,17 @@ export function AppealFormDialog({
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-4">
+            </div>
+            <div className="grid grid-cols-1 gap-2 border-t bg-background p-4 sm:flex sm:justify-end sm:px-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                className="w-full sm:w-auto"
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={registerAppeal.isPending}>
+              <Button type="submit" disabled={registerAppeal.isPending} className="w-full sm:w-auto">
                 {registerAppeal.isPending ? 'Guardando...' : 'Registrar Apelación'}
               </Button>
             </div>
