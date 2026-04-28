@@ -390,10 +390,10 @@ export default function Evaluaciones() {
         {/* Cycles Tab */}
         <TabsContent value="cycles">
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle>Ciclos de Evaluación</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               {loadingCycles ? (
                 <p className="text-muted-foreground">Cargando...</p>
               ) : cycles.length === 0 ? (
@@ -401,7 +401,7 @@ export default function Evaluaciones() {
                   No hay ciclos de evaluación configurados
                 </p>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto rounded-md border sm:border-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
