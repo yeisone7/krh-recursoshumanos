@@ -46,7 +46,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
+      <DialogContent className="h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-0 sm:flex sm:h-auto sm:max-h-[90vh] sm:flex-col sm:overflow-hidden">
         {/* Hero header */}
         <div className="shrink-0 bg-gradient-to-br from-[#3b3a59] via-[#4a4870] to-[#5a587a] px-4 pt-4 pb-3 rounded-t-lg sm:px-6 sm:pt-6 sm:pb-5">
           <DialogHeader>
@@ -130,7 +130,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-5 scrollbar-themed sm:px-6">
+        <div className="space-y-6 px-4 py-5 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain sm:px-6 sm:scrollbar-themed">
           {/* Criteria section */}
           <section>
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
