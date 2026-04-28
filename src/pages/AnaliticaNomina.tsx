@@ -470,7 +470,7 @@ export default function AnaliticaNomina() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                 <Filter className="h-4 w-4" /> Centro de operación
@@ -494,6 +494,18 @@ export default function AnaliticaNomina() {
                 <CalendarDays className="h-4 w-4" /> Hasta
               </div>
               <Input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <TrendingUp className="h-4 w-4" /> Comparación
+              </div>
+              <Select value={comparisonMode} onValueChange={(value: 'actual' | 'mes_anterior') => setComparisonMode(value)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="actual">Solo período actual</SelectItem>
+                  <SelectItem value="mes_anterior">Contra mes anterior</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -585,6 +597,52 @@ export default function AnaliticaNomina() {
               <Bar yAxisId="left" dataKey="empleadosImpactados" name="Empleados impactados" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
               <Line yAxisId="left" type="monotone" dataKey="horasPorJornada" name="Horas por jornada" stroke="hsl(var(--warning))" strokeWidth={3} />
               <Area yAxisId="right" type="monotone" dataKey="montoEstimado" name="Monto estimado" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.18} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Altas y bajas mensuales de novedades" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.monthlyTrend} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="altasNovedades" name="Altas" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="bajasNovedades" name="Bajas" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+              <Line type="monotone" dataKey="novedades" name="Total novedades" stroke="hsl(var(--primary))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Distribución mensual por jornada" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={analytics.shiftDistributionTrend} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Legend />
+              <Area type="monotone" dataKey="jornadas" name="Jornadas" stackId="1" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.28} />
+              <Area type="monotone" dataKey="descansos" name="Descansos" stackId="1" stroke="hsl(var(--secondary))" fill="hsl(var(--secondary))" fillOpacity={0.24} />
+              <Line type="monotone" dataKey="manual" name="Manual" stroke="hsl(var(--warning))" strokeWidth={3} />
+              <Line type="monotone" dataKey="ciclo" name="Ciclo" stroke="hsl(var(--success))" strokeWidth={3} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Evolución de impacto estimado" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.impactEvolution} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `$${Number(value) / 1000000}M`} />
+              <Tooltip formatter={(value) => currencyFormatter.format(Number(value))} />
+              <Legend />
+              <Area type="monotone" dataKey="impactoActual" name="Impacto actual" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.18} />
+              {comparisonMode === 'mes_anterior' && <Line type="monotone" dataKey="impactoMesAnterior" name="Mes anterior" stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" strokeWidth={3} />}
+              <Bar dataKey="variacion" name="Variación" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
