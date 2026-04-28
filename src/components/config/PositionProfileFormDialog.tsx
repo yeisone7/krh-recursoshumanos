@@ -322,7 +322,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
               <SectionHeader icon={ListChecks} num={3} label="Funciones del Cargo" count={form.functions.filter(f => f.trim()).length} />
               <CollapsibleContent className="space-y-3 pt-4 pl-1">
                 {form.functions.map((f, i) => (
-                  <div key={i} className="flex gap-2 items-center">
+                  <div key={i} className="flex items-center gap-2">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary">
                       {i + 1}
                     </span>
@@ -382,7 +382,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
             <Collapsible>
               <SectionHeader icon={Stamp} num={6} label="Aprobaciones" />
               <CollapsibleContent className="space-y-3 pt-4 pl-1">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div>
                     <FieldLabel>Elaborado por</FieldLabel>
                     <Input className="mt-1.5" value={form.elaborated_by} onChange={e => updateField('elaborated_by', e.target.value)} />
@@ -402,9 +402,9 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
         </div>
 
         {/* Footer */}
-        <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/30">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
+        <DialogFooter className="shrink-0 flex-col-reverse gap-2 border-t border-border/50 bg-muted/30 px-4 py-4 sm:flex-row sm:gap-0 sm:px-6">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={isPending} className="w-full sm:w-auto">
             {isPending ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Guardar Perfil'}
           </Button>
         </DialogFooter>
