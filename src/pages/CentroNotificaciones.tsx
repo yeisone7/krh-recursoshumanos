@@ -99,13 +99,13 @@ export default function CentroNotificaciones() {
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Centro de Notificaciones</h1>
+        <div className="min-w-0">
+          <h1 className="break-words font-display text-xl font-bold text-foreground sm:text-2xl">Centro de Notificaciones</h1>
           <p className="text-muted-foreground mt-1">
             {canManageCompanyHistory ? 'Historial de alertas y envíos de la empresa por usuario' : 'Historial de tus alertas y envíos'}
           </p>
         </div>
-        <Button variant="outline" onClick={refetch} disabled={isLoading} className="gap-2">
+        <Button variant="outline" onClick={refetch} disabled={isLoading} className="w-full gap-2 sm:w-auto">
           <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} /> Actualizar
         </Button>
       </motion.div>
@@ -118,11 +118,11 @@ export default function CentroNotificaciones() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="px-4 sm:px-6">
           <CardTitle>Historial</CardTitle>
           <CardDescription>Filtra por usuario, estado, canal, correo o asunto.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-4 sm:px-6">
           <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -152,12 +152,40 @@ export default function CentroNotificaciones() {
             </Select>
           </div>
 
-          <Tabs defaultValue="alerts">
-            <TabsList>
-              <TabsTrigger value="alerts">Alertas en app</TabsTrigger>
-              <TabsTrigger value="deliveries">Correos y envíos</TabsTrigger>
+          <Tabs defaultValue="alerts" className="space-y-4">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1">
+              <TabsTrigger value="alerts" className="min-w-0 px-2 text-xs sm:text-sm">
+                <span className="min-w-0 truncate">Alertas en app</span>
+              </TabsTrigger>
+              <TabsTrigger value="deliveries" className="min-w-0 px-2 text-xs sm:text-sm">
+                <span className="min-w-0 truncate">Correos y envíos</span>
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="alerts">
+              <div className="space-y-3 md:hidden">
+                {filteredNotifications.map((item) => (
+                  <div key={item.id} className="rounded-lg border bg-card p-3 space-y-3">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground break-words">{userDisplayMap[item.user_id] || item.user_id}</p>
+                      <p className="font-medium break-words">{item.title}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{item.message}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline">{typeLabels[item.type] || item.type}</Badge>
+                      <Badge variant={item.is_read ? 'secondary' : 'default'}>{item.is_read ? 'Leída' : 'Sin leer'}</Badge>
+                    </div>
+                    <div className="flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                      <span>{formatDate(item.created_at)}</span>
+                      <div className="flex gap-2">
+                        {!item.is_read && <Button variant="outline" size="sm" className="flex-1" onClick={() => handleMarkRead(item.id)}><Check className="h-4 w-4" /> Leer</Button>}
+                        <Button variant="outline" size="sm" className="flex-1 text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4" /> Eliminar</Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {filteredNotifications.length === 0 && <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">No hay alertas con estos filtros.</div>}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Alerta</TableHead><TableHead>Tipo</TableHead><TableHead>Estado</TableHead><TableHead>Fecha</TableHead><TableHead className="text-right">Acciones</TableHead></TableRow></TableHeader>
                 <TableBody>
@@ -177,8 +205,28 @@ export default function CentroNotificaciones() {
                   {filteredNotifications.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No hay alertas con estos filtros.</TableCell></TableRow>}
                 </TableBody>
               </Table>
+              </div>
             </TabsContent>
             <TabsContent value="deliveries">
+              <div className="space-y-3 md:hidden">
+                {filteredLogs.map((item) => (
+                  <div key={item.id} className="rounded-lg border bg-card p-3 space-y-3">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground break-words">{item.recipient_user_id ? userDisplayMap[item.recipient_user_id] || item.recipient_user_id : '-'}</p>
+                      <p className="font-medium break-words">{item.subject || item.template_name || '-'}</p>
+                      {item.recipient_email && <p className="text-sm text-muted-foreground break-words">{item.recipient_email}</p>}
+                      {item.error_message && <p className="text-sm text-destructive line-clamp-2">{item.error_message}</p>}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline">{item.channel}</Badge>
+                      <Badge variant="outline" className={statusStyles[item.status] || 'bg-muted text-muted-foreground'}>{item.status}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{formatDate(item.created_at)}</p>
+                  </div>
+                ))}
+                {filteredLogs.length === 0 && <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">No hay envíos registrados con estos filtros.</div>}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Destinatario</TableHead><TableHead>Canal</TableHead><TableHead>Asunto</TableHead><TableHead>Estado</TableHead><TableHead>Fecha</TableHead></TableRow></TableHeader>
                 <TableBody>
@@ -195,6 +243,7 @@ export default function CentroNotificaciones() {
                   {filteredLogs.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No hay envíos registrados con estos filtros.</TableCell></TableRow>}
                 </TableBody>
               </Table>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
