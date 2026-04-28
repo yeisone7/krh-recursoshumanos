@@ -405,11 +405,11 @@ export default function Evaluaciones() {
                   No hay ciclos de evaluación configurados
                 </p>
               ) : (
-                <div className="overflow-x-auto rounded-md border sm:border-0">
-                <Table>
+                <div className="w-full overflow-x-auto rounded-md border sm:border-0">
+                <Table className="min-w-[720px] table-fixed sm:table-auto">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Nombre</TableHead>
+                      <TableHead className="w-[220px]">Nombre</TableHead>
                       <TableHead className="hidden sm:table-cell">Plantilla</TableHead>
                       <TableHead className="hidden md:table-cell">Periodo</TableHead>
                       <TableHead className="hidden sm:table-cell">Progreso</TableHead>
@@ -423,8 +423,12 @@ export default function Evaluaciones() {
                       const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
                       return (
                       <TableRow key={cycle.id}>
-                        <TableCell className="font-medium">{cycle.name}</TableCell>
-                        <TableCell className="hidden sm:table-cell">{cycle.template?.name || '-'}</TableCell>
+                        <TableCell className="font-medium">
+                          <span className="block max-w-[210px] truncate">{cycle.name}</span>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <span className="block max-w-[180px] truncate">{cycle.template?.name || '-'}</span>
+                        </TableCell>
                         <TableCell className="hidden md:table-cell">
                           {format(new Date(cycle.start_date), 'dd MMM', { locale: es })} -{' '}
                           {format(new Date(cycle.end_date), 'dd MMM yyyy', { locale: es })}
