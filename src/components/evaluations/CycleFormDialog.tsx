@@ -111,7 +111,7 @@ export function CycleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>
             {cycle ? 'Editar Ciclo' : 'Nuevo Ciclo de Evaluación'}
@@ -173,7 +173,7 @@ export function CycleFormDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="start_date"
@@ -203,7 +203,7 @@ export function CycleFormDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="self_evaluation_deadline"
@@ -258,11 +258,11 @@ export function CycleFormDialog({
               )}
             />
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="grid grid-cols-2 gap-2 pt-4 sm:flex sm:justify-end">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                 {cycle ? 'Actualizar' : 'Crear'} Ciclo
               </Button>
             </div>
