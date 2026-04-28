@@ -229,8 +229,8 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                 <Star className="h-4 w-4 text-amber-500" />
                 Tabla de Calificación
               </h3>
-              <div className="overflow-x-auto rounded-lg border">
-                <table className="w-full text-sm">
+              <div className="w-full overflow-x-auto rounded-lg border">
+                <table className="min-w-[640px] w-full table-fixed text-sm sm:table-auto">
                   <thead className="bg-muted/50">
                     <tr>
                       <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Nivel</th>
@@ -254,10 +254,10 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                       ];
                       return (
                         <tr key={idx} className={`border-t ${rowColors[idx] || ''}`}>
-                          <td className="px-4 py-2.5">
+                          <td className="px-4 py-2.5 w-[190px]">
                             <div className="flex items-center gap-2">
                               <span className={`h-2.5 w-2.5 rounded-full ${dotColors[idx] || 'bg-muted'}`} />
-                              <span className="font-medium text-foreground">{item.label}</span>
+                              <span className="font-medium text-foreground truncate">{item.label}</span>
                             </div>
                           </td>
                           <td className="px-4 py-2.5 text-center">
