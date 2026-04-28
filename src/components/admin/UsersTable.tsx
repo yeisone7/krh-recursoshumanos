@@ -41,6 +41,7 @@ import { useRemoveCompanyAssignment, useToggleUserStatus, type AdminUser } from 
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 // Helper to get display name with fallbacks
 function getUserDisplayName(user: AdminUser): string {
@@ -92,6 +93,58 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const removeCompany = useRemoveCompanyAssignment();
   const toggleStatus = useToggleUserStatus();
+
+  const renderActionsMenu = (user: AdminUser) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => handleManageRoles(user)}>
+          <Shield className="w-4 h-4 mr-2" />
+          Gestionar Roles
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleManageCenters(user)}>
+          <MapPin className="w-4 h-4 mr-2" />
+          Asignar Centros
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleManageCompanies(user)}>
+          <Building2 className="w-4 h-4 mr-2" />
+          Asignar Empresas
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleLinkEmployee(user)}>
+          <Link className="w-4 h-4 mr-2" />
+          Vincular Empleado
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => handleToggleStatus(user)} disabled={user.id === currentUser?.id}>
+          {user.is_active ? (
+            <>
+              <UserMinus className="w-4 h-4 mr-2" />
+              Desactivar Usuario
+            </>
+          ) : (
+            <>
+              <UserCheck className="w-4 h-4 mr-2" />
+              Activar Usuario
+            </>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="text-destructive"
+          onClick={() => handleRemoveFromCompany(user)}
+          disabled={user.id === currentUser?.id}
+        >
+          <UserX className="w-4 h-4 mr-2" />
+          Eliminar de Empresa
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users;
