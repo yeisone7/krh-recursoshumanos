@@ -41,13 +41,13 @@ export function OrgChartNode({
 
   return (
     <div className="flex flex-col items-center">
-      {level > 0 && <div className="w-px h-6 bg-border" />}
+      {level > 0 && <div className="h-4 w-px bg-border sm:h-6" />}
 
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className={cn(
-          "relative bg-card border border-border rounded-lg shadow-sm p-4 min-w-[220px] max-w-[280px]",
+          "relative min-w-[200px] max-w-[240px] rounded-lg border border-border bg-card p-3 shadow-sm sm:min-w-[220px] sm:max-w-[280px] sm:p-4",
           "hover:shadow-md transition-shadow cursor-pointer",
           level === 0 && "border-primary/50 bg-primary/5"
         )}
@@ -67,22 +67,22 @@ export function OrgChartNode({
 
         {/* Position name */}
         <div className="text-center mb-2">
-          <div className="flex items-center justify-center gap-1.5 mb-1">
-            <Briefcase className="w-3.5 h-3.5 text-primary" />
-            <h3 className="font-semibold text-foreground text-sm">{position.name}</h3>
+          <div className="mb-1 flex min-w-0 items-start justify-center gap-1.5">
+            <Briefcase className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+            <h3 className="break-words text-sm font-semibold leading-snug text-foreground">{position.name}</h3>
           </div>
           {position.code && (
-            <span className="text-xs text-muted-foreground">{position.code}</span>
+            <span className="block break-words text-xs text-muted-foreground">{position.code}</span>
           )}
           {position.areaName && (
-            <p className="text-xs text-muted-foreground mt-0.5">{position.areaName}</p>
+            <p className="mt-0.5 break-words text-xs text-muted-foreground">{position.areaName}</p>
           )}
         </div>
 
         {/* Employee info */}
         {mainEmployee ? (
-          <div className="flex items-center gap-3 pt-3 border-t border-border">
-            <Avatar className="h-10 w-10">
+          <div className="flex min-w-0 items-center gap-2 border-t border-border pt-3 sm:gap-3">
+            <Avatar className="h-9 w-9 shrink-0 sm:h-10 sm:w-10">
               <AvatarImage src={mainEmployee.avatar_url} />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {getInitials(mainEmployee.first_name, mainEmployee.last_name)}
@@ -100,9 +100,9 @@ export function OrgChartNode({
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-2 pt-3 border-t border-border text-muted-foreground">
-            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-              <Users className="w-5 h-5" />
+          <div className="flex items-center gap-2 border-t border-border pt-3 text-muted-foreground">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted sm:h-10 sm:w-10">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <span className="text-xs italic">Vacante</span>
           </div>
@@ -126,11 +126,11 @@ export function OrgChartNode({
             exit={{ opacity: 0, height: 0 }}
             className="flex flex-col items-center"
           >
-            <div className="w-px h-6 bg-border" />
+            <div className="h-4 w-px bg-border sm:h-6" />
             <div className="relative">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px bg-border"
                 style={{ width: 'calc(100% - 100px)' }} />
-              <div className="flex gap-8 pt-0">
+              <div className="flex gap-4 pt-0 sm:gap-8">
                 {children}
               </div>
             </div>
