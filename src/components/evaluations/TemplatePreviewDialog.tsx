@@ -229,7 +229,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                 <Star className="h-4 w-4 text-amber-500" />
                 Tabla de Calificación
               </h3>
-              <div className="border rounded-lg overflow-hidden">
+              <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
