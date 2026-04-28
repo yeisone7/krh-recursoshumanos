@@ -359,7 +359,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
             ) : (
               <div className="h-full flex flex-col">
                 {/* Weekday header */}
-                <div className="grid grid-cols-7 gap-1 mb-1">
+                <div className="mb-1 grid min-w-[640px] grid-cols-7 gap-1 sm:min-w-0">
                   {weekDays.map((day) => (
                     <div
                       key={day}
@@ -467,6 +467,38 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
             )}
           </CardContent>
         </Card>
+
+        {/* Mobile selected day detail */}
+        {view !== 'agenda' && (
+          <Card className="lg:hidden">
+            <div className="px-4 pb-3 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agenda del día</p>
+              <p className="mt-1 text-base font-bold capitalize">{format(selectedDay, "EEEE d 'de' MMMM", { locale: es })}</p>
+            </div>
+            <Separator />
+            <div className="max-h-[320px] space-y-2 overflow-y-auto p-4">
+              {selectedDayEvents.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <CalendarIcon className="mx-auto mb-2 h-8 w-8 opacity-40" />
+                  <p className="text-sm">Sin eventos este día</p>
+                </div>
+              ) : (
+                selectedDayEvents.map((event) => (
+                  <button key={event.id} onClick={() => handleEventClick(event)} className="w-full rounded-lg border p-3 text-left transition-all hover:border-primary/30">
+                    <div className="flex items-start gap-2.5">
+                      <div className={cn('mt-0.5 shrink-0 rounded-md p-1.5', event.bgColor, event.color)}>{EVENT_ICONS[event.type]}</div>
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words text-sm font-medium">{event.title}</p>
+                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{event.description}</p>
+                        <Badge variant="outline" className="mt-1.5 px-1.5 py-0 text-[10px]">{EVENT_TYPE_LABELS[event.type]}</Badge>
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </Card>
+        )}
 
         {/* Sidebar: Selected day detail */}
         <Card className="hidden lg:flex w-[300px] flex-col shrink-0">
