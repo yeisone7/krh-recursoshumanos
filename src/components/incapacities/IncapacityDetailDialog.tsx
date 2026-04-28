@@ -32,7 +32,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -117,19 +116,19 @@ export function IncapacityDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="flex items-center gap-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <DialogTitle className="flex items-start gap-2 leading-tight">
                   <Stethoscope className="h-5 w-5" />
-                  Incapacidad - {employeeName}
+                  <span>Incapacidad - {employeeName}</span>
                 </DialogTitle>
                 <DialogDescription>
                   {format(new Date(incapacity.start_date), "d 'de' MMMM, yyyy", { locale: es })} - {format(endDate, "d 'de' MMMM, yyyy", { locale: es })}
                 </DialogDescription>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                 <Badge variant={incapacity.origin === 'laboral' ? 'destructive' : 'secondary'}>
                   {incapacityOriginLabels[incapacity.origin]}
                 </Badge>
@@ -142,14 +141,14 @@ export function IncapacityDetailDialog({
             </div>
           </DialogHeader>
           
-          <ScrollArea className="flex-1">
+          <div className="min-h-0">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="payment">Pagos</TabsTrigger>
-                <TabsTrigger value="recovery">Recobro</TabsTrigger>
-                <TabsTrigger value="documents">Documentos</TabsTrigger>
-                <TabsTrigger value="history">Historial</TabsTrigger>
+              <TabsList className="flex h-auto w-full justify-start overflow-x-auto">
+                <TabsTrigger value="general" className="shrink-0">General</TabsTrigger>
+                <TabsTrigger value="payment" className="shrink-0">Pagos</TabsTrigger>
+                <TabsTrigger value="recovery" className="shrink-0">Recobro</TabsTrigger>
+                <TabsTrigger value="documents" className="shrink-0">Documentos</TabsTrigger>
+                <TabsTrigger value="history" className="shrink-0">Historial</TabsTrigger>
               </TabsList>
               
               {/* General Tab */}
