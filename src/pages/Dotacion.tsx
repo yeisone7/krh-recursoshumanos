@@ -448,7 +448,7 @@ export default function Dotacion() {
                 )}
               </div>
             ) : (
-              <div className="overflow-x-auto overscroll-x-contain">
+              <div className="hidden overflow-x-auto overscroll-x-contain sm:block">
               <Table className="min-w-[560px]">
                 <TableHeader>
                   <TableRow>
@@ -540,6 +540,54 @@ export default function Dotacion() {
                   })}
                 </TableBody>
               </Table>
+              </div>
+              <div className="divide-y divide-border sm:hidden">
+                {filteredTransactions.map((tx) => {
+                  const hasValidDate = tx.delivery_date && !isNaN(new Date(tx.delivery_date).getTime());
+                  const txStatus = getTransactionStatus(tx);
+                  const sc = statusStyles[txStatus];
+                  const StatusIcon = sc.icon;
+                  const itemsSummary = tx.items.length <= 2
+                    ? tx.items.map(i => i.item_name).join(', ')
+                    : `${tx.items[0].item_name}, ${tx.items[1].item_name} +${tx.items.length - 2} más`;
+
+                  return (
+                    <div key={tx.id} className="space-y-3 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-foreground">
+                            {tx.employees?.first_name} {tx.employees?.last_name}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {tx.employees?.operation_centers?.name || 'Sin centro'}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className={cn('shrink-0 gap-1 text-xs', sc.bg, sc.text)}>
+                          <StatusIcon className="w-3 h-3" />
+                          {sc.label}
+                        </Badge>
+                      </div>
+                      <div className="rounded-lg bg-muted/30 p-3 text-xs text-muted-foreground">
+                        <p className="font-medium text-foreground">{itemsSummary}</p>
+                        <p className="mt-1 flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {hasValidDate ? format(new Date(tx.delivery_date), 'dd/MM/yyyy') : '—'} · {tx.items.length} artículo(s)
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleViewTransaction(tx.id)} className="gap-1">
+                          <Eye className="w-4 h-4" /> Ver
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleExportPdf(tx)} title="Exportar acta de entrega">
+                          <FileDown className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteConfirmId(tx.id)} title="Eliminar entrega">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -668,14 +716,14 @@ export default function Dotacion() {
       />
 
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar entrega de dotación</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Estás seguro de que deseas eliminar esta entrega y todos sus artículos? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
