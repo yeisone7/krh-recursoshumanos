@@ -129,15 +129,15 @@ export function EvaluationTreeView({
                                 className="overflow-hidden"
                               >
                                 <div className="px-3 pb-3">
-                                  <div className="overflow-x-auto rounded-lg border">
-                                    <Table>
+                                  <div className="w-full overflow-x-auto rounded-lg border">
+                                    <Table className="min-w-[760px] table-fixed sm:table-auto">
                                       <TableHeader>
                                         <TableRow>
-                                          <TableHead>Empleado</TableHead>
-                                          <TableHead>Tipo</TableHead>
-                                          <TableHead>Estado</TableHead>
-                                          <TableHead>Puntaje</TableHead>
-                                          <TableHead>Calificación</TableHead>
+                                          <TableHead className="w-[220px]">Empleado</TableHead>
+                                          <TableHead className="w-[160px]">Tipo</TableHead>
+                                          <TableHead className="w-[150px]">Estado</TableHead>
+                                          <TableHead className="w-[110px]">Puntaje</TableHead>
+                                          <TableHead className="w-[160px]">Calificación</TableHead>
                                           <TableHead className="w-12"></TableHead>
                                         </TableRow>
                                       </TableHeader>
@@ -145,9 +145,13 @@ export function EvaluationTreeView({
                                         {evals.map((evaluation: PerformanceEvaluation) => (
                                           <TableRow key={evaluation.id}>
                                             <TableCell className="font-medium">
-                                              {evaluation.employee?.first_name} {evaluation.employee?.last_name}
+                                              <span className="block max-w-[210px] truncate">
+                                                {evaluation.employee?.first_name} {evaluation.employee?.last_name}
+                                              </span>
                                             </TableCell>
-                                            <TableCell>{EVALUATION_TYPE_LABELS[evaluation.evaluation_type]}</TableCell>
+                                            <TableCell>
+                                              <span className="block max-w-[150px] truncate">{EVALUATION_TYPE_LABELS[evaluation.evaluation_type]}</span>
+                                            </TableCell>
                                             <TableCell>
                                               <Badge className={`${statusColors[evaluation.status]} rounded-full`}>
                                                 {EVALUATION_STATUS_LABELS[evaluation.status]}
