@@ -185,8 +185,8 @@ export default function SuperAdmin() {
             </div>
           ) : (
             <Card>
-              <CardContent className="p-0">
-                <Table>
+              <CardContent className="p-0 overflow-x-auto">
+                <Table className="min-w-[760px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Empresa</TableHead>
@@ -245,7 +245,7 @@ export default function SuperAdmin() {
         {/* Users Tab */}
         <TabsContent value="users" className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => setInviteDialogOpen(true)}>
+            <Button onClick={() => setInviteDialogOpen(true)} className="w-full sm:w-auto">
               <UserPlus className="w-4 h-4 mr-2" />
               Invitar Usuario
             </Button>
