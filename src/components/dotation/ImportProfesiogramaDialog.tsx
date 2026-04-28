@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
@@ -207,8 +206,8 @@ export function ImportProfesiogramaDialog({ open, onOpenChange, centers, positio
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
+        <DialogHeader className="pr-12">
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5 text-primary" />
             Importar Profesiogramas desde Excel
@@ -255,7 +254,7 @@ export function ImportProfesiogramaDialog({ open, onOpenChange, centers, positio
 
               {/* Upsert toggle */}
               {updateCount > 0 && (
-                <div className="flex items-center justify-between rounded-lg border border-border p-3 bg-muted/30">
+                <div className="flex flex-col gap-3 rounded-lg border border-border p-3 bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-medium">Modo actualización (upsert)</p>
                     <p className="text-xs text-muted-foreground">
@@ -267,8 +266,8 @@ export function ImportProfesiogramaDialog({ open, onOpenChange, centers, positio
               )}
 
               {/* Preview table */}
-              <ScrollArea className="max-h-[40vh]">
-                <Table>
+              <div className="max-h-[40vh] overflow-auto overscroll-x-contain">
+                <Table className="min-w-[680px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Estado</TableHead>
@@ -328,18 +327,18 @@ export function ImportProfesiogramaDialog({ open, onOpenChange, centers, positio
                     ))}
                   </TableBody>
                 </Table>
-              </ScrollArea>
+              </div>
             </>
           )}
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t mt-2">
+        <div className="grid grid-cols-1 gap-3 pt-4 border-t mt-2 sm:flex sm:items-center sm:justify-between">
           {isParsed ? (
             <>
               <Button variant="ghost" size="sm" onClick={resetState} className="text-muted-foreground">
                 Cambiar archivo
               </Button>
-              <div className="flex gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:flex">
                 <Button variant="outline" onClick={() => handleClose(false)}>Cancelar</Button>
                 <Button
                   onClick={handleConfirmImport}
