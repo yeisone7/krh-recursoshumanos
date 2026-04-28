@@ -48,7 +48,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
         {/* Hero header */}
-        <div className="bg-gradient-to-br from-[#3b3a59] via-[#4a4870] to-[#5a587a] px-4 pt-4 pb-5 rounded-t-lg sm:px-6 sm:pt-6">
+        <div className="shrink-0 bg-gradient-to-br from-[#3b3a59] via-[#4a4870] to-[#5a587a] px-4 pt-4 pb-3 rounded-t-lg sm:px-6 sm:pt-6 sm:pb-5">
           <DialogHeader>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
               <div className="p-2.5 rounded-xl bg-white/15 backdrop-blur-sm">
@@ -59,7 +59,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                   {template.name}
                 </DialogTitle>
                 {template.description && (
-                  <p className="text-white/70 text-sm mt-1">{template.description}</p>
+                  <p className="text-white/70 text-sm mt-1 line-clamp-3 sm:line-clamp-none">{template.description}</p>
                 )}
               </div>
               <Badge
@@ -76,7 +76,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
 
           {/* Positions badges */}
           {template.positions && template.positions.length > 0 && (
-            <div className="flex items-center gap-2 mt-4 flex-wrap">
+            <div className="flex max-h-16 items-center gap-2 mt-3 flex-wrap overflow-y-auto pr-1 sm:mt-4 sm:max-h-none sm:overflow-visible">
               <Briefcase className="h-4 w-4 text-white/50" />
               {template.positions.map(p => (
                 <Badge key={p.id} variant="outline" className="text-xs text-white/80 border-white/25 bg-white/10">
@@ -87,7 +87,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
           )}
 
           {/* Quick stats */}
-          <div className="flex flex-wrap gap-3 mt-4 sm:gap-4">
+          <div className="flex flex-wrap gap-3 mt-3 sm:mt-4 sm:gap-4">
             <div className="flex items-center gap-1.5 text-white/70 text-sm">
               <Layers className="h-4 w-4" />
               <span className="font-medium text-white">{criteria.length}</span> criterios
@@ -99,10 +99,11 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
             <div className="flex items-center gap-1.5 text-white/70 text-sm">
               <BarChart3 className="h-4 w-4" />
               <span className="font-medium text-white">{ratingScale.length}</span> niveles
+            </div>
           </div>
 
           {/* Action buttons */}
-          <div className="grid gap-2 mt-4 sm:flex">
+          <div className="grid grid-cols-1 gap-2 mt-3 sm:mt-4 sm:flex">
             <Button
               size="sm"
               variant="secondary"
@@ -128,9 +129,8 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
             )}
           </div>
         </div>
-        </div>
 
-        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-5 scrollbar-themed sm:px-6">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 py-5 scrollbar-themed sm:px-6">
           {/* Criteria section */}
           <section>
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
