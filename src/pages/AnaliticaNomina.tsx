@@ -108,6 +108,12 @@ function periodLabel(key: string) {
   return format(new Date(`${key}T00:00:00`), 'MMM yy', { locale: es });
 }
 
+function shiftMonth(value: string, months: number) {
+  const date = asDate(value);
+  if (!date) return value;
+  return format(subMonths(date, months), 'yyyy-MM-dd');
+}
+
 function hoursBetween(start?: string | null, end?: string | null, breakMinutes = 0) {
   if (!start || !end) return 0;
   const [sh, sm] = start.slice(0, 5).split(':').map(Number);
@@ -189,6 +195,9 @@ export default function AnaliticaNomina() {
   const [centerFilter, setCenterFilter] = useState('all');
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(defaultEnd);
+  const [comparisonMode, setComparisonMode] = useState<'actual' | 'mes_anterior'>('actual');
+  const comparisonStartDate = startDate ? shiftMonth(startDate, 1) : '';
+  const comparisonEndDate = endDate ? shiftMonth(endDate, 1) : '';
 
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
   const { data: contracts = [], isLoading: loadingContracts } = useContracts();
@@ -202,12 +211,21 @@ export default function AnaliticaNomina() {
     endDate: endDate || undefined,
     centerId: centerFilter === 'all' ? undefined : centerFilter,
   });
+  const { data: comparisonAssignments = [], isLoading: loadingComparisonAssignments } = useShiftAssignments({
+    startDate: comparisonMode === 'mes_anterior' ? comparisonStartDate || undefined : undefined,
+    endDate: comparisonMode === 'mes_anterior' ? comparisonEndDate || undefined : undefined,
+    centerId: centerFilter === 'all' ? undefined : centerFilter,
+  });
   const { data: novelties = [], isLoading: loadingNovelties } = usePayrollNovelties({
     startDate: startDate || undefined,
     endDate: endDate || undefined,
   });
+  const { data: comparisonNovelties = [], isLoading: loadingComparisonNovelties } = usePayrollNovelties({
+    startDate: comparisonMode === 'mes_anterior' ? comparisonStartDate || undefined : undefined,
+    endDate: comparisonMode === 'mes_anterior' ? comparisonEndDate || undefined : undefined,
+  });
 
-  const isLoading = loadingEmployees || loadingContracts || loadingPayrollConfig || loadingSchedules || loadingShifts || loadingCycles || loadingConfigs || loadingAssignments || loadingNovelties;
+  const isLoading = loadingEmployees || loadingContracts || loadingPayrollConfig || loadingSchedules || loadingShifts || loadingCycles || loadingConfigs || loadingAssignments || loadingComparisonAssignments || loadingNovelties || loadingComparisonNovelties;
 
   const centerOptions = useMemo(() => {
     const centers = new Map<string, string>();
@@ -233,6 +251,11 @@ export default function AnaliticaNomina() {
     if (centerFilter === 'all') return true;
     return employeeCenterMap.get(novelty.employee_id) === centerFilter;
   }), [novelties, centerFilter, employeeCenterMap]);
+
+  const filteredComparisonNovelties = useMemo(() => comparisonNovelties.filter((novelty: any) => {
+    if (centerFilter === 'all') return true;
+    return employeeCenterMap.get(novelty.employee_id) === centerFilter;
+  }), [comparisonNovelties, centerFilter, employeeCenterMap]);
 
   const filteredConfigs = useMemo(() => timeConfigs.filter((config: any) => {
     if (centerFilter === 'all') return true;
@@ -260,6 +283,33 @@ export default function AnaliticaNomina() {
       const multiplier = defaultImpactMultiplier[item.novelty_type] ?? 1;
       return Number(item.hours || 0) * hourlyRate * multiplier;
     };
+    const buildMonthlyTrend = (sourceAssignments: any[], sourceNovelties: any[], suffix = '') => {
+      const keys = new Set<string>();
+      sourceAssignments.forEach((item: any) => keys.add(periodKey(item.assignment_date)));
+      sourceNovelties.forEach((item: any) => keys.add(periodKey(item.novelty_date)));
+      return Array.from(keys).sort().map((key) => {
+        const monthAssignments = sourceAssignments.filter((item: any) => periodKey(item.assignment_date) === key);
+        const monthNovelties = sourceNovelties.filter((item: any) => periodKey(item.novelty_date) === key);
+        const currentCount = monthNovelties.length;
+        const previousMonthKey = shiftMonth(key, 1);
+        const previousCount = sourceNovelties.filter((item: any) => periodKey(item.novelty_date) === previousMonthKey).length;
+        return {
+          periodo: `${periodLabel(key)}${suffix}`,
+          periodoBase: periodLabel(key),
+          asignaciones: monthAssignments.length,
+          jornadas: monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length,
+          descansos: monthAssignments.filter((item: any) => item.shifts?.is_rest_day).length,
+          novedades: currentCount,
+          altasNovedades: Math.max(0, currentCount - previousCount),
+          bajasNovedades: Math.max(0, previousCount - currentCount),
+          empleadosImpactados: new Set(monthNovelties.map((item: any) => item.employee_id)).size,
+          horasPorJornada: Math.round((monthNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) / Math.max(1, monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length)) * 10) / 10,
+          montoEstimado: Math.round(monthNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0)),
+          horasExtra: Math.round(monthNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
+          ausencias: Math.round(monthNovelties.filter((item: any) => absenceTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
+        };
+      });
+    };
     const noveltyHours = filteredNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
     const estimatedImpact = filteredNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0);
     const overtimeHours = filteredNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0);
@@ -269,25 +319,8 @@ export default function AnaliticaNomina() {
     const overtimeRate = percent(overtimeHours, Math.max(1, plannedHours + overtimeHours));
     const absenceRate = percent(absenceHours, Math.max(1, plannedHours));
 
-    const monthKeys = new Set<string>();
-    assignments.forEach((item: any) => monthKeys.add(periodKey(item.assignment_date)));
-    filteredNovelties.forEach((item: any) => monthKeys.add(periodKey(item.novelty_date)));
-    const monthlyTrend = Array.from(monthKeys).sort().map((key) => {
-      const monthAssignments = assignments.filter((item: any) => periodKey(item.assignment_date) === key);
-      const monthNovelties = filteredNovelties.filter((item: any) => periodKey(item.novelty_date) === key);
-      return {
-        periodo: periodLabel(key),
-        asignaciones: monthAssignments.length,
-        jornadas: monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length,
-        descansos: monthAssignments.filter((item: any) => item.shifts?.is_rest_day).length,
-        novedades: monthNovelties.length,
-        empleadosImpactados: new Set(monthNovelties.map((item: any) => item.employee_id)).size,
-        horasPorJornada: Math.round((monthNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) / Math.max(1, monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length)) * 10) / 10,
-        montoEstimado: Math.round(monthNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0)),
-        horasExtra: Math.round(monthNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
-        ausencias: Math.round(monthNovelties.filter((item: any) => absenceTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
-      };
-    });
+    const monthlyTrend = buildMonthlyTrend(assignments, filteredNovelties);
+    const comparisonMonthlyTrend = buildMonthlyTrend(comparisonAssignments, filteredComparisonNovelties, ' ant.');
 
     const weekdayBehavior = Array.from({ length: 7 }, (_, day) => {
       const dayAssignments = assignments.filter((item: any) => asDate(item.assignment_date)?.getDay() === day);
@@ -304,6 +337,19 @@ export default function AnaliticaNomina() {
     const noveltyTypes = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type);
     const noveltyHoursByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, (item: any) => Number(item.hours || 0));
     const estimatedImpactByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, getEstimatedImpact);
+    const shiftDistributionTrend = monthlyTrend.map((month) => ({
+      periodo: month.periodo,
+      jornadas: month.jornadas,
+      descansos: month.descansos,
+      manual: assignments.filter((item: any) => periodLabel(periodKey(item.assignment_date)) === month.periodo && item.source === 'manual').length,
+      ciclo: assignments.filter((item: any) => periodLabel(periodKey(item.assignment_date)) === month.periodo && item.source === 'cycle').length,
+    }));
+    const impactEvolution = monthlyTrend.map((month, index) => ({
+      periodo: month.periodo,
+      impactoActual: month.montoEstimado,
+      impactoMesAnterior: comparisonMode === 'mes_anterior' ? comparisonMonthlyTrend[index]?.montoEstimado || 0 : undefined,
+      variacion: comparisonMode === 'mes_anterior' ? month.montoEstimado - (comparisonMonthlyTrend[index]?.montoEstimado || 0) : month.montoEstimado - (monthlyTrend[index - 1]?.montoEstimado || 0),
+    }));
     const shiftDemand = groupByName(assignments, (item: any) => item.shifts?.name || (item.shifts?.is_rest_day ? 'Descanso' : 'Sin turno')).slice(0, 8);
     const sourceMix = groupByName(assignments, (item: any) => item.source === 'cycle' ? 'Ciclo automático' : 'Manual');
     const noveltySourceMix = groupByName(filteredNovelties, (item: any) => item.source === 'auto' ? 'Automático' : 'Manual');
@@ -380,6 +426,9 @@ export default function AnaliticaNomina() {
         overtimeRate,
       },
       monthlyTrend,
+      comparisonMonthlyTrend,
+      shiftDistributionTrend,
+      impactEvolution,
       weekdayBehavior,
       noveltyTypes,
       noveltyHoursByType,
@@ -393,7 +442,7 @@ export default function AnaliticaNomina() {
       insights,
       alerts,
     };
-  }, [assignments, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, shiftCycles, shifts, startDate, endDate, workSchedules]);
+  }, [assignments, comparisonAssignments, comparisonMode, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, shiftCycles, shifts, startDate, endDate, workSchedules]);
 
   if (isLoading) {
     return (
@@ -421,7 +470,7 @@ export default function AnaliticaNomina() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                 <Filter className="h-4 w-4" /> Centro de operación
@@ -445,6 +494,18 @@ export default function AnaliticaNomina() {
                 <CalendarDays className="h-4 w-4" /> Hasta
               </div>
               <Input type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <TrendingUp className="h-4 w-4" /> Comparación
+              </div>
+              <Select value={comparisonMode} onValueChange={(value: 'actual' | 'mes_anterior') => setComparisonMode(value)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="actual">Solo período actual</SelectItem>
+                  <SelectItem value="mes_anterior">Contra mes anterior</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -536,6 +597,52 @@ export default function AnaliticaNomina() {
               <Bar yAxisId="left" dataKey="empleadosImpactados" name="Empleados impactados" fill="hsl(var(--tertiary))" radius={[4, 4, 0, 0]} />
               <Line yAxisId="left" type="monotone" dataKey="horasPorJornada" name="Horas por jornada" stroke="hsl(var(--warning))" strokeWidth={3} />
               <Area yAxisId="right" type="monotone" dataKey="montoEstimado" name="Monto estimado" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.18} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Altas y bajas mensuales de novedades" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.monthlyTrend} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="altasNovedades" name="Altas" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="bajasNovedades" name="Bajas" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+              <Line type="monotone" dataKey="novedades" name="Total novedades" stroke="hsl(var(--primary))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Distribución mensual por jornada" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={analytics.shiftDistributionTrend} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Legend />
+              <Area type="monotone" dataKey="jornadas" name="Jornadas" stackId="1" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.28} />
+              <Area type="monotone" dataKey="descansos" name="Descansos" stackId="1" stroke="hsl(var(--secondary))" fill="hsl(var(--secondary))" fillOpacity={0.24} />
+              <Line type="monotone" dataKey="manual" name="Manual" stroke="hsl(var(--warning))" strokeWidth={3} />
+              <Line type="monotone" dataKey="ciclo" name="Ciclo" stroke="hsl(var(--success))" strokeWidth={3} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Evolución de impacto estimado" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.impactEvolution} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `$${Number(value) / 1000000}M`} />
+              <Tooltip formatter={(value) => currencyFormatter.format(Number(value))} />
+              <Legend />
+              <Area type="monotone" dataKey="impactoActual" name="Impacto actual" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.18} />
+              {comparisonMode === 'mes_anterior' && <Line type="monotone" dataKey="impactoMesAnterior" name="Mes anterior" stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" strokeWidth={3} />}
+              <Bar dataKey="variacion" name="Variación" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
