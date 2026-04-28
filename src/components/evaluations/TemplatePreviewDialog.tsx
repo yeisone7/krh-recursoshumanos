@@ -46,7 +46,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-0 scrollbar-themed">
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
         {/* Hero header */}
         <div className="bg-gradient-to-br from-[#3b3a59] via-[#4a4870] to-[#5a587a] px-4 pt-4 pb-5 rounded-t-lg sm:px-6 sm:pt-6">
           <DialogHeader>
@@ -130,7 +130,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
         </div>
         </div>
 
-        <div className="px-4 py-5 space-y-6 sm:px-6">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-5 scrollbar-themed sm:px-6">
           {/* Criteria section */}
           <section>
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
