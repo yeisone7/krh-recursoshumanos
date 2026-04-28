@@ -113,21 +113,22 @@ export function DisciplinaryDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle className="text-xl">
+        <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh] sm:p-6">
+          <DialogHeader className="px-4 pb-3 pt-4 pr-12 sm:px-0 sm:pb-4 sm:pt-0 sm:pr-0">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <DialogTitle className="truncate text-lg sm:text-xl">
                   Proceso {process.case_number}
                 </DialogTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   {process.employee?.first_name} {process.employee?.last_name}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="w-full sm:w-auto"
                   onClick={handleExportPdf}
                   disabled={isExporting}
                 >
@@ -144,9 +145,9 @@ export function DisciplinaryDetailDialog({
             </div>
           </DialogHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto pr-2">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-0 sm:pb-0 sm:pr-2">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-5">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="evidence">Evidencias</TabsTrigger>
                 <TabsTrigger value="defenses">Descargos</TabsTrigger>
