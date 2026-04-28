@@ -64,7 +64,7 @@ export function BulkGeneratePreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-h-[85vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UsersRound className="h-5 w-5 text-primary" />
@@ -76,7 +76,7 @@ export function BulkGeneratePreviewDialog({
         </DialogHeader>
 
         {/* Summary */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="bg-muted/50 rounded-lg p-3">
             <p className="text-xs text-muted-foreground">Ciclo</p>
             <p className="font-medium text-sm text-foreground">{cycleName}</p>
@@ -87,7 +87,7 @@ export function BulkGeneratePreviewDialog({
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:gap-4">
           <div className="flex items-center gap-1.5 text-primary">
             <UsersRound className="h-4 w-4" />
             <span className="font-medium">{newEmployees.length}</span>
@@ -109,7 +109,7 @@ export function BulkGeneratePreviewDialog({
             </p>
           </div>
         ) : (
-          <ScrollArea className="flex-1 max-h-[350px] border rounded-md">
+          <ScrollArea className="max-h-[350px] rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -143,13 +143,14 @@ export function BulkGeneratePreviewDialog({
           </ScrollArea>
         )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+        <DialogFooter className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="w-full sm:w-auto">
             Cancelar
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={loading || newEmployees.length === 0}
+            className="w-full sm:w-auto"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
