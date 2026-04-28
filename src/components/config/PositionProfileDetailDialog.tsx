@@ -150,10 +150,10 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
             </div>
 
             {/* Content */}
-            <ScrollArea className="flex-1 max-h-[70vh]">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               <Tabs defaultValue="profile" className="w-full">
-                <div className="px-5 pt-4 pb-0">
-                  <TabsList className="h-8">
+                <div className="scrollbar-hide overflow-x-auto px-4 pt-4 pb-0 sm:px-5">
+                  <TabsList className="h-8 min-w-max">
                     <TabsTrigger value="profile" className="text-xs gap-1"><FileText className="w-3 h-3" />Perfil</TabsTrigger>
                     <TabsTrigger value="onboarding" className="text-xs gap-1"><ListChecks className="w-3 h-3" />Onboarding</TabsTrigger>
                     <TabsTrigger value="annexes" className="text-xs gap-1"><Building2 className="w-3 h-3" />Anexos por Centro</TabsTrigger>
@@ -256,10 +256,10 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                   )}
 
                   {/* Aprobaciones */}
-                  <Card>
+                    <Card>
                     <CardContent className="pt-4">
                       <SectionTitle>6. Aprobaciones</SectionTitle>
-                      <div className="grid grid-cols-3 gap-4 text-sm text-center">
+                        <div className="grid grid-cols-1 gap-4 text-center text-sm sm:grid-cols-3">
                         <div><p className="text-muted-foreground">Elaborado por</p><p className="font-medium">{profile.elaborated_by || '—'}</p></div>
                         <div><p className="text-muted-foreground">Revisado por</p><p className="font-medium">{profile.reviewed_by || '—'}</p></div>
                         <div><p className="text-muted-foreground">Aprobado por</p><p className="font-medium">{profile.approved_by || '—'}</p></div>
@@ -280,7 +280,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                   </div>
                 </TabsContent>
               </Tabs>
-            </ScrollArea>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
