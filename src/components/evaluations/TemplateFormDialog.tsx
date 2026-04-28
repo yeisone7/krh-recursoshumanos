@@ -328,12 +328,13 @@ export function TemplateFormDialog({
 
             {/* Qualitative Questions */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h4 className="font-medium">Preguntas Cualitativas</h4>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     const current = form.getValues('qualitative_questions');
                     form.setValue('qualitative_questions', [...current, '']);
@@ -374,7 +375,7 @@ export function TemplateFormDialog({
             {/* Rating Scale */}
             <div className="space-y-3">
               <h4 className="font-medium">Tabla de Calificación</h4>
-              <div className="border rounded-lg overflow-hidden">
+              <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
                     <tr>
@@ -440,11 +441,11 @@ export function TemplateFormDialog({
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="grid grid-cols-2 gap-2 pt-4 sm:flex sm:justify-end">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                 {template ? 'Actualizar' : 'Crear'} Plantilla
               </Button>
             </div>
