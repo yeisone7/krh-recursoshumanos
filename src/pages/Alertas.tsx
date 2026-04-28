@@ -84,17 +84,17 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       className={cn(
-        "flex items-center gap-4 p-5 rounded-xl border transition-all duration-200 hover:shadow-md card-elevated",
+        "flex flex-col gap-3 rounded-xl border p-4 transition-all duration-200 hover:shadow-md card-elevated sm:flex-row sm:items-center sm:gap-4 sm:p-5",
         styles.border
       )}
     >
-      <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0", styles.bg)}>
+      <div className={cn("h-10 w-10 shrink-0 rounded-xl flex items-center justify-center sm:h-12 sm:w-12", styles.bg)}>
         <Icon className={cn("w-6 h-6", styles.icon)} />
       </div>
       
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1 self-stretch sm:self-auto">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <p className="font-semibold text-foreground">{alert.title}</p>
+          <p className="min-w-0 break-words font-semibold text-foreground">{alert.title}</p>
           <Badge variant="outline" className={cn("text-xs", styles.badge)}>
             {isExpired ? `Vencido hace ${Math.abs(alert.daysRemaining)} días` : `${alert.daysRemaining} días`}
           </Badge>
@@ -107,7 +107,7 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
             </Badge>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
+        <p className="break-words text-sm text-muted-foreground">
           <span className="font-medium text-foreground">{alert.entityName}</span>
           {' • '}
           {alert.description}
@@ -119,11 +119,11 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
         )}
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
         <Button 
           variant="outline" 
           size="sm" 
-          className="gap-1.5"
+          className="w-full gap-1.5 sm:w-auto"
           onClick={() => onNavigate(alert.navigateTo || '/')}
         >
           <ExternalLink className="w-3.5 h-3.5" />
@@ -184,17 +184,17 @@ export default function Alertas() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4 sm:space-y-6">
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+        className="flex min-w-0 flex-col gap-4 md:flex-row md:items-center md:justify-between"
       >
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Centro de Alertas</h1>
-          <p className="text-muted-foreground mt-1">Monitoreo centralizado de vencimientos y eventos críticos</p>
+        <div className="min-w-0">
+          <h1 className="break-words font-display text-xl font-bold text-foreground sm:text-2xl">Centro de Alertas</h1>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">Monitoreo centralizado de vencimientos y eventos críticos</p>
         </div>
       </motion.div>
 
@@ -276,8 +276,8 @@ export default function Alertas() {
         transition={{ duration: 0.3, delay: 0.3 }}
         className="card-elevated p-4"
       >
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
+        <div className="flex min-w-0 flex-col gap-3 md:flex-row md:gap-4">
+          <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
@@ -287,9 +287,9 @@ export default function Alertas() {
               className="pl-10"
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex min-w-0 gap-3">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full min-w-0 md:w-[180px]">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -309,19 +309,23 @@ export default function Alertas() {
       </motion.div>
 
       {/* Tabs and Alerts List */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="all">Todas</TabsTrigger>
-          <TabsTrigger value="critical" className="gap-1">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0 space-y-4">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1 sm:inline-flex sm:w-auto">
+          <TabsTrigger value="all" className="min-w-0 px-2 text-xs sm:text-sm">Todas</TabsTrigger>
+          <TabsTrigger value="critical" className="min-w-0 gap-1 px-2 text-xs sm:text-sm">
             Críticas
             {stats.criticalCount > 0 && (
-              <span className="ml-1 bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
+              <span className="ml-1 rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
                 {stats.criticalCount}
               </span>
             )}
           </TabsTrigger>
-          <TabsTrigger value="warning">Advertencias</TabsTrigger>
-          <TabsTrigger value="info">Informativas</TabsTrigger>
+          <TabsTrigger value="warning" className="min-w-0 px-2 text-xs sm:text-sm">
+            <span className="truncate">Advertencias</span>
+          </TabsTrigger>
+          <TabsTrigger value="info" className="min-w-0 px-2 text-xs sm:text-sm">
+            <span className="truncate">Informativas</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-3">
