@@ -564,7 +564,7 @@ export function IncapacityDetailDialog({
                 </Card>
               </TabsContent>
             </Tabs>
-          </ScrollArea>
+          </div>
           
           <Separator className="my-4" />
           
