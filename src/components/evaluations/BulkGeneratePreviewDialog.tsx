@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Table,
   TableBody,
@@ -110,8 +109,8 @@ export function BulkGeneratePreviewDialog({
             </p>
           </div>
         ) : (
-          <ScrollArea className="max-h-[350px] rounded-md border">
-            <div className="w-full overflow-x-auto">
+          <div className="max-h-[350px] overflow-auto rounded-md border">
+            <div className="w-full">
             <Table className="min-w-[760px] table-fixed sm:table-auto">
               <TableHeader>
                 <TableRow>
@@ -143,11 +142,11 @@ export function BulkGeneratePreviewDialog({
               </TableBody>
             </Table>
             </div>
-          </ScrollArea>
+          </div>
         )}
 
         </div>
-        <DialogFooter className="grid grid-cols-2 gap-2 border-t bg-background p-4 sm:flex sm:gap-2 sm:px-6">
+        <DialogFooter className="grid grid-cols-1 gap-2 border-t bg-background p-4 sm:flex sm:gap-2 sm:px-6">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="w-full sm:w-auto">
             Cancelar
           </Button>
