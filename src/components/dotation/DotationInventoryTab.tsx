@@ -84,9 +84,9 @@ export function DotationInventoryTab() {
             className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
           />
         </div>
-        <div className="flex gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:flex">
           <Select value={centerFilter} onValueChange={setCenterFilter}>
-            <SelectTrigger className="w-[160px] h-10 text-sm">
+            <SelectTrigger className="h-10 w-full text-sm md:w-[160px]">
               <SelectValue placeholder="Centro" />
             </SelectTrigger>
             <SelectContent>
@@ -98,7 +98,7 @@ export function DotationInventoryTab() {
             </SelectContent>
           </Select>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[140px] h-10 text-sm">
+            <SelectTrigger className="h-10 w-full text-sm md:w-[140px]">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
             <SelectContent>
@@ -108,7 +108,7 @@ export function DotationInventoryTab() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={() => { setEditItem(null); setIsFormOpen(true); }} className="gap-2">
+          <Button onClick={() => { setEditItem(null); setIsFormOpen(true); }} className="w-full gap-2 md:w-auto">
             <Plus className="w-4 h-4" /> Nuevo
           </Button>
         </div>
@@ -127,7 +127,8 @@ export function DotationInventoryTab() {
             )}
           </div>
         ) : (
-          <Table>
+          <div className="overflow-x-auto overscroll-x-contain">
+          <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Artículo</TableHead>
@@ -184,6 +185,7 @@ export function DotationInventoryTab() {
               })}
             </TableBody>
           </Table>
+          </div>
         )}
       </div>
 
@@ -199,14 +201,14 @@ export function DotationInventoryTab() {
         item={adjustItem}
       />
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar artículo</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Estás seguro de eliminar "{deleteTarget?.item_name}" del inventario? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Eliminar
