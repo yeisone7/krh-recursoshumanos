@@ -244,21 +244,21 @@ export default function AnaliticasEvaluaciones() {
       {/* By Cycle + Score Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle>Comparativo por Ciclo</CardTitle>
             <CardDescription>Total vs completadas por ciclo de evaluación</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
             {byCycle.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">Sin datos de ciclos</p>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 300 : 300}>
                 <ComposedChart data={byCycle} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={130} tick={{ fontSize: 12 }} />
+                  <XAxis type="number" tick={{ fontSize: isMobile ? 10 : 12 }} />
+                  <YAxis dataKey="name" type="category" width={isMobile ? 82 : 130} tick={{ fontSize: isMobile ? 10 : 12 }} />
                   <Tooltip />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: isMobile ? 11 : 12 }} />
                   <Bar dataKey="total" fill="hsl(var(--primary))" name="Total" radius={[0, 4, 4, 0]} />
                   <Bar dataKey="completadas" fill="#10b981" name="Completadas" radius={[0, 4, 4, 0]} />
                 </ComposedChart>
@@ -268,16 +268,16 @@ export default function AnaliticasEvaluaciones() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle>Distribución de Puntajes</CardTitle>
             <CardDescription>Rangos de calificación según escala</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-2 pt-0 sm:p-6 sm:pt-0">
+            <ResponsiveContainer width="100%" height={isMobile ? 240 : 300}>
               <BarChart data={scoreDistribution}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis dataKey="name" tick={{ fontSize: isMobile ? 10 : 12 }} />
+                <YAxis width={isMobile ? 28 : 40} tick={{ fontSize: isMobile ? 10 : 12 }} />
                 <Tooltip />
                 <Bar dataKey="cantidad" name="Evaluaciones" radius={[4, 4, 0, 0]}>
                   {scoreDistribution.map((_, i) => (
