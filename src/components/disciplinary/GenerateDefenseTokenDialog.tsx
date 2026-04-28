@@ -91,8 +91,8 @@ export function GenerateDefenseTokenDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-sm overflow-hidden">
+        <DialogHeader className="pr-10">
           <DialogTitle className="text-center">Enlace de Descargos</DialogTitle>
         </DialogHeader>
 
@@ -123,7 +123,7 @@ export function GenerateDefenseTokenDialog({
               <QRCodeSVG
                 id="defense-qr-code"
                 value={generatedUrl}
-                size={220}
+                size={Math.min(220, Math.max(180, window.innerWidth - 120))}
                 level="H"
                 includeMargin
               />
@@ -131,11 +131,11 @@ export function GenerateDefenseTokenDialog({
             <p className="text-xs text-muted-foreground break-all text-center max-w-[250px]">
               {generatedUrl}
             </p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleCopy}>
+            <div className="grid w-full grid-cols-2 gap-2">
+              <Button variant="outline" size="sm" onClick={handleCopy} className="w-full">
                 <Copy className="h-4 w-4 mr-1" /> Copiar
               </Button>
-              <Button variant="outline" size="sm" onClick={handleDownloadQR}>
+              <Button variant="outline" size="sm" onClick={handleDownloadQR} className="w-full">
                 <Download className="h-4 w-4 mr-1" /> QR
               </Button>
             </div>
