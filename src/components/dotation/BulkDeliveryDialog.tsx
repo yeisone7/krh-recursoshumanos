@@ -292,7 +292,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
             </div>
 
             {/* Table */}
-            <div className="flex-1 min-h-0 overflow-auto rounded-lg border overscroll-x-contain">
+            <div className="hidden flex-1 min-h-0 overflow-auto rounded-lg border overscroll-x-contain sm:block">
               <Table className="min-w-[760px]">
                 <TableHeader>
                   <TableRow>
@@ -345,6 +345,41 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
                   ))}
                 </TableBody>
               </Table>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto rounded-lg border sm:hidden">
+              <div className="divide-y divide-border">
+                {rows.map((row, idx) => (
+                  <div key={row.employeeId} className={cn('space-y-3 p-4', !row.selected && 'opacity-50')}>
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={row.selected}
+                        disabled={row.items.length === 0}
+                        onCheckedChange={() => toggleRow(idx)}
+                        className="mt-1"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm text-foreground">{row.employeeName}</p>
+                        <p className="text-xs text-muted-foreground">{row.documentNumber}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{row.positionName || '—'}</p>
+                      </div>
+                      <Badge variant="outline" className="shrink-0 text-xs">
+                        {row.items.reduce((a, b) => a + b.quantity, 0) || '—'}
+                      </Badge>
+                    </div>
+                    {row.items.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 pl-8">
+                        {row.items.map((item, i) => (
+                          <Badge key={i} variant="outline" className="text-xs">
+                            {item.itemName}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="pl-8 text-xs italic text-muted-foreground">Sin profesiograma</p>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Actions */}

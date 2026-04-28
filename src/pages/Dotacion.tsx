@@ -256,7 +256,7 @@ export default function Dotacion() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -265,8 +265,8 @@ export default function Dotacion() {
         className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
       >
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Gestión de Dotación</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Gestión de Dotación</h1>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
             Administra las entregas de dotación, controla vencimientos y genera alertas automáticas
           </p>
         </div>
@@ -287,25 +287,25 @@ export default function Dotacion() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="-mx-1 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <TabsList className="inline-flex h-auto min-w-max">
-          <TabsTrigger value="entregas" className="gap-2">
+        <TabsList className="inline-flex h-auto min-w-max p-1">
+          <TabsTrigger value="entregas" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
             <Package className="w-4 h-4" /> Entregas
           </TabsTrigger>
           {inventoryEnabled && (
-            <TabsTrigger value="inventario" className="gap-2">
+            <TabsTrigger value="inventario" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
               <Warehouse className="w-4 h-4" /> Inventario
               {lowStockCount > 0 && (
                 <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">{lowStockCount}</Badge>
               )}
             </TabsTrigger>
           )}
-          <TabsTrigger value="profesiograma" className="gap-2">
+          <TabsTrigger value="profesiograma" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
             <ClipboardList className="w-4 h-4" /> Profesiograma
           </TabsTrigger>
-          <TabsTrigger value="cumplimiento" className="gap-2">
+          <TabsTrigger value="cumplimiento" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
             <ShieldCheck className="w-4 h-4" /> Cumplimiento
           </TabsTrigger>
-          <TabsTrigger value="ajustes" className="gap-2">
+          <TabsTrigger value="ajustes" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
             <Settings className="w-4 h-4" /> Ajustes
           </TabsTrigger>
         </TabsList>
@@ -448,7 +448,8 @@ export default function Dotacion() {
                 )}
               </div>
             ) : (
-              <div className="overflow-x-auto overscroll-x-contain">
+              <>
+              <div className="hidden overflow-x-auto overscroll-x-contain sm:block">
               <Table className="min-w-[560px]">
                 <TableHeader>
                   <TableRow>
@@ -541,6 +542,55 @@ export default function Dotacion() {
                 </TableBody>
               </Table>
               </div>
+              <div className="divide-y divide-border sm:hidden">
+                {filteredTransactions.map((tx) => {
+                  const hasValidDate = tx.delivery_date && !isNaN(new Date(tx.delivery_date).getTime());
+                  const txStatus = getTransactionStatus(tx);
+                  const sc = statusStyles[txStatus];
+                  const StatusIcon = sc.icon;
+                  const itemsSummary = tx.items.length <= 2
+                    ? tx.items.map(i => i.item_name).join(', ')
+                    : `${tx.items[0].item_name}, ${tx.items[1].item_name} +${tx.items.length - 2} más`;
+
+                  return (
+                    <div key={tx.id} className="space-y-3 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-foreground">
+                            {tx.employees?.first_name} {tx.employees?.last_name}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {tx.employees?.operation_centers?.name || 'Sin centro'}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className={cn('shrink-0 gap-1 text-xs', sc.bg, sc.text)}>
+                          <StatusIcon className="w-3 h-3" />
+                          {sc.label}
+                        </Badge>
+                      </div>
+                      <div className="rounded-lg bg-muted/30 p-3 text-xs text-muted-foreground">
+                        <p className="font-medium text-foreground">{itemsSummary}</p>
+                        <p className="mt-1 flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {hasValidDate ? format(new Date(tx.delivery_date), 'dd/MM/yyyy') : '—'} · {tx.items.length} artículo(s)
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleViewTransaction(tx.id)} className="gap-1">
+                          <Eye className="w-4 h-4" /> Ver
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleExportPdf(tx)} title="Exportar acta de entrega">
+                          <FileDown className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteConfirmId(tx.id)} title="Eliminar entrega">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              </>
             )}
           </div>
         </motion.div>
@@ -668,14 +718,14 @@ export default function Dotacion() {
       />
 
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar entrega de dotación</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Estás seguro de que deseas eliminar esta entrega y todos sus artículos? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

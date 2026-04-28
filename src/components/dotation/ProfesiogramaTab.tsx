@@ -341,7 +341,8 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                 </div>
               </div>
               {!collapsedCenters.has(group.centerId) && (
-              <div className="overflow-x-auto overscroll-x-contain">
+              <>
+              <div className="hidden overflow-x-auto overscroll-x-contain sm:block">
               <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow>
@@ -422,6 +423,50 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                 </TableBody>
               </Table>
               </div>
+              <div className="divide-y divide-border sm:hidden">
+                {group.items.map((prof) => (
+                  <div key={prof.id} className={selectedIds.has(prof.id) ? 'space-y-3 bg-primary/5 p-4' : 'space-y-3 p-4'}>
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={selectedIds.has(prof.id)}
+                        onCheckedChange={() => toggleSelect(prof.id)}
+                        aria-label="Seleccionar"
+                        className="mt-1"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-foreground">{prof.positions?.name || getPositionName(prof.position_id)}</p>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {prof.items.slice(0, 3).map((item, i) => {
+                            const isRequired = (item as any).is_required !== false;
+                            return (
+                              <Badge key={i} variant={isRequired ? 'secondary' : 'outline'} className={`text-xs ${!isRequired ? 'border-dashed' : ''}`}>
+                                {item.dotation_item_types?.name || 'Artículo'}{item.quantity > 1 && ` x${item.quantity}`}
+                              </Badge>
+                            );
+                          })}
+                          {prof.items.length > 3 && <Badge variant="outline" className="text-xs">+{prof.items.length - 3} más</Badge>}
+                          {prof.items.length === 0 && <span className="text-sm text-muted-foreground">Sin artículos</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1">
+                      <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => setPreviewData(prof)} title="Ver detalle">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => handleEdit(prof)} title="Editar">
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => setCloneData(prof)} title="Clonar">
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-full text-destructive" onClick={() => setDeleteId(prof.id)} title="Eliminar">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
               )}
             </div>
           ))}
