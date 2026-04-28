@@ -211,6 +211,10 @@ export default function AnaliticaNomina() {
   const [comparisonMode, setComparisonMode] = useState<'actual' | 'mes_anterior'>('actual');
   const [volumeThreshold, setVolumeThreshold] = useState(10);
   const [severityThreshold, setSeverityThreshold] = useState(1000000);
+  const [selectedAlertType, setSelectedAlertType] = useState<NoveltyType>('hedo');
+  const [selectedAlertCenter, setSelectedAlertCenter] = useState('all');
+  const [typeAlertThresholds, setTypeAlertThresholds] = useState<Record<string, { volume: number; severity: number }>>({});
+  const [centerAlertThresholds, setCenterAlertThresholds] = useState<Record<string, { volume: number; severity: number }>>({});
   const [alertStatusOverrides, setAlertStatusOverrides] = useState<Record<string, 'pendiente' | 'notificada' | 'cerrada'>>({});
   const comparisonStartDate = startDate ? shiftMonth(startDate, 1) : '';
   const comparisonEndDate = endDate ? shiftMonth(endDate, 1) : '';
@@ -255,6 +259,28 @@ export default function AnaliticaNomina() {
   const employeeCenterMap = useMemo(() => new Map(employees.map((employee: any) => [employee.id, employee.work_info?.operation_center_id || employee.operation_centers?.id || null])), [employees]);
 
   const centerNameMap = useMemo(() => new Map(centerOptions.map((center) => [center.id, center.name])), [centerOptions]);
+
+  const updateTypeAlertThreshold = (field: 'volume' | 'severity', value: number) => {
+    setTypeAlertThresholds((prev) => ({
+      ...prev,
+      [selectedAlertType]: {
+        volume: prev[selectedAlertType]?.volume ?? volumeThreshold,
+        severity: prev[selectedAlertType]?.severity ?? severityThreshold,
+        [field]: value,
+      },
+    }));
+  };
+
+  const updateCenterAlertThreshold = (field: 'volume' | 'severity', value: number) => {
+    setCenterAlertThresholds((prev) => ({
+      ...prev,
+      [selectedAlertCenter]: {
+        volume: prev[selectedAlertCenter]?.volume ?? volumeThreshold,
+        severity: prev[selectedAlertCenter]?.severity ?? severityThreshold,
+        [field]: value,
+      },
+    }));
+  };
 
   const salaryByEmployee = useMemo(() => {
     const map = new Map<string, number>();
