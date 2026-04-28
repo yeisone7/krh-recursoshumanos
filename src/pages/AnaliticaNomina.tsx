@@ -410,7 +410,14 @@ export default function AnaliticaNomina() {
       });
       return row;
     });
-    const buildImpactRanking = (getKey: (item: any) => string) => Object.values(filteredNovelties.reduce<Record<string, any>>((acc, item: any) => {
+    const resolveThresholds = (scope: 'type' | 'center', key: string) => {
+      const overrides = scope === 'type' ? typeAlertThresholds[key] : centerAlertThresholds[key];
+      return {
+        volume: overrides?.volume ?? volumeThreshold,
+        severity: overrides?.severity ?? severityThreshold,
+      };
+    };
+    const buildImpactRanking = (getKey: (item: any) => string, scope: 'type' | 'center') => Object.values(filteredNovelties.reduce<Record<string, any>>((acc, item: any) => {
       const name = getKey(item);
       if (!acc[name]) acc[name] = { name, volumen: 0, horas: 0, impacto: 0, empleados: new Set<string>() };
       acc[name].volumen += 1;
@@ -418,15 +425,20 @@ export default function AnaliticaNomina() {
       acc[name].impacto += getEstimatedImpact(item);
       acc[name].empleados.add(item.employee_id);
       return acc;
-    }, {})).map((item: any) => ({
-      ...item,
-      horas: Math.round(item.horas * 10) / 10,
-      impacto: Math.round(item.impacto),
-      empleados: item.empleados.size,
-      prioridad: item.volumen >= volumeThreshold && item.impacto >= severityThreshold ? 'Crítica' : item.volumen >= volumeThreshold || item.impacto >= severityThreshold ? 'Alta' : 'Normal',
-    })).sort((a: any, b: any) => b.impacto - a.impacto || b.volumen - a.volumen).slice(0, 8);
-    const impactRankingByType = buildImpactRanking((item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type || 'Sin tipo');
-    const impactRankingByCenter = buildImpactRanking((item: any) => centerNameMap.get(employeeCenterMap.get(item.employee_id) as string) || 'Sin centro');
+    }, {})).map((item: any) => {
+      const thresholds = resolveThresholds(scope, item.name);
+      return {
+        ...item,
+        horas: Math.round(item.horas * 10) / 10,
+        impacto: Math.round(item.impacto),
+        empleados: item.empleados.size,
+        volumeThreshold: thresholds.volume,
+        severityThreshold: thresholds.severity,
+        prioridad: item.volumen >= thresholds.volume && item.impacto >= thresholds.severity ? 'Crítica' : item.volumen >= thresholds.volume || item.impacto >= thresholds.severity ? 'Alta' : 'Normal',
+      };
+    }).sort((a: any, b: any) => b.impacto - a.impacto || b.volumen - a.volumen).slice(0, 8);
+    const impactRankingByType = buildImpactRanking((item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type || 'Sin tipo', 'type');
+    const impactRankingByCenter = buildImpactRanking((item: any) => centerNameMap.get(employeeCenterMap.get(item.employee_id) as string) || 'Sin centro', 'center');
     const shiftDistributionTrend = monthlyTrend.map((month) => ({
       periodo: month.periodo,
       jornadas: month.jornadas,
