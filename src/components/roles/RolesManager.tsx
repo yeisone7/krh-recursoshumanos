@@ -62,20 +62,20 @@ export function RolesManager() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h3 className="text-lg font-semibold">Roles y permisos por empresa</h3>
           <p className="text-sm text-muted-foreground">Crea roles para la empresa activa y define permisos por módulo</p>
         </div>
-        <Button onClick={handleCreate}>
+        <Button onClick={handleCreate} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Nuevo Rol
         </Button>
       </div>
 
       <Card>
-        <CardContent className="p-0">
-          <Table>
+        <CardContent className="p-0 overflow-x-auto">
+          <Table className="min-w-[760px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Rol</TableHead>
@@ -172,7 +172,7 @@ export function RolesManager() {
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar este rol?</AlertDialogTitle>
             <AlertDialogDescription>
