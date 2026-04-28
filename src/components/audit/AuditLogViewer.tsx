@@ -241,7 +241,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
       )}
       <CardContent className={compact ? 'p-0' : ''}>
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="flex flex-col gap-3 mb-4 lg:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -251,8 +251,8 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Select value={filterAction} onValueChange={handleFilterChange(setFilterAction)}>
-            <SelectTrigger className="w-full sm:w-40">
+            <Select value={filterAction} onValueChange={handleFilterChange(setFilterAction)}>
+              <SelectTrigger className="w-full lg:w-44">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Acción" />
             </SelectTrigger>
@@ -264,8 +264,8 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
             </SelectContent>
           </Select>
           {!entityType && (
-            <Select value={filterEntity} onValueChange={handleFilterChange(setFilterEntity)}>
-              <SelectTrigger className="w-full sm:w-40">
+              <Select value={filterEntity} onValueChange={handleFilterChange(setFilterEntity)}>
+                <SelectTrigger className="w-full lg:w-44">
                 <SelectValue placeholder="Entidad" />
               </SelectTrigger>
               <SelectContent className="bg-background">
@@ -297,9 +297,9 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
           </div>
         ) : (
           <>
-            <ScrollArea className={compact ? 'h-[400px]' : 'h-[600px]'}>
-              <div className="rounded-md border">
-                <Table>
+            <ScrollArea className={compact ? 'h-[400px]' : 'h-[min(600px,calc(100vh-18rem))]'}>
+              <div className="overflow-x-auto rounded-md border">
+                <Table className="min-w-[760px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[140px]">Fecha</TableHead>
@@ -319,11 +319,11 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
             </ScrollArea>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <p className="text-sm text-muted-foreground">
+              <div className="flex flex-col gap-3 mt-4 pt-4 border-t sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-muted-foreground text-center sm:text-left">
                   Mostrando {currentPage * pageSize + 1}–{Math.min((currentPage + 1) * pageSize, totalCount)} de {totalCount} registros
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
