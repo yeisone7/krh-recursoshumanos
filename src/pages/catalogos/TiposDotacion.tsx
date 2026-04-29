@@ -28,6 +28,7 @@ import {
 
 import { useDotationItemTypes, useDeleteDotationItemType, useUpdateDotationItemType } from '@/hooks/useSystemConfig';
 import { DotationItemTypeFormDialog } from '@/components/config';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import { DOTATION_CATEGORIES } from '@/types/config';
 import type { DotationItemType } from '@/types/config';
 import { supabase } from '@/integrations/supabase/client';
@@ -202,30 +203,30 @@ export default function CatalogosTiposDotacion() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 rounded-lg bg-primary/10 p-2">
             <Shirt className="w-6 h-6 text-primary" />
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Tipos de Dotación</h1>
+          <div className="min-w-0">
+            <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Tipos de Dotación</h1>
             <p className="text-muted-foreground mt-1">Catálogo de artículos de dotación</p>
           </div>
         </div>
       </motion.div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
-          <div>
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <CardTitle>Listado de Tipos</CardTitle>
             <CardDescription>Artículos disponibles para entrega de dotación</CardDescription>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                  <Button variant="outline" size="sm" onClick={handleExportExcel} className="w-full sm:w-auto">
                     <FileSpreadsheet className="w-4 h-4 mr-2" />Excel
                   </Button>
                 </TooltipTrigger>
@@ -233,27 +234,27 @@ export default function CatalogosTiposDotacion() {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                  <Button variant="outline" size="sm" onClick={handleExportPDF} className="w-full sm:w-auto">
                     <FileText className="w-4 h-4 mr-2" />PDF
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Exportar a PDF</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <Button onClick={handleCreate}>
+            <Button onClick={handleCreate} className="col-span-2 w-full sm:col-span-1 sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />Nuevo Tipo
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="grid gap-3 sm:flex sm:flex-wrap sm:items-center">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground sm:w-auto">
               <Filter className="w-4 h-4" />
               Filtros:
             </div>
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-[200px] h-9">
+              <SelectTrigger className="h-9 w-full sm:w-[200px]">
                 <SelectValue placeholder="Categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -264,7 +265,7 @@ export default function CatalogosTiposDotacion() {
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[160px] h-9">
+              <SelectTrigger className="h-9 w-full sm:w-[160px]">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
@@ -274,11 +275,11 @@ export default function CatalogosTiposDotacion() {
               </SelectContent>
             </Select>
             {(filterCategory !== 'all' || filterStatus !== 'all') && (
-              <Button variant="ghost" size="sm" onClick={() => { setFilterCategory('all'); setFilterStatus('all'); }}>
+              <Button variant="ghost" size="sm" className="w-full sm:w-auto" onClick={() => { setFilterCategory('all'); setFilterStatus('all'); }}>
                 Limpiar filtros
               </Button>
             )}
-            <span className="text-xs text-muted-foreground ml-auto">
+            <span className="text-xs text-muted-foreground sm:ml-auto">
               {filteredTypes.length} de {dotationTypes.length} registros
             </span>
           </div>
@@ -292,7 +293,44 @@ export default function CatalogosTiposDotacion() {
                 : 'No se encontraron resultados con los filtros aplicados.'}
             </div>
           ) : (
-            <Table>
+            <>
+            <MobileCardList
+              className="md:hidden"
+              emptyMessage="No se encontraron tipos de dotación"
+              items={filteredTypes.map((item) => ({
+                id: item.id,
+                title: item.name,
+                subtitle: item.description || getCategoryLabel(item.category),
+                badge: <Badge variant={item.is_active ? 'default' : 'secondary'}>{item.is_active ? 'Activo' : 'Inactivo'}</Badge>,
+                itemClassName: !item.is_active ? 'opacity-70' : undefined,
+                fields: [
+                  { label: 'Código', value: item.code || '-', className: 'col-span-1' },
+                  { label: 'Categoría', value: getCategoryLabel(item.category), className: 'col-span-1' },
+                  { label: 'Requiere talla', value: item.requires_size ? 'Sí' : 'No', className: 'col-span-1' },
+                  { label: 'Imagen', value: (item as any).image_url ? 'Disponible' : 'Sin imagen', className: 'col-span-1' },
+                ],
+                actions: (
+                  <div className="grid w-full grid-cols-3 gap-2">
+                    {(item as any).image_url && (
+                      <Button variant="outline" size="sm" onClick={() => setZoomImage({ url: (item as any).image_url, name: item.name })}>
+                        <ZoomIn className="mr-2 h-4 w-4" />
+                        Ver
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(item)} className={(item as any).image_url ? '' : 'col-span-2'}>
+                      <Edit2 className="mr-2 h-4 w-4" />
+                      Editar
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setDeleteItem(item)} className="text-destructive hover:text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar
+                    </Button>
+                  </div>
+                ),
+              }))}
+            />
+            <div className="hidden overflow-x-auto md:block">
+            <Table className="min-w-[860px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16">Imagen</TableHead>
@@ -376,6 +414,8 @@ export default function CatalogosTiposDotacion() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -389,14 +429,14 @@ export default function CatalogosTiposDotacion() {
 
       {/* Image zoom dialog */}
       <Dialog open={!!zoomImage} onOpenChange={(open) => !open && setZoomImage(null)}>
-        <DialogContent className="max-w-lg p-2">
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-lg flex-col overflow-hidden p-2">
           <DialogTitle className="sr-only">{zoomImage?.name}</DialogTitle>
           {zoomImage && (
             <div className="flex flex-col items-center gap-3">
               <img
                 src={zoomImage.url}
                 alt={zoomImage.name}
-                className="max-h-[70vh] w-auto rounded-lg object-contain"
+                className="max-h-[70dvh] max-w-full rounded-lg object-contain"
               />
               <p className="text-sm font-medium text-foreground">{zoomImage.name}</p>
             </div>
@@ -407,8 +447,8 @@ export default function CatalogosTiposDotacion() {
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteItem} onOpenChange={(open) => !open && setDeleteItem(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden">
+          <AlertDialogHeader className="shrink-0">
             <AlertDialogTitle>¿Eliminar tipo de dotación?</AlertDialogTitle>
             <AlertDialogDescription>
               Estás a punto de eliminar <strong>{deleteItem?.name}</strong>.
@@ -416,9 +456,9 @@ export default function CatalogosTiposDotacion() {
               Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteLoading}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleteLoading} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+            <AlertDialogCancel disabled={deleteLoading} className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleteLoading} className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto">
               {deleteLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Eliminar
             </AlertDialogAction>
