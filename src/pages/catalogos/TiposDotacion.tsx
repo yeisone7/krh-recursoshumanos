@@ -429,14 +429,14 @@ export default function CatalogosTiposDotacion() {
 
       {/* Image zoom dialog */}
       <Dialog open={!!zoomImage} onOpenChange={(open) => !open && setZoomImage(null)}>
-        <DialogContent className="max-w-lg p-2">
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-lg flex-col overflow-hidden p-2">
           <DialogTitle className="sr-only">{zoomImage?.name}</DialogTitle>
           {zoomImage && (
             <div className="flex flex-col items-center gap-3">
               <img
                 src={zoomImage.url}
                 alt={zoomImage.name}
-                className="max-h-[70vh] w-auto rounded-lg object-contain"
+                className="max-h-[70dvh] max-w-full rounded-lg object-contain"
               />
               <p className="text-sm font-medium text-foreground">{zoomImage.name}</p>
             </div>
@@ -447,8 +447,8 @@ export default function CatalogosTiposDotacion() {
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteItem} onOpenChange={(open) => !open && setDeleteItem(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden">
+          <AlertDialogHeader className="shrink-0">
             <AlertDialogTitle>¿Eliminar tipo de dotación?</AlertDialogTitle>
             <AlertDialogDescription>
               Estás a punto de eliminar <strong>{deleteItem?.name}</strong>.
@@ -456,9 +456,9 @@ export default function CatalogosTiposDotacion() {
               Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleteLoading}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleteLoading} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+            <AlertDialogCancel disabled={deleteLoading} className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleteLoading} className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto">
               {deleteLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Eliminar
             </AlertDialogAction>
