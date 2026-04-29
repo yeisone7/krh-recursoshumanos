@@ -172,19 +172,19 @@ export function DotationItemTypeFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden p-0">
+        <DialogHeader className="shrink-0 px-4 pt-4 sm:px-6 sm:pt-6">
           <DialogTitle>
             {isEditing ? 'Editar Tipo de Dotación' : 'Nuevo Tipo de Dotación'}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
             {/* Image Upload */}
             <div className="space-y-2">
               <FormLabel>Imagen</FormLabel>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                 {imagePreview ? (
                   <div className="relative w-20 h-20 rounded-lg border overflow-hidden bg-muted">
                     <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
@@ -214,7 +214,7 @@ export function DotationItemTypeFormDialog({
                   onChange={handleImageSelect}
                 />
                 {imagePreview && (
-                  <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                  <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full sm:w-auto">
                     Cambiar
                   </Button>
                 )}
@@ -235,7 +235,7 @@ export function DotationItemTypeFormDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="code"
@@ -355,11 +355,11 @@ export function DotationItemTypeFormDialog({
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end sm:gap-3">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
                 {isPending && (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 )}
