@@ -77,7 +77,7 @@ export function SocialSecurityCatalogFormDialog({
     }
 
     if (editItem) {
-      (data as any).id = editItem.id;
+      (data as Partial<CatalogItem | CatalogIPS> & { id: string }).id = editItem.id;
     }
 
     onSubmit(data);
@@ -86,91 +86,93 @@ export function SocialSecurityCatalogFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col gap-0 p-0 sm:max-w-md">
+        <DialogHeader className="shrink-0 border-b border-border px-6 py-4 pr-12">
           <DialogTitle>{editItem ? `Editar ${title}` : `Nueva ${title}`}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre *</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={`Nombre de la ${title}`}
-              required
-            />
-          </div>
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre *</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={`Nombre de la ${title}`}
+                required
+              />
+            </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="code">Código</Label>
-              <Input
-                id="code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="Código"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="nit">NIT</Label>
-              <Input
-                id="nit"
-                value={nit}
-                onChange={(e) => setNit(e.target.value)}
-                placeholder="NIT"
-              />
-            </div>
-          </div>
-
-          {showIPSFields && (
-            <>
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="address">Dirección</Label>
+                <Label htmlFor="code">Código</Label>
                 <Input
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Dirección"
+                  id="code"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="Código"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">Ciudad</Label>
-                  <Input
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Ciudad"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono</Label>
-                  <Input
-                    id="phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Teléfono"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="nit">NIT</Label>
+                <Input
+                  id="nit"
+                  value={nit}
+                  onChange={(e) => setNit(e.target.value)}
+                  placeholder="NIT"
+                />
               </div>
-            </>
-          )}
+            </div>
 
-          <div className="flex items-center gap-2">
-            <Switch
-              id="is_active"
-              checked={isActive}
-              onCheckedChange={setIsActive}
-            />
-            <Label htmlFor="is_active">Activo</Label>
+            {showIPSFields && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="address">Dirección</Label>
+                  <Input
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Dirección"
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">Ciudad</Label>
+                    <Input
+                      id="city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Ciudad"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Teléfono</Label>
+                    <Input
+                      id="phone"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Teléfono"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="is_active"
+                checked={isActive}
+                onCheckedChange={setIsActive}
+              />
+              <Label htmlFor="is_active">Activo</Label>
+            </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="shrink-0 gap-2 border-t border-border px-6 py-4 sm:gap-0">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading || !name.trim()}>
+            <Button type="submit" className="w-full sm:w-auto" disabled={isLoading || !name.trim()}>
               {isLoading ? 'Guardando...' : editItem ? 'Actualizar' : 'Crear'}
             </Button>
           </DialogFooter>
