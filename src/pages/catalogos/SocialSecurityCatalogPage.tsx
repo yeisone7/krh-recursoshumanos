@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
 import { SocialSecurityCatalogFormDialog } from '@/components/config/SocialSecurityCatalogFormDialog';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import type { CatalogItem, CatalogIPS } from '@/hooks/useSocialSecurityCatalogs';
 
 interface SocialSecurityCatalogPageProps {
@@ -79,12 +80,12 @@ export function SocialSecurityCatalogPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold text-foreground">{title}</h1>
           <p className="text-muted-foreground">{description}</p>
         </div>
-        <Button onClick={() => { setEditItem(null); setDialogOpen(true); }}>
+        <Button className="w-full sm:w-auto" onClick={() => { setEditItem(null); setDialogOpen(true); }}>
           <Plus className="w-4 h-4 mr-2" />
           Nueva {title}
         </Button>
@@ -92,8 +93,8 @@ export function SocialSecurityCatalogPage({
 
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Buscar por nombre, código o NIT..."
@@ -112,51 +113,85 @@ export function SocialSecurityCatalogPage({
               {searchTerm ? 'No se encontraron resultados' : `No hay ${title.toLowerCase()}s registradas`}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Código</TableHead>
-                  <TableHead>NIT</TableHead>
-                  {showIPSFields && <TableHead>Ciudad</TableHead>}
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    <TableCell>{item.code || '-'}</TableCell>
-                    <TableCell>{item.nit || '-'}</TableCell>
-                    {showIPSFields && <TableCell>{(item as CatalogIPS).city || '-'}</TableCell>}
-                    <TableCell>
-                      <Badge variant={item.is_active ? 'default' : 'secondary'}>
-                        {item.is_active ? 'Activa' : 'Inactiva'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(item)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteId(item.id)}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <>
+              <MobileCardList
+                className="md:hidden"
+                items={filteredData.map((item) => ({
+                  id: item.id,
+                  title: item.name,
+                  subtitle: item.nit ? `NIT: ${item.nit}` : 'Sin NIT registrado',
+                  badge: (
+                    <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                      {item.is_active ? 'Activa' : 'Inactiva'}
+                    </Badge>
+                  ),
+                  fields: [
+                    { label: 'Código', value: item.code || '-' },
+                    ...(showIPSFields ? [{ label: 'Ciudad', value: (item as CatalogIPS).city || '-' }] : []),
+                  ],
+                  actions: (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
+                        <Edit2 className="w-4 h-4 mr-2" />
+                        Editar
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setDeleteId(item.id)}>
+                        <Trash2 className="w-4 h-4 mr-2 text-destructive" />
+                        Eliminar
+                      </Button>
+                    </>
+                  ),
+                }))}
+              />
+
+              <div className="hidden md:block overflow-x-auto">
+                <Table className="min-w-[760px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Código</TableHead>
+                      <TableHead>NIT</TableHead>
+                      {showIPSFields && <TableHead>Ciudad</TableHead>}
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredData.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell>{item.code || '-'}</TableCell>
+                        <TableCell>{item.nit || '-'}</TableCell>
+                        {showIPSFields && <TableCell>{(item as CatalogIPS).city || '-'}</TableCell>}
+                        <TableCell>
+                          <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                            {item.is_active ? 'Activa' : 'Inactiva'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setDeleteId(item.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -175,14 +210,14 @@ export function SocialSecurityCatalogPage({
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90dvh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar registro?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. El registro será eliminado permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Eliminar
