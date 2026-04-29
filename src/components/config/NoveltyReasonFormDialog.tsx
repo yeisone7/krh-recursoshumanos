@@ -61,11 +61,11 @@ export function NoveltyReasonFormDialog({ open, onOpenChange, reason, nextItemNu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col p-0 sm:w-full">
+        <DialogHeader className="shrink-0 px-6 pt-6">
           <DialogTitle>{isEditing ? 'Editar Motivo' : 'Nuevo Motivo'}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div className="space-y-2">
             <Label>Motivo *</Label>
             <Input
@@ -90,9 +90,9 @@ export function NoveltyReasonFormDialog({ open, onOpenChange, reason, nextItemNu
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={create.isPending || update.isPending}>
+        <DialogFooter className="shrink-0 flex-col-reverse gap-2 border-t border-border px-6 pb-6 pt-4 sm:flex-row sm:justify-end">
+          <Button className="w-full sm:w-auto" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button className="w-full sm:w-auto" onClick={handleSave} disabled={create.isPending || update.isPending}>
             {isEditing ? 'Actualizar' : 'Crear'}
           </Button>
         </DialogFooter>
