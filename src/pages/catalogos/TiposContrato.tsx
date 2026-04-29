@@ -480,29 +480,23 @@ export default function TiposContrato() {
                 <div className="overflow-x-auto pb-1">
                   <TabsList className="h-auto min-w-max justify-start gap-1">
                     {previewTabs.map((tab) => (
-                      <TabsTrigger key={tab.id} value={tab.id} className="max-w-[220px] gap-2 pr-1">
-                        <span className="truncate">{tab.display_name}</span>
-                        <span
-                          role="button"
-                          tabIndex={0}
+                      <div key={tab.id} className="flex items-center rounded-sm data-[state=active]:bg-background">
+                        <TabsTrigger value={tab.id} className="max-w-[190px] rounded-r-none pr-2 shadow-none data-[state=active]:shadow-none">
+                          <span className="truncate">{tab.display_name}</span>
+                        </TabsTrigger>
+                        <button
+                          type="button"
                           className="rounded-sm p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                           onClick={(event) => {
                             event.preventDefault();
                             event.stopPropagation();
                             removePreviewTab(tab.id);
                           }}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter' || event.key === ' ') {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              removePreviewTab(tab.id);
-                            }
-                          }}
                           aria-label={`Cerrar ${tab.display_name}`}
                         >
                           <X className="h-3 w-3" />
-                        </span>
-                      </TabsTrigger>
+                        </button>
+                      </div>
                     ))}
                   </TabsList>
                 </div>
