@@ -61,11 +61,13 @@ export default function TiposContrato() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<ContractTypeConfig | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [docxRendering, setDocxRendering] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewDocxBlob, setPreviewDocxBlob] = useState<Blob | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewKind, setPreviewKind] = useState<'pdf' | 'docx' | 'unsupported' | null>(null);
   const docxPreviewRef = useRef<HTMLDivElement>(null);
+  const docxRenderIdRef = useRef(0);
 
   const filteredData = data.filter(item =>
     item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -139,9 +141,12 @@ export default function TiposContrato() {
     const container = docxPreviewRef.current;
     if (previewKind !== 'docx' || !previewDocxBlob || !container) return;
 
+    const renderId = ++docxRenderIdRef.current;
     let cancelled = false;
-    container.innerHTML = '';
-    renderAsync(previewDocxBlob, container, undefined, {
+    const nextContainer = document.createElement('div');
+    setDocxRendering(true);
+
+    renderAsync(previewDocxBlob, nextContainer, undefined, {
       className: 'docx-preview-content',
       inWrapper: true,
       ignoreWidth: false,
@@ -149,40 +154,53 @@ export default function TiposContrato() {
       breakPages: true,
       renderHeaders: true,
       renderFooters: true,
-    }).catch((error) => {
-      console.error('DOCX render error:', error);
-      if (!cancelled) setPreviewError('No se pudo renderizar visualmente la plantilla DOCX.');
-    });
+    })
+      .then(() => {
+        if (cancelled || renderId !== docxRenderIdRef.current) return;
+        container.replaceChildren(...Array.from(nextContainer.childNodes));
+        setDocxRendering(false);
+      })
+      .catch((error) => {
+        console.error('DOCX render error:', error);
+        if (!cancelled && renderId === docxRenderIdRef.current) {
+          setPreviewError('No se pudo renderizar visualmente la plantilla DOCX.');
+          setDocxRendering(false);
+        }
+      });
 
     return () => {
       cancelled = true;
-      container.innerHTML = '';
     };
   }, [previewKind, previewDocxBlob]);
 
 
   const handlePreview = async (item: ContractTypeConfig) => {
     if (!item.template_url || !item.template_file_name) return;
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewItem(item);
     setPreviewLoading(true);
-    setPreviewUrl(null);
-    setPreviewDocxBlob(null);
     setPreviewError(null);
-    setPreviewKind(null);
     try {
       const { data: blob, error } = await supabase.storage.from('documents').download(item.template_url);
       if (error) throw error;
       const extension = item.template_file_name.split('.').pop()?.toLowerCase();
       if (extension === 'pdf') {
         setPreviewKind('pdf');
-        setPreviewUrl(URL.createObjectURL(blob));
+        setPreviewUrl((currentUrl) => {
+          if (currentUrl) URL.revokeObjectURL(currentUrl);
+          return URL.createObjectURL(blob);
+        });
+        setPreviewDocxBlob(null);
       } else if (extension === 'docx') {
         setPreviewKind('docx');
         setPreviewDocxBlob(blob);
+        setPreviewUrl((currentUrl) => {
+          if (currentUrl) URL.revokeObjectURL(currentUrl);
+          return null;
+        });
       } else {
         setPreviewKind('unsupported');
         setPreviewError('La vista previa está disponible para PDF y DOCX. Puedes descargar este archivo para revisarlo.');
+        setPreviewDocxBlob(null);
       }
     } catch (error) {
       console.error('Preview error:', error);
