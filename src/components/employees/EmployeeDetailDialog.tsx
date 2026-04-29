@@ -102,7 +102,7 @@ function InfoItem({ icon: Icon, label, value, className }: { icon?: any; label: 
       {Icon && <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />}
       <div className="min-w-0">
         <p className="text-xs text-muted-foreground leading-none mb-1">{label}</p>
-        <p className="text-sm font-medium text-foreground">{value}</p>
+        <p className="break-words text-sm font-medium text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -136,13 +136,13 @@ function MetricChip({ icon: Icon, label, value, color = 'primary' }: { icon: any
 function SectionCard({ title, icon: Icon, children, action }: { title: string; icon: any; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <Card className="border border-border shadow-none">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+      <CardContent className="p-3 sm:p-4">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
             <div className="p-1.5 rounded-md bg-primary/10">
               <Icon className="w-3.5 h-3.5 text-primary" />
             </div>
-            {title}
+            <span className="min-w-0 break-words">{title}</span>
           </h3>
           {action}
         </div>
