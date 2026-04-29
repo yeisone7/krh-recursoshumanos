@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,7 +34,7 @@ import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDial
 import { ContractPlaceholdersInfo } from '@/components/contracts/ContractPlaceholdersInfo';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { supabase } from '@/integrations/supabase/client';
-import PizZip from 'pizzip';
+import { renderAsync } from 'docx-preview';
 
 const codeColors = [
   'bg-primary/10 text-primary border-primary/20',
@@ -62,9 +62,10 @@ export default function TiposContrato() {
   const [previewItem, setPreviewItem] = useState<ContractTypeConfig | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [previewText, setPreviewText] = useState<string>('');
+  const [previewDocxBlob, setPreviewDocxBlob] = useState<Blob | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewKind, setPreviewKind] = useState<'pdf' | 'docx' | 'unsupported' | null>(null);
+  const docxPreviewRef = useRef<HTMLDivElement>(null);
 
   const filteredData = data.filter(item =>
     item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -134,16 +135,31 @@ export default function TiposContrato() {
     setIsFormOpen(true);
   };
 
-  const extractDocxText = async (blob: Blob) => {
-    const zip = new PizZip(await blob.arrayBuffer());
-    const xml = zip.file('word/document.xml')?.asText();
-    if (!xml) return 'No se pudo leer el contenido de la plantilla.';
-    const doc = new DOMParser().parseFromString(xml, 'application/xml');
-    return Array.from(doc.getElementsByTagName('w:p'))
-      .map((p) => Array.from(p.getElementsByTagName('w:t')).map((t) => t.textContent || '').join(''))
-      .filter(Boolean)
-      .join('\n\n');
-  };
+  useEffect(() => {
+    const container = docxPreviewRef.current;
+    if (previewKind !== 'docx' || !previewDocxBlob || !container) return;
+
+    let cancelled = false;
+    container.innerHTML = '';
+    renderAsync(previewDocxBlob, container, undefined, {
+      className: 'docx-preview-content',
+      inWrapper: true,
+      ignoreWidth: false,
+      ignoreHeight: false,
+      breakPages: true,
+      renderHeaders: true,
+      renderFooters: true,
+    }).catch((error) => {
+      console.error('DOCX render error:', error);
+      if (!cancelled) setPreviewError('No se pudo renderizar visualmente la plantilla DOCX.');
+    });
+
+    return () => {
+      cancelled = true;
+      container.innerHTML = '';
+    };
+  }, [previewKind, previewDocxBlob]);
+
 
   const handlePreview = async (item: ContractTypeConfig) => {
     if (!item.template_url || !item.template_file_name) return;
@@ -151,7 +167,7 @@ export default function TiposContrato() {
     setPreviewItem(item);
     setPreviewLoading(true);
     setPreviewUrl(null);
-    setPreviewText('');
+    setPreviewDocxBlob(null);
     setPreviewError(null);
     setPreviewKind(null);
     try {
@@ -163,7 +179,7 @@ export default function TiposContrato() {
         setPreviewUrl(URL.createObjectURL(blob));
       } else if (extension === 'docx') {
         setPreviewKind('docx');
-        setPreviewText(await extractDocxText(blob));
+        setPreviewDocxBlob(blob);
       } else {
         setPreviewKind('unsupported');
         setPreviewError('La vista previa está disponible para PDF y DOCX. Puedes descargar este archivo para revisarlo.');
@@ -180,6 +196,7 @@ export default function TiposContrato() {
     setPreviewItem(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
+    setPreviewDocxBlob(null);
   };
 
   return (
@@ -404,7 +421,9 @@ export default function TiposContrato() {
             ) : previewKind === 'pdf' && previewUrl ? (
               <iframe title="Vista previa de plantilla" src={previewUrl} className="h-[65dvh] w-full rounded-lg border border-border bg-background" />
             ) : previewKind === 'docx' ? (
-              <pre className="min-h-[320px] whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/30 p-4 text-sm text-foreground font-sans">{previewText || 'La plantilla no contiene texto visible.'}</pre>
+              <div className="min-h-[320px] overflow-x-auto rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
+                <div ref={docxPreviewRef} className="docx-visual-preview min-w-fit origin-top-left" />
+              </div>
             ) : null}
           </div>
 
