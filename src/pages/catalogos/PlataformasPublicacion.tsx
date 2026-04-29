@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Search, Pencil, Trash2, Globe } from 'lucide-react';
 import { useVacancyPlatforms, type VacancyPublicationPlatform } from '@/hooks/useVacancyPlatforms';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 export default function PlataformasPublicacion() {
   const { data, isLoading, create, update, delete: deleteItem, isCreating, isUpdating } = useVacancyPlatforms();
@@ -67,24 +68,24 @@ export default function PlataformasPublicacion() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <CardTitle className="flex items-center gap-2 break-words">
+                <Globe className="h-5 w-5 shrink-0" />
                 Plataformas de Publicación
               </CardTitle>
               <CardDescription>
                 Catálogo de plataformas donde se publican las vacantes
               </CardDescription>
             </div>
-            <Button onClick={openCreate} size="sm">
+            <Button onClick={openCreate} size="sm" className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-1" /> Nueva Plataforma
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
-            <div className="relative max-w-sm">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar plataforma..."
@@ -100,53 +101,94 @@ export default function PlataformasPublicacion() {
           ) : filtered.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No hay plataformas registradas.</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead>URL</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="w-[100px]">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                      {item.url ? (
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                          {item.name}
-                        </a>
-                      ) : item.name}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{item.description || '—'}</TableCell>
-                    <TableCell className="text-sm">
-                      {item.url ? (
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[200px] block">
-                          {item.url}
-                        </a>
-                      ) : '—'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={item.is_active ? 'default' : 'secondary'}>
-                        {item.is_active ? 'Activa' : 'Inactiva'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(item)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteId(item.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <>
+              <MobileCardList
+                className="md:hidden"
+                emptyMessage="No hay plataformas registradas."
+                items={filtered.map((item) => ({
+                  id: item.id,
+                  title: item.url ? (
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      {item.name}
+                    </a>
+                  ) : item.name,
+                  subtitle: item.description || 'Sin descripción',
+                  badge: (
+                    <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                      {item.is_active ? 'Activa' : 'Inactiva'}
+                    </Badge>
+                  ),
+                  fields: [
+                    { label: 'URL', value: item.url ? (
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        {item.url}
+                      </a>
+                    ) : '—', className: 'col-span-2' },
+                  ],
+                  actions: (
+                    <>
+                      <Button variant="outline" size="sm" onClick={() => openEdit(item)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Editar
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setDeleteId(item.id)}>
+                        <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+                        Eliminar
+                      </Button>
+                    </>
+                  ),
+                }))}
+              />
+              <div className="hidden md:block overflow-x-auto">
+                <Table className="min-w-[760px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead>URL</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="w-[100px]">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">
+                          {item.url ? (
+                            <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                              {item.name}
+                            </a>
+                          ) : item.name}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{item.description || '—'}</TableCell>
+                        <TableCell className="text-sm">
+                          {item.url ? (
+                            <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate max-w-[200px] block">
+                              {item.url}
+                            </a>
+                          ) : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                            {item.is_active ? 'Activa' : 'Inactiva'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(item)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setDeleteId(item.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
