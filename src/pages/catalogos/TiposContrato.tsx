@@ -231,6 +231,8 @@ export default function TiposContrato() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setPreviewDocxBlob(null);
+    setPreviewDocxKey(null);
+    setDocxRendering(false);
   };
 
   return (
@@ -445,7 +447,17 @@ export default function TiposContrato() {
           </DialogHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
-            {previewLoading ? (
+            {previewKind === 'docx' ? (
+              <div className="relative min-h-[320px] overflow-x-auto rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
+                {(previewLoading || docxRendering) && (
+                  <div className="absolute inset-x-3 top-3 z-10 flex items-center justify-center rounded-md border border-border bg-background/90 px-3 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur sm:inset-x-4 sm:top-4">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Actualizando vista previa...
+                  </div>
+                )}
+                <div ref={docxPreviewRef} className="docx-visual-preview min-w-fit origin-top-left" />
+              </div>
+            ) : previewLoading ? (
               <div className="flex min-h-[320px] items-center justify-center text-muted-foreground">
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Cargando vista previa...
@@ -454,10 +466,6 @@ export default function TiposContrato() {
               <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">{previewError}</div>
             ) : previewKind === 'pdf' && previewUrl ? (
               <iframe title="Vista previa de plantilla" src={previewUrl} className="h-[65dvh] w-full rounded-lg border border-border bg-background" />
-            ) : previewKind === 'docx' ? (
-              <div className="min-h-[320px] overflow-x-auto rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
-                <div ref={docxPreviewRef} className="docx-visual-preview min-w-fit origin-top-left" />
-              </div>
             ) : null}
           </div>
 
