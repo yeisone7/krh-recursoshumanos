@@ -28,6 +28,7 @@ import {
 
 import { useDotationItemTypes, useDeleteDotationItemType, useUpdateDotationItemType } from '@/hooks/useSystemConfig';
 import { DotationItemTypeFormDialog } from '@/components/config';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import { DOTATION_CATEGORIES } from '@/types/config';
 import type { DotationItemType } from '@/types/config';
 import { supabase } from '@/integrations/supabase/client';
@@ -202,30 +203,30 @@ export default function CatalogosTiposDotacion() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
+        <div className="flex items-start gap-3">
+          <div className="shrink-0 rounded-lg bg-primary/10 p-2">
             <Shirt className="w-6 h-6 text-primary" />
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Tipos de Dotación</h1>
+          <div className="min-w-0">
+            <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Tipos de Dotación</h1>
             <p className="text-muted-foreground mt-1">Catálogo de artículos de dotación</p>
           </div>
         </div>
       </motion.div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
-          <div>
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <CardTitle>Listado de Tipos</CardTitle>
             <CardDescription>Artículos disponibles para entrega de dotación</CardDescription>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                  <Button variant="outline" size="sm" onClick={handleExportExcel} className="w-full sm:w-auto">
                     <FileSpreadsheet className="w-4 h-4 mr-2" />Excel
                   </Button>
                 </TooltipTrigger>
@@ -233,14 +234,14 @@ export default function CatalogosTiposDotacion() {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                  <Button variant="outline" size="sm" onClick={handleExportPDF} className="w-full sm:w-auto">
                     <FileText className="w-4 h-4 mr-2" />PDF
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Exportar a PDF</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <Button onClick={handleCreate}>
+            <Button onClick={handleCreate} className="col-span-2 w-full sm:col-span-1 sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />Nuevo Tipo
             </Button>
           </div>
