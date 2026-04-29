@@ -481,7 +481,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0 gap-0 [&>button]:text-foreground [&>button]:hover:text-foreground/80">
+      <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl flex-col gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 [&>button]:text-foreground [&>button]:hover:text-foreground/80 sm:[&>button]:right-4 sm:[&>button]:top-4">
         <div className="flex-1 min-h-0 overflow-y-auto scrollbar-themed">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -495,15 +495,15 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
         ) : (
           <>
             {/* ── HEADER ── */}
-            <div className="px-6 pt-6 pb-5 rounded-t-xl relative overflow-hidden bg-sidebar">
+            <div className="relative overflow-hidden rounded-t-xl bg-sidebar px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
               <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:26px_26px] opacity-10" />
               <div className="absolute -top-20 -right-16 h-56 w-56 rounded-full border border-primary/30 bg-primary/5" />
               <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full border border-primary/20 bg-primary/5" />
               <div className="absolute top-8 right-28 h-28 w-28 rounded-full border border-primary/25" />
-              <div className="flex items-start gap-4 relative z-10">
+              <div className="relative z-10 flex items-start gap-3 pr-8 sm:gap-4 sm:pr-10">
                 {/* Avatar with upload overlay */}
                 <div className="relative group shrink-0">
-                  <Avatar className="w-16 h-16 border-2 border-primary/20 shadow-sm">
+                  <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-sm sm:h-16 sm:w-16">
                     <AvatarImage src={employee.avatar_url || undefined} alt={employeeFullName} />
                     <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
                       {employee.first_name[0]}{employee.last_name[0]}
@@ -530,7 +530,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
                     <Badge variant="outline" className={cn(
                       "text-[11px] border-primary-foreground/30",
                       employee.is_active 
@@ -557,13 +557,13 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       </Badge>
                     )}
                   </div>
-                  <h2 className="text-xl font-display font-bold text-foreground leading-tight">
+                  <h2 className="break-words pr-1 font-display text-lg font-bold leading-tight text-foreground sm:text-xl">
                     {employeeFullName}
                   </h2>
                   <p className="text-muted-foreground text-sm mt-0.5">
                     {employee.work_info?.position_name || 'Sin cargo asignado'}
                   </p>
-                  <div className="flex items-center gap-3 mt-2 text-muted-foreground text-xs flex-wrap">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                     {employee.operation_centers?.name && (
                       <span className="flex items-center gap-1">
                         <Building className="w-3 h-3" />
@@ -584,6 +584,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     )}
                   </div>
                 </div>
+                <div className="flex shrink-0 flex-col gap-1 sm:flex-row sm:gap-2">
                 {employee.is_active && (
                   <Button 
                     variant="ghost" 
@@ -603,6 +604,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                 >
                   <Pencil className="w-4 h-4" />
                 </Button>
+                </div>
               </div>
             </div>
 
