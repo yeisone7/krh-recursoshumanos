@@ -351,8 +351,8 @@ export default function Festivos() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-lg flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 px-4 pt-4 sm:px-6 sm:pt-6">
             <DialogTitle>
               {selectedHoliday ? 'Editar Festivo' : 'Agregar Festivo'}
             </DialogTitle>
@@ -363,8 +363,8 @@ export default function Festivos() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="holiday_date">Fecha *</Label>
                 <Input
@@ -395,8 +395,8 @@ export default function Festivos() {
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="space-y-0.5">
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+              <div className="min-w-0 space-y-0.5">
                 <Label>Festivo Nacional</Label>
                 <p className="text-xs text-muted-foreground">
                   Marca si es un festivo oficial de Colombia
@@ -408,8 +408,8 @@ export default function Festivos() {
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="space-y-0.5">
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+              <div className="min-w-0 space-y-0.5">
                 <Label>Activo</Label>
                 <p className="text-xs text-muted-foreground">
                   Los festivos inactivos no se cuentan en los cálculos
@@ -422,13 +422,14 @@ export default function Festivos() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="shrink-0 flex-col-reverse gap-2 border-t border-border px-4 py-4 sm:flex-row sm:gap-0 sm:px-6">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
             <Button 
               onClick={handleSubmit}
               disabled={createHoliday.isPending || updateHoliday.isPending}
+              className="w-full sm:w-auto"
             >
               {(createHoliday.isPending || updateHoliday.isPending) && (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -441,19 +442,19 @@ export default function Festivos() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden">
+          <AlertDialogHeader className="shrink-0">
             <AlertDialogTitle>¿Eliminar festivo?</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Estás seguro de eliminar "{selectedHoliday?.name}"? 
               Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto"
             >
               {deleteHoliday.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Eliminar
