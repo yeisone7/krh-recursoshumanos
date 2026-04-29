@@ -123,7 +123,7 @@ function MetricChip({ icon: Icon, label, value, color = 'primary' }: { icon: any
   };
 
   return (
-    <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border bg-card flex-1 min-w-0">
+    <div className="flex w-28 shrink-0 flex-col items-center gap-1.5 rounded-xl border border-border bg-card p-3 sm:w-auto sm:flex-1">
       <div className={cn("p-2 rounded-lg", colorClasses[color] || colorClasses.primary)}>
         <Icon className="w-4 h-4" />
       </div>
@@ -638,7 +638,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
             {/* ── TABS ── */}
             <div className="px-4 pb-5 pt-4 sm:px-6 sm:pb-6">
               <Tabs defaultValue="identity" className="w-full">
-                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-lg bg-muted/50 p-1 sm:flex-wrap sm:overflow-visible">
+                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-lg bg-muted/50 p-1 sm:flex-wrap sm:overflow-visible [&>button]:shrink-0">
                   <TabsTrigger value="identity" className="text-xs rounded-md px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                     Identidad
                   </TabsTrigger>
