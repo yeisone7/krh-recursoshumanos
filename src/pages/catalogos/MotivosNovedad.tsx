@@ -17,6 +17,7 @@ export default function MotivosNovedad() {
   const [showDialog, setShowDialog] = useState(false);
   const [editing, setEditing] = useState<NoveltyReason | null>(null);
   const [search, setSearch] = useState('');
+  const nextItemNumber = Math.max(0, ...reasons.map(r => r.item_number || 0)) + 1;
 
   const filtered = reasons.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -60,7 +61,6 @@ export default function MotivosNovedad() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[80px]">Item</TableHead>
                 <TableHead>Motivo</TableHead>
                 <TableHead>Descripción</TableHead>
                 <TableHead className="w-[100px]">Estado</TableHead>
@@ -70,18 +70,17 @@ export default function MotivosNovedad() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">Cargando...</TableCell>
+                  <TableCell colSpan={4} className="text-center py-8">Cargando...</TableCell>
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                     No se encontraron motivos
                   </TableCell>
                 </TableRow>
               ) : (
                 filtered.map(r => (
                   <TableRow key={r.id}>
-                    <TableCell className="font-mono font-semibold">{r.item_number}</TableCell>
                     <TableCell className="font-medium">{r.name}</TableCell>
                     <TableCell className="text-muted-foreground text-sm max-w-[300px] truncate">
                       {r.description || '—'}
@@ -113,6 +112,7 @@ export default function MotivosNovedad() {
         open={showDialog}
         onOpenChange={setShowDialog}
         reason={editing}
+        nextItemNumber={nextItemNumber}
       />
     </div>
   );
