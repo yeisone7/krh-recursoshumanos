@@ -55,6 +55,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 import { 
   useHolidays, 
@@ -159,19 +160,19 @@ export default function Festivos() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <motion.div 
         initial={{ opacity: 0, y: -10 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Días Festivos</h1>
+        <div className="min-w-0">
+          <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Días Festivos</h1>
           <p className="text-muted-foreground mt-1">
             Administra los días festivos nacionales y de la empresa
           </p>
         </div>
-        <Button onClick={handleOpenCreate}>
+        <Button onClick={handleOpenCreate} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Agregar Festivo
         </Button>
@@ -179,8 +180,8 @@ export default function Festivos() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <CardTitle className="flex items-center gap-2">
                 <CalendarDays className="w-5 h-5" />
                 Festivos {selectedYear}
@@ -189,18 +190,20 @@ export default function Festivos() {
                 {holidays?.length || 0} días festivos configurados
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
               <Button 
                 variant="outline" 
                 size="icon"
+                className="shrink-0"
                 onClick={() => setSelectedYear(y => y - 1)}
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="font-medium w-16 text-center">{selectedYear}</span>
+              <span className="font-medium flex-1 text-center sm:w-16 sm:flex-none">{selectedYear}</span>
               <Button 
                 variant="outline" 
                 size="icon"
+                className="shrink-0"
                 onClick={() => setSelectedYear(y => y + 1)}
               >
                 <ChevronRight className="w-4 h-4" />
