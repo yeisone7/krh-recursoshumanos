@@ -14,15 +14,16 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   reason?: NoveltyReason | null;
+  nextItemNumber?: number;
 }
 
-export function NoveltyReasonFormDialog({ open, onOpenChange, reason }: Props) {
+export function NoveltyReasonFormDialog({ open, onOpenChange, reason, nextItemNumber = 1 }: Props) {
   const create = useCreateNoveltyReason();
   const update = useUpdateNoveltyReason();
   const isEditing = !!reason;
 
   const [form, setForm] = useState({
-    item_number: reason?.item_number || 0,
+    item_number: reason?.item_number || nextItemNumber,
     name: reason?.name || '',
     description: reason?.description || '',
     is_active: reason?.is_active ?? true,
@@ -31,16 +32,16 @@ export function NoveltyReasonFormDialog({ open, onOpenChange, reason }: Props) {
   useEffect(() => {
     if (open) {
       setForm({
-        item_number: reason?.item_number || 0,
+        item_number: reason?.item_number || nextItemNumber,
         name: reason?.name || '',
         description: reason?.description || '',
         is_active: reason?.is_active ?? true,
       });
     }
-  }, [open, reason]);
+  }, [open, reason, nextItemNumber]);
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.item_number) {
+    if (!form.name.trim()) {
       toast({ title: 'Complete los campos requeridos', variant: 'destructive' });
       return;
     }
@@ -65,14 +66,6 @@ export function NoveltyReasonFormDialog({ open, onOpenChange, reason }: Props) {
           <DialogTitle>{isEditing ? 'Editar Motivo' : 'Nuevo Motivo'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Número de ítem *</Label>
-            <Input
-              type="number"
-              value={form.item_number}
-              onChange={e => setForm(f => ({ ...f, item_number: Number(e.target.value) }))}
-            />
-          </div>
           <div className="space-y-2">
             <Label>Motivo *</Label>
             <Input
