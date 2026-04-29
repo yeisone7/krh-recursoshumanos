@@ -55,6 +55,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 
 import { 
   useHolidays, 
@@ -159,19 +160,19 @@ export default function Festivos() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <motion.div 
         initial={{ opacity: 0, y: -10 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Días Festivos</h1>
+        <div className="min-w-0">
+          <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Días Festivos</h1>
           <p className="text-muted-foreground mt-1">
             Administra los días festivos nacionales y de la empresa
           </p>
         </div>
-        <Button onClick={handleOpenCreate}>
+        <Button onClick={handleOpenCreate} className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Agregar Festivo
         </Button>
@@ -179,8 +180,8 @@ export default function Festivos() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <CardTitle className="flex items-center gap-2">
                 <CalendarDays className="w-5 h-5" />
                 Festivos {selectedYear}
@@ -189,18 +190,20 @@ export default function Festivos() {
                 {holidays?.length || 0} días festivos configurados
               </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
               <Button 
                 variant="outline" 
                 size="icon"
+                className="shrink-0"
                 onClick={() => setSelectedYear(y => y - 1)}
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="font-medium w-16 text-center">{selectedYear}</span>
+              <span className="font-medium flex-1 text-center sm:w-16 sm:flex-none">{selectedYear}</span>
               <Button 
                 variant="outline" 
                 size="icon"
+                className="shrink-0"
                 onClick={() => setSelectedYear(y => y + 1)}
               >
                 <ChevronRight className="w-4 h-4" />
@@ -225,7 +228,42 @@ export default function Festivos() {
               </Button>
             </div>
           ) : (
-            <Table>
+            <>
+            <MobileCardList
+              className="md:hidden"
+              emptyMessage={`No hay festivos configurados para ${selectedYear}`}
+              items={holidays.map((holiday) => ({
+                id: holiday.id,
+                title: holiday.name,
+                subtitle: formatDate(holiday.holiday_date),
+                badge: <Badge variant={holiday.is_active ? 'outline' : 'secondary'}>{holiday.is_active ? 'Activo' : 'Inactivo'}</Badge>,
+                fields: [
+                  {
+                    label: 'Fecha',
+                    value: format(new Date(holiday.holiday_date + 'T00:00:00'), 'd MMM yyyy', { locale: es }),
+                  },
+                  {
+                    label: 'Tipo',
+                    value: holiday.is_national ? 'Nacional' : 'Empresa',
+                  },
+                  ...(holiday.description ? [{ label: 'Descripción', value: holiday.description, className: 'col-span-2' }] : []),
+                ],
+                actions: (
+                  <div className="grid w-full grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleOpenEdit(holiday)}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Editar
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleOpenDelete(holiday)} className="text-destructive hover:text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar
+                    </Button>
+                  </div>
+                ),
+              }))}
+            />
+            <div className="hidden overflow-x-auto md:block">
+            <Table className="min-w-[760px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha</TableHead>
@@ -305,14 +343,16 @@ export default function Festivos() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-lg flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 px-4 pt-4 sm:px-6 sm:pt-6">
             <DialogTitle>
               {selectedHoliday ? 'Editar Festivo' : 'Agregar Festivo'}
             </DialogTitle>
@@ -323,8 +363,8 @@ export default function Festivos() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="holiday_date">Fecha *</Label>
                 <Input
@@ -355,8 +395,8 @@ export default function Festivos() {
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="space-y-0.5">
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+              <div className="min-w-0 space-y-0.5">
                 <Label>Festivo Nacional</Label>
                 <p className="text-xs text-muted-foreground">
                   Marca si es un festivo oficial de Colombia
@@ -368,8 +408,8 @@ export default function Festivos() {
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="space-y-0.5">
+            <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+              <div className="min-w-0 space-y-0.5">
                 <Label>Activo</Label>
                 <p className="text-xs text-muted-foreground">
                   Los festivos inactivos no se cuentan en los cálculos
@@ -382,13 +422,14 @@ export default function Festivos() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="shrink-0 flex-col-reverse gap-2 border-t border-border px-4 py-4 sm:flex-row sm:gap-0 sm:px-6">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
             <Button 
               onClick={handleSubmit}
               disabled={createHoliday.isPending || updateHoliday.isPending}
+              className="w-full sm:w-auto"
             >
               {(createHoliday.isPending || updateHoliday.isPending) && (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -401,19 +442,19 @@ export default function Festivos() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden">
+          <AlertDialogHeader className="shrink-0">
             <AlertDialogTitle>¿Eliminar festivo?</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Estás seguro de eliminar "{selectedHoliday?.name}"? 
               Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto"
             >
               {deleteHoliday.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Eliminar
