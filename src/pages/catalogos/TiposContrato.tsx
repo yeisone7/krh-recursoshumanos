@@ -253,18 +253,16 @@ export default function TiposContrato() {
   };
 
   const removePreviewTab = (tabId: string) => {
-    setPreviewTabs((current) => {
-      const nextTabs = current.filter((tab) => tab.id !== tabId);
-      if (activePreviewId === tabId) {
-        const nextActive = nextTabs[nextTabs.length - 1] || null;
-        if (nextActive) {
-          handlePreview(nextActive as ContractTypeConfig);
-        } else {
-          closePreview();
-        }
+    const nextTabs = previewTabs.filter((tab) => tab.id !== tabId);
+    setPreviewTabs(nextTabs);
+    if (activePreviewId === tabId) {
+      const nextActive = nextTabs[nextTabs.length - 1] || null;
+      if (nextActive) {
+        handlePreview(nextActive as ContractTypeConfig);
+      } else {
+        closePreview();
       }
-      return nextTabs;
-    });
+    }
   };
 
   return (
