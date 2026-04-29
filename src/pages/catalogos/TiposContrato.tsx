@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2, X } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2 } from 'lucide-react';
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
 import { ContractPlaceholdersInfo } from '@/components/contracts/ContractPlaceholdersInfo';
@@ -191,14 +191,10 @@ export default function TiposContrato() {
   }, [previewKind, previewDocxBlob, previewDocxKey]);
 
 
-  const handlePreview = async (item: ContractTypeConfig) => {
+  const loadPreview = async (item: PreviewTab) => {
     if (!item.template_url || !item.template_file_name) return;
-    setPreviewTabs((current) => {
-      const exists = current.some((tab) => tab.id === item.id);
-      return exists ? current : [...current, item];
-    });
     setActivePreviewId(item.id);
-    setPreviewItem(item);
+    setPreviewItem(item as ContractTypeConfig);
     setPreviewLoading(true);
     setPreviewError(null);
     try {
@@ -236,6 +232,14 @@ export default function TiposContrato() {
     }
   };
 
+  const handlePreview = (item: ContractTypeConfig) => {
+    setPreviewTabs((current) => {
+      const exists = current.some((tab) => tab.id === item.id);
+      return exists ? current : [...current, item];
+    });
+    void loadPreview(item);
+  };
+
   const closePreview = () => {
     setPreviewItem(null);
     setPreviewTabs([]);
@@ -249,20 +253,7 @@ export default function TiposContrato() {
 
   const switchPreviewTab = (tabId: string) => {
     const tab = previewTabs.find((item) => item.id === tabId);
-    if (tab) handlePreview(tab as ContractTypeConfig);
-  };
-
-  const removePreviewTab = (tabId: string) => {
-    const nextTabs = previewTabs.filter((tab) => tab.id !== tabId);
-    setPreviewTabs(nextTabs);
-    if (activePreviewId === tabId) {
-      const nextActive = nextTabs[nextTabs.length - 1] || null;
-      if (nextActive) {
-        handlePreview(nextActive as ContractTypeConfig);
-      } else {
-        closePreview();
-      }
-    }
+    if (tab) void loadPreview(tab);
   };
 
   return (
