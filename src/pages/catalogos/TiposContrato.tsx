@@ -421,7 +421,9 @@ export default function TiposContrato() {
             ) : previewKind === 'pdf' && previewUrl ? (
               <iframe title="Vista previa de plantilla" src={previewUrl} className="h-[65dvh] w-full rounded-lg border border-border bg-background" />
             ) : previewKind === 'docx' ? (
-              <pre className="min-h-[320px] whitespace-pre-wrap break-words rounded-lg border border-border bg-muted/30 p-4 text-sm text-foreground font-sans">{previewText || 'La plantilla no contiene texto visible.'}</pre>
+              <div className="min-h-[320px] overflow-x-auto rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
+                <div ref={docxPreviewRef} className="docx-visual-preview min-w-fit origin-top-left" />
+              </div>
             ) : null}
           </div>
 
