@@ -195,11 +195,11 @@ export default function PlataformasPublicacion() {
 
       {/* Form Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-lg flex-col p-0 sm:max-h-[85vh]">
+          <DialogHeader className="shrink-0 border-b border-border px-4 py-4 sm:px-6">
             <DialogTitle>{editing ? 'Editar Plataforma' : 'Nueva Plataforma'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6">
             <div className="space-y-2">
               <Label>Nombre <span className="text-destructive">*</span></Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: CompuTrabajo, elempleo.com..." />
@@ -217,9 +217,9 @@ export default function PlataformasPublicacion() {
               <Switch checked={isActive} onCheckedChange={setIsActive} />
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmit} disabled={!name.trim() || isCreating || isUpdating}>
+          <DialogFooter className="shrink-0 flex-col-reverse gap-2 border-t border-border px-4 py-4 sm:flex-row sm:px-6">
+            <Button className="w-full sm:w-auto" variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
+            <Button className="w-full sm:w-auto" onClick={handleSubmit} disabled={!name.trim() || isCreating || isUpdating}>
               {editing ? 'Guardar' : 'Crear'}
             </Button>
           </DialogFooter>
@@ -228,16 +228,16 @@ export default function PlataformasPublicacion() {
 
       {/* Delete Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar plataforma?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. Se eliminará la plataforma del catálogo.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { if (deleteId) { deleteItem(deleteId); setDeleteId(null); } }}>
+          <AlertDialogFooter className="flex-col-reverse gap-2 sm:flex-row">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="w-full sm:w-auto" onClick={() => { if (deleteId) { deleteItem(deleteId); setDeleteId(null); } }}>
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
