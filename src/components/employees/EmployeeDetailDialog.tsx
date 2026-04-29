@@ -609,8 +609,8 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
             </div>
 
             {/* ── QUICK METRICS ── */}
-            <div className="px-6 -mt-3 relative z-10">
-              <div className="flex gap-2 pb-1">
+            <div className="relative z-10 -mt-2 px-4 sm:-mt-3 sm:px-6">
+              <div className="flex snap-x gap-2 overflow-x-auto pb-1 sm:overflow-visible">
                 {employee.work_info?.hire_date && (
                   <MetricChip icon={Clock} label="Antigüedad" value={computeSeniority(employee.work_info.hire_date)} color="blue" />
                 )}
@@ -630,15 +630,15 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
             </div>
 
             {/* ── CANDIDATE HISTORY ── */}
-            <div className="px-6 pt-3 space-y-3">
+            <div className="space-y-3 px-4 pt-3 sm:px-6">
               <CandidateHistoryLink employeeId={employeeId} />
               <ExpiringItemsAlert employee={employee} />
             </div>
 
             {/* ── TABS ── */}
-            <div className="px-6 pb-6 pt-4">
+            <div className="px-4 pb-5 pt-4 sm:px-6 sm:pb-6">
               <Tabs defaultValue="identity" className="w-full">
-                <TabsList className="w-full justify-start bg-muted/50 p-1 rounded-lg h-auto flex-wrap gap-0.5">
+                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-lg bg-muted/50 p-1 sm:flex-wrap sm:overflow-visible">
                   <TabsTrigger value="identity" className="text-xs rounded-md px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                     Identidad
                   </TabsTrigger>
