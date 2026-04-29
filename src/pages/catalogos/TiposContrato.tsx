@@ -64,10 +64,12 @@ export default function TiposContrato() {
   const [docxRendering, setDocxRendering] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewDocxBlob, setPreviewDocxBlob] = useState<Blob | null>(null);
+  const [previewDocxKey, setPreviewDocxKey] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewKind, setPreviewKind] = useState<'pdf' | 'docx' | 'unsupported' | null>(null);
   const docxPreviewRef = useRef<HTMLDivElement>(null);
   const docxRenderIdRef = useRef(0);
+  const docxHtmlCacheRef = useRef(new Map<string, string>());
 
   const filteredData = data.filter(item =>
     item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -142,6 +144,15 @@ export default function TiposContrato() {
     if (previewKind !== 'docx' || !previewDocxBlob || !container) return;
 
     const renderId = ++docxRenderIdRef.current;
+    if (previewDocxKey) {
+      const cachedHtml = docxHtmlCacheRef.current.get(previewDocxKey);
+      if (cachedHtml) {
+        container.innerHTML = cachedHtml;
+        setDocxRendering(false);
+        return;
+      }
+    }
+
     let cancelled = false;
     const nextContainer = document.createElement('div');
     setDocxRendering(true);
@@ -158,6 +169,7 @@ export default function TiposContrato() {
       .then(() => {
         if (cancelled || renderId !== docxRenderIdRef.current) return;
         container.replaceChildren(...Array.from(nextContainer.childNodes));
+        if (previewDocxKey) docxHtmlCacheRef.current.set(previewDocxKey, container.innerHTML);
         setDocxRendering(false);
       })
       .catch((error) => {
@@ -171,7 +183,7 @@ export default function TiposContrato() {
     return () => {
       cancelled = true;
     };
-  }, [previewKind, previewDocxBlob]);
+  }, [previewKind, previewDocxBlob, previewDocxKey]);
 
 
   const handlePreview = async (item: ContractTypeConfig) => {
@@ -185,6 +197,7 @@ export default function TiposContrato() {
       const extension = item.template_file_name.split('.').pop()?.toLowerCase();
       if (extension === 'pdf') {
         setPreviewKind('pdf');
+        setPreviewDocxKey(null);
         setPreviewUrl((currentUrl) => {
           if (currentUrl) URL.revokeObjectURL(currentUrl);
           return URL.createObjectURL(blob);
@@ -192,6 +205,8 @@ export default function TiposContrato() {
         setPreviewDocxBlob(null);
       } else if (extension === 'docx') {
         setPreviewKind('docx');
+        setPreviewDocxKey(item.template_url);
+        setDocxRendering(!docxHtmlCacheRef.current.has(item.template_url));
         setPreviewDocxBlob(blob);
         setPreviewUrl((currentUrl) => {
           if (currentUrl) URL.revokeObjectURL(currentUrl);
@@ -201,6 +216,7 @@ export default function TiposContrato() {
         setPreviewKind('unsupported');
         setPreviewError('La vista previa está disponible para PDF y DOCX. Puedes descargar este archivo para revisarlo.');
         setPreviewDocxBlob(null);
+        setPreviewDocxKey(null);
       }
     } catch (error) {
       console.error('Preview error:', error);
