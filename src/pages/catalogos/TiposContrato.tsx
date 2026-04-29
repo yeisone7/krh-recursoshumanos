@@ -28,7 +28,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2 } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2, X } from 'lucide-react';
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
 import { ContractPlaceholdersInfo } from '@/components/contracts/ContractPlaceholdersInfo';
@@ -53,6 +54,8 @@ const getCodeColor = (code: string): string => {
   return codeColors[Math.abs(hash) % codeColors.length];
 };
 
+type PreviewTab = Pick<ContractTypeConfig, 'id' | 'display_name' | 'template_url' | 'template_file_name'>;
+
 export default function TiposContrato() {
   const { data, isLoading, create, update, delete: deleteItem, uploadTemplate, downloadTemplate, isCreating, isUpdating } = useContractTypes();
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,6 +63,8 @@ export default function TiposContrato() {
   const [editItem, setEditItem] = useState<ContractTypeConfig | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<ContractTypeConfig | null>(null);
+  const [previewTabs, setPreviewTabs] = useState<PreviewTab[]>([]);
+  const [activePreviewId, setActivePreviewId] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [docxRendering, setDocxRendering] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -186,9 +191,10 @@ export default function TiposContrato() {
   }, [previewKind, previewDocxBlob, previewDocxKey]);
 
 
-  const handlePreview = async (item: ContractTypeConfig) => {
+  const loadPreview = async (item: PreviewTab) => {
     if (!item.template_url || !item.template_file_name) return;
-    setPreviewItem(item);
+    setActivePreviewId(item.id);
+    setPreviewItem(item as ContractTypeConfig);
     setPreviewLoading(true);
     setPreviewError(null);
     try {
@@ -226,13 +232,38 @@ export default function TiposContrato() {
     }
   };
 
+  const handlePreview = (item: ContractTypeConfig) => {
+    setPreviewTabs((current) => {
+      const exists = current.some((tab) => tab.id === item.id);
+      return exists ? current : [...current, item];
+    });
+    void loadPreview(item);
+  };
+
   const closePreview = () => {
     setPreviewItem(null);
+    setPreviewTabs([]);
+    setActivePreviewId(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setPreviewDocxBlob(null);
     setPreviewDocxKey(null);
     setDocxRendering(false);
+  };
+
+  const switchPreviewTab = (tabId: string) => {
+    const tab = previewTabs.find((item) => item.id === tabId);
+    if (tab) void loadPreview(tab);
+  };
+
+  const removePreviewTab = (tabId: string) => {
+    const nextTabs = previewTabs.filter((tab) => tab.id !== tabId);
+    setPreviewTabs(nextTabs);
+    if (activePreviewId === tabId) {
+      const nextActive = nextTabs[nextTabs.length - 1] || null;
+      if (nextActive) void loadPreview(nextActive);
+      else closePreview();
+    }
   };
 
   return (
@@ -444,6 +475,33 @@ export default function TiposContrato() {
               Vista previa de plantilla
             </DialogTitle>
             {previewItem && <p className="break-words text-sm text-muted-foreground">{previewItem.template_file_name}</p>}
+            {previewTabs.length > 1 && activePreviewId && (
+              <Tabs value={activePreviewId} onValueChange={switchPreviewTab} className="pt-2">
+                <div className="overflow-x-auto pb-1">
+                  <TabsList className="h-auto min-w-max justify-start gap-1">
+                    {previewTabs.map((tab) => (
+                      <div key={tab.id} className="flex items-center rounded-sm data-[state=active]:bg-background">
+                        <TabsTrigger value={tab.id} className="max-w-[190px] rounded-r-none pr-2 shadow-none data-[state=active]:shadow-none">
+                          <span className="truncate">{tab.display_name}</span>
+                        </TabsTrigger>
+                        <button
+                          type="button"
+                          className="rounded-sm p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            removePreviewTab(tab.id);
+                          }}
+                          aria-label={`Cerrar ${tab.display_name}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </TabsList>
+                </div>
+              </Tabs>
+            )}
           </DialogHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
