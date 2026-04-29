@@ -474,6 +474,39 @@ export default function TiposContrato() {
               Vista previa de plantilla
             </DialogTitle>
             {previewItem && <p className="break-words text-sm text-muted-foreground">{previewItem.template_file_name}</p>}
+            {previewTabs.length > 1 && activePreviewId && (
+              <Tabs value={activePreviewId} onValueChange={switchPreviewTab} className="pt-2">
+                <div className="overflow-x-auto pb-1">
+                  <TabsList className="h-auto min-w-max justify-start gap-1">
+                    {previewTabs.map((tab) => (
+                      <TabsTrigger key={tab.id} value={tab.id} className="max-w-[220px] gap-2 pr-1">
+                        <span className="truncate">{tab.display_name}</span>
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          className="rounded-sm p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            removePreviewTab(tab.id);
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              removePreviewTab(tab.id);
+                            }
+                          }}
+                          aria-label={`Cerrar ${tab.display_name}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
+              </Tabs>
+            )}
           </DialogHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
