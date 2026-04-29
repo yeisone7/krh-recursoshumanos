@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2 } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2, X } from 'lucide-react';
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
 import { ContractPlaceholdersInfo } from '@/components/contracts/ContractPlaceholdersInfo';
@@ -254,6 +254,16 @@ export default function TiposContrato() {
   const switchPreviewTab = (tabId: string) => {
     const tab = previewTabs.find((item) => item.id === tabId);
     if (tab) void loadPreview(tab);
+  };
+
+  const removePreviewTab = (tabId: string) => {
+    const nextTabs = previewTabs.filter((tab) => tab.id !== tabId);
+    setPreviewTabs(nextTabs);
+    if (activePreviewId === tabId) {
+      const nextActive = nextTabs[nextTabs.length - 1] || null;
+      if (nextActive) void loadPreview(nextActive);
+      else closePreview();
+    }
   };
 
   return (
