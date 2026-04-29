@@ -28,7 +28,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2 } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2, X } from 'lucide-react';
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
 import { ContractPlaceholdersInfo } from '@/components/contracts/ContractPlaceholdersInfo';
@@ -53,6 +54,8 @@ const getCodeColor = (code: string): string => {
   return codeColors[Math.abs(hash) % codeColors.length];
 };
 
+type PreviewTab = Pick<ContractTypeConfig, 'id' | 'display_name' | 'template_url' | 'template_file_name'>;
+
 export default function TiposContrato() {
   const { data, isLoading, create, update, delete: deleteItem, uploadTemplate, downloadTemplate, isCreating, isUpdating } = useContractTypes();
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,6 +63,8 @@ export default function TiposContrato() {
   const [editItem, setEditItem] = useState<ContractTypeConfig | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<ContractTypeConfig | null>(null);
+  const [previewTabs, setPreviewTabs] = useState<PreviewTab[]>([]);
+  const [activePreviewId, setActivePreviewId] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [docxRendering, setDocxRendering] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
