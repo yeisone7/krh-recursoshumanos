@@ -77,7 +77,7 @@ export function SocialSecurityCatalogFormDialog({
     }
 
     if (editItem) {
-      (data as any).id = editItem.id;
+      (data as Partial<CatalogItem | CatalogIPS> & { id: string }).id = editItem.id;
     }
 
     onSubmit(data);
