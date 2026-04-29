@@ -61,11 +61,15 @@ export default function TiposContrato() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<ContractTypeConfig | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [docxRendering, setDocxRendering] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewDocxBlob, setPreviewDocxBlob] = useState<Blob | null>(null);
+  const [previewDocxKey, setPreviewDocxKey] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewKind, setPreviewKind] = useState<'pdf' | 'docx' | 'unsupported' | null>(null);
   const docxPreviewRef = useRef<HTMLDivElement>(null);
+  const docxRenderIdRef = useRef(0);
+  const docxHtmlCacheRef = useRef(new Map<string, string>());
 
   const filteredData = data.filter(item =>
     item.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -139,9 +143,21 @@ export default function TiposContrato() {
     const container = docxPreviewRef.current;
     if (previewKind !== 'docx' || !previewDocxBlob || !container) return;
 
+    const renderId = ++docxRenderIdRef.current;
+    if (previewDocxKey) {
+      const cachedHtml = docxHtmlCacheRef.current.get(previewDocxKey);
+      if (cachedHtml) {
+        container.innerHTML = cachedHtml;
+        setDocxRendering(false);
+        return;
+      }
+    }
+
     let cancelled = false;
-    container.innerHTML = '';
-    renderAsync(previewDocxBlob, container, undefined, {
+    const nextContainer = document.createElement('div');
+    setDocxRendering(true);
+
+    renderAsync(previewDocxBlob, nextContainer, undefined, {
       className: 'docx-preview-content',
       inWrapper: true,
       ignoreWidth: false,
@@ -149,40 +165,58 @@ export default function TiposContrato() {
       breakPages: true,
       renderHeaders: true,
       renderFooters: true,
-    }).catch((error) => {
-      console.error('DOCX render error:', error);
-      if (!cancelled) setPreviewError('No se pudo renderizar visualmente la plantilla DOCX.');
-    });
+    })
+      .then(() => {
+        if (cancelled || renderId !== docxRenderIdRef.current) return;
+        container.replaceChildren(...Array.from(nextContainer.childNodes));
+        if (previewDocxKey) docxHtmlCacheRef.current.set(previewDocxKey, container.innerHTML);
+        setDocxRendering(false);
+      })
+      .catch((error) => {
+        console.error('DOCX render error:', error);
+        if (!cancelled && renderId === docxRenderIdRef.current) {
+          setPreviewError('No se pudo renderizar visualmente la plantilla DOCX.');
+          setDocxRendering(false);
+        }
+      });
 
     return () => {
       cancelled = true;
-      container.innerHTML = '';
     };
-  }, [previewKind, previewDocxBlob]);
+  }, [previewKind, previewDocxBlob, previewDocxKey]);
 
 
   const handlePreview = async (item: ContractTypeConfig) => {
     if (!item.template_url || !item.template_file_name) return;
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewItem(item);
     setPreviewLoading(true);
-    setPreviewUrl(null);
-    setPreviewDocxBlob(null);
     setPreviewError(null);
-    setPreviewKind(null);
     try {
       const { data: blob, error } = await supabase.storage.from('documents').download(item.template_url);
       if (error) throw error;
       const extension = item.template_file_name.split('.').pop()?.toLowerCase();
       if (extension === 'pdf') {
         setPreviewKind('pdf');
-        setPreviewUrl(URL.createObjectURL(blob));
+        setPreviewDocxKey(null);
+        setPreviewUrl((currentUrl) => {
+          if (currentUrl) URL.revokeObjectURL(currentUrl);
+          return URL.createObjectURL(blob);
+        });
+        setPreviewDocxBlob(null);
       } else if (extension === 'docx') {
         setPreviewKind('docx');
+        setPreviewDocxKey(item.template_url);
+        setDocxRendering(!docxHtmlCacheRef.current.has(item.template_url));
         setPreviewDocxBlob(blob);
+        setPreviewUrl((currentUrl) => {
+          if (currentUrl) URL.revokeObjectURL(currentUrl);
+          return null;
+        });
       } else {
         setPreviewKind('unsupported');
         setPreviewError('La vista previa está disponible para PDF y DOCX. Puedes descargar este archivo para revisarlo.');
+        setPreviewDocxBlob(null);
+        setPreviewDocxKey(null);
       }
     } catch (error) {
       console.error('Preview error:', error);
@@ -197,6 +231,8 @@ export default function TiposContrato() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setPreviewDocxBlob(null);
+    setPreviewDocxKey(null);
+    setDocxRendering(false);
   };
 
   return (
@@ -411,7 +447,17 @@ export default function TiposContrato() {
           </DialogHeader>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
-            {previewLoading ? (
+            {previewKind === 'docx' ? (
+              <div className="relative min-h-[320px] overflow-x-auto rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
+                {(previewLoading || docxRendering) && (
+                  <div className="absolute inset-x-3 top-3 z-10 flex items-center justify-center rounded-md border border-border bg-background/90 px-3 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur sm:inset-x-4 sm:top-4">
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Actualizando vista previa...
+                  </div>
+                )}
+                <div ref={docxPreviewRef} className="docx-visual-preview min-w-fit origin-top-left" />
+              </div>
+            ) : previewLoading ? (
               <div className="flex min-h-[320px] items-center justify-center text-muted-foreground">
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Cargando vista previa...
@@ -420,10 +466,6 @@ export default function TiposContrato() {
               <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">{previewError}</div>
             ) : previewKind === 'pdf' && previewUrl ? (
               <iframe title="Vista previa de plantilla" src={previewUrl} className="h-[65dvh] w-full rounded-lg border border-border bg-background" />
-            ) : previewKind === 'docx' ? (
-              <div className="min-h-[320px] overflow-x-auto rounded-lg border border-border bg-muted/30 p-3 sm:p-4">
-                <div ref={docxPreviewRef} className="docx-visual-preview min-w-fit origin-top-left" />
-              </div>
             ) : null}
           </div>
 
