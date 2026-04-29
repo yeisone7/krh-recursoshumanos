@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { useNoveltyReasons, useDeleteNoveltyReason, type NoveltyReason } from '@/hooks/useNoveltyReasons';
 import { NoveltyReasonFormDialog } from '@/components/config/NoveltyReasonFormDialog';
+import { MobileCardList } from '@/components/shared/MobileCardList';
 import { toast } from '@/hooks/use-toast';
 
 export default function MotivosNovedad() {
@@ -35,18 +36,18 @@ export default function MotivosNovedad() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Motivos de Novedad</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold sm:text-3xl">Motivos de Novedad</h1>
           <p className="text-muted-foreground">Catálogo de motivos para novedades de nómina</p>
         </div>
-        <Button onClick={() => { setEditing(null); setShowDialog(true); }}>
+        <Button className="w-full sm:w-auto" onClick={() => { setEditing(null); setShowDialog(true); }}>
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Motivo
         </Button>
       </div>
 
-      <div className="relative max-w-sm">
+      <div className="relative w-full sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar motivo..."
@@ -56,9 +57,42 @@ export default function MotivosNovedad() {
         />
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
+      {isLoading ? (
+        <Card className="md:hidden">
+          <CardContent className="py-8 text-center text-muted-foreground">Cargando...</CardContent>
+        </Card>
+      ) : (
+        <MobileCardList
+          className="md:hidden"
+          emptyMessage="No se encontraron motivos"
+          items={filtered.map(r => ({
+            id: r.id,
+            title: r.name,
+            subtitle: r.description || 'Sin descripción',
+            badge: (
+              <Badge variant={r.is_active ? 'default' : 'secondary'}>
+                {r.is_active ? 'Activo' : 'Inactivo'}
+              </Badge>
+            ),
+            actions: (
+              <>
+                <Button size="sm" variant="outline" onClick={() => { setEditing(r); setShowDialog(true); }}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Editar
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleDelete(r.id)}>
+                  <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+                  Eliminar
+                </Button>
+              </>
+            ),
+          }))}
+        />
+      )}
+
+      <Card className="hidden md:block">
+        <CardContent className="overflow-x-auto p-0">
+          <Table className="min-w-[680px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Motivo</TableHead>
