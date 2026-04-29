@@ -248,13 +248,13 @@ export default function CatalogosTiposDotacion() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="grid gap-3 sm:flex sm:flex-wrap sm:items-center">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground sm:w-auto">
               <Filter className="w-4 h-4" />
               Filtros:
             </div>
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-[200px] h-9">
+              <SelectTrigger className="h-9 w-full sm:w-[200px]">
                 <SelectValue placeholder="Categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -265,7 +265,7 @@ export default function CatalogosTiposDotacion() {
               </SelectContent>
             </Select>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[160px] h-9">
+              <SelectTrigger className="h-9 w-full sm:w-[160px]">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
@@ -275,11 +275,11 @@ export default function CatalogosTiposDotacion() {
               </SelectContent>
             </Select>
             {(filterCategory !== 'all' || filterStatus !== 'all') && (
-              <Button variant="ghost" size="sm" onClick={() => { setFilterCategory('all'); setFilterStatus('all'); }}>
+              <Button variant="ghost" size="sm" className="w-full sm:w-auto" onClick={() => { setFilterCategory('all'); setFilterStatus('all'); }}>
                 Limpiar filtros
               </Button>
             )}
-            <span className="text-xs text-muted-foreground ml-auto">
+            <span className="text-xs text-muted-foreground sm:ml-auto">
               {filteredTypes.length} de {dotationTypes.length} registros
             </span>
           </div>
@@ -293,7 +293,44 @@ export default function CatalogosTiposDotacion() {
                 : 'No se encontraron resultados con los filtros aplicados.'}
             </div>
           ) : (
-            <Table>
+            <>
+            <MobileCardList
+              className="md:hidden"
+              emptyMessage="No se encontraron tipos de dotación"
+              items={filteredTypes.map((item) => ({
+                id: item.id,
+                title: item.name,
+                subtitle: item.description || getCategoryLabel(item.category),
+                badge: <Badge variant={item.is_active ? 'default' : 'secondary'}>{item.is_active ? 'Activo' : 'Inactivo'}</Badge>,
+                itemClassName: !item.is_active ? 'opacity-70' : undefined,
+                fields: [
+                  { label: 'Código', value: item.code || '-', className: 'col-span-1' },
+                  { label: 'Categoría', value: getCategoryLabel(item.category), className: 'col-span-1' },
+                  { label: 'Requiere talla', value: item.requires_size ? 'Sí' : 'No', className: 'col-span-1' },
+                  { label: 'Imagen', value: (item as any).image_url ? 'Disponible' : 'Sin imagen', className: 'col-span-1' },
+                ],
+                actions: (
+                  <div className="grid w-full grid-cols-3 gap-2">
+                    {(item as any).image_url && (
+                      <Button variant="outline" size="sm" onClick={() => setZoomImage({ url: (item as any).image_url, name: item.name })}>
+                        <ZoomIn className="mr-2 h-4 w-4" />
+                        Ver
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(item)} className={(item as any).image_url ? '' : 'col-span-2'}>
+                      <Edit2 className="mr-2 h-4 w-4" />
+                      Editar
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setDeleteItem(item)} className="text-destructive hover:text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar
+                    </Button>
+                  </div>
+                ),
+              }))}
+            />
+            <div className="hidden overflow-x-auto md:block">
+            <Table className="min-w-[860px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16">Imagen</TableHead>
@@ -377,6 +414,8 @@ export default function CatalogosTiposDotacion() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
