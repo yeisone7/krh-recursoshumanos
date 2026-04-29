@@ -193,6 +193,11 @@ export default function TiposContrato() {
 
   const handlePreview = async (item: ContractTypeConfig) => {
     if (!item.template_url || !item.template_file_name) return;
+    setPreviewTabs((current) => {
+      const exists = current.some((tab) => tab.id === item.id);
+      return exists ? current : [...current, item];
+    });
+    setActivePreviewId(item.id);
     setPreviewItem(item);
     setPreviewLoading(true);
     setPreviewError(null);
@@ -233,11 +238,33 @@ export default function TiposContrato() {
 
   const closePreview = () => {
     setPreviewItem(null);
+    setPreviewTabs([]);
+    setActivePreviewId(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setPreviewDocxBlob(null);
     setPreviewDocxKey(null);
     setDocxRendering(false);
+  };
+
+  const switchPreviewTab = (tabId: string) => {
+    const tab = previewTabs.find((item) => item.id === tabId);
+    if (tab) handlePreview(tab as ContractTypeConfig);
+  };
+
+  const removePreviewTab = (tabId: string) => {
+    setPreviewTabs((current) => {
+      const nextTabs = current.filter((tab) => tab.id !== tabId);
+      if (activePreviewId === tabId) {
+        const nextActive = nextTabs[nextTabs.length - 1] || null;
+        if (nextActive) {
+          handlePreview(nextActive as ContractTypeConfig);
+        } else {
+          closePreview();
+        }
+      }
+      return nextTabs;
+    });
   };
 
   return (
