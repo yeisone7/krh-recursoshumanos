@@ -102,7 +102,7 @@ function InfoItem({ icon: Icon, label, value, className }: { icon?: any; label: 
       {Icon && <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />}
       <div className="min-w-0">
         <p className="text-xs text-muted-foreground leading-none mb-1">{label}</p>
-        <p className="text-sm font-medium text-foreground">{value}</p>
+        <p className="break-words text-sm font-medium text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -123,7 +123,7 @@ function MetricChip({ icon: Icon, label, value, color = 'primary' }: { icon: any
   };
 
   return (
-    <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border bg-card flex-1 min-w-0">
+    <div className="flex w-28 shrink-0 flex-col items-center gap-1.5 rounded-xl border border-border bg-card p-3 sm:w-auto sm:flex-1">
       <div className={cn("p-2 rounded-lg", colorClasses[color] || colorClasses.primary)}>
         <Icon className="w-4 h-4" />
       </div>
@@ -136,13 +136,13 @@ function MetricChip({ icon: Icon, label, value, color = 'primary' }: { icon: any
 function SectionCard({ title, icon: Icon, children, action }: { title: string; icon: any; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <Card className="border border-border shadow-none">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+      <CardContent className="p-3 sm:p-4">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
             <div className="p-1.5 rounded-md bg-primary/10">
               <Icon className="w-3.5 h-3.5 text-primary" />
             </div>
-            {title}
+            <span className="min-w-0 break-words">{title}</span>
           </h3>
           {action}
         </div>
@@ -481,7 +481,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0 gap-0 [&>button]:text-foreground [&>button]:hover:text-foreground/80">
+      <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl flex-col gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 [&>button]:text-foreground [&>button]:hover:text-foreground/80 sm:[&>button]:right-4 sm:[&>button]:top-4">
         <div className="flex-1 min-h-0 overflow-y-auto scrollbar-themed">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -495,15 +495,15 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
         ) : (
           <>
             {/* ── HEADER ── */}
-            <div className="px-6 pt-6 pb-5 rounded-t-xl relative overflow-hidden bg-sidebar">
+            <div className="relative overflow-hidden rounded-t-xl bg-sidebar px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
               <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:26px_26px] opacity-10" />
               <div className="absolute -top-20 -right-16 h-56 w-56 rounded-full border border-primary/30 bg-primary/5" />
               <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full border border-primary/20 bg-primary/5" />
               <div className="absolute top-8 right-28 h-28 w-28 rounded-full border border-primary/25" />
-              <div className="flex items-start gap-4 relative z-10">
+              <div className="relative z-10 flex items-start gap-3 pr-8 sm:gap-4 sm:pr-10">
                 {/* Avatar with upload overlay */}
                 <div className="relative group shrink-0">
-                  <Avatar className="w-16 h-16 border-2 border-primary/20 shadow-sm">
+                  <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-sm sm:h-16 sm:w-16">
                     <AvatarImage src={employee.avatar_url || undefined} alt={employeeFullName} />
                     <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
                       {employee.first_name[0]}{employee.last_name[0]}
@@ -530,7 +530,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <div className="mb-1 flex flex-wrap items-center gap-1.5 sm:gap-2">
                     <Badge variant="outline" className={cn(
                       "text-[11px] border-primary-foreground/30",
                       employee.is_active 
@@ -557,13 +557,13 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       </Badge>
                     )}
                   </div>
-                  <h2 className="text-xl font-display font-bold text-foreground leading-tight">
+                  <h2 className="break-words pr-1 font-display text-lg font-bold leading-tight text-foreground sm:text-xl">
                     {employeeFullName}
                   </h2>
                   <p className="text-muted-foreground text-sm mt-0.5">
                     {employee.work_info?.position_name || 'Sin cargo asignado'}
                   </p>
-                  <div className="flex items-center gap-3 mt-2 text-muted-foreground text-xs flex-wrap">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                     {employee.operation_centers?.name && (
                       <span className="flex items-center gap-1">
                         <Building className="w-3 h-3" />
@@ -584,6 +584,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     )}
                   </div>
                 </div>
+                <div className="flex shrink-0 flex-col gap-1 sm:flex-row sm:gap-2">
                 {employee.is_active && (
                   <Button 
                     variant="ghost" 
@@ -603,12 +604,13 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                 >
                   <Pencil className="w-4 h-4" />
                 </Button>
+                </div>
               </div>
             </div>
 
             {/* ── QUICK METRICS ── */}
-            <div className="px-6 -mt-3 relative z-10">
-              <div className="flex gap-2 pb-1">
+            <div className="relative z-10 -mt-2 px-4 sm:-mt-3 sm:px-6">
+              <div className="flex snap-x gap-2 overflow-x-auto pb-1 sm:overflow-visible">
                 {employee.work_info?.hire_date && (
                   <MetricChip icon={Clock} label="Antigüedad" value={computeSeniority(employee.work_info.hire_date)} color="blue" />
                 )}
@@ -628,15 +630,15 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
             </div>
 
             {/* ── CANDIDATE HISTORY ── */}
-            <div className="px-6 pt-3 space-y-3">
+            <div className="space-y-3 px-4 pt-3 sm:px-6">
               <CandidateHistoryLink employeeId={employeeId} />
               <ExpiringItemsAlert employee={employee} />
             </div>
 
             {/* ── TABS ── */}
-            <div className="px-6 pb-6 pt-4">
+            <div className="px-4 pb-5 pt-4 sm:px-6 sm:pb-6">
               <Tabs defaultValue="identity" className="w-full">
-                <TabsList className="w-full justify-start bg-muted/50 p-1 rounded-lg h-auto flex-wrap gap-0.5">
+                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-lg bg-muted/50 p-1 sm:flex-wrap sm:overflow-visible [&>button]:shrink-0">
                   <TabsTrigger value="identity" className="text-xs rounded-md px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                     Identidad
                   </TabsTrigger>
