@@ -228,7 +228,42 @@ export default function Festivos() {
               </Button>
             </div>
           ) : (
-            <Table>
+            <>
+            <MobileCardList
+              className="md:hidden"
+              emptyMessage={`No hay festivos configurados para ${selectedYear}`}
+              items={holidays.map((holiday) => ({
+                id: holiday.id,
+                title: holiday.name,
+                subtitle: formatDate(holiday.holiday_date),
+                badge: <Badge variant={holiday.is_active ? 'outline' : 'secondary'}>{holiday.is_active ? 'Activo' : 'Inactivo'}</Badge>,
+                fields: [
+                  {
+                    label: 'Fecha',
+                    value: format(new Date(holiday.holiday_date + 'T00:00:00'), 'd MMM yyyy', { locale: es }),
+                  },
+                  {
+                    label: 'Tipo',
+                    value: holiday.is_national ? 'Nacional' : 'Empresa',
+                  },
+                  ...(holiday.description ? [{ label: 'Descripción', value: holiday.description, className: 'col-span-2' }] : []),
+                ],
+                actions: (
+                  <div className="grid w-full grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleOpenEdit(holiday)}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Editar
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleOpenDelete(holiday)} className="text-destructive hover:text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar
+                    </Button>
+                  </div>
+                ),
+              }))}
+            />
+            <div className="hidden overflow-x-auto md:block">
+            <Table className="min-w-[760px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha</TableHead>
@@ -308,6 +343,8 @@ export default function Festivos() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
