@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Building2, Plus, Users, Loader2, Search, UserPlus, Shield } from 'lucide-react';
+import { Building2, Plus, Users, Loader2, Search, UserPlus, Shield, Edit } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,10 @@ export default function SuperAdmin() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [newCompany, setNewCompany] = useState({ name: '', nit: '', email: '', phone: '', address: '' });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<{ id: string; name: string; nit: string; email: string; phone: string; address: string; logo_url: string | null } | null>(null);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
   const { data: users = [], isLoading: usersLoading } = useAdminUsers();
@@ -65,12 +68,33 @@ export default function SuperAdmin() {
 
   const createCompanyMutation = useMutation({
     mutationFn: async () => {
+      let logoUrl = null;
+
+      if (logoFile) {
+        const fileExt = logoFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const filePath = `logos/${fileName}`;
+
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from('company_logos')
+          .upload(filePath, logoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('company_logos')
+          .getPublicUrl(filePath);
+
+        logoUrl = publicUrlData.publicUrl;
+      }
+
       const { error } = await supabase.from('companies').insert({
         name: newCompany.name,
         nit: newCompany.nit,
         email: newCompany.email || null,
         phone: newCompany.phone || null,
         address: newCompany.address || null,
+        logo_url: logoUrl,
         created_by: user?.id,
       });
       if (error) throw error;
@@ -79,12 +103,73 @@ export default function SuperAdmin() {
       queryClient.invalidateQueries({ queryKey: ['superadmin-companies'] });
       toast({ title: 'Empresa creada exitosamente' });
       setNewCompany({ name: '', nit: '', email: '', phone: '', address: '' });
+      setLogoFile(null);
       setCreateOpen(false);
     },
     onError: (err: any) => {
       toast({ variant: 'destructive', title: 'Error', description: err.message });
     },
   });
+
+  const updateCompanyMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingCompany) return;
+      let logoUrl = editingCompany.logo_url;
+
+      if (logoFile) {
+        const fileExt = logoFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const filePath = `logos/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('company_logos')
+          .upload(filePath, logoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('company_logos')
+          .getPublicUrl(filePath);
+
+        logoUrl = publicUrlData.publicUrl;
+      }
+
+      const { error } = await supabase.from('companies').update({
+        name: editingCompany.name,
+        nit: editingCompany.nit,
+        email: editingCompany.email || null,
+        phone: editingCompany.phone || null,
+        address: editingCompany.address || null,
+        logo_url: logoUrl,
+      }).eq('id', editingCompany.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['superadmin-companies'] });
+      toast({ title: 'Empresa actualizada exitosamente' });
+      setEditingCompany(null);
+      setLogoFile(null);
+      setEditOpen(false);
+    },
+    onError: (err: any) => {
+      toast({ variant: 'destructive', title: 'Error', description: err.message });
+    },
+  });
+
+  const handleEditCompany = (company: any) => {
+    setEditingCompany({
+      id: company.id,
+      name: company.name,
+      nit: company.nit,
+      email: company.email || '',
+      phone: company.phone || '',
+      address: company.address || '',
+      logo_url: company.logo_url,
+    });
+    setLogoFile(null);
+    setEditOpen(true);
+  };
 
   const filteredCompanies = companies.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -148,6 +233,10 @@ export default function SuperAdmin() {
                     <Input value={newCompany.name} onChange={e => setNewCompany(p => ({ ...p, name: e.target.value }))} placeholder="Mi Empresa S.A.S" />
                   </div>
                   <div>
+                    <Label>Logo de la Empresa</Label>
+                    <Input type="file" accept="image/*" onChange={e => setLogoFile(e.target.files?.[0] || null)} />
+                  </div>
+                  <div>
                     <Label>NIT *</Label>
                     <Input value={newCompany.nit} onChange={e => setNewCompany(p => ({ ...p, nit: e.target.value }))} placeholder="900123456-7" />
                   </div>
@@ -174,6 +263,59 @@ export default function SuperAdmin() {
                   >
                     {createCompanyMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                     Crear Empresa
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Edit Company Dialog */}
+            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+              <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
+                <DialogHeader className="shrink-0">
+                  <DialogTitle>Editar Empresa</DialogTitle>
+                  <DialogDescription>Actualiza los datos de la empresa seleccionada</DialogDescription>
+                </DialogHeader>
+                {editingCompany && (
+                  <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+                    <div>
+                      <Label>Nombre *</Label>
+                      <Input value={editingCompany.name} onChange={e => setEditingCompany(p => ({ ...p!, name: e.target.value }))} placeholder="Mi Empresa S.A.S" />
+                    </div>
+                    <div>
+                      <Label>Logo de la Empresa</Label>
+                      <Input type="file" accept="image/*" onChange={e => setLogoFile(e.target.files?.[0] || null)} />
+                      {editingCompany.logo_url && !logoFile && (
+                        <p className="text-xs text-muted-foreground mt-1">Logo actual cargado</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label>NIT *</Label>
+                      <Input value={editingCompany.nit} onChange={e => setEditingCompany(p => ({ ...p!, nit: e.target.value }))} placeholder="900123456-7" />
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <Label>Correo</Label>
+                        <Input value={editingCompany.email} onChange={e => setEditingCompany(p => ({ ...p!, email: e.target.value }))} placeholder="empresa@ejemplo.com" />
+                      </div>
+                      <div>
+                        <Label>Teléfono</Label>
+                        <Input value={editingCompany.phone} onChange={e => setEditingCompany(p => ({ ...p!, phone: e.target.value }))} placeholder="+57 300 123 4567" />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Dirección</Label>
+                      <Input value={editingCompany.address} onChange={e => setEditingCompany(p => ({ ...p!, address: e.target.value }))} placeholder="Calle 123 #45-67" />
+                    </div>
+                  </div>
+                )}
+                <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+                  <Button
+                    onClick={() => updateCompanyMutation.mutate()}
+                    disabled={!editingCompany?.name || !editingCompany?.nit || updateCompanyMutation.isPending}
+                    className="w-full sm:w-auto"
+                  >
+                    {updateCompanyMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Guardar Cambios
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -219,6 +361,12 @@ export default function SuperAdmin() {
                     value: new Date(company.created_at).toLocaleDateString('es-CO'),
                   },
                 ],
+                actions: (
+                  <Button variant="outline" size="sm" onClick={() => handleEditCompany(company)}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Editar
+                  </Button>
+                ),
               }))}
             />
             <Card className="hidden md:block">
@@ -231,6 +379,7 @@ export default function SuperAdmin() {
                       <TableHead>Contacto</TableHead>
                       <TableHead>Usuarios</TableHead>
                       <TableHead>Creada</TableHead>
+                      <TableHead className="w-[80px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -238,8 +387,12 @@ export default function SuperAdmin() {
                       <TableRow key={company.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
-                              <Building2 className="w-4 h-4 text-primary" />
+                            <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
+                              {company.logo_url ? (
+                                <img src={company.logo_url} alt={company.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <Building2 className="w-4 h-4 text-primary" />
+                              )}
                             </div>
                             <div>
                               <p className="font-medium">{company.name}</p>
@@ -263,11 +416,16 @@ export default function SuperAdmin() {
                         <TableCell className="text-sm text-muted-foreground">
                           {new Date(company.created_at).toLocaleDateString('es-CO')}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditCompany(company)}>
+                            <Edit className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                     {filteredCompanies.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                           No se encontraron empresas
                         </TableCell>
                       </TableRow>

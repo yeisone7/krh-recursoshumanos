@@ -226,7 +226,7 @@ export default function CrearCapacitacion() {
         isMandatory: obligatorio,
         requiresCertification: certificacion,
         validityMonths: vigencia,
-        level: nivel.toLowerCase(),
+        level: nivel.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
         audience: publico === 'Otro' ? publicoOtro : publico,
         targetAudience: area === 'Otro' ? areaOtra : area,
         objective: objetivo === 'Otro' ? objetivoOtro : objetivo,
@@ -245,8 +245,9 @@ export default function CrearCapacitacion() {
         toast.success(status === 'publicado' ? 'Capacitación publicada' : 'Borrador guardado');
         navigate(`/capacitaciones/crear?id=${result.id}`, { replace: true });
       }
-    } catch {
-      toast.error('Error al guardar');
+    } catch (err: any) {
+      console.error("Error al guardar capacitación:", err);
+      toast.error(`Error al guardar: ${err?.message || err}`);
     }
   };
 
