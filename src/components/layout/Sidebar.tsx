@@ -54,7 +54,8 @@ import {
   ClipboardCheck,
   Globe,
   Bot,
-  ExternalLink } from
+  ExternalLink,
+  History } from
 'lucide-react';
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -269,6 +270,7 @@ const payrollNavItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
   { label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad', moduleCode: 'seguridad' },
+  { label: 'Auditoría', icon: <History className="w-5 h-5" />, href: '/auditoria', moduleCode: 'seguridad' },
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion', moduleCode: 'configuracion' },
 ];
 

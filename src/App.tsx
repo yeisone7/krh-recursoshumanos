@@ -63,6 +63,7 @@ import ConfiguracionLaboral from "./pages/ConfiguracionLaboral";
 import Prestamos from "./pages/Prestamos";
 import Descuentos from "./pages/Descuentos";
 import Install from "./pages/Install";
+import Auditoria from "./pages/Auditoria";
 import { 
   CatalogosAreas, 
   CatalogosCargos, 
@@ -193,6 +194,7 @@ const App = () => (
                         <Route path="/perfil" element={<Perfil />} />
                         <Route path="/super-admin" element={<SuperAdmin />} />
                         <Route path="/seguridad" element={<P module="seguridad"><Seguridad /></P>} />
+                        <Route path="/auditoria" element={<P module="seguridad"><Auditoria /></P>} />
                         <Route path="/configuracion" element={<P module="configuracion"><Configuracion /></P>} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>

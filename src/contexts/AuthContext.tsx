@@ -10,6 +10,7 @@ interface UserCompany {
   id: string;
   name: string;
   nit: string;
+  logo_url?: string;
 }
 
 interface PermissionEntry {
@@ -99,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Fetch user companies
     const { data: companiesData } = await supabase
       .from('user_company_assignments')
-      .select('company_id, companies(id, name, nit)')
+      .select('company_id, companies(id, name, nit, logo_url)')
       .eq('user_id', userId);
 
     if (companiesData && companiesData.length > 0) {
@@ -109,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: c.companies!.id,
           name: c.companies!.name,
           nit: c.companies!.nit,
+          logo_url: c.companies!.logo_url || undefined,
         }));
       setCompanies(userCompanies);
       if (!currentCompanyId && userCompanies.length > 0) {
@@ -138,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (saData) {
       const { data: allCompanies } = await supabase
         .from('companies')
-        .select('id, name, nit')
+        .select('id, name, nit, logo_url')
         .order('name');
       if (allCompanies && allCompanies.length > 0) {
         setCompanies(allCompanies);

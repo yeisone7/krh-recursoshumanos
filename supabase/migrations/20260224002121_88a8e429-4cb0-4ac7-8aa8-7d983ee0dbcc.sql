@@ -1,7 +1,8 @@
-
 -- =============================================
 -- FASE 1: Módulo de Capacitaciones - DB & Storage
 -- =============================================
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- 1. ALTER TABLE training_courses: agregar columnas faltantes
 ALTER TABLE public.training_courses 
@@ -29,7 +30,7 @@ CREATE TABLE public.training_access_tokens (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   course_id uuid NOT NULL REFERENCES public.training_courses(id) ON DELETE CASCADE,
-  token text NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
+  token text NOT NULL DEFAULT encode(extensions.gen_random_bytes(32), 'hex'),
   access_type text NOT NULL DEFAULT 'solo_link',
   usage_type text NOT NULL DEFAULT 'multiple',
   max_uses integer,

@@ -318,7 +318,7 @@ export default function Auth() {
                 height={240}
                 decoding="async"
                 loading="eager"
-                fetchPriority="high"
+                fetchpriority="high"
                 onLoad={() => setIsHeroLogoLoaded(true)}
                 onError={() => setIsHeroLogoLoaded(true)}
               />
@@ -586,31 +586,35 @@ export default function Auth() {
                     } />
 
                   </div>
-                  <FormField
-                  control={registerForm.control}
-                  name="document_number"
-                  render={({ field }) =>
                   <FormItem>
-                        <FormLabel className="text-xs font-semibold">Número de identificación</FormLabel>
-                        <FormControl>
-                          <Input placeholder="1234567890" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                  } />
+                    <FormLabel className="text-xs font-semibold">Número de identificación</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="1234567890" 
+                        className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" 
+                        {...registerForm.register("document_number")}
+                      />
+                    </FormControl>
+                    {registerForm.formState.errors.document_number && (
+                      <p className="text-[0.8rem] font-medium text-destructive">{registerForm.formState.errors.document_number.message}</p>
+                    )}
+                  </FormItem>
 
-                  <FormField
-                  control={registerForm.control}
-                  name="email"
-                  render={({ field }) =>
                   <FormItem>
-                        <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-11 bg-muted/50 border-border focus:bg-background transition-colors" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                  } />
+                    <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder="correo@ejemplo.com" 
+                        autoComplete="email" 
+                        className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" 
+                        {...registerForm.register("email")}
+                      />
+                    </FormControl>
+                    {registerForm.formState.errors.email && (
+                      <p className="text-[0.8rem] font-medium text-destructive">{registerForm.formState.errors.email.message}</p>
+                    )}
+                  </FormItem>
 
                   <FormField
                   control={registerForm.control}
