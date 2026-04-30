@@ -1,0 +1,6 @@
+# Variables para conectar el frontend Vite al Supabase externo.
+# En Lovable/hosting configura estos valores como variables públicas de build/runtime.
+
+VITE_SUPABASE_URL=https://REEMPLAZA_PROJECT_REF.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=REEMPLAZA_ANON_KEY
+VITE_SUPABASE_PROJECT_ID=REEMPLAZA_PROJECT_REF

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, addMonths } from 'date-fns';
+import { toast } from 'sonner';
 import type { 
   TrainingCourse, 
   TrainingSession, 
@@ -39,13 +40,23 @@ export function useTrainingCourses() {
 
       const { data, error } = await supabase
         .from('training_courses')
-        .select('*')
+        .select(`
+          *,
+          media_count:training_media(count)
+        `)
         .eq('company_id', currentCompanyId)
         .eq('is_active', true)
         .order('name');
 
       if (error) throw error;
-      return data as TrainingCourse[];
+      
+      // Map the data to include the media count as a simple number
+      const coursesWithCounts = data.map(course => ({
+        ...course,
+        media_count: (course.media_count as any)?.[0]?.count || 0
+      }));
+
+      return coursesWithCounts as TrainingCourse[];
     },
     enabled: !!currentCompanyId,
   });
@@ -136,6 +147,29 @@ export function useDeleteCourse() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['training_courses'] });
     },
+  });
+}
+
+export function usePublishCourse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('training_courses')
+        .update({ status: 'publicado' })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['training_courses'] });
+      toast.success('Capacitación publicada con éxito');
+    },
+    onError: (error) => {
+      console.error('Error publishing course:', error);
+      toast.error('No se pudo publicar la capacitación');
+    }
   });
 }
 

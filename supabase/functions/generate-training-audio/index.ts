@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const SCRIPT_MODEL = "google/gemini-2.5-flash-lite";
+const SCRIPT_MODEL = "google/gemini-1.5-flash";
 
 interface AIConfig {
   openai_api_key?: string;
@@ -48,86 +48,88 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
     const aiConfig = await getAIConfig(companyId);
-
-    // TTS requires OpenAI API key
-    if (!aiConfig.openai_api_key) {
-      return new Response(
-        JSON.stringify({ error: "Se requiere una API Key de OpenAI para generar audio. Configúrela en Configuración → IA." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const provider = aiConfig.model || "openai";
 
     const wordCount = duration === "short" ? 150 : duration === "long" ? 750 : 400;
     const keyPoints = (puntosClave || []).slice(0, 5).join(", ");
 
-    // Step 1: Generate narration script via Lovable AI Gateway
-    console.log("Generating audio script with:", SCRIPT_MODEL);
-
     const scriptPrompt = `Eres un narrador profesional de capacitaciones empresariales. Genera un guion de narración en español para ser convertido a audio (text-to-speech).
-
 Tema: "${title}"
 Contenido de referencia: ${content?.substring(0, 2000) || "No disponible"}
 Puntos clave: ${keyPoints || "No especificados"}
-
 Requisitos:
 - Aproximadamente ${wordCount} palabras
 - Tono profesional pero amigable, como un podcast educativo
 - Sin encabezados ni formato, solo texto corrido para narrar
 - Incluir una introducción breve, desarrollo de puntos clave y cierre
 - NO incluir indicaciones como "[Música]", "[Pausa]", etc.
-
 Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
 
-    // Retry logic
-    let scriptResponse: Response | null = null;
-    const maxRetries = 3;
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      scriptResponse = await fetch(GATEWAY_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: SCRIPT_MODEL,
-          messages: [{ role: "user", content: scriptPrompt }],
-          temperature: 0.7,
-        }),
-      });
+    let scriptText = "";
 
-      if (scriptResponse.status === 429 && attempt < maxRetries - 1) {
-        const wait = (attempt + 1) * 5000;
-        console.log(`Rate limited (429), retrying in ${wait}ms (attempt ${attempt + 1}/${maxRetries})`);
-        await new Promise(r => setTimeout(r, wait));
-        continue;
+    // Step 1: Generate narration script via Direct API or Gateway
+    try {
+      if (provider === "openai" && aiConfig.openai_api_key) {
+        console.log("Generating audio script via OpenAI direct...");
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${aiConfig.openai_api_key}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [{ role: "user", content: scriptPrompt }],
+          }),
+        });
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          throw new Error(`OpenAI script error: ${errBody.error?.message || res.status}`);
+        }
+        const data = await res.json();
+        scriptText = data.choices?.[0]?.message?.content?.trim();
+      } else if (provider === "gemini" && aiConfig.gemini_api_key) {
+        console.log("Generating audio script via Gemini direct...");
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiConfig.gemini_api_key}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: scriptPrompt }] }],
+          }),
+        });
+        if (!res.ok) throw new Error(`Gemini script error: ${res.status}`);
+        const data = await res.json();
+        scriptText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      } else {
+        console.log("Generating audio script via Gateway (fallback)...");
+        if (!LOVABLE_API_KEY) throw new Error("No hay API Keys configuradas ni acceso al Gateway.");
+        const res = await fetch(GATEWAY_URL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: SCRIPT_MODEL,
+            messages: [{ role: "user", content: scriptPrompt }],
+          }),
+        });
+        if (!res.ok) throw new Error(`Gateway script error: ${res.status}`);
+        const data = await res.json();
+        scriptText = data.choices?.[0]?.message?.content?.trim();
       }
-      break;
+    } catch (err: any) {
+      console.error("Script generation failed:", err);
+      return new Response(
+        JSON.stringify({ error: `Fallo al generar el guion: ${err.message}` }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    if (!scriptResponse || !scriptResponse.ok) {
-      if (scriptResponse?.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Límite de solicitudes excedido. Intente de nuevo en unos momentos." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (scriptResponse?.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos insuficientes. Contacte al administrador." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errorText = await scriptResponse?.text();
-      console.error("Script generation error:", scriptResponse?.status, errorText);
-      throw new Error(`Script generation failed: ${scriptResponse?.status}`);
-    }
+    if (!scriptText) throw new Error("No se pudo generar el texto del guion.");
 
-    const scriptData = await scriptResponse.json();
-    const scriptText = scriptData.choices?.[0]?.message?.content?.trim();
+    console.log("Script generated successfully. Word count:", scriptText.split(" ").length);
 
     if (!scriptText) {
       throw new Error("No script text generated");
@@ -190,11 +192,11 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
       JSON.stringify({ audioUrl: urlData.publicUrl, script: scriptText }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("generate-training-audio error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Error generating audio" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

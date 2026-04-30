@@ -1,0 +1,1 @@
+ALTER TABLE public.operation_centers ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;

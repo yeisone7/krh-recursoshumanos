@@ -1,0 +1,43 @@
+project_id = "bxskgdzvypbaxcogsjhw"
+
+[functions.complete-onboarding]
+verify_jwt = false
+
+[functions.invite-user]
+verify_jwt = false
+
+[functions.notify-pending-terminations]
+verify_jwt = false
+
+[functions.notify-incapacity-alerts]
+verify_jwt = false
+
+[functions.notify-contract-preaviso]
+verify_jwt = false
+
+[functions.notify-requisition-approver]
+verify_jwt = false
+
+[functions.extract-pdf]
+verify_jwt = false
+
+[functions.generate-training]
+verify_jwt = false
+
+[functions.generate-training-video]
+verify_jwt = false
+
+[functions.generate-training-audio]
+verify_jwt = false
+
+[functions.generate-training-media]
+verify_jwt = false
+
+[functions.generate-training-avatar]
+verify_jwt = false
+
+[functions.send-candidate-thanks]
+verify_jwt = false
+
+[functions.ai-chat]
+verify_jwt = false

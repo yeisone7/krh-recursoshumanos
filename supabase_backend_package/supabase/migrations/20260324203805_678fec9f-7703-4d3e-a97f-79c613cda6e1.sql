@@ -1,0 +1,1 @@
+ALTER TABLE public.candidates ADD COLUMN document_issue_date date NULL;

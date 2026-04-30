@@ -6,7 +6,7 @@ import {
   Search, LayoutGrid, List, FolderTree, MoreVertical, Eye, PenLine, Copy,
   Link2, Trash2, Sparkles, MessageCircle, GraduationCap, RefreshCw,
   BookOpen, ClipboardCheck, Clock, Calendar, FileText, Image as ImageIcon,
-  Filter, SlidersHorizontal,
+  Filter, SlidersHorizontal, Send,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TrainingPreviewDialog } from '@/components/training';
-import { useTrainingCourses, useDeleteCourse, useDuplicateCourse } from '@/hooks/useTraining';
+import { useTrainingCourses, useDeleteCourse, useDuplicateCourse, usePublishCourse } from '@/hooks/useTraining';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -65,6 +65,7 @@ export default function Biblioteca() {
   const { data: courses = [] } = useTrainingCourses();
   const deleteCourse = useDeleteCourse();
   const duplicateCourse = useDuplicateCourse();
+  const publishCourse = usePublishCourse();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'tree'>('grid');
   const [filterType, setFilterType] = useState('all');
@@ -211,6 +212,11 @@ export default function Biblioteca() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => setPreviewCourse(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
+                            {course.status === 'borrador' && (
+                              <DropdownMenuItem onClick={() => publishCourse.mutate(course.id)} className="text-emerald-600 focus:text-emerald-600">
+                                <Send className="h-4 w-4 mr-2" /> Publicar
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
@@ -251,9 +257,9 @@ export default function Biblioteca() {
                           <FileText className="h-3.5 w-3.5" />
                           {content?.contenido ? 1 : 0}
                         </span>
-                        <span className="flex items-center gap-1.5">
+                        <span className="flex items-center gap-1.5" title="Recursos multimedia generados">
                           <ImageIcon className="h-3.5 w-3.5" />
-                          {evalCount}
+                          {course.media_count || 0}
                         </span>
                       </div>
                       <Badge variant="outline" className={`text-[11px] font-medium rounded-full px-3 py-0.5 ${statusCfg.className}`}>

@@ -24,6 +24,33 @@
   <meta name="twitter:title" content="KRH - Gestión de Recursos Humanos">
   <meta property="og:description" content="Sistema integral de gestión de recursos humanos">
   <meta name="twitter:description" content="Sistema integral de gestión de recursos humanos">
+  <style>
+    #app-launch-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none; /* Se activa solo en modo standalone o via JS */
+      place-items: center;
+      align-content: center;
+      flex-direction: column;
+      gap: 0.75rem;
+      background: #ffffff;
+      transition: opacity 360ms ease;
+    }
+    #app-launch-screen img {
+      width: 104px;
+      height: 104px;
+      object-fit: contain;
+    }
+    #app-launch-screen strong {
+      font-size: 1.5rem;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    /* Prevents the image from being visible before CSS loads if not needed */
+    :not(.app-standalone) #app-launch-screen {
+      display: none !important;
+    }
+  </style>
 </head>
 
   <body>

@@ -53,6 +53,7 @@ export interface TrainingCourse {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  media_count?: number;
 }
 
 export interface TrainingSession {
