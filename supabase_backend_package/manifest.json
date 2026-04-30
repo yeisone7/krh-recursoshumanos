@@ -1,0 +1,35 @@
+{
+  "migration_count": 131,
+  "edge_functions": [
+    "ai-chat",
+    "complete-onboarding",
+    "extract-pdf",
+    "generate-training",
+    "generate-training-audio",
+    "generate-training-avatar",
+    "generate-training-media",
+    "generate-training-video",
+    "get-session-info",
+    "invite-user",
+    "lookup-user-by-email",
+    "notify-contract-preaviso",
+    "notify-incapacity-alerts",
+    "notify-pending-terminations",
+    "notify-requisition-approver",
+    "send-candidate-thanks"
+  ],
+  "storage_buckets": [
+    "avatars",
+    "documents",
+    "training-media",
+    "dotation-images"
+  ],
+  "required_secrets": [
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "LOVABLE_API_KEY",
+    "RESEND_API_KEY"
+  ]
+}

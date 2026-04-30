@@ -16,7 +16,7 @@ import {
 import { MarkdownContent } from './MarkdownContent';
 import { MediaTypeCard } from './MediaTypeCard';
 import { StoryboardViewer } from './StoryboardViewer';
-import { useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
+import { useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia, usePublishCourse } from '@/hooks/useTraining';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { supabase } from '@/integrations/supabase/client';
@@ -128,6 +128,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
   const [audioDuration, setAudioDuration] = useState('medium');
   const { currentCompanyId } = useAuth();
   const { data: systemConfig } = useSystemConfig();
+  const publishCourse = usePublishCourse();
   const { data: media = [], isLoading: isMediaLoading, isError: isMediaError } = useTrainingMedia(course?.id);
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
@@ -156,6 +157,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
         },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
       if (data?.imageUrl) {
         const wmConfig = systemConfig?.watermark_config as WatermarkConfig | undefined;
         const watermarkedBlob = await applyWatermark(data.imageUrl, wmConfig);
@@ -198,6 +201,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
         },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
       if (data?.audioUrl) {
         await createMedia.mutateAsync({
           courseId: course.id,
@@ -723,9 +728,23 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
               <span className="text-[10px] sm:text-xs">Creación</span>
             </span>
           </div>
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="mt-2 w-full sm:mt-0 sm:w-auto">
-            Cerrar
-          </Button>
+          <div className="flex items-center gap-2 mt-2 w-full sm:mt-0 sm:w-auto">
+            {course.status === 'borrador' && (
+              <Button 
+                onClick={() => {
+                  publishCourse.mutate(course.id);
+                  onOpenChange(false);
+                }} 
+                className="flex-1 sm:flex-none gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Send className="h-4 w-4" />
+                Publicar
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none">
+              Cerrar
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
