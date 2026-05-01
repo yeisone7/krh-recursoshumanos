@@ -207,6 +207,44 @@ export function useUpdateOperationCenter() {
   });
 }
 
+export function useUpdateCompany() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string } & Partial<Company>) => {
+      const { data, error } = await supabase
+        .from('companies')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (user) {
+        await logAuditEvent(
+          user.id,
+          user.email,
+          data.id,
+          'update',
+          'company',
+          data.id,
+          data.name,
+          undefined,
+          updates
+        );
+      }
+
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['company', data.id] });
+    },
+  });
+}
+
 export function useDeleteOperationCenter() {
   const queryClient = useQueryClient();
   const { user, currentCompanyId } = useAuth();

@@ -78,6 +78,7 @@ export default function Examenes() {
       await generateExamOrderPdf({
         companyName: currentCompany?.name || '',
         companyNit: currentCompany?.nit || '',
+        logoUrl: currentCompany?.horizontal_logo_url || currentCompany?.logo_url,
         transaction: tx,
       });
       toast.success('Orden de exámenes exportada');

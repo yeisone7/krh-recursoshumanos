@@ -59,6 +59,7 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
       await generateExamOrderPdf({
         companyName: currentCompany?.name || '',
         companyNit: currentCompany?.nit || '',
+        logoUrl: currentCompany?.horizontal_logo_url || currentCompany?.logo_url,
         transaction,
         signatureDataUrl,
       });

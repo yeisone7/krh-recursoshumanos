@@ -22,6 +22,7 @@ import {
   Stamp,
   Video,
   Shield,
+  Cpu,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,7 +38,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useCompany } from '@/hooks/useCompanies';
+import { useCompany, useUpdateCompany } from '@/hooks/useCompanies';
 import {
   useSystemConfig,
   useUpdateSystemConfig,
@@ -48,9 +49,42 @@ import type { WatermarkPosition } from '@/lib/watermark';
 import { DEFAULT_WATERMARK_CONFIG } from '@/lib/watermark';
 import { SecurityTab } from '@/components/config/SecurityTab';
 import { DiversityGoalsConfig } from '@/components/config/DiversityGoalsConfig';
+import { AITab } from '@/components/config/AITab';
 
 export default function Configuracion() {
+  const { currentCompanyId } = useAuth();
+  const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
+  const updateCompany = useUpdateCompany();
+  
   const [activeTab, setActiveTab] = useState('company');
+  const [editingCompany, setEditingCompany] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingHorizontal, setUploadingHorizontal] = useState(false);
+
+  // Form state for company
+  const [companyForm, setCompanyForm] = useState({
+    name: '',
+    nit: '',
+    email: '',
+    phone: '',
+    address: ''
+  });
+
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const horizontalInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize form when company data loads
+  useMemo(() => {
+    if (company && !editingCompany) {
+      setCompanyForm({
+        name: company.name || '',
+        nit: company.nit || '',
+        email: company.email || '',
+        phone: company.phone || '',
+        address: company.address || ''
+      });
+    }
+  }, [company, editingCompany]);
 
   // Alert config state
   const [alertRecipients, setAlertRecipients] = useState('');
@@ -67,21 +101,6 @@ export default function Configuracion() {
   const [alertTerminationWarning, setAlertTerminationWarning] = useState(7);
   const [alertTerminationCritical, setAlertTerminationCritical] = useState(3);
   const [alertTerminationPendingDays, setAlertTerminationPendingDays] = useState(7);
-
-  // AI config state
-  const [aiModel, setAiModel] = useState<'gemini' | 'openai'>('gemini');
-  const [openaiApiKey, setOpenaiApiKey] = useState('');
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [showOpenaiKey, setShowOpenaiKey] = useState(false);
-  const [showGeminiKey, setShowGeminiKey] = useState(false);
-  const [testingOpenai, setTestingOpenai] = useState(false);
-  const [testingGemini, setTestingGemini] = useState(false);
-  const [savingAi, setSavingAi] = useState(false);
-
-  // HeyGen config state
-  const [heygenApiKey, setHeygenApiKey] = useState('');
-  const [showHeygenKey, setShowHeygenKey] = useState(false);
-  const [testingHeygen, setTestingHeygen] = useState(false);
 
   // Watermark config state
   const [watermarkEnabled, setWatermarkEnabled] = useState(DEFAULT_WATERMARK_CONFIG.enabled);
@@ -106,9 +125,8 @@ export default function Configuracion() {
 
   // Hiring notification role state
   const [hiringNotifRoleId, setHiringNotifRoleId] = useState<string>('none');
-
-  const { currentCompanyId, user } = useAuth();
-  const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
+  
+  const { user } = useAuth();
   const { data: systemConfig, isLoading: loadingConfig } = useSystemConfig();
   const { data: customRoles } = useCustomRoles();
 
@@ -146,15 +164,6 @@ export default function Configuracion() {
         setAlertTerminationInfo(terminationPendingDays.info || 15);
         setAlertTerminationWarning(terminationPendingDays.warning || 7);
         setAlertTerminationCritical(terminationPendingDays.critical || 3);
-      }
-
-      // Load AI config
-      const aiConfig = systemConfig.ai_config;
-      if (aiConfig) {
-        setAiModel(aiConfig.model || 'gemini');
-        setOpenaiApiKey(aiConfig.openai_api_key || '');
-        setGeminiApiKey(aiConfig.gemini_api_key || '');
-        setHeygenApiKey(aiConfig.heygen_api_key || '');
       }
 
       // Load Watermark config
@@ -242,53 +251,57 @@ export default function Configuracion() {
     }
   };
 
-  const handleSaveAiConfig = async () => {
-    setSavingAi(true);
+
+
+  const handleSaveCompanyInfo = async () => {
+    if (!company) return;
     try {
-      await updateConfig.mutateAsync({
-        key: 'ai_config',
-        value: {
-          model: aiModel,
-          openai_api_key: openaiApiKey,
-          gemini_api_key: geminiApiKey,
-          heygen_api_key: heygenApiKey,
-        },
-        description: 'Configuración del modelo de IA para generación de capacitaciones',
+      await updateCompany.mutateAsync({
+        id: company.id,
+        ...companyForm
       });
-      toast.success('Configuración de IA guardada');
+      setEditingCompany(false);
+      toast.success('Información de la empresa actualizada');
     } catch (error) {
-      toast.error('Error al guardar la configuración de IA');
-    } finally {
-      setSavingAi(false);
+      toast.error('Error al actualizar la información');
     }
   };
 
-  const handleTestApiKey = async (provider: 'openai' | 'gemini') => {
-    const key = provider === 'openai' ? openaiApiKey : geminiApiKey;
-    if (!key) {
-      toast.error('Ingresa una API Key para probar');
-      return;
-    }
-    if (provider === 'openai') setTestingOpenai(true);
-    else setTestingGemini(true);
+  const handleUploadCompanyLogo = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'horizontal') => {
+    const file = e.target.files?.[0];
+    if (!file || !company) return;
 
-    setTimeout(() => {
-      if (provider === 'openai') {
-        if (key.startsWith('sk-')) {
-          toast.success('Formato de API Key de OpenAI válido');
-        } else {
-          toast.warning('La API Key de OpenAI normalmente comienza con "sk-"');
-        }
-        setTestingOpenai(false);
-      } else {
-        if (key.length > 20) {
-          toast.success('Formato de API Key de Google Gemini válido');
-        } else {
-          toast.warning('La API Key parece muy corta');
-        }
-        setTestingGemini(false);
-      }
-    }, 1000);
+    if (type === 'avatar') setUploadingAvatar(true);
+    else setUploadingHorizontal(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${company.id}/${type}-${Date.now()}.${fileExt}`;
+      const filePath = `company-logos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      await updateCompany.mutateAsync({
+        id: company.id,
+        [type === 'avatar' ? 'logo_url' : 'horizontal_logo_url']: publicUrl
+      });
+
+      toast.success(`Logo ${type === 'avatar' ? 'de perfil' : 'horizontal'} actualizado`);
+    } catch (error) {
+      console.error(error);
+      toast.error('Error al subir el logo');
+    } finally {
+      if (type === 'avatar') setUploadingAvatar(false);
+      else setUploadingHorizontal(false);
+    }
   };
 
   const handleUploadWatermarkLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -384,41 +397,240 @@ export default function Configuracion() {
         </div>
 
         {/* Company Tab */}
-        <TabsContent value="company">
+        <TabsContent value="company" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Información de la Empresa</CardTitle>
-              <CardDescription>Datos generales de la empresa</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>Información de la Empresa</CardTitle>
+                <CardDescription>Datos generales y contacto</CardDescription>
+              </div>
+              <Button 
+                variant={editingCompany ? "ghost" : "outline"}
+                size="sm"
+                onClick={() => setEditingCompany(!editingCompany)}
+              >
+                {editingCompany ? "Cancelar" : "Editar"}
+              </Button>
             </CardHeader>
             <CardContent>
               {loadingCompany ? (
                 <Skeleton className="h-32 w-full" />
               ) : company && (
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <Label>Nombre</Label>
-                    <p className="font-medium mt-1">{company.name}</p>
+                <div className="space-y-6">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Nombre de la Empresa</Label>
+                      {editingCompany ? (
+                        <Input 
+                          value={companyForm.name} 
+                          onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})} 
+                        />
+                      ) : (
+                        <p className="font-medium p-2 bg-muted/30 rounded-md border border-transparent">{company.name}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>NIT</Label>
+                      {editingCompany ? (
+                        <Input 
+                          value={companyForm.nit} 
+                          onChange={(e) => setCompanyForm({...companyForm, nit: e.target.value})} 
+                        />
+                      ) : (
+                        <p className="font-medium p-2 bg-muted/30 rounded-md border border-transparent">{company.nit}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email Corporativo</Label>
+                      {editingCompany ? (
+                        <Input 
+                          value={companyForm.email} 
+                          onChange={(e) => setCompanyForm({...companyForm, email: e.target.value})} 
+                        />
+                      ) : (
+                        <p className="font-medium p-2 bg-muted/30 rounded-md border border-transparent">{company.email || '-'}</p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Teléfono</Label>
+                      {editingCompany ? (
+                        <Input 
+                          value={companyForm.phone} 
+                          onChange={(e) => setCompanyForm({...companyForm, phone: e.target.value})} 
+                        />
+                      ) : (
+                        <p className="font-medium p-2 bg-muted/30 rounded-md border border-transparent">{company.phone || '-'}</p>
+                      )}
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                      <Label>Dirección</Label>
+                      {editingCompany ? (
+                        <Input 
+                          value={companyForm.address} 
+                          onChange={(e) => setCompanyForm({...companyForm, address: e.target.value})} 
+                        />
+                      ) : (
+                        <p className="font-medium p-2 bg-muted/30 rounded-md border border-transparent">{company.address || '-'}</p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <Label>NIT</Label>
-                    <p className="font-medium mt-1">{company.nit}</p>
-                  </div>
-                  <div>
-                    <Label>Email</Label>
-                    <p className="font-medium mt-1">{company.email || '-'}</p>
-                  </div>
-                  <div>
-                    <Label>Teléfono</Label>
-                    <p className="font-medium mt-1">{company.phone || '-'}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label>Dirección</Label>
-                    <p className="font-medium mt-1">{company.address || '-'}</p>
-                  </div>
+
+                  {editingCompany && (
+                    <div className="flex justify-end">
+                      <Button onClick={handleSaveCompanyInfo} disabled={updateCompany.isPending}>
+                        {updateCompany.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Guardar Cambios
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
           </Card>
+
+          {/* Logos Management */}
+          <div className="grid gap-8 md:grid-cols-2">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="border-primary/10 overflow-hidden rounded-[2rem] shadow-xl shadow-black/5 bg-gradient-to-b from-card to-muted/10 group">
+                <CardHeader className="bg-muted/30 border-b border-border/50 px-8 py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <CardTitle className="text-lg font-black flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        Logo Identitario
+                      </CardTitle>
+                      <CardDescription className="text-xs font-medium uppercase tracking-tighter">Avatar y Perfiles</CardDescription>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="flex flex-col items-center gap-8">
+                    <div className="relative group/logo cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+                      <div className="w-40 h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden bg-background shadow-inner transition-all duration-500 group-hover/logo:border-primary/50 group-hover/logo:shadow-2xl group-hover/logo:shadow-primary/10 group-hover/logo:-rotate-2">
+                        {company?.logo_url ? (
+                          <img src={company.logo_url} alt="Avatar" className="w-full h-full object-contain p-4 transition-transform duration-700 group-hover/logo:scale-110" />
+                        ) : (
+                          <Building2 className="w-16 h-16 text-primary/10" />
+                        )}
+                        <div className="absolute inset-0 bg-primary/60 backdrop-blur-[2px] opacity-0 group-hover/logo:opacity-100 transition-all duration-300 flex items-center justify-center">
+                          <div className="bg-white text-primary rounded-full p-3 shadow-xl">
+                            <Upload className="w-6 h-6" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="absolute -bottom-3 -right-3 h-12 w-12 rounded-2xl bg-primary shadow-xl flex items-center justify-center border-4 border-card z-10 group-hover/logo:scale-110 transition-transform">
+                        <ImageIcon className="w-5 h-5 text-primary-foreground" />
+                      </div>
+                    </div>
+
+                    <input 
+                      type="file" 
+                      ref={avatarInputRef} 
+                      className="hidden" 
+                      onChange={(e) => handleUploadCompanyLogo(e, 'avatar')}
+                      accept="image/*"
+                    />
+
+                    <div className="text-center space-y-4">
+                      <div className="space-y-1">
+                        <p className="text-sm font-black text-foreground">Formato Cuadrado</p>
+                        <p className="text-[11px] text-muted-foreground font-medium">Recomendado: 512x512px (PNG, SVG, JPG)</p>
+                      </div>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="rounded-xl px-6 font-bold shadow-sm hover:shadow-md transition-all h-10"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                      >
+                        {uploadingAvatar ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                        Sustituir Avatar
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="border-primary/10 overflow-hidden rounded-[2rem] shadow-xl shadow-black/5 bg-gradient-to-b from-card to-muted/10 group">
+                <CardHeader className="bg-muted/30 border-b border-border/50 px-8 py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <CardTitle className="text-lg font-black flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        Logo Institucional
+                      </CardTitle>
+                      <CardDescription className="text-xs font-medium uppercase tracking-tighter">Documentos y Reportes</CardDescription>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-primary" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="flex flex-col items-center gap-8">
+                    <div className="relative group/logo w-full cursor-pointer" onClick={() => horizontalInputRef.current?.click()}>
+                      <div className="w-full h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden bg-background shadow-inner transition-all duration-500 group-hover/logo:border-primary/50 group-hover/logo:shadow-2xl group-hover/logo:shadow-primary/10">
+                        {company?.horizontal_logo_url ? (
+                          <img src={company.horizontal_logo_url} alt="Horizontal Logo" className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover/logo:scale-105" />
+                        ) : (
+                          <div className="text-center">
+                            <ImageIcon className="w-12 h-12 text-primary/10 mx-auto mb-2" />
+                            <span className="text-xs text-muted-foreground font-bold">Sin logo horizontal</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-primary/60 backdrop-blur-[2px] opacity-0 group-hover/logo:opacity-100 transition-all duration-300 flex items-center justify-center">
+                          <div className="bg-white text-primary rounded-full p-3 shadow-xl">
+                            <Upload className="w-6 h-6" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="absolute -bottom-3 -right-3 h-12 w-12 rounded-2xl bg-primary shadow-xl flex items-center justify-center border-4 border-card z-10 group-hover/logo:scale-110 transition-transform">
+                        <FileText className="w-5 h-5 text-primary-foreground" />
+                      </div>
+                    </div>
+
+                    <input 
+                      type="file" 
+                      ref={horizontalInputRef} 
+                      className="hidden" 
+                      onChange={(e) => handleUploadCompanyLogo(e, 'horizontal')}
+                      accept="image/*"
+                    />
+
+                    <div className="text-center space-y-4 w-full">
+                      <div className="space-y-1">
+                        <p className="text-sm font-black text-foreground">Formato Horizontal</p>
+                        <p className="text-[11px] text-muted-foreground font-medium">Recomendado: Relación 3:1 o 4:1 (PNG Transparente)</p>
+                      </div>
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="rounded-xl px-6 font-bold shadow-sm hover:shadow-md transition-all h-10 w-full sm:w-auto"
+                        onClick={() => horizontalInputRef.current?.click()}
+                        disabled={uploadingHorizontal}
+                      >
+                        {uploadingHorizontal ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                        Sustituir Logo Horizontal
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
         </TabsContent>
 
         {/* Alerts Tab */}
@@ -626,253 +838,12 @@ export default function Configuracion() {
 
         {/* AI Tab */}
         <TabsContent value="ai">
-          <Card>
-            <CardHeader>
-                <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Brain className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>Modelo de Inteligencia Artificial</CardTitle>
-                  <CardDescription>Selecciona el proveedor de IA para generar capacitaciones y multimedia</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Model Selection with integrated API Keys */}
-              <div className="space-y-3">
-                {/* Google Gemini Card */}
-                <div
-                  className={`w-full rounded-xl border-2 transition-all ${
-                    aiModel === 'gemini' 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-muted-foreground/30'
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setAiModel('gemini')}
-                    className="w-full flex items-start gap-4 p-4 text-left"
-                  >
-                    <div className="flex items-center gap-3 mt-0.5">
-                      <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                        aiModel === 'gemini' ? 'border-primary' : 'border-muted-foreground/40'
-                      }`}>
-                        {aiModel === 'gemini' && <div className="h-2 w-2 rounded-full bg-primary" />}
-                      </div>
-                      <Zap className={`h-5 w-5 ${aiModel === 'gemini' ? 'text-primary' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold">Google Gemini</p>
-                      <p className="text-sm text-muted-foreground">Rápido y eficiente. Ideal para generación ágil de contenido.</p>
-                      <Badge variant="secondary" className="mt-2 font-mono text-xs">gemini-3-flash-preview</Badge>
-                    </div>
-                  </button>
-
-                  {aiModel === 'gemini' && (
-                    <div className="px-4 pb-4 pt-1 border-t border-primary/20 mx-4 mt-1">
-                      <div className="space-y-1.5 pt-3">
-                        <Label className="text-xs font-medium flex items-center gap-1.5">
-                          <Key className="h-3.5 w-3.5 text-muted-foreground" />
-                          Google Gemini API Key
-                          <span className="text-muted-foreground font-normal">(Opcional)</span>
-                        </Label>
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          <div className="relative flex-1">
-                            <Input
-                              type={showGeminiKey ? 'text' : 'password'}
-                              value={geminiApiKey}
-                              onChange={(e) => setGeminiApiKey(e.target.value)}
-                              placeholder="AIza..."
-                              className="text-sm"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowGeminiKey(!showGeminiKey)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                            >
-                              {showGeminiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </button>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleTestApiKey('gemini')}
-                            disabled={testingGemini || !geminiApiKey}
-                          >
-                            {testingGemini ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Probar'}
-                          </Button>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Déjala vacía para usar el gateway integrado por defecto.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* OpenAI Card */}
-                <div
-                  className={`w-full rounded-xl border-2 transition-all ${
-                    aiModel === 'openai' 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-muted-foreground/30'
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setAiModel('openai')}
-                            className="w-full flex items-start gap-3 p-4 text-left sm:gap-4"
-                  >
-                    <div className="flex items-center gap-3 mt-0.5">
-                      <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                        aiModel === 'openai' ? 'border-primary' : 'border-muted-foreground/40'
-                      }`}>
-                        {aiModel === 'openai' && <div className="h-2 w-2 rounded-full bg-primary" />}
-                      </div>
-                      <Sparkles className={`h-5 w-5 ${aiModel === 'openai' ? 'text-primary' : 'text-muted-foreground'}`} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold">OpenAI ChatGPT</p>
-                      <p className="text-sm text-muted-foreground">Alta precisión y razonamiento avanzado para contenido detallado.</p>
-                      <Badge variant="secondary" className="mt-2 font-mono text-xs">gpt-5-mini</Badge>
-                    </div>
-                  </button>
-
-                  {aiModel === 'openai' && (
-                    <div className="px-4 pb-4 pt-1 border-t border-primary/20 mx-4 mt-1">
-                      <div className="space-y-1.5 pt-3">
-                        <Label className="text-xs font-medium flex items-center gap-1.5">
-                          <Key className="h-3.5 w-3.5 text-muted-foreground" />
-                          OpenAI API Key
-                          <span className="text-muted-foreground font-normal">(Opcional)</span>
-                        </Label>
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          <div className="relative flex-1">
-                            <Input
-                              type={showOpenaiKey ? 'text' : 'password'}
-                              value={openaiApiKey}
-                              onChange={(e) => setOpenaiApiKey(e.target.value)}
-                              placeholder="sk-..."
-                              className="text-sm"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowOpenaiKey(!showOpenaiKey)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                            >
-                              {showOpenaiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </button>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleTestApiKey('openai')}
-                            disabled={testingOpenai || !openaiApiKey}
-                          >
-                            {testingOpenai ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Probar'}
-                          </Button>
-              </div>
-
-              {/* HeyGen Avatar Card */}
-              <div className="w-full rounded-xl border-2 border-border bg-card">
-                <div className="flex items-start gap-3 p-4 sm:gap-4">
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <div className="h-10 w-10 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-                      <Video className="h-5 w-5 text-violet-600 dark:text-violet-400" />
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">HeyGen — Avatar IA</p>
-                    <p className="text-sm text-muted-foreground">Genera videos con un avatar virtual que presenta las capacitaciones</p>
-                    <Badge variant="secondary" className="mt-2 font-mono text-xs">Avatar Video API</Badge>
-                  </div>
-                </div>
-
-                <div className="px-4 pb-4 pt-1 border-t mx-4 mt-1">
-                  <div className="space-y-1.5 pt-3">
-                    <Label className="text-xs font-medium flex items-center gap-1.5">
-                      <Key className="h-3.5 w-3.5 text-muted-foreground" />
-                      HeyGen API Key
-                    </Label>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <div className="relative flex-1">
-                        <Input
-                          type={showHeygenKey ? 'text' : 'password'}
-                          value={heygenApiKey}
-                          onChange={(e) => setHeygenApiKey(e.target.value)}
-                          placeholder="sk_V2_..."
-                          className="text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowHeygenKey(!showHeygenKey)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        >
-                          {showHeygenKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={async () => {
-                          if (!heygenApiKey) {
-                            toast.error('Ingresa una API Key de HeyGen');
-                            return;
-                          }
-                          setTestingHeygen(true);
-                          try {
-                            // Save first so the edge function can read it
-                            await updateConfig.mutateAsync({
-                              key: 'ai_config',
-                              value: {
-                                model: aiModel,
-                                openai_api_key: openaiApiKey,
-                                gemini_api_key: geminiApiKey,
-                                heygen_api_key: heygenApiKey,
-                              },
-                            });
-                            const { data, error } = await supabase.functions.invoke('generate-training-avatar', {
-                              body: { action: 'test', companyId: currentCompanyId },
-                            });
-                            if (error) throw error;
-                            if (data?.success) {
-                              toast.success(`Conexión exitosa — ${data.avatarCount} avatares disponibles`);
-                            } else {
-                              toast.error(data?.error || 'No se pudo conectar con HeyGen');
-                            }
-                          } catch (err: any) {
-                            toast.error(err?.message || 'Error al probar la conexión');
-                          } finally {
-                            setTestingHeygen(false);
-                          }
-                        }}
-                        disabled={testingHeygen || !heygenApiKey}
-                      >
-                        {testingHeygen ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Probar'}
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Obtén tu API Key en <a href="https://app.heygen.com/settings/api" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">heygen.com/settings/api</a>
-                    </p>
-                  </div>
-                </div>
-              </div>
-                        <p className="text-xs text-muted-foreground">
-                          Déjala vacía para usar el gateway integrado por defecto.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <Button onClick={handleSaveAiConfig} disabled={savingAi} className="w-full bg-primary hover:bg-primary/90 sm:w-auto">
-                {savingAi ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Guardar Configuración IA
-              </Button>
-            </CardContent>
-          </Card>
+          <AITab 
+            systemConfig={systemConfig} 
+            onUpdateConfig={async (key, value, description) => {
+              return await updateConfig.mutateAsync({ key, value, description });
+            }}
+          />
         </TabsContent>
 
         {/* Watermark Tab */}

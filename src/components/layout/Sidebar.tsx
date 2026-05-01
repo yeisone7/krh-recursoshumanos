@@ -164,7 +164,7 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
 
 // Reorganized: Grouped by workflow logic
 const coreNavItems: NavItem[] = [
-  { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/', moduleCode: 'dashboard' },
+  { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
   { label: 'Analítica RRHH', icon: <BarChart3 className="w-5 h-5" />, href: '/analitica', moduleCode: 'analitica' },
 ];
 

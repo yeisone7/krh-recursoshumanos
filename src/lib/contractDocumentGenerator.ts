@@ -13,6 +13,7 @@ export interface ContractDocumentData {
   companyAddress?: string;
   companyPhone?: string;
   companyEmail?: string;
+  logoUrl?: string | null;
   
   // Employee info
   employeeFullName: string;
@@ -69,6 +70,17 @@ function formatCurrency(amount: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+// Helper to load image for PDF
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = src;
+  });
 }
 
 // Helper to format date in Spanish words
@@ -243,7 +255,7 @@ export async function generateContractFromTemplate(
 }
 
 // Generate a basic PDF contract (fallback when no template)
-export function generateBasicContractPDF(data: ContractDocumentData): jsPDF {
+export async function generateBasicContractPDF(data: ContractDocumentData): Promise<jsPDF> {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -256,6 +268,17 @@ export function generateBasicContractPDF(data: ContractDocumentData): jsPDF {
   let y = 20;
   
   doc.setFont('helvetica');
+  
+  // Logo
+  if (data.logoUrl) {
+    try {
+      const logoImg = await loadImage(data.logoUrl);
+      doc.addImage(logoImg, 'PNG', margin, y, 40, 20);
+      y += 25;
+    } catch (e) {
+      console.warn('Could not load company logo for contract PDF', e);
+    }
+  }
   
   // Header
   doc.setFontSize(14);

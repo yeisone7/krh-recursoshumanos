@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     appVersionPlugin(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: ["favicon.png", "pwa-icon.svg", "pwa-192x192.png", "pwa-256x256.png", "pwa-384x384.png", "pwa-512x512.png", "pwa-maskable-512.png"],
       workbox: {
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
