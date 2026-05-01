@@ -397,8 +397,8 @@ export function CandidateDetailDialog({
                           operation_centers: vacancy?.operation_centers,
                         },
                         step: {
-                          provider: (step as any).provider,
-                          doctor_name: (step as any).doctor_name,
+                          provider: step.provider,
+                          doctor_name: step.doctor_name,
                           scheduled_date: step.scheduled_date,
                           exam_profesiograma_items: (step as any).exam_profesiograma_items,
                           notes: step.notes,

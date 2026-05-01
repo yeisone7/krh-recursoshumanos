@@ -12,6 +12,7 @@ import { NoRoleGuard } from "@/components/auth/NoRoleGuard";
 import { PermissionRoute } from "@/components/auth/PermissionRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppUpdateNotifier } from "@/components/system/AppUpdateNotifier";
+import { LocationPersister } from "@/components/auth/LocationPersister";
 import Dashboard from "./pages/Dashboard";
 import Empleados from "./pages/Empleados";
 import Contratos from "./pages/Contratos";
@@ -106,6 +107,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <AppUpdateNotifier />
+          <LocationPersister />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -137,7 +139,7 @@ const App = () => (
                     <NoRoleGuard>
                     <AppLayout>
                       <Routes>
-                        <Route path="/" element={<P module="dashboard"><Dashboard /></P>} />
+                        <Route path="/" element={<Dashboard />} />
                         <Route path="/empleados/:id/360" element={<P module="empleados"><Empleado360 /></P>} />
                         <Route path="/empleados" element={<P module="empleados"><Empleados /></P>} />
                         <Route path="/contratos" element={<P module="contratos"><Contratos /></P>} />

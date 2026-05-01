@@ -39,7 +39,7 @@ export async function generateExamOrderPdf(data: ExamOrderData) {
   // Fetch company info
   const { data: company } = await supabase
     .from('companies')
-    .select('name, nit, address, phone, email, logo_url')
+    .select('name, nit, address, phone, email, logo_url, horizontal_logo_url')
     .eq('id', data.companyId)
     .single();
 
@@ -58,15 +58,17 @@ export async function generateExamOrderPdf(data: ExamOrderData) {
   };
 
   // ── Header with company logo area ──
-  // Company logo placeholder
-  if (company?.logo_url) {
+  // Company logo placeholder - prioritize horizontal logo
+  const logoToUse = company?.horizontal_logo_url || company?.logo_url;
+  
+  if (logoToUse) {
     try {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       await new Promise<void>((resolve, reject) => {
         img.onload = () => resolve();
         img.onerror = () => reject();
-        img.src = company.logo_url!;
+        img.src = logoToUse;
       });
       doc.addImage(img, 'PNG', marginL, y, 36, 16);
     } catch {

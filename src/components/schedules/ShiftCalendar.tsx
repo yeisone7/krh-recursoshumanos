@@ -48,7 +48,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getEmployeeFullName } from '@/types/employee';
 import type { Shift, EmployeeShiftAssignment, EmployeeAbsence, WorkSchedule, EmployeeTimeMode } from '@/types/schedule';
 
-type ViewMode = 'quincenal' | 'mensual';
+type ViewMode = 'quincenal' | 'mensual' | 'trimestral' | 'semestral';
 
 interface GroupedEmployee {
   centerId: string;
@@ -115,10 +115,29 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       };
     }
     
+    if (viewMode === 'mensual') {
+      return {
+        startDate: format(monthStart, 'yyyy-MM-dd'),
+        endDate: format(monthEnd, 'yyyy-MM-dd'),
+        daysInPeriod: eachDayOfInterval({ start: monthStart, end: monthEnd }),
+      };
+    }
+
+    if (viewMode === 'trimestral') {
+      const threeMonthsEnd = endOfMonth(addMonths(monthStart, 2));
+      return {
+        startDate: format(monthStart, 'yyyy-MM-dd'),
+        endDate: format(threeMonthsEnd, 'yyyy-MM-dd'),
+        daysInPeriod: eachDayOfInterval({ start: monthStart, end: threeMonthsEnd }),
+      };
+    }
+
+    // Semestral: 6 months starting from the current month's start
+    const sixMonthsEnd = endOfMonth(addMonths(monthStart, 5));
     return {
       startDate: format(monthStart, 'yyyy-MM-dd'),
-      endDate: format(monthEnd, 'yyyy-MM-dd'),
-      daysInPeriod: eachDayOfInterval({ start: monthStart, end: monthEnd }),
+      endDate: format(sixMonthsEnd, 'yyyy-MM-dd'),
+      daysInPeriod: eachDayOfInterval({ start: monthStart, end: sixMonthsEnd }),
     };
   }, [currentMonth, viewMode]);
   
@@ -317,8 +336,11 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
           setCurrentMonth(startOfMonth(currentMonth));
         }
       }
-    } else {
+    } else if (viewMode === 'mensual') {
       setCurrentMonth(addMonths(currentMonth, direction === 'next' ? 1 : -1));
+    } else {
+      // Trimestral
+      setCurrentMonth(addMonths(currentMonth, direction === 'next' ? 3 : -3));
     }
   };
 
@@ -445,6 +467,17 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
     }
   }, [groupedEmployees]);
 
+  const periodLabel = useMemo(() => {
+    if (viewMode === 'quincenal') {
+      return `${format(parseISO(startDate), 'd')} - ${format(parseISO(endDate), 'd MMM yyyy', { locale: es })}`;
+    }
+    if (viewMode === 'mensual') {
+      return format(currentMonth, 'MMMM yyyy', { locale: es });
+    }
+    // Trimestral
+    return `${format(currentMonth, 'MMM')} - ${format(addMonths(currentMonth, 2), 'MMM yyyy', { locale: es })}`;
+  }, [viewMode, startDate, endDate, currentMonth]);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -453,10 +486,6 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       </div>
     );
   }
-
-  const periodLabel = viewMode === 'quincenal'
-    ? `${format(parseISO(startDate), 'd')} - ${format(parseISO(endDate), 'd MMM yyyy', { locale: es })}`
-    : format(currentMonth, 'MMMM yyyy', { locale: es });
 
   return (
     <div className="flex flex-col flex-1 min-h-0 gap-2 overflow-hidden">
@@ -482,6 +511,12 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
             </ToggleGroupItem>
             <ToggleGroupItem value="mensual" aria-label="Vista mensual" className="h-8 sm:h-7 text-xs px-2">
               Mes
+            </ToggleGroupItem>
+            <ToggleGroupItem value="trimestral" aria-label="Vista trimestral" className="h-8 sm:h-7 text-xs px-2">
+              3m
+            </ToggleGroupItem>
+            <ToggleGroupItem value="semestral" aria-label="Vista semestral" className="h-8 sm:h-7 text-xs px-2">
+              6m
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
@@ -962,8 +997,8 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
       {/* Instructions */}
       <p className="text-xs sm:text-sm text-muted-foreground">
-        💡 <span className="hidden sm:inline"><strong>Click derecho</strong> para asignar, cambiar o eliminar turnos (operativos). <strong>Arrastre</strong> para selección múltiple. Los horarios administrativos se proyectan automáticamente según la configuración del empleado.</span>
-        <span className="sm:hidden">Mantén presionado para opciones de turno. Horarios admin se proyectan automáticamente.</span>
+        💡 <span className="hidden sm:inline"><strong>Clic izquierdo y arrastre</strong> para selección múltiple. <strong>Clic derecho</strong> sobre un día para opciones rápidas.</span>
+        <span className="sm:hidden"><strong>Desliza</strong> para selección múltiple. Mantén presionado para opciones.</span>
       </p>
 
       {/* Assign Dialog */}

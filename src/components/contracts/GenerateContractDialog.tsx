@@ -201,7 +201,7 @@ export function GenerateContractDialog({
       const documentData = prepareDocumentData();
       setProgress(50);
 
-      const pdf = generateBasicContractPDF(documentData);
+      const pdf = await generateBasicContractPDF(documentData);
       setProgress(80);
 
       const filename = `Contrato_${contract.contract_type}_${contract.employees.document_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
@@ -276,6 +276,7 @@ export function GenerateContractDialog({
       companyAddress: company?.address || undefined,
       companyPhone: company?.phone || undefined,
       companyEmail: company?.email || undefined,
+      logoUrl: company?.horizontal_logo_url || company?.logo_url,
 
       // Employee
       employeeFullName: employeeName,

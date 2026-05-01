@@ -11,6 +11,7 @@ interface UserCompany {
   name: string;
   nit: string;
   logo_url?: string;
+  horizontal_logo_url?: string;
 }
 
 interface PermissionEntry {
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [hasAnyRole, setHasAnyRole] = useState(true); // default true to avoid flash
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const userRef = React.useRef<User | null>(null);
 
   const fetchPermissions = async (userId: string) => {
     try {
@@ -97,31 +99,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRoles(rolesData.map(r => r.role));
     }
 
-    // Fetch user companies
-    const { data: companiesData } = await supabase
+    const { data: assignmentsData, error: assignmentsError } = await supabase
       .from('user_company_assignments')
-      .select('company_id, companies(id, name, nit, logo_url)')
+      .select('company_id, companies(id, name, nit, logo_url, horizontal_logo_url)')
       .eq('user_id', userId);
 
-    if (companiesData && companiesData.length > 0) {
-      const userCompanies = companiesData
+    if (assignmentsError) {
+      console.error('Error fetching user company assignments:', assignmentsError);
+    } else if (assignmentsData && assignmentsData.length > 0) {
+      const userCompanies = assignmentsData
         .filter(c => c.companies)
         .map(c => ({
           id: c.companies!.id,
           name: c.companies!.name,
           nit: c.companies!.nit,
           logo_url: c.companies!.logo_url || undefined,
+          horizontal_logo_url: (c.companies as any).horizontal_logo_url || undefined,
         }));
+      
       setCompanies(userCompanies);
+
       if (!currentCompanyId && userCompanies.length > 0) {
-        // Restore last selected company from localStorage
         const lastCompany = localStorage.getItem(`last_company_${userId}`);
         if (lastCompany && userCompanies.some(c => c.id === lastCompany)) {
           setCurrentCompanyId(lastCompany);
         } else if (userCompanies.length === 1) {
           setCurrentCompanyId(userCompanies[0].id);
         }
-        // If multiple companies and no saved preference, leave null for CompanyGuard
       }
     }
 
@@ -138,12 +142,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // If super admin, fetch ALL companies
     if (saData) {
-      const { data: allCompanies } = await supabase
+      const { data: allCompanies, error: allErr } = await supabase
         .from('companies')
-        .select('id, name, nit, logo_url')
+        .select('id, name, nit, logo_url, horizontal_logo_url')
         .order('name');
-      if (allCompanies && allCompanies.length > 0) {
-        setCompanies(allCompanies);
+      
+      if (allErr) {
+        console.error('Error fetching all companies for super admin:', allErr);
+      } else if (allCompanies && allCompanies.length > 0) {
+        setCompanies(allCompanies.map(c => ({
+          ...c,
+          logo_url: c.logo_url || undefined,
+          horizontal_logo_url: c.horizontal_logo_url || undefined
+        })));
+        
         if (!currentCompanyId) {
           const lastCompany = localStorage.getItem(`last_company_${userId}`);
           if (lastCompany && allCompanies.some(c => c.id === lastCompany)) {
@@ -159,15 +171,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+        const newUser = session?.user ?? null;
+        const prevUser = userRef.current;
         
-        if (session?.user) {
-          // Set loading true to prevent flash of onboarding/guards
-          setIsLoading(true);
-          setTimeout(() => {
-            fetchUserData(session.user.id).finally(() => setIsLoading(false));
-          }, 0);
+        // Update refs and state
+        userRef.current = newUser;
+        setSession(session);
+        setUser(newUser);
+        
+        if (newUser) {
+          // Si el usuario es el mismo (ej. refresco de token o foco), no activamos el loading global
+          // Esto evita que ProtectedRoute desmonte toda la app y se pierda el estado/scroll
+          const isSameUser = prevUser?.id === newUser.id;
+          
+          if (!isSameUser) {
+            setIsLoading(true);
+          }
+          
+          fetchUserData(newUser.id).finally(() => {
+            setIsLoading(false);
+          });
         } else {
           setRoles([]);
           setCompanies([]);
@@ -176,15 +199,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPermissionsLoaded(false);
           setHasAnyRole(true);
           setIsSuperAdmin(false);
+          setIsLoading(false);
         }
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      const newUser = session?.user ?? null;
+      userRef.current = newUser;
       setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserData(session.user.id).finally(() => setIsLoading(false));
+      setUser(newUser);
+      if (newUser) {
+        fetchUserData(newUser.id).finally(() => setIsLoading(false));
       } else {
         setIsLoading(false);
       }

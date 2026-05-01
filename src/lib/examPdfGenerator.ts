@@ -25,12 +25,13 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 interface ExamOrderOptions {
   companyName: string;
   companyNit: string;
+  logoUrl?: string | null;
   transaction: ExamTransaction;
   signatureDataUrl?: string | null;
 }
 
 export async function generateExamOrderPdf(options: ExamOrderOptions): Promise<void> {
-  const { companyName, companyNit, transaction, signatureDataUrl } = options;
+  const { companyName, companyNit, transaction, signatureDataUrl, logoUrl } = options;
   const employee = transaction.employees;
   if (!employee) return;
 
@@ -56,10 +57,12 @@ export async function generateExamOrderPdf(options: ExamOrderOptions): Promise<v
   } catch { /* optional */ }
 
   // Header logo
-  try {
-    const logoImg = await loadImage('/images/petrocasinos-watermark.png');
-    doc.addImage(logoImg, 'PNG', margin, y, 36, 18);
-  } catch { /* optional */ }
+  if (logoUrl) {
+    try {
+      const logoImg = await loadImage(logoUrl);
+      doc.addImage(logoImg, 'PNG', margin, y, 36, 18);
+    } catch { /* optional */ }
+  }
 
   // Title
   doc.setFontSize(16);

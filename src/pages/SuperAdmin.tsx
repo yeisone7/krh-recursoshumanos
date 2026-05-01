@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Building2, Plus, Users, Loader2, Search, UserPlus, Shield, Edit } from 'lucide-react';
+import { Building2, Plus, Users, Loader2, Search, UserPlus, Shield, Edit, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,9 +29,10 @@ export default function SuperAdmin() {
   const [search, setSearch] = useState('');
   const [newCompany, setNewCompany] = useState({ name: '', nit: '', email: '', phone: '', address: '' });
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [horizontalLogoFile, setHorizontalLogoFile] = useState<File | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [editingCompany, setEditingCompany] = useState<{ id: string; name: string; nit: string; email: string; phone: string; address: string; logo_url: string | null } | null>(null);
+  const [editingCompany, setEditingCompany] = useState<{ id: string; name: string; nit: string; email: string; phone: string; address: string; logo_url: string | null; horizontal_logo_url: string | null } | null>(null);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
   const { data: users = [], isLoading: usersLoading } = useAdminUsers();
@@ -75,7 +76,7 @@ export default function SuperAdmin() {
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
         const filePath = `logos/${fileName}`;
 
-        const { error: uploadError, data: uploadData } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('company_logos')
           .upload(filePath, logoFile);
 
@@ -88,6 +89,25 @@ export default function SuperAdmin() {
         logoUrl = publicUrlData.publicUrl;
       }
 
+      let horizontalLogoUrl = null;
+      if (horizontalLogoFile) {
+        const fileExt = horizontalLogoFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}_h.${fileExt}`;
+        const filePath = `logos/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('company_logos')
+          .upload(filePath, horizontalLogoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('company_logos')
+          .getPublicUrl(filePath);
+
+        horizontalLogoUrl = publicUrlData.publicUrl;
+      }
+
       const { error } = await supabase.from('companies').insert({
         name: newCompany.name,
         nit: newCompany.nit,
@@ -95,6 +115,7 @@ export default function SuperAdmin() {
         phone: newCompany.phone || null,
         address: newCompany.address || null,
         logo_url: logoUrl,
+        horizontal_logo_url: horizontalLogoUrl,
         created_by: user?.id,
       });
       if (error) throw error;
@@ -104,6 +125,7 @@ export default function SuperAdmin() {
       toast({ title: 'Empresa creada exitosamente' });
       setNewCompany({ name: '', nit: '', email: '', phone: '', address: '' });
       setLogoFile(null);
+      setHorizontalLogoFile(null);
       setCreateOpen(false);
     },
     onError: (err: any) => {
@@ -134,6 +156,25 @@ export default function SuperAdmin() {
         logoUrl = publicUrlData.publicUrl;
       }
 
+      let horizontalLogoUrl = editingCompany.horizontal_logo_url;
+      if (horizontalLogoFile) {
+        const fileExt = horizontalLogoFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}_h.${fileExt}`;
+        const filePath = `logos/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('company_logos')
+          .upload(filePath, horizontalLogoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('company_logos')
+          .getPublicUrl(filePath);
+
+        horizontalLogoUrl = publicUrlData.publicUrl;
+      }
+
       const { error } = await supabase.from('companies').update({
         name: editingCompany.name,
         nit: editingCompany.nit,
@@ -141,6 +182,7 @@ export default function SuperAdmin() {
         phone: editingCompany.phone || null,
         address: editingCompany.address || null,
         logo_url: logoUrl,
+        horizontal_logo_url: horizontalLogoUrl,
       }).eq('id', editingCompany.id);
       
       if (error) throw error;
@@ -150,6 +192,7 @@ export default function SuperAdmin() {
       toast({ title: 'Empresa actualizada exitosamente' });
       setEditingCompany(null);
       setLogoFile(null);
+      setHorizontalLogoFile(null);
       setEditOpen(false);
     },
     onError: (err: any) => {
@@ -166,8 +209,10 @@ export default function SuperAdmin() {
       phone: company.phone || '',
       address: company.address || '',
       logo_url: company.logo_url,
+      horizontal_logo_url: company.horizontal_logo_url,
     });
     setLogoFile(null);
+    setHorizontalLogoFile(null);
     setEditOpen(true);
   };
 
@@ -232,9 +277,55 @@ export default function SuperAdmin() {
                     <Label>Nombre *</Label>
                     <Input value={newCompany.name} onChange={e => setNewCompany(p => ({ ...p, name: e.target.value }))} placeholder="Mi Empresa S.A.S" />
                   </div>
-                  <div>
-                    <Label>Logo de la Empresa</Label>
-                    <Input type="file" accept="image/*" onChange={e => setLogoFile(e.target.files?.[0] || null)} />
+                  <div className="space-y-4">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <ImageIcon className="h-3 w-3" /> Identidad Visual
+                    </Label>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                      {/* Avatar */}
+                      <div className="space-y-2 flex-shrink-0">
+                        <Label className="text-[10px] text-muted-foreground">Avatar (Cuadrado)</Label>
+                        <div 
+                          onClick={() => document.getElementById('new-logo-avatar')?.click()}
+                          className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all hover:border-primary/50 hover:bg-primary/5 group"
+                        >
+                          {logoFile ? (
+                            <img src={URL.createObjectURL(logoFile)} alt="Preview" className="h-full w-full object-contain p-2" />
+                          ) : (
+                            <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
+                              <Plus className="h-5 w-5" />
+                              <span className="text-[8px]">1:1</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 group-hover:bg-black/5 group-hover:opacity-100 transition-all">
+                            <Plus className="h-4 w-4 text-primary" />
+                          </div>
+                        </div>
+                        <Input id="new-logo-avatar" type="file" accept="image/*" onChange={e => setLogoFile(e.target.files?.[0] || null)} className="hidden" />
+                      </div>
+
+                      {/* Horizontal */}
+                      <div className="space-y-2 flex-1">
+                        <Label className="text-[10px] text-muted-foreground">Branding (Reportes/Contratos)</Label>
+                        <div 
+                          onClick={() => document.getElementById('new-logo-horizontal')?.click()}
+                          className="relative h-24 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all hover:border-primary/50 hover:bg-primary/5 group"
+                        >
+                          {horizontalLogoFile ? (
+                            <img src={URL.createObjectURL(horizontalLogoFile)} alt="Preview" className="h-full w-full object-contain p-3" />
+                          ) : (
+                            <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
+                              <Plus className="h-5 w-5" />
+                              <span className="text-[8px]">Horizontal</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 group-hover:bg-black/5 group-hover:opacity-100 transition-all">
+                            <Plus className="h-4 w-4 text-primary" />
+                          </div>
+                        </div>
+                        <Input id="new-logo-horizontal" type="file" accept="image/*" onChange={e => setHorizontalLogoFile(e.target.files?.[0] || null)} className="hidden" />
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <Label>NIT *</Label>
@@ -281,12 +372,77 @@ export default function SuperAdmin() {
                       <Label>Nombre *</Label>
                       <Input value={editingCompany.name} onChange={e => setEditingCompany(p => ({ ...p!, name: e.target.value }))} placeholder="Mi Empresa S.A.S" />
                     </div>
-                    <div>
-                      <Label>Logo de la Empresa</Label>
-                      <Input type="file" accept="image/*" onChange={e => setLogoFile(e.target.files?.[0] || null)} />
-                      {editingCompany.logo_url && !logoFile && (
-                        <p className="text-xs text-muted-foreground mt-1">Logo actual cargado</p>
-                      )}
+                    <div className="space-y-4">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                        <ImageIcon className="h-3 w-3" /> Identidad Visual
+                      </Label>
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                        {/* Avatar */}
+                        <div className="space-y-2 flex-shrink-0">
+                          <Label className="text-[10px] text-muted-foreground">Avatar (Cuadrado)</Label>
+                          <div 
+                            onClick={() => document.getElementById('edit-logo-avatar')?.click()}
+                            className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-100/50 transition-all hover:border-primary/50 hover:bg-primary/5 group"
+                          >
+                            {(logoFile || editingCompany.logo_url) ? (
+                              <img 
+                                src={logoFile ? URL.createObjectURL(logoFile) : editingCompany.logo_url!} 
+                                alt="Avatar" 
+                                className="h-full w-full object-contain p-2 transition-transform group-hover:scale-105" 
+                              />
+                            ) : (
+                              <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
+                                <Plus className="h-5 w-5" />
+                                <span className="text-[8px]">1:1</span>
+                              </div>
+                            )}
+                            
+                            {editingCompany.logo_url && !logoFile && (
+                              <div className="absolute top-1.5 right-1.5">
+                                <Badge className="bg-emerald-500 hover:bg-emerald-600 text-[8px] h-3.5 px-1 border-none shadow-sm">Actual</Badge>
+                              </div>
+                            )}
+
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 group-hover:bg-black/10 group-hover:opacity-100 transition-all text-primary">
+                              <Edit className="h-4 w-4" />
+                            </div>
+                          </div>
+                          <Input id="edit-logo-avatar" type="file" accept="image/*" onChange={e => setLogoFile(e.target.files?.[0] || null)} className="hidden" />
+                        </div>
+
+                        {/* Horizontal branding */}
+                        <div className="space-y-2 flex-1">
+                          <Label className="text-[10px] text-muted-foreground">Branding (Reportes/Contratos)</Label>
+                          <div 
+                            onClick={() => document.getElementById('edit-logo-horizontal')?.click()}
+                            className="relative h-24 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-100/50 transition-all hover:border-primary/50 hover:bg-primary/5 group"
+                          >
+                            {(horizontalLogoFile || editingCompany.horizontal_logo_url) ? (
+                              <img 
+                                src={horizontalLogoFile ? URL.createObjectURL(horizontalLogoFile) : editingCompany.horizontal_logo_url!} 
+                                alt="Horizontal" 
+                                className="h-full w-full object-contain p-4 transition-transform group-hover:scale-105" 
+                              />
+                            ) : (
+                              <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
+                                <Plus className="h-5 w-5" />
+                                <span className="text-[8px]">Horizontal</span>
+                              </div>
+                            )}
+
+                            {editingCompany.horizontal_logo_url && !horizontalLogoFile && (
+                              <div className="absolute top-1.5 right-1.5">
+                                <Badge className="bg-emerald-500 hover:bg-emerald-600 text-[8px] h-3.5 px-1 border-none shadow-sm">Actual</Badge>
+                              </div>
+                            )}
+
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 group-hover:bg-black/10 group-hover:opacity-100 transition-all text-primary">
+                              <Edit className="h-4 w-4" />
+                            </div>
+                          </div>
+                          <Input id="edit-logo-horizontal" type="file" accept="image/*" onChange={e => setHorizontalLogoFile(e.target.files?.[0] || null)} className="hidden" />
+                        </div>
+                      </div>
                     </div>
                     <div>
                       <Label>NIT *</Label>
