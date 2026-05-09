@@ -92,9 +92,10 @@ export async function generateExamOrderPdf(options: ExamOrderOptions): Promise<v
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
 
+  const docTypeLabel = (employee as any).identification_types?.name || employee.document_type || 'C.C.';
   const leftInfoLines = [
     ['Nombre:', employeeName],
-    ['Documento:', employee.document_number],
+    ['Documento:', `${docTypeLabel} ${employee.document_number}`],
     ['Centro de Operación:', centerName],
   ];
   const infoStartY = y;

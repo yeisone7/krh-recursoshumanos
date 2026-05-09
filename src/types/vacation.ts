@@ -167,20 +167,27 @@ export function isSunday(date: Date): boolean {
  * Check if a date is a business day (not Sunday and not holiday)
  * Per Colombian vacation law, only Sundays and holidays are non-business days
  */
-export function isBusinessDay(date: Date): boolean {
-  return !isSunday(date) && !isColombianHoliday(date);
+export function isBusinessDay(date: Date, holidaysSet?: Set<string>): boolean {
+  if (isSunday(date)) return false;
+  
+  if (holidaysSet) {
+    const dateStr = date.toISOString().split('T')[0];
+    return !holidaysSet.has(dateStr);
+  }
+  
+  return !isColombianHoliday(date);
 }
 
 /**
  * Calculate business days between two dates (inclusive)
  * Following Colombian labor law
  */
-export function calculateBusinessDays(startDate: Date, endDate: Date): number {
+export function calculateBusinessDays(startDate: Date, endDate: Date, holidaysSet?: Set<string>): number {
   let count = 0;
   const current = new Date(startDate);
   
   while (current <= endDate) {
-    if (isBusinessDay(current)) {
+    if (isBusinessDay(current, holidaysSet)) {
       count++;
     }
     current.setDate(current.getDate() + 1);

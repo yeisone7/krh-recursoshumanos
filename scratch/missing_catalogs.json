@@ -1,0 +1,24 @@
+{
+  "areas": [
+    "Bodega",
+    "Conductores",
+    "Rrhh",
+    "Cajeras Borrego",
+    "Administrativo",
+    "Servicio",
+    "Cocina",
+    "Hidrocarburos",
+    "Cajeras Descanso",
+    "Mantenimiento",
+    "Steward",
+    "Admon Bmanga",
+    "Gerencia",
+    "Casa Hielo",
+    "Hse",
+    "Sena",
+    "Calidad"
+  ],
+  "opCenters": [
+    "Principal"
+  ]
+}

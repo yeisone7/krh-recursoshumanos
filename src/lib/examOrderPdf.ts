@@ -8,6 +8,7 @@ interface ExamOrderData {
     first_name: string;
     last_name: string;
     document_type: string;
+    document_type_name?: string;
     document_number: string;
     birth_date?: string | null;
     gender?: string | null;
@@ -155,7 +156,7 @@ export async function generateExamOrderPdf(data: ExamOrderData) {
   drawField('Nombres y Apellidos', `${data.candidate.first_name} ${data.candidate.last_name}`, marginL + 2, 38);
   y += 6;
 
-  drawField('Tipo Doc.', data.candidate.document_type, marginL + 2, 20);
+  drawField('Tipo Doc.', data.candidate.document_type_name || data.candidate.document_type, marginL + 2, 20);
   drawField('No. Documento', data.candidate.document_number, pageW / 2, 28);
   y += 6;
 
@@ -312,7 +313,7 @@ export async function generateExamOrderPdf(data: ExamOrderData) {
   doc.setFontSize(7);
   doc.setTextColor(100, 100, 100);
   doc.text(`${data.candidate.first_name} ${data.candidate.last_name}`, pageW / 2 + 25, sigY + 9);
-  doc.text(`${data.candidate.document_type} ${data.candidate.document_number}`, pageW / 2 + 25, sigY + 13);
+  doc.text(`${data.candidate.document_type_name || data.candidate.document_type} ${data.candidate.document_number}`, pageW / 2 + 25, sigY + 13);
 
   y = sigY + 18;
 

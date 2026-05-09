@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Save, ShieldCheck } from 'lucide-react';
+import { Save, ShieldCheck, Shield, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -8,18 +8,44 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useLogAction } from '@/hooks/useAuditLog';
 import { CustomRole, Permission, RolePermissionEntry, useCustomRoles, useModules, usePermissionsCatalog } from '@/hooks/useRolesPermissions';
 
-const MODULE_CODES = ['empleados', 'contratos', 'alertas'];
-const ACTIONS = ['view', 'create', 'update', 'delete'] as const;
-const ACTION_LABELS: Record<(typeof ACTIONS)[number], string> = {
+// Show the most important modules in the quick view
+const QUICK_MODULE_CODES = [
+  'empleados',
+  'contratos',
+  'vacaciones',
+  'permisos',
+  'novedades',
+  'seleccion',
+  'requisiciones',
+  'capacitaciones',
+  'alertas',
+];
+
+const ACTIONS = ['view', 'create', 'update', 'delete', 'approve', 'export'] as const;
+type ActionType = (typeof ACTIONS)[number];
+
+const ACTION_LABELS: Record<ActionType, string> = {
   view: 'Ver',
   create: 'Crear',
-  update: 'Modificar',
+  update: 'Editar',
   delete: 'Eliminar',
+  approve: 'Aprobar',
+  export: 'Exportar',
+};
+
+const ACTION_COLORS: Record<ActionType, string> = {
+  view: 'text-blue-500',
+  create: 'text-green-500',
+  update: 'text-amber-500',
+  delete: 'text-red-500',
+  approve: 'text-violet-500',
+  export: 'text-cyan-500',
 };
 
 export function QuickRolePermissions() {
@@ -32,7 +58,7 @@ export function QuickRolePermissions() {
 
   const roleIds = useMemo(() => roles.map((role) => role.id), [roles]);
   const quickModules = useMemo(
-    () => MODULE_CODES.map((code) => modules.find((module) => module.code === code)).filter(Boolean),
+    () => QUICK_MODULE_CODES.map((code) => modules.find((module) => module.code === code)).filter(Boolean),
     [modules]
   );
   const quickModuleIds = useMemo(() => quickModules.map((module) => module!.id), [quickModules]);
@@ -121,7 +147,7 @@ export function QuickRolePermissions() {
     onError: (error: any) => toast.error(error.message),
   });
 
-  const getPermission = (moduleId: string, action: (typeof ACTIONS)[number]) => permissionByModuleAction.get(`${moduleId}:${action}`);
+  const getPermission = (moduleId: string, action: ActionType) => permissionByModuleAction.get(`${moduleId}:${action}`);
   const isChecked = (role: CustomRole, permissionId?: string) => role.is_system || (!!permissionId && selectedByRole[role.id]?.has(permissionId));
   const hasChanges = (roleId: string) => {
     const current = Array.from(selectedByRole[roleId] || []).sort().join('|');
@@ -147,31 +173,47 @@ export function QuickRolePermissions() {
           <ShieldCheck className="h-5 w-5 text-primary" />
           Administración rápida de permisos
         </CardTitle>
-        <CardDescription>Asigna permisos por rol para Empleados, Contratos y Alertas.</CardDescription>
+        <CardDescription>
+          Asigna permisos por rol para los módulos principales. Incluye aprobaciones y exportaciones.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto rounded-lg border border-border">
-          <Table className="min-w-[920px]">
+          <Table className="min-w-[1100px]">
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-52">Rol</TableHead>
+                <TableHead className="min-w-44 sticky left-0 bg-background z-10">Rol</TableHead>
                 {quickModules.map((module) => (
                   <TableHead key={module!.id} className="text-center" colSpan={ACTIONS.length}>
-                    {module!.name}
+                    <span className="font-semibold">{module!.name}</span>
                   </TableHead>
                 ))}
-                <TableHead className="text-right">Guardar</TableHead>
+                <TableHead className="text-right sticky right-0 bg-background z-10">Guardar</TableHead>
               </TableRow>
               <TableRow>
-                <TableHead />
+                <TableHead className="sticky left-0 bg-background z-10" />
                 {quickModules.flatMap((module) =>
                   ACTIONS.map((action) => (
-                    <TableHead key={`${module!.id}-${action}`} className="min-w-20 text-center text-xs">
-                      {ACTION_LABELS[action]}
+                    <TableHead key={`${module!.id}-${action}`} className="min-w-14 text-center px-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className={`text-[10px] font-medium cursor-help ${ACTION_COLORS[action]}`}>
+                            {ACTION_LABELS[action]}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="text-xs">
+                          {action === 'approve' && `Aprobar en ${module!.name}`}
+                          {action === 'export' && `Exportar datos de ${module!.name}`}
+                          {action === 'view' && `Ver ${module!.name}`}
+                          {action === 'create' && `Crear en ${module!.name}`}
+                          {action === 'update' && `Modificar en ${module!.name}`}
+                          {action === 'delete' && `Eliminar en ${module!.name}`}
+                        </TooltipContent>
+                      </Tooltip>
                     </TableHead>
                   ))
                 )}
-                <TableHead />
+                <TableHead className="sticky right-0 bg-background z-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -190,7 +232,7 @@ export function QuickRolePermissions() {
               ) : (
                 roles.map((role) => (
                   <TableRow key={role.id}>
-                    <TableCell>
+                    <TableCell className="sticky left-0 bg-background z-10">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{role.name}</span>
                         {role.is_system && <Badge variant="secondary">Sistema</Badge>}
@@ -199,19 +241,23 @@ export function QuickRolePermissions() {
                     {quickModules.flatMap((module) =>
                       ACTIONS.map((action) => {
                         const permission = getPermission(module!.id, action);
+                        const hasPermForAction = !!permission;
                         return (
-                          <TableCell key={`${role.id}-${module!.id}-${action}`} className="text-center">
-                            <Checkbox
-                              checked={isChecked(role, permission?.id)}
-                              disabled={role.is_system || !permission}
-                              onCheckedChange={() => togglePermission(role, permission?.id)}
-                              className={cn(!permission && 'opacity-30')}
-                            />
+                          <TableCell key={`${role.id}-${module!.id}-${action}`} className="text-center px-1">
+                            {hasPermForAction ? (
+                              <Checkbox
+                                checked={isChecked(role, permission?.id)}
+                                disabled={role.is_system || !permission}
+                                onCheckedChange={() => togglePermission(role, permission?.id)}
+                              />
+                            ) : (
+                              <span className="text-muted-foreground/20 text-xs">—</span>
+                            )}
                           </TableCell>
                         );
                       })
                     )}
-                    <TableCell className="text-right">
+                    <TableCell className="text-right sticky right-0 bg-background z-10">
                       <Button
                         size="sm"
                         disabled={!hasChanges(role.id) || role.is_system || savePermissions.isPending}

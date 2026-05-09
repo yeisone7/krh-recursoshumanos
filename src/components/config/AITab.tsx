@@ -101,7 +101,12 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
       id: 'openai',
       name: 'OpenAI',
       icon: <Bot className="h-6 w-6 text-foreground/70" />,
-      models: ['GPT-4o Mini', 'GPT-4o', 'GPT-4 Turbo', 'GPT-3.5 Turbo'],
+      models: [
+        'GPT-4o Mini — Rápido y económico', 
+        'GPT-4o — Mayor capacidad de análisis', 
+        'GPT-4 Turbo — Contexto extendido', 
+        'GPT-3.5 Turbo — Más económico'
+      ],
       suggested: 'GPT-4o Mini — Rápido y económico',
       docs: 'https://platform.openai.com/api-keys',
       description: 'Alta precisión y razonamiento avanzado para contenido detallado.',
@@ -111,7 +116,11 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
       id: 'anthropic',
       name: 'Anthropic (Claude)',
       icon: <Brain className="h-6 w-6 text-foreground/70" />,
-      models: ['Claude Sonnet 4', 'Claude 3.5 Haiku', 'Claude Opus 4'],
+      models: [
+        'Claude Sonnet 4 — Equilibrio ideal', 
+        'Claude 3.5 Haiku — Ultra rápido', 
+        'Claude Opus 4 — Máxima inteligencia'
+      ],
       suggested: 'Claude Sonnet 4 — Equilibrio ideal',
       docs: 'https://console.anthropic.com/settings/keys',
       description: 'Líder en seguridad y redacción natural.',
@@ -121,7 +130,11 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
       id: 'gemini',
       name: 'Google (Gemini)',
       icon: <Sparkles className="h-6 w-6 text-primary" />,
-      models: ['Gemini 2.0 Flash', 'Gemini 2.5 Pro', 'Gemini 2.0 Flash Lite'],
+      models: [
+        'Gemini 2.0 Flash — Rápido y versátil', 
+        'Gemini 2.5 Pro — Máxima capacidad', 
+        'Gemini 2.0 Flash Lite — Ultra económico'
+      ],
       suggested: 'Gemini 2.0 Flash — Rápido y versátil',
       docs: 'https://aistudio.google.com/app/apikey',
       description: 'Rápido y eficiente con ventana de contexto masiva.',
@@ -131,7 +144,10 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
       id: 'heygen',
       name: 'HeyGen (Avatar)',
       icon: <Video className="h-6 w-6 text-foreground/70" />,
-      models: ['Avatar Video API', 'Streaming Avatar'],
+      models: [
+        'Avatar Video API — Generación asíncrona', 
+        'Streaming Avatar — Interacción real'
+      ],
       suggested: 'Avatar Video API — Generación asíncrona',
       docs: 'https://app.heygen.com/settings/api',
       description: 'Genera videos con un avatar virtual que presenta las capacitaciones.',
@@ -148,15 +164,15 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       {/* Header section */}
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between px-1">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-black tracking-tighter text-foreground sm:text-4xl">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-1">
+        <div className="space-y-0.5">
+          <h2 className="text-2xl font-black tracking-tighter text-foreground sm:text-3xl">
             IA <span className="text-primary">&</span> Automatización
           </h2>
-          <p className="text-muted-foreground text-sm max-w-xl font-medium">
-            Configura el motor inteligente que impulsa el análisis de datos, el asistente virtual y la generación automática de capacitaciones.
+          <p className="text-muted-foreground text-xs max-w-xl font-medium">
+            Configura el motor inteligente que impulsa el análisis de datos y la generación de capacitaciones.
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
@@ -166,41 +182,41 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
           }
         }}>
           <DialogTrigger asChild>
-            <Button className="rounded-2xl shadow-xl shadow-primary/25 transition-all hover:scale-105 active:scale-95 gap-2 px-8 py-6 h-auto font-bold text-base">
-              <Plus className="h-5 w-5" /> Agregar Proveedor
+            <Button className="rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-2 px-6 py-4 h-auto font-bold text-sm">
+              <Plus className="h-4 w-4" /> Agregar Proveedor
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] rounded-[2.5rem] border-border bg-card/95 backdrop-blur-xl shadow-2xl p-0 overflow-hidden">
-            <div className="p-8 pt-10">
-              <DialogHeader className="mb-8">
-                <DialogTitle className="text-2xl font-black tracking-tight">Configurar Motor IA</DialogTitle>
-                <DialogDescription className="text-base font-medium">
-                  Selecciona y activa un proveedor para las capacidades inteligentes del sistema.
+          <DialogContent className="sm:max-w-[450px] rounded-[2rem] border-border bg-card/95 backdrop-blur-xl shadow-2xl p-0 overflow-hidden">
+            <div className="p-6 pt-8">
+              <DialogHeader className="mb-6">
+                <DialogTitle className="text-xl font-black tracking-tight">Configurar Motor IA</DialogTitle>
+                <DialogDescription className="text-sm font-medium">
+                  Selecciona y activa un proveedor para el sistema.
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="grid gap-8">
-                <div className="grid gap-3">
-                  <Label htmlFor="provider" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Seleccionar Proveedor</Label>
-                  <div className="grid grid-cols-4 gap-3">
+              <div className="grid gap-6">
+                <div className="grid gap-2.5">
+                  <Label htmlFor="provider" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Proveedor</Label>
+                  <div className="grid grid-cols-4 gap-2">
                     {providers.map((p) => (
                       <button
                         key={p.id}
                         onClick={() => setAiConfig({ ...aiConfig, model: p.id })}
                         className={cn(
-                          "flex flex-col items-center gap-2.5 p-4 rounded-2xl border-2 transition-all relative group",
+                          "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all relative group",
                           aiConfig.model === p.id 
                             ? "border-primary bg-primary/5 shadow-inner" 
-                            : "border-muted bg-muted/20 hover:border-border hover:bg-muted/40"
+                            : "border-muted bg-muted/10 hover:border-border hover:bg-muted/20"
                         )}
                       >
                         <div className={cn(
-                          "p-2 rounded-xl transition-all duration-300",
+                          "p-1.5 rounded-lg transition-all duration-300",
                           aiConfig.model === p.id ? "bg-primary/20 scale-110" : "bg-muted group-hover:scale-110"
                         )}>
                           {p.icon}
                         </div>
-                        <span className="text-[10px] font-black text-center uppercase tracking-tight leading-none truncate w-full">
+                        <span className="text-[9px] font-black text-center uppercase tracking-tight leading-none truncate w-full">
                           {p.name.split(' ')[0]}
                         </span>
                         {aiConfig.model === p.id && (
@@ -214,8 +230,8 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
                   </div>
                 </div>
 
-                <div className="grid gap-3">
-                  <Label htmlFor="apiKey" className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">API Key del Servicio</Label>
+                <div className="grid gap-2.5">
+                  <Label htmlFor="apiKey" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">API Key</Label>
                   <div className="relative group">
                     <Input
                       id="apiKey"
@@ -234,64 +250,56 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
                         setAiConfig({ ...aiConfig, [key]: e.target.value });
                       }}
                       placeholder={`sk-... (Key de ${currentProviderData.name})`}
-                      className="h-14 px-5 rounded-2xl bg-muted/40 border-border focus:ring-2 focus:ring-primary/20 transition-all font-mono"
+                      className="h-11 px-4 rounded-xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all font-mono text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowKeys({ ...showKeys, [aiConfig.model]: !showKeys[aiConfig.model as keyof typeof showKeys] })}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted transition-colors"
                     >
-                      {showKeys[aiConfig.model as keyof typeof showKeys] ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showKeys[aiConfig.model as keyof typeof showKeys] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
-                  </div>
-                  <div className="flex items-center gap-2 ml-1">
-                    <Shield className="h-3.5 w-3.5 text-primary/60" />
-                    <p className="text-[11px] text-muted-foreground font-medium italic">
-                      Cifrado de extremo a extremo con seguridad AES-256.
-                    </p>
                   </div>
                 </div>
 
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div className="grid gap-3">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-2">
                     <div className="flex items-center justify-between ml-1">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tokens Máximos</Label>
-                      <Badge variant="outline" className="font-mono text-[10px] rounded-md">{aiConfig.tokens}</Badge>
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tokens</Label>
+                      <Badge variant="outline" className="font-mono text-[9px] rounded-md px-1.5 h-4">{aiConfig.tokens}</Badge>
                     </div>
                     <Slider
                       value={[aiConfig.tokens]}
                       onValueChange={(v) => setAiConfig({ ...aiConfig, tokens: v[0] })}
                       max={4096}
                       step={128}
-                      className="py-2"
                     />
                   </div>
-                  <div className="grid gap-3">
+                  <div className="grid gap-2">
                     <div className="flex items-center justify-between ml-1">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Creatividad</Label>
-                      <Badge variant="outline" className="font-mono text-[10px] rounded-md">{aiConfig.temperature}</Badge>
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Creatividad</Label>
+                      <Badge variant="outline" className="font-mono text-[9px] rounded-md px-1.5 h-4">{aiConfig.temperature}</Badge>
                     </div>
                     <Slider
                       value={[aiConfig.temperature]}
                       onValueChange={(v) => setAiConfig({ ...aiConfig, temperature: v[0] })}
                       max={1}
                       step={0.1}
-                      className="py-2"
                     />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="p-8 pt-0 mt-4">
+            <div className="p-6 pt-0 mt-2">
               <Button 
                 onClick={() => handleSave()} 
                 disabled={saving}
-                className="w-full rounded-2xl h-14 font-black text-base shadow-lg shadow-primary/20"
+                className="w-full rounded-xl h-12 font-black text-sm"
               >
                 {saving ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Sincronizando...
                   </>
                 ) : (
@@ -305,52 +313,50 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
 
       {/* Main Highlight Banner */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
+        initial={{ opacity: 0, scale: 0.99 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
+        transition={{ duration: 0.4 }}
       >
-        <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-card via-card to-primary/5 shadow-2xl shadow-black/5 dark:shadow-none rounded-[2rem] relative group border-2">
+        <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl rounded-[1.5rem] relative group border-2">
           {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 blur-[120px] rounded-full -mr-64 -mt-64 pointer-events-none opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/5 blur-[80px] rounded-full -ml-32 -mb-32 pointer-events-none opacity-30" />
+          <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 blur-[100px] rounded-full -mr-40 -mt-40 pointer-events-none opacity-40" />
           
-          <CardContent className="p-8 sm:p-12 flex flex-col md:flex-row items-center gap-12 relative z-10">
+          <CardContent className="p-5 sm:p-6 flex flex-col md:flex-row items-center gap-6 relative z-10">
             <div className="relative">
-              <div className="h-28 w-28 sm:h-36 sm:w-36 rounded-[2.5rem] bg-background/50 backdrop-blur-md shadow-2xl flex items-center justify-center border border-primary/20 relative z-10 overflow-hidden group-hover:rotate-3 transition-transform duration-500">
+              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-background/50 backdrop-blur-md shadow-xl flex items-center justify-center border border-primary/20 relative z-10 overflow-hidden transition-transform duration-500 group-hover:scale-105">
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent opacity-50" />
                 {currentProviderData.icon && (
-                  <div className="scale-[1.8] sm:scale-[2.2] transition-transform duration-500 group-hover:scale-[2] sm:group-hover:scale-[2.4]">
+                  <div className="scale-[1.5] transition-transform duration-500">
                     {currentProviderData.icon}
                   </div>
                 )}
               </div>
-              <div className="absolute -bottom-2 -right-2 h-10 w-10 rounded-2xl bg-primary shadow-xl flex items-center justify-center z-20 border-4 border-card">
-                <CheckCircle2 className="h-5 w-5 text-primary-foreground" />
+              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-lg bg-primary shadow-lg flex items-center justify-center z-20 border-2 border-card">
+                <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />
               </div>
-              <div className="absolute inset-0 rounded-[2.5rem] bg-primary/20 blur-xl scale-75 opacity-50 animate-pulse" />
             </div>
 
-            <div className="flex-1 text-center md:text-left space-y-5">
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-                <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 px-4 py-1.5 rounded-full text-xs font-black gap-2 uppercase tracking-widest">
-                  <div className="h-2 w-2 rounded-full bg-primary animate-ping" />
+            <div className="flex-1 text-center md:text-left space-y-3">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+                <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 px-3 py-0.5 rounded-full text-[10px] font-black gap-1.5 uppercase tracking-wider">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                   Sincronizado
                 </Badge>
                 <div className="h-1 w-1 rounded-full bg-muted-foreground/30 hidden sm:block" />
-                <span className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.2em] opacity-70">Cerebro de la Plataforma</span>
+                <span className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.15em] opacity-70">Cerebro de la Plataforma</span>
               </div>
               
-              <div className="space-y-1">
-                <h3 className="text-4xl sm:text-5xl font-black text-foreground tracking-tighter">
+              <div className="space-y-0.5">
+                <h3 className="text-3xl font-black text-foreground tracking-tight">
                   {currentProviderData.name}
                 </h3>
-                <p className="text-lg text-muted-foreground font-medium max-w-lg leading-relaxed">
+                <p className="text-sm text-muted-foreground font-medium max-w-lg leading-snug">
                   {currentProviderData.description}
                 </p>
               </div>
               
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-6">
-                <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-2xl border border-border/50">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                <div className="flex items-center gap-2.5 bg-muted/40 px-3 py-1.5 rounded-xl border border-border/50">
                   <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Database className="h-4 w-4 text-primary" />
                   </div>
@@ -363,15 +369,15 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter leading-none mb-1">Tokens</span>
-                    <span className="text-xl font-black text-primary font-mono">{aiConfig.tokens}</span>
+                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter leading-none mb-0.5">Tokens</span>
+                    <span className="text-base font-black text-primary font-mono leading-none">{aiConfig.tokens}</span>
                   </div>
-                  <div className="w-px h-8 bg-border" />
+                  <div className="w-px h-6 bg-border" />
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter leading-none mb-1">Temperatura</span>
-                    <span className="text-xl font-black text-primary font-mono">{aiConfig.temperature}</span>
+                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter leading-none mb-0.5">Temp</span>
+                    <span className="text-base font-black text-primary font-mono leading-none">{aiConfig.temperature}</span>
                   </div>
                 </div>
               </div>
@@ -380,9 +386,9 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
             <Button 
               variant="outline" 
               onClick={() => setIsDialogOpen(true)}
-              className="h-auto rounded-3xl border-border bg-background shadow-lg px-10 py-6 hover:bg-muted/50 hover:border-primary/30 transition-all gap-3 font-black text-base group/btn"
+              className="h-auto rounded-2xl border-border bg-background shadow-md px-6 py-3 hover:bg-muted/50 transition-all gap-2 font-black text-xs group/btn"
             >
-              <Settings2 className="h-5 w-5 transition-transform group-hover/btn:rotate-90 duration-500" /> 
+              <Settings2 className="h-4 w-4 transition-transform group-hover/btn:rotate-45" /> 
               Personalizar
             </Button>
           </CardContent>
@@ -390,16 +396,15 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
       </motion.div>
 
       {/* Configured Providers Section */}
-      <div className="space-y-6 pt-2">
+      <div className="space-y-4 pt-1">
         <div className="flex items-center justify-between px-2">
-          <h4 className="text-xs font-black uppercase tracking-[0.25em] text-muted-foreground/80 flex items-center gap-3">
-            <div className="h-1 w-8 bg-primary rounded-full" />
+          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2.5">
+            <div className="h-0.5 w-6 bg-primary rounded-full" />
             Ecosistema de Motores
           </h4>
-          <span className="text-[10px] font-bold text-muted-foreground italic">Proveedores listos para usar</span>
         </div>
         
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {providers.map((p, idx) => {
             const hasKey = p.id === 'openai' ? aiConfig.openai_api_key :
                           p.id === 'gemini' ? aiConfig.gemini_api_key :
@@ -411,81 +416,80 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
             return (
               <motion.div
                 key={p.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.2 + (idx * 0.1) }}
+                transition={{ duration: 0.3, delay: 0.1 + (idx * 0.05) }}
               >
                 <Card className={cn(
-                  "border-border/60 bg-card/40 hover:bg-card transition-all rounded-[1.75rem] overflow-hidden group border-2 h-full flex flex-col",
-                  isActive ? "border-primary/40 ring-4 ring-primary/5" : "hover:border-primary/20"
+                  "border-border/60 bg-card/40 hover:bg-card transition-all rounded-2xl overflow-hidden group border-2 h-full flex flex-col",
+                  isActive ? "border-primary/40 ring-2 ring-primary/5" : "hover:border-primary/20"
                 )}>
-                  <CardContent className="p-6 flex flex-col h-full space-y-5">
+                  <CardContent className="p-4 flex flex-col h-full space-y-3">
                     <div className="flex items-center justify-between">
                       <div className={cn(
-                        "h-14 w-14 rounded-2xl flex items-center justify-center border transition-all duration-500 group-hover:scale-110",
-                        isActive ? "bg-primary/15 border-primary/20" : "bg-muted/50 border-border/50"
+                        "h-10 w-10 rounded-xl flex items-center justify-center border transition-all",
+                        isActive ? "bg-primary/10 border-primary/20" : "bg-muted/30 border-border/50"
                       )}>
-                        <div className={cn("scale-125", isActive ? "text-primary" : "text-muted-foreground")}>
+                        <div className={cn("scale-110", isActive ? "text-primary" : "text-muted-foreground")}>
                           {p.icon}
                         </div>
                       </div>
                       
                       {isActive ? (
-                        <Badge className="bg-primary text-primary-foreground border-none rounded-full px-3 py-1 text-[9px] font-black uppercase">
+                        <Badge className="bg-primary text-primary-foreground border-none rounded-full px-2 py-0.5 text-[8px] font-black uppercase">
                           Activo
                         </Badge>
                       ) : hasKey ? (
-                        <Badge variant="outline" className="text-muted-foreground border-muted-foreground/20 rounded-full px-3 py-1 text-[9px] font-black uppercase">
-                          Configurado
+                        <Badge variant="outline" className="text-muted-foreground border-muted-foreground/20 rounded-full px-2 py-0.5 text-[8px] font-black uppercase">
+                          OK
                         </Badge>
                       ) : null}
                     </div>
 
-                    <div className="space-y-1.5 flex-1">
-                      <h5 className="font-black text-foreground text-lg tracking-tight group-hover:text-primary transition-colors">{p.name}</h5>
-                      <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-2">
-                        {p.description}
-                      </p>
-                    </div>
-
-                    <div className="pt-2 flex flex-col gap-3">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">Top Model</p>
-                        <p className="text-xs font-bold text-foreground truncate">{p.models[0]}</p>
+                    <div className="space-y-2 flex-1">
+                      <div className="space-y-0.5">
+                        <h5 className="font-black text-foreground text-sm tracking-tight">{p.name}</h5>
+                        <p className="text-[10px] text-muted-foreground font-medium leading-tight line-clamp-1">
+                          {p.description}
+                        </p>
                       </div>
                       
-                      <div className="flex items-center justify-between pt-2">
+                      {/* Detailed models list restored */}
+                      <div className="space-y-1.5 py-1">
+                        {p.models.map((model, mIdx) => (
+                          <div key={mIdx} className="flex items-start gap-1.5 group/model">
+                            <div className="h-1 w-1 rounded-full bg-primary/40 mt-1.5 shrink-0 group-hover/model:bg-primary" />
+                            <span className="text-[10px] font-medium text-muted-foreground group-hover/model:text-foreground transition-colors leading-tight">
+                              {model}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-1 flex flex-col gap-2 mt-auto">
+                      <div className="flex items-center justify-between border-t border-border/40 pt-2">
                         <a
                           href={p.docs}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center text-[11px] font-black text-primary hover:gap-3 gap-2 transition-all"
+                          className="text-[9px] font-black text-primary hover:underline flex items-center gap-1"
                         >
-                          DOCS <ArrowRight className="h-3.5 w-3.5" />
+                          DOCS <ExternalLink className="h-2 w-2" />
                         </a>
-                        
                         <div className="flex gap-1">
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-8 w-8 rounded-xl hover:bg-primary/10 hover:text-primary"
+                            className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
                             onClick={() => {
                               setEditingProvider(p.id);
                               setAiConfig({ ...aiConfig, model: p.id });
                               setIsDialogOpen(true);
                             }}
                           >
-                            <Pencil className="h-3.5 w-3.5" />
+                            <Pencil className="h-3 w-3" />
                           </Button>
-                          {hasKey && (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 rounded-xl hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -498,29 +502,23 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
       </div>
 
       {/* Security & Info Grid */}
-      <div className="grid gap-6 md:grid-cols-2 pt-4">
-        <Alert className="bg-primary/5 border-primary/20 rounded-[2rem] p-8 flex items-start group hover:bg-primary/[0.07] transition-all duration-500">
-          <div className="bg-primary shadow-xl shadow-primary/20 p-4 rounded-[1.25rem] mr-6 group-hover:scale-110 transition-transform">
-            <Shield className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div className="space-y-2">
-            <AlertTitle className="text-foreground font-black text-xl tracking-tight">Privacidad Corporativa</AlertTitle>
-            <AlertDescription className="text-muted-foreground text-sm leading-relaxed font-medium">
-              Tus credenciales se almacenan bajo el estándar <span className="text-foreground font-bold underline decoration-primary/40">FIPS 140-2</span>. 
-              Los datos procesados por la IA en este entorno están aislados y no se utilizan para entrenar modelos públicos externos.
+      <div className="grid gap-4 md:grid-cols-2 pt-2">
+        <Alert className="bg-primary/5 border-primary/10 rounded-2xl p-4 flex items-start group hover:bg-primary/[0.07] transition-all">
+          <Shield className="h-5 w-5 text-primary mt-0.5 mr-3 shrink-0" />
+          <div className="space-y-0.5">
+            <AlertTitle className="text-foreground font-black text-sm tracking-tight">Privacidad Corporativa</AlertTitle>
+            <AlertDescription className="text-muted-foreground text-[11px] leading-snug font-medium">
+              Credenciales cifradas con AES-256. Los datos procesados están aislados y no entrenan modelos públicos.
             </AlertDescription>
           </div>
         </Alert>
 
-        <Alert className="bg-muted/30 border-border/60 rounded-[2rem] p-8 flex items-start group hover:bg-muted/40 transition-all duration-500">
-          <div className="bg-card shadow-lg p-4 rounded-[1.25rem] mr-6 border border-border group-hover:scale-110 transition-transform">
-            <Cpu className="h-6 w-6 text-foreground" />
-          </div>
-          <div className="space-y-2">
-            <AlertTitle className="text-foreground font-black text-xl tracking-tight">Capacidad de Cómputo</AlertTitle>
-            <AlertDescription className="text-muted-foreground text-sm leading-relaxed font-medium">
-              El sistema utiliza auto-scaling para garantizar tiempos de respuesta menores a 2 segundos en generación de contenido.
-              <span className="block mt-2 text-xs font-bold text-primary uppercase tracking-widest">SLA Actual: 99.9% Disponibilidad</span>
+        <Alert className="bg-muted/20 border-border/40 rounded-2xl p-4 flex items-start group hover:bg-muted/30 transition-all">
+          <Cpu className="h-5 w-5 text-foreground mt-0.5 mr-3 shrink-0" />
+          <div className="space-y-0.5">
+            <AlertTitle className="text-foreground font-black text-sm tracking-tight">Cómputo & SLA</AlertTitle>
+            <AlertDescription className="text-muted-foreground text-[11px] leading-snug font-medium">
+              Auto-scaling activo. Respuesta menor a 2s. SLA del 99.9% de disponibilidad garantizada.
             </AlertDescription>
           </div>
         </Alert>

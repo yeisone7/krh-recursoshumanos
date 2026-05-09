@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Save, ChevronDown, ChevronRight, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Save, ChevronDown, ChevronRight, CheckSquare, Shield, FileDown } from 'lucide-react';
 import {
   useModules, usePermissionsCatalog, useRolePermissions, useSetRolePermissions,
   CustomRole, Module, Permission,
 } from '@/hooks/useRolesPermissions';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface PermissionMatrixProps {
   role: CustomRole;
@@ -21,9 +22,20 @@ const ACTION_LABELS: Record<string, string> = {
   create: 'Crear',
   update: 'Modificar',
   delete: 'Eliminar',
+  approve: 'Aprobar',
+  export: 'Exportar',
 };
 
-const ACTION_ORDER = ['view', 'create', 'update', 'delete'];
+const ACTION_ORDER = ['view', 'create', 'update', 'delete', 'approve', 'export'];
+
+const ACTION_COLORS: Record<string, string> = {
+  view: 'text-blue-500',
+  create: 'text-green-500',
+  update: 'text-amber-500',
+  delete: 'text-red-500',
+  approve: 'text-violet-500',
+  export: 'text-cyan-500',
+};
 
 export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
   const { data: modules = [] } = useModules();
@@ -60,6 +72,13 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
     () => modules.filter(m => !m.parent_id).sort((a, b) => a.sort_order - b.sort_order),
     [modules]
   );
+
+  // Determine which actions exist for a given module (not all modules have approve/export)
+  const getModuleActions = (moduleId: string): string[] => {
+    const perms = permsByModule[moduleId] || [];
+    const existingActions = new Set(perms.map(p => p.action));
+    return ACTION_ORDER.filter(a => existingActions.has(a));
+  };
 
   const getPermissionId = (moduleId: string, action: string): string | undefined => {
     return permsByModule[moduleId]?.find(p => p.action === action)?.id;
@@ -136,6 +155,10 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
   const totalPerms = permissionsCatalog.length;
   const selectedCount = selectedIds.size;
 
+  // Count of approve and export permissions selected
+  const approveCount = permissionsCatalog.filter(p => p.action === 'approve' && selectedIds.has(p.id)).length;
+  const exportCount = permissionsCatalog.filter(p => p.action === 'export' && selectedIds.has(p.id)).length;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -145,10 +168,26 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
           </Button>
           <div className="min-w-0">
             <h3 className="text-base sm:text-lg font-semibold break-words">Permisos: {role.name}</h3>
-            <p className="text-sm text-muted-foreground">
-              {selectedCount} de {totalPerms} permisos seleccionados
-              {role.is_system && ' (rol de sistema — todos los permisos)'}
-            </p>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <span className="text-sm text-muted-foreground">
+                {selectedCount} de {totalPerms} permisos
+              </span>
+              {role.is_system && (
+                <Badge variant="secondary">rol de sistema — todos los permisos</Badge>
+              )}
+              {!role.is_system && approveCount > 0 && (
+                <Badge variant="outline" className="text-violet-600 border-violet-300 bg-violet-50 dark:bg-violet-950/30">
+                  <Shield className="w-3 h-3 mr-1" />
+                  {approveCount} aprobaciones
+                </Badge>
+              )}
+              {!role.is_system && exportCount > 0 && (
+                <Badge variant="outline" className="text-cyan-600 border-cyan-300 bg-cyan-50 dark:bg-cyan-950/30">
+                  <FileDown className="w-3 h-3 mr-1" />
+                  {exportCount} exportaciones
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
@@ -177,11 +216,25 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
       <Card>
         <CardContent className="p-0 overflow-x-auto">
           {/* Header row */}
-          <div className="grid min-w-[620px] grid-cols-[minmax(180px,1fr)_repeat(5,72px)] sm:grid-cols-[1fr_repeat(5,80px)] items-center border-b bg-muted/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center border-b bg-muted/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <span>Módulo</span>
             <span className="text-center">Todos</span>
             {ACTION_ORDER.map(a => (
-              <span key={a} className="text-center">{ACTION_LABELS[a]}</span>
+              <Tooltip key={a}>
+                <TooltipTrigger asChild>
+                  <span className={`text-center cursor-help ${ACTION_COLORS[a]}`}>
+                    {ACTION_LABELS[a]}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {a === 'approve' && 'Permite aprobar solicitudes y flujos de trabajo'}
+                  {a === 'export' && 'Permite descargar y exportar datos del módulo'}
+                  {a === 'view' && 'Permite ver y consultar información'}
+                  {a === 'create' && 'Permite crear nuevos registros'}
+                  {a === 'update' && 'Permite modificar registros existentes'}
+                  {a === 'delete' && 'Permite eliminar registros'}
+                </TooltipContent>
+              </Tooltip>
             ))}
           </div>
 
@@ -191,11 +244,12 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
               const children = modules.filter(m => m.parent_id === mod.id);
               const hasChildren = children.length > 0;
               const isExpanded = expandedModules.has(mod.id);
+              const moduleActions = getModuleActions(mod.id);
 
               return (
                 <div key={mod.id}>
                   {/* Module row */}
-                  <div className="grid min-w-[620px] grid-cols-[minmax(180px,1fr)_repeat(5,72px)] sm:grid-cols-[1fr_repeat(5,80px)] items-center px-4 py-2.5 hover:bg-muted/20 transition-colors">
+                  <div className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center px-4 py-2.5 hover:bg-muted/20 transition-colors">
                     <div className="flex items-center gap-2">
                       {hasChildren ? (
                         <button onClick={() => toggleExpanded(mod.id)} className="p-0.5">
@@ -217,46 +271,59 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
                     </div>
                     {ACTION_ORDER.map(action => {
                       const permId = getPermissionId(mod.id, action);
+                      const hasAction = moduleActions.includes(action);
                       return (
                         <div key={action} className="flex justify-center">
-                          <Checkbox
-                            checked={role.is_system ? true : isChecked(permId)}
-                            onCheckedChange={() => togglePermission(permId)}
-                            disabled={role.is_system || !permId}
-                          />
+                          {hasAction ? (
+                            <Checkbox
+                              checked={role.is_system ? true : isChecked(permId)}
+                              onCheckedChange={() => togglePermission(permId)}
+                              disabled={role.is_system || !permId}
+                            />
+                          ) : (
+                            <span className="w-4 h-4 text-muted-foreground/20">—</span>
+                          )}
                         </div>
                       );
                     })}
                   </div>
 
                   {/* Children */}
-                  {hasChildren && isExpanded && children.map(child => (
-                    <div
-                      key={child.id}
-                      className="grid min-w-[620px] grid-cols-[minmax(180px,1fr)_repeat(5,72px)] sm:grid-cols-[1fr_repeat(5,80px)] items-center px-4 py-2 pl-12 bg-muted/10 hover:bg-muted/20 transition-colors"
-                    >
-                      <span className="text-sm text-muted-foreground">{child.name}</span>
-                      <div className="flex justify-center">
-                        <Checkbox
-                          checked={isModuleAllChecked(child.id)}
-                          onCheckedChange={() => toggleModuleAll(child.id)}
-                          disabled={role.is_system}
-                        />
+                  {hasChildren && isExpanded && children.map(child => {
+                    const childActions = getModuleActions(child.id);
+                    return (
+                      <div
+                        key={child.id}
+                        className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center px-4 py-2 pl-12 bg-muted/10 hover:bg-muted/20 transition-colors"
+                      >
+                        <span className="text-sm text-muted-foreground">{child.name}</span>
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={isModuleAllChecked(child.id)}
+                            onCheckedChange={() => toggleModuleAll(child.id)}
+                            disabled={role.is_system}
+                          />
+                        </div>
+                        {ACTION_ORDER.map(action => {
+                          const permId = getPermissionId(child.id, action);
+                          const hasAction = childActions.includes(action);
+                          return (
+                            <div key={action} className="flex justify-center">
+                              {hasAction ? (
+                                <Checkbox
+                                  checked={role.is_system ? true : isChecked(permId)}
+                                  onCheckedChange={() => togglePermission(permId)}
+                                  disabled={role.is_system || !permId}
+                                />
+                              ) : (
+                                <span className="w-4 h-4 text-muted-foreground/20">—</span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                      {ACTION_ORDER.map(action => {
-                        const permId = getPermissionId(child.id, action);
-                        return (
-                          <div key={action} className="flex justify-center">
-                            <Checkbox
-                              checked={role.is_system ? true : isChecked(permId)}
-                              onCheckedChange={() => togglePermission(permId)}
-                              disabled={role.is_system || !permId}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               );
             })}

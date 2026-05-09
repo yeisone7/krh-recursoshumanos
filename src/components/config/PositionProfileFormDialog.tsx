@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronDown, Plus, Trash2, Briefcase, GraduationCap, ListChecks, Shield, HardHat, Stamp, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreatePositionProfile, useUpdatePositionProfile, usePositionProfiles } from '@/hooks/usePositionProfiles';
+import { useEducationLevels } from '@/hooks/useEducationLevels';
 import type { PositionProfileFormData, SpecificKnowledge, Skill } from '@/types/positionProfile';
 
 type DialogMode = 'create' | 'new_version' | 'edit';
@@ -143,6 +144,8 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
 
   const isPending = createProfile.isPending || updateProfile.isPending;
 
+  const { data: educationLevels = [] } = useEducationLevels();
+
   const titleText = isEditing
     ? `Editar Perfil v${existingData?.version || ''}`
     : existingData
@@ -237,8 +240,8 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <Select value={form.education_level} onValueChange={v => updateField('education_level', v)}>
                       <SelectTrigger className="mt-1.5"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                       <SelectContent>
-                        {['Bachiller', 'Técnico', 'Tecnólogo', 'Profesional', 'Especialización', 'Maestría', 'Doctorado'].map(l => (
-                          <SelectItem key={l} value={l}>{l}</SelectItem>
+                        {educationLevels.map(l => (
+                          <SelectItem key={l.id} value={l.name}>{l.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

@@ -49,6 +49,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -482,6 +483,8 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl flex-col gap-0 overflow-hidden p-0 sm:w-[calc(100vw-2rem)] [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 [&>button]:text-foreground [&>button]:hover:text-foreground/80 sm:[&>button]:right-4 sm:[&>button]:top-4">
+        <DialogTitle className="sr-only">Detalles del Empleado</DialogTitle>
+        <DialogDescription className="sr-only">Vista detallada de la información del empleado {employeeFullName}</DialogDescription>
         <div className="flex-1 min-h-0 overflow-y-auto scrollbar-themed">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -618,7 +621,12 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   <MetricChip icon={Cake} label="Edad" value={computeAge(employee.birth_date)} color="success" />
                 )}
                 {employee.document_number && (
-                  <MetricChip icon={Hash} label={documentTypeLabels[employee.document_type]} value={employee.document_number} color="purple" />
+                  <MetricChip 
+                    icon={Hash} 
+                    label={employee.identification_types?.name || employee.document_type || 'Documento'} 
+                    value={employee.document_number} 
+                    color="purple" 
+                  />
                 )}
                 {employee.blood_type && (
                   <MetricChip icon={Droplets} label="Tipo Sangre" value={employee.blood_type} color="destructive" />
@@ -670,7 +678,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <SectionCard title="Documento de Identidad" icon={FileText}>
                       <div className="divide-y divide-border">
-                        <InfoItem label="Tipo de Documento" value={documentTypeLabels[employee.document_type] || employee.document_type} />
+                        <InfoItem label="Tipo de Documento" value={employee.identification_types?.name || employee.document_type || 'No especificado'} />
                         <InfoItem label="Número" value={employee.document_number} />
                         <InfoItem label="Expedido en" value={employee.document_issue_city} />
                         {employee.document_issue_date && (
@@ -700,6 +708,8 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                         )}
                         {employee.blood_type && <InfoItem label="Tipo de Sangre" value={employee.blood_type} />}
                         {employee.marital_status && <InfoItem label="Estado Civil" value={maritalStatusLabels[employee.marital_status]} />}
+                        <InfoItem label="Niveles Educativos" value={employee.education_levels?.map(el => el.name).join(', ') || 'No especificado'} />
+                        {employee.profession_id && <InfoItem label="Profesión" value={(employee as any).professions?.name || 'Cargando...'} />}
                       </div>
                     </SectionCard>
 

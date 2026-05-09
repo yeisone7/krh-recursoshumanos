@@ -7,11 +7,13 @@ import {
   Info,
   History,
   ShieldCheck,
+  Bot,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
 import { RolesManager } from '@/components/roles/RolesManager';
 import { QuickRolePermissions } from '@/components/roles/QuickRolePermissions';
+import { AiAccessManager } from '@/components/ai/AiAccessManager';
 
 export default function Seguridad() {
   const { isAdmin, roles } = useAuth();
@@ -84,15 +86,19 @@ export default function Seguridad() {
                 <ShieldCheck className="w-4 h-4" />
                 Permisos rápidos
               </TabsTrigger>
-            <TabsTrigger value="audit" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
-              <History className="w-4 h-4" />
-              Auditoría
-            </TabsTrigger>
-            <TabsTrigger value="info" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
-              <Info className="w-4 h-4" />
-              Información
-            </TabsTrigger>
-          </TabsList>
+              <TabsTrigger value="audit" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+                <History className="w-4 h-4" />
+                Auditoría
+              </TabsTrigger>
+              <TabsTrigger value="ai-access" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+                <Bot className="w-4 h-4" />
+                Acceso IA
+              </TabsTrigger>
+              <TabsTrigger value="info" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+                <Info className="w-4 h-4" />
+                Información
+              </TabsTrigger>
+            </TabsList>
           </div>
 
           <TabsContent value="roles" className="space-y-4">
@@ -105,6 +111,10 @@ export default function Seguridad() {
 
           <TabsContent value="audit" className="space-y-4">
             <AuditLogViewer />
+          </TabsContent>
+
+          <TabsContent value="ai-access" className="space-y-4">
+            <AiAccessManager />
           </TabsContent>
 
           <TabsContent value="info" className="space-y-4">

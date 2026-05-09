@@ -4,3 +4,8 @@ export { DotationItemTypeFormDialog } from './DotationItemTypeFormDialog';
 export { PositionProfileFormDialog } from './PositionProfileFormDialog';
 export { PositionProfileDetailDialog } from './PositionProfileDetailDialog';
 export { ClonePositionProfileDialog } from './ClonePositionProfileDialog';
+export { IdentificationTypeFormDialog } from './IdentificationTypeFormDialog';
+export { NoveltyReasonFormDialog } from './NoveltyReasonFormDialog';
+export { SocialSecurityCatalogFormDialog } from './SocialSecurityCatalogFormDialog';
+export { EducationLevelFormDialog } from './EducationLevelFormDialog';
+export { ProfessionFormDialog } from './ProfessionFormDialog';

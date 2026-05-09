@@ -5,11 +5,16 @@ import { format } from 'date-fns';
 import { 
   Package, Plus, Search, Filter, Eye, 
   AlertTriangle, CheckCircle, Clock, Calendar,
-  Loader2, Warehouse, ClipboardList, ShieldCheck, Settings, FileDown, Users, Trash2
+  Loader2, Warehouse, ClipboardList, ShieldCheck, Settings, FileDown, Users, Trash2,
+  TrendingUp, RotateCw, ChevronRight, User
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -235,6 +240,13 @@ export default function Dotacion() {
 
   const selectedTransaction = transactions?.find(t => t.id === selectedTransactionId) || null;
 
+  const kpis = useMemo(() => ([
+    { label: 'TOTAL ENTREGAS', value: stats.totalTransactions, desc: `${stats.totalItems} artículos entregados`, icon: Package, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'VIGENTES', value: stats.vigentes, desc: 'En tiempo legal', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+    { label: 'POR VENCER', value: stats.porVencer, desc: 'Próximos 30 días', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-500/10' },
+    { label: 'VENCIDAS', value: stats.vencidas, desc: 'Acción requerida', icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10' },
+  ]), [stats]);
+
   if (!currentCompanyId) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] text-center">
@@ -256,449 +268,354 @@ export default function Dotacion() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
-      >
-        <div>
-          <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Gestión de Dotación</h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-            Administra las entregas de dotación, controla vencimientos y genera alertas automáticas
-          </p>
-        </div>
-        {activeTab === 'entregas' && (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:flex">
-            <Button variant="outline" onClick={() => setIsBulkOpen(true)} className="w-full gap-2 md:w-auto">
-              <Users className="w-4 h-4" />
-              Entrega Masiva
-            </Button>
-            <Button onClick={() => setIsFormOpen(true)} className="w-full gap-2 md:w-auto">
-              <Plus className="w-4 h-4" />
-              Nueva Entrega
-            </Button>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="-mx-1 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <TabsList className="inline-flex h-auto min-w-max p-1">
-          <TabsTrigger value="entregas" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
-            <Package className="w-4 h-4" /> Entregas
-          </TabsTrigger>
-          {inventoryEnabled && (
-            <TabsTrigger value="inventario" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
-              <Warehouse className="w-4 h-4" /> Inventario
-              {lowStockCount > 0 && (
-                <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-xs">{lowStockCount}</Badge>
-              )}
-            </TabsTrigger>
-          )}
-          <TabsTrigger value="profesiograma" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
-            <ClipboardList className="w-4 h-4" /> Profesiograma
-          </TabsTrigger>
-          <TabsTrigger value="cumplimiento" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
-            <ShieldCheck className="w-4 h-4" /> Cumplimiento
-          </TabsTrigger>
-          <TabsTrigger value="ajustes" className="h-9 gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
-            <Settings className="w-4 h-4" /> Ajustes
-          </TabsTrigger>
-        </TabsList>
-        </div>
-
-        <TabsContent value="entregas" className="mt-6 space-y-6">
-
-      {/* Stats Cards */}
-      <div className="hidden gap-4 sm:grid sm:grid-cols-2 xl:grid-cols-4">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-primary-light flex items-center justify-center">
-            <Package className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.totalTransactions}</p>
-            <p className="text-sm text-muted-foreground">Entregas ({stats.totalItems} artículos)</p>
-          </div>
-        </motion.div>
+    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+      {/* Premium Header */}
+      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
         
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.15 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-success-light flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-success" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.vigentes}</p>
-            <p className="text-sm text-muted-foreground">Vigentes</p>
-          </div>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-warning-light flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-warning" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.porVencer}</p>
-            <p className="text-sm text-muted-foreground">Por Vencer</p>
-          </div>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.25 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-destructive-light flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-destructive" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.vencidas}</p>
-            <p className="text-sm text-muted-foreground">Vencidas</p>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Alerts Panel */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-          className="lg:col-span-1"
-        >
-          <DotationAlertsCard 
-            alerts={alerts} 
-            onAlertClick={(alert) => handleViewTransaction(alert.deliveryId)}
-          />
-        </motion.div>
-
-        {/* Transactions Table */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.35 }}
-          className="lg:col-span-2"
-        >
-          <div className="card-elevated">
-            {/* Filters */}
-            <div className="p-4 border-b border-border">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar por empleado, artículo..."
-                    className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
-                  />
-                </div>
-                <div className="grid grid-cols-[1fr_auto] gap-3 sm:flex">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-10 w-full text-sm border-border sm:w-[140px]">
-                      <SelectValue placeholder="Estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="vigente">Vigentes</SelectItem>
-                      <SelectItem value="por_vencer">Por Vencer</SelectItem>
-                      <SelectItem value="vencida">Vencidas</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="outline" size="icon" className="h-10 w-10">
-                    <Filter className="w-4 h-4" />
-                  </Button>
-                </div>
+        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+                <Package className="w-6 h-6" />
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                  Control de Dotación
+                </Badge>
+                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Gestión de EPP y Uniformes</h1>
               </div>
             </div>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
+              Administración de entregas, control de inventario y seguimiento de vigencias para cumplimiento de seguridad laboral.
+            </p>
+          </div>
 
-            {/* Table */}
-            {filteredTransactions.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>
-                  {searchQuery || statusFilter !== 'all'
-                    ? 'No se encontraron entregas con los filtros seleccionados'
-                    : 'No hay entregas de dotación registradas'}
-                </p>
-                {!searchQuery && statusFilter === 'all' && (
-                  <Button onClick={() => setIsFormOpen(true)} className="mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
+            {kpis.map((stat, i) => (
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+                <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
+                   <stat.icon className="w-3.5 h-3.5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
+                  <p className={`text-2xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
+                  <p className="text-[9px] font-bold text-muted-foreground/60 leading-none truncate">{stat.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Sticky Bar */}
+      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-primary/5 px-6 sm:px-10 py-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="bg-transparent h-auto p-0 gap-6">
+            {[
+              { value: 'entregas', label: 'Entregas', icon: Package },
+              { value: 'inventario', label: 'Inventario', icon: Warehouse, count: lowStockCount, enabled: inventoryEnabled },
+              { value: 'profesiograma', label: 'Profesiograma', icon: ClipboardList, enabled: true },
+              { value: 'cumplimiento', label: 'Cumplimiento', icon: ShieldCheck, enabled: true },
+              { value: 'ajustes', label: 'Ajustes', icon: Settings, enabled: true },
+            ].filter(t => t.enabled).map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group"
+              >
+                <div className="flex items-center gap-2">
+                  <tab.icon className={cn("w-4 h-4 transition-colors", activeTab === tab.value ? "text-primary" : "text-muted-foreground")} />
+                  <span className={cn("text-xs font-black uppercase tracking-widest transition-colors", activeTab === tab.value ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>
+                    {tab.label}
+                  </span>
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <Badge variant="destructive" className="h-4 px-1 text-[8px] font-black">{tab.count}</Badge>
+                  )}
+                </div>
+                {activeTab === tab.value && (
+                  <motion.div
+                    layoutId="activeTabDot"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"
+                  />
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="p-6 sm:p-10 space-y-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsContent value="entregas" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Entregas Header & Actions */}
+              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-background/40 backdrop-blur-xl p-4 rounded-[2rem] border border-primary/5 shadow-xl">
+                <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
+                  <div className="relative w-full sm:w-80 group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input
+                      placeholder="Buscar por empleado o artículo..."
+                      className="pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <Filter className="w-3.5 h-3.5 text-primary" />
+                        <SelectValue placeholder="Estado" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+                      <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los estados</SelectItem>
+                      <SelectItem value="vigente" className="font-bold text-xs uppercase p-3 text-emerald-600">Vigente</SelectItem>
+                      <SelectItem value="por_vencer" className="font-bold text-xs uppercase p-3 text-amber-600">Por Vencer</SelectItem>
+                      <SelectItem value="vencida" className="font-bold text-xs uppercase p-3 text-destructive">Vencida</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    className="h-12 px-6 rounded-2xl border-primary/10 font-black uppercase tracking-widest text-[11px]"
+                    onClick={() => setIsBulkOpen(true)}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Entrega Masiva
+                  </Button>
+                  <Button
+                    className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20"
+                    onClick={() => setIsFormOpen(true)}
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Nueva Entrega
                   </Button>
-                )}
-              </div>
-            ) : (
-              <>
-              <div className="hidden overflow-x-auto overscroll-x-contain sm:block">
-              <Table className="min-w-[560px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Empleado</TableHead>
-                    <TableHead className="hidden sm:table-cell">Artículos</TableHead>
-                    <TableHead className="hidden md:table-cell">Fecha Entrega</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.map((tx) => {
-                    const hasValidDate = tx.delivery_date && !isNaN(new Date(tx.delivery_date).getTime());
-                    const txStatus = getTransactionStatus(tx);
-                    const sc = statusStyles[txStatus];
-                    const StatusIcon = sc.icon;
-
-                    // Build items summary
-                    const itemsSummary = tx.items.length <= 2
-                      ? tx.items.map(i => i.item_name).join(', ')
-                      : `${tx.items[0].item_name}, ${tx.items[1].item_name} +${tx.items.length - 2} más`;
-
-                    return (
-                      <TableRow key={tx.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">
-                              {tx.employees?.first_name} {tx.employees?.last_name}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {tx.employees?.operation_centers?.name || 'Sin centro'}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <div>
-                            <p className="font-medium text-sm">{itemsSummary}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {tx.items.length} artículo(s)
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                            {hasValidDate ? format(new Date(tx.delivery_date), 'dd/MM/yyyy') : '—'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant="outline" 
-                            className={cn("gap-1", sc.bg, sc.text)}
-                          >
-                            <StatusIcon className="w-3 h-3" />
-                            {sc.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewTransaction(tx.id)}
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              Ver
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleExportPdf(tx)}
-                              title="Exportar acta de entrega"
-                            >
-                              <FileDown className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => setDeleteConfirmId(tx.id)}
-                              title="Eliminar entrega"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              </div>
-              <div className="divide-y divide-border sm:hidden">
-                {filteredTransactions.map((tx) => {
-                  const hasValidDate = tx.delivery_date && !isNaN(new Date(tx.delivery_date).getTime());
-                  const txStatus = getTransactionStatus(tx);
-                  const sc = statusStyles[txStatus];
-                  const StatusIcon = sc.icon;
-                  const itemsSummary = tx.items.length <= 2
-                    ? tx.items.map(i => i.item_name).join(', ')
-                    : `${tx.items[0].item_name}, ${tx.items[1].item_name} +${tx.items.length - 2} más`;
-
-                  return (
-                    <div key={tx.id} className="space-y-3 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-foreground">
-                            {tx.employees?.first_name} {tx.employees?.last_name}
-                          </p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {tx.employees?.operation_centers?.name || 'Sin centro'}
-                          </p>
-                        </div>
-                        <Badge variant="outline" className={cn('shrink-0 gap-1 text-xs', sc.bg, sc.text)}>
-                          <StatusIcon className="w-3 h-3" />
-                          {sc.label}
-                        </Badge>
-                      </div>
-                      <div className="rounded-lg bg-muted/30 p-3 text-xs text-muted-foreground">
-                        <p className="font-medium text-foreground">{itemsSummary}</p>
-                        <p className="mt-1 flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {hasValidDate ? format(new Date(tx.delivery_date), 'dd/MM/yyyy') : '—'} · {tx.items.length} artículo(s)
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <Button variant="outline" size="sm" onClick={() => handleViewTransaction(tx.id)} className="gap-1">
-                          <Eye className="w-4 h-4" /> Ver
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleExportPdf(tx)} title="Exportar acta de entrega">
-                          <FileDown className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteConfirmId(tx.id)} title="Eliminar entrega">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              </>
-            )}
-          </div>
-        </motion.div>
-        </div>
-        </TabsContent>
-
-        {inventoryEnabled && (
-          <TabsContent value="inventario" className="mt-6">
-            <DotationInventoryTab />
-          </TabsContent>
-        )}
-
-        <TabsContent value="profesiograma" className="mt-6">
-          <ProfesiogramaTab
-            centers={operationCenters.map(c => ({ id: c.id, name: c.name }))}
-            positions={(positionsData as any[]).map((p: any) => ({ id: p.id, name: p.name }))}
-          />
-        </TabsContent>
-
-        <TabsContent value="cumplimiento" className="mt-6">
-          <DotationComplianceTab />
-        </TabsContent>
-
-        <TabsContent value="ajustes" className="mt-6">
-          <div className="max-w-2xl space-y-6">
-            <div className="card-elevated p-4 space-y-4 sm:p-6">
-              <div>
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Warehouse className="w-5 h-5 text-primary" />
-                  Módulo de Inventario
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Activa o desactiva el control de inventario de dotación. Si se desactiva, la pestaña de inventario no será visible y no se descontarán existencias al registrar entregas.
-                </p>
-              </div>
-              <div className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-0.5">
-                  <Label className="text-sm font-medium">Habilitar inventario de dotación</Label>
-                  <p className="text-xs text-muted-foreground">Controla existencias por centro, artículo y talla</p>
                 </div>
-                <Switch
-                  checked={inventoryEnabled}
-                  onCheckedChange={async (checked) => {
-                    try {
-                      await updateConfig.mutateAsync({
-                        key: 'dotation_inventory_enabled',
-                        value: { enabled: checked },
-                        description: 'Habilitar/deshabilitar módulo de inventario de dotación',
-                      });
-                      if (!checked && activeTab === 'inventario') {
-                        setActiveTab('entregas');
-                      }
-                    } catch {
-                      // error handled by mutation
-                    }
-                  }}
-                />
               </div>
 
-              {inventoryEnabled && (
-                <>
-                  <div className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-sm font-medium">Descontar inventario automáticamente</Label>
-                      <p className="text-xs text-muted-foreground">Al registrar una entrega, se descuenta automáticamente del stock disponible</p>
-                    </div>
-                    <Switch
-                      checked={systemConfig?.dotation_auto_deduct?.enabled !== false}
-                      onCheckedChange={async (checked) => {
-                        try {
+              {/* Alerts & Table Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-1">
+                  <DotationAlertsCard 
+                    alerts={alerts} 
+                    onAlertClick={(alert) => handleViewTransaction(alert.deliveryId)}
+                  />
+                </div>
+
+                <div className="lg:col-span-2">
+                  <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-2xl bg-background/40 backdrop-blur-xl">
+                    {filteredTransactions.length === 0 ? (
+                      <div className="text-center py-32">
+                         <Package className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
+                         <p className="text-xl font-black uppercase tracking-[0.2em] text-muted-foreground/40">Sin entregas registradas</p>
+                      </div>
+                    ) : (
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/30 border-b border-primary/5 hover:bg-muted/30">
+                            <TableHead className="px-8 h-16 font-black text-[10px] uppercase tracking-[0.2em]">Empleado</TableHead>
+                            <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Artículos</TableHead>
+                            <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
+                            <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
+                            <TableHead className="px-8 h-16 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredTransactions.map((tx) => {
+                            const txStatus = getTransactionStatus(tx);
+                            const sc = statusStyles[txStatus];
+                            const StatusIcon = sc.icon;
+                            const itemsSummary = tx.items.length <= 2
+                              ? tx.items.map(i => i.item_name).join(', ')
+                              : `${tx.items[0].item_name}, ${tx.items[1].item_name} +${tx.items.length - 2}`;
+
+                            return (
+                              <TableRow
+                                key={tx.id}
+                                className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors cursor-pointer"
+                                onClick={() => handleViewTransaction(tx.id)}
+                              >
+                                <TableCell className="px-8 py-5">
+                                  <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
+                                      <User className="w-6 h-6" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="font-black tracking-tight text-foreground text-base leading-none mb-1">
+                                        {tx.employees?.first_name} {tx.employees?.last_name}
+                                      </p>
+                                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">
+                                        {tx.employees?.operation_centers?.name || 'General'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="min-w-0 max-w-[200px]">
+                                    <p className="text-sm font-black tracking-tight text-foreground/80 truncate">{itemsSummary}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground/60">{tx.items.length} {tx.items.length === 1 ? 'artículo' : 'artículos'}</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col">
+                                     <span className="text-[11px] font-bold text-foreground/80">
+                                        {tx.delivery_date ? format(new Date(tx.delivery_date), 'dd MMM yyyy') : '—'}
+                                     </span>
+                                     <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Entrega</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className={cn("h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-primary/10 shadow-sm", sc.bg, sc.text)}>
+                                    <StatusIcon className="mr-1.5 h-3.5 w-3.5" />
+                                    {sc.label}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="px-8 text-right">
+                                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0" onClick={e => e.stopPropagation()}>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-10 w-10 rounded-xl bg-primary/5 hover:bg-primary text-primary hover:text-primary-foreground shadow-sm transition-all"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewTransaction(tx.id);
+                                      }}
+                                    >
+                                      <Eye className="w-5 h-5" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-10 w-10 rounded-xl bg-muted hover:bg-foreground hover:text-background transition-all"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleExportPdf(tx);
+                                      }}
+                                    >
+                                      <FileDown className="w-5 h-5" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-10 w-10 rounded-xl bg-destructive/5 hover:bg-destructive text-destructive hover:text-destructive-foreground transition-all"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeleteConfirmId(tx.id);
+                                      }}
+                                    >
+                                      <Trash2 className="w-5 h-5" />
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="inventario" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <DotationInventoryTab />
+            </TabsContent>
+
+            <TabsContent value="profesiograma" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <ProfesiogramaTab
+                centers={operationCenters.map(c => ({ id: c.id, name: c.name }))}
+                positions={(positionsData as any[]).map((p: any) => ({ id: p.id, name: p.name }))}
+              />
+            </TabsContent>
+
+            <TabsContent value="cumplimiento" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <DotationComplianceTab />
+            </TabsContent>
+
+            <TabsContent value="ajustes" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="max-w-3xl mx-auto py-8">
+                <div className="rounded-[2.5rem] border border-primary/5 shadow-2xl bg-background/40 backdrop-blur-xl p-8 space-y-8">
+                  <div>
+                    <h3 className="text-2xl font-black tracking-tighter flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                        <Settings className="w-6 h-6" />
+                      </div>
+                      Configuración del Módulo
+                    </h3>
+                    <p className="text-sm font-medium text-muted-foreground mt-2 leading-relaxed">
+                      Personalice el comportamiento del sistema de dotación e inventarios para adaptarlo a su operación.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {[
+                      { 
+                        id: 'dotation_inventory_enabled', 
+                        label: 'Habilitar Módulo de Inventario', 
+                        desc: 'Control de existencias por centro, artículo y talla.', 
+                        checked: inventoryEnabled,
+                        onChange: async (checked: boolean) => {
+                          await updateConfig.mutateAsync({
+                            key: 'dotation_inventory_enabled',
+                            value: { enabled: checked },
+                            description: 'Habilitar/deshabilitar módulo de inventario de dotación',
+                          });
+                          if (!checked && activeTab === 'inventario') setActiveTab('entregas');
+                        }
+                      },
+                      {
+                        id: 'dotation_auto_deduct',
+                        label: 'Descontar Automáticamente',
+                        desc: 'Sincronizar entregas con existencias de bodega.',
+                        checked: systemConfig?.dotation_auto_deduct?.enabled !== false,
+                        enabled: inventoryEnabled,
+                        onChange: async (checked: boolean) => {
                           await updateConfig.mutateAsync({
                             key: 'dotation_auto_deduct',
                             value: { enabled: checked },
                             description: 'Descontar inventario automáticamente al registrar entregas',
                           });
-                        } catch {
-                          // error handled by mutation
                         }
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-muted/20 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-sm font-medium">Bloquear entregas sin stock suficiente</Label>
-                      <p className="text-xs text-muted-foreground">Impide registrar entregas cuando no hay existencias suficientes en el inventario</p>
-                    </div>
-                    <Switch
-                      checked={systemConfig?.dotation_block_no_stock?.enabled === true}
-                      onCheckedChange={async (checked) => {
-                        try {
+                      },
+                      {
+                        id: 'dotation_block_no_stock',
+                        label: 'Bloquear Entregas sin Stock',
+                        desc: 'Impedir registros si no hay disponibilidad en almacén.',
+                        checked: systemConfig?.dotation_block_no_stock?.enabled === true,
+                        enabled: inventoryEnabled,
+                        onChange: async (checked: boolean) => {
                           await updateConfig.mutateAsync({
                             key: 'dotation_block_no_stock',
                             value: { enabled: checked },
                             description: 'Bloquear entregas sin stock disponible en inventario',
                           });
-                        } catch {
-                          // error handled by mutation
                         }
-                      }}
-                    />
+                      }
+                    ].map((config) => (
+                      <div key={config.id} className={cn("flex items-center justify-between p-6 rounded-[2rem] border transition-all", config.enabled === false ? "opacity-40 grayscale pointer-events-none border-transparent bg-muted/10" : "bg-background/40 border-primary/5 hover:border-primary/20 shadow-sm")}>
+                        <div className="space-y-1">
+                          <Label className="text-base font-black tracking-tight">{config.label}</Label>
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{config.desc}</p>
+                        </div>
+                        <Switch
+                          checked={config.checked}
+                          onCheckedChange={config.onChange}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                      </div>
+                    ))}
                   </div>
-                </>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </ScrollArea>
 
       {/* Dialogs */}
       <DotationFormDialog

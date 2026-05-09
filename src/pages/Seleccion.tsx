@@ -15,6 +15,7 @@ import {
   Calendar,
   Building2,
   UserPlus,
+  Filter,
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -119,7 +121,7 @@ export default function Seleccion() {
         title: vacancy.position_title,
         subtitle: `${vacancy.department_area || 'Sin área'} • ${vacancy.positions_count} posicion${vacancy.positions_count > 1 ? 'es' : ''}`,
         badge: (
-          <Badge variant="outline" className={cn('max-w-full truncate', statusStyle.bg, statusStyle.text, statusStyle.border)}>
+          <Badge variant="outline" className={cn('max-w-full truncate font-black uppercase tracking-widest text-[9px] px-2', statusStyle.bg, statusStyle.text, statusStyle.border)}>
             {vacancyStatusLabels[status]}
           </Badge>
         ),
@@ -130,34 +132,32 @@ export default function Seleccion() {
         ],
         onClick: () => openVacancyDetail(vacancy.id),
         actions: (
-          <>
+          <div className="flex gap-2">
             <Button
               size="sm"
               variant="ghost"
-              className="h-10 w-10 bg-info/10 hover:bg-info/20 text-info"
+              className="h-10 w-10 rounded-xl bg-primary/5 hover:bg-primary/20 text-primary"
               onClick={(e) => {
                 e.stopPropagation();
                 setCandidateFormVacancyId(vacancy.id);
                 setShowCandidateForm(true);
               }}
               disabled={vacancy.status !== 'in_process'}
-              aria-label={`Agregar candidato a vacante ${vacancy.position_title}`}
             >
               <UserPlus className="w-4 h-4" />
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              className="h-10 w-10 bg-indigo-light hover:bg-indigo/20 text-indigo"
+              className="h-10 w-10 rounded-xl bg-muted/50 hover:bg-muted text-foreground"
               onClick={(e) => {
                 e.stopPropagation();
                 openVacancyDetail(vacancy.id);
               }}
-              aria-label={`Ver detalle de vacante ${vacancy.position_title}`}
             >
               <Eye className="w-4 h-4" />
             </Button>
-          </>
+          </div>
         ),
       };
     }),
@@ -169,366 +169,246 @@ export default function Seleccion() {
     setShowVacancyDetail(true);
   };
 
-  const openCandidateDetail = (candidateId: string) => {
-    setSelectedCandidateId(candidateId);
-    setShowCandidateDetail(true);
-  };
+  const kpis = useMemo(() => ([
+    { label: 'VACANTES ABIERTAS', value: stats.openVacancies, desc: 'Nuevas solicitudes', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-500/10' },
+    { label: 'EN PROCESO', value: stats.inProcessVacancies, desc: 'Reclutamiento activo', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-500/10' },
+    { label: 'CANDIDATOS', value: stats.totalCandidates, desc: 'Base de datos total', icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'CONTRATADOS', value: stats.hiredCandidates, desc: 'Cierres exitosos', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+  ]), [stats]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">
-            Selección y Reclutamiento
-          </h1>
-          <p className="text-muted-foreground">
-            Gestiona vacantes y el proceso de selección
-          </p>
+    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+      {/* Premium Header */}
+      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+        
+        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+                <Users className="w-6 h-6" />
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                  Gestión de Talento
+                </Badge>
+                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Selección y Reclutamiento</h1>
+              </div>
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
+              Administración de vacantes, evaluación de candidatos y seguimiento de procesos de contratación.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
+            {kpis.map((stat, i) => (
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+                <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
+                   <stat.icon className="w-3.5 h-3.5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
+                  <p className={`text-2xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
+                  <p className="text-[9px] font-bold text-muted-foreground/60 leading-none truncate">{stat.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowVacancyForm(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva Vacante
-          </Button>
+      </div>
+
+      {/* Sticky Filter Bar */}
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
+          <div className="relative w-full sm:w-80 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input
+              placeholder="Buscar vacantes por cargo o área..."
+              className="pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-primary" />
+                  <SelectValue placeholder="Estado" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+                <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los estados</SelectItem>
+                <SelectItem value="open" className="font-bold text-xs uppercase p-3 text-emerald-600">Abierta</SelectItem>
+                <SelectItem value="in_process" className="font-bold text-xs uppercase p-3 text-amber-600">En Proceso</SelectItem>
+                <SelectItem value="closed" className="font-bold text-xs uppercase p-3 text-blue-600">Cerrada</SelectItem>
+                <SelectItem value="cancelled" className="font-bold text-xs uppercase p-3 text-destructive">Cancelada</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={centerFilter} onValueChange={setCenterFilter}>
+              <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-3.5 h-3.5 text-primary" />
+                  <SelectValue placeholder="Centro" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+                <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los centros</SelectItem>
+                {operationCenters.map((center) => (
+                  <SelectItem key={center.id} value={center.id} className="font-bold text-xs uppercase p-3">
+                    {center.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </motion.div>
 
-      {/* Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"
-      >
-        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 border-l-4 border-l-primary">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Briefcase className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.openVacancies}</p>
-                <p className="text-xs text-muted-foreground">Vacantes Abiertas</p>
-              </div>
+        <Button className="h-12 w-full xl:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={() => setShowVacancyForm(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Nueva Vacante
+        </Button>
+      </div>
+
+      <ScrollArea className="flex-1 p-6 sm:p-10">
+        <div className="max-w-7xl mx-auto">
+          {loadingVacancies ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-24 w-full rounded-[2rem]" />
+              ))}
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-info">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-info/10">
-                <Clock className="w-5 h-5 text-info" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.inProcessVacancies}</p>
-                <p className="text-xs text-muted-foreground">En Proceso</p>
-              </div>
+          ) : filteredVacancies.length === 0 ? (
+            <div className="text-center py-32 bg-background/50 rounded-[3rem] border-2 border-dashed border-primary/5">
+               <Briefcase className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
+               <p className="text-xl font-black uppercase tracking-[0.2em] text-muted-foreground/40">Sin vacantes registradas</p>
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <>
+              {/* Mobile View */}
+              <MobileCardList
+                className="md:hidden"
+                items={vacancyItems}
+                emptyMessage="No hay vacantes"
+              />
 
-        <Card className="border-l-4 border-l-violet">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-violet-light">
-                <Users className="w-5 h-5 text-violet" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.totalCandidates}</p>
-                <p className="text-xs text-muted-foreground">Total Candidatos</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-2xl bg-background/40 backdrop-blur-xl">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 border-b border-primary/5 hover:bg-muted/30">
+                      <TableHead className="px-8 h-16 font-black text-[10px] uppercase tracking-[0.2em]">Vacante</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Ubicación</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Candidatos</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Apertura</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
+                      <TableHead className="px-8 h-16 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredVacancies.map((vacancy) => {
+                      const status = vacancy.status as VacancyStatus;
+                      const statusStyle = vacancyStatusConfig[status];
+                      const candidateCount = (vacancy as any).candidates?.length || 0;
+                      const centerName = (vacancy as any).operation_centers?.name || 'General';
 
-        <Card className="border-l-4 border-l-warning">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-warning/10">
-                <TrendingUp className="w-5 h-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.inProcessCandidates}</p>
-                <p className="text-xs text-muted-foreground">En Evaluación</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-indigo">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-indigo-light">
-                <CheckCircle className="w-5 h-5 text-indigo" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.selectedCandidates}</p>
-                <p className="text-xs text-muted-foreground">Seleccionados</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 border-l-4 border-l-primary">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <UserPlus className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.hiredCandidates}</p>
-                <p className="text-xs text-muted-foreground">Contratados</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Main Content */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <Card>
-          <CardHeader className="pb-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h2 className="font-semibold text-lg flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-primary" />
-                Vacantes
-              </h2>
-
-              {/* Filters */}
-              <div className="grid w-full grid-cols-1 gap-3 sm:flex sm:w-auto">
-                <div className="relative flex-1 sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar vacantes..."
-                    className="pl-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <CollapsibleFilters
-                  activeCount={(statusFilter !== 'all' ? 1 : 0) + (centerFilter !== 'all' ? 1 : 0)}
-                  className="sm:flex sm:gap-3"
-                >
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="min-w-0 w-full sm:w-[150px]">
-                      <SelectValue placeholder="Estado" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background">
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="open">Abierta</SelectItem>
-                      <SelectItem value="in_process">En Proceso</SelectItem>
-                      <SelectItem value="closed">Cerrada</SelectItem>
-                      <SelectItem value="cancelled">Cancelada</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={centerFilter} onValueChange={setCenterFilter}>
-                    <SelectTrigger className="min-w-0 w-full sm:w-[180px]">
-                      <SelectValue placeholder="Centro" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background">
-                      <SelectItem value="all">Todos los centros</SelectItem>
-                      {operationCenters.map((center) => (
-                        <SelectItem key={center.id} value={center.id}>
-                          {center.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </CollapsibleFilters>
-              </div>
-            </div>
-            
-            <div className="mt-4">
-              {loadingVacancies ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
-                  ))}
-                </div>
-              ) : filteredVacancies.length === 0 ? (
-                <div className="text-center py-12">
-                  <Briefcase className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">No hay vacantes</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {searchQuery || statusFilter !== 'all'
-                      ? 'No se encontraron vacantes con esos filtros.'
-                      : 'Crea tu primera vacante para comenzar.'}
-                  </p>
-                  <Button onClick={() => setShowVacancyForm(true)} className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    Nueva Vacante
-                  </Button>
-                </div>
-              ) : (
-                <>
-                <MobileCardList
-                  className="md:hidden"
-                  items={vacancyItems}
-                  emptyMessage="No hay vacantes"
-                />
-                <div className="hidden rounded-md border md:block md:overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Vacante</TableHead>
-                        <TableHead>Centro</TableHead>
-                        <TableHead>Candidatos</TableHead>
-                        <TableHead>Fecha Apertura</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredVacancies.map((vacancy) => {
-                        const status = vacancy.status as VacancyStatus;
-                        const statusStyle = vacancyStatusConfig[status];
-                        const candidateCount = (vacancy as any).candidates?.length || 0;
-                        const centerName = (vacancy as any).operation_centers?.name || 'General';
-
-                        return (
-                          <TableRow
-                            key={vacancy.id}
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => openVacancyDetail(vacancy.id)}
-                          >
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                                  <Briefcase className="w-4 h-4 text-primary" />
-                                </div>
-                                <div>
-                                  <p className="font-medium">{vacancy.position_title}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {vacancy.department_area || 'Sin área'} • {vacancy.positions_count} posicion{vacancy.positions_count > 1 ? 'es' : ''}
-                                  </p>
-                                </div>
+                      return (
+                        <TableRow
+                          key={vacancy.id}
+                          className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors cursor-pointer"
+                          onClick={() => openVacancyDetail(vacancy.id)}
+                        >
+                          <TableCell className="px-8 py-5">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
+                                <Briefcase className="w-6 h-6" />
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-secondary-light flex items-center justify-center">
-                                  <Building2 className="w-3.5 h-3.5 text-secondary" />
-                                </div>
-                                <span className="text-sm">{centerName}</span>
+                              <div className="min-w-0">
+                                <p className="font-black tracking-tight text-foreground text-base leading-none mb-1">{vacancy.position_title}</p>
+                                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest truncate">
+                                  {vacancy.department_area || 'Sin área'} • {vacancy.positions_count} {vacancy.positions_count > 1 ? 'Posiciones' : 'Posición'}
+                                </p>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-violet-light flex items-center justify-center">
-                                  <Users className="w-3.5 h-3.5 text-violet" />
-                                </div>
-                                <span className="font-medium">{candidateCount}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Building2 className="w-4 h-4 text-primary/60" />
+                              <span className="text-sm font-black tracking-tight text-foreground/80">{centerName}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="px-3 py-1 rounded-full bg-primary/10 text-primary font-black text-xs">
+                                {candidateCount}
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-md bg-tertiary/10 flex items-center justify-center">
-                                  <Calendar className="w-3.5 h-3.5 text-tertiary" />
-                                </div>
-                                <span className="text-sm">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Candidatos</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                               <span className="text-[11px] font-bold text-foreground/80">
                                   {format(new Date(vacancy.open_date), 'dd MMM yyyy', { locale: es })}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={cn(statusStyle.bg, statusStyle.text, statusStyle.border)}
+                               </span>
+                               <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Fecha Apertura</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={cn('h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-primary/10 shadow-sm', statusStyle.bg, statusStyle.text, statusStyle.border)}
+                            >
+                              {vacancyStatusLabels[status]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="px-8 text-right">
+                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0" onClick={e => e.stopPropagation()}>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-10 w-10 rounded-xl bg-primary/5 hover:bg-primary text-primary hover:text-primary-foreground shadow-sm transition-all"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCandidateFormVacancyId(vacancy.id);
+                                  setShowCandidateForm(true);
+                                }}
+                                disabled={vacancy.status !== 'in_process'}
                               >
-                                {vacancyStatusLabels[status]}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-1" role="group" aria-label="Acciones de vacante">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="bg-info/10 hover:bg-info/20 text-info"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setCandidateFormVacancyId(vacancy.id);
-                                    setShowCandidateForm(true);
-                                  }}
-                                  disabled={vacancy.status !== 'in_process'}
-                                  title={vacancy.status !== 'in_process' ? 'Solo se pueden agregar candidatos cuando la vacante está En Proceso' : undefined}
-                                  aria-label={`Agregar candidato a vacante ${vacancy.position_title}`}
-                                  data-testid={`add-candidate-${vacancy.id}`}
-                                >
-                                  <UserPlus className="w-4 h-4" />
-                                  <span className="sr-only">Nuevo Candidato</span>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="bg-indigo-light hover:bg-indigo/20 text-indigo"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    openVacancyDetail(vacancy.id);
-                                  }}
-                                  aria-label={`Ver detalle de vacante ${vacancy.position_title}`}
-                                  data-testid={`view-vacancy-${vacancy.id}`}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                  <span className="sr-only">Ver Detalle</span>
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-                </>
-              )}
-            </div>
-          </CardHeader>
-        </Card>
-      </motion.div>
+                                <UserPlus className="w-5 h-5" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-10 w-10 rounded-xl bg-muted hover:bg-foreground hover:text-background transition-all"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openVacancyDetail(vacancy.id);
+                                }}
+                              >
+                                <Eye className="w-5 h-5" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
+        </div>
+      </ScrollArea>
 
       {/* Dialogs */}
-      <VacancyFormDialog
-        open={showVacancyForm}
-        onOpenChange={setShowVacancyForm}
-      />
-      
-      {selectedVacancyId && (
-        <VacancyDetailDialog
-          open={showVacancyDetail}
-          onOpenChange={setShowVacancyDetail}
-          vacancyId={selectedVacancyId}
-        />
-      )}
-
-      <CandidateFormDialog
-        open={showCandidateForm}
-        onOpenChange={(open) => {
-          setShowCandidateForm(open);
-          if (!open) {
-            // Delay clearing vacancyId to avoid unmount during Dialog close animation
-            setTimeout(() => setCandidateFormVacancyId(null), 200);
-          }
-        }}
-        vacancyId={candidateFormVacancyId || undefined}
-      />
-
-      {selectedCandidateId && (
-        <CandidateDetailDialog
-          open={showCandidateDetail}
-          onOpenChange={setShowCandidateDetail}
-          candidateId={selectedCandidateId}
-        />
-      )}
+      <VacancyFormDialog open={showVacancyForm} onOpenChange={setShowVacancyForm} />
+      {selectedVacancyId && <VacancyDetailDialog open={showVacancyDetail} onOpenChange={setShowVacancyDetail} vacancyId={selectedVacancyId} />}
+      <CandidateFormDialog open={showCandidateForm} onOpenChange={(open) => { setShowCandidateForm(open); if (!open) { setTimeout(() => setCandidateFormVacancyId(null), 200); } }} vacancyId={candidateFormVacancyId || undefined} />
+      {selectedCandidateId && <CandidateDetailDialog open={showCandidateDetail} onOpenChange={setShowCandidateDetail} candidateId={selectedCandidateId} />}
     </div>
   );
 }
+

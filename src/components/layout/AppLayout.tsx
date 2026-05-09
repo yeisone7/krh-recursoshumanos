@@ -283,7 +283,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {showAiButton && (
+      {showAiButton && !isAiAssistant && (
         <Button
           type="button"
           size="icon"

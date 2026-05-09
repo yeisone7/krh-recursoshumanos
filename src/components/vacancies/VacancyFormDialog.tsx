@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Briefcase, DollarSign, FileText, Settings, AlertCircle, FileCheck, Upload, X, Loader2 } from 'lucide-react';
+import { CalendarIcon, Briefcase, DollarSign, FileText, Settings, AlertCircle, FileCheck, Upload, X, Loader2, GraduationCap, BookOpen, Building2, Target, Zap } from 'lucide-react';
 
 import {
   Dialog,
@@ -43,6 +43,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 import {
   vacancyFormSchema,
@@ -56,6 +59,8 @@ import { useApprovedRequisitions } from '@/hooks/useRequisitions';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEducationLevels } from '@/hooks/useEducationLevels';
+import { useProfessions } from '@/hooks/useProfessions';
 
 interface VacancyFormDialogProps {
   open: boolean;
@@ -76,6 +81,8 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
   const { data: approvedRequisitions = [], isLoading: loadingRequisitions } = useApprovedRequisitions();
   const { data: areas = [] } = useAreas();
   const { data: positions = [] } = usePositions();
+  const { data: educationLevels = [] } = useEducationLevels();
+  const { data: professions = [] } = useProfessions();
   const createVacancy = useCreateVacancy();
 
   const form = useForm<VacancyFormData>({
@@ -91,6 +98,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
       openDate: new Date(),
       publicationPlatforms: [],
       priority: 'normal',
+      educationLevelIds: [],
     },
   });
 
@@ -174,7 +182,12 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
         job_description: data.jobDescription || null,
         requirements: data.requirements || null,
         experience_years: data.experienceYears,
-        education_level: data.educationLevel || null,
+        educationLevelIds: data.educationLevelIds,
+        education_level: data.educationLevelIds.length > 0 
+          ? data.educationLevelIds.map(id => educationLevels.find(e => e.id === id)?.name).filter(Boolean).join(', ') 
+          : (data.educationLevel || null),
+        education_level_id: data.educationLevelIds.length > 0 ? data.educationLevelIds[0] : null,
+        profession_id: (data.professionId && data.professionId !== 'none') ? data.professionId : null,
         open_date: format(data.openDate, 'yyyy-MM-dd'),
         target_close_date: data.targetCloseDate ? format(data.targetCloseDate, 'yyyy-MM-dd') : null,
         publication_platforms: data.publicationPlatforms,
@@ -210,36 +223,78 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-3xl p-0 overflow-hidden sm:w-full">
-        <DialogHeader className="px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
-          <DialogTitle className="font-display text-lg leading-tight flex items-center gap-2 sm:text-xl">
-            <Briefcase className="w-5 h-5 text-primary" />
-            Nueva Vacante
-          </DialogTitle>
-          <DialogDescription>
-            Complete la información de la posición a cubrir.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[95dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full border-none shadow-2xl">
+        <DialogTitle className="sr-only">Nueva Vacante</DialogTitle>
+        <DialogDescription className="sr-only">Formulario para la creación de una nueva vacante de empleo.</DialogDescription>
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4 pt-8 pb-6 sm:px-8 sm:pt-10">
+          {/* Decorative patterns */}
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          
+          {/* Pattern overlay (dots) */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+
+          <div className="relative flex flex-col md:flex-row items-start gap-6">
+            {/* Avatar/Initial */}
+            <div className="w-16 h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-primary/10 transition-transform hover:scale-105 duration-300">
+              {form.watch('positionTitle') ? form.watch('positionTitle').substring(0, 2).toUpperCase() : 'NV'}
+            </div>
+
+            <div className="flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" className="bg-success/10 text-success border-success/20 animate-in fade-in slide-in-from-left-2 duration-500">
+                  <span className="w-2 h-2 rounded-full bg-success mr-1.5 animate-pulse" />
+                  Nueva
+                </Badge>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 font-medium">
+                  {vacancyTypeLabels[form.watch('vacancyType') as keyof typeof vacancyTypeLabels] || 'Externa'}
+                </Badge>
+              </div>
+              
+              <h2 className="text-3xl font-display font-bold text-foreground tracking-tight sm:text-4xl">
+                {form.watch('positionTitle') || 'Nueva Vacante'}
+              </h2>
+              
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground font-medium">
+                <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                  <Building2 className="w-4 h-4 text-primary/60" />
+                  {operationCenters.find(c => c.id === form.watch('operationCenterId'))?.name || 'Centro no seleccionado'}
+                </div>
+                <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                  <CalendarIcon className="w-4 h-4 text-primary/60" />
+                  {format(new Date(), "MMMM yyyy", { locale: es })}
+                </div>
+                {form.watch('departmentArea') && (
+                  <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                    <Target className="w-4 h-4 text-primary/60" />
+                    {form.watch('departmentArea')}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="px-4 pt-2 sm:px-6">
-                <TabsList className="w-full h-auto flex-wrap gap-1 bg-muted/50 p-1">
+                <TabsList className="w-full h-auto flex-wrap gap-2 bg-transparent p-0 justify-start">
                   {tabItems.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="h-9 flex-1 min-w-[54px] gap-2 px-2 data-[state=active]:bg-background sm:min-w-[100px]"
+                      className="h-10 flex-1 min-w-[100px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all"
                     >
                       <tab.icon className="w-4 h-4" />
-                      <span className="hidden sm:inline">{tab.label}</span>
+                      <span className="hidden sm:inline font-medium">{tab.label}</span>
                     </TabsTrigger>
                   ))}
                 </TabsList>
               </div>
 
-              <ScrollArea className="h-[calc(92dvh-250px)] px-4 py-4 sm:h-[calc(90vh-260px)] sm:px-6">
+              <ScrollArea className="h-[calc(95dvh-320px)] px-4 py-4 sm:px-8 sm:py-6">
                 {/* Requisition Tab */}
                 <TabsContent value="requisition" className="mt-0 space-y-6">
                   {approvedRequisitions.length === 0 && !loadingRequisitions ? (
@@ -263,7 +318,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-background">
-                              {approvedRequisitions.map((req) => (
+                              {approvedRequisitions.filter(req => !!req.id).map((req) => (
                                 <SelectItem key={req.id} value={req.id}>
                                   {req.cargo_solicitado} - {req.cantidad_vacantes_requeridas} vacante(s)
                                   {req.operation_centers?.name && ` (${req.operation_centers.name})`}
@@ -322,7 +377,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-background">
-                              {operationCenters.map((center) => (
+                              {operationCenters.filter(c => !!c.id).map((center) => (
                                 <SelectItem key={center.id} value={center.id}>
                                   {center.name}
                                 </SelectItem>
@@ -349,7 +404,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-background">
-                              {areas.filter(a => a.is_active).map((area) => (
+                              {areas.filter(a => a.is_active && !!a.name).map((area) => (
                                 <SelectItem key={area.id} value={area.name}>
                                   {area.name}
                                 </SelectItem>
@@ -652,24 +707,52 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                     />
                     <FormField
                       control={form.control}
-                      name="educationLevel"
+                      name="educationLevelIds"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Nivel Educativo</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            <GraduationCap className="w-4 h-4 text-primary" />
+                            Niveles Educativos
+                          </FormLabel>
+                          <FormControl>
+                            <MultiSelect
+                              options={educationLevels
+                                .filter(e => e.is_active)
+                                .map(e => ({ label: e.name, value: e.id }))}
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Seleccionar niveles"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="professionId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <BookOpen className="w-4 h-4 text-primary" />
+                            Profesión / Disciplina
+                          </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar" />
+                                <SelectValue placeholder="Seleccionar profesión" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-background">
-                              <SelectItem value="bachiller">Bachiller</SelectItem>
-                              <SelectItem value="tecnico">Técnico</SelectItem>
-                              <SelectItem value="tecnologo">Tecnólogo</SelectItem>
-                              <SelectItem value="profesional">Profesional</SelectItem>
-                              <SelectItem value="especializacion">Especialización</SelectItem>
-                              <SelectItem value="maestria">Maestría</SelectItem>
-                              <SelectItem value="doctorado">Doctorado</SelectItem>
+                             <SelectContent className="bg-background">
+                              <SelectItem value="none">Sin especificar / Cualquiera</SelectItem>
+                              {professions.filter(p => p.is_active && !!p.id).map((prof) => (
+                                <SelectItem key={prof.id} value={prof.id}>
+                                  {prof.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -764,12 +847,25 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
               </ScrollArea>
             </Tabs>
 
-            <div className="px-4 py-4 border-t border-border flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:px-6">
-              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
+            <div className="px-6 py-4 bg-muted/30 border-t border-border flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:px-8">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="w-full sm:w-auto hover:bg-background transition-colors" 
+                onClick={() => onOpenChange(false)}
+              >
                 Cancelar
               </Button>
-              <Button type="submit" className="w-full sm:w-auto" disabled={createVacancy.isPending}>
-                {createVacancy.isPending ? 'Creando...' : 'Crear Vacante'}
+              <Button 
+                type="submit" 
+                className="w-full sm:w-auto shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" 
+                disabled={createVacancy.isPending}
+              >
+                {createVacancy.isPending ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creando...</>
+                ) : (
+                  'Crear Vacante'
+                )}
               </Button>
             </div>
           </form>

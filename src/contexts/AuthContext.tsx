@@ -41,6 +41,8 @@ interface AuthContextType {
   canCreate: (moduleCode: string) => boolean;
   canUpdate: (moduleCode: string) => boolean;
   canDelete: (moduleCode: string) => boolean;
+  canApprove: (moduleCode: string) => boolean;
+  canExport: (moduleCode: string) => boolean;
   hasAnyRole: boolean;
   refreshPermissions: () => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -236,6 +238,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const canCreate = useCallback((m: string) => hasPermission(m, 'create'), [hasPermission]);
   const canUpdate = useCallback((m: string) => hasPermission(m, 'update'), [hasPermission]);
   const canDelete = useCallback((m: string) => hasPermission(m, 'delete'), [hasPermission]);
+  const canApprove = useCallback((m: string) => hasPermission(m, 'approve'), [hasPermission]);
+  const canExport = useCallback((m: string) => hasPermission(m, 'export'), [hasPermission]);
 
   const refreshPermissions = useCallback(() => {
     if (user) fetchPermissions(user.id);
@@ -338,6 +342,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         canCreate,
         canUpdate,
         canDelete,
+        canApprove,
+        canExport,
         hasAnyRole,
         refreshPermissions,
         signIn,

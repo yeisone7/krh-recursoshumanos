@@ -122,16 +122,25 @@ export default function Festivos() {
       return;
     }
 
+    // Check for duplicates in the global list before creating
+    if (!selectedHoliday) {
+      const isDuplicate = holidays?.some(h => h.holiday_date === formData.holiday_date);
+      if (isDuplicate) {
+        toast.error('Ya existe un festivo configurado para esta fecha en el sistema global');
+        return;
+      }
+    }
+
     try {
       if (selectedHoliday) {
         await updateHoliday.mutateAsync({
           id: selectedHoliday.id,
           ...formData,
         });
-        toast.success('Festivo actualizado');
+        toast.success('Festivo actualizado globalmente');
       } else {
         await createHoliday.mutateAsync(formData);
-        toast.success('Festivo agregado');
+        toast.success('Festivo agregado al catálogo global');
       }
       setDialogOpen(false);
     } catch (error: any) {
@@ -167,9 +176,14 @@ export default function Festivos() {
         className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="min-w-0">
-          <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Días Festivos</h1>
+          <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl flex items-center gap-2">
+            Días Festivos
+            <Badge variant="secondary" className="text-[10px] uppercase font-black bg-primary/10 text-primary border-none">
+              Catálogo Global
+            </Badge>
+          </h1>
           <p className="text-muted-foreground mt-1">
-            Administra los días festivos nacionales y de la empresa
+            Administra los días festivos compartidos para todas las empresas del sistema.
           </p>
         </div>
         <Button onClick={handleOpenCreate} className="w-full sm:w-auto">

@@ -1,18 +1,14 @@
 import { AlertTriangle, Clock, FileWarning, ChevronRight, ShieldAlert } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useDashboardAlerts, DashboardAlert } from '@/hooks/useDashboardAlerts';
+import { DashboardAlert } from '@/hooks/useDashboardAlerts';
 
 interface CertificationAlertsPanelProps {
   onEmployeeClick: (employeeId: string) => void;
+  alerts?: DashboardAlert[];
 }
 
-export function CertificationAlertsPanel({ onEmployeeClick }: CertificationAlertsPanelProps) {
-  const { data: allAlerts, isLoading } = useDashboardAlerts();
-
-  // Filter only certification alerts
-  const certificationAlerts = allAlerts?.filter(alert => alert.type === 'certification') || [];
-
+export function CertificationAlertsPanel({ onEmployeeClick, alerts = [] }: CertificationAlertsPanelProps) {
   const getLevelStyles = (level: DashboardAlert['level']) => {
     switch (level) {
       case 'critical':
@@ -47,32 +43,16 @@ export function CertificationAlertsPanel({ onEmployeeClick }: CertificationAlert
     }
   };
 
-  if (isLoading) {
+  if (alerts.length === 0) {
     return (
-      <div className="card-elevated p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <ShieldAlert className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-foreground">Alertas de Certificaciones</h3>
-        </div>
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-muted/50 rounded-lg animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (certificationAlerts.length === 0) {
-    return (
-      <div className="card-elevated p-4">
+      <div className="card-elevated p-4 h-full">
         <div className="flex items-center gap-2 mb-4">
           <ShieldAlert className="w-5 h-5 text-primary" />
           <h3 className="font-semibold text-foreground">Alertas de Certificaciones</h3>
         </div>
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-12 h-12 rounded-full bg-success-light flex items-center justify-center mb-3">
-            <FileWarning className="w-6 h-6 text-success" />
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+            <FileWarning className="w-6 h-6 text-primary" />
           </div>
           <p className="text-sm text-muted-foreground">
             No hay certificaciones vencidas o por vencer
@@ -83,9 +63,9 @@ export function CertificationAlertsPanel({ onEmployeeClick }: CertificationAlert
   }
 
   // Group alerts by level for summary
-  const expiredCount = certificationAlerts.filter(a => a.daysRemaining < 0).length;
-  const criticalCount = certificationAlerts.filter(a => a.level === 'critical' && a.daysRemaining >= 0).length;
-  const warningCount = certificationAlerts.filter(a => a.level === 'warning').length;
+  const expiredCount = alerts.filter(a => a.daysRemaining < 0).length;
+  const criticalCount = alerts.filter(a => a.level === 'critical' && a.daysRemaining >= 0).length;
+  const warningCount = alerts.filter(a => a.level === 'warning').length;
 
   return (
     <div className="card-elevated p-4 h-full">
@@ -115,14 +95,14 @@ export function CertificationAlertsPanel({ onEmployeeClick }: CertificationAlert
             </Badge>
           )}
           <Badge variant="outline" className="text-xs">
-            {certificationAlerts.length} total
+            {alerts.length} total
           </Badge>
         </div>
       </div>
 
       {/* Grid layout for alerts */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-        {certificationAlerts.map((alert) => {
+        {alerts.map((alert) => {
           const styles = getLevelStyles(alert.level);
           const isExpired = alert.daysRemaining < 0;
 

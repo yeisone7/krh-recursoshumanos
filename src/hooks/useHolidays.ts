@@ -29,15 +29,12 @@ export interface HolidayFormData {
 // =============================================
 
 export function useHolidays(year?: number) {
-  const { currentCompanyId } = useAuth();
-
   return useQuery({
-    queryKey: ['company_holidays', currentCompanyId, year],
+    queryKey: ['company_holidays', 'global', year],
     queryFn: async () => {
       let query = supabase
         .from('company_holidays')
         .select('*')
-        .eq('company_id', currentCompanyId!)
         .order('holiday_date', { ascending: true });
 
       if (year) {
@@ -50,43 +47,35 @@ export function useHolidays(year?: number) {
       if (error) throw error;
       return data as Holiday[];
     },
-    enabled: !!currentCompanyId,
   });
 }
 
 // Get all active holidays as a Set for quick lookup
 export function useHolidaysSet() {
-  const { currentCompanyId } = useAuth();
-
   return useQuery({
-    queryKey: ['company_holidays_set', currentCompanyId],
+    queryKey: ['company_holidays_set', 'global'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('company_holidays')
         .select('holiday_date')
-        .eq('company_id', currentCompanyId!)
         .eq('is_active', true);
 
       if (error) throw error;
       
       return new Set(data.map(h => h.holiday_date));
     },
-    enabled: !!currentCompanyId,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 }
 
 // Get holidays as a map for calendar display (date -> name)
 export function useHolidaysMap() {
-  const { currentCompanyId } = useAuth();
-
   return useQuery({
-    queryKey: ['company_holidays_map', currentCompanyId],
+    queryKey: ['company_holidays_map', 'global'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('company_holidays')
         .select('holiday_date, name')
-        .eq('company_id', currentCompanyId!)
         .eq('is_active', true);
 
       if (error) throw error;
@@ -97,7 +86,6 @@ export function useHolidaysMap() {
       });
       return map;
     },
-    enabled: !!currentCompanyId,
     staleTime: 1000 * 60 * 5,
   });
 }

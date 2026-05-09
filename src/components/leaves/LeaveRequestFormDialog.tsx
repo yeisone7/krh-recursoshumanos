@@ -42,6 +42,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useLeaveTypeConfigs, useCreateLeaveRequest, calculateBusinessDays } from '@/hooks/useLeaves';
+import { useHolidaysSet } from '@/hooks/useHolidays';
 import { LeaveType, LeaveDurationType, LEAVE_DURATION_TYPE_LABELS } from '@/types/leave';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,6 +72,7 @@ export function LeaveRequestFormDialog({
 }: LeaveRequestFormDialogProps) {
   const { data: employees = [] } = useEmployees();
   const { data: leaveTypeConfigs = [] } = useLeaveTypeConfigs();
+  const { data: holidaysSet } = useHolidaysSet();
   const createRequest = useCreateLeaveRequest();
   
   const [selectedTypeConfig, setSelectedTypeConfig] = useState<typeof leaveTypeConfigs[0] | null>(null);
@@ -117,13 +119,13 @@ export function LeaveRequestFormDialog({
   useEffect(() => {
     if (watchStartDate && watchEndDate) {
       if (watchDurationType === 'dias_completos') {
-        const days = calculateBusinessDays(watchStartDate, watchEndDate);
+        const days = calculateBusinessDays(watchStartDate, watchEndDate, holidaysSet);
         setCalculatedDays(days);
       } else if (watchDurationType === 'medio_dia') {
         setCalculatedDays(0.5);
       }
     }
-  }, [watchStartDate, watchEndDate, watchDurationType]);
+  }, [watchStartDate, watchEndDate, watchDurationType, holidaysSet]);
 
   const activeLeaveTypes = leaveTypeConfigs.filter(c => c.is_active);
 

@@ -153,6 +153,7 @@ export function useOvertimeRecords(filters?: {
 export function useCreateOvertimeRecord() {
   const queryClient = useQueryClient();
   const { user, currentCompanyId } = useAuth();
+  const { data: holidaysSet } = useHolidaysSet();
 
   return useMutation({
     mutationFn: async (record: {
@@ -165,7 +166,7 @@ export function useCreateOvertimeRecord() {
     }) => {
       const workDate = new Date(record.work_date);
       const totalHours = calculateHours(record.start_time, record.end_time);
-      const overtimeType = classifyOvertimeType(workDate, record.start_time, record.end_time);
+      const overtimeType = classifyOvertimeType(workDate, record.start_time, record.end_time, true, holidaysSet);
       const surchargePercentage = OVERTIME_SURCHARGES[overtimeType];
       
       let totalValue: number | undefined;

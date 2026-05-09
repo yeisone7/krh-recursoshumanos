@@ -382,6 +382,99 @@ export function useDeleteDotationItemType() {
 }
 
 // =============================================
+// IDENTIFICATION TYPES
+// =============================================
+
+export function useIdentificationTypes() {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['identification_types', currentCompanyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('identification_types')
+        .select('*')
+        .eq('company_id', currentCompanyId!)
+        .order('name');
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+export function useCreateIdentificationType() {
+  const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async (type: {
+      name: string;
+      code?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('identification_types')
+        .insert({
+          ...type,
+          company_id: currentCompanyId!,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['identification_types'] });
+    },
+  });
+}
+
+export function useUpdateIdentificationType() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string } & Partial<{
+      name: string;
+      code: string;
+      is_active: boolean;
+    }>) => {
+      const { data, error } = await supabase
+        .from('identification_types')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['identification_types'] });
+    },
+  });
+}
+
+export function useDeleteIdentificationType() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('identification_types')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['identification_types'] });
+    },
+  });
+}
+
+// =============================================
 // SYSTEM CONFIG
 // =============================================
 

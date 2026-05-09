@@ -25,7 +25,9 @@ import {
   Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Select,
@@ -38,12 +40,23 @@ import { cn } from '@/lib/utils';
 import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { ContractDetailDialog } from '@/components/contracts/ContractDetailDialog';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
-import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
+
+// Helper to parse dates safely and avoid "Invalid Date" crashes
+const parseSafeDate = (dateStr: string | null | undefined): Date | null => {
+  if (!dateStr) return null;
+  try {
+    // Try to handle ISO dates or simple YYYY-MM-DD
+    const date = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`);
+    return isNaN(date.getTime()) ? null : date;
+  } catch (e) {
+    return null;
+  }
+};
 
 // Contract type is now dynamic (text in DB) - no longer using enum
 type ContractStatus = 'active' | 'expiring' | 'expired' | 'terminated';
@@ -235,187 +248,110 @@ export default function Contratos() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-      >
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Contratos</h1>
-          <p className="text-muted-foreground mt-1">Administra contratos y prórrogas de empleados</p>
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-background to-accent/5 border border-primary/10 p-6 sm:p-8">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/5 rounded-full -ml-24 -mb-24 blur-2xl" />
+
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="h-1 w-10 bg-primary rounded-full" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Módulo de Talento</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+              Contratos Laborales
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base max-w-xl leading-relaxed">
+              Gestión centralizada de vinculaciones, prórrogas y estados contractuales.
+            </p>
+          </div>
+
+          <div className="flex gap-2 shrink-0">
+            <Button className="h-11 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95" onClick={() => setIsFormOpen(true)}>
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Nuevo Contrato</span>
+              <span className="sm:hidden">Nuevo</span>
+            </Button>
+          </div>
         </div>
-        <Button 
-          onClick={() => setIsFormOpen(true)}
-          className="gradient-primary text-primary-foreground hover:opacity-90 gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Nuevo Contrato
-        </Button>
-      </motion.div>
-
-      {/* Contract Form Dialog */}
-      <ContractFormDialog
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-      />
-
-      {/* Contract Detail Dialog */}
-      {selectedContract && (
-        <ContractDetailDialog
-          open={isDetailOpen}
-          onOpenChange={setIsDetailOpen}
-          contract={{
-            id: selectedContract.id,
-            employeeId: selectedContract.employee_id,
-            employeeName: `${selectedContract.employees?.first_name} ${selectedContract.employees?.last_name}`,
-            employeeDocument: selectedContract.employees?.document_number || '',
-            contractNumber: selectedContract.contract_number || undefined,
-            // Keep the database value - no mapping needed since we now use dynamic types
-            contractType: selectedContract.contract_type as any,
-            startDate: new Date(selectedContract.start_date + 'T00:00:00'),
-            originalEndDate: selectedContract.end_date ? new Date(selectedContract.end_date + 'T00:00:00') : null,
-            currentEndDate: getEffectiveEndDate(selectedContract) ? new Date(getEffectiveEndDate(selectedContract)! + 'T00:00:00') : null,
-            salary: Number(selectedContract.salary),
-            salaryType: (selectedContract.salary_type === 'integral' ? 'integral' : 'monthly') as 'monthly' | 'integral',
-            transportAllowance: Number(selectedContract.transport_allowance) > 0,
-            operationCenter: selectedContract.employees?.operation_centers?.name || '',
-            position: '',
-            area: '',
-            hasNonCompeteClause: selectedContract.has_non_compete_clause || false,
-            hasConfidentialityClause: selectedContract.has_confidentiality_clause || false,
-            extensions: (selectedContract.contract_extensions || []).map((ext) => ({
-              id: ext.id,
-              extensionNumber: ext.extension_number,
-              startDate: new Date(ext.start_date + 'T00:00:00'),
-              endDate: new Date(ext.end_date + 'T00:00:00'),
-              extensionType: (ext as any).extension_type || 'pactada',
-              createdAt: new Date(ext.created_at),
-              notes: ext.reason || undefined,
-            })),
-            status: getContractStatus(selectedContract),
-            isApproved: selectedContract.is_approved || false,
-            approvedBy: selectedContract.approved_by || undefined,
-            approvedAt: selectedContract.approved_at ? new Date(selectedContract.approved_at) : undefined,
-            createdAt: new Date(selectedContract.created_at),
-            updatedAt: new Date(selectedContract.updated_at),
-          }}
-        />
-      )}
-
-      {/* Stats Row */}
-      <div className="hidden md:grid grid-cols-1 md:grid-cols-4 gap-4">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-primary-light flex items-center justify-center">
-            <FileText className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.active}</p>
-            <p className="text-sm text-muted-foreground">Contratos activos</p>
-          </div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.15 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-warning-light flex items-center justify-center">
-            <Clock className="w-5 h-5 text-warning" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.expiring}</p>
-            <p className="text-sm text-muted-foreground">Por vencer (30 días)</p>
-          </div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-destructive-light flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-destructive" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.expired}</p>
-            <p className="text-sm text-muted-foreground">Vencidos</p>
-          </div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.25 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-accent-light flex items-center justify-center">
-            <FileText className="w-5 h-5 text-accent" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">{stats.withExtensions}</p>
-            <p className="text-sm text-muted-foreground">Con prórrogas</p>
-          </div>
-        </motion.div>
       </div>
 
-      {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-        className="card-elevated p-4"
-      >
-        <div className="flex flex-col gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+      {/* KPI Cards Compact */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Vigentes', value: stats.active, desc: 'Contratos activos', icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+          { label: 'Por Vencer', value: stats.expiring, desc: 'Próximos 30 días', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+          { label: 'Vencidos', value: stats.expired, desc: 'Requieren acción', icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10' },
+          { label: 'Con Prórrogas', value: stats.withExtensions, desc: 'Historial de cambios', icon: RotateCw, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+        ].map((kpi, i) => (
+          <Card key={i} className="relative overflow-hidden border-none shadow-sm bg-background/60 backdrop-blur-sm hover:shadow-md transition-all duration-300 group">
+            <div className={`absolute top-0 left-0 w-1 h-full ${kpi.color.replace('text', 'bg')}`} />
+            <CardContent className="p-3">
+              <div className="flex items-center gap-3">
+                <div className={`p-1.5 rounded-lg ${kpi.bg} group-hover:scale-110 transition-transform shrink-0`}>
+                  <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-lg font-bold tracking-tight truncate leading-tight">{kpi.value}</p>
+                  <p className="text-[11px] font-semibold text-foreground/80 leading-tight">{kpi.label}</p>
+                  <p className="text-[10px] text-muted-foreground leading-tight">{kpi.desc}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Filters Glassmorphism Bar */}
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md pb-2">
+        <div className="flex flex-col lg:flex-row gap-2 p-3 rounded-2xl border border-primary/10 bg-muted/30 shadow-inner">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input
               placeholder="Buscar por empleado..."
-              className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="h-10 pl-11 bg-background border-none rounded-xl shadow-sm focus-visible:ring-primary/20"
             />
           </div>
-          <CollapsibleFilters
-            activeCount={
-              (typeFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0)
-            }
-          >
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full sm:w-[200px] h-10 text-sm border-border">
+
+          <div className="flex flex-wrap gap-2">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-[180px] h-10 bg-background border-none rounded-xl shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-primary shrink-0" />
                   <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent className="bg-background">
-                  <SelectItem value="all">Todos los tipos</SelectItem>
-                  {contractTypesConfig?.filter(ct => ct.is_active).map((ct) => (
-                    <SelectItem key={ct.contract_type} value={ct.contract_type}>
-                      {ct.display_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[150px] h-10 text-sm border-border">
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent className="bg-background">
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="active">Vigentes</SelectItem>
-                  <SelectItem value="expiring">Por vencer</SelectItem>
-                  <SelectItem value="expired">Vencidos</SelectItem>
-                </SelectContent>
-              </Select>
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-background rounded-xl">
+                <SelectItem value="all" className="rounded-lg">Todos los tipos</SelectItem>
+                {contractTypesConfig?.filter(ct => ct.is_active).map((ct) => (
+                  <SelectItem key={ct.contract_type} value={ct.contract_type} className="rounded-lg">
+                    {ct.display_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[140px] h-10 bg-background border-none rounded-xl shadow-sm">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent className="bg-background rounded-xl">
+                <SelectItem value="all" className="rounded-lg">Todos</SelectItem>
+                <SelectItem value="active" className="rounded-lg">Vigentes</SelectItem>
+                <SelectItem value="expiring" className="rounded-lg">Por vencer</SelectItem>
+                <SelectItem value="expired" className="rounded-lg">Vencidos</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center px-3 h-10 bg-primary/10 rounded-xl border border-primary/5 shrink-0">
+              <span className="text-[11px] font-bold text-primary whitespace-nowrap">{filteredContracts.length}</span>
             </div>
-          </CollapsibleFilters>
+          </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Contracts Table */}
       <motion.div
@@ -566,26 +502,25 @@ export default function Contratos() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden md:table-cell">Nº Contrato</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Empleado</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden sm:table-cell">Tipo</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden lg:table-cell">Fecha Inicio</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden sm:table-cell">Vigencia Actual</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden md:table-cell">Salario</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden lg:table-cell">Prórrogas</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm hidden lg:table-cell">Aprobación</th>
-                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Estado</th>
-                  <th className="text-right p-4 font-medium text-muted-foreground text-sm"></th>
+                <tr className="border-b border-primary/5 bg-muted/20">
+                  <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden md:table-cell">Nº Contrato</th>
+                  <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Empleado</th>
+                  <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Tipo</th>
+                  <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Vigencia</th>
+                  <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden md:table-cell">Salario</th>
+                  <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Aprobación</th>
+                  <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Estado</th>
+                  <th className="text-right p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground"></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-primary/5">
                 {filteredContracts.map((contract, index) => {
                   const status = getContractStatus(contract);
                   const effectiveEndDate = getEffectiveEndDate(contract);
                   const daysRemaining = calculateDaysRemaining(effectiveEndDate);
                   const StatusIcon = statusConfig[status].icon;
                   const extensionsCount = contract.contract_extensions?.length || 0;
+                  const ContractTypeIcon = getContractTypeIcon(contract.contract_type);
                   
                   return (
                     <motion.tr
@@ -594,88 +529,84 @@ export default function Contratos() {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: index * 0.05 }}
                       onClick={() => handleContractClick(contract.id)}
-                      className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer group"
+                      className="group hover:bg-primary/[0.02] transition-colors cursor-pointer"
                     >
                       <td className="p-4 hidden md:table-cell">
-                        {contract.contract_number ? (
-                          <span className="text-sm font-mono text-primary font-medium">
-                            {contract.contract_number}
+                        <div className="flex items-center gap-2">
+                          <Coins className="w-3.5 h-3.5 text-primary/40" />
+                          <span className="text-sm font-mono text-primary/70 font-semibold">
+                            {contract.contract_number || 'S/C'}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-destructive/10 text-destructive border border-destructive/20">
-                            <AlertTriangle className="w-3 h-3" />
-                            Sin consecutivo
-                          </span>
-                        )}
+                        </div>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-primary-light flex items-center justify-center">
-                            <User className="w-4 h-4 text-primary" />
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <User className="w-5 h-5 text-primary" />
                           </div>
-                          <div>
-                            <span className="font-medium text-foreground">
+                          <div className="min-w-0">
+                            <span className="font-bold text-foreground block truncate">
                               {contract.employees?.first_name} {contract.employees?.last_name}
                             </span>
-                            <p className="text-xs text-muted-foreground">{contract.employees?.document_number}</p>
+                            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-tight">CC {contract.employees?.document_number}</p>
                           </div>
                         </div>
                       </td>
                       <td className="p-4 hidden sm:table-cell">
-                        <span className="text-sm text-foreground">{getContractTypeLabel(contract.contract_type)}</span>
-                      </td>
-                      <td className="p-4 hidden lg:table-cell">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="w-4 h-4" />
-                          {new Date(contract.start_date).toLocaleDateString('es-CO')}
+                        <div className="flex items-center gap-2">
+                          <ContractTypeIcon className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium text-foreground/80">{getContractTypeLabel(contract.contract_type)}</span>
                         </div>
                       </td>
-                      <td className="p-4 hidden sm:table-cell">
-                        <span className="text-sm text-foreground">
-                          {effectiveEndDate
-                            ? new Date(effectiveEndDate).toLocaleDateString('es-CO')
-                            : 'Sin fecha fin'}
-                        </span>
-                        {extensionsCount > 0 && (
-                          <p className="text-xs text-accent">Extendido</p>
-                        )}
+                      <td className="p-4 hidden lg:table-cell">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                            <Calendar className="w-3.5 h-3.5 text-primary/60" />
+                            {new Date(contract.start_date).toLocaleDateString('es-CO')}
+                          </div>
+                          <p className="text-[11px] font-medium text-foreground/60">
+                            → {effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido'}
+                          </p>
+                        </div>
                       </td>
                       <td className="p-4 hidden md:table-cell">
-                        <span className="text-sm font-medium text-foreground">{formatCurrency(Number(contract.salary))}</span>
-                      </td>
-                      <td className="p-4 hidden lg:table-cell">
-                        {extensionsCount > 0 ? (
-                          <Badge variant="outline" className="bg-accent-light text-accent border-accent/20">
-                            {extensionsCount} prórroga{extensionsCount > 1 ? 's' : ''}
-                          </Badge>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">-</span>
-                        )}
+                        <div className="space-y-0.5">
+                          <span className="text-sm font-bold text-foreground">{formatCurrency(Number(contract.salary))}</span>
+                          {extensionsCount > 0 && (
+                            <p className="text-[10px] font-bold text-accent uppercase flex items-center gap-1">
+                              <RotateCw className="w-2.5 h-2.5" /> {extensionsCount} prórrogas
+                            </p>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 hidden lg:table-cell">
                         {contract.is_approved ? (
-                          <Badge variant="outline" className="bg-success-light text-success border-success/20 gap-1">
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1 text-[10px] font-bold uppercase py-0 px-2">
                             <CheckCircle2 className="w-3 h-3" />
                             Aprobado
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="bg-warning-light text-warning-foreground border-warning/20 gap-1">
+                          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 gap-1 text-[10px] font-bold uppercase py-0 px-2">
                             <XCircle className="w-3 h-3" />
                             Pendiente
                           </Badge>
                         )}
                       </td>
                       <td className="p-4">
-                        <Badge variant="outline" className={cn("gap-1", statusConfig[status].class)}>
+                        <Badge variant="outline" className={cn("gap-1 text-[10px] font-bold uppercase py-0.5 px-2 border-primary/10 shadow-sm", statusConfig[status].class)}>
                           <StatusIcon className="w-3 h-3" />
                           {statusConfig[status].label}
                           {daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30 && (
-                            <span className="ml-1">({daysRemaining}d)</span>
+                            <span className="ml-1 opacity-70">({daysRemaining}d)</span>
                           )}
                         </Badge>
                       </td>
                       <td className="p-4 text-right">
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors inline-block" />
+                        <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                           <Button size="icon" variant="ghost" className="h-8 w-8 rounded-xl hover:bg-primary/10 hover:text-primary">
+                             <ChevronRight className="w-4 h-4" />
+                           </Button>
+                        </div>
                       </td>
                     </motion.tr>
                   );

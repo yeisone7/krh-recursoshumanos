@@ -56,6 +56,7 @@ export function useEmployees() {
         .from('employees_v2')
         .select(`
           *,
+          identification_types(id, name, code),
           employee_contact(
             id, email, mobile, phone, residence_city, residence_department,
             residence_address, emergency_contact_name, emergency_contact_phone
@@ -97,7 +98,7 @@ export function useEmployee(id: string | undefined) {
       // Get core employee
       const { data: employee, error: empError } = await supabase
         .from('employees_v2')
-        .select('*')
+        .select('*, identification_types(id, name, code), professions(id, name)')
         .eq('id', id)
         .single();
 
@@ -116,6 +117,7 @@ export function useEmployee(id: string | undefined) {
         { data: vaccinations },
         { data: timeConfig },
         { data: familyMembers },
+        { data: eduLevels, error: eduError },
       ] = await Promise.all([
         supabase.from('employee_contact').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
         supabase.from('employee_family').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
@@ -137,7 +139,12 @@ export function useEmployee(id: string | undefined) {
           shift_cycles(id, name, code, total_days)
         `).eq('employee_id', id).eq('is_active', true).maybeSingle(),
         supabase.from('employee_family_members').select('*').eq('employee_id', id).order('created_at', { ascending: true }),
+        supabase.from('employee_education_levels').select('education_level_id, education_levels(id, name)').eq('employee_id', id),
       ]);
+
+      if (eduError) {
+        console.warn('Education levels table not found or inaccessible:', eduError.message);
+      }
 
       return {
         ...employee,
@@ -155,6 +162,8 @@ export function useEmployee(id: string | undefined) {
         operation_centers: workInfo?.operation_centers || null,
         areas: workInfo?.areas || null,
         positions: workInfo?.positions || null,
+        education_levels: (eduLevels || []).map((el: any) => el.education_levels).filter(Boolean),
+        education_level_ids: (eduLevels || []).map((el: any) => el.education_level_id).filter(Boolean),
       } as EmployeeV2WithRelations;
     },
     enabled: !!id,
@@ -180,7 +189,8 @@ export function useCreateEmployee() {
         .from('employees_v2')
         .insert({
           company_id: currentCompanyId,
-          document_type: data.documentType,
+          identification_type_id: data.identificationTypeId,
+          document_type: data.documentType || null,
           document_number: data.documentNumber,
           document_issue_city: data.documentIssueCity || null,
           document_issue_date: data.documentIssueDate ? format(data.documentIssueDate, 'yyyy-MM-dd') : null,
@@ -197,6 +207,8 @@ export function useCreateEmployee() {
           gender_identity_other: (data as any).genderIdentity === 'otro' ? ((data as any).genderIdentityOther || null) : null,
           blood_type: data.bloodType || null,
           marital_status: data.maritalStatus || null,
+          education_level_id: data.educationLevelId || null,
+          profession_id: data.professionId || null,
           is_first_job: data.isFirstJob || false,
           is_head_of_household: data.isHeadOfHousehold || false,
           disability_type: data.disabilityType && data.disabilityType !== 'ninguna' ? data.disabilityType : null,
@@ -213,6 +225,17 @@ export function useCreateEmployee() {
       if (empError) throw empError;
 
       const employeeId = employee.id;
+
+      // 1.5 Create education levels
+      if (data.educationLevelIds && data.educationLevelIds.length > 0) {
+        const { error: eduError } = await supabase
+          .from('employee_education_levels')
+          .insert(data.educationLevelIds.map(id => ({
+            employee_id: employeeId,
+            education_level_id: id
+          })));
+        if (eduError) console.error('Error creating education levels:', eduError);
+      }
 
       // 2. Create related records in parallel
       const relatedInserts = [
@@ -392,7 +415,8 @@ export function useUpdateEmployee() {
       const { data: employee, error: empError } = await supabase
         .from('employees_v2')
         .update({
-          document_type: data.documentType,
+          identification_type_id: data.identificationTypeId,
+          document_type: data.documentType || null,
           document_number: data.documentNumber,
           document_issue_city: data.documentIssueCity || null,
           document_issue_date: data.documentIssueDate ? format(data.documentIssueDate, 'yyyy-MM-dd') : null,
@@ -409,6 +433,8 @@ export function useUpdateEmployee() {
           gender_identity_other: (data as any).genderIdentity === 'otro' ? ((data as any).genderIdentityOther || null) : null,
           blood_type: data.bloodType || null,
           marital_status: data.maritalStatus || null,
+          education_level_id: data.educationLevelId || null,
+          profession_id: data.professionId || null,
           is_first_job: data.isFirstJob || false,
           is_head_of_household: data.isHeadOfHousehold || false,
           disability_type: data.disabilityType && data.disabilityType !== 'ninguna' ? data.disabilityType : null,
@@ -422,6 +448,18 @@ export function useUpdateEmployee() {
         .single();
 
       if (empError) throw empError;
+
+      // 1.5 Update education levels
+      await supabase.from('employee_education_levels').delete().eq('employee_id', id);
+      if (data.educationLevelIds && data.educationLevelIds.length > 0) {
+        const { error: eduError } = await supabase
+          .from('employee_education_levels')
+          .insert(data.educationLevelIds.map(eduId => ({
+            employee_id: id,
+            education_level_id: eduId
+          })));
+        if (eduError) console.error('Error updating education levels:', eduError);
+      }
 
       // 2. Update or insert related records
       // First, check which records exist

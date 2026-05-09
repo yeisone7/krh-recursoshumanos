@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, CheckCircle2, AlertTriangle, User, Send, Building, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useEducationLevels } from '@/hooks/useEducationLevels';
+import { useProfessions } from '@/hooks/useProfessions';
 
 type Step = 'loading' | 'error' | 'form' | 'done';
 
@@ -47,8 +49,8 @@ const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; sect
   emergencyContactName: { label: 'Nombre Contacto de Emergencia', type: 'text', section: 'Contacto' },
   emergencyContactPhone: { label: 'Teléfono Contacto de Emergencia', type: 'tel', section: 'Contacto' },
   emergencyContactRelationship: { label: 'Parentesco', type: 'text', section: 'Contacto' },
-  educationLevel: { label: 'Nivel Educativo', type: 'select-education', section: 'Profesional' },
-  profession: { label: 'Profesión / Título', type: 'text', section: 'Profesional' },
+  educationLevelId: { label: 'Nivel Educativo', type: 'select-education-id', section: 'Profesional' },
+  professionId: { label: 'Profesión / Título', type: 'select-profession-id', section: 'Profesional' },
   experienceYears: { label: 'Años de Experiencia', type: 'number', section: 'Profesional' },
   currentCompany: { label: 'Empresa Actual', type: 'text', section: 'Profesional' },
   currentPosition: { label: 'Cargo Actual', type: 'text', section: 'Profesional' },
@@ -132,9 +134,15 @@ export default function RegistroPublico() {
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const [vacancyTitle, setVacancyTitle] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [formData, setFormData] = useState<Record<string, string>>({ documentType: 'CC' });
+  const [identificationTypes, setIdentificationTypes] = useState<any[]>([]);
+  const [formData, setFormData] = useState<Record<string, string>>({ documentType: 'CC', identificationTypeId: '' });
   const [submitting, setSubmitting] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
+  
+  // Use company_id from token for catalogs if not authenticated
+  const targetCompanyId = tokenData?.company_id;
+  const { data: educationLevels = [] } = useEducationLevels(targetCompanyId);
+  const { data: professions = [] } = useProfessions(targetCompanyId);
 
   useEffect(() => {
     if (!tokenParam) {
@@ -190,6 +198,26 @@ export default function RegistroPublico() {
         .eq('id', token.company_id)
         .single();
       if (company) setCompanyName(company.name);
+
+      // Fetch identification types for this company
+      const { data: idTypes } = await supabase
+        .from('identification_types')
+        .select('*')
+        .eq('company_id', token.company_id)
+        .order('name');
+      
+      if (idTypes) {
+        setIdentificationTypes(idTypes);
+        // If we have id types, set the first one or one that matches CC if possible
+        if (idTypes.length > 0) {
+          const ccType = idTypes.find(t => t.code === 'CC' || t.name.includes('Cédula'));
+          setFormData(prev => ({ 
+            ...prev, 
+            identificationTypeId: ccType?.id || idTypes[0].id,
+            documentType: ccType?.code || idTypes[0].code || 'CC'
+          }));
+        }
+      }
 
       setStep('form');
     } catch {
@@ -273,6 +301,9 @@ export default function RegistroPublico() {
           p_ethnic_group: formData.ethnicGroup || null,
           p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
           p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
+          p_identification_type_id: formData.identificationTypeId || null,
+          p_education_level_id: formData.educationLevelId || null,
+          p_profession_id: formData.professionId || null,
         });
         result = data;
       } else {
@@ -300,8 +331,8 @@ export default function RegistroPublico() {
           p_emergency_contact_name: formData.emergencyContactName || null,
           p_emergency_contact_phone: formData.emergencyContactPhone || null,
           p_emergency_contact_relationship: formData.emergencyContactRelationship || null,
-          p_education_level: formData.educationLevel || null,
-          p_profession: formData.profession || null,
+          p_education_level_id: formData.educationLevelId || null,
+          p_profession_id: formData.professionId || null,
           p_experience_years: formData.experienceYears ? parseInt(formData.experienceYears) : 0,
           p_current_company: formData.currentCompany || null,
           p_current_position: formData.currentPosition || null,
@@ -313,6 +344,9 @@ export default function RegistroPublico() {
           p_ethnic_group: formData.ethnicGroup || null,
           p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
           p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
+          p_identification_type_id: formData.identificationTypeId || null,
+          p_education_level_id: formData.educationLevelId || null,
+          p_profession_id: formData.professionId || null,
         });
         result = data;
       }
@@ -337,15 +371,35 @@ export default function RegistroPublico() {
       return (
         <div key={key} className="space-y-1.5">
           <Label>{config.label}{isRequired && <span className="text-destructive ml-1">*</span>}</Label>
-          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+          <Select 
+            value={formData.identificationTypeId || ''} 
+            onValueChange={v => {
+              const selected = identificationTypes.find(t => t.id === v);
+              setFormData(prev => ({ 
+                ...prev, 
+                identificationTypeId: v,
+                documentType: selected?.code || prev.documentType 
+              }));
+            }}
+          >
             <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
             <SelectContent className="bg-background">
-              <SelectItem value="CC">Cédula de Ciudadanía</SelectItem>
-              <SelectItem value="CE">Cédula de Extranjería</SelectItem>
-              <SelectItem value="PA">Pasaporte</SelectItem>
-              <SelectItem value="TI">Tarjeta de Identidad</SelectItem>
-              <SelectItem value="PEP">PEP</SelectItem>
-              <SelectItem value="PPT">PPT</SelectItem>
+              {identificationTypes.length > 0 ? (
+                identificationTypes.map(type => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <>
+                  <SelectItem value="CC">Cédula de Ciudadanía</SelectItem>
+                  <SelectItem value="CE">Cédula de Extranjería</SelectItem>
+                  <SelectItem value="PA">Pasaporte</SelectItem>
+                  <SelectItem value="TI">Tarjeta de Identidad</SelectItem>
+                  <SelectItem value="PEP">PEP</SelectItem>
+                  <SelectItem value="PPT">PPT</SelectItem>
+                </>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -387,20 +441,36 @@ export default function RegistroPublico() {
       );
     }
 
-    if (type === 'select-education') {
+    if (type === 'select-education-id') {
       return (
         <div key={key} className="space-y-1.5">
           <Label>{config.label}</Label>
           <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
             <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
             <SelectContent className="bg-background">
-              <SelectItem value="bachiller">Bachiller</SelectItem>
-              <SelectItem value="tecnico">Técnico</SelectItem>
-              <SelectItem value="tecnologo">Tecnólogo</SelectItem>
-              <SelectItem value="profesional">Profesional</SelectItem>
-              <SelectItem value="especializacion">Especialización</SelectItem>
-              <SelectItem value="maestria">Maestría</SelectItem>
-              <SelectItem value="doctorado">Doctorado</SelectItem>
+              {educationLevels.map(level => (
+                <SelectItem key={level.id} value={level.id}>
+                  {level.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    if (type === 'select-profession-id') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+            <SelectContent className="bg-background">
+              {professions.map(prof => (
+                <SelectItem key={prof.id} value={prof.id}>
+                  {prof.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

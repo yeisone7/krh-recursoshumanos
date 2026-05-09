@@ -18,6 +18,7 @@ import { useSendAiChatMessage, type AiChatMessage, type ChatMode } from '@/hooks
 interface AiChatPanelProps {
   compact?: boolean;
   onClose?: () => void;
+  hideTabs?: boolean;
 }
 
 const starterQuestions = [
@@ -139,7 +140,7 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
   );
 }
 
-export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
+export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = false }: AiChatPanelProps) {
   const location = useLocation();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
@@ -394,6 +395,22 @@ export function AiChatPanel({ compact = false, onClose }: AiChatPanelProps) {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {chatBody}
         </div>
+        </div>
+        {resetDialog}
+      </>
+    );
+  }
+
+  // Modo embebido: sin pestañas ni header propio (se gestiona desde el padre)
+  if (hideTabs) {
+    return (
+      <>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <Card className="h-[calc(100dvh-12rem)] min-h-[430px] flex-1 overflow-hidden md:h-full md:min-h-0">
+            <CardContent className="flex h-full min-h-0 flex-col p-0">
+              {chatBody}
+            </CardContent>
+          </Card>
         </div>
         {resetDialog}
       </>

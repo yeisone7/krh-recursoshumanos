@@ -7,7 +7,7 @@ import { es } from 'date-fns/locale';
 import { 
   CalendarIcon, User, Briefcase, MapPin, Heart, Building, 
   CreditCard, Shield, Clock, Users as UsersIcon, Camera, AlertCircle,
-  RotateCcw
+  RotateCcw, GraduationCap, BookOpen
 } from 'lucide-react';
 
 import {
@@ -144,7 +144,7 @@ import {
 } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateEmployee, useUpdateEmployee } from '@/hooks/useEmployees';
-import { useAreas, usePositions } from '@/hooks/useSystemConfig';
+import { useAreas, usePositions, useIdentificationTypes } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { CitySelect, CityDepartmentSelect } from '@/components/ui/city-department-select';
 import { 
@@ -157,6 +157,9 @@ import {
 } from '@/hooks/useSocialSecurityCatalogs';
 import { useBanksCatalog } from '@/hooks/useBanksCatalog';
 import { useWorkSchedules, useShiftCycles } from '@/hooks/useSchedules';
+import { useEducationLevels } from '@/hooks/useEducationLevels';
+import { useProfessions } from '@/hooks/useProfessions';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { AvatarUpload } from './AvatarUpload';
 
 interface EmployeeFormDialogProps {
@@ -173,15 +176,18 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: areas = [] } = useAreas();
   const { data: positions = [] } = usePositions();
+  const { data: identificationTypes = [] } = useIdentificationTypes();
   const { data: arlOptions = [] } = useARLCatalog();
   const { data: epsOptions = [] } = useEPSCatalog();
   const { data: afpOptions = [] } = useAFPCatalog();
   const { data: ccfOptions = [] } = useCCFCatalog();
   const { data: afcOptions = [] } = useAFCCatalog();
   const { data: ipsOptions = [] } = useIPSCatalog();
-  const { data: bankOptions = [] } = useBanksCatalog();
   const { data: workSchedules = [] } = useWorkSchedules();
   const { data: shiftCycles = [] } = useShiftCycles();
+  const { data: educationLevels = [] } = useEducationLevels();
+  const { data: professions = [] } = useProfessions();
+  const { data: bankOptions = [] } = useBanksCatalog();
   const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
   
@@ -190,6 +196,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   // Filter active schedules and cycles
   const activeSchedules = workSchedules.filter(s => s.is_active);
   const activeCycles = shiftCycles.filter(c => c.is_active);
+  const activeEducationLevels = educationLevels.filter(level => level.is_active);
+  const activeProfessions = professions.filter(prof => prof.is_active);
 
   // Sync avatar URL when employee changes
   useEffect(() => {
@@ -213,6 +221,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
       ethnicGroup: 'ninguno',
       isConflictVictim: false,
       isDemobilized: false,
+      educationLevelIds: [],
     },
   });
 
@@ -224,6 +233,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
     if (employee && open) {
       form.reset({
         // A. Core Identity
+        identificationTypeId: employee.identification_type_id || '',
         documentType: employee.document_type as any,
         documentNumber: employee.document_number,
         documentIssueCity: employee.document_issue_city || undefined,
@@ -241,6 +251,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         genderIdentityOther: (employee as any).gender_identity_other || undefined,
         bloodType: employee.blood_type as any,
         maritalStatus: employee.marital_status as any,
+        educationLevelIds: employee.education_level_ids || [],
+        professionId: employee.profession_id || undefined,
         
         // B. Contact
         residenceDepartment: employee.contact?.residence_department || undefined,
@@ -429,24 +441,30 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-4xl flex-col overflow-hidden p-0">
-        <DialogHeader className="shrink-0 bg-gradient-to-r from-primary to-primary/80 px-4 pb-4 pt-6 text-primary-foreground sm:px-6">
-          <DialogTitle className="flex items-center gap-2 pr-6 font-display text-lg text-primary-foreground sm:text-xl">
-            <Building className="w-5 h-5" />
-            {isEditMode ? 'Editar Empleado' : 'Nuevo Empleado'}
-          </DialogTitle>
-          <DialogDescription className="text-primary-foreground/75">
-            {isEditMode 
-              ? 'Modifique la información del empleado según sea necesario.'
-              : 'Complete la información del empleado en cada una de las secciones.'
-            }
-          </DialogDescription>
-        </DialogHeader>
-
         <Form {...form}>
           <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
-              <div className="px-4 pt-2 sm:px-6">
-                <TabsList className="grid h-auto w-full grid-cols-4 gap-1 rounded-lg border border-primary/10 bg-primary/5 p-1.5 sm:flex sm:flex-wrap">
+              <div className="relative shrink-0 overflow-hidden bg-sidebar border-b">
+                <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:26px_26px] opacity-10" />
+                <div className="absolute -top-20 -right-16 h-56 w-56 rounded-full border border-primary/30 bg-primary/5" />
+                <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full border border-primary/20 bg-primary/5" />
+                <div className="absolute top-8 right-28 h-28 w-28 rounded-full border border-primary/25" />
+                
+                <DialogHeader className="relative z-10 px-4 pt-6 pb-2 text-foreground sm:px-6">
+                  <DialogTitle className="flex items-center gap-2 pr-6 font-display text-lg text-foreground sm:text-xl">
+                    <Building className="w-5 h-5 text-primary" />
+                    {isEditMode ? 'Editar Empleado' : 'Nuevo Empleado'}
+                  </DialogTitle>
+                  <DialogDescription className="text-muted-foreground mt-1">
+                    {isEditMode 
+                      ? 'Modifique la información del empleado según sea necesario.'
+                      : 'Complete la información del empleado en cada una de las secciones.'
+                    }
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="relative z-10 px-4 pb-4 sm:px-6">
+                  <TabsList className="grid h-auto w-full grid-cols-4 gap-1 rounded-xl bg-background/50 backdrop-blur-md border border-primary/10 p-1 sm:flex sm:flex-wrap shadow-sm">
                   {tabItems.map((tab) => {
                     const errorCount = getTabErrorCount(tab.value);
                     const hasErrors = tabsWithErrors.has(tab.value);
@@ -472,8 +490,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   })}
                 </TabsList>
               </div>
+            </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 scrollbar-themed sm:px-6" style={{ maxHeight: 'calc(90vh - 260px)' }}>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 scrollbar-themed sm:px-6" style={{ maxHeight: 'calc(90vh - 260px)' }}>
                 {/* A. IDENTITY TAB */}
                 <TabsContent value="identity" className="mt-0 space-y-6">
                   {/* Photo Section */}
@@ -494,26 +513,28 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   <div className="space-y-4">
                     <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Documento de Identidad</h3>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="documentType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tipo *</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                {Object.entries(documentTypeLabels).map(([value, label]) => (
-                                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormField
+                          control={form.control}
+                          name="identificationTypeId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Tipo *</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-background">
+                                  {identificationTypes?.filter(type => !!type.id).map((type) => (
+                                    <SelectItem key={type.id} value={type.id}>
+                                      {type.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       <FormField
                         control={form.control}
                         name="documentNumber"
@@ -868,6 +889,62 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                           </FormItem>
                         )}
                       />
+                      <FormField
+                        control={form.control}
+                        name="educationLevelIds"
+                        render={({ field }) => (
+                          <FormItem className="col-span-1 md:col-span-2">
+                            <FormLabel className="flex items-center gap-2">
+                              <GraduationCap className="w-4 h-4 text-primary" />
+                              Niveles Educativos
+                            </FormLabel>
+                            <FormControl>
+                              <MultiSelect
+                                options={activeEducationLevels.map(level => ({
+                                  label: level.name,
+                                  value: level.id
+                                }))}
+                                value={field.value || []}
+                                onChange={field.onChange}
+                                placeholder="Seleccionar niveles educativos..."
+                                className="bg-background/50 border-input hover:border-primary/50 transition-colors"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="professionId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              <BookOpen className="w-4 h-4 text-primary" />
+                              Profesión
+                            </FormLabel>
+                            <Select 
+                              onValueChange={(val) => field.onChange(val === 'unspecified' ? '' : val)} 
+                              value={field.value || 'unspecified'}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleccionar" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                <SelectItem value="unspecified">Sin especificar</SelectItem>
+                                {activeProfessions?.filter(prof => !!prof.id).map((prof) => (
+                                  <SelectItem key={prof.id} value={prof.id}>
+                                    {prof.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                   </div>
                 </TabsContent>
@@ -1157,9 +1234,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar centro" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {operationCenters.map((center) => (
-                                  <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
-                                ))}
+                                  {operationCenters?.filter(c => !!c.id).map((center) => (
+                                    <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
+                                  ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -1188,9 +1265,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar área" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {areas.map((area: any) => (
-                                  <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>
-                                ))}
+                                  {areas?.filter((a: any) => !!a.id).map((area: any) => (
+                                    <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>
+                                  ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -1218,11 +1295,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar cargo" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {positions.map((position: any) => (
-                                  <SelectItem key={position.id} value={position.id}>
-                                    {position.name}
-                                  </SelectItem>
-                                ))}
+                                  {positions?.filter((p: any) => !!p.id).map((position: any) => (
+                                    <SelectItem key={position.id} value={position.id}>
+                                      {position.name}
+                                    </SelectItem>
+                                  ))}
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -1411,7 +1488,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                     No hay horarios activos. Configure uno primero en Jornadas.
                                   </div>
                                 ) : (
-                                  activeSchedules.map((schedule) => (
+                                  activeSchedules?.filter(s => !!s.id).map((schedule) => (
                                     <SelectItem key={schedule.id} value={schedule.id}>
                                       <span>{schedule.name}</span>
                                       <span className="text-muted-foreground ml-2">
@@ -1448,7 +1525,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                       No hay ciclos activos. Configure uno primero en Jornadas.
                                     </div>
                                   ) : (
-                                    activeCycles.map((cycle) => (
+                                    activeCycles?.filter(c => !!c.id).map((cycle) => (
                                       <SelectItem key={cycle.id} value={cycle.id}>
                                         <span>{cycle.name}</span>
                                         <span className="text-muted-foreground ml-2">
@@ -1609,7 +1686,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar ARL" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {arlOptions.filter(a => a.is_active).map((arl) => (
+                                {arlOptions?.filter(a => a.is_active && !!a.name).map((arl) => (
                                   <SelectItem key={arl.id} value={arl.name}>{arl.name}</SelectItem>
                                 ))}
                               </SelectContent>
@@ -1629,7 +1706,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar EPS" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {epsOptions.filter(e => e.is_active).map((eps) => (
+                                {epsOptions?.filter(e => e.is_active && !!e.name).map((eps) => (
                                   <SelectItem key={eps.id} value={eps.name}>{eps.name}</SelectItem>
                                 ))}
                               </SelectContent>
@@ -1649,7 +1726,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar AFP" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {afpOptions.filter(a => a.is_active).map((afp) => (
+                                {afpOptions?.filter(a => a.is_active && !!a.name).map((afp) => (
                                   <SelectItem key={afp.id} value={afp.name}>{afp.name}</SelectItem>
                                 ))}
                               </SelectContent>
@@ -1669,7 +1746,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar CCF" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {ccfOptions.filter(c => c.is_active).map((ccf) => (
+                                {ccfOptions?.filter(c => c.is_active && !!c.name).map((ccf) => (
                                   <SelectItem key={ccf.id} value={ccf.name}>{ccf.name}</SelectItem>
                                 ))}
                               </SelectContent>
@@ -1689,7 +1766,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar AFC" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {afcOptions.filter(a => a.is_active).map((afc) => (
+                                {afcOptions?.filter(a => a.is_active && !!a.name).map((afc) => (
                                   <SelectItem key={afc.id} value={afc.name}>{afc.name}</SelectItem>
                                 ))}
                               </SelectContent>
@@ -1709,7 +1786,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar IPS" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {ipsOptions.filter(i => i.is_active).map((ips) => (
+                                {ipsOptions?.filter(i => i.is_active && !!i.name).map((ips) => (
                                   <SelectItem key={ips.id} value={ips.name}>{ips.name}</SelectItem>
                                 ))}
                               </SelectContent>
@@ -1738,7 +1815,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 <SelectTrigger><SelectValue placeholder="Seleccionar banco" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                {bankOptions.filter(b => b.is_active).map((bank) => (
+                                {bankOptions?.filter(b => b.is_active && !!b.name).map((bank) => (
                                   <SelectItem key={bank.id} value={bank.name}>{bank.name}</SelectItem>
                                 ))}
                               </SelectContent>

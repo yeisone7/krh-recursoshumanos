@@ -1,0 +1,98 @@
+Empresa
+Centro de Operaciones
+Centro de Costo
+Área
+primerNombre
+segundoNombre
+primerApellido
+segundoApellido
+Sexo Biológico
+Tipo de Identificación
+Identidificación
+Ciudad de Expedición
+fechaExpedida
+salario
+Cargo
+País de Nacimiento
+Departamento de Nacimiento
+Ciudad de Nacimiento
+fechaNacimiento
+Departamento de Recidencia
+Ciudad de Recidencia
+direccionResidencia
+barrioResidencia
+correoEmpleado
+telEmpleado
+Sexo del Conyuge
+nombreConyuge
+fechaNacimientoConyuge
+conyugeTrabaja
+numeroHijos
+Ciudad Donde Labora
+Tipo de Contrato
+Tipo de Nómina
+Tipo de Turno
+Tipo de Sangre
+Nivel Educativo
+Profesión
+Estado Civil
+contactoEmergencia
+telEmergencia
+Riesgo
+ARL
+EPS
+AFP
+CCF
+AFC
+IPS
+Banco
+TipoCuenta
+CuentaBanco
+cartaBanco
+cuentaInscrita
+hojaVida
+copiaIdentificacion
+certificadoJudicial
+certLaboral
+certAcademica
+cartaAutorizacion
+licenciaConduccion
+venceLicencia
+manejoDefensivo
+venceManejo
+manipulacionAlimentos
+venceManipulacion
+bpm
+venceBPM
+regCapacitacion
+fechaIngreso
+camisa
+pantalon
+Zapatos
+observacion
+Tétano 1 Dósis
+Tétano 2 Dósis
+Tétano 3 Dósis
+Tétano 4 Dósis
+Tétano 4 Dósis_1
+Próxima Dósis Tétano
+Hepatitis A 1 Dósis
+Hepatitis A 2 Dósis
+Próxima Dósis Hepatitis A
+Hepatitis B 1 Dósis
+Hepatitis B 2 Dósis
+Hepatitis B 3 Dósis
+Próxima Dósis Hepatitis B
+Fiebre Amarilla 1 Dósis
+Fiebre Amarilla 2 Dósis
+Próxima Dósis Fiebre Amarilla
+Tifoidea 1 Dósis
+Tifoidea 2 Dósis
+Próxima Dósis Tifoidea
+Horario de Oficina
+Estado
+ficha_Personal
+cartaResidencia
+venceCartaResidencia
+vencePsicosensometrico
+diaDescanso

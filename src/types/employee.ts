@@ -183,9 +183,10 @@ export function normalizeEmployeeDocumentFolder(type: EmployeeDocumentType): Emp
 // A. Core Employee Schema
 export const employeeCoreSchema = z.object({
   // Identification
-  documentType: z.enum(['CC', 'CE', 'TI', 'PA', 'PEP'], {
-    required_error: 'Seleccione el tipo de documento',
+  identificationTypeId: z.string().uuid({
+    required_error: 'Seleccione el tipo de identificación',
   }),
+  documentType: z.enum(['CC', 'CE', 'TI', 'PA', 'PEP']).optional(),
   documentNumber: z.string()
     .min(5, 'El documento debe tener al menos 5 caracteres')
     .max(20, 'El documento no puede exceder 20 caracteres'),
@@ -214,6 +215,8 @@ export const employeeCoreSchema = z.object({
   genderIdentityOther: z.string().max(100).optional(),
   bloodType: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
   maritalStatus: z.enum(['soltero', 'casado', 'union_libre', 'divorciado', 'viudo'], { required_error: 'Seleccione el estado civil' }),
+  educationLevelIds: z.array(z.string().uuid()).optional().default([]),
+  professionId: z.string().uuid().optional().or(z.literal('')),
 });
 
 // B. Contact Schema
@@ -394,7 +397,8 @@ export type EmployeeFullFormData = z.infer<typeof employeeFullFormSchema>;
 export interface EmployeeV2 {
   id: string;
   company_id: string;
-  document_type: DocumentType;
+  identification_type_id: string | null;
+  document_type: DocumentType | null;
   document_number: string;
   document_issue_city: string | null;
   document_issue_date: string | null;
@@ -409,6 +413,9 @@ export interface EmployeeV2 {
   gender: GenderType | null;
   blood_type: BloodType | null;
   marital_status: MaritalStatusType | null;
+  education_level_id: string | null; // Keep for backward compatibility
+  education_level_ids?: string[];
+  profession_id: string | null;
   status?: 'active' | 'suspended' | 'retired' | 'en_retiro';
   is_active: boolean;
   avatar_url: string | null;
@@ -589,6 +596,7 @@ export interface EmployeeSchedule {
 // =====================================================
 
 export interface EmployeeV2WithRelations extends EmployeeV2 {
+  identification_types?: { id: string; name: string; code: string } | null;
   contact?: EmployeeContact | null;
   family?: EmployeeFamily | null;
   family_members?: EmployeeFamilyMember[];
@@ -615,6 +623,7 @@ export interface EmployeeV2WithRelations extends EmployeeV2 {
   operation_centers?: { id: string; name: string; city?: string | null } | null;
   areas?: { id: string; name: string } | null;
   positions?: { id: string; name: string } | null;
+  education_levels?: { id: string; name: string }[];
 }
 
 // Helper to get full name

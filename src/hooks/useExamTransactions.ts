@@ -33,6 +33,8 @@ export interface ExamTransaction {
     last_name: string;
     second_last_name?: string | null;
     document_number: string;
+    document_type?: string;
+    identification_types?: { id: string; name: string; code: string } | null;
     company_id: string;
     operation_centers?: { id: string; name: string } | null;
   };
@@ -65,7 +67,8 @@ export function useExamTransactions() {
         supabase
           .from('employees_v2')
           .select(`
-            id, first_name, middle_name, last_name, second_last_name, document_number, company_id,
+            id, first_name, middle_name, last_name, second_last_name, document_number, document_type, company_id,
+            identification_types(id, name, code),
             employee_work_info(id, operation_center_id, is_current, operation_centers(id, name))
           `)
           .in('id', employeeIds)
@@ -100,6 +103,8 @@ export function useExamTransactions() {
             last_name: e.last_name,
             second_last_name: e.second_last_name,
             document_number: e.document_number,
+            document_type: e.document_type,
+            identification_types: e.identification_types,
             company_id: e.company_id,
             operation_centers: currentWorkInfo?.operation_centers || null,
           }];
