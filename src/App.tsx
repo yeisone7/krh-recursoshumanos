@@ -64,6 +64,7 @@ import ConfiguracionLaboral from "./pages/ConfiguracionLaboral";
 import Prestamos from "./pages/Prestamos";
 import Descuentos from "./pages/Descuentos";
 import Install from "./pages/Install";
+import Catalogos from "./pages/Catalogos";
 import Auditoria from "./pages/Auditoria";
 import { 
   CatalogosAreas, 
@@ -80,7 +81,10 @@ import {
   CatalogosFestivos,
   CatalogosMotivosNovedad,
   CatalogosPlataformasPublicacion,
-} from "./pages/catalogos";
+  CatalogosTiposIdentificacion,
+  CatalogosNivelesEducativos,
+  CatalogosProfessions,
+} from "./pages/catalogos/index";
 import NotFound from "./pages/NotFound";
 
 const AnaliticaSeleccion = lazy(() => import("./pages/AnaliticaSeleccion"));
@@ -179,6 +183,7 @@ const App = () => (
                         <Route path="/reportes" element={<P module="reportes"><Reportes /></P>} />
                         <Route path="/analitica" element={<P module="analitica"><Analitica /></P>} />
                         <Route path="/asistente-ia" element={<P module="asistente_ia"><AsistenteIA /></P>} />
+                        <Route path="/catalogos" element={<P module="catalogos"><Catalogos /></P>} />
                         <Route path="/catalogos/areas" element={<P module="catalogos"><CatalogosAreas /></P>} />
                         <Route path="/catalogos/cargos" element={<P module="catalogos"><CatalogosCargos /></P>} />
                         <Route path="/catalogos/tipos-dotacion" element={<P module="catalogos"><CatalogosTiposDotacion /></P>} />
@@ -193,6 +198,9 @@ const App = () => (
                         <Route path="/catalogos/festivos" element={<P module="catalogos"><CatalogosFestivos /></P>} />
                         <Route path="/catalogos/motivos-novedad" element={<P module="catalogos"><CatalogosMotivosNovedad /></P>} />
                         <Route path="/catalogos/plataformas-publicacion" element={<P module="catalogos"><CatalogosPlataformasPublicacion /></P>} />
+                        <Route path="/catalogos/tipos-identificacion" element={<P module="catalogos"><CatalogosTiposIdentificacion /></P>} />
+                        <Route path="/catalogos/niveles-educativos" element={<P module="catalogos"><CatalogosNivelesEducativos /></P>} />
+                        <Route path="/catalogos/profesiones" element={<P module="catalogos"><CatalogosProfessions /></P>} />
                         <Route path="/perfil" element={<Perfil />} />
                         <Route path="/super-admin" element={<SuperAdmin />} />
                         <Route path="/seguridad" element={<P module="seguridad"><Seguridad /></P>} />

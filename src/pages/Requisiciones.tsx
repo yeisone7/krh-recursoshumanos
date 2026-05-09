@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale';
 import {
   FileText, Plus, Search, Eye, Clock, CheckCircle, XCircle,
   Building2, Users, Calendar, Send, ArrowRight, FileDown, Loader2,
+  TrendingUp, Briefcase, Filter, ChevronRight
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +19,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 
 import { useRequisitions, PersonnelRequisition } from '@/hooks/useRequisitions';
 import { RequisitionFormDialog, RequisitionDetailDialog, RequisitionApprovalDialog } from '@/components/requisitions';
@@ -30,6 +30,8 @@ import {
   requisitionReasonLabels,
   RequisitionReason,
 } from '@/types/requisition';
+
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function Requisiciones() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,8 +95,6 @@ export default function Requisiciones() {
     return statusMap[req.estado_requisicion] || null;
   };
 
-  // Helper to get approval progress for timeline
-  // Order: RRHH → Jurídico → Operaciones → Gerencia → Selección
   const getApprovalProgress = (req: PersonnelRequisition) => {
     const allSteps = [
       { key: 'rrhh', label: 'RH', approved: req.rrhh_aprobado },
@@ -112,299 +112,311 @@ export default function Requisiciones() {
   };
 
   const statusOptions = [
-    { value: 'all', label: 'Todos' },
+    { value: 'all', label: 'Todos los estados' },
     ...Object.entries(requisitionStatusLabels).map(([k, v]) => ({ value: k, label: v })),
   ];
 
-  return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Requisiciones de Personal</h1>
-          <p className="text-muted-foreground">Gestiona solicitudes de nuevo personal</p>
-        </div>
-        <Button onClick={() => { setEditRequisition(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-2" />Nueva Requisición
-        </Button>
-      </motion.div>
+  const kpis = useMemo(() => ([
+    { label: 'TOTAL REQUISICIONES', value: stats.total, desc: 'Historial completo', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-500/10' },
+    { label: 'EN BORRADOR', value: stats.borrador, desc: 'Pendientes de envío', icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted' },
+    { label: 'EN PROCESO', value: stats.enProceso, desc: 'Flujo de aprobación', icon: Send, color: 'text-amber-600', bg: 'bg-amber-500/10' },
+    { label: 'APROBADAS', value: stats.aprobadas, desc: 'Listas para selección', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+  ]), [stats]);
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-secondary"><CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-secondary/10"><FileText className="w-5 h-5 text-secondary" /></div>
-          <div><p className="text-2xl font-bold">{stats.total}</p><p className="text-xs text-muted-foreground">Total</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-muted"><Clock className="w-5 h-5 text-muted-foreground" /></div>
-          <div><p className="text-2xl font-bold">{stats.borrador}</p><p className="text-xs text-muted-foreground">Borrador</p></div>
-        </CardContent></Card>
-        <Card className="border-l-4 border-l-tertiary"><CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-tertiary/10"><Send className="w-5 h-5 text-tertiary" /></div>
-          <div><p className="text-2xl font-bold">{stats.enProceso}</p><p className="text-xs text-muted-foreground">En Proceso</p></div>
-        </CardContent></Card>
-        <Card className="bg-gradient-to-br from-success/5 to-success/10 border-success/20 border-l-4 border-l-success"><CardContent className="p-4 flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-success/10"><CheckCircle className="w-5 h-5 text-success" /></div>
-          <div><p className="text-2xl font-bold">{stats.aprobadas}</p><p className="text-xs text-muted-foreground">Aprobadas</p></div>
-        </CardContent></Card>
+  return (
+    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+      {/* Premium Header */}
+      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+        
+        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                  Módulo de Selección
+                </Badge>
+                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Requisiciones de Personal</h1>
+              </div>
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
+              Gestiona y aprueba las solicitudes de nuevo talento humano para tu operación de manera eficiente.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
+            {kpis.map((stat, i) => (
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+                <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
+                   <stat.icon className="w-3.5 h-3.5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
+                  <p className={`text-2xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
+                  <p className="text-[9px] font-bold text-muted-foreground/60 leading-none truncate">{stat.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Filters & Table */}
-      <Card>
-        <CollapsibleFilters
-          activeCount={(searchQuery ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0)}
-          className="border-b p-4"
-        >
-          <div className="flex flex-col gap-3 sm:flex-row">
-          <div className="relative min-w-0 flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Buscar..." className="min-h-11 pl-9 sm:min-h-10" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+      {/* Sticky Filter Bar */}
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
+          <div className="relative w-full sm:w-80 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <input
+              placeholder="Buscar por cargo, solicitante..."
+              className="w-full pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          <SearchableSelect
-            options={statusOptions}
-            value={statusFilter}
-            onValueChange={setStatusFilter}
-            placeholder="Estado"
-            searchPlaceholder="Buscar estado..."
-            triggerClassName="min-h-11 w-full sm:min-h-10 sm:w-[180px]"
-          />
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+             <SearchableSelect
+              options={statusOptions}
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+              placeholder="Filtrar por estado"
+              searchPlaceholder="Buscar estado..."
+              triggerClassName="h-12 w-full sm:w-[220px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider"
+            />
+            <div className="flex items-center px-4 h-12 bg-primary/10 rounded-2xl border border-primary/5 shrink-0">
+              <span className="text-sm font-black text-primary">{filtered.length}</span>
+            </div>
           </div>
-        </CollapsibleFilters>
+        </div>
 
-        {isLoading ? (
-          <div className="p-4 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No hay requisiciones</h3>
-            <Button onClick={() => setShowForm(true)}><Plus className="w-4 h-4 mr-2" />Nueva Requisición</Button>
-          </div>
-        ) : (
-          <>
-          <div className="space-y-3 p-4 md:hidden">
-            {filtered.map(req => {
-              const status = req.estado_requisicion as RequisitionStatus;
-              const cfg = requisitionStatusConfig[status];
-              const step = getCurrentApprovalStep(req);
-              const progress = getApprovalProgress(req);
-              return (
-                <Card key={req.id} className="overflow-hidden" onClick={() => openDetail(req.id)}>
-                  <CardContent className="space-y-4 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="break-words font-medium uppercase leading-snug">{req.cargo_solicitado}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{req.cantidad_vacantes_requeridas} vacantes • {req.solicitante_nombre}</p>
-                      </div>
-                      <Badge variant="outline" className={cn('shrink-0 whitespace-nowrap', cfg.bg, cfg.text, cfg.border)}>{requisitionStatusLabels[status]}</Badge>
-                    </div>
+        <Button className="h-12 w-full xl:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={() => { setEditRequisition(null); setShowForm(true); }}>
+          <Plus className="w-4 h-4 mr-2" />
+          Nueva Requisición
+        </Button>
+      </div>
 
-                    <div className="grid gap-2 text-sm text-muted-foreground">
-                      <div className="flex min-w-0 items-center gap-2"><Building2 className="h-4 w-4 shrink-0" /><span className="truncate">{req.operation_centers?.name || '-'}</span></div>
-                      <div className="flex items-center gap-2"><Calendar className="h-4 w-4 shrink-0" /><span>{format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}</span></div>
-                      <div><Badge variant="outline" className="max-w-full whitespace-normal text-left">{requisitionReasonLabels[req.motivo_solicitud as RequisitionReason]}</Badge></div>
-                    </div>
-
-                    <TooltipProvider>
-                      <div className="flex items-center gap-1" role="progressbar" aria-label={`Progreso de aprobación: ${progress.filter(s => s.approved === true).length} de ${progress.length} aprobados`} aria-valuenow={progress.filter(s => s.approved === true).length} aria-valuemax={progress.length}>
-                        {progress.map((s, idx) => (
-                          <div key={s.key} className="flex items-center">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  aria-label={`${s.key}: ${s.approved === true ? 'Aprobado' : s.approved === false ? 'Rechazado' : 'Pendiente'}`}
-                                  className={cn(
-                                    'flex h-8 w-8 items-center justify-center rounded-full border-2 text-[10px] font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
-                                    s.approved === true && 'bg-success text-success-foreground border-success shadow-sm',
-                                    s.approved === false && 'bg-destructive text-destructive-foreground border-destructive shadow-sm',
-                                    s.approved === null && 'bg-muted text-muted-foreground border-border'
-                                  )}
-                                  onClick={e => e.stopPropagation()}
-                                >
-                                  {s.approved === true ? <CheckCircle className="h-4 w-4" /> : s.approved === false ? <XCircle className="h-4 w-4" /> : s.label}
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="text-xs">
-                                <p className="font-medium">{s.key === 'operaciones' ? 'Operaciones' : s.key === 'rrhh' ? 'Recursos Humanos' : s.key === 'juridico' ? 'Jurídico' : s.key === 'gerencia' ? 'Gerencia' : 'Selección'}</p>
-                                <p className={cn(s.approved === true && 'text-success', s.approved === false && 'text-destructive', s.approved === null && 'text-muted-foreground')}>{s.approved === true ? '✓ Aprobado' : s.approved === false ? '✗ Rechazado' : '○ Pendiente'}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                            {idx < progress.length - 1 && <div className={cn('h-0.5 w-3', s.approved === true ? 'bg-success' : 'bg-border')} aria-hidden="true" />}
-                          </div>
-                        ))}
-                      </div>
-                    </TooltipProvider>
-
-                    <div className="grid grid-cols-2 gap-2" onClick={e => e.stopPropagation()}>
-                      <Button size="sm" variant="outline" className="min-h-11" onClick={(e) => handleExportPDF(req, e)} disabled={exportingId === req.id}>
-                        {exportingId === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-                        <span className="ml-2">PDF</span>
-                      </Button>
-                      <Button size="sm" variant="outline" className="min-h-11" onClick={() => openDetail(req.id)}>
-                        <Eye className="h-4 w-4 mr-2" />Ver
-                      </Button>
-                      {step && (
-                        <Button size="sm" className="col-span-2 min-h-11" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
-                          <CheckCircle className="h-4 w-4 mr-2" />Aprobar
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-          <div className="hidden md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cargo</TableHead>
-                <TableHead>Centro</TableHead>
-                <TableHead>Motivo</TableHead>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Progreso</TableHead>
-                
-                <TableHead>Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map(req => {
-                const status = req.estado_requisicion as RequisitionStatus;
-                const cfg = requisitionStatusConfig[status];
-                const step = getCurrentApprovalStep(req);
-                const progress = getApprovalProgress(req);
-                return (
-                  <TableRow key={req.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(req.id)}>
-                    <TableCell>
-                      <p className="font-medium uppercase">{req.cargo_solicitado}</p>
-                      <p className="text-xs text-muted-foreground">{req.cantidad_vacantes_requeridas} vacantes • {req.solicitante_nombre}</p>
-                    </TableCell>
-                    <TableCell><div className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-muted-foreground" />{req.operation_centers?.name || '-'}</div></TableCell>
-                    <TableCell><Badge variant="outline">{requisitionReasonLabels[req.motivo_solicitud as RequisitionReason]}</Badge></TableCell>
-                    <TableCell><div className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-muted-foreground" />{format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}</div></TableCell>
-                    <TableCell>
-                      <TooltipProvider>
-                        <div 
-                          className="flex items-center gap-0.5"
-                          role="progressbar"
-                          aria-label={`Progreso de aprobación: ${progress.filter(s => s.approved === true).length} de ${progress.length} aprobados`}
-                          aria-valuenow={progress.filter(s => s.approved === true).length}
-                          aria-valuemax={progress.length}
-                        >
-                          {progress.map((s, idx) => (
-                            <div key={s.key} className="flex items-center">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    data-testid={`approval-step-${s.key}-${req.id}`}
-                                    aria-label={`${s.key}: ${s.approved === true ? 'Aprobado' : s.approved === false ? 'Rechazado' : 'Pendiente'}`}
-                                    className={cn(
-                                      'w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold transition-all duration-200 border-2',
-                                      'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary',
-                                      s.approved === true && 'bg-success text-success-foreground border-success shadow-sm',
-                                      s.approved === false && 'bg-destructive text-destructive-foreground border-destructive shadow-sm',
-                                      s.approved === null && 'bg-muted text-muted-foreground border-border'
-                                    )}
-                                  >
-                                    {s.approved === true ? (
-                                      <CheckCircle className="w-3.5 h-3.5" />
-                                    ) : s.approved === false ? (
-                                      <XCircle className="w-3.5 h-3.5" />
-                                    ) : (
-                                      s.label
-                                    )}
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="text-xs">
-                                  <p className="font-medium">
-                                    {s.key === 'operaciones' && 'Operaciones'}
-                                    {s.key === 'rrhh' && 'Recursos Humanos'}
-                                    {s.key === 'juridico' && 'Jurídico'}
-                                    {s.key === 'gerencia' && 'Gerencia'}
-                                    {s.key === 'seleccion' && 'Selección'}
-                                  </p>
-                                  <p className={cn(
-                                    s.approved === true && 'text-success',
-                                    s.approved === false && 'text-destructive',
-                                    s.approved === null && 'text-muted-foreground'
-                                  )}>
-                                    {s.approved === true ? '✓ Aprobado' : s.approved === false ? '✗ Rechazado' : '○ Pendiente'}
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                              {/* Connector line between steps */}
-                              {idx < progress.length - 1 && (
-                                <div 
-                                  className={cn(
-                                    'w-2 h-0.5 mx-0.5',
-                                    s.approved === true ? 'bg-success' : 'bg-border'
-                                  )}
-                                  aria-hidden="true"
-                                />
-                              )}
+      <ScrollArea className="flex-1 p-6 sm:p-10">
+        <div className="max-w-7xl mx-auto">
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-24 w-full rounded-[2rem]" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-32 bg-background/50 rounded-[3rem] border-2 border-dashed border-primary/5">
+               <FileText className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
+               <p className="text-xl font-black uppercase tracking-[0.2em] text-muted-foreground/40">Sin requisiciones registradas</p>
+            </div>
+          ) : (
+            <>
+              {/* Mobile View */}
+              <div className="space-y-4 md:hidden">
+                {filtered.map(req => {
+                  const status = req.estado_requisicion as RequisitionStatus;
+                  const cfg = requisitionStatusConfig[status];
+                  const progress = getApprovalProgress(req);
+                  return (
+                    <Card key={req.id} className="group relative overflow-hidden rounded-[2rem] border border-primary/5 shadow-lg bg-background/50 backdrop-blur-sm" onClick={() => openDetail(req.id)}>
+                      <div className={cn("absolute left-0 top-0 h-full w-1.5", cfg.bg)} />
+                      <CardContent className="p-6 space-y-4">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-black uppercase text-base leading-none tracking-tight mb-1">{req.cargo_solicitado}</p>
+                            <div className="flex items-center gap-2 mt-1 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                              <Users className="w-3.5 h-3.5 text-primary/60" />
+                              <span>{req.cantidad_vacantes_requeridas} vacantes</span>
+                              <span>•</span>
+                              <span className="truncate">{req.solicitante_nombre}</span>
                             </div>
-                          ))}
+                          </div>
+                          <Badge variant="outline" className={cn('shrink-0 text-[9px] font-black uppercase tracking-widest px-3 py-1 border-primary/10 shadow-sm rounded-full', cfg.bg, cfg.text, cfg.border)}>
+                            {requisitionStatusLabels[status]}
+                          </Badge>
                         </div>
-                      </TooltipProvider>
-                    </TableCell>
-                    <TableCell><Badge variant="outline" className={cn(cfg.bg, cfg.text, cfg.border)}>{requisitionStatusLabels[status]}</Badge></TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={(e) => handleExportPDF(req, e)}
-                              disabled={exportingId === req.id}
-                              aria-label={`Exportar requisición ${req.cargo_solicitado} a PDF`}
-                            >
-                              {exportingId === req.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <FileDown className="w-4 h-4" />
-                              )}
+
+                        <div className="flex flex-col gap-3 p-4 rounded-2xl bg-muted/30 border border-primary/5">
+                          <div className="flex items-center gap-3">
+                            <div className="p-1.5 rounded-lg bg-background shadow-sm">
+                              <Building2 className="w-3.5 h-3.5 text-primary" />
+                            </div>
+                            <span className="text-xs font-bold text-foreground/80 truncate">{req.operation_centers?.name || '-'}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="p-1.5 rounded-lg bg-background shadow-sm">
+                              <Calendar className="w-3.5 h-3.5 text-primary" />
+                            </div>
+                            <span className="text-xs font-bold text-foreground/80">{format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4 pt-2 border-t border-primary/5">
+                          <div className="flex -space-x-2">
+                            {progress.map((s, idx) => (
+                              <div
+                                key={s.key}
+                                className={cn(
+                                  'w-8 h-8 rounded-full flex items-center justify-center border-4 border-background text-[9px] font-black z-[1] shadow-sm',
+                                  s.approved === true ? 'bg-emerald-500 text-white' : s.approved === false ? 'bg-red-500 text-white' : 'bg-muted text-muted-foreground'
+                                )}
+                              >
+                                {s.approved === true ? <CheckCircle className="w-4 h-4" /> : s.approved === false ? <XCircle className="w-4 h-4" /> : s.label}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all" onClick={(e) => handleExportPDF(req, e)}>
+                              {exportingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
                             </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Exportar PDF</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => openDetail(req.id)}
-                              aria-label={`Ver detalle de requisición ${req.cargo_solicitado}`}
-                              data-testid={`view-requisition-${req.id}`}
-                            >
-                              <Eye className="w-4 h-4" />
+                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-muted hover:bg-foreground hover:text-background transition-all" onClick={() => openDetail(req.id)}>
+                              <ChevronRight className="w-5 h-5" />
                             </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>Ver detalle</TooltipContent>
-                        </Tooltip>
-                        {step && (
-                          <Button 
-                            size="sm" 
-                            onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}
-                            aria-label={`Aprobar requisición ${req.cargo_solicitado} en etapa ${step}`}
-                            data-testid={`approve-requisition-${req.id}`}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1.5" />
-                            Aprobar
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          </div>
-          </>
-        )}
-      </Card>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-2xl bg-background/40 backdrop-blur-xl">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 border-b border-primary/5 hover:bg-muted/30">
+                      <TableHead className="px-8 h-16 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Flujo de Aprobación</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
+                      <TableHead className="px-8 h-16 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map(req => {
+                      const status = req.estado_requisicion as RequisitionStatus;
+                      const cfg = requisitionStatusConfig[status];
+                      const step = getCurrentApprovalStep(req);
+                      const progress = getApprovalProgress(req);
+                      return (
+                        <TableRow key={req.id} className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors cursor-pointer" onClick={() => openDetail(req.id)}>
+                          <TableCell className="px-8 py-5">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
+                                <FileText className="w-6 h-6" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-black tracking-tight text-foreground text-base leading-none mb-1 uppercase">{req.cargo_solicitado}</p>
+                                <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                                  <Users className="w-3.5 h-3.5 text-primary/60" />
+                                  <span>{req.cantidad_vacantes_requeridas} vacantes</span>
+                                  <span>•</span>
+                                  <span className="text-foreground/80">{req.solicitante_nombre}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-primary/60" />
+                                <span className="text-sm font-black tracking-tight text-foreground/80 truncate max-w-[150px]">{req.operation_centers?.name || '-'}</span>
+                              </div>
+                              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-muted/50 border-primary/5 px-2 py-0">
+                                {requisitionReasonLabels[req.motivo_solicitud as RequisitionReason]}
+                              </Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                               <span className="text-[11px] font-bold text-foreground/80">
+                                  {format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}
+                               </span>
+                               <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Fecha Solicitud</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <TooltipProvider>
+                              <div className="flex items-center gap-1.5">
+                                {progress.map((s, idx) => (
+                                  <div key={s.key} className="flex items-center">
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          type="button"
+                                          className={cn(
+                                            'w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black transition-all duration-300 border-2',
+                                            s.approved === true && 'bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-500/20',
+                                            s.approved === false && 'bg-red-500 text-white border-red-400 shadow-lg shadow-red-500/20',
+                                            s.approved === null && 'bg-muted text-muted-foreground border-border hover:border-primary/30'
+                                          )}
+                                          onClick={e => e.stopPropagation()}
+                                        >
+                                          {s.approved === true ? <CheckCircle className="w-4 h-4" /> : s.approved === false ? <XCircle className="w-4 h-4" /> : s.label}
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="text-xs bg-popover/90 backdrop-blur-sm border-primary/20 p-3 rounded-xl shadow-2xl">
+                                        <p className="font-black uppercase tracking-widest text-[10px] mb-1">{s.key === 'operaciones' ? 'Operaciones' : s.key === 'rrhh' ? 'RH' : s.key === 'juridico' ? 'Jurídico' : s.key === 'gerencia' ? 'Gerencia' : 'Selección'}</p>
+                                        <p className={cn('font-bold', s.approved === true ? 'text-emerald-500' : s.approved === false ? 'text-red-500' : 'text-muted-foreground')}>
+                                          {s.approved === true ? '✓ APROBADO' : s.approved === false ? '✗ RECHAZADO' : '○ PENDIENTE'}
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                    {idx < progress.length - 1 && (
+                                      <div className={cn('w-3 h-0.5 mx-0.5 rounded-full', s.approved === true ? 'bg-emerald-500' : 'bg-muted')} />
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </TooltipProvider>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={cn('h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-primary/10 shadow-sm', cfg.bg, cfg.text, cfg.border)}>
+                              {requisitionStatusLabels[status]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="px-8 text-right">
+                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0" onClick={e => e.stopPropagation()}>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-primary/5 hover:bg-primary text-primary hover:text-white shadow-sm transition-all" onClick={(e) => handleExportPDF(req, e)} disabled={exportingId === req.id}>
+                                      {exportingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="rounded-xl font-bold">Exportar PDF</TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-muted hover:bg-foreground hover:text-background transition-all" onClick={() => openDetail(req.id)}>
+                                      <Eye className="w-5 h-5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="rounded-xl font-bold">Ver detalle</TooltipContent>
+                                </Tooltip>
+                                {step && (
+                                  <Button size="sm" className="h-10 rounded-xl px-4 bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
+                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                    Gestionar
+                                  </Button>
+                                )}
+                              </TooltipProvider>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
+        </div>
+      </ScrollArea>
 
       <RequisitionFormDialog open={showForm} onOpenChange={setShowForm} requisition={editRequisition} />
       <RequisitionDetailDialog open={showDetail} onOpenChange={setShowDetail} requisitionId={selectedId} onEdit={() => { setShowDetail(false); const r = requisitions.find(x => x.id === selectedId); if (r) { setEditRequisition(r); setShowForm(true); }}} />

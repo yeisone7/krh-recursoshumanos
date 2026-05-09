@@ -97,6 +97,17 @@ export interface DotationItemType {
   updated_at: string;
 }
 
+// Identification Types
+export interface IdentificationType {
+  id: string;
+  company_id: string;
+  name: string;
+  code?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // System Config
 export interface SystemConfigItem {
   id: string;

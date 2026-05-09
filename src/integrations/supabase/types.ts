@@ -9613,7 +9613,7 @@ export const Constants = {
         "festivo_nocturna",
       ],
       payroll_type: ["quincenal", "mensual"],
-      permission_action: ["view", "create", "update", "delete"],
+      permission_action: ["view", "create", "update", "delete", "approve", "export"],
       recovery_status: [
         "pendiente",
         "radicado",

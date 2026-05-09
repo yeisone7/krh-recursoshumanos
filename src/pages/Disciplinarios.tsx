@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Plus,
@@ -7,9 +7,11 @@ import {
   Scale,
   Clock,
   CheckCircle2,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -30,6 +32,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/hooks/use-toast';
 import {
   useDisciplinaryProcesses,
@@ -69,7 +72,6 @@ export default function Disciplinarios() {
   const deleteProcess = useDeleteDisciplinaryProcess();
   const { log } = useAuditLogger();
 
-  // Handle deep linking from dashboard
   useEffect(() => {
     const processId = searchParams.get('proceso');
     if (processId) {
@@ -118,12 +120,12 @@ export default function Disciplinarios() {
     setDeleteTarget(null);
   };
 
-  // Unique operation centers for filter
-  const operationCenters = [...new Set(
-    (processes || []).map((p) => p.operation_center_name).filter(Boolean)
-  )].sort() as string[];
+  const operationCenters = useMemo(() => {
+    return [...new Set(
+      (processes || []).map((p) => p.operation_center_name).filter(Boolean)
+    )].sort() as string[];
+  }, [processes]);
 
-  // Filter processes
   const filteredProcesses = processes?.filter((process) => {
     const matchesSearch =
       !searchTerm ||
@@ -139,184 +141,168 @@ export default function Disciplinarios() {
     return matchesSearch && matchesStatus && matchesFault && matchesCenter;
   });
 
+  const kpis = useMemo(() => ([
+    { label: 'TOTAL CASOS', value: stats?.total || 0, desc: 'Histórico acumulado', icon: Scale, color: 'text-blue-600', bg: 'bg-blue-500/10' },
+    { label: 'EN CURSO', value: stats?.active || 0, desc: 'Procesos vigentes', icon: Clock, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'CERRADOS', value: stats?.closed || 0, desc: 'Resoluciones finales', icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+    { label: 'FALTAS CRÍTICAS', value: (stats?.byFault?.grave || 0) + (stats?.byFault?.gravisima || 0), desc: 'Graves / Gravísimas', icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10' },
+  ]), [stats]);
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight">Procesos Disciplinarios</h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-            Gestión de procesos disciplinarios según normativa colombiana
-          </p>
+    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+      {/* Premium Header */}
+      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+        
+        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+                <Scale className="w-6 h-6" />
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                  Jurídico / Disciplinario
+                </Badge>
+                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Gestión Disciplinaria</h1>
+              </div>
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
+              Administración integral de procesos disciplinarios y descargos laborales bajo el marco normativo legal vigente.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
+            {kpis.map((stat, i) => (
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+                <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
+                   <stat.icon className="w-3.5 h-3.5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
+                  <p className={`text-2xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
+                  <p className="text-[9px] font-bold text-muted-foreground/60 leading-none truncate">{stat.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <Button onClick={() => setShowFormDialog(true)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
+      </div>
+
+      {/* Sticky Filter Bar */}
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
+          <div className="relative w-full sm:w-80 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input
+              placeholder="Buscar por caso, empleado o descripción..."
+              className="pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-primary" />
+                  <SelectValue placeholder="Estado" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+                <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los estados</SelectItem>
+                {(Object.keys(disciplinaryStatusLabels) as DisciplinaryStatus[]).map((status) => (
+                  <SelectItem key={status} value={status} className="font-bold text-xs uppercase p-3">
+                    {disciplinaryStatusLabels[status]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={faultFilter} onValueChange={setFaultFilter}>
+              <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-primary" />
+                  <SelectValue placeholder="Falta" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+                <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todas las faltas</SelectItem>
+                {(Object.keys(faultTypeLabels) as FaultType[]).map((fault) => (
+                  <SelectItem key={fault} value={fault} className="font-bold text-xs uppercase p-3">
+                    {faultTypeLabels[fault]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={centerFilter} onValueChange={setCenterFilter}>
+              <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-3.5 h-3.5 text-primary" />
+                  <SelectValue placeholder="Centro" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+                <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los centros</SelectItem>
+                {operationCenters.map((center) => (
+                  <SelectItem key={center} value={center} className="font-bold text-xs uppercase p-3">
+                    {center}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <Button className="h-12 w-full xl:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={() => setShowFormDialog(true)}>
+          <Plus className="w-4 h-4 mr-2" />
           Nuevo Proceso
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 sm:gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-6 sm:pb-2">
-            <CardTitle className="text-sm font-medium">Total Procesos</CardTitle>
-            <Scale className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-2xl font-bold">{stats?.total || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-6 sm:pb-2">
-            <CardTitle className="text-sm font-medium">En Curso</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-2xl font-bold text-primary">{stats?.active || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-6 sm:pb-2">
-            <CardTitle className="text-sm font-medium">Cerrados</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-2xl font-bold text-primary">{stats?.closed || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2 sm:p-6 sm:pb-2">
-            <CardTitle className="text-sm font-medium">Faltas Graves</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-            <div className="text-2xl font-bold text-destructive">
-              {(stats?.byFault?.grave || 0) + (stats?.byFault?.gravisima || 0)}
+      <ScrollArea className="flex-1 p-6 sm:p-10">
+        <div className="max-w-6xl mx-auto">
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+              ))}
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(260px,1fr)_180px_160px_200px] lg:gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por caso, empleado o descripción..."
-            className="pl-9"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            {(Object.keys(disciplinaryStatusLabels) as DisciplinaryStatus[]).map((status) => (
-              <SelectItem key={status} value={status}>
-                {disciplinaryStatusLabels[status]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={faultFilter} onValueChange={setFaultFilter}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Tipo de falta" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las faltas</SelectItem>
-            {(Object.keys(faultTypeLabels) as FaultType[]).map((fault) => (
-              <SelectItem key={fault} value={fault}>
-                {faultTypeLabels[fault]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={centerFilter} onValueChange={setCenterFilter}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Centro de operación" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los centros</SelectItem>
-            {operationCenters.map((center) => (
-              <SelectItem key={center} value={center}>
-                {center}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Tree View */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full rounded-xl" />
-          ))}
-        </div>
-      ) : filteredProcesses && filteredProcesses.length > 0 ? (
-        <DisciplinaryTreeView
-          processes={filteredProcesses}
-          onOpenDetail={handleOpenDetail}
-          onExportPdf={handleExportPdf}
-          onDelete={setDeleteTarget}
-          exportingId={exportingId}
-        />
-      ) : (
-        <Card>
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <Scale className="h-8 w-8 opacity-50" />
-              <p>No hay procesos disciplinarios</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFormDialog(true)}
-              >
-                Crear primer proceso
-              </Button>
+          ) : filteredProcesses && filteredProcesses.length > 0 ? (
+            <DisciplinaryTreeView
+              processes={filteredProcesses}
+              onOpenDetail={handleOpenDetail}
+              onExportPdf={handleExportPdf}
+              onDelete={setDeleteTarget}
+              exportingId={exportingId}
+            />
+          ) : (
+            <div className="text-center py-32 bg-background/50 rounded-[2.5rem] border-2 border-dashed border-primary/5">
+               <Scale className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
+               <p className="text-xl font-black uppercase tracking-[0.2em] text-muted-foreground/40">Sin procesos activos</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
+      </ScrollArea>
 
-      {/* Dialogs */}
-      <DisciplinaryFormDialog
-        open={showFormDialog}
-        onOpenChange={setShowFormDialog}
-      />
+      <DisciplinaryFormDialog open={showFormDialog} onOpenChange={setShowFormDialog} />
+      <DisciplinaryDetailDialog processId={selectedProcessId} open={!!selectedProcessId} onOpenChange={(open) => !open && setSelectedProcessId(null)} />
 
-      <DisciplinaryDetailDialog
-        processId={selectedProcessId}
-        open={!!selectedProcessId}
-        onOpenChange={(open) => !open && setSelectedProcessId(null)}
-      />
-
-      {/* Delete confirmation */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent className="w-[calc(100vw-1rem)] sm:max-w-lg">
+        <AlertDialogContent className="rounded-[2.5rem] border-primary/5 bg-background/95 backdrop-blur-xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar proceso disciplinario?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Se eliminará el proceso <strong>{deleteTarget?.case_number}</strong> y toda su información asociada (evidencias, descargos, línea de tiempo).
-              Esta acción quedará registrada en la auditoría.
+            <AlertDialogTitle className="text-2xl font-black tracking-tighter">¿Eliminar proceso?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm font-medium">
+              Se eliminará el proceso <strong className="text-foreground">{deleteTarget?.case_number}</strong> y toda su información asociada. Esta acción es irreversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-0">
-            <AlertDialogCancel className="mt-0">Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Eliminar
+          <AlertDialogFooter className="mt-6">
+            <AlertDialogCancel className="rounded-2xl font-bold uppercase tracking-widest text-[10px]">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="rounded-2xl bg-destructive text-destructive-foreground font-bold uppercase tracking-widest text-[10px] hover:bg-destructive/90">
+              Eliminar Definitivamente
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -324,3 +310,4 @@ export default function Disciplinarios() {
     </div>
   );
 }
+

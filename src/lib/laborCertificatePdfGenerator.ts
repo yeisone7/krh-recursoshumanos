@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale';
 interface LaborCertificateData {
   employeeName: string;
   documentType: string;
+  documentTypeName?: string;
   documentNumber: string;
   position: string;
   hireDate: string;
@@ -66,7 +67,7 @@ export async function generateLaborCertificatePdf(data: LaborCertificateData) {
     currency: 'COP',
     minimumFractionDigits: 0,
   }).format(data.salary);
-  const docTypeLabel = DOCUMENT_TYPE_LABELS[data.documentType] || data.documentType;
+  const docTypeLabel = data.documentTypeName || DOCUMENT_TYPE_LABELS[data.documentType] || data.documentType;
 
   const text1 = `El suscrito representante legal de ${data.companyName.toUpperCase()}, identificada con NIT ${data.companyNit}, certifica que:`;
   const lines1 = doc.splitTextToSize(text1, contentWidth);

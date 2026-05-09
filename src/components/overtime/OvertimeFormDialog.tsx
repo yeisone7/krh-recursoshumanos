@@ -125,7 +125,7 @@ export function OvertimeFormDialog({ open, onOpenChange }: OvertimeFormDialogPro
     }
   }
 
-  const dateInfo = watchDate ? isHolidayOrSunday(watchDate) : null;
+  const dateInfo = watchDate ? isHolidayOrSunday(watchDate, holidaysSet) : null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

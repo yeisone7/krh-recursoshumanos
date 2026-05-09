@@ -119,7 +119,7 @@ const defaultConfig: ActivityConfig = {
 };
 
 export function RecentActivity() {
-  const { data: logs, isLoading } = useAuditLogs({ limit: 10 });
+  const { data: logs, isLoading } = useAuditLogs(0, 10, {});
 
   if (isLoading) {
     return (

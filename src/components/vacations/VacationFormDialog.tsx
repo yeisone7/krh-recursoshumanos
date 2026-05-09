@@ -43,6 +43,7 @@ import {
   useVacationConfig,
   useVacationRequests,
 } from '@/hooks/useVacations';
+import { useHolidaysSet } from '@/hooks/useHolidays';
 import {
   VacationRequestType,
   REQUEST_TYPE_LABELS,
@@ -78,6 +79,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
   const { data: balances } = useEmployeeVacationBalances(selectedEmployeeId);
   const { data: config } = useVacationConfig();
   const { data: allRequests } = useVacationRequests();
+  const { data: holidaysSet } = useHolidaysSet();
   const createRequest = useCreateVacationRequest();
 
   const form = useForm<FormData>({
@@ -98,10 +100,10 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
   // Calculate business days when dates change
   useEffect(() => {
     if (watchStartDate && watchEndDate) {
-      const days = calculateBusinessDays(watchStartDate, watchEndDate);
+      const days = calculateBusinessDays(watchStartDate, watchEndDate, holidaysSet);
       setBusinessDays(days);
     }
-  }, [watchStartDate, watchEndDate]);
+  }, [watchStartDate, watchEndDate, holidaysSet]);
 
   // Query affected shift assignments when dates and employee change
   useEffect(() => {

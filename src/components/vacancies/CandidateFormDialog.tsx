@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, User, Briefcase, MapPin, Shield, Users, X } from 'lucide-react';
+import { CalendarIcon, User, Briefcase, MapPin, Shield, Users, X, GraduationCap, BookOpen } from 'lucide-react';
 
 import {
   Dialog,
@@ -50,6 +50,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { familyRelationshipOptions } from '@/types/employee';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCandidateBackground } from '@/hooks/useCandidateBackground';
+import { useEducationLevels } from '@/hooks/useEducationLevels';
+import { useProfessions } from '@/hooks/useProfessions';
 import { CandidateBackgroundAlerts } from '@/components/selection/CandidateBackgroundAlerts';
 
 interface CandidateFormDialogProps {
@@ -63,6 +65,8 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
   const [activeTab, setActiveTab] = useState('personal');
   const { currentCompanyId } = useAuth();
   const { data: vacancies = [] } = useOpenVacancies();
+  const { data: educationLevels = [] } = useEducationLevels();
+  const { data: professions = [] } = useProfessions();
   const createCandidate = useCreateCandidate();
   const { background, loading: bgLoading, checkBackground } = useCandidateBackground();
   const [prefilled, setPrefilled] = useState(false);
@@ -107,8 +111,8 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         gender: data.gender || null,
         gender_identity: data.genderIdentity || null,
         gender_identity_other: data.genderIdentity === 'otro' ? (data.genderIdentityOther || null) : null,
-        education_level: data.educationLevel || null,
-        profession: data.profession || null,
+        education_level_id: (data.educationLevelId && data.educationLevelId !== 'none') ? data.educationLevelId : null,
+        profession_id: (data.professionId && data.professionId !== 'none') ? data.professionId : null,
         experience_years: data.experienceYears,
         current_company: data.currentCompany || null,
         current_position: data.currentPosition || null,
@@ -307,6 +311,8 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                                     if (!current.department && latest.department) form.setValue('department', latest.department);
                                     if (!current.neighborhood && latest.neighborhood) form.setValue('neighborhood', latest.neighborhood);
                                     if (!current.gender && latest.gender) form.setValue('gender', latest.gender);
+                                    if (!current.educationLevelId && latest.education_level_id) form.setValue('educationLevelId', latest.education_level_id);
+                                    if (!current.professionId && latest.profession_id) form.setValue('professionId', latest.profession_id);
                                     if (!current.educationLevel && latest.education_level) form.setValue('educationLevel', latest.education_level);
                                     if (!current.profession && latest.profession) form.setValue('profession', latest.profession);
                                     setPrefilled(true);
@@ -984,24 +990,26 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="educationLevel"
+                      name="educationLevelId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Nivel Educativo</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            <GraduationCap className="w-4 h-4 text-primary" />
+                            Nivel Educativo
+                          </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Seleccionar" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-background">
-                              <SelectItem value="bachiller">Bachiller</SelectItem>
-                              <SelectItem value="tecnico">Técnico</SelectItem>
-                              <SelectItem value="tecnologo">Tecnólogo</SelectItem>
-                              <SelectItem value="profesional">Profesional</SelectItem>
-                              <SelectItem value="especializacion">Especialización</SelectItem>
-                              <SelectItem value="maestria">Maestría</SelectItem>
-                              <SelectItem value="doctorado">Doctorado</SelectItem>
+                             <SelectContent className="bg-background">
+                              <SelectItem value="none">Sin especificar</SelectItem>
+                              {educationLevels.filter(e => e.is_active).map((level) => (
+                                <SelectItem key={level.id} value={level.id}>
+                                  {level.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1010,13 +1018,28 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                     />
                     <FormField
                       control={form.control}
-                      name="profession"
+                      name="professionId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Profesión / Título</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Ej: Ingeniero de Sistemas" {...field} />
-                          </FormControl>
+                          <FormLabel className="flex items-center gap-2">
+                            <BookOpen className="w-4 h-4 text-primary" />
+                            Profesión / Título
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar" />
+                              </SelectTrigger>
+                            </FormControl>
+                             <SelectContent className="bg-background">
+                              <SelectItem value="none">Sin especificar</SelectItem>
+                              {professions.filter(p => p.is_active).map((prof) => (
+                                <SelectItem key={prof.id} value={prof.id}>
+                                  {prof.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}

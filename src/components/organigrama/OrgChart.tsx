@@ -1,7 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { OrgChartNode } from './OrgChartNode';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, Search, Plus, Minus, Maximize, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface Position {
   id: string;
@@ -52,6 +55,13 @@ interface PositionNode {
 
 export function OrgChart({ positions, areas, employees, isLoading }: OrgChartProps) {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [zoom, setZoom] = useState(1);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Motion values for pan
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
 
   const areaMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -104,13 +114,44 @@ export function OrgChart({ positions, areas, employees, isLoading }: OrgChartPro
     return roots;
   }, [positions, employees, areaMap]);
 
-  useMemo(() => {
+  // Initial expand
+  useEffect(() => {
     if (positionTree.length > 0 && expandedNodes.size === 0) {
       const initial = new Set<string>();
       positionTree.forEach(r => initial.add(r.id));
       setExpandedNodes(initial);
     }
   }, [positionTree]);
+
+  // Handle Search & Auto-expand
+  useEffect(() => {
+    if (searchQuery.length < 2) return;
+    
+    const newExpanded = new Set(expandedNodes);
+    const query = searchQuery.toLowerCase();
+    
+    const findAndExpand = (nodes: PositionNode[], parentIds: string[] = []): boolean => {
+      let foundInBranch = false;
+      nodes.forEach(node => {
+        const matches = 
+          node.name.toLowerCase().includes(query) || 
+          node.employees.some(e => `${e.first_name} ${e.last_name}`.toLowerCase().includes(query));
+        
+        if (matches) {
+          parentIds.forEach(id => newExpanded.add(id));
+          foundInBranch = true;
+        }
+        
+        if (findAndExpand(node.children, [...parentIds, node.id])) {
+          foundInBranch = true;
+        }
+      });
+      return foundInBranch;
+    };
+    
+    findAndExpand(positionTree);
+    setExpandedNodes(newExpanded);
+  }, [searchQuery]);
 
   const toggleNode = (nodeId: string) => {
     setExpandedNodes(prev => {
@@ -131,18 +172,32 @@ export function OrgChart({ positions, areas, employees, isLoading }: OrgChartPro
 
   const collapseAll = () => setExpandedNodes(new Set());
 
-  const renderNode = (node: PositionNode, level: number): React.ReactNode => (
-    <OrgChartNode
-      key={node.id}
-      position={node}
-      isExpanded={expandedNodes.has(node.id)}
-      onToggle={() => toggleNode(node.id)}
-      hasChildren={node.children.length > 0}
-      level={level}
-    >
-      {node.children.map(child => renderNode(child, level + 1))}
-    </OrgChartNode>
-  );
+  const resetView = () => {
+    setZoom(1);
+    x.set(0);
+    y.set(0);
+  };
+
+  const renderNode = (node: PositionNode, level: number): React.ReactNode => {
+    const isMatched = searchQuery.length >= 2 && (
+      node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      node.employees.some(e => `${e.first_name} ${e.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+
+    return (
+      <OrgChartNode
+        key={node.id}
+        position={node}
+        isExpanded={expandedNodes.has(node.id)}
+        onToggle={() => toggleNode(node.id)}
+        hasChildren={node.children.length > 0}
+        level={level}
+        highlighted={isMatched}
+      >
+        {node.children.map(child => renderNode(child, level + 1))}
+      </OrgChartNode>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -170,27 +225,68 @@ export function OrgChart({ positions, areas, employees, isLoading }: OrgChartPro
   }
 
   return (
-    <div className="w-full min-w-0">
-      <div className="mb-4 flex flex-wrap justify-end gap-2 px-4 sm:mb-6 sm:px-0">
-        <button onClick={expandAll} className="text-sm text-primary hover:underline">
-          Expandir todo
-        </button>
-        <span className="text-muted-foreground">|</span>
-        <button onClick={collapseAll} className="text-sm text-primary hover:underline">
-          Contraer todo
-        </button>
+    <div className="relative w-full overflow-hidden rounded-xl border bg-muted/20" style={{ height: '700px' }}>
+      {/* Search and Global Controls */}
+      <div className="absolute left-4 top-4 z-20 flex flex-col gap-2 sm:flex-row sm:items-center w-full max-w-[calc(100%-2rem)] pointer-events-none">
+        <div className="relative w-full sm:w-80 pointer-events-auto">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar cargo o empleado..."
+            className="pl-9 bg-background/80 backdrop-blur-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex gap-2 pointer-events-auto">
+          <Button variant="secondary" size="sm" onClick={expandAll} className="h-9 px-3 gap-2">
+            <ChevronDown className="h-4 w-4" /> Expandir Todo
+          </Button>
+          <Button variant="secondary" size="sm" onClick={collapseAll} className="h-9 px-3 gap-2">
+            <ChevronUp className="h-4 w-4" /> Contraer Todo
+          </Button>
+        </div>
       </div>
 
-      <div className="overflow-x-auto overscroll-x-contain pb-6 [scrollbar-width:none] sm:pb-8 [&::-webkit-scrollbar]:hidden">
-        <div className="inline-flex min-w-max flex-col items-center px-4 sm:min-w-full sm:px-8">
-          {positionTree.length === 1 ? (
-            renderNode(positionTree[0], 0)
-          ) : (
-            <div className="flex gap-6 sm:gap-12">
-              {positionTree.map(root => renderNode(root, 0))}
-            </div>
-          )}
+      {/* Navigation Controls (Zoom/Reset) */}
+      <div className="absolute right-4 bottom-4 z-20 flex flex-col gap-2">
+        <div className="flex flex-col overflow-hidden rounded-lg border bg-background/80 shadow-lg backdrop-blur-sm">
+          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-none border-b" onClick={() => setZoom(prev => Math.min(prev + 0.1, 2))}>
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-none" onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.4))}>
+            <Minus className="h-4 w-4" />
+          </Button>
         </div>
+        <Button variant="secondary" size="icon" className="h-10 w-10 rounded-lg shadow-lg" onClick={resetView} title="Resetear vista">
+          <RotateCcw className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Zoom indicator */}
+      <div className="absolute left-4 bottom-4 z-20 bg-background/80 px-2 py-1 rounded border text-[10px] font-mono shadow-sm">
+        {Math.round(zoom * 100)}%
+      </div>
+
+      {/* The Canvas */}
+      <div className="h-full w-full cursor-grab active:cursor-grabbing overflow-hidden" ref={containerRef}>
+        <motion.div
+          drag
+          dragMomentum={false}
+          style={{ x, y, scale: zoom }}
+          className="flex min-w-max flex-col items-center p-32 origin-top"
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+          <div className="inline-flex flex-col items-center">
+            {positionTree.length === 1 ? (
+              renderNode(positionTree[0], 0)
+            ) : (
+              <div className="flex gap-12 sm:gap-24">
+                {positionTree.map(root => renderNode(root, 0))}
+              </div>
+            )}
+          </div>
+        </motion.div>
       </div>
     </div>
   );

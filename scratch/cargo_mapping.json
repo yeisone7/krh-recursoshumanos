@@ -1,0 +1,180 @@
+{
+  "uniqueCounts": {
+    "cargos": 41,
+    "profesiones": 34,
+    "areas": 17,
+    "sedes": 1,
+    "eps": 10,
+    "afp": 6,
+    "arl": 2,
+    "ccf": 3,
+    "ips": 2,
+    "afc": 1,
+    "bancos": 4,
+    "tiposContrato": 4,
+    "tiposTurno": 5
+  },
+  "cargoMapping": {
+    "1": [
+      "TECNICO EN DESARROLLO OPERACIÓN DE LOGISTICA",
+      "BACHILLER",
+      "TECNICO EN OPERACIONES LOGISTICAS EN LA CADENA DE ABASTECIMIENTO",
+      "TECNICO EN LOGISTICA EMPRESARIAL",
+      "NINGUNO"
+    ],
+    "2": [
+      "BACHILLER",
+      "PRIMARIA",
+      "NINGUNO"
+    ],
+    "3": [
+      "BACHILLER",
+      "TECNICO EN COCINA",
+      "PRIMARIA",
+      "DECIMO",
+      "TECNICO EN CHEF DE COCINA INTERNANCIONAL",
+      "NINGUNO"
+    ],
+    "4": [
+      "TECNICO EN OPERACIÓN DE CAMION MINERO",
+      "BACHILLER"
+    ],
+    "5": [
+      "INGENIERIA INDUSTRIAL"
+    ],
+    "6": [
+      "BACHILLER",
+      "NINGUNO",
+      "TECNICO MANTENIMIENTO EQUIPO PESADO"
+    ],
+    "7": [
+      "SECRETARIADO GERENCIAL",
+      "BACHILLER",
+      "TECNICO ALMACEN Y LOGISTICA",
+      "TECNICO EN MANTENIMIENTO DE EQUIPO DE COMPUTO",
+      "TECNOLOGO EN PROCESAMIENTO DE ALIMENTOS",
+      "NINGUNO"
+    ],
+    "8": [
+      "ASISTENCIA EN ORGANIZACIÓN DE ARCHIVOS",
+      "BACHILLER"
+    ],
+    "9": [
+      "BACHILLER",
+      "TECNICO ASISTENCIA ADMINISTRATIVA",
+      "NINGUNO",
+      "TECNOLOGO EN CONTROL Y CALIDAD EN ALIMENTOS",
+      "ADMINISTRADOR DE EMPRESA",
+      "TECNICO EN RECURSOS HUMANOS"
+    ],
+    "11": [
+      "BACHILLER",
+      "INGENIERO AGROINDUSTRIAL"
+    ],
+    "12": [
+      "NINGUNO"
+    ],
+    "13": [
+      "BACHILLER"
+    ],
+    "14": [
+      "BACHILLER",
+      "TECNICO PROFESIONAL EN COCINA"
+    ],
+    "15": [
+      "BACHILLER",
+      "LICENCIADA EN EDUCACION FISICA",
+      "ADMINISTRADORA DE EMPRESA TURISTICA Y HOTELERA",
+      "MICROBIOLOGA"
+    ],
+    "16": [
+      "TECNOLOGO EN ANALISIS Y PROGRAMACION DE COMPUTADORES",
+      "NINGUNO"
+    ],
+    "17": [
+      "TECNICO PROFESIONAL EN COCINA"
+    ],
+    "19": [
+      "ADMINISTRADORA DE EMPRESA TURISTICA Y HOTELERA",
+      "INGENIERIA INDUSTRIAL"
+    ],
+    "20": [
+      "CONTADOR PUBLICO"
+    ],
+    "21": [
+      "INGENIERIA INDUSTRIAL"
+    ],
+    "22": [
+      "TECNICO PROFESIONAL EN GESTION CONTABLE Y FINANCIERA"
+    ],
+    "23": [
+      "TECNICO EN COCINA"
+    ],
+    "24": [
+      "BACHILLER",
+      "NINGUNO"
+    ],
+    "25": [
+      "BACHILLER"
+    ],
+    "27": [
+      "BACHILLER"
+    ],
+    "28": [
+      "BACHILLER",
+      "NINGUNO"
+    ],
+    "30": [
+      "TECNICO EN MANTENIMIENTO ELECTRICO Y ELECTRONICO",
+      "BACHILLER",
+      "NINGUNO"
+    ],
+    "32": [
+      "TECNICO ASISTENCIA ADMINISTRATIVA"
+    ],
+    "33": [
+      "INGENIERO DE SISTEMAS"
+    ],
+    "35": [
+      "MICROBIOLOGA"
+    ],
+    "36": [
+      "NINGUNO"
+    ],
+    "37": [
+      "TECNICO AUXILIAR DE ARCHIVO"
+    ],
+    "38": [
+      "NINGUNO"
+    ],
+    "39": [
+      "FONOAUDIOLOGA"
+    ],
+    "42": [
+      "BACHILLER",
+      "NINGUNO",
+      "TECNOLOGO EN COORDINACIÓN EN SISTEMAS INTEGRADOS DE GESTIÓN"
+    ],
+    "43": [
+      "MICROBIOLOGA"
+    ],
+    "44": [
+      "NINGUNO"
+    ],
+    "48": [
+      "BACHILLER"
+    ],
+    "50": [
+      "ADMINISTRADOR DE EMPRESA"
+    ],
+    "51": [
+      "NINGUNO"
+    ],
+    "52": [
+      "ADMINISTRADOR DE EMPRESA"
+    ],
+    "54": [
+      "ADMINISTRADOR DE EMPRESA"
+    ]
+  }
+}

@@ -60,7 +60,7 @@ import {
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import petroVerdeLogo from '@/assets/petrocasinos-sidebar-icon-new.png';
+import sidebarLogo from '@/assets/sidebar-logo.png';
 
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || 'dev';
 const APP_VERSION_LABEL = APP_VERSION === 'dev' ? 'dev' : APP_VERSION.slice(0, 8);
@@ -248,6 +248,8 @@ const catalogosItem: NavItem = {
     { label: 'Bancos', icon: <BanknoteIcon className="w-4 h-4" />, href: '/catalogos/bancos' },
     { label: 'Motivos Novedad', icon: <ClipboardList className="w-4 h-4" />, href: '/catalogos/motivos-novedad' },
     { label: 'Plataformas Publicación', icon: <Globe className="w-4 h-4" />, href: '/catalogos/plataformas-publicacion' },
+    { label: 'Niveles Educativos', icon: <GraduationCap className="w-4 h-4" />, href: '/catalogos/niveles-educativos' },
+    { label: 'Profesiones', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/profesiones' },
   ],
 };
 
@@ -374,7 +376,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             : "px-3 py-2",
           isActive ?
           "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" :
-          "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
+          "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
         )}>
 
           <span className={cn(
@@ -450,7 +452,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   whileHover={{ backgroundColor: 'hsl(var(--sidebar-accent))' }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "relative flex items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
+                    "relative flex items-center justify-center rounded-lg border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-white [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
                     isCollapsed ? "mx-auto h-11 w-11 p-0 [&_svg]:size-5" : "h-16 flex-col gap-1 px-1",
                     isActive && "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
                   )}
@@ -646,12 +648,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               exit={{ opacity: 0 }}
               className="flex items-center gap-2">
 
-              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center">
-                <img src={petroVerdeLogo} alt="KRH Logo" className="w-10 h-10 object-cover rounded-xl" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-primary/5 p-1.5 transition-colors group-hover:bg-primary/10">
+                <img src={sidebarLogo} alt="EmpatiQ Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
-                <span className="font-display font-extrabold text-xl text-sidebar-primary leading-tight">KRH</span>
-                 <span className="text-[11px] font-bold text-sidebar-foreground leading-tight whitespace-nowrap">Talento Humano</span>
+                <span className="font-['Plus_Jakarta_Sans'] font-extrabold text-xl text-foreground leading-tight tracking-tight">EmpatiQ</span>
+                 <span className="text-[10px] font-bold text-sidebar-foreground/60 leading-tight whitespace-nowrap uppercase tracking-wider">Talento Humano</span>
               </div>
             </motion.div> :
 
@@ -659,10 +661,10 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               key="icon-logo"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center mx-auto">
-
-              <img src={petroVerdeLogo} alt="KRH Logo" className="w-10 h-10 object-cover rounded-xl" />
+              exit={{ opacity: 0 }}>
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center mx-auto bg-primary/5 p-1.5 hover:bg-primary/10 transition-colors">
+                <img src={sidebarLogo} alt="EmpatiQ Logo" className="w-full h-full object-contain" />
+              </div>
             </motion.div>
             }
         </AnimatePresence>

@@ -34,6 +34,9 @@ export function useCandidates(vacancyId?: string) {
         .from('candidates')
         .select(`
           *,
+          identification_types(id, name, code),
+          professions(id, name),
+          education_levels(id, name),
           vacancies!inner(id, position_title, company_id, operation_center_id, operation_centers(id, name)),
           selection_steps(*)
         `)
@@ -61,6 +64,9 @@ export function useCandidate(id: string | undefined) {
         .from('candidates')
         .select(`
           *,
+          identification_types(id, name, code),
+          professions(id, name),
+          education_levels(id, name),
           vacancies(id, position_title, operation_center_id, position_id, operation_centers(name)),
           selection_steps(*)
         `)
@@ -342,7 +348,8 @@ export function useConvertToEmployee() {
         company_id: currentCompanyId!,
         first_name: candidate.first_name,
         last_name: candidate.last_name,
-        document_type: candidate.document_type,
+        identification_type_id: candidate.identification_type_id,
+        document_type: candidate.document_type || null,
         document_number: candidate.document_number,
         birth_date: candidate.birth_date,
         gender: normalizeCandidateGenderToEmployeeGender(candidate.gender),
@@ -358,6 +365,8 @@ export function useConvertToEmployee() {
         ethnic_group: candidate.ethnic_group,
         is_conflict_victim: candidate.is_conflict_victim ?? false,
         is_demobilized: candidate.is_demobilized ?? false,
+        profession_id: (candidate as any).profession_id,
+        education_level_id: (candidate as any).education_level_id,
         is_active: true,
         created_by: user?.id,
       };

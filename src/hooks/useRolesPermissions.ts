@@ -18,7 +18,7 @@ export interface Module {
 export interface Permission {
   id: string;
   module_id: string;
-  action: 'view' | 'create' | 'update' | 'delete';
+  action: 'view' | 'create' | 'update' | 'delete' | 'approve' | 'export';
   description: string | null;
 }
 

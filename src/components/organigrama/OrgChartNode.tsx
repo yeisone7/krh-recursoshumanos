@@ -23,6 +23,7 @@ interface OrgChartNodeProps {
   onToggle: () => void;
   hasChildren: boolean;
   level: number;
+  highlighted?: boolean;
 }
 
 export function OrgChartNode({
@@ -32,6 +33,7 @@ export function OrgChartNode({
   onToggle,
   hasChildren,
   level,
+  highlighted = false,
 }: OrgChartNodeProps) {
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
@@ -41,96 +43,100 @@ export function OrgChartNode({
 
   return (
     <div className="flex flex-col items-center">
-      {level > 0 && <div className="h-4 w-px bg-border sm:h-6" />}
+      {level > 0 && <div className="h-6 w-px bg-border/60" />}
 
       <motion.div
+        layout
         initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+        animate={{ 
+          opacity: 1, 
+          scale: 1,
+          borderColor: highlighted ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+          boxShadow: highlighted ? '0 0 20px -5px hsl(var(--primary)/0.4)' : '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+        }}
         className={cn(
-          "relative min-w-[200px] max-w-[240px] rounded-lg border border-border bg-card p-3 shadow-sm sm:min-w-[220px] sm:max-w-[280px] sm:p-4",
-          "hover:shadow-md transition-shadow cursor-pointer",
-          level === 0 && "border-primary/50 bg-primary/5"
+          "relative min-w-[220px] max-w-[280px] rounded-xl border-2 bg-card p-4 transition-all",
+          "hover:border-primary/40 hover:shadow-md cursor-pointer",
+          level === 0 && !highlighted && "border-primary/20 bg-primary/5",
+          highlighted && "border-primary ring-2 ring-primary/20 ring-offset-2 ring-offset-background"
         )}
         onClick={hasChildren ? onToggle : undefined}
       >
         {hasChildren && (
-          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10">
-            <div className="bg-background border border-border rounded-full p-0.5 shadow-sm">
+          <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 z-10">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggle();
+              }}
+              className="flex h-7 w-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:text-primary hover:border-primary transition-colors"
+            >
               {isExpanded ? (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                <ChevronDown className="h-4 w-4" />
               ) : (
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                <ChevronRight className="h-4 w-4" />
               )}
-            </div>
+            </button>
           </div>
         )}
 
         {/* Position name */}
-        <div className="text-center mb-2">
+        <div className="text-center mb-3">
           <div className="mb-1 flex min-w-0 items-start justify-center gap-1.5">
-            <Briefcase className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-            <h3 className="break-words text-sm font-semibold leading-snug text-foreground">{position.name}</h3>
+            <Briefcase className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", highlighted ? "text-primary" : "text-muted-foreground")} />
+            <h3 className="break-words text-sm font-bold leading-tight text-foreground">{position.name}</h3>
           </div>
-          {position.code && (
-            <span className="block break-words text-xs text-muted-foreground">{position.code}</span>
-          )}
           {position.areaName && (
-            <p className="mt-0.5 break-words text-xs text-muted-foreground">{position.areaName}</p>
+            <p className="mt-0.5 break-words text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/80">{position.areaName}</p>
           )}
         </div>
 
         {/* Employee info */}
         {mainEmployee ? (
-          <div className="flex min-w-0 items-center gap-2 border-t border-border pt-3 sm:gap-3">
-            <Avatar className="h-9 w-9 shrink-0 sm:h-10 sm:w-10">
+          <div className="flex min-w-0 items-center gap-3 border-t border-border/50 pt-3">
+            <Avatar className="h-10 w-10 shrink-0 border border-border/50">
               <AvatarImage src={mainEmployee.avatar_url} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+              <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
                 {getInitials(mainEmployee.first_name, mainEmployee.last_name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+              <p className="text-sm font-semibold text-foreground truncate">
                 {mainEmployee.first_name} {mainEmployee.last_name}
               </p>
-              {position.employees.length > 1 && (
-                <p className="text-xs text-muted-foreground">
-                  +{position.employees.length - 1} más
-                </p>
-              )}
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                {position.employees.length} {position.employees.length === 1 ? 'Persona' : 'Personas'}
+              </p>
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-2 border-t border-border pt-3 text-muted-foreground">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted sm:h-10 sm:w-10">
-              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+          <div className="flex items-center gap-3 border-t border-border/50 pt-3 text-muted-foreground">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/50 border border-dashed border-border">
+              <Users className="h-4 w-4" />
             </div>
-            <span className="text-xs italic">Vacante</span>
+            <div className="flex flex-col">
+              <span className="text-xs font-medium italic">Cargo Vacante</span>
+              <span className="text-[10px]">Sin personal asignado</span>
+            </div>
           </div>
         )}
-
-        {/* Employee count badge */}
-        <div className="flex justify-center mt-3">
-          <Badge variant="secondary" className="text-xs">
-            <Users className="w-3 h-3 mr-1" />
-            {position.employees.length} {position.employees.length === 1 ? 'persona' : 'personas'}
-          </Badge>
-        </div>
       </motion.div>
 
       {/* Children */}
       <AnimatePresence>
         {hasChildren && isExpanded && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
             className="flex flex-col items-center"
           >
-            <div className="h-4 w-px bg-border sm:h-6" />
+            <div className="h-8 w-px bg-border/60" />
             <div className="relative">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px bg-border"
-                style={{ width: 'calc(100% - 100px)' }} />
-              <div className="flex gap-4 pt-0 sm:gap-8">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px bg-border/60"
+                style={{ width: 'calc(100% - 240px)' }} />
+              <div className="flex gap-8 pt-0 sm:gap-16">
                 {children}
               </div>
             </div>

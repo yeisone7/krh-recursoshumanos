@@ -36,6 +36,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -137,6 +138,8 @@ export function CandidateDetailDialog({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl">
+          <DialogTitle className="sr-only">Cargando candidato</DialogTitle>
+          <DialogDescription className="sr-only">Por favor espere mientras se carga la información del candidato.</DialogDescription>
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
@@ -312,6 +315,8 @@ export function CandidateDetailDialog({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full">
+          <DialogTitle className="sr-only">Detalles del Candidato</DialogTitle>
+          <DialogDescription className="sr-only">Información detallada del candidato {candidate.first_name} {candidate.last_name}</DialogDescription>
           <DialogHeader className="px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
             <div className="flex flex-col items-start gap-3 pr-8 sm:flex-row sm:items-start sm:justify-between sm:pr-0">
               <div className="flex min-w-0 items-start gap-3 sm:gap-4">
@@ -381,6 +386,7 @@ export function CandidateDetailDialog({
                           first_name: candidate.first_name,
                           last_name: candidate.last_name,
                           document_type: candidate.document_type,
+                          document_type_name: (candidate as any).identification_types?.name,
                           document_number: candidate.document_number,
                           birth_date: candidate.birth_date,
                           gender: candidate.gender,
@@ -425,7 +431,9 @@ export function CandidateDetailDialog({
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Documento</p>
-                      <p className="font-medium">{candidate.document_type} {candidate.document_number}</p>
+                      <p className="font-medium">
+                        {(candidate as any).identification_types?.name || candidate.document_type || 'Documento'} {candidate.document_number}
+                      </p>
                     </div>
                     {(candidate as any).document_issue_date && (
                       <div className="space-y-1">
@@ -612,16 +620,16 @@ export function CandidateDetailDialog({
                     Experiencia Profesional
                   </h3>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-                    {candidate.education_level && (
+                    {((candidate as any).education_levels?.name || (candidate as any).education_level) && (
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground uppercase tracking-wide">Nivel Educativo</p>
-                        <p className="font-medium capitalize">{candidate.education_level}</p>
+                        <p className="font-medium capitalize">{((candidate as any).education_levels?.name || (candidate as any).education_level)}</p>
                       </div>
                     )}
-                    {candidate.profession && (
+                    {((candidate as any).professions?.name || (candidate as any).profession) && (
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground uppercase tracking-wide">Profesión</p>
-                        <p className="font-medium">{candidate.profession}</p>
+                        <p className="font-medium">{((candidate as any).professions?.name || (candidate as any).profession)}</p>
                       </div>
                     )}
                     <div className="space-y-1">

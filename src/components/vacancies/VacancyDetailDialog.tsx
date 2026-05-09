@@ -18,22 +18,25 @@ import {
   Pause,
   FileText,
   GraduationCap,
-  FileCheck,
+  Paperclip,
+  Link2,
   Building2,
-  User,
+  Target,
+  Zap,
+  TrendingUp,
+  FileCheck,
   ExternalLink,
   LayoutGrid,
   LayoutList,
   Upload,
-  Trash2,
-  Paperclip,
-  Link2,
+  User,
 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -201,6 +204,8 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl">
+          <DialogTitle className="sr-only">Cargando vacante</DialogTitle>
+          <DialogDescription className="sr-only">Por favor espere mientras se carga la información de la vacante.</DialogDescription>
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
@@ -282,45 +287,76 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 flex flex-col overflow-hidden sm:w-full">
-          <DialogHeader className="px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
-            <div className="flex flex-col items-start gap-3 pr-8 sm:flex-row sm:items-start sm:justify-between sm:pr-0">
-              <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                <div className="w-10 h-10 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center sm:h-12 sm:w-12">
-                  <Briefcase className="w-6 h-6 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <DialogTitle className="font-display text-lg leading-tight sm:text-xl">{vacancy.position_title}</DialogTitle>
-                  <p className="text-sm text-muted-foreground break-words">
-                    {(vacancy as any).operation_centers?.name || 'General'}
-                    {vacancy.department_area && ` • ${vacancy.department_area}`}
-                  </p>
-                </div>
-              </div>
-              <Badge
-                variant="outline"
-                className={cn('max-w-full gap-1 self-start truncate', statusStyle.bg, statusStyle.text, statusStyle.border)}
-              >
-                <StatusIcon className="w-3 h-3" />
-                {vacancyStatusLabels[status]}
-              </Badge>
+        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full">
+        <DialogTitle className="sr-only">Detalles de la Vacante</DialogTitle>
+        <DialogDescription className="sr-only">Información detallada de la vacante para el cargo {vacancy.position_title}</DialogDescription>
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4 pt-8 pb-6 sm:px-8 sm:pt-10">
+          {/* Decorative patterns */}
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          
+          {/* Pattern overlay (dots) */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+
+          <div className="relative flex flex-col md:flex-row items-start gap-6">
+            {/* Avatar/Initial */}
+            <div className="w-16 h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-primary/10 transition-transform hover:scale-105 duration-300">
+              {vacancy.position_title.substring(0, 2).toUpperCase()}
             </div>
-          </DialogHeader>
+
+            <div className="flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={cn('max-w-full gap-1.5 self-start truncate font-bold animate-in fade-in slide-in-from-left-2 duration-500', statusStyle.bg, statusStyle.text, statusStyle.border)}
+                >
+                  <StatusIcon className="w-3.5 h-3.5" />
+                  {vacancyStatusLabels[status]}
+                </Badge>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 font-medium capitalize">
+                  {vacancyTypeLabels[vacancy.vacancy_type as keyof typeof vacancyTypeLabels]}
+                </Badge>
+              </div>
+              
+              <h2 className="text-3xl font-display font-bold text-foreground tracking-tight sm:text-4xl">
+                {vacancy.position_title}
+              </h2>
+              
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground font-medium">
+                <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                  <Building2 className="w-4 h-4 text-primary/60" />
+                  {(vacancy as any).operation_centers?.name || 'General'}
+                </div>
+                <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                  <Calendar className="w-4 h-4 text-primary/60" />
+                  Abierta desde {format(new Date(vacancy.open_date), "dd MMM yyyy", { locale: es })}
+                </div>
+                {vacancy.department_area && (
+                  <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                    <Target className="w-4 h-4 text-primary/60" />
+                    {vacancy.department_area}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+        </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-            <div className="px-4 pt-2 border-b flex-shrink-0 sm:px-6">
-              <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1 sm:inline-flex sm:h-10 sm:w-auto sm:gap-0">
-                <TabsTrigger value="info" className="h-10 min-w-0 flex-col gap-0.5 px-1 text-[11px] leading-none sm:h-9 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+            <div className="px-4 pt-2 flex-shrink-0 sm:px-8 border-b">
+              <TabsList className="w-full h-auto flex-wrap gap-2 bg-transparent p-0 justify-start pb-2">
+                <TabsTrigger value="info" className="h-10 flex-1 min-w-[100px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
                   <FileText className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Información</span>
+                  <span className="font-medium">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="candidates" className="h-10 min-w-0 flex-col gap-0.5 px-1 text-[11px] leading-none sm:h-9 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+                <TabsTrigger value="candidates" className="h-10 flex-1 min-w-[100px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
                   <Users className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Candidatos</span>
+                  <span className="font-medium">Candidatos</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="h-10 min-w-0 flex-col gap-0.5 px-1 text-[11px] leading-none sm:h-9 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm">
+                <TabsTrigger value="documents" className="h-10 flex-1 min-w-[100px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
                   <Paperclip className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Documentos</span>
+                  <span className="font-medium">Documentos</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -477,7 +513,21 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                             <span className="text-sm">{vacancy.experience_years} años de experiencia</span>
                           </div>
                         )}
-                        {vacancy.education_level && (
+                        {((vacancy as any).vacancy_education_levels?.length > 0) ? (
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2">
+                              <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm font-medium">Niveles Educativos:</span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 ml-6">
+                              {(vacancy as any).vacancy_education_levels.map((vel: any) => (
+                                <Badge key={vel.education_levels.id} variant="secondary" className="text-[10px] py-0 h-5">
+                                  {vel.education_levels.name}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        ) : vacancy.education_level && (
                           <div className="flex items-center gap-2">
                             <GraduationCap className="w-4 h-4 text-muted-foreground" />
                             <span className="text-sm capitalize">{vacancy.education_level}</span>

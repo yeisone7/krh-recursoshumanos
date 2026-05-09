@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { useShifts, useShiftAssignments } from '@/hooks/useSchedules';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
+import { useHolidaysSet } from '@/hooks/useHolidays';
 import { getEmployeeFullName } from '@/types/employee';
 
 interface ShiftReportExportProps {
@@ -43,6 +44,7 @@ export function ShiftReportExport({ open, onOpenChange }: ShiftReportExportProps
   const { data: employees = [] } = useEmployees();
   const { data: shifts = [] } = useShifts();
   const { data: centers = [] } = useOperationCenters();
+  const { data: holidaysSet } = useHolidaysSet();
 
   const startDate = format(startOfMonth(selectedMonth), 'yyyy-MM-dd');
   const endDate = format(endOfMonth(selectedMonth), 'yyyy-MM-dd');
@@ -157,6 +159,7 @@ export function ShiftReportExport({ open, onOpenChange }: ShiftReportExportProps
         ['Total días del mes', days.length],
         ['Total asignaciones', assignments.length],
         ['Domingos en el mes', days.filter(d => isSunday(d)).length],
+        ['Festivos en el mes', days.filter(d => holidaysSet?.has(format(d, 'yyyy-MM-dd'))).length],
       ];
 
       const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);

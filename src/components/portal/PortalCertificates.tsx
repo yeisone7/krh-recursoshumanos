@@ -21,6 +21,7 @@ export function PortalCertificates({ employee, companyName, companyNit, contract
       await generateLaborCertificatePdf({
         employeeName: `${employee.first_name} ${employee.middle_name || ''} ${employee.last_name} ${employee.second_last_name || ''}`.replace(/\s+/g, ' ').trim(),
         documentType: employee.document_type || 'CC',
+        documentTypeName: (employee as any).identification_types?.name,
         documentNumber: employee.document_number || '',
         position: employee.positions?.name || employee.work_info?.position_name || 'N/A',
         hireDate: employee.work_info?.hire_date || '',

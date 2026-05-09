@@ -76,6 +76,7 @@ function useCatalogGeneric(tableName: 'catalog_arl' | 'catalog_eps' | 'catalog_a
 
   const createMutation = useMutation({
     mutationFn: async (item: Partial<CatalogItem>) => {
+      console.log('Creating catalog item:', { tableName, currentCompanyId, item });
       if (!currentCompanyId) throw new Error('No company selected');
       
       const { data, error } = await supabase
@@ -91,7 +92,10 @@ function useCatalogGeneric(tableName: 'catalog_arl' | 'catalog_eps' | 'catalog_a
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error creating catalog item:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -99,11 +103,11 @@ function useCatalogGeneric(tableName: 'catalog_arl' | 'catalog_eps' | 'catalog_a
       toast.success('Registro creado exitosamente');
     },
     onError: (error: any) => {
-      console.error('Error creating:', error);
+      console.error(`Error creating in ${tableName}:`, error);
       if (error.code === '23505') {
         toast.error('Ya existe un registro con ese nombre');
       } else {
-        toast.error('Error al crear el registro');
+        toast.error(`Error al crear el registro: ${error.message || 'Error desconocido'}`);
       }
     },
   });
@@ -191,6 +195,7 @@ function useCatalogGenericIPS() {
 
   const createMutation = useMutation({
     mutationFn: async (item: Partial<CatalogIPS>) => {
+      console.log('Creating IPS catalog item:', { tableName, currentCompanyId, item });
       if (!currentCompanyId) throw new Error('No company selected');
       
       const { data, error } = await supabase
@@ -209,7 +214,10 @@ function useCatalogGenericIPS() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error creating IPS catalog item:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -217,11 +225,11 @@ function useCatalogGenericIPS() {
       toast.success('Registro creado exitosamente');
     },
     onError: (error: any) => {
-      console.error('Error creating:', error);
+      console.error(`Error creating in ${tableName}:`, error);
       if (error.code === '23505') {
         toast.error('Ya existe un registro con ese nombre');
       } else {
-        toast.error('Error al crear el registro');
+        toast.error(`Error al crear el registro: ${error.message || 'Error desconocido'}`);
       }
     },
   });

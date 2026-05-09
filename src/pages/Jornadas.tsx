@@ -22,9 +22,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -93,12 +101,11 @@ export default function Jornadas() {
   const deleteShift = useDeleteShift();
   const deleteCycle = useDeleteShiftCycle();
 
-  // Stats
-  const stats = useMemo(() => ({
-    schedules: workSchedules.filter(s => s.is_active).length,
-    shifts: shifts.filter(s => s.is_active).length,
-    cycles: shiftCycles.filter(c => c.is_active).length,
-  }), [workSchedules, shifts, shiftCycles]);
+  const stats = useMemo(() => ([
+    { label: 'HORARIOS', value: workSchedules.filter(s => s.is_active).length, icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-500/10' },
+    { label: 'TURNOS', value: shifts.filter(s => s.is_active).length, icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-500/10' },
+    { label: 'CICLOS', value: shiftCycles.filter(c => c.is_active).length, icon: RotateCcw, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+  ]), [workSchedules, shifts, shiftCycles]);
 
   const formatTime = (time: string) => time?.slice(0, 5) || '';
   const filteredSchedules = workSchedules.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -107,15 +114,10 @@ export default function Jornadas() {
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
-    
     try {
-      if (deleteConfirm.type === 'schedule') {
-        await deleteSchedule.mutateAsync(deleteConfirm.id);
-      } else if (deleteConfirm.type === 'shift') {
-        await deleteShift.mutateAsync(deleteConfirm.id);
-      } else if (deleteConfirm.type === 'cycle') {
-        await deleteCycle.mutateAsync(deleteConfirm.id);
-      }
+      if (deleteConfirm.type === 'schedule') await deleteSchedule.mutateAsync(deleteConfirm.id);
+      else if (deleteConfirm.type === 'shift') await deleteShift.mutateAsync(deleteConfirm.id);
+      else if (deleteConfirm.type === 'cycle') await deleteCycle.mutateAsync(deleteConfirm.id);
       toast.success('Eliminado correctamente');
     } catch (error: any) {
       toast.error('Error', { description: error.message });
@@ -123,7 +125,6 @@ export default function Jornadas() {
     setDeleteConfirm(null);
   };
 
-  // Escape key to exit fullscreen
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) setIsFullscreen(false);
@@ -134,25 +135,32 @@ export default function Jornadas() {
 
   if (!currentCompanyId) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] text-center">
-        <Clock className="w-16 h-16 text-muted-foreground mb-4" />
-        <h2 className="text-xl font-semibold mb-2">Sin empresa asignada</h2>
-        <p className="text-muted-foreground">Contacta al administrador.</p>
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center animate-in fade-in zoom-in duration-500">
+        <div className="w-24 h-24 rounded-full bg-muted/20 flex items-center justify-center mb-6">
+          <Clock className="w-12 h-12 text-muted-foreground/40" />
+        </div>
+        <h2 className="text-2xl font-black text-foreground tracking-tight">Compañía No Vinculada</h2>
+        <p className="text-muted-foreground font-medium mt-2">Seleccione una organización para gestionar sus jornadas.</p>
       </div>
     );
   }
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-background p-2 sm:p-4 flex flex-col">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <h2 className="font-display text-base sm:text-lg font-bold text-foreground truncate">Calendario de Turnos</h2>
-          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsFullscreen(false)}>
-            <Minimize2 className="w-3.5 h-3.5 mr-1" />
-            <span className="hidden sm:inline">Restaurar</span>
+      <div className="fixed inset-0 z-50 bg-background flex flex-col p-2 sm:p-4">
+        <div className="flex items-center justify-between mb-4 px-2">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                <Calendar className="w-4 h-4" />
+             </div>
+             <h2 className="font-black text-foreground tracking-tight uppercase text-sm">Calendario de Turnos Operativos</h2>
+          </div>
+          <Button variant="outline" size="sm" className="h-9 rounded-xl font-bold uppercase tracking-widest text-[10px]" onClick={() => setIsFullscreen(false)}>
+            <Minimize2 className="w-3.5 h-3.5 mr-2" />
+            Restaurar
           </Button>
         </div>
-        <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 bg-muted/10 rounded-2xl border border-primary/5 p-4 overflow-hidden">
           <ShiftCalendar />
         </div>
       </div>
@@ -160,350 +168,344 @@ export default function Jornadas() {
   }
 
   return (
-    <div className="flex flex-col gap-2 h-full min-h-0 overflow-hidden">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div className="min-w-0">
-          <h1 className="font-display text-lg font-bold text-foreground">Horarios y Turnos</h1>
-          <p className="text-muted-foreground text-xs hidden sm:block">Gestiona horarios administrativos, turnos operativos y ciclos de rotación</p>
-        </div>
-        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:justify-end">
-          <Button variant="outline" size="sm" className="h-8 sm:h-7 text-xs px-2" onClick={() => setShowGeneratorDialog(true)}>
-            <Zap className="w-3.5 h-3.5 sm:mr-1" />
-            <span className="hidden sm:inline">Generar Ciclo</span>
-            <span className="sm:hidden truncate">Ciclo</span>
-          </Button>
-          <Button size="sm" className="h-8 sm:h-7 text-xs px-2" onClick={() => setShowBulkGeneratorDialog(true)}>
-            <Users className="w-3.5 h-3.5 sm:mr-1" />
-            <span className="hidden sm:inline">Generar Todos</span>
-            <span className="sm:hidden truncate">Todos</span>
-          </Button>
-          <Button variant="outline" size="sm" className="h-8 sm:h-7 text-xs px-2" onClick={() => setShowExportDialog(true)}>
-            <FileSpreadsheet className="w-3.5 h-3.5 sm:mr-1" />
-            <span className="hidden sm:inline">Exportar</span>
-            <span className="sm:hidden truncate">Excel</span>
-          </Button>
+    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+      {/* Premium Header */}
+      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+        
+        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+                <Clock className="w-6 h-6" />
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                  Operaciones / RRHH
+                </Badge>
+                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Jornadas & Turnos</h1>
+              </div>
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
+              Planificación estratégica de horarios administrativos y rotación de personal operativo con visualización en tiempo real.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:min-w-[450px]">
+            {stats.map((stat, i) => (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                key={stat.label}
+                className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500"
+              >
+                <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
+                   <stat.icon className="w-3.5 h-3.5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
+                  <p className={`text-2xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <Card className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="p-2 flex-1 min-h-0 flex flex-col overflow-hidden">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-              <TabsList className="h-auto w-full sm:w-auto grid grid-cols-4 sm:inline-flex p-1">
-                <TabsTrigger value="calendar" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span className="hidden min-[380px]:inline">Calendario</span>
-                </TabsTrigger>
-                <TabsTrigger value="schedules" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
-                  <Briefcase className="w-3.5 h-3.5" />
-                  <span className="hidden min-[380px]:inline">Horarios</span>
-                </TabsTrigger>
-                <TabsTrigger value="shifts" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span className="hidden min-[380px]:inline">Turnos</span>
-                </TabsTrigger>
-                <TabsTrigger value="cycles" className="gap-1 text-xs h-8 sm:h-7 px-1 sm:px-2.5">
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span className="hidden min-[380px]:inline">Ciclos</span>
-                </TabsTrigger>
-              </TabsList>
+      {/* Navigation & Controls */}
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full md:w-auto">
+          <TabsList className="h-12 bg-muted/40 p-1 rounded-2xl border border-primary/5 w-full sm:w-auto overflow-x-auto no-scrollbar">
+            <TabsTrigger value="calendar" className="flex-1 sm:flex-none gap-2 rounded-xl font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all">
+              <Calendar className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Calendario</span>
+            </TabsTrigger>
+            <TabsTrigger value="schedules" className="flex-1 sm:flex-none gap-2 rounded-xl font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all">
+              <Briefcase className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Horarios</span>
+            </TabsTrigger>
+            <TabsTrigger value="shifts" className="flex-1 sm:flex-none gap-2 rounded-xl font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Turnos</span>
+            </TabsTrigger>
+            <TabsTrigger value="cycles" className="flex-1 sm:flex-none gap-2 rounded-xl font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all">
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Ciclos</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
-              {activeTab !== 'calendar' && (
-                <div className="grid grid-cols-[1fr_auto] gap-2 w-full sm:flex sm:w-auto">
-                  <div className="relative flex-1 sm:flex-none sm:w-64">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar..."
-                      className="pl-9 h-9"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <Button size="sm" className="h-9" onClick={() => {
-                    if (activeTab === 'schedules') { setSelectedSchedule(null); setShowScheduleForm(true); }
-                    else if (activeTab === 'shifts') { setSelectedShift(null); setShowShiftForm(true); }
-                    else if (activeTab === 'cycles') { setSelectedCycle(null); setShowCycleForm(true); }
-                  }}>
-                    <Plus className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Nuevo</span>
-                  </Button>
-                </div>
-              )}
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {activeTab !== 'calendar' && (
+            <div className="relative w-full sm:w-64 group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Input
+                placeholder="Filtrar registros..."
+                className="pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-
-            {/* Horarios Administrativos */}
-            <TabsContent value="schedules" className="overflow-auto min-h-0">
-              {loadingSchedules ? (
-                <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
-              ) : isMobile ? (
-                <MobileCardList
-                  className="p-1"
-                  emptyMessage="No hay horarios administrativos"
-                  items={filteredSchedules.map((schedule) => ({
-                    id: schedule.id,
-                    title: schedule.name,
-                    subtitle: `${formatTime(schedule.start_time)} - ${formatTime(schedule.end_time)}`,
-                    badge: <Badge variant={schedule.is_active ? 'default' : 'secondary'}>{schedule.is_active ? 'Activo' : 'Inactivo'}</Badge>,
-                    fields: [
-                      { label: 'Días', value: schedule.days_of_week.map(d => DAY_NAMES_SHORT[d]).join(', ') },
-                      { label: 'Descanso', value: `${schedule.break_minutes} min` },
-                    ],
-                    actions: (
-                      <>
-                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => { setSelectedSchedule(schedule); setShowScheduleForm(true); }}>
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setDeleteConfirm({ type: 'schedule', id: schedule.id })}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </>
-                    ),
-                  }))}
-                />
-              ) : (
-                <div className="rounded-md border overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead className="hidden sm:table-cell">Días</TableHead>
-                        <TableHead>Horario</TableHead>
-                        <TableHead className="hidden md:table-cell">Descanso</TableHead>
-                        <TableHead className="hidden sm:table-cell">Estado</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredSchedules.map((schedule) => (
-                        <TableRow key={schedule.id}>
-                          <TableCell>
-                            <div>
-                              <span className="font-medium">{schedule.name}</span>
-                              <div className="sm:hidden flex gap-0.5 mt-1">
-                                {schedule.days_of_week.map(d => (
-                                  <Badge key={d} variant="outline" className="text-[10px] px-0.5 h-4">{DAY_NAMES_SHORT[d]}</Badge>
-                                ))}
-                              </div>
-                              <div className="sm:hidden text-xs text-muted-foreground mt-0.5">
-                                {schedule.is_active ? '● Activo' : '○ Inactivo'}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <div className="flex gap-1">
-                              {schedule.days_of_week.map(d => (
-                                <Badge key={d} variant="outline" className="text-xs px-1">{DAY_NAMES_SHORT[d]}</Badge>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell>{formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}</TableCell>
-                          <TableCell className="hidden md:table-cell">{schedule.break_minutes} min</TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge variant={schedule.is_active ? 'default' : 'secondary'}>
-                              {schedule.is_active ? 'Activo' : 'Inactivo'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button size="sm" variant="ghost" onClick={() => { setSelectedSchedule(schedule); setShowScheduleForm(true); }}>
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteConfirm({ type: 'schedule', id: schedule.id })}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Turnos */}
-            <TabsContent value="shifts" className="overflow-auto min-h-0">
-              {loadingShifts ? (
-                <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
-              ) : isMobile ? (
-                <MobileCardList
-                  className="p-1"
-                  emptyMessage="No hay turnos operativos"
-                  items={filteredShifts.map((shift) => ({
-                    id: shift.id,
-                    title: (
-                      <span className="inline-flex items-center gap-2 min-w-0">
-                        <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: shift.color }} />
-                        <span className="truncate">{shift.name}</span>
-                        {shift.code && <span className="text-muted-foreground">({shift.code})</span>}
-                      </span>
-                    ),
-                    subtitle: `${formatTime(shift.start_time)} - ${formatTime(shift.end_time)}`,
-                    badge: <Badge variant={shift.is_active ? 'default' : 'secondary'}>{shift.is_active ? 'Activo' : 'Inactivo'}</Badge>,
-                    fields: [
-                      { label: 'Descanso', value: `${shift.break_minutes} min` },
-                      { label: 'Tipo', value: shift.is_rest_day ? 'Descanso' : shift.crosses_midnight ? 'Cruza medianoche' : 'Laboral' },
-                      ...(shift.description ? [{ label: 'Descripción', value: shift.description, className: 'col-span-2' }] : []),
-                    ],
-                    actions: (
-                      <>
-                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => { setSelectedShift(shift); setShowShiftForm(true); }}>
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setDeleteConfirm({ type: 'shift', id: shift.id })}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </>
-                    ),
-                  }))}
-                />
-              ) : (
-                <div className="rounded-md border overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Turno</TableHead>
-                        <TableHead>Horario</TableHead>
-                        <TableHead className="hidden sm:table-cell">Descripción</TableHead>
-                        <TableHead className="hidden sm:table-cell">Estado</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredShifts.map((shift) => (
-                        <TableRow key={shift.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: shift.color }} />
-                              <div>
-                                <span className="font-medium">{shift.name}</span>
-                                {shift.code && <span className="text-muted-foreground ml-1">({shift.code})</span>}
-                                <div className="sm:hidden text-xs text-muted-foreground mt-0.5">
-                                  {shift.is_active ? '● Activo' : '○ Inactivo'}
-                                </div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{formatTime(shift.start_time)} - {formatTime(shift.end_time)}</TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <span className="text-muted-foreground text-sm">
-                              {shift.description || '—'}
-                            </span>
-                          </TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge variant={shift.is_active ? 'default' : 'secondary'}>
-                              {shift.is_active ? 'Activo' : 'Inactivo'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button size="sm" variant="ghost" onClick={() => { setSelectedShift(shift); setShowShiftForm(true); }}>
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteConfirm({ type: 'shift', id: shift.id })}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Ciclos */}
-            <TabsContent value="cycles" className="overflow-auto min-h-0">
-              {loadingCycles ? (
-                <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}</div>
-              ) : isMobile ? (
-                <MobileCardList
-                  className="p-1"
-                  emptyMessage="No hay ciclos de rotación"
-                  items={filteredCycles.map((cycle) => ({
-                    id: cycle.id,
-                    title: (
-                      <span className="min-w-0">
-                        <span className="truncate">{cycle.name}</span>
-                        {cycle.code && <span className="text-muted-foreground ml-1">({cycle.code})</span>}
-                      </span>
-                    ),
-                    subtitle: cycle.description || 'Sin descripción',
-                    badge: <Badge variant={cycle.is_active ? 'default' : 'secondary'}>{cycle.is_active ? 'Activo' : 'Inactivo'}</Badge>,
-                    fields: [
-                      { label: 'Duración', value: `${cycle.total_days} días` },
-                      { label: 'Días configurados', value: cycle.cycle_days?.length || 0 },
-                    ],
-                    actions: (
-                      <>
-                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => { setSelectedCycle(cycle); setShowCycleForm(true); }}>
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive" onClick={() => setDeleteConfirm({ type: 'cycle', id: cycle.id })}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </>
-                    ),
-                  }))}
-                />
-              ) : (
-                <div className="rounded-md border overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Ciclo</TableHead>
-                        <TableHead>Duración</TableHead>
-                        <TableHead className="hidden sm:table-cell">Descripción</TableHead>
-                        <TableHead className="hidden sm:table-cell">Estado</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredCycles.map((cycle) => (
-                        <TableRow key={cycle.id}>
-                          <TableCell>
-                            <div>
-                              <span className="font-medium">{cycle.name}</span>
-                              {cycle.code && <span className="text-muted-foreground ml-2">({cycle.code})</span>}
-                              <div className="sm:hidden text-xs text-muted-foreground mt-0.5">
-                                {cycle.is_active ? '● Activo' : '○ Inactivo'}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{cycle.total_days} días</TableCell>
-                          <TableCell className="hidden sm:table-cell text-muted-foreground max-w-[200px] truncate">{cycle.description || '-'}</TableCell>
-                          <TableCell className="hidden sm:table-cell">
-                            <Badge variant={cycle.is_active ? 'default' : 'secondary'}>
-                              {cycle.is_active ? 'Activo' : 'Inactivo'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button size="sm" variant="ghost" onClick={() => { setSelectedCycle(cycle); setShowCycleForm(true); }}>
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost" className="text-destructive" onClick={() => setDeleteConfirm({ type: 'cycle', id: cycle.id })}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Calendario */}
-            <TabsContent value="calendar" className="mt-1 flex-1 min-h-0 flex flex-col">
-              <div className="flex justify-end mb-1 shrink-0">
-                <Button variant="outline" size="sm" className="h-8 sm:h-7 text-xs" onClick={() => setIsFullscreen(true)}>
-                  <Maximize2 className="w-3.5 h-3.5 sm:mr-1" />
-                  <span className="hidden sm:inline">Pantalla completa</span>
-                  <span className="sm:hidden">Ampliar</span>
+          )}
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {activeTab === 'calendar' ? (
+              <Button size="sm" className="h-12 w-full sm:w-auto px-6 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={() => setShowGeneratorDialog(true)}>
+                <Zap className="w-4 h-4 mr-2" />
+                Generar
+              </Button>
+            ) : (
+              <Button size="sm" className="h-12 w-full sm:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={() => {
+                if (activeTab === 'schedules') { setSelectedSchedule(null); setShowScheduleForm(true); }
+                else if (activeTab === 'shifts') { setSelectedShift(null); setShowShiftForm(true); }
+                else if (activeTab === 'cycles') { setSelectedCycle(null); setShowCycleForm(true); }
+              }}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nuevo
+              </Button>
+            )}
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-12 w-12 rounded-2xl border-primary/10 bg-background/50 p-0">
+                  <Maximize2 className="w-4 h-4" />
                 </Button>
-              </div>
-              <ShiftCalendar />
-            </TabsContent>
-          </Tabs>
-        </Card>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur-xl rounded-2xl border-primary/10 shadow-2xl">
+                 <DropdownMenuItem className="p-3 rounded-xl m-1 font-bold" onClick={() => setShowBulkGeneratorDialog(true)}>
+                    <Users className="w-4 h-4 mr-3 text-primary" /> Generar Masivo
+                 </DropdownMenuItem>
+                 <DropdownMenuItem className="p-3 rounded-xl m-1 font-bold" onClick={() => setShowExportDialog(true)}>
+                    <FileSpreadsheet className="w-4 h-4 mr-3 text-emerald-600" /> Exportar Excel
+                 </DropdownMenuItem>
+                 <DropdownMenuSeparator />
+                 <DropdownMenuItem className="p-3 rounded-xl m-1 font-bold" onClick={() => setIsFullscreen(true)}>
+                    <Maximize2 className="w-4 h-4 mr-3" /> Pantalla Completa
+                 </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+
+      <ScrollArea className="flex-1 p-6 sm:p-10">
+        <Tabs value={activeTab} className="w-full">
+          {/* Horarios Content */}
+          <TabsContent value="schedules" className="m-0 focus-visible:ring-0">
+             {loadingSchedules ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1,2,3].map(i => <Skeleton key={i} className="h-40 rounded-[2.5rem]" />)}
+                </div>
+             ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {filteredSchedules.map((schedule) => (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        key={schedule.id}
+                        className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background border border-primary/5 hover:border-primary/20 hover:shadow-2xl transition-all duration-500"
+                      >
+                         <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                            <Briefcase className="w-24 h-24" />
+                         </div>
+                         <div className="relative flex flex-col h-full gap-6">
+                            <div className="flex items-start justify-between">
+                               <div className="space-y-1">
+                                  <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-[9px] font-black uppercase tracking-widest px-2">Administrativo</Badge>
+                                  <h3 className="text-xl font-black text-foreground tracking-tight line-clamp-1">{schedule.name}</h3>
+                               </div>
+                               <Badge variant={schedule.is_active ? 'outline' : 'secondary'} className={schedule.is_active ? 'bg-emerald-500/5 text-emerald-600 border-emerald-500/10 font-bold' : 'font-bold opacity-50'}>
+                                  {schedule.is_active ? 'Vigente' : 'Inactivo'}
+                               </Badge>
+                            </div>
+
+                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-muted/30 border border-primary/5">
+                               <div className="p-2 rounded-xl bg-background text-primary shadow-sm">
+                                  <Clock className="w-4 h-4" />
+                                </div>
+                                <div className="space-y-0.5">
+                                   <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Franja Horaria</p>
+                                   <p className="font-black text-foreground text-sm tracking-tight">
+                                      {formatTime(schedule.start_time)} — {formatTime(schedule.end_time)}
+                                   </p>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1.5">
+                               {schedule.days_of_week.map(d => (
+                                  <Badge key={d} variant="outline" className="text-[9px] font-black tracking-tighter px-2 h-5 border-primary/10 group-hover:border-primary/30 transition-colors">
+                                     {DAY_NAMES_SHORT[d]}
+                                  </Badge>
+                               ))}
+                            </div>
+
+                            <div className="pt-4 mt-auto border-t border-primary/5 flex items-center justify-between">
+                               <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                  Receso: {schedule.break_minutes} min
+                               </div>
+                               <div className="flex items-center gap-1">
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => { setSelectedSchedule(schedule); setShowScheduleForm(true); }}>
+                                     <Edit2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all" onClick={() => setDeleteConfirm({ type: 'schedule', id: schedule.id })}>
+                                     <Trash2 className="w-4 h-4" />
+                                  </Button>
+                               </div>
+                            </div>
+                         </div>
+                      </motion.div>
+                   ))}
+                </div>
+             )}
+          </TabsContent>
+
+          {/* Turnos Content */}
+          <TabsContent value="shifts" className="m-0 focus-visible:ring-0">
+             {loadingShifts ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1,2,3].map(i => <Skeleton key={i} className="h-40 rounded-[2.5rem]" />)}
+                </div>
+             ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {filteredShifts.map((shift) => (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        key={shift.id}
+                        className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background border border-primary/5 hover:border-primary/20 hover:shadow-2xl transition-all duration-500"
+                      >
+                         <div className="absolute top-0 right-0 p-8 opacity-[0.05]" style={{ color: shift.color }}>
+                            <Clock className="w-24 h-24" />
+                         </div>
+                         <div className="relative flex flex-col h-full gap-6">
+                            <div className="flex items-start justify-between">
+                               <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                     <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: shift.color }} />
+                                     <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest px-2" style={{ borderColor: `${shift.color}40`, color: shift.color, backgroundColor: `${shift.color}05` }}>
+                                        {shift.is_rest_day ? 'DESCANSO' : 'OPERATIVO'}
+                                     </Badge>
+                                  </div>
+                                  <h3 className="text-xl font-black text-foreground tracking-tight flex items-center gap-2">
+                                     {shift.name}
+                                     {shift.code && <span className="text-xs font-mono text-muted-foreground/50">#{shift.code}</span>}
+                                  </h3>
+                               </div>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                               <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-primary/5 text-center group-hover:bg-background transition-colors">
+                                  <p className="text-[10px] font-black text-muted-foreground/60 uppercase mb-1">INICIO</p>
+                                  <p className="text-lg font-black text-foreground tracking-tighter">{formatTime(shift.start_time)}</p>
+                               </div>
+                               <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-primary/5 text-center group-hover:bg-background transition-colors">
+                                  <p className="text-[10px] font-black text-muted-foreground/60 uppercase mb-1">FIN</p>
+                                  <p className="text-lg font-black text-foreground tracking-tighter">{formatTime(shift.end_time)}</p>
+                               </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 text-[11px] font-medium text-muted-foreground leading-relaxed line-clamp-2 min-h-[2.5rem]">
+                               {shift.description || 'Sin descripción adicional para este turno operativo.'}
+                            </div>
+
+                            <div className="pt-4 mt-auto border-t border-primary/5 flex items-center justify-between">
+                               <div className="flex items-center gap-4">
+                                  <div className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                     <RotateCcw className="w-3.5 h-3.5" />
+                                     {shift.break_minutes}m
+                                  </div>
+                                  {shift.crosses_midnight && (
+                                     <Badge variant="outline" className="text-[9px] font-black uppercase bg-amber-500/5 text-amber-600 border-amber-500/10">Nocturno</Badge>
+                                  )}
+                               </div>
+                               <div className="flex items-center gap-1">
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => { setSelectedShift(shift); setShowShiftForm(true); }}>
+                                     <Edit2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all" onClick={() => setDeleteConfirm({ type: 'shift', id: shift.id })}>
+                                     <Trash2 className="w-4 h-4" />
+                                  </Button>
+                               </div>
+                            </div>
+                         </div>
+                      </motion.div>
+                   ))}
+                </div>
+             )}
+          </TabsContent>
+
+          {/* Ciclos Content */}
+          <TabsContent value="cycles" className="m-0 focus-visible:ring-0">
+             {loadingCycles ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1,2,3].map(i => <Skeleton key={i} className="h-40 rounded-[2.5rem]" />)}
+                </div>
+             ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                   {filteredCycles.map((cycle) => (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        key={cycle.id}
+                        className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background border border-primary/5 hover:border-primary/20 hover:shadow-2xl transition-all duration-500"
+                      >
+                         <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity">
+                            <RotateCcw className="w-24 h-24" />
+                         </div>
+                         <div className="relative flex flex-col h-full gap-6">
+                            <div className="flex items-start justify-between">
+                               <div className="space-y-1">
+                                  <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px] font-black uppercase tracking-widest px-2">Rotativo</Badge>
+                                  <h3 className="text-xl font-black text-foreground tracking-tight line-clamp-1">{cycle.name}</h3>
+                               </div>
+                            </div>
+
+                            <div className="flex items-center gap-6">
+                               <div className="space-y-1 flex-1">
+                                  <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Duración Total</p>
+                                  <p className="text-2xl font-black text-primary tracking-tighter">{cycle.total_days} <span className="text-sm">días</span></p>
+                               </div>
+                               <div className="w-16 h-16 rounded-2xl bg-primary/5 border border-primary/10 flex flex-col items-center justify-center">
+                                  <p className="text-xs font-black text-primary">{cycle.cycle_days?.length || 0}</p>
+                                  <p className="text-[8px] font-bold text-muted-foreground uppercase">Hitos</p>
+                               </div>
+                            </div>
+
+                            <p className="text-[11px] font-medium text-muted-foreground leading-relaxed italic line-clamp-2">
+                               {cycle.description || 'Configuración de rotación secuencial para personal de planta y operaciones externas.'}
+                            </p>
+
+                            <div className="pt-4 mt-auto border-t border-primary/5 flex items-center justify-between">
+                               <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                  Cód: {cycle.code || 'UNSET'}
+                               </div>
+                               <div className="flex items-center gap-1">
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all" onClick={() => { setSelectedCycle(cycle); setShowCycleForm(true); }}>
+                                     <Edit2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all" onClick={() => setDeleteConfirm({ type: 'cycle', id: cycle.id })}>
+                                     <Trash2 className="w-4 h-4" />
+                                  </Button>
+                               </div>
+                            </div>
+                         </div>
+                      </motion.div>
+                   ))}
+                </div>
+             )}
+          </TabsContent>
+
+          {/* Calendar Content */}
+          <TabsContent value="calendar" className="m-0 focus-visible:ring-0">
+             <div className="bg-background rounded-[2.5rem] border border-primary/10 p-6 sm:p-10 shadow-xl overflow-hidden min-h-[600px] flex flex-col">
+                <ShiftCalendar />
+             </div>
+          </TabsContent>
+        </Tabs>
+      </ScrollArea>
 
       {/* Dialogs */}
       <WorkScheduleFormDialog open={showScheduleForm} onOpenChange={setShowScheduleForm} schedule={selectedSchedule} />
@@ -515,15 +517,17 @@ export default function Jornadas() {
 
       {/* Delete Confirm */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-background/95 backdrop-blur-xl border-none shadow-2xl rounded-3xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar?</AlertDialogTitle>
-            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+            <AlertDialogTitle className="text-2xl font-black tracking-tight">¿Confirmar Eliminación?</AlertDialogTitle>
+            <AlertDialogDescription className="font-medium text-muted-foreground">
+              Esta operación es irreversible y afectará la planificación histórica vinculada a este registro.
+            </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-              Eliminar
+          <AlertDialogFooter className="mt-6">
+            <AlertDialogCancel className="rounded-2xl h-12 px-8 font-bold uppercase tracking-widest text-[11px]">Mantener</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-2xl h-12 px-10 font-black uppercase tracking-widest text-[11px] shadow-lg shadow-destructive/20">
+              Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -531,3 +535,4 @@ export default function Jornadas() {
     </div>
   );
 }
+

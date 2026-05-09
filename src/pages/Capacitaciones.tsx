@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Plus, Search, MoreVertical, Clock, Sparkles, PenLine, Library, Link2,
   Eye, Copy, Trash2, LayoutDashboard, BookOpenCheck, MonitorPlay, UsersRound,
   Layers, Timer, BadgeCheck, FileText, ShieldCheck, HeartPulse, Utensils,
-  Flame, HardHat, ClipboardCheck, Leaf, BriefcaseBusiness, ImageIcon
+  Flame, HardHat, ClipboardCheck, Leaf, BriefcaseBusiness, ImageIcon,
+  Filter, TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CourseFormDialog, CertificateAlertsCard, TrainingPreviewDialog } from '@/components/training';
@@ -20,6 +23,7 @@ import { toast as sonnerToast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import type { TrainingCourse, TrainingModality, TrainingCourseContent } from '@/types/training';
+import { cn } from '@/lib/utils';
 
 const STATUS_COLORS: Record<string, string> = {
   programado: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
@@ -71,142 +75,195 @@ function getCourseCategoryVisual(category: string) {
 
 export default function Capacitaciones() {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const { toast } = useToast();
-  const { data: courses, isLoading: loadingCourses } = useTrainingCourses();
-  const { data: stats } = useTrainingStats();
-  const deleteCourse = useDeleteCourse();
-  const duplicateCourse = useDuplicateCourse();
-
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCourseForm, setShowCourseForm] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<TrainingCourse | null>(null);
+
+  const { data: courses, isLoading: loadingCourses, refetch } = useTrainingCourses();
+  const deleteMutation = useDeleteCourse();
+  const duplicateMutation = useDuplicateCourse();
+
   const [courseDialogOpen, setCourseDialogOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<TrainingCourse | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<TrainingCourse | undefined>();
   const [previewCourse, setPreviewCourse] = useState<TrainingCourse | null>(null);
-  const [previewInitialTab, setPreviewInitialTab] = useState('general');
+  const [previewInitialTab, setPreviewInitialTab] = useState('overview');
 
-  const filteredCourses = courses?.filter(course =>
-    course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (course.code && course.code.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    course.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCourses = useMemo(() => {
+    if (!courses) return [];
+    if (!searchTerm) return courses;
+    
+    const term = searchTerm.toLowerCase();
+    return courses.filter(c => 
+      c.name.toLowerCase().includes(term) || 
+      (c.code && c.code.toLowerCase().includes(term)) ||
+      c.category.toLowerCase().includes(term)
+    );
+  }, [courses, searchTerm]);
 
-  async function handleDeleteCourse(id: string) {
-    try {
-      await deleteCourse.mutateAsync(id);
-      toast({ title: 'Curso eliminado' });
-    } catch {
-      toast({ title: 'Error al eliminar', variant: 'destructive' });
-    }
-  }
-
-  async function handleDuplicate(id: string) {
-    try {
-      await duplicateCourse.mutateAsync(id);
-      sonnerToast.success('Curso duplicado exitosamente');
-    } catch {
-      sonnerToast.error('Error al duplicar');
-    }
-  }
-
-  function handleEdit(course: TrainingCourse) {
-    const content = course.content as TrainingCourseContent | null;
-    if (content?.isManual) {
-      navigate(`/capacitaciones/crear-manual?id=${course.id}`);
-    } else {
-      navigate(`/capacitaciones/crear?id=${course.id}`);
-    }
-  }
-
-  function handleOpenPreview(course: TrainingCourse, tab = 'general') {
-    setPreviewInitialTab(tab);
+  const handleOpenPreview = (course: TrainingCourse, tab = 'overview') => {
     setPreviewCourse(course);
-  }
+    setPreviewInitialTab(tab);
+  };
+
+  const handleEdit = (course: TrainingCourse) => {
+    setSelectedCourse(course);
+    setCourseDialogOpen(true);
+  };
+
+  const handleDuplicate = async (id: string) => {
+    try {
+      await duplicateMutation.mutateAsync(id);
+      sonnerToast.success('Curso duplicado correctamente');
+    } catch (error) {
+      console.error(error);
+      sonnerToast.error('Error al duplicar el curso');
+    }
+  };
+
+  const handleDeleteCourse = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      sonnerToast.success('Curso eliminado correctamente');
+    } catch (error) {
+      sonnerToast.error('Error al eliminar el curso');
+    }
+  };
+
+  const statsKpis = useMemo(() => {
+    if (!courses) return { total: 0, inProcess: 0, published: 0, completed: 0 };
+    return {
+      total: courses.length,
+      inProcess: courses.filter(c => c.status === 'en_curso' || c.status === 'programado').length,
+      published: courses.filter(c => c.status === 'publicado').length,
+      completed: courses.filter(c => c.status === 'completado').length,
+    };
+  }, [courses]);
+
+  const kpis = useMemo(() => ([
+    { label: 'TOTAL CURSOS', value: statsKpis.total, desc: 'Catálogo completo', icon: Library, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'PUBLICADOS', value: statsKpis.published, desc: 'Cursos activos', icon: BadgeCheck, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+    { label: 'EN PROCESO', value: statsKpis.inProcess, desc: 'Por iniciar/en curso', icon: Timer, color: 'text-amber-600', bg: 'bg-amber-500/10' },
+    { label: 'COMPLETADOS', value: statsKpis.completed, desc: 'Ciclo finalizado', icon: BookOpenCheck, color: 'text-blue-600', bg: 'bg-blue-500/10' },
+  ]), [statsKpis]);
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex items-start sm:items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl md:text-3xl font-bold">Capacitaciones</h1>
-          <p className="text-sm text-muted-foreground">Plataforma integral de capacitación empresarial</p>
-        </div>
-        <Button size={isMobile ? 'sm' : 'default'} onClick={() => navigate('/capacitaciones/crear')} className="shrink-0">
-          <Sparkles className="h-4 w-4 mr-1.5" /> Nueva con IA
-        </Button>
-      </div>
+    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+      {/* Premium Header */}
+      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+        
+        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+                <BookOpenCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                  Formación Continua
+                </Badge>
+                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Capacitaciones</h1>
+              </div>
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
+              Plataforma integral para la gestión de formación, desarrollo de competencias y cumplimiento normativo.
+            </p>
+          </div>
 
-      {/* AI Banner + Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <motion.div className="lg:col-span-2" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20 h-full">
-            <CardContent className="pt-5 pb-5 md:pt-6 md:pb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 h-full">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="p-2.5 md:p-3 bg-primary/20 rounded-xl shrink-0">
-                  <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
+            {kpis.map((stat, i) => (
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+                <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
+                   <stat.icon className="w-3.5 h-3.5" />
                 </div>
-                <div className="min-w-0">
-                  <h2 className="text-lg md:text-xl font-bold">Plataforma de Capacitaciones con IA</h2>
-                  <p className="text-sm text-muted-foreground">Genera contenido, evaluaciones y certificados automáticamente</p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
+                  <p className={`text-2xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
+                  <p className="text-[9px] font-bold text-muted-foreground/60 leading-none truncate">{stat.desc}</p>
                 </div>
               </div>
-              <Button onClick={() => navigate('/capacitaciones/crear')} size={isMobile ? 'sm' : 'lg'} className="w-full sm:w-auto shrink-0">
-                <Plus className="h-4 w-4 mr-2" /> Crear Capacitación
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Quick Actions - hidden on mobile */}
-        <Card className="hidden lg:block">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Acciones Rápidas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))] gap-2">
-              <Button variant="outline" className="h-auto min-h-10 min-w-0 justify-start px-3 text-left whitespace-normal" onClick={() => navigate('/capacitaciones/crear')}>
-                <Sparkles className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">Nueva con IA</span>
-              </Button>
-              <Button variant="outline" className="h-auto min-h-10 min-w-0 justify-start px-3 text-left whitespace-normal" onClick={() => navigate('/capacitaciones/biblioteca')}>
-                <Library className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">Ver Biblioteca</span>
-              </Button>
-              <Button variant="outline" className="h-auto min-h-10 min-w-0 justify-start px-3 text-left whitespace-normal" onClick={() => navigate('/capacitaciones/crear-manual')}>
-                <PenLine className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">Nueva Manual</span>
-              </Button>
-              <Button variant="outline" className="h-auto min-h-10 min-w-0 justify-start px-3 text-left whitespace-normal" onClick={() => navigate('/capacitaciones/acceso/generar')}>
-                <Link2 className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">Generar Enlace</span>
-              </Button>
-              <Button variant="outline" className="h-auto min-h-10 min-w-0 justify-start px-3 text-left whitespace-normal [grid-column:1/-1]" onClick={() => navigate('/capacitaciones/cumplimiento')}>
-                <LayoutDashboard className="h-4 w-4 shrink-0" /> <span className="min-w-0 truncate">Cumplimiento</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Alerts */}
-      <CertificateAlertsCard />
-
-      {/* Search */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 md:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar cursos..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Courses - Mobile Cards / Desktop Table */}
-      <Card>
-        <CardHeader><CardTitle>Cursos de Capacitación</CardTitle></CardHeader>
-        <CardContent>
-          {isMobile ? (
-            <PullToRefresh onRefresh={async () => { await new Promise(r => setTimeout(r, 800)); }}>
-              {loadingCourses ? (
-                <p className="text-center text-muted-foreground py-8">Cargando...</p>
-              ) : filteredCourses?.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No hay cursos registrados</p>
-              ) : (
-                <div className="space-y-3">
-                  {(filteredCourses || []).map((course, index) => {
+      {/* Sticky Filter Bar */}
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
+          <div className="relative w-full sm:w-80 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input
+              placeholder="Buscar cursos por nombre, código o categoría..."
+              className="pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              className="h-12 rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider px-4"
+              onClick={() => navigate('/capacitaciones/biblioteca')}
+            >
+              <Library className="w-4 h-4 mr-2 text-primary" />
+              Biblioteca
+            </Button>
+            <Button
+              variant="ghost"
+              className="h-12 rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider px-4"
+              onClick={() => navigate('/capacitaciones/cumplimiento')}
+            >
+              <LayoutDashboard className="w-4 h-4 mr-2 text-primary" />
+              Cumplimiento
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button 
+            className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20" 
+            onClick={() => navigate('/capacitaciones/crear')}
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Nueva con IA
+          </Button>
+          <Button 
+            variant="outline"
+            className="h-12 px-6 rounded-2xl border-primary/10 font-black uppercase tracking-widest text-[11px]" 
+            onClick={() => navigate('/capacitaciones/crear-manual')}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Manual
+          </Button>
+        </div>
+      </div>
+
+      <ScrollArea className="flex-1 p-6 sm:p-10">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Alerts */}
+          <CertificateAlertsCard />
+
+          {loadingCourses ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-24 w-full rounded-[2rem]" />
+              ))}
+            </div>
+          ) : filteredCourses?.length === 0 ? (
+            <div className="text-center py-32 bg-background/50 rounded-[3rem] border-2 border-dashed border-primary/5">
+               <BookOpenCheck className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
+               <p className="text-xl font-black uppercase tracking-[0.2em] text-muted-foreground/40">Sin cursos registrados</p>
+            </div>
+          ) : (
+            <>
+              {/* Mobile View */}
+              {isMobile ? (
+                <div className="space-y-4">
+                  {filteredCourses?.map((course, index) => {
                     const content = course.content as TrainingCourseContent | null;
                     const statusLabel = STATUS_LABELS[course.status] || course.status;
                     const statusClass = STATUS_COLORS[course.status] || '';
@@ -218,67 +275,52 @@ export default function Capacitaciones() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.04 }}
-                        role="button"
-                        tabIndex={0}
+                        className="group relative overflow-hidden rounded-[2rem] border border-primary/5 bg-background/40 backdrop-blur-xl p-5 shadow-sm hover:shadow-xl transition-all duration-500"
                         onClick={() => handleOpenPreview(course)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            handleOpenPreview(course);
-                          }
-                        }}
-                        className="cursor-pointer rounded-xl border border-border/70 bg-card p-4 shadow-sm transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
-                        <div className="flex items-start gap-3">
-                          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ring-1 ${iconStyle}`}>
-                            <CourseIcon className="h-6 w-6" />
+                        <div className="flex items-start gap-4">
+                          <div className={cn("flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.2rem] ring-1 transition-transform group-hover:scale-110 duration-500", iconStyle)}>
+                            <CourseIcon className="h-7 w-7" />
                           </div>
                           <div className="min-w-0 flex-1 space-y-3">
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0">
-                                <h3 className="line-clamp-2 break-words text-sm font-semibold leading-snug text-foreground">{course.name}</h3>
-                                <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                                  <BookOpenCheck className="h-3.5 w-3.5" />
-                                  <span className="truncate">{course.category}</span>
-                                </div>
+                                <h3 className="font-black tracking-tight text-foreground text-base leading-tight line-clamp-2">{course.name}</h3>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1 truncate">{course.category}</p>
                               </div>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-8 w-8 shrink-0" onClick={(event) => event.stopPropagation()}><MoreVertical className="h-4 w-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-muted/20 hover:bg-muted" onClick={(event) => event.stopPropagation()}><MoreVertical className="h-5 w-5" /></Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-                                  <DropdownMenuItem onClick={() => handleOpenPreview(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleOpenPreview(course, 'media')}><ImageIcon className="h-4 w-4 mr-2" /> Multimedia</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
-                                  <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
+                                <DropdownMenuContent align="end" className="rounded-2xl border-primary/10 shadow-2xl p-2">
+                                  <DropdownMenuItem onClick={() => handleOpenPreview(course)} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3"><Eye className="h-4 w-4 mr-3" /> Vista previa</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleEdit(course)} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3"><PenLine className="h-4 w-4 mr-3" /> Editar</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDuplicate(course.id)} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3"><Copy className="h-4 w-4 mr-3" /> Duplicar</DropdownMenuItem>
+                                  <DropdownMenuItem className="rounded-xl font-bold text-xs uppercase tracking-wider p-3 text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-3" /> Eliminar</DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
 
                             <div className="flex items-center gap-2">
-                              <Badge className={`min-w-0 flex-1 justify-center rounded-full border-transparent px-3 py-1 ${statusClass}`}>
-                                <BadgeCheck className="mr-1 h-3 w-3 shrink-0" />
-                                <span className="truncate">{statusLabel}</span>
+                              <Badge className={cn("h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-primary/10 shadow-sm", statusClass)}>
+                                <BadgeCheck className="mr-1.5 h-3.5 w-3.5" />
+                                {statusLabel}
                               </Badge>
                               {content?.isManual ? (
-                                <Badge className="shrink-0 rounded-full bg-muted px-3 py-1 text-muted-foreground"><PenLine className="mr-1 h-3 w-3" /> Manual</Badge>
+                                <Badge variant="outline" className="h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 bg-muted/20 border-primary/10"><PenLine className="mr-1.5 h-3.5 w-3.5" /> Manual</Badge>
                               ) : content ? (
-                                <Badge className="shrink-0 rounded-full bg-success-light px-3 py-1 text-success"><Sparkles className="mr-1 h-3 w-3" /> IA</Badge>
-                              ) : (
-                                <Badge variant="outline" className="shrink-0 rounded-full px-3 py-1"><FileText className="mr-1 h-3 w-3" />{course.code || 'Curso'}</Badge>
-                              )}
+                                <Badge variant="outline" className="h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 bg-success-light/20 text-success border-success/10"><Sparkles className="mr-1.5 h-3.5 w-3.5" /> IA</Badge>
+                              ) : null}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-2 pt-1">
-                              <div className="rounded-lg bg-muted/60 p-2.5">
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Layers className="h-3 w-3" /> Modalidad</div>
-                                <p className="mt-1 truncate text-sm font-semibold text-foreground">{MODALITY_LABELS[course.modality]}</p>
+                            <div className="grid grid-cols-2 gap-3 pt-2">
+                              <div className="rounded-2xl bg-muted/30 p-3 flex flex-col items-center justify-center text-center">
+                                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Modalidad</span>
+                                <p className="text-xs font-black text-foreground">{MODALITY_LABELS[course.modality]}</p>
                               </div>
-                              <div className="rounded-lg bg-muted/60 p-2.5">
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground"><Timer className="h-3 w-3" /> Duración</div>
-                                <p className="mt-1 truncate text-sm font-semibold text-foreground">{course.duration_hours}h</p>
+                              <div className="rounded-2xl bg-muted/30 p-3 flex flex-col items-center justify-center text-center">
+                                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Duración</span>
+                                <p className="text-xs font-black text-foreground">{course.duration_hours}h</p>
                               </div>
                             </div>
                           </div>
@@ -287,67 +329,110 @@ export default function Capacitaciones() {
                     );
                   })}
                 </div>
-              )}
-            </PullToRefresh>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Modalidad</TableHead>
-                  <TableHead>Duración</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loadingCourses ? (
-                  <TableRow><TableCell colSpan={8} className="text-center">Cargando...</TableCell></TableRow>
-                ) : filteredCourses?.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No hay cursos registrados</TableCell></TableRow>
-                ) : (
-                  filteredCourses?.map((course) => {
-                    const content = course.content as TrainingCourseContent | null;
-                    return (
-                      <TableRow key={course.id}>
-                        <TableCell className="font-medium">{course.code || '-'}</TableCell>
-                        <TableCell>{course.name}</TableCell>
-                        <TableCell><Badge variant="outline">{course.category}</Badge></TableCell>
-                        <TableCell>{MODALITY_LABELS[course.modality]}</TableCell>
-                        <TableCell><Clock className="h-4 w-4 text-muted-foreground inline mr-1" />{course.duration_hours}h</TableCell>
-                        <TableCell><Badge className={STATUS_COLORS[course.status] || ''}>{STATUS_LABELS[course.status] || course.status}</Badge></TableCell>
-                        <TableCell>
-                          {content?.isManual ? (
-                            <Badge variant="outline"><PenLine className="h-3 w-3 mr-1" /> Manual</Badge>
-                          ) : content ? (
-                            <Badge variant="secondary"><Sparkles className="h-3 w-3 mr-1" /> IA</Badge>
-                          ) : null}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleOpenPreview(course)}><Eye className="h-4 w-4 mr-2" /> Vista previa</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleOpenPreview(course, 'media')}><ImageIcon className="h-4 w-4 mr-2" /> Multimedia</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEdit(course)}><PenLine className="h-4 w-4 mr-2" /> Editar</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
+              ) : (
+                /* Desktop Table View */
+                <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-2xl bg-background/40 backdrop-blur-xl">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/30 border-b border-primary/5 hover:bg-muted/30">
+                        <TableHead className="px-8 h-16 font-black text-[10px] uppercase tracking-[0.2em]">Curso</TableHead>
+                        <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Categoría</TableHead>
+                        <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Modalidad</TableHead>
+                        <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Duración</TableHead>
+                        <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
+                        <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Tipo</TableHead>
+                        <TableHead className="px-8 h-16 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
                       </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCourses?.map((course, index) => {
+                        const content = course.content as TrainingCourseContent | null;
+                        const { icon: CourseIcon, style: iconStyle } = getCourseCategoryVisual(course.category);
+                        const statusClass = STATUS_COLORS[course.status] || '';
+
+                        return (
+                          <TableRow
+                            key={course.id}
+                            className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors cursor-pointer"
+                            onClick={() => handleOpenPreview(course)}
+                          >
+                            <TableCell className="px-8 py-5">
+                              <div className="flex items-center gap-4">
+                                <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500", iconStyle)}>
+                                  <CourseIcon className="w-6 h-6" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-black tracking-tight text-foreground text-base leading-none mb-1">{course.name}</p>
+                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">{course.code || 'S/C'}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 bg-primary/5 border-primary/10">
+                                {course.category}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm font-black tracking-tight text-foreground/80">{MODALITY_LABELS[course.modality]}</span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Timer className="w-4 h-4 text-primary/60" />
+                                <span className="text-sm font-black tracking-tight text-foreground/80">{course.duration_hours}h</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={cn("h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-primary/10 shadow-sm", statusClass)}>
+                                {STATUS_LABELS[course.status] || course.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {content?.isManual ? (
+                                <Badge variant="outline" className="h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 bg-muted/20 border-primary/10">Manual</Badge>
+                              ) : content ? (
+                                <Badge variant="outline" className="h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 bg-success-light/20 text-success border-success/10">IA</Badge>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="px-8 text-right">
+                              <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0" onClick={e => e.stopPropagation()}>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-10 w-10 rounded-xl bg-primary/5 hover:bg-primary text-primary hover:text-primary-foreground shadow-sm transition-all"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenPreview(course);
+                                  }}
+                                >
+                                  <Eye className="w-5 h-5" />
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-muted hover:bg-foreground hover:text-background transition-all">
+                                      <MoreVertical className="w-5 h-5" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="rounded-2xl border-primary/10 shadow-2xl p-2">
+                                    <DropdownMenuItem onClick={() => handleEdit(course)} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3"><PenLine className="h-4 w-4 mr-3" /> Editar</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDuplicate(course.id)} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3"><Copy className="h-4 w-4 mr-3" /> Duplicar</DropdownMenuItem>
+                                    <DropdownMenuItem className="rounded-xl font-bold text-xs uppercase tracking-wider p-3 text-destructive" onClick={() => handleDeleteCourse(course.id)}><Trash2 className="h-4 w-4 mr-3" /> Eliminar</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </ScrollArea>
 
       {/* Dialogs */}
       <CourseFormDialog open={courseDialogOpen} onOpenChange={setCourseDialogOpen} course={selectedCourse} />

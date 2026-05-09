@@ -37,6 +37,7 @@ export function useBanksCatalog() {
 
   const createMutation = useMutation({
     mutationFn: async (item: Partial<CatalogBank>) => {
+      console.log('Creating bank catalog item:', { currentCompanyId, item });
       if (!currentCompanyId) throw new Error('No company selected');
       
       const { data, error } = await supabase
@@ -52,7 +53,10 @@ export function useBanksCatalog() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error creating bank catalog item:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -60,11 +64,11 @@ export function useBanksCatalog() {
       toast.success('Banco creado exitosamente');
     },
     onError: (error: any) => {
-      console.error('Error creating:', error);
+      console.error('Error creating bank:', error);
       if (error.code === '23505') {
         toast.error('Ya existe un banco con ese nombre');
       } else {
-        toast.error('Error al crear el banco');
+        toast.error(`Error al crear el banco: ${error.message || 'Error desconocido'}`);
       }
     },
   });

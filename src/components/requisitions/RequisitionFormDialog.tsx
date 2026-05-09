@@ -1,8 +1,25 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { es } from 'date-fns/locale';
+import { 
+  CalendarIcon, 
+  Building2, 
+  Target, 
+  ClipboardList, 
+  Users, 
+  Clock, 
+  CreditCard, 
+  UserCheck, 
+  FileEdit, 
+  Briefcase,
+  AlertCircle,
+  Truck,
+  Coffee,
+  Tool,
+  Wrench
+} from 'lucide-react';
 
 import {
   Dialog,
@@ -36,6 +53,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -67,6 +87,7 @@ export function RequisitionFormDialog({
   onOpenChange,
   requisition,
 }: RequisitionFormDialogProps) {
+  const [activeTab, setActiveTab] = useState('requisition');
   const { user } = useAuth();
   const { data: areas = [] } = useAreas();
   const { data: positions = [] } = usePositions();
@@ -185,533 +206,684 @@ export function RequisitionFormDialog({
 
   const isLoading = createRequisition.isPending || updateRequisition.isPending;
 
+  const tabItems = [
+    { value: 'requisition', label: 'Solicitud', icon: FileEdit },
+    { value: 'position', label: 'Posición', icon: Briefcase },
+    { value: 'replacement', label: 'Reemplazo', icon: Users },
+    { value: 'conditions', label: 'Condiciones', icon: Clock },
+    { value: 'benefits', label: 'Beneficios', icon: CreditCard },
+    { value: 'requester', label: 'Solicitante', icon: UserCheck },
+  ];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_textarea]:min-h-24 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
-        <DialogHeader>
-          <DialogTitle>
-            {requisition ? 'Editar Requisición' : 'Nueva Requisición de Personal'}
-          </DialogTitle>
-          <DialogDescription>
-            {requisition
-              ? 'Modifica los datos de la requisición.'
-              : 'Ingresa los datos para solicitar nuevo personal.'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[95dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full border-none shadow-2xl">
+        <DialogTitle className="sr-only">
+          {requisition ? 'Editar Requisición' : 'Nueva Requisición de Personal'}
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          Formulario para la solicitud de nuevo personal en la organización.
+        </DialogDescription>
+
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4 pt-8 pb-6 sm:px-8 sm:pt-10">
+          {/* Decorative patterns */}
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          
+          {/* Pattern overlay (dots) */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+
+          <div className="relative flex flex-col md:flex-row items-start gap-6">
+            {/* Avatar/Initial */}
+            <div className="w-16 h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-primary/10 transition-transform hover:scale-105 duration-300">
+              {form.watch('cargo_solicitado') ? form.watch('cargo_solicitado').substring(0, 2).toUpperCase() : 'RP'}
+            </div>
+
+            <div className="flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" className="bg-success/10 text-success border-success/20 animate-in fade-in slide-in-from-left-2 duration-500">
+                  <span className="w-2 h-2 rounded-full bg-success mr-1.5 animate-pulse" />
+                  {requisition ? 'En Proceso' : 'Nueva'}
+                </Badge>
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 font-medium">
+                  {requisitionReasonLabels[form.watch('motivo_solicitud') as RequisitionReason] || 'Solicitud'}
+                </Badge>
+              </div>
+              
+              <h2 className="text-3xl font-display font-bold text-foreground tracking-tight sm:text-4xl">
+                {form.watch('cargo_solicitado') || (requisition ? 'Editar Requisición' : 'Nueva Requisición')}
+              </h2>
+              
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground font-medium">
+                <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                  <Building2 className="w-4 h-4 text-primary/60" />
+                  {operationCenters.find(c => c.id === form.watch('operation_center_id'))?.name || 'Centro no seleccionado'}
+                </div>
+                <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                  <CalendarIcon className="w-4 h-4 text-primary/60" />
+                  {format(form.watch('fecha_requisicion') || new Date(), "MMMM yyyy", { locale: es })}
+                </div>
+                {form.watch('area_id') && (
+                  <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                    <Target className="w-4 h-4 text-primary/60" />
+                    {areas.find(a => a.id === form.watch('area_id'))?.name}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Datos generales */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Datos Generales</h3>
-              
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="fecha_requisicion"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Fecha de Requisición <span className="text-orange-500">*</span></FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <div className="px-4 pt-2 sm:px-6">
+                <TabsList className="w-full h-auto flex-wrap gap-2 bg-transparent p-0 justify-start">
+                  {tabItems.map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className="h-10 flex-1 min-w-[120px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all"
+                    >
+                      <tab.icon className="w-4 h-4" />
+                      <span className="hidden sm:inline font-medium">{tab.label}</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
+
+              <ScrollArea className="h-[calc(95dvh-320px)] px-4 py-4 sm:px-8 sm:py-6">
+                {/* Requisition Tab */}
+                <TabsContent value="requisition" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="fecha_requisicion"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel className="flex items-center gap-2">
+                            <CalendarIcon className="w-4 h-4 text-primary" />
+                            Fecha de Requisición <span className="text-orange-500">*</span>
+                          </FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    'pl-3 text-left font-normal h-11',
+                                    !field.value && 'text-muted-foreground'
+                                  )}
+                                >
+                                  {field.value ? format(field.value, 'dd/MM/yyyy') : 'Seleccionar fecha'}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="fecha_ingreso_estimada"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel className="flex items-center gap-2">
+                            <CalendarIcon className="w-4 h-4 text-primary" />
+                            Fecha Ingreso Estimada
+                          </FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    'pl-3 text-left font-normal h-11',
+                                    !field.value && 'text-muted-foreground'
+                                  )}
+                                >
+                                  {field.value ? format(field.value, 'dd/MM/yyyy') : 'Seleccionar fecha'}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => {
+                                  const fechaReq = form.getValues('fecha_requisicion');
+                                  if (!fechaReq) return false;
+                                  const minDate = new Date(fechaReq);
+                                  minDate.setDate(minDate.getDate() + 8);
+                                  minDate.setHours(0, 0, 0, 0);
+                                  return date < minDate;
+                                }}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <p className="text-[10px] text-muted-foreground font-medium mt-1">
+                            Mínimo 8 días después de la fecha de requisición
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="motivo_solicitud"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <ClipboardList className="w-4 h-4 text-primary" />
+                            Motivo de la Solicitud <span className="text-orange-500">*</span>
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Seleccionar motivo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              {(Object.keys(requisitionReasonLabels) as RequisitionReason[]).map((reason) => (
+                                <SelectItem key={reason} value={reason}>
+                                  {requisitionReasonLabels[reason]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="observaciones_motivo_solicitud"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Observaciones adicionales</FormLabel>
                           <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                'pl-3 text-left font-normal',
-                                !field.value && 'text-muted-foreground'
-                              )}
-                            >
-                              {field.value ? format(field.value, 'dd/MM/yyyy') : 'Seleccionar fecha'}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
+                            <Textarea
+                              placeholder="Detalle adicional sobre el motivo de la solicitud..."
+                              className="min-h-[120px] resize-none"
+                              {...field}
+                            />
                           </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-background" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
 
-                <FormField
-                  control={form.control}
-                  name="fecha_ingreso_estimada"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Fecha Ingreso Estimada</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
+                {/* Position Tab */}
+                <TabsContent value="position" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="cargo_solicitado"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Briefcase className="w-4 h-4 text-primary" />
+                            Cargo Solicitado <span className="text-orange-500">*</span>
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Seleccionar cargo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              {positions
+                                .filter((p) => p.is_active !== false)
+                                .map((position) => (
+                                  <SelectItem key={position.id} value={position.name}>
+                                    {position.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="cantidad_vacantes_requeridas"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-primary" />
+                            Cantidad de Vacantes <span className="text-orange-500">*</span>
+                          </FormLabel>
                           <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                'pl-3 text-left font-normal',
-                                !field.value && 'text-muted-foreground'
-                              )}
-                            >
-                              {field.value ? format(field.value, 'dd/MM/yyyy') : 'Seleccionar fecha'}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
+                            <Input
+                              type="number"
+                              min={1}
+                              className="h-11"
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                            />
                           </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-background" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => {
-                              const fechaReq = form.getValues('fecha_requisicion');
-                              if (!fechaReq) return false;
-                              const minDate = new Date(fechaReq);
-                              minDate.setDate(minDate.getDate() + 8);
-                              minDate.setHours(0, 0, 0, 0);
-                              return date < minDate;
-                            }}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <p className="text-xs text-muted-foreground">
-                        Mínimo 8 días después de la fecha de requisición
-                        {(() => {
-                          const fechaReq = form.watch('fecha_requisicion');
-                          if (!fechaReq) return '';
-                          const minDate = new Date(fechaReq);
-                          minDate.setDate(minDate.getDate() + 8);
-                          return ` (a partir del ${format(minDate, 'dd/MM/yyyy')})`;
-                        })()}
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="cargo_solicitado"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cargo Solicitado <span className="text-orange-500">*</span></FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                    <FormField
+                      control={form.control}
+                      name="area_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Target className="w-4 h-4 text-primary" />
+                            Área <span className="text-orange-500">*</span>
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Seleccionar área" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              {areas.map((area) => (
+                                <SelectItem key={area.id} value={area.id}>
+                                  {area.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="operation_center_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Building2 className="w-4 h-4 text-primary" />
+                            Centro de Operación <span className="text-orange-500">*</span>
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Seleccionar centro" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              {operationCenters.map((center) => (
+                                <SelectItem key={center.id} value={center.id}>
+                                  {center.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* Replacement Tab */}
+                <TabsContent value="replacement" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                        <Users className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-foreground">Información de Reemplazo</h4>
+                        <p className="text-xs text-muted-foreground">Complete solo si la vacante es para reemplazar a alguien.</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <FormField
+                        control={form.control}
+                        name="cargo_a_reemplazar"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cargo a Reemplazar</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger className="h-11 bg-background">
+                                  <SelectValue placeholder="Si aplica..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {positions
+                                  .filter((p) => p.is_active !== false)
+                                  .map((position) => (
+                                    <SelectItem key={position.id} value={position.name}>
+                                      {position.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="persona_a_reemplazar"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Persona a Reemplazar</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || ''}>
+                              <FormControl>
+                                <SelectTrigger className="h-11 bg-background">
+                                  <SelectValue placeholder="Si aplica..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-background">
+                                {activeEmployees.map((employee) => (
+                                  <SelectItem key={employee.id} value={`${employee.first_name} ${employee.last_name}`}>
+                                    {employee.first_name} {employee.last_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* Conditions Tab */}
+                <TabsContent value="conditions" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="horario_trabajo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-primary" />
+                            Horario de Trabajo
+                          </FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: 6:00 AM - 2:00 PM" className="h-11" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="dia_descanso_obligatorio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <CalendarIcon className="w-4 h-4 text-primary" />
+                            Día de Descanso <span className="text-orange-500">*</span>
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Seleccionar día" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              {(Object.keys(dayOfWeekLabels) as DayOfWeek[]).map((day) => (
+                                <SelectItem key={day} value={day}>
+                                  {dayOfWeekLabels[day]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="turno_trabajo_id"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel className="flex items-center gap-2">
+                            <ClipboardList className="w-4 h-4 text-primary" />
+                            Turno de Trabajo
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ''}>
+                            <FormControl>
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Seleccionar turno específico" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-background">
+                              {shifts
+                                .filter((s: any) => s.is_active !== false)
+                                .map((shift: any) => (
+                                  <SelectItem key={shift.id} value={shift.id}>
+                                    {shift.name}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="requiere_herramienta_trabajo"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-muted/30 transition-colors hover:bg-muted/50">
+                        <div className="flex gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                            <Wrench className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0 space-y-0.5">
+                            <FormLabel className="text-base font-semibold">Requiere Herramienta</FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              ¿Se requieren equipos o herramientas especiales?
+                            </p>
+                          </div>
+                        </div>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar cargo" />
-                          </SelectTrigger>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
                         </FormControl>
-                        <SelectContent className="bg-background">
-                          {positions
-                            .filter((p) => p.is_active !== false)
-                            .map((position) => (
-                              <SelectItem key={position.id} value={position.name}>
-                                {position.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
 
-                <FormField
-                  control={form.control}
-                  name="cantidad_vacantes_requeridas"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cantidad de Vacantes <span className="text-orange-500">*</span></FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={1}
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                {/* Benefits Tab */}
+                <TabsContent value="benefits" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="incluye_alimentacion"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-muted/30">
+                          <div className="flex gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success shrink-0">
+                              <Coffee className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0 space-y-0.5">
+                              <FormLabel className="text-base font-semibold">Alimentación</FormLabel>
+                              <p className="text-xs text-muted-foreground">¿Incluye servicio de comedor?</p>
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="area_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Área <span className="text-orange-500">*</span></FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar área" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-background">
-                          {areas.map((area) => (
-                            <SelectItem key={area.id} value={area.id}>
-                              {area.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="incluye_desplazamiento"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-muted/30">
+                          <div className="flex gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center text-info shrink-0">
+                              <Truck className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0 space-y-0.5">
+                              <FormLabel className="text-base font-semibold">Transporte</FormLabel>
+                              <p className="text-xs text-muted-foreground">¿Se incluye desplazamiento?</p>
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                <FormField
-                  control={form.control}
-                  name="operation_center_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Centro de Operación <span className="text-orange-500">*</span></FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar centro" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-background">
-                          {operationCenters.map((center) => (
-                            <SelectItem key={center.id} value={center.id}>
-                              {center.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+                  {form.watch('incluye_desplazamiento') && (
+                    <FormField
+                      control={form.control}
+                      name="trayecto_desplazamiento"
+                      render={({ field }) => (
+                        <FormItem className="animate-in fade-in zoom-in-95 duration-200">
+                          <FormLabel>Trayecto de Desplazamiento</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ej: Bogotá - Yopal" className="h-11" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
-                />
-              </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="cargo_a_reemplazar"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cargo a Reemplazar</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ''}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Si aplica..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-background">
-                          {positions
-                            .filter((p) => p.is_active !== false)
-                            .map((position) => (
-                              <SelectItem key={position.id} value={position.name}>
-                                {position.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="tipo_contrato_solicitado"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2">
+                          <FileEdit className="w-4 h-4 text-primary" />
+                          Tipo de Contrato Sugerido
+                        </FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ''}>
+                          <FormControl>
+                            <SelectTrigger className="h-11">
+                              <SelectValue placeholder="Seleccionar tipo de contrato" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-background">
+                            {contractTypes
+                              .filter((ct) => ct.is_active)
+                              .map((ct) => (
+                                <SelectItem key={ct.id} value={ct.display_name}>
+                                  {ct.display_name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
 
-                <FormField
-                  control={form.control}
-                  name="persona_a_reemplazar"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Persona a Reemplazar</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ''}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Si aplica..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-background">
-                          {activeEmployees.map((employee) => (
-                            <SelectItem key={employee.id} value={`${employee.first_name} ${employee.last_name}`}>
-                              {employee.first_name} {employee.last_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="horario_trabajo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Horario de Trabajo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: 6:00 AM - 2:00 PM" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="dia_descanso_obligatorio"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Día de Descanso <span className="text-orange-500">*</span></FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar día" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-background">
-                          {(Object.keys(dayOfWeekLabels) as DayOfWeek[]).map((day) => (
-                            <SelectItem key={day} value={day}>
-                              {dayOfWeekLabels[day]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="requiere_herramienta_trabajo"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
-                    <div className="min-w-0 space-y-0.5">
-                      <FormLabel className="text-base">Requiere Herramienta de Trabajo</FormLabel>
-                      <p className="text-sm text-muted-foreground">
-                        ¿El cargo requiere herramientas o equipos especiales?
+                {/* Requester Tab */}
+                <TabsContent value="requester" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="bg-muted/20 rounded-3xl p-8 border border-dashed border-muted-foreground/30 flex flex-col items-center text-center space-y-4">
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
+                      <UserCheck className="w-10 h-10" />
+                    </div>
+                    <div className="max-w-md space-y-2">
+                      <h4 className="text-xl font-bold text-foreground">Validación del Solicitante</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Esta información identifica quién está realizando el requerimiento de personal ante el área de recursos humanos.
                       </p>
                     </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                  </div>
 
-              {/* Turno de trabajo */}
-              <FormField
-                control={form.control}
-                name="turno_trabajo_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Turno de Trabajo</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ''}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar turno" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        {shifts
-                          .filter((s: any) => s.is_active !== false)
-                          .map((shift: any) => (
-                            <SelectItem key={shift.id} value={shift.id}>
-                              {shift.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="solicitante_nombre"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre del Solicitante</FormLabel>
+                          <FormControl>
+                            <Input {...field} readOnly className="h-11 bg-muted/50 cursor-not-allowed font-medium" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="incluye_alimentacion"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
-                      <div className="min-w-0 space-y-0.5">
-                        <FormLabel className="text-base">Incluye Alimentación</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          ¿Durante el turno de trabajo?
-                        </p>
-                      </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
-                      </FormControl>
-                    </FormItem>
+                    <FormField
+                      control={form.control}
+                      name="cargo_solicitante"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cargo del Solicitante</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ingrese su cargo actual" className="h-11" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+              </ScrollArea>
+
+              <div className="flex flex-col sm:flex-row justify-end gap-3 px-4 py-4 sm:px-8 sm:py-6 bg-muted/5 border-t border-border/50">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={() => onOpenChange(false)}
+                  className="h-11 px-6 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-colors font-medium order-2 sm:order-1"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all font-semibold order-1 sm:order-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    requisition ? 'Actualizar Requisición' : 'Crear Requisición'
                   )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="incluye_desplazamiento"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
-                      <div className="min-w-0 space-y-0.5">
-                        <FormLabel className="text-base">Incluye Desplazamiento</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          ¿Se incluye transporte?
-                        </p>
-                      </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                </Button>
               </div>
-
-              {form.watch('incluye_desplazamiento') && (
-                <FormField
-                  control={form.control}
-                  name="trayecto_desplazamiento"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Indique el Trayecto</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej: Bogotá - Yopal" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {/* Contract Type */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="tipo_contrato_solicitado"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo de Contrato Sugerido</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ''}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar tipo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-background">
-                          {contractTypes
-                            .filter((ct) => ct.is_active)
-                            .map((ct) => (
-                              <SelectItem key={ct.id} value={ct.display_name}>
-                                {ct.display_name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Motivo de la solicitud */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Motivo de la Solicitud</h3>
-
-              <FormField
-                control={form.control}
-                name="motivo_solicitud"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Motivo <span className="text-orange-500">*</span></FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar motivo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        {(Object.keys(requisitionReasonLabels) as RequisitionReason[]).map((reason) => (
-                          <SelectItem key={reason} value={reason}>
-                            {requisitionReasonLabels[reason]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="observaciones_motivo_solicitud"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Observaciones del Motivo</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Detalle adicional sobre el motivo de la solicitud..."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Información del solicitante */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Información del Solicitante</h3>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="solicitante_nombre"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre del Solicitante <span className="text-orange-500">*</span></FormLabel>
-                      <FormControl>
-                        <Input {...field} readOnly className="bg-muted cursor-not-allowed" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cargo_solicitante"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cargo del Solicitante</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Cargo que ocupa" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Guardando...' : requisition ? 'Guardar Cambios' : 'Crear Requisición'}
-              </Button>
-            </div>
+            </Tabs>
           </form>
         </Form>
       </DialogContent>

@@ -12,3 +12,6 @@ export { default as CatalogosTiposContrato } from './TiposContrato';
 export { default as CatalogosFestivos } from './Festivos';
 export { default as CatalogosMotivosNovedad } from './MotivosNovedad';
 export { default as CatalogosPlataformasPublicacion } from './PlataformasPublicacion';
+export { default as CatalogosTiposIdentificacion } from './TiposIdentificacion';
+export { default as CatalogosNivelesEducativos } from './NivelesEducativos';
+export { default as CatalogosProfessions } from './Professions';

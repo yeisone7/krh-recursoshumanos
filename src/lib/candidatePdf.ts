@@ -8,6 +8,7 @@ interface CandidateForPdf {
   first_name: string;
   last_name: string;
   document_type: string;
+  identification_type_name?: string;
   document_number: string;
   email?: string | null;
   phone?: string | null;
@@ -158,8 +159,9 @@ export async function generateCandidatePdf(candidate: CandidateForPdf) {
   y += 10;
 
   // ── DATOS PERSONALES ──
+  const docTypeLabel = (candidate as any).identification_types?.name || candidate.identification_type_name || candidate.document_type;
   drawSectionTitle('DATOS PERSONALES');
-  drawTwoCol('Documento', `${candidate.document_type} ${candidate.document_number}`, 'Expedido en', candidate.document_issue_city);
+  drawTwoCol('Documento', `${docTypeLabel} ${candidate.document_number}`, 'Expedido en', candidate.document_issue_city);
   drawTwoCol(
     'Fecha Expedición',
     candidate.document_issue_date ? format(new Date(candidate.document_issue_date), 'dd/MM/yyyy') : null,

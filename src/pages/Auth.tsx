@@ -13,9 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2, ChevronRight, ChevronDown, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
-import krhLoginHeroLogo from '@/assets/krh-login-hero-logo-horizontal.png';
-import krhLoginHeroLogoOptimized from '@/assets/krh-login-hero-logo-horizontal.webp';
+import empatiqIcon from '@/assets/empatiq-icon.png';
+import empatiqLogo from '@/assets/empatiq-logo.png';
 
 const loginSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
@@ -91,15 +90,14 @@ const prefetchPostLoginRoute = (path: string) => {
 
 const preloadHeroLogo = () => {
   if (typeof document === 'undefined') return;
-  if (document.querySelector('link[data-hero-logo-preload="krh-login"]')) return;
+  if (document.querySelector('link[data-hero-logo-preload="empatiq-login"]')) return;
 
   const link = document.createElement('link');
   link.rel = 'preload';
   link.as = 'image';
-  link.href = krhLoginHeroLogoOptimized;
-  link.type = 'image/webp';
+  link.href = empatiqLogo;
   link.setAttribute('fetchpriority', 'high');
-  link.setAttribute('data-hero-logo-preload', 'krh-login');
+  link.setAttribute('data-hero-logo-preload', 'empatiq-login');
   document.head.appendChild(link);
 };
 
@@ -309,10 +307,9 @@ export default function Auth() {
             <div className="relative h-24 w-full max-w-[220px] lg:h-32 lg:max-w-[320px]">
             {!isHeroLogoLoaded && <div className="absolute inset-0 rounded bg-secondary/15 animate-pulse" aria-hidden="true" />}
             <picture className={cn("block origin-center transition-[opacity,transform] duration-500 ease-out", isHeroLogoLoaded ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0")}>
-              <source srcSet={krhLoginHeroLogoOptimized} type="image/webp" />
               <img
-                src={krhLoginHeroLogo}
-                alt="Logo horizontal de Gestión de Recursos Humanos"
+                src={empatiqLogo}
+                alt="Logo EmpatiQ"
                 className="h-full max-w-full object-contain"
                 width={480}
                 height={240}
@@ -390,9 +387,9 @@ export default function Auth() {
               onClick={() => setIsBrandPanelOpen((open) => !open)}
             >
               <span className="flex items-center gap-3 min-w-0">
-                <img src={petrocasinosIcon} alt="KRH" className="h-11 w-11 shrink-0 object-contain" />
+                <img src={empatiqIcon} alt="EmpatiQ" className="h-11 w-11 shrink-0 object-contain" />
                 <span className="min-w-0">
-                  <span className="block text-sm font-bold text-foreground">Gestión de Recursos Humanos</span>
+                  <span className="block text-sm font-bold text-foreground">EmpatiQ</span>
                   <span className="block text-xs text-muted-foreground">Plataforma KRH</span>
                 </span>
               </span>
@@ -411,7 +408,7 @@ export default function Auth() {
                   <div className="relative border-t border-primary/10 px-4 py-4">
                     <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:20px_20px] opacity-10" aria-hidden="true" />
                     <div className="relative space-y-3">
-                      <img src={krhLoginHeroLogoOptimized} alt="Logo horizontal de Gestión de Recursos Humanos" className="h-14 max-w-full object-contain sm:h-16" />
+                      <img src={empatiqLogo} alt="Logo EmpatiQ" className="h-14 max-w-full object-contain sm:h-16" />
                       <p className="text-sm font-semibold text-foreground">Gestión de Recursos Humanos</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">Administra empleados, contratos, dotación y exámenes médicos en una sola plataforma.</p>
                     </div>
@@ -425,9 +422,9 @@ export default function Auth() {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="hidden lg:flex flex-col items-center mb-3">
-                <img src={petrocasinosIcon} alt="KRH" className="w-16 h-16 object-contain" style={{ borderRadius: '10%' }} />
+                <img src={empatiqIcon} alt="EmpatiQ" className="w-16 h-16 object-contain" />
                 
-                <span className="text-xs font-semibold text-primary/80 leading-tight text-center">Gestión de<br />Talento Humano</span>
+                <span className="text-xs font-semibold text-primary/80 leading-tight text-center">EmpatiQ<br />Gestión de Talento</span>
               </div>
               <AnimatePresence mode="wait">
                 <motion.div

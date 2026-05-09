@@ -18,7 +18,10 @@ export function useVacancies() {
           *,
           operation_centers(id, name),
           candidates(id, status),
-          personnel_requisitions:requisition_id(id, cargo_solicitado, estado_requisicion)
+          personnel_requisitions:requisition_id(id, cargo_solicitado, estado_requisicion),
+          vacancy_education_levels(
+            education_levels(id, name)
+          )
         `)
         .eq('company_id', currentCompanyId!)
         .order('created_at', { ascending: false });
@@ -47,6 +50,9 @@ export function useVacancy(id: string | undefined) {
           candidates(
             id, first_name, last_name, document_number, status, application_date, email, mobile,
             selection_steps(*)
+          ),
+          vacancy_education_levels(
+            education_levels(id, name)
           )
         `)
         .eq('id', id)
@@ -64,8 +70,9 @@ export function useCreateVacancy() {
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async (vacancy: Omit<VacancyInsert, 'company_id' | 'created_by'>) => {
-      const { data, error } = await supabase
+    mutationFn: async ({ educationLevelIds, ...vacancy }: Omit<VacancyInsert, 'company_id' | 'created_by'> & { educationLevelIds?: string[] }) => {
+      // 1. Create the vacancy
+      const { data: newVacancy, error: vacancyError } = await supabase
         .from('vacancies')
         .insert({
           ...vacancy,
@@ -75,8 +82,24 @@ export function useCreateVacancy() {
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (vacancyError) throw vacancyError;
+
+      // 2. Insert education levels if provided
+      if (educationLevelIds && educationLevelIds.length > 0) {
+        const educationLevelsToInsert = educationLevelIds.map(levelId => ({
+          vacancy_id: newVacancy.id,
+          education_level_id: levelId,
+          company_id: currentCompanyId!,
+        }));
+
+        const { error: levelsError } = await supabase
+          .from('vacancy_education_levels')
+          .insert(educationLevelsToInsert);
+
+        if (levelsError) throw levelsError;
+      }
+
+      return newVacancy;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
@@ -88,16 +111,44 @@ export function useUpdateVacancy() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Vacancy> & { id: string }) => {
-      const { data, error } = await supabase
+    mutationFn: async ({ id, educationLevelIds, ...updates }: Partial<Vacancy> & { id: string, educationLevelIds?: string[] }) => {
+      // 1. Update the vacancy
+      const { data: updatedVacancy, error: vacancyError } = await supabase
         .from('vacancies')
         .update(updates)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (vacancyError) throw vacancyError;
+
+      // 2. Update education levels if provided
+      if (educationLevelIds) {
+        // Delete existing relations
+        const { error: deleteError } = await supabase
+          .from('vacancy_education_levels')
+          .delete()
+          .eq('vacancy_id', id);
+
+        if (deleteError) throw deleteError;
+
+        // Insert new relations if any
+        if (educationLevelIds.length > 0) {
+          const educationLevelsToInsert = educationLevelIds.map(levelId => ({
+            vacancy_id: id,
+            education_level_id: levelId,
+            company_id: updatedVacancy.company_id,
+          }));
+
+          const { error: levelsError } = await supabase
+            .from('vacancy_education_levels')
+            .insert(educationLevelsToInsert);
+
+          if (levelsError) throw levelsError;
+        }
+      }
+
+      return updatedVacancy;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
