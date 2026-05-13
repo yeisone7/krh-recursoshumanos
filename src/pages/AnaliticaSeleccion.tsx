@@ -1232,142 +1232,231 @@ export default function AnaliticaSeleccion() {
 
       {/* ── Metrics Dictionary Modal ── */}
       <Dialog open={showMetricsDict} onOpenChange={setShowMetricsDict}>
-        <DialogContent className="max-w-3xl max-h-[90dvh] flex flex-col p-0">
+        <DialogContent className="max-w-2xl h-[85dvh] flex flex-col gap-0 p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
             <DialogTitle className="flex items-center gap-2 text-lg font-bold">
               <BookOpen className="h-5 w-5 text-primary" />
               Diccionario de Métricas — Analítica de Selección
             </DialogTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Explicación de cada indicador: fuente de datos, cálculo y cómo interpretarlo.
+              Aquí puedes entender qué significa cada indicador, de dónde viene la información y cómo leerlo.
             </p>
           </DialogHeader>
-          <ScrollArea className="flex-1 px-6 py-4">
-            <div className="space-y-6 pb-4">
 
-              {/* Section: KPIs Generales */}
-              <section>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-                  <Info className="h-4 w-4" /> KPIs Generales
-                </h3>
-                <div className="space-y-3">
-                  {[
-                    { name: 'Requisiciones activas', formula: 'COUNT(requisiciones) WHERE estado ≠ cancelada/cerrada/rechazada', source: 'Tabla personnel_requisitions', note: 'Mide la demanda de personal pendiente de cubrir.' },
-                    { name: 'Vacantes abiertas', formula: 'COUNT(vacancies) WHERE status IN (open, in_process)', source: 'Tabla vacancies', note: 'Vacantes con proceso de selección activo.' },
-                    { name: 'Posiciones publicadas', formula: 'SUM(positions_count) de todas las vacantes filtradas', source: 'Campo vacancies.positions_count', note: 'Total de cupos físicos publicados.' },
-                    { name: 'Candidatos en proceso', formula: 'COUNT(candidates) WHERE status NOT IN (hired, not_selected, withdrawn)', source: 'Tabla candidates', note: 'Candidatos que aún no tienen un resultado definitivo.' },
-                    { name: 'Candidatos / vacante', formula: 'COUNT(candidates) ÷ COUNT(vacancies)', source: 'Tablas candidates + vacancies', note: 'Salud del pipeline. Óptimo: ≥ 3.' },
-                    { name: 'Tasa de avance', formula: 'Promedio del índice de etapa alcanzada por candidato × 100', source: 'Tabla candidates + selection_steps', note: 'Mide qué tan lejos llegan los candidatos en el embudo.' },
-                    { name: 'Tiempo prom. de cobertura', formula: 'AVG(actual_close_date − open_date) de vacantes cerradas', source: 'Campos vacancies.open_date + actual_close_date', note: 'Días promedio desde apertura hasta cierre de la vacante.' },
-                    { name: 'Vacantes activas (días abiertos)', formula: 'AVG(HOY − open_date) de vacantes abiertas/en proceso', source: 'Campo vacancies.open_date', note: 'Antigüedad promedio de las vacantes que siguen abiertas.' },
-                  ].map((m) => (
-                    <div key={m.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
-                      <p className="font-semibold text-foreground text-sm">{m.name}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fórmula:</span> {m.formula}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fuente:</span> {m.source}</p>
-                      <p className="text-xs text-muted-foreground italic">{m.note}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-8">
 
-              {/* Section: Tasas de Conversión */}
-              <section>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" /> Tasas y Conversión
-                </h3>
-                <div className="space-y-3">
-                  {[
-                    { name: 'Contratados (Hired)', formula: 'COUNT(candidates) WHERE status = hired', source: 'Tabla candidates', note: 'Candidatos que completaron el proceso y fueron vinculados.' },
-                    { name: 'Tasa de contratación', formula: 'COUNT(hired) ÷ COUNT(total candidatos) × 100', source: 'Tabla candidates', note: 'Porcentaje de candidatos que terminan siendo contratados.' },
-                    { name: 'Tasa de selección', formula: '(COUNT(selected) + COUNT(hired)) ÷ COUNT(total) × 100', source: 'Tabla candidates', note: 'Candidatos que llegaron a ser seleccionados o contratados.' },
-                    { name: 'Tasa de descarte global', formula: '(COUNT(not_selected) + COUNT(withdrawn)) ÷ COUNT(total) × 100', source: 'Tabla candidates', note: 'Proporción de candidatos que no continuaron por cualquier razón.' },
-                    { name: 'Tasa de descarte (Descartar)', formula: 'COUNT(not_selected) ÷ COUNT(total) × 100', source: 'Campo candidates.status = not_selected', note: 'Candidatos descartados por: EMO, EDS, pruebas u otro motivo.' },
-                    { name: 'Tasa de desistimiento', formula: 'COUNT(withdrawn) ÷ COUNT(total) × 100', source: 'Campo candidates.status = withdrawn', note: 'Candidatos que voluntariamente abandonaron el proceso.' },
-                    { name: 'Cobertura real de posiciones', formula: 'COUNT(selected + hired por vacante) ÷ positions_count × 100', source: 'candidates.status + vacancies.positions_count', note: 'Cuántos cupos de cada vacante han sido cubiertos efectivamente.' },
-                  ].map((m) => (
-                    <div key={m.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
-                      <p className="font-semibold text-foreground text-sm">{m.name}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fórmula:</span> {m.formula}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fuente:</span> {m.source}</p>
-                      <p className="text-xs text-muted-foreground italic">{m.note}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
+            {/* ── KPIs Generales ── */}
+            <section>
+              <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
+                <Info className="h-4 w-4" /> Indicadores generales
+              </h3>
+              <div className="space-y-3">
+                {[
+                  {
+                    name: 'Requisiciones activas',
+                    calc: 'Se cuentan todas las solicitudes de personal que todavía no han sido canceladas, rechazadas ni cerradas.',
+                    ejemplo: 'Si hay 10 solicitudes y 2 fueron canceladas, el indicador muestra 8.',
+                    note: 'Refleja cuántas necesidades de personal están pendientes de resolver.',
+                  },
+                  {
+                    name: 'Vacantes abiertas',
+                    calc: 'Se cuentan las vacantes que están en estado Abierta o En Proceso.',
+                    ejemplo: 'Si se crearon 5 vacantes y 2 ya fueron cerradas, se muestran 3.',
+                    note: 'Indica cuántos procesos de selección están activos en este momento.',
+                  },
+                  {
+                    name: 'Posiciones publicadas',
+                    calc: 'Se suman los cupos de todas las vacantes. Una vacante puede tener más de un cupo.',
+                    ejemplo: 'Si hay 3 vacantes con 2, 1 y 4 cupos, el total es 7 posiciones.',
+                    note: 'Es diferente al número de vacantes: una vacante puede necesitar varios empleados.',
+                  },
+                  {
+                    name: 'Candidatos en proceso',
+                    calc: 'Se cuentan los candidatos que aún no tienen un resultado final: ni contratados, ni descartados, ni desistidos.',
+                    ejemplo: 'Un candidato en entrevista cuenta. Uno contratado o descartado ya no cuenta.',
+                    note: 'Muestra cuántas personas están actualmente siendo evaluadas.',
+                  },
+                  {
+                    name: 'Candidatos por vacante',
+                    calc: 'Total de candidatos dividido entre el total de vacantes.',
+                    ejemplo: 'Si hay 30 candidatos y 6 vacantes → 5 candidatos por vacante.',
+                    note: 'Lo recomendable es tener 3 o más candidatos por vacante para poder elegir con criterio.',
+                  },
+                  {
+                    name: 'Tasa de avance',
+                    calc: 'Mide en promedio qué tan lejos llegan los candidatos dentro del proceso (desde la aplicación hasta la contratación).',
+                    ejemplo: 'Si la mayoría llega hasta entrevistas pero casi nadie llega a oferta, la tasa baja.',
+                    note: 'Cuanto más alta, mejor: significa que los candidatos avanzan por todo el proceso.',
+                  },
+                  {
+                    name: 'Tiempo promedio de cobertura',
+                    calc: 'Promedio de días que tomó cerrar las vacantes ya finalizadas (desde que se abrieron hasta que se cerraron).',
+                    ejemplo: 'Si una vacante tardó 20 días y otra 30, el promedio es 25 días.',
+                    note: 'Permite saber si los procesos de selección están siendo rápidos o lentos.',
+                  },
+                  {
+                    name: 'Días abiertos (vacantes activas)',
+                    calc: 'Promedio de días que llevan abiertas las vacantes que aún no se han cerrado.',
+                    ejemplo: 'Si una vacante lleva 15 días abierta y otra 25, el promedio es 20 días.',
+                    note: 'Alerta sobre vacantes que llevan mucho tiempo sin cubrirse.',
+                  },
+                ].map((m) => (
+                  <div key={m.name} className="rounded-xl border bg-muted/20 p-4 space-y-2">
+                    <p className="font-semibold text-foreground text-sm">{m.name}</p>
+                    <p className="text-sm text-foreground/80"><span className="font-semibold">¿Cómo se calcula?</span> {m.calc}</p>
+                    <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground/70">Ejemplo:</span> {m.ejemplo}</p>
+                    <p className="text-xs text-primary/80 italic border-l-2 border-primary/30 pl-2">{m.note}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-              {/* Section: Motivos */}
-              <section>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-                  <UserMinus className="h-4 w-4" /> Motivos de Descarte y Desistimiento
-                </h3>
-                <div className="space-y-3">
-                  {[
-                    { name: 'No aprobó EMO', formula: 'COUNT WHERE rejection_reason = no_aprobo_emo', source: 'Campo candidates.rejection_reason', note: 'Candidato no pasó el Examen Médico Ocupacional.' },
-                    { name: 'No aprobó EDS', formula: 'COUNT WHERE rejection_reason = no_aprobo_eds', source: 'Campo candidates.rejection_reason', note: 'Candidato no pasó el Estudio de Seguridad.' },
-                    { name: 'No aprobó pruebas', formula: 'COUNT WHERE rejection_reason = no_aprobo_pruebas', source: 'Campo candidates.rejection_reason', note: 'Candidato no superó pruebas de conocimiento o psicotécnicas.' },
-                    { name: 'Otra oferta laboral', formula: 'COUNT WHERE withdrawal_reason = otra_oferta', source: 'Campo candidates.withdrawal_reason', note: 'Candidato aceptó otra oferta y desistió del proceso.' },
-                    { name: 'Motivos personales', formula: 'COUNT WHERE withdrawal_reason = motivos_personales', source: 'Campo candidates.withdrawal_reason', note: 'El candidato se retiró por razones personales.' },
-                    { name: 'Salario', formula: 'COUNT WHERE withdrawal_reason = salario', source: 'Campo candidates.withdrawal_reason', note: 'El candidato desistió por desacuerdo con el salario ofrecido.' },
-                  ].map((m) => (
-                    <div key={m.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
-                      <p className="font-semibold text-foreground text-sm">{m.name}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fórmula:</span> {m.formula}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fuente:</span> {m.source}</p>
-                      <p className="text-xs text-muted-foreground italic">{m.note}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
+            {/* ── Tasas y Conversión ── */}
+            <section>
+              <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" /> Tasas y conversión
+              </h3>
+              <div className="space-y-3">
+                {[
+                  {
+                    name: 'Contratados',
+                    calc: 'Candidatos que completaron el proceso y fueron oficialmente vinculados a la empresa.',
+                    ejemplo: 'Si de 20 candidatos, 4 fueron contratados, este número es 4.',
+                    note: 'Es el resultado final esperado de cada proceso de selección.',
+                  },
+                  {
+                    name: 'Tasa de contratación',
+                    calc: 'De cada 100 candidatos que aplican, cuántos terminan siendo contratados.',
+                    ejemplo: '4 contratados de 20 candidatos = 20% de tasa de contratación.',
+                    note: 'Una tasa del 15% o más se considera saludable.',
+                  },
+                  {
+                    name: 'Tasa de selección',
+                    calc: 'De cada 100 candidatos, cuántos fueron seleccionados o contratados.',
+                    ejemplo: '2 seleccionados + 3 contratados de 20 = 25% de tasa de selección.',
+                    note: 'Incluye tanto a los seleccionados (pendientes de contratar) como a los ya vinculados.',
+                  },
+                  {
+                    name: 'Tasa de descarte global',
+                    calc: 'De cada 100 candidatos, cuántos no continuaron en el proceso (ya sea descartados o desistidos).',
+                    ejemplo: '5 descartados + 3 desistidos de 20 = 40% de descarte global.',
+                    note: 'Permite ver qué tanto se está filtrando el proceso de selección.',
+                  },
+                  {
+                    name: 'Tasa de descarte (Descartar)',
+                    calc: 'Candidatos a quienes se les marcó como "No seleccionado" por el equipo de selección.',
+                    ejemplo: '5 descartados de 20 candidatos = 25%.',
+                    note: 'Incluye motivos como: no aprobó EMO, EDS, pruebas u otro motivo definido por el evaluador.',
+                  },
+                  {
+                    name: 'Tasa de desistimiento',
+                    calc: 'Candidatos que decidieron retirarse voluntariamente del proceso.',
+                    ejemplo: '3 desistidos de 20 candidatos = 15%.',
+                    note: 'Una tasa alta puede indicar problemas con el salario, la demora del proceso o la competencia del mercado.',
+                  },
+                  {
+                    name: 'Cobertura real de posiciones',
+                    calc: 'Por cada vacante, qué porcentaje de sus cupos han sido cubiertos con candidatos seleccionados o contratados.',
+                    ejemplo: 'Una vacante con 4 cupos y 2 candidatos seleccionados tiene 50% de cobertura.',
+                    note: 'Cuando llega al 100%, los botones de selección se bloquean automáticamente.',
+                  },
+                ].map((m) => (
+                  <div key={m.name} className="rounded-xl border bg-muted/20 p-4 space-y-2">
+                    <p className="font-semibold text-foreground text-sm">{m.name}</p>
+                    <p className="text-sm text-foreground/80"><span className="font-semibold">¿Cómo se calcula?</span> {m.calc}</p>
+                    <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground/70">Ejemplo:</span> {m.ejemplo}</p>
+                    <p className="text-xs text-primary/80 italic border-l-2 border-primary/30 pl-2">{m.note}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-              {/* Section: Estados de Vacante */}
-              <section>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-                  <PauseCircle className="h-4 w-4" /> Estados especiales de Vacante
-                </h3>
-                <div className="space-y-3">
-                  {[
-                    { name: 'Vacantes pausadas', formula: 'COUNT(vacancies) WHERE status = paused', source: 'Campo vacancies.status', note: 'Vacantes con contadores de tiempo suspendidos. No acumulan días de antigüedad ni afectan el tiempo de cobertura.' },
-                    { name: 'Vacantes canceladas', formula: 'COUNT(vacancies) WHERE status = cancelled', source: 'Campo vacancies.status + cancellation_reason + cancelled_by + cancelled_at', note: 'Vacantes cerradas anticipadamente con justificación. Requieren revisión.' },
-                    { name: 'Restricción de selección', formula: 'COUNT(selected + hired) ≥ positions_count → botones inactivos', source: 'candidates.status + vacancies.positions_count', note: 'Cuando los cupos están cubiertos, los botones Seleccionar, Descartar y Desistió se inhabilitan para evitar sobreasignación.' },
-                  ].map((m) => (
-                    <div key={m.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
-                      <p className="font-semibold text-foreground text-sm">{m.name}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fórmula:</span> {m.formula}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fuente:</span> {m.source}</p>
-                      <p className="text-xs text-muted-foreground italic">{m.note}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
+            {/* ── Motivos ── */}
+            <section>
+              <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
+                <UserMinus className="h-4 w-4" /> Motivos de descarte y desistimiento
+              </h3>
+              <div className="space-y-3">
+                {[
+                  { name: 'No aprobó EMO', calc: 'El candidato no superó el Examen Médico Ocupacional requerido para el cargo.', note: 'El evaluador registra este motivo al marcar al candidato como "Descartado".' },
+                  { name: 'No aprobó EDS', calc: 'El candidato no aprobó el Estudio de Seguridad (verificación de antecedentes y referencias).', note: 'Es uno de los filtros más sensibles del proceso.' },
+                  { name: 'No aprobó pruebas', calc: 'El candidato no alcanzó el puntaje mínimo en las pruebas de conocimiento o psicotécnicas.', note: 'Aplica a cargos que requieren validación técnica o psicológica.' },
+                  { name: 'Otra oferta laboral', calc: 'El candidato recibió una oferta de otra empresa y decidió aceptarla.', note: 'Si este motivo es frecuente, puede indicar que el proceso tarda demasiado o que el salario no es competitivo.' },
+                  { name: 'Motivos personales', calc: 'El candidato se retiró por razones personales que no están relacionadas con la empresa.', note: 'Puede incluir cambio de ciudad, situación familiar u otras circunstancias.' },
+                  { name: 'Salario', calc: 'El candidato desistió porque el salario ofrecido no cumplía sus expectativas.', note: 'Una frecuencia alta de este motivo es una señal para revisar la propuesta de valor salarial.' },
+                ].map((m) => (
+                  <div key={m.name} className="rounded-xl border bg-muted/20 p-4 space-y-2">
+                    <p className="font-semibold text-foreground text-sm">{m.name}</p>
+                    <p className="text-sm text-foreground/80"><span className="font-semibold">¿Qué significa?</span> {m.calc}</p>
+                    <p className="text-xs text-primary/80 italic border-l-2 border-primary/30 pl-2">{m.note}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-              {/* Section: Radar */}
-              <section>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-                  <Gauge className="h-4 w-4" /> Índice de Salud Integral (Radar)
-                </h3>
-                <div className="space-y-3">
-                  {[
-                    { name: 'Cobertura', formula: 'SUM(positions_count) ÷ MAX(positions solicitadas, publicadas) × 100', source: 'vacancies + requisitions', note: 'Qué porcentaje de las posiciones solicitadas han sido publicadas.' },
-                    { name: 'Conversión', formula: 'Tasa de contratación (hireRate)', source: 'candidates.status = hired', note: 'Eficiencia del proceso: cuántos candidatos acaban contratados.' },
-                    { name: 'Selección', formula: 'Tasa de selección (selectionRate)', source: 'candidates.status ∈ {selected, hired}', note: 'Qué tan bien el proceso identifica candidatos válidos.' },
-                    { name: 'Velocidad', formula: 'MAX(0, 100 − MIN(avgOpenDays × 2, 100))', source: 'vacancies.open_date', note: 'Inverso al tiempo que llevan abiertas las vacantes activas. Mayor valor = más rápido.' },
-                    { name: 'Pipeline', formula: 'MIN(100, ROUND(avgCandidatesPerVacancy × 20))', source: 'candidates / vacancies', note: 'Calidad del volumen de candidatos. 5 o más candidatos/vacante = 100%.' },
-                  ].map((m) => (
-                    <div key={m.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
-                      <p className="font-semibold text-foreground text-sm">{m.name}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fórmula:</span> {m.formula}</p>
-                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fuente:</span> {m.source}</p>
-                      <p className="text-xs text-muted-foreground italic">{m.note}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
+            {/* ── Estados especiales ── */}
+            <section>
+              <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
+                <PauseCircle className="h-4 w-4" /> Estados especiales de vacante
+              </h3>
+              <div className="space-y-3">
+                {[
+                  {
+                    name: 'Vacante pausada',
+                    calc: 'El proceso de selección se pausó temporalmente. Los días que esté pausada no se cuentan en el tiempo de cobertura.',
+                    ejemplo: 'Si una vacante lleva 10 días abierta, se pausa 5 días y se reactiva, solo cuenta 10 días (no 15).',
+                    note: 'Útil cuando hay situaciones internas que impiden avanzar con el proceso sin que sea una cancelación.',
+                  },
+                  {
+                    name: 'Vacante cancelada',
+                    calc: 'La vacante fue cerrada antes de completarse, con un motivo registrado por el responsable.',
+                    ejemplo: 'Se cancela una vacante porque el área ya no tiene presupuesto para el cargo.',
+                    note: 'Toda cancelación queda registrada con fecha, responsable y justificación.',
+                  },
+                  {
+                    name: 'Límite de selección por cupos',
+                    calc: 'Cuando los cupos de una vacante ya están cubiertos (seleccionados + contratados = cupos totales), los botones de acción se desactivan automáticamente.',
+                    ejemplo: 'Vacante con 2 cupos: si ya hay 2 candidatos seleccionados, no se puede seleccionar más.',
+                    note: 'Evita asignar más candidatos de los que la empresa puede contratar para esa posición.',
+                  },
+                ].map((m) => (
+                  <div key={m.name} className="rounded-xl border bg-muted/20 p-4 space-y-2">
+                    <p className="font-semibold text-foreground text-sm">{m.name}</p>
+                    <p className="text-sm text-foreground/80"><span className="font-semibold">¿Qué significa?</span> {m.calc}</p>
+                    <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground/70">Ejemplo:</span> {m.ejemplo}</p>
+                    <p className="text-xs text-primary/80 italic border-l-2 border-primary/30 pl-2">{m.note}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-            </div>
-          </ScrollArea>
+            {/* ── Radar ── */}
+            <section>
+              <h3 className="text-xs font-black uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
+                <Gauge className="h-4 w-4" /> Índice de salud integral (gráfico de radar)
+              </h3>
+              <p className="text-sm text-muted-foreground mb-3">Este gráfico muestra en qué dimensiones el proceso de selección está bien y en cuáles necesita atención. Cada eje va de 0 a 100.</p>
+              <div className="space-y-3">
+                {[
+                  { name: 'Cobertura', calc: 'Qué porcentaje de las posiciones solicitadas han sido publicadas como vacantes.', note: '100% significa que todas las necesidades de personal ya tienen una vacante creada.' },
+                  { name: 'Conversión', calc: 'De cada 100 candidatos que aplican, cuántos terminan siendo contratados (igual que la tasa de contratación).', note: 'Entre más alto, más eficiente es el proceso.' },
+                  { name: 'Selección', calc: 'Qué tan bien el proceso identifica candidatos aptos (seleccionados + contratados respecto al total).', note: 'Un porcentaje bajo puede indicar que se están aplicando muchos candidatos poco calificados.' },
+                  { name: 'Velocidad', calc: 'Qué tan rápido se están llenando las vacantes. Entre menos días lleven abiertas, mayor es este índice.', note: 'Una vacante de más de 50 días sin cerrarse reduce significativamente este indicador.' },
+                  { name: 'Pipeline', calc: 'Qué tan surtida está la base de candidatos. Con 5 o más candidatos por vacante se llega al máximo (100%).', note: 'Un pipeline sano permite elegir al mejor candidato, no simplemente al único disponible.' },
+                ].map((m) => (
+                  <div key={m.name} className="rounded-xl border bg-muted/20 p-4 space-y-2">
+                    <p className="font-semibold text-foreground text-sm">{m.name}</p>
+                    <p className="text-sm text-foreground/80"><span className="font-semibold">¿Qué mide?</span> {m.calc}</p>
+                    <p className="text-xs text-primary/80 italic border-l-2 border-primary/30 pl-2">{m.note}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+          </div>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
+
