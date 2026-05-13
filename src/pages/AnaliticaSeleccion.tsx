@@ -58,6 +58,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useRequisitions } from '@/hooks/useRequisitions';
 import { useVacancies } from '@/hooks/useVacancies';
@@ -214,11 +215,51 @@ function candidateReachedStage(candidate: any, stage: 'aplicado' | 'evaluado' | 
   return Boolean(candidate.final_score || hasStep(['evaluation', 'evaluacion', 'evaluación', 'test', 'prueba', 'assessment', 'score']) || ['selected', 'hired'].includes(status));
 }
 
-function ChartCard({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
+export interface MetricInfoData {
+  calc: string;
+  ejemplo: string;
+  note: string;
+}
+
+function MetricInfo({ info }: { info: MetricInfoData }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          className="flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground/50 transition-colors hover:text-primary hover:bg-primary/10 focus:outline-none"
+          aria-label="Ver cómo se calcula"
+        >
+          <Info className="h-3.5 w-3.5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent side="top" align="end" className="w-72 p-0 text-sm shadow-lg">
+        <div className="space-y-0 divide-y">
+          <div className="p-3 space-y-0.5">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-primary">¿Cómo se calcula?</p>
+            <p className="text-xs text-foreground/85 leading-relaxed">{info.calc}</p>
+          </div>
+          <div className="p-3 space-y-0.5">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Ejemplo</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{info.ejemplo}</p>
+          </div>
+          <div className="bg-primary/5 p-3 space-y-0.5">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-primary">Interpretación</p>
+            <p className="text-xs text-primary/80 leading-relaxed italic">{info.note}</p>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function ChartCard({ title, children, className, info }: { title: string; children: React.ReactNode; className?: string; info?: MetricInfoData }) {
   return (
     <Card className={cn('overflow-hidden', className)}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold">{title}</CardTitle>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-base font-semibold">{title}</CardTitle>
+          {info && <MetricInfo info={info} />}
+        </div>
       </CardHeader>
       <CardContent className="h-[280px] sm:h-[320px]">{children}</CardContent>
     </Card>
@@ -231,19 +272,24 @@ function KpiCard({
   detail,
   icon: Icon,
   trend,
+  info,
 }: {
   title: string;
   value: string | number;
   detail: string;
   icon: React.ElementType;
   trend?: 'up' | 'down' | 'neutral';
+  info?: MetricInfoData;
 }) {
   return (
     <Card>
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
-            <p className="text-xs font-medium text-muted-foreground">{title}</p>
+            <div className="flex items-center gap-1">
+              <p className="text-xs font-medium text-muted-foreground">{title}</p>
+              {info && <MetricInfo info={info} />}
+            </div>
             <p className="text-2xl font-bold tracking-normal text-foreground">{value}</p>
             <p className="text-xs text-muted-foreground">{detail}</p>
           </div>
@@ -756,22 +802,34 @@ export default function AnaliticaSeleccion() {
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard title="Requisiciones activas" value={analytics.kpis.activeRequisitions} detail={`${analytics.kpis.requisitions} requisiciones filtradas`} icon={Briefcase} trend="neutral" />
-        <KpiCard title="Vacantes abiertas" value={analytics.kpis.activeVacancies} detail={`${analytics.kpis.totalPositions} posiciones publicadas`} icon={Target} trend="up" />
-        <KpiCard title="Candidatos en proceso" value={analytics.kpis.inProcessCandidates} detail={`${numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)} por vacante`} icon={Users} trend="up" />
-        <KpiCard title="Tasa de avance" value={`${analytics.kpis.advanceRate}%`} detail="Promedio del embudo aplicado-contratado" icon={TrendingUp} trend={analytics.kpis.advanceRate >= 45 ? 'up' : 'down'} />
-        <KpiCard title="Tiempo prom. cobertura" value={`${analytics.kpis.avgTimeToFill} días`} detail="Promedio de vacantes cerradas" icon={Clock} />
-        <KpiCard title="Contratados" value={analytics.kpis.hiredCandidates} detail={`${analytics.kpis.hireRate}% conversión`} icon={UserCheck} trend={analytics.kpis.hireRate >= 15 ? 'up' : 'down'} />
-        <KpiCard title="Tasa selección" value={`${analytics.kpis.selectionRate}%`} detail="Seleccionados + contratados" icon={CheckCircle2} />
-        <KpiCard title="Tasa descarte global" value={`${analytics.kpis.rejectionRate}%`} detail="No seleccionados o retirados" icon={Gauge} />
+        <KpiCard title="Requisiciones activas" value={analytics.kpis.activeRequisitions} detail={`${analytics.kpis.requisitions} requisiciones filtradas`} icon={Briefcase} trend="neutral"
+          info={{ calc: 'Se cuentan todas las solicitudes de personal que no han sido canceladas, rechazadas ni cerradas.', ejemplo: 'Si hay 10 solicitudes y 2 fueron canceladas, el indicador muestra 8.', note: 'Refleja cuántas necesidades de personal están pendientes de resolver.' }} />
+        <KpiCard title="Vacantes abiertas" value={analytics.kpis.activeVacancies} detail={`${analytics.kpis.totalPositions} posiciones publicadas`} icon={Target} trend="up"
+          info={{ calc: 'Se cuentan las vacantes en estado Abierta o En Proceso.', ejemplo: 'Si se crearon 5 vacantes y 2 ya cerraron, se muestran 3.', note: 'Indica cuántos procesos de selección están activos ahora mismo.' }} />
+        <KpiCard title="Candidatos en proceso" value={analytics.kpis.inProcessCandidates} detail={`${numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)} por vacante`} icon={Users} trend="up"
+          info={{ calc: 'Candidatos sin resultado final: ni contratados, ni descartados, ni desistidos.', ejemplo: 'Un candidato en entrevista cuenta; uno contratado ya no cuenta.', note: 'Muestra cuántas personas están siendo evaluadas en este momento.' }} />
+        <KpiCard title="Tasa de avance" value={`${analytics.kpis.advanceRate}%`} detail="Promedio del embudo aplicado-contratado" icon={TrendingUp} trend={analytics.kpis.advanceRate >= 45 ? 'up' : 'down'}
+          info={{ calc: 'Promedio de qué tan lejos llegan los candidatos dentro del proceso (de aplicación a contratación).', ejemplo: 'Si la mayoría llega hasta entrevistas pero casi nadie llega a oferta, la tasa baja.', note: 'Cuanto más alta, mejor: significa que los candidatos avanzan por todo el proceso.' }} />
+        <KpiCard title="Tiempo prom. cobertura" value={`${analytics.kpis.avgTimeToFill} días`} detail="Promedio de vacantes cerradas" icon={Clock}
+          info={{ calc: 'Promedio de días que tomó cerrar las vacantes ya finalizadas (desde apertura hasta cierre).', ejemplo: 'Si una vacante tardó 20 días y otra 30, el promedio es 25 días.', note: 'Permite saber si los procesos de selección son rápidos o lentos.' }} />
+        <KpiCard title="Contratados" value={analytics.kpis.hiredCandidates} detail={`${analytics.kpis.hireRate}% conversión`} icon={UserCheck} trend={analytics.kpis.hireRate >= 15 ? 'up' : 'down'}
+          info={{ calc: 'Candidatos que completaron el proceso y fueron oficialmente vinculados a la empresa.', ejemplo: 'Si de 20 candidatos, 4 fueron contratados, este número es 4.', note: 'Es el resultado final esperado de cada proceso de selección. Una tasa del 15% o más es saludable.' }} />
+        <KpiCard title="Tasa selección" value={`${analytics.kpis.selectionRate}%`} detail="Seleccionados + contratados" icon={CheckCircle2}
+          info={{ calc: 'De cada 100 candidatos, cuántos fueron seleccionados o contratados.', ejemplo: '2 seleccionados + 3 contratados de 20 = 25% de tasa de selección.', note: 'Incluye tanto a los seleccionados (pendientes de contratar) como a los ya vinculados.' }} />
+        <KpiCard title="Tasa descarte global" value={`${analytics.kpis.rejectionRate}%`} detail="No seleccionados o retirados" icon={Gauge}
+          info={{ calc: 'De cada 100 candidatos, cuántos no continuaron en el proceso (descartados o desistidos).', ejemplo: '5 descartados + 3 desistidos de 20 candidatos = 40% de descarte global.', note: 'Permite ver qué tanto se está filtrando el proceso. Un valor muy alto puede indicar problemas en la atracción de candidatos.' }} />
       </div>
 
       {/* New status KPIs */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard title="Descartados" value={analytics.kpis.discardedCandidates} detail={`${analytics.kpis.discardRate}% del total de candidatos`} icon={UserMinus} trend={analytics.kpis.discardRate <= 20 ? 'up' : 'down'} />
-        <KpiCard title="Desistidos" value={analytics.kpis.withdrawnCandidates} detail={`${analytics.kpis.withdrawalRate}% del total de candidatos`} icon={UserX} trend={analytics.kpis.withdrawalRate <= 10 ? 'up' : 'down'} />
-        <KpiCard title="Vacantes pausadas" value={analytics.kpis.pausedVacancies} detail="Contadores de tiempo suspendidos" icon={PauseCircle} trend="neutral" />
-        <KpiCard title="Vacantes canceladas" value={analytics.kpis.cancelledVacancies} detail="Requieren revisión o justificación" icon={Ban} trend={analytics.kpis.cancelledVacancies === 0 ? 'up' : 'down'} />
+        <KpiCard title="Descartados" value={analytics.kpis.discardedCandidates} detail={`${analytics.kpis.discardRate}% del total de candidatos`} icon={UserMinus} trend={analytics.kpis.discardRate <= 20 ? 'up' : 'down'}
+          info={{ calc: 'Candidatos a quienes el equipo de selección marcó como "No seleccionado" con un motivo registrado.', ejemplo: '5 descartados de 20 candidatos = 25% de tasa de descarte.', note: 'Incluye: no aprobó EMO, EDS, pruebas u otro motivo. Una tasa menor al 20% es normal.' }} />
+        <KpiCard title="Desistidos" value={analytics.kpis.withdrawnCandidates} detail={`${analytics.kpis.withdrawalRate}% del total de candidatos`} icon={UserX} trend={analytics.kpis.withdrawalRate <= 10 ? 'up' : 'down'}
+          info={{ calc: 'Candidatos que decidieron retirarse voluntariamente del proceso.', ejemplo: '3 desistidos de 20 candidatos = 15% de tasa de desistimiento.', note: 'Una tasa alta puede indicar demora en el proceso, salario no competitivo o alta demanda del mercado.' }} />
+        <KpiCard title="Vacantes pausadas" value={analytics.kpis.pausedVacancies} detail="Contadores de tiempo suspendidos" icon={PauseCircle} trend="neutral"
+          info={{ calc: 'Vacantes con el proceso suspendido temporalmente. Los días pausados no se suman al tiempo de cobertura.', ejemplo: 'Una vacante abierta 10 días, pausada 5 y reactivada, solo cuenta 10 días (no 15).', note: 'Útil cuando hay situaciones internas que impiden avanzar sin llegar a cancelar la vacante.' }} />
+        <KpiCard title="Vacantes canceladas" value={analytics.kpis.cancelledVacancies} detail="Requieren revisión o justificación" icon={Ban} trend={analytics.kpis.cancelledVacancies === 0 ? 'up' : 'down'}
+          info={{ calc: 'Vacantes cerradas anticipadamente con un motivo, responsable y fecha registrados.', ejemplo: 'Se cancela una vacante porque el área ya no tiene presupuesto para el cargo.', note: 'Toda cancelación queda trazable. Un número alto puede indicar inestabilidad en la planeación del personal.' }} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -800,7 +858,8 @@ export default function AnaliticaSeleccion() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title="Tendencia mensual del proceso" className="xl:col-span-2">
+        <ChartCard title="Tendencia mensual del proceso" className="xl:col-span-2"
+          info={{ calc: 'Agrupa por mes las requisiciones creadas, vacantes abiertas, candidatos aplicados y contrataciones.', ejemplo: 'Si en marzo se abrieron 5 vacantes y 3 candidatos fueron contratados, aparecen en esas barras y líneas.', note: 'Permite ver si el proceso crece, se estanca o mejora mes a mes.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.trend} margin={{ left: -20, right: 12, top: 10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -816,7 +875,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Tendencia semanal: aperturas, cierres y cobertura" className="xl:col-span-2">
+        <ChartCard title="Tendencia semanal: aperturas, cierres y cobertura" className="xl:col-span-2"
+          info={{ calc: 'Muestra por semana cuántas vacantes se abrieron, cuántas se cerraron y cuántos días tardaron en cerrarse.', ejemplo: 'Si la semana 3 tuvo 4 aperturas y solo 1 cierre, hay acumulación de vacantes sin resolver.', note: 'La línea de cobertura indica si los cierres fueron rápidos o lentos. Picos altos = demoras.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.weeklyCoverageTrend} margin={{ left: -20, right: 18, top: 10, bottom: 24 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -833,7 +893,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Comparativo mensual: volumen vs tiempo de cobertura" className="xl:col-span-2">
+        <ChartCard title="Comparativo mensual: volumen vs tiempo de cobertura" className="xl:col-span-2"
+          info={{ calc: 'Compara el número de vacantes abiertas y cerradas por mes con el tiempo promedio que tardaron en cubrirse.', ejemplo: 'Si abril tuvo muchas aperturas pero tardó más días, el proceso se volvió más lento ese mes.', note: 'Relaciona volumen con velocidad: meses con muchas aperturas suelen tener tiempos de cobertura más altos.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.monthlyCoverageTrend} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -850,7 +911,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Embudo de conversión">
+        <ChartCard title="Embudo de conversión"
+          info={{ calc: 'Muestra cuántos elementos hay en cada etapa: requisiciones → vacantes → candidatos → en proceso → seleccionados → contratados.', ejemplo: 'Si hay 50 candidatos pero solo 5 contratados, hay una reducción del 90% en el embudo.', note: 'Entre más estrecho sea el embudo en las últimas etapas, más selectivo es el proceso. Lo ideal es que sea progresivo.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.funnel} layout="vertical" margin={{ left: 18, right: 16, top: 8, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -864,7 +926,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Embudo de reclutamiento por etapa" className="xl:col-span-2">
+        <ChartCard title="Embudo de reclutamiento por etapa" className="xl:col-span-2"
+          info={{ calc: 'Para cada etapa (aplicado, evaluado, entrevista, oferta, contratado) muestra cuántos candidatos la alcanzaron y qué porcentaje representa del total.', ejemplo: 'Si 20 candidatos llegaron a entrevista de 50, ese paso tiene 40% de alcance.', note: '"% etapa anterior" indica la tasa de avance entre pasos. Una caída grande entre dos etapas señala dónde se pierde más talento.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.recruitmentFunnel} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -880,7 +943,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Conversión por fuente de convocatoria" className="xl:col-span-2">
+        <ChartCard title="Conversión por fuente de convocatoria" className="xl:col-span-2"
+          info={{ calc: 'Por cada canal (portal, referidos, LinkedIn, etc.) muestra cuántos candidatos aplicaron, evaluaron, llegaron a entrevista, oferta y fueron contratados.', ejemplo: 'Si LinkedIn genera 10 candidatos pero 0 contratados, su tasa de conversión es 0%.', note: 'Identifica qué canales producen candidatos de mejor calidad (más conversión) vs. solo volumen.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.sourceConversion} margin={{ left: -20, right: 18, top: 10, bottom: 36 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -899,7 +963,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Salud integral del proceso">
+        <ChartCard title="Salud integral del proceso"
+          info={{ calc: 'Gráfico de radar con 5 dimensiones: Cobertura, Conversión, Selección, Velocidad y Pipeline. Cada una va de 0 a 100.', ejemplo: 'Un proceso ideal tendría todas las dimensiones cerca de 100. Si Velocidad es 20, las vacantes tardan demasiado en cubrirse.', note: 'Una figura equilibrada y grande indica un proceso robusto. Dimensiones bajas o asimétricas señalan áreas de mejora urgente.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart data={analytics.radar} outerRadius="72%">
               <PolarGrid stroke="hsl(var(--border))" />
@@ -911,7 +976,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Candidatos por estado">
+        <ChartCard title="Candidatos por estado"
+          info={{ calc: 'Distribución de todos los candidatos agrupados por su estado actual: en proceso, contratado, descartado, desistido, etc.', ejemplo: 'Si el 60% está en proceso y el 5% contratado, hay un cuello de botella en la toma de decisiones.', note: 'Una proporción alta de candidatos en proceso sin avance puede indicar falta de seguimiento.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={analytics.statusCandidates} dataKey="value" nameKey="name" outerRadius={96} label>
@@ -923,7 +989,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Vacantes por estado">
+        <ChartCard title="Vacantes por estado"
+          info={{ calc: 'Muestra cuántas vacantes hay en cada estado: abierta, en proceso, pausada, cerrada, cancelada.', ejemplo: 'Si hay 8 vacantes abiertas y 3 pausadas, activamente se trabajan 8 pero hay 3 en espera.', note: 'Una cantidad alta de vacantes abiertas por mucho tiempo puede indicar dificultad para encontrar candidatos idóneos.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.statusVacancies} margin={{ left: -20, right: 12, top: 8, bottom: 24 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -935,7 +1002,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Requisiciones por estado">
+        <ChartCard title="Requisiciones por estado"
+          info={{ calc: 'Distribución de las solicitudes de personal según su estado en el flujo de aprobación.', ejemplo: 'Si hay 5 requisiciones pendientes de aprobación, RRHH aún no las ha gestionado.', note: 'Las requisiciones bloqueadas o rechazadas frenan la creación de vacantes y retrasan la contratación.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={analytics.statusRequisitions} dataKey="value" nameKey="name" innerRadius={48} outerRadius={96} paddingAngle={3}>
@@ -947,7 +1015,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Fuentes de candidatos">
+        <ChartCard title="Fuentes de candidatos"
+          info={{ calc: 'Cuenta cuántos candidatos provienen de cada canal de reclutamiento registrado.', ejemplo: 'Si 30 candidatos vienen de referidos y 10 de un portal de empleo, los referidos son la principal fuente.', note: 'Conocer la fuente más productiva ayuda a enfocar los esfuerzos y el presupuesto de reclutamiento.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.sources} margin={{ left: -20, right: 12, top: 8, bottom: 24 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -959,7 +1028,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Motivos de vacante">
+        <ChartCard title="Motivos de vacante"
+          info={{ calc: 'Agrupa las vacantes según el motivo por el cual fueron creadas: renuncia, nuevo cargo, reemplazo, etc.', ejemplo: 'Si el 70% de las vacantes son por renuncia, hay un posible problema de retención de personal.', note: 'Una alta concentración en un solo motivo puede indicar un patrón organizacional que merece revisión.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={analytics.reasons} margin={{ left: -20, right: 12, top: 8, bottom: 24 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -971,7 +1041,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Pipeline por centro de operación" className="xl:col-span-2">
+        <ChartCard title="Pipeline por centro de operación" className="xl:col-span-2"
+          info={{ calc: 'Por cada centro de operación muestra los cupos demandados, los candidatos en proceso y los contratados.', ejemplo: 'Si el centro Bogotá tiene 10 cupos pero solo 3 contratados, tiene el 70% de sus cupos sin cubrir.', note: 'Permite identificar qué centros tienen mayores necesidades de personal no resueltas.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.centerPipeline} margin={{ left: -20, right: 12, top: 8, bottom: 36 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -986,7 +1057,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Antigüedad de vacantes abiertas">
+        <ChartCard title="Antigüedad de vacantes abiertas"
+          info={{ calc: 'Clasifica las vacantes activas según cuántos días llevan abiertas: menos de 7, 7-15, 16-30 y más de 30 días.', ejemplo: 'Si 5 vacantes llevan más de 30 días abiertas, son las más urgentes de atender.', note: 'Vacantes en la categoría +30 días requieren atención inmediata. Pueden estar bloqueando producción u operaciones.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={analytics.aging} dataKey="value" nameKey="name" outerRadius={98} label>
@@ -998,7 +1070,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Rangos salariales promedio por área">
+        <ChartCard title="Rangos salariales promedio por área"
+          info={{ calc: 'Para cada área organizacional calcula el salario promedio de las vacantes publicadas en ese período.', ejemplo: 'Si el área de Tecnología tiene un promedio de $4M y Operaciones $2.5M, hay una brecha salarial entre áreas.', note: 'Ayuda a detectar áreas con presupuesto salarial bajo que pueden tener dificultad para atraer candidatos.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.salaryByArea} layout="vertical" margin={{ left: 28, right: 18, top: 8, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -1010,7 +1083,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Ranking de demanda por cargo" className="xl:col-span-2">
+        <ChartCard title="Ranking de demanda por cargo" className="xl:col-span-2"
+          info={{ calc: 'Lista los cargos más solicitados comparando cuántos cupos se pidieron, cuántos candidatos llegaron y cuántos fueron contratados.', ejemplo: 'Si Conductor tiene 10 cupos pedidos y solo 3 contratados, ese cargo tiene baja tasa de cobertura.', note: 'Los cargos con alta demanda y baja cobertura son los que más requieren estrategias de atracción específicas.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.demandByPosition} layout="vertical" margin={{ left: 36, right: 18, top: 8, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -1025,7 +1099,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Tasa de cobertura por cargo">
+        <ChartCard title="Tasa de cobertura por cargo"
+          info={{ calc: 'Para cada cargo muestra qué porcentaje de los cupos solicitados ya fueron cubiertos con contrataciones.', ejemplo: 'Un cargo con 4 cupos pedidos y 2 contratados tiene 50% de cobertura.', note: '100% significa que todos los cupos de ese cargo ya fueron cubiertos. Por debajo del 60% requiere atención.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.coverageByPosition} margin={{ left: -20, right: 12, top: 8, bottom: 36 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -1037,7 +1112,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Demanda y cobertura por jornada">
+        <ChartCard title="Demanda y cobertura por jornada"
+          info={{ calc: 'Agrupa los cupos demandados y contratados por tipo de jornada laboral (diurna, nocturna, mixta, etc.) y calcula la cobertura.', ejemplo: 'Si la jornada nocturna tiene 10 cupos y 4 contratados, su cobertura es 40%.', note: 'Permite identificar qué tipo de jornada tiene mayor dificultad para ser cubierta.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.demandByShift} margin={{ left: -20, right: 18, top: 10, bottom: 24 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -1053,7 +1129,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Motivos de descarte (No seleccionado)">
+        <ChartCard title="Motivos de descarte (No seleccionado)"
+          info={{ calc: 'Cuenta cuántos candidatos fueron descartados por cada motivo registrado: EMO, EDS, pruebas u otro.', ejemplo: 'Si 8 candidatos no aprobaron el EMO y 3 no aprobaron pruebas, el EMO es el mayor filtro.', note: 'Un motivo dominante puede indicar que el proceso de selección previa no está siendo efectivo para ese criterio.' }}>
           <ResponsiveContainer width="100%" height="100%">
             {analytics.rejectionReasonsData.length > 0 ? (
               <BarChart data={analytics.rejectionReasonsData} layout="vertical" margin={{ left: 28, right: 18, top: 8, bottom: 8 }}>
@@ -1069,7 +1146,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Motivos de desistimiento">
+        <ChartCard title="Motivos de desistimiento"
+          info={{ calc: 'Cuenta cuántos candidatos se retiraron voluntariamente y por qué motivo: otra oferta, salario, motivos personales u otro.', ejemplo: 'Si 6 candidatos se fueron por salario, hay una señal clara de que la oferta económica no es competitiva.', note: 'Analizar estos motivos ayuda a tomar decisiones sobre la propuesta de valor del empleo.' }}>
           <ResponsiveContainer width="100%" height="100%">
             {analytics.withdrawalReasonsData.length > 0 ? (
               <BarChart data={analytics.withdrawalReasonsData} layout="vertical" margin={{ left: 28, right: 18, top: 8, bottom: 8 }}>
@@ -1085,7 +1163,8 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Cobertura real de posiciones por vacante" className="xl:col-span-2">
+        <ChartCard title="Cobertura real de posiciones por vacante" className="xl:col-span-2"
+          info={{ calc: 'Por cada vacante muestra cuántos cupos tenía asignados (posiciones requeridas) y cuántos han sido cubiertos con candidatos seleccionados o contratados.', ejemplo: 'Una vacante con 4 cupos y 2 cubiertos tiene 50% de cobertura. Cuando llega al 100%, los botones se bloquean.', note: 'Permite identificar qué vacantes aún tienen cupos disponibles y cuáles ya completaron su proceso.' }}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.positionsCoverage} margin={{ left: 20, right: 18, top: 10, bottom: 36 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
