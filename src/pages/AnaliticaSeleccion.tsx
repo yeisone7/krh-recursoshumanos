@@ -30,16 +30,23 @@ import {
   AlertTriangle,
   BarChart3,
   Briefcase,
+  BookOpen,
+  Ban,
   CalendarDays,
   CheckCircle2,
   Clock,
   Filter,
   Gauge,
+  Info,
+  PauseCircle,
   Target,
   TrendingDown,
   TrendingUp,
   UserCheck,
+  UserMinus,
+  UserX,
   Users,
+  X,
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +55,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useRequisitions } from '@/hooks/useRequisitions';
 import { useVacancies } from '@/hooks/useVacancies';
@@ -103,6 +113,14 @@ const spanishLabels: Record<string, string> = {
   website: 'Sitio web',
   job_board: 'Portal de empleo',
   source: 'Fuente',
+  paused: 'Pausada',
+  no_aprobo_emo: 'No aprobó EMO',
+  no_aprobo_eds: 'No aprobó EDS',
+  no_aprobo_pruebas: 'No aprobó pruebas',
+  otra_oferta: 'Otra oferta laboral',
+  motivos_personales: 'Motivos personales',
+  salario: 'Salario',
+  otro: 'Otro motivo',
 };
 
 function asDate(value: string | null | undefined) {
@@ -253,6 +271,7 @@ export default function AnaliticaSeleccion() {
   const [centerFilter, setCenterFilter] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [showMetricsDict, setShowMetricsDict] = useState(false);
 
   const isLoading = loadingVacancies || loadingCandidates || loadingRequisitions;
 
@@ -583,6 +602,33 @@ export default function AnaliticaSeleccion() {
       },
     ];
 
+    const discardedCandidates = candidates.filter((c: any) => c.status === 'not_selected');
+    const withdrawnCandidates = candidates.filter((c: any) => c.status === 'withdrawn');
+    const pausedVacancies = vacancies.filter((v: any) => v.status === 'paused');
+    const cancelledVacancies = vacancies.filter((v: any) => v.status === 'cancelled');
+    const discardRate = percent(discardedCandidates.length, candidates.length);
+    const withdrawalRate = percent(withdrawnCandidates.length, candidates.length);
+
+    const rejectionReasonsData = groupCount(discardedCandidates as any[], (c) => (c as any).rejection_reason || 'sin_registro');
+    const withdrawalReasonsData = groupCount(withdrawnCandidates as any[], (c) => (c as any).withdrawal_reason || 'sin_registro');
+
+    const positionsCoverage = vacancies
+      .map((v: any) => {
+        const vacCandidates = candidates.filter((c: any) => c.vacancy_id === v.id);
+        const covered = vacCandidates.filter((c: any) => ['selected', 'hired'].includes(c.status)).length;
+        const total = v.positions_count || 1;
+        return { cargo: v.position_title || 'Sin cargo', posiciones: total, cubiertos: covered, cobertura: percent(covered, total) };
+      })
+      .sort((a: any, b: any) => b.posiciones - a.posiciones)
+      .slice(0, 10);
+
+    const cancelledVacanciesData = cancelledVacancies.map((v: any) => ({
+      cargo: v.position_title || 'Sin cargo',
+      reason: v.cancellation_reason || 'Sin justificación',
+      cancelledBy: v.cancelled_by || '—',
+      cancelledAt: v.cancelled_at ? v.cancelled_at.slice(0, 10) : '—',
+    }));
+
     return {
       trend,
       weeklyCoverageTrend,
@@ -607,6 +653,10 @@ export default function AnaliticaSeleccion() {
       demandByShift,
       stagnationAlerts,
       insights,
+      rejectionReasonsData,
+      withdrawalReasonsData,
+      positionsCoverage,
+      cancelledVacanciesData,
       kpis: {
         requisitions: requisitions.length,
         activeRequisitions: activeRequisitions.length,
@@ -617,10 +667,16 @@ export default function AnaliticaSeleccion() {
         candidates: candidates.length,
         inProcessCandidates: inProcessCandidates.length,
         hiredCandidates: hiredCandidates.length,
+        discardedCandidates: discardedCandidates.length,
+        withdrawnCandidates: withdrawnCandidates.length,
+        pausedVacancies: pausedVacancies.length,
+        cancelledVacancies: cancelledVacancies.length,
         advanceRate,
         hireRate,
         selectionRate,
         rejectionRate,
+        discardRate,
+        withdrawalRate,
         avgTimeToFill,
         avgOpenDays,
         avgCandidatesPerVacancy,
@@ -652,9 +708,15 @@ export default function AnaliticaSeleccion() {
               Tendencias, embudo, comportamiento de candidatos y desempeño de requisiciones y vacantes.
             </p>
           </div>
-          <Badge variant="outline" className="w-fit bg-primary-light text-primary border-primary/20">
-            {format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowMetricsDict(true)} className="gap-2">
+              <BookOpen className="h-4 w-4" />
+              Diccionario de Métricas
+            </Button>
+            <Badge variant="outline" className="w-fit bg-primary-light text-primary border-primary/20">
+              {format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}
+            </Badge>
+          </div>
         </div>
       </motion.div>
 
@@ -701,7 +763,15 @@ export default function AnaliticaSeleccion() {
         <KpiCard title="Tiempo prom. cobertura" value={`${analytics.kpis.avgTimeToFill} días`} detail="Promedio de vacantes cerradas" icon={Clock} />
         <KpiCard title="Contratados" value={analytics.kpis.hiredCandidates} detail={`${analytics.kpis.hireRate}% conversión`} icon={UserCheck} trend={analytics.kpis.hireRate >= 15 ? 'up' : 'down'} />
         <KpiCard title="Tasa selección" value={`${analytics.kpis.selectionRate}%`} detail="Seleccionados + contratados" icon={CheckCircle2} />
-        <KpiCard title="Tasa descarte" value={`${analytics.kpis.rejectionRate}%`} detail="No seleccionados o retirados" icon={Gauge} />
+        <KpiCard title="Tasa descarte global" value={`${analytics.kpis.rejectionRate}%`} detail="No seleccionados o retirados" icon={Gauge} />
+      </div>
+
+      {/* New status KPIs */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard title="Descartados" value={analytics.kpis.discardedCandidates} detail={`${analytics.kpis.discardRate}% del total de candidatos`} icon={UserMinus} trend={analytics.kpis.discardRate <= 20 ? 'up' : 'down'} />
+        <KpiCard title="Desistidos" value={analytics.kpis.withdrawnCandidates} detail={`${analytics.kpis.withdrawalRate}% del total de candidatos`} icon={UserX} trend={analytics.kpis.withdrawalRate <= 10 ? 'up' : 'down'} />
+        <KpiCard title="Vacantes pausadas" value={analytics.kpis.pausedVacancies} detail="Contadores de tiempo suspendidos" icon={PauseCircle} trend="neutral" />
+        <KpiCard title="Vacantes canceladas" value={analytics.kpis.cancelledVacancies} detail="Requieren revisión o justificación" icon={Ban} trend={analytics.kpis.cancelledVacancies === 0 ? 'up' : 'down'} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -982,7 +1052,80 @@ export default function AnaliticaSeleccion() {
             </ComposedChart>
           </ResponsiveContainer>
         </ChartCard>
+
+        <ChartCard title="Motivos de descarte (No seleccionado)">
+          <ResponsiveContainer width="100%" height="100%">
+            {analytics.rejectionReasonsData.length > 0 ? (
+              <BarChart data={analytics.rejectionReasonsData} layout="vertical" margin={{ left: 28, right: 18, top: 8, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" tick={{ fontSize: 12 }} />
+                <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey="value" name="Candidatos" fill="hsl(var(--destructive))" radius={[0, 6, 6, 0]} />
+              </BarChart>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Sin candidatos descartados aún</div>
+            )}
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Motivos de desistimiento">
+          <ResponsiveContainer width="100%" height="100%">
+            {analytics.withdrawalReasonsData.length > 0 ? (
+              <BarChart data={analytics.withdrawalReasonsData} layout="vertical" margin={{ left: 28, right: 18, top: 8, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" tick={{ fontSize: 12 }} />
+                <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey="value" name="Candidatos" fill="hsl(var(--warning))" radius={[0, 6, 6, 0]} />
+              </BarChart>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Sin candidatos desistidos aún</div>
+            )}
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="Cobertura real de posiciones por vacante" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={analytics.positionsCoverage} margin={{ left: 20, right: 18, top: 10, bottom: 36 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="cargo" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
+              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value, name) => String(name).includes('%') ? `${value}%` : value} />
+              <Legend />
+              <Bar yAxisId="left" dataKey="posiciones" name="Posiciones requeridas" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
+              <Bar yAxisId="left" dataKey="cubiertos" name="Cubiertos (Sel.+Contrat.)" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="cobertura" name="Cobertura %" stroke="hsl(var(--primary))" strokeWidth={3} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
+
+      {/* Cancelled Vacancies Table */}
+      {analytics.cancelledVacanciesData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <Ban className="h-5 w-5 text-destructive" />
+              Vacantes canceladas con justificación
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {analytics.cancelledVacanciesData.map((v: any, i: number) => (
+                <div key={i} className="rounded-md border border-destructive/20 bg-destructive/5 p-3">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="font-medium text-foreground">{v.cargo}</p>
+                    <span className="text-xs text-muted-foreground">{v.cancelledAt} · por {v.cancelledBy}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{v.reason}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -1086,6 +1229,145 @@ export default function AnaliticaSeleccion() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Metrics Dictionary Modal ── */}
+      <Dialog open={showMetricsDict} onOpenChange={setShowMetricsDict}>
+        <DialogContent className="max-w-3xl max-h-[90dvh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold">
+              <BookOpen className="h-5 w-5 text-primary" />
+              Diccionario de Métricas — Analítica de Selección
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Explicación de cada indicador: fuente de datos, cálculo y cómo interpretarlo.
+            </p>
+          </DialogHeader>
+          <ScrollArea className="flex-1 px-6 py-4">
+            <div className="space-y-6 pb-4">
+
+              {/* Section: KPIs Generales */}
+              <section>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
+                  <Info className="h-4 w-4" /> KPIs Generales
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { name: 'Requisiciones activas', formula: 'COUNT(requisiciones) WHERE estado ≠ cancelada/cerrada/rechazada', source: 'Tabla personnel_requisitions', note: 'Mide la demanda de personal pendiente de cubrir.' },
+                    { name: 'Vacantes abiertas', formula: 'COUNT(vacancies) WHERE status IN (open, in_process)', source: 'Tabla vacancies', note: 'Vacantes con proceso de selección activo.' },
+                    { name: 'Posiciones publicadas', formula: 'SUM(positions_count) de todas las vacantes filtradas', source: 'Campo vacancies.positions_count', note: 'Total de cupos físicos publicados.' },
+                    { name: 'Candidatos en proceso', formula: 'COUNT(candidates) WHERE status NOT IN (hired, not_selected, withdrawn)', source: 'Tabla candidates', note: 'Candidatos que aún no tienen un resultado definitivo.' },
+                    { name: 'Candidatos / vacante', formula: 'COUNT(candidates) ÷ COUNT(vacancies)', source: 'Tablas candidates + vacancies', note: 'Salud del pipeline. Óptimo: ≥ 3.' },
+                    { name: 'Tasa de avance', formula: 'Promedio del índice de etapa alcanzada por candidato × 100', source: 'Tabla candidates + selection_steps', note: 'Mide qué tan lejos llegan los candidatos en el embudo.' },
+                    { name: 'Tiempo prom. de cobertura', formula: 'AVG(actual_close_date − open_date) de vacantes cerradas', source: 'Campos vacancies.open_date + actual_close_date', note: 'Días promedio desde apertura hasta cierre de la vacante.' },
+                    { name: 'Vacantes activas (días abiertos)', formula: 'AVG(HOY − open_date) de vacantes abiertas/en proceso', source: 'Campo vacancies.open_date', note: 'Antigüedad promedio de las vacantes que siguen abiertas.' },
+                  ].map((m) => (
+                    <div key={m.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                      <p className="font-semibold text-foreground text-sm">{m.name}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fórmula:</span> {m.formula}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fuente:</span> {m.source}</p>
+                      <p className="text-xs text-muted-foreground italic">{m.note}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Section: Tasas de Conversión */}
+              <section>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" /> Tasas y Conversión
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { name: 'Contratados (Hired)', formula: 'COUNT(candidates) WHERE status = hired', source: 'Tabla candidates', note: 'Candidatos que completaron el proceso y fueron vinculados.' },
+                    { name: 'Tasa de contratación', formula: 'COUNT(hired) ÷ COUNT(total candidatos) × 100', source: 'Tabla candidates', note: 'Porcentaje de candidatos que terminan siendo contratados.' },
+                    { name: 'Tasa de selección', formula: '(COUNT(selected) + COUNT(hired)) ÷ COUNT(total) × 100', source: 'Tabla candidates', note: 'Candidatos que llegaron a ser seleccionados o contratados.' },
+                    { name: 'Tasa de descarte global', formula: '(COUNT(not_selected) + COUNT(withdrawn)) ÷ COUNT(total) × 100', source: 'Tabla candidates', note: 'Proporción de candidatos que no continuaron por cualquier razón.' },
+                    { name: 'Tasa de descarte (Descartar)', formula: 'COUNT(not_selected) ÷ COUNT(total) × 100', source: 'Campo candidates.status = not_selected', note: 'Candidatos descartados por: EMO, EDS, pruebas u otro motivo.' },
+                    { name: 'Tasa de desistimiento', formula: 'COUNT(withdrawn) ÷ COUNT(total) × 100', source: 'Campo candidates.status = withdrawn', note: 'Candidatos que voluntariamente abandonaron el proceso.' },
+                    { name: 'Cobertura real de posiciones', formula: 'COUNT(selected + hired por vacante) ÷ positions_count × 100', source: 'candidates.status + vacancies.positions_count', note: 'Cuántos cupos de cada vacante han sido cubiertos efectivamente.' },
+                  ].map((m) => (
+                    <div key={m.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                      <p className="font-semibold text-foreground text-sm">{m.name}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fórmula:</span> {m.formula}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fuente:</span> {m.source}</p>
+                      <p className="text-xs text-muted-foreground italic">{m.note}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Section: Motivos */}
+              <section>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
+                  <UserMinus className="h-4 w-4" /> Motivos de Descarte y Desistimiento
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { name: 'No aprobó EMO', formula: 'COUNT WHERE rejection_reason = no_aprobo_emo', source: 'Campo candidates.rejection_reason', note: 'Candidato no pasó el Examen Médico Ocupacional.' },
+                    { name: 'No aprobó EDS', formula: 'COUNT WHERE rejection_reason = no_aprobo_eds', source: 'Campo candidates.rejection_reason', note: 'Candidato no pasó el Estudio de Seguridad.' },
+                    { name: 'No aprobó pruebas', formula: 'COUNT WHERE rejection_reason = no_aprobo_pruebas', source: 'Campo candidates.rejection_reason', note: 'Candidato no superó pruebas de conocimiento o psicotécnicas.' },
+                    { name: 'Otra oferta laboral', formula: 'COUNT WHERE withdrawal_reason = otra_oferta', source: 'Campo candidates.withdrawal_reason', note: 'Candidato aceptó otra oferta y desistió del proceso.' },
+                    { name: 'Motivos personales', formula: 'COUNT WHERE withdrawal_reason = motivos_personales', source: 'Campo candidates.withdrawal_reason', note: 'El candidato se retiró por razones personales.' },
+                    { name: 'Salario', formula: 'COUNT WHERE withdrawal_reason = salario', source: 'Campo candidates.withdrawal_reason', note: 'El candidato desistió por desacuerdo con el salario ofrecido.' },
+                  ].map((m) => (
+                    <div key={m.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                      <p className="font-semibold text-foreground text-sm">{m.name}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fórmula:</span> {m.formula}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fuente:</span> {m.source}</p>
+                      <p className="text-xs text-muted-foreground italic">{m.note}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Section: Estados de Vacante */}
+              <section>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
+                  <PauseCircle className="h-4 w-4" /> Estados especiales de Vacante
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { name: 'Vacantes pausadas', formula: 'COUNT(vacancies) WHERE status = paused', source: 'Campo vacancies.status', note: 'Vacantes con contadores de tiempo suspendidos. No acumulan días de antigüedad ni afectan el tiempo de cobertura.' },
+                    { name: 'Vacantes canceladas', formula: 'COUNT(vacancies) WHERE status = cancelled', source: 'Campo vacancies.status + cancellation_reason + cancelled_by + cancelled_at', note: 'Vacantes cerradas anticipadamente con justificación. Requieren revisión.' },
+                    { name: 'Restricción de selección', formula: 'COUNT(selected + hired) ≥ positions_count → botones inactivos', source: 'candidates.status + vacancies.positions_count', note: 'Cuando los cupos están cubiertos, los botones Seleccionar, Descartar y Desistió se inhabilitan para evitar sobreasignación.' },
+                  ].map((m) => (
+                    <div key={m.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                      <p className="font-semibold text-foreground text-sm">{m.name}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fórmula:</span> {m.formula}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fuente:</span> {m.source}</p>
+                      <p className="text-xs text-muted-foreground italic">{m.note}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Section: Radar */}
+              <section>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
+                  <Gauge className="h-4 w-4" /> Índice de Salud Integral (Radar)
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { name: 'Cobertura', formula: 'SUM(positions_count) ÷ MAX(positions solicitadas, publicadas) × 100', source: 'vacancies + requisitions', note: 'Qué porcentaje de las posiciones solicitadas han sido publicadas.' },
+                    { name: 'Conversión', formula: 'Tasa de contratación (hireRate)', source: 'candidates.status = hired', note: 'Eficiencia del proceso: cuántos candidatos acaban contratados.' },
+                    { name: 'Selección', formula: 'Tasa de selección (selectionRate)', source: 'candidates.status ∈ {selected, hired}', note: 'Qué tan bien el proceso identifica candidatos válidos.' },
+                    { name: 'Velocidad', formula: 'MAX(0, 100 − MIN(avgOpenDays × 2, 100))', source: 'vacancies.open_date', note: 'Inverso al tiempo que llevan abiertas las vacantes activas. Mayor valor = más rápido.' },
+                    { name: 'Pipeline', formula: 'MIN(100, ROUND(avgCandidatesPerVacancy × 20))', source: 'candidates / vacancies', note: 'Calidad del volumen de candidatos. 5 o más candidatos/vacante = 100%.' },
+                  ].map((m) => (
+                    <div key={m.name} className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                      <p className="font-semibold text-foreground text-sm">{m.name}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fórmula:</span> {m.formula}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Fuente:</span> {m.source}</p>
+                      <p className="text-xs text-muted-foreground italic">{m.note}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
