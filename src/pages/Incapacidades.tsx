@@ -109,119 +109,129 @@ export default function Incapacidades() {
   
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight">Incapacidades</h1>
-          <p className="text-muted-foreground">
-            Gestión de incapacidades médicas y recobros
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
-          <Button variant="outline" onClick={() => setShowExportDialog(true)} className="w-full sm:w-auto">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
-          <Button onClick={() => setShowFormDialog(true)} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="sm:hidden">Nueva</span>
-            <span className="hidden sm:inline">Nueva Incapacidad</span>
-          </Button>
+      {/* Header Premium */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 rounded-[2rem] border border-primary/10 p-8 sm:p-10 shadow-sm">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+          <div className="flex items-start sm:items-center gap-5">
+            <div className="w-16 h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
+              <Stethoscope className="w-8 h-8" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
+                  SALUD
+                </Badge>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground mb-1">
+                Incapacidades
+              </h1>
+              <p className="text-sm font-medium text-muted-foreground max-w-xl">
+                Gestión de incapacidades médicas y recobros
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+            <Button variant="outline" onClick={() => setShowExportDialog(true)} className="h-14 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs border-primary/20 hover:bg-primary/5 w-full sm:w-auto">
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </Button>
+            <Button 
+              onClick={() => setShowFormDialog(true)}
+              size="lg"
+              className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all shrink-0 w-full sm:w-auto"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              <span className="sm:hidden">Nueva</span>
+              <span className="hidden sm:inline">Nueva Incapacidad</span>
+            </Button>
+          </div>
         </div>
       </div>
       
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
-              <CardTitle className="text-sm font-medium">Activas</CardTitle>
-              <Stethoscope className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-              <div className="text-2xl font-bold">{stats?.totalActive || 0}</div>
-              <p className="text-xs text-muted-foreground">En curso actualmente</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-        >
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
-              <CardTitle className="text-sm font-medium">Este Mes</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-              <div className="text-2xl font-bold">{stats?.totalThisMonth || 0}</div>
-              <p className="text-xs text-muted-foreground">{stats?.totalDaysThisMonth || 0} días</p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
-              <CardTitle className="text-sm font-medium">Recobros Pendientes</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-              <div className="text-2xl font-bold text-warning">{stats?.pendingRecovery || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {formatCurrency(stats?.pendingRecoveryAmount || 0)}
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-        >
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
-              <CardTitle className="text-sm font-medium">Por Origen</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <span className="text-lg font-bold">{stats?.byOrigin?.comun || 0}</span>
-                <span className="text-xs text-muted-foreground">Común</span>
-                <span className="text-lg font-bold ml-2">{stats?.byOrigin?.laboral || 0}</span>
-                <span className="text-xs text-muted-foreground">Laboral</span>
+      {/* KPIs Premium */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5 relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Activas</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-black tracking-tight">{stats?.totalActive || 0}</h3>
+                <p className="text-xs text-muted-foreground font-medium">En curso</p>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="h-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
-              <CardTitle className="text-sm font-medium">Duración Promedio</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
-              <div className="text-2xl font-bold">{stats?.avgDuration || 0}</div>
-              <p className="text-xs text-muted-foreground">días</p>
-            </CardContent>
-          </Card>
-        </motion.div>
+            </div>
+            <div className="w-12 h-12 rounded-[1rem] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Stethoscope className="w-6 h-6" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5 relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Este Mes</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-black tracking-tight text-blue-600">{stats?.totalThisMonth || 0}</h3>
+                <p className="text-xs text-muted-foreground font-medium">{stats?.totalDaysThisMonth || 0} días</p>
+              </div>
+            </div>
+            <div className="w-12 h-12 rounded-[1rem] bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+              <Calendar className="w-6 h-6" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-warning/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5 relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Recobros Pendientes</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-black tracking-tight text-warning">{stats?.pendingRecovery || 0}</h3>
+                <p className="text-xs text-muted-foreground font-medium truncate max-w-[80px]">
+                  {formatCurrency(stats?.pendingRecoveryAmount || 0)}
+                </p>
+              </div>
+            </div>
+            <div className="w-12 h-12 rounded-[1rem] bg-warning/10 text-warning flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="col-span-1 sm:col-span-2 rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5 relative z-10 flex items-center justify-between h-full">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 w-full">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Origen Común</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-3xl font-black tracking-tight">{stats?.byOrigin?.comun || 0}</h3>
+                </div>
+              </div>
+              <div className="w-px h-12 bg-border/50 hidden sm:block"></div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Origen Laboral</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-3xl font-black tracking-tight">{stats?.byOrigin?.laboral || 0}</h3>
+                </div>
+              </div>
+              <div className="w-px h-12 bg-border/50 hidden sm:block"></div>
+              <div className="hidden sm:block">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Duración Promedio</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-3xl font-black tracking-tight text-emerald-600">{stats?.avgDuration || 0}</h3>
+                  <p className="text-xs text-muted-foreground font-medium">días</p>
+                </div>
+              </div>
+            </div>
+            <div className="w-12 h-12 rounded-[1rem] bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 hidden sm:flex">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
       {/* Main Content */}
@@ -236,13 +246,13 @@ export default function Incapacidades() {
         
         {/* Table */}
         <div className="lg:col-span-3">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
+          <Card className="rounded-[2rem] border-none shadow-sm bg-background">
+            <CardHeader className="p-6 border-b border-border/50">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="min-w-0">
-                  <CardTitle>Listado de Incapacidades</CardTitle>
-                  <CardDescription>
-                    {filteredIncapacities?.length || 0} registro(s)
+                  <CardTitle className="text-xl font-bold">Listado de Incapacidades</CardTitle>
+                  <CardDescription className="font-medium">
+                    {filteredIncapacities?.length || 0} registro(s) encontrados
                   </CardDescription>
                 </div>
                 <div className="flex w-full flex-col gap-2 sm:flex-row xl:w-auto xl:items-center">

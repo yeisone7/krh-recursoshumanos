@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, ClipboardList } from 'lucide-react';
+import { Plus, Trash2, ClipboardList, Sparkles, Loader2, Info } from 'lucide-react';
+import { cn } from "@/lib/utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
@@ -117,21 +118,28 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:w-full sm:p-6">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-primary" />
-            {isEditing ? 'Editar Profesiograma de Exámenes' : 'Nuevo Profesiograma de Exámenes'}
-          </DialogTitle>
-          <DialogDescription>
-            Asocia exámenes médicos a un Centro de Operación + Cargo
-          </DialogDescription>
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2.5rem] border-0 shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
+        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-violet/10 via-background to-violet/5 border-b border-violet/10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-violet/10 blur-3xl pointer-events-none" />
+          <div className="relative flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-violet flex items-center justify-center shadow-lg shadow-violet/20">
+              <ClipboardList className="w-6 h-6 text-violet-foreground" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-black tracking-tighter text-foreground">
+                {isEditing ? 'Editar Profesiograma' : 'Nuevo Profesiograma'}
+              </DialogTitle>
+              <DialogDescription className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-violet" /> Definición de Requerimientos Médicos
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4 pr-1 sm:max-h-[60vh] sm:overflow-y-auto">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+        <div className="p-8 space-y-8">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Centro de Operación *</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-violet px-1">Centro de Operación *</Label>
               <SearchableSelect
                 options={centers.map(c => ({ value: c.id, label: c.name }))}
                 value={centerId}
@@ -140,10 +148,11 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
                 searchPlaceholder="Buscar centro..."
                 emptyMessage="No se encontraron centros."
                 disabled={isEditing}
+                className="h-12 rounded-xl bg-background border-border/50 focus:ring-4 focus:ring-violet/10 transition-all font-medium"
               />
             </div>
             <div className="space-y-2">
-              <Label>Cargo *</Label>
+              <Label className="text-[10px] font-black uppercase tracking-widest text-violet px-1">Cargo *</Label>
               <SearchableSelect
                 options={positions.map(p => ({ value: p.id, label: p.name }))}
                 value={positionId}
@@ -152,114 +161,147 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
                 searchPlaceholder="Buscar cargo..."
                 emptyMessage="No se encontraron cargos."
                 disabled={isEditing}
+                className="h-12 rounded-xl bg-background border-border/50 focus:ring-4 focus:ring-violet/10 transition-all font-medium"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Exámenes Médicos</Label>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-violet">Lista de Procedimientos</Label>
                 {items.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {requiredCount} obligatorio{requiredCount !== 1 ? 's' : ''}, {optionalCount} opcional{optionalCount !== 1 ? 'es' : ''}
-                  </p>
+                  <div className="flex gap-1">
+                    <Badge variant="outline" className="h-5 px-1.5 rounded-lg bg-violet/5 text-violet border-violet/20 font-black text-[8px] uppercase tracking-tighter">
+                      {requiredCount} Obligatorios
+                    </Badge>
+                    <Badge variant="outline" className="h-5 px-1.5 rounded-lg bg-muted text-muted-foreground border-border font-black text-[8px] uppercase tracking-tighter">
+                      {optionalCount} Opcionales
+                    </Badge>
+                  </div>
                 )}
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={addItem} disabled={availableExams.length === 0} className="gap-1">
-                <Plus className="w-3 h-3" /> Agregar
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={addItem} 
+                disabled={availableExams.length === 0} 
+                className="h-8 px-4 rounded-lg gap-2 font-black uppercase tracking-widest text-[9px] border-violet/20 text-violet hover:bg-violet/5 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" /> Agregar Examen
               </Button>
             </div>
 
             {items.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
-                <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No hay exámenes. Haz clic en "Agregar" para comenzar.</p>
+              <div className="text-center py-16 rounded-[2rem] border border-dashed border-border/50 bg-muted/20">
+                <Info className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
+                <p className="text-sm font-medium text-muted-foreground">No hay exámenes configurados para este cargo.</p>
+                <Button variant="link" onClick={addItem} className="mt-2 font-black text-[10px] uppercase tracking-widest">Haz clic para agregar el primero</Button>
               </div>
             ) : (
-              <>
-              <div className="hidden overflow-x-auto sm:block">
-              <Table className="min-w-[520px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Examen</TableHead>
-                    <TableHead className="w-24 text-center">Obligatorio</TableHead>
-                    <TableHead className="w-10"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <div className="space-y-3">
+                {/* Table for Desktop */}
+                <div className="hidden sm:block overflow-hidden rounded-2xl border border-border/50 bg-background/50">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent bg-muted/30 border-border/50">
+                        <TableHead className="text-[9px] font-black uppercase tracking-widest px-6 h-10">Procedimiento Médico</TableHead>
+                        <TableHead className="w-24 text-center text-[9px] font-black uppercase tracking-widest px-6 h-10">Requerido</TableHead>
+                        <TableHead className="w-10 px-6 h-10"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {items.map((item, idx) => (
+                        <TableRow key={idx} className="group border-border/30 hover:bg-violet/[0.02]">
+                          <TableCell className="px-6 py-3">
+                            <Select
+                              value={item.exam_catalog_id}
+                              onValueChange={(v) => updateItem(idx, 'exam_catalog_id', v)}
+                            >
+                              <SelectTrigger className="h-10 rounded-xl bg-background border-border/50 focus:ring-4 focus:ring-violet/10 font-medium text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl">
+                                {activeExams
+                                  .filter(e => e.id === item.exam_catalog_id || !items.some(i => i.exam_catalog_id === e.id))
+                                  .map(e => (
+                                    <SelectItem key={e.id} value={e.id} className="font-medium">
+                                      {e.name} {e.code && <span className="text-muted-foreground opacity-50 ml-1">[{e.code}]</span>}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="px-6 py-3 text-center">
+                            <Switch
+                              checked={item.is_required}
+                              onCheckedChange={(v) => updateItem(idx, 'is_required', v)}
+                              className="data-[state=checked]:bg-violet"
+                            />
+                          </TableCell>
+                          <TableCell className="px-6 py-3">
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => removeItem(idx)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Cards for Mobile */}
+                <div className="grid grid-cols-1 gap-3 sm:hidden">
                   {items.map((item, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell>
-                        <Select
-                          value={item.exam_catalog_id}
-                          onValueChange={(v) => updateItem(idx, 'exam_catalog_id', v)}
-                        >
-                          <SelectTrigger className="h-9">
+                    <div key={idx} className="rounded-2xl border border-border/50 p-4 space-y-4 bg-background/50">
+                      <div className="space-y-2">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Examen Seleccionado</Label>
+                        <Select value={item.exam_catalog_id} onValueChange={(v) => updateItem(idx, 'exam_catalog_id', v)}>
+                          <SelectTrigger className="h-11 rounded-xl">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {activeExams
-                              .filter(e => e.id === item.exam_catalog_id || !items.some(i => i.exam_catalog_id === e.id))
-                              .map(e => (
-                                <SelectItem key={e.id} value={e.id}>
-                                  {e.name}
-                                  {e.code && <span className="text-muted-foreground ml-1">({e.code})</span>}
-                                </SelectItem>
-                              ))}
+                            {activeExams.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
                           </SelectContent>
                         </Select>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Switch
-                          checked={item.is_required}
-                          onCheckedChange={(v) => updateItem(idx, 'is_required', v)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeItem(idx)}>
+                      </div>
+                      <div className="flex items-center justify-between gap-4 pt-2 border-t border-border/50 mt-4">
+                        <div className="flex items-center gap-3">
+                          <Switch checked={item.is_required} onCheckedChange={(v) => updateItem(idx, 'is_required', v)} />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Es Requerido</span>
+                        </div>
+                        <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl text-destructive border-destructive/20" onClick={() => removeItem(idx)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              </div>
-              <div className="space-y-2 sm:hidden">
-                {items.map((item, idx) => (
-                  <div key={idx} className="rounded-lg border border-border p-3 space-y-3">
-                    <SearchableSelect
-                      options={activeExams
-                        .filter(e => e.id === item.exam_catalog_id || !items.some(i => i.exam_catalog_id === e.id))
-                        .map(e => ({ value: e.id, label: e.code ? `${e.name} (${e.code})` : e.name }))}
-                      value={item.exam_catalog_id}
-                      onValueChange={(v) => updateItem(idx, 'exam_catalog_id', v)}
-                      placeholder="Seleccionar examen"
-                      searchPlaceholder="Buscar examen..."
-                    />
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <Switch checked={item.is_required} onCheckedChange={(v) => updateItem(idx, 'is_required', v)} />
-                        <span className="text-sm text-muted-foreground">Obligatorio</span>
                       </div>
-                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => removeItem(idx)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-              </>
             )}
           </div>
         </div>
 
-        <div className="sticky bottom-0 -mx-4 grid grid-cols-1 gap-2 border-t border-border bg-background/95 px-4 pt-3 pb-1 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:pt-4 sm:backdrop-blur-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isPending} className="gap-2">
-            <ClipboardList className="w-4 h-4" />
-            {isPending ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear Profesiograma'}
+        <div className="p-8 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row gap-3">
+          <Button 
+            variant="ghost" 
+            onClick={() => onOpenChange(false)}
+            className="h-12 flex-1 rounded-xl font-black uppercase tracking-widest text-[10px]"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isPending} 
+            className="h-12 flex-[2] rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-violet/20 hover:shadow-xl transition-all gap-2 bg-violet hover:bg-violet/90 text-white"
+          >
+            {isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            {isEditing ? 'Actualizar Profesiograma' : 'Crear Profesiograma'}
           </Button>
         </div>
       </DialogContent>

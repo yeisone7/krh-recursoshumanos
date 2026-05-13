@@ -57,9 +57,9 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       manifest: {
-        name: "KRH - Gestión de Recursos Humanos",
-        short_name: "KRH",
-        description: "Sistema integral de gestión de recursos humanos",
+        name: "EmpatiQ - Gestión de Talento Humano",
+        short_name: "EmpatiQ",
+        description: "Sistema integral de gestión de talento humano",
         theme_color: "#2B3A5C",
         background_color: "#F3F4F7",
         display: "standalone",

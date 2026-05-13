@@ -47,6 +47,7 @@ export function useVacancy(id: string | undefined) {
             id, cargo_solicitado, estado_requisicion, fecha_requisicion, 
             solicitante_nombre, motivo_solicitud, operation_centers(name)
           ),
+          cancelled_by_profile:cancelled_by(id, full_name),
           candidates(
             id, first_name, last_name, document_number, status, application_date, email, mobile,
             selection_steps(*)
@@ -186,7 +187,7 @@ export function useOpenVacancies() {
         .from('vacancies')
         .select('id, position_title, operation_centers(name)')
         .eq('company_id', currentCompanyId!)
-        .in('status', ['open', 'in_process'])
+        .in('status', ['open', 'in_process', 'paused'])
         .order('position_title');
 
       if (error) throw error;

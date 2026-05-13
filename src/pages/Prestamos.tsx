@@ -26,6 +26,7 @@ import { LoanRiskScoring } from '@/components/loans/LoanRiskScoring';
 import { LoanRefinanceDialog } from '@/components/loans/LoanRefinanceDialog';
 import { useLoans, useLoanPayments, useCreateLoan, useUpdateLoan, useDeleteLoan, useRegisterPayment, useRefinancingHistory, type EmployeeLoan } from '@/hooks/useLoans';
 import { useEmployees } from '@/hooks/useEmployees';
+import { LoanFormDialog } from '@/components/loans/LoanFormDialog';
 
 const LOAN_TYPE_LABELS: Record<string, string> = {
   personal: 'Personal',
@@ -113,56 +114,13 @@ export default function Prestamos() {
   const fullyPaid = loans.filter(l => l.status === 'pagado').length;
 
   const resetForm = () => {
-    setFormData({ employee_id: '', loan_type: 'personal', description: '', total_amount: '', interest_rate: '0', installments: '1', start_date: format(new Date(), 'yyyy-MM-dd'), notes: '' });
     setEditing(null);
   };
 
   const openCreate = () => { resetForm(); setShowForm(true); };
   const openEdit = (loan: EmployeeLoan) => {
     setEditing(loan);
-    setFormData({
-      employee_id: loan.employee_id,
-      loan_type: loan.loan_type,
-      description: loan.description || '',
-      total_amount: String(loan.total_amount),
-      interest_rate: String(loan.interest_rate),
-      installments: String(loan.installments),
-      start_date: loan.start_date,
-      notes: loan.notes || '',
-    });
     setShowForm(true);
-  };
-
-  const handleSave = () => {
-    const totalAmount = Number(formData.total_amount);
-    const interestRate = Number(formData.interest_rate);
-    const installments = Number(formData.installments);
-    const totalWithInterest = totalAmount * (1 + interestRate / 100);
-    const installmentAmount = totalWithInterest / installments;
-
-    const payload: any = {
-      employee_id: formData.employee_id,
-      loan_type: formData.loan_type,
-      description: formData.description || null,
-      total_amount: totalAmount,
-      interest_rate: interestRate,
-      total_with_interest: Math.round(totalWithInterest * 100) / 100,
-      installments,
-      installment_amount: Math.round(installmentAmount * 100) / 100,
-      remaining_balance: editing ? undefined : Math.round(totalWithInterest * 100) / 100,
-      start_date: formData.start_date,
-      notes: formData.notes || null,
-    };
-
-    if (editing) {
-      // Recalculate remaining if editing amounts
-      const newBalance = Math.round(totalWithInterest * 100) / 100 - Number(editing.paid_amount);
-      payload.remaining_balance = Math.max(0, newBalance);
-      updateLoan.mutate({ id: editing.id, ...payload }, { onSuccess: () => setShowForm(false) });
-    } else {
-      payload.status = 'solicitado';
-      createLoan.mutate(payload, { onSuccess: () => setShowForm(false) });
-    }
   };
 
   const handleApprove = (loan: EmployeeLoan) => {
@@ -513,82 +471,18 @@ export default function Prestamos() {
       </div>
 
       {/* Create/Edit Dialog */}
-      <Dialog open={showForm} onOpenChange={o => { if (!o) { setShowForm(false); resetForm(); } }}>
-        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editing ? 'Editar Préstamo' : 'Nuevo Préstamo'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Empleado *</Label>
-              <Select value={formData.employee_id} onValueChange={v => setFormData(p => ({ ...p, employee_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
-                <SelectContent>
-                  {employees.filter(e => e.is_active).map(e => (
-                    <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name} - {e.document_number}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Tipo de Préstamo</Label>
-                <Select value={formData.loan_type} onValueChange={v => setFormData(p => ({ ...p, loan_type: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(LOAN_TYPE_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Fecha Inicio *</Label>
-                <Input type="date" value={formData.start_date} onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))} />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="space-y-2">
-                <Label>Monto Total *</Label>
-                <Input type="number" min="0" value={formData.total_amount} onChange={e => setFormData(p => ({ ...p, total_amount: e.target.value }))} placeholder="0" />
-              </div>
-              <div className="space-y-2">
-                <Label>Interés (%)</Label>
-                <Input type="number" min="0" step="0.01" value={formData.interest_rate} onChange={e => setFormData(p => ({ ...p, interest_rate: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label>N° Cuotas *</Label>
-                <Input type="number" min="1" value={formData.installments} onChange={e => setFormData(p => ({ ...p, installments: e.target.value }))} />
-              </div>
-            </div>
-
-            {/* Preview */}
-            {Number(formData.total_amount) > 0 && Number(formData.installments) > 0 && (
-              <Card className="bg-muted/50">
-                <CardContent className="pt-3 pb-2 text-sm space-y-1">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:justify-between"><span className="text-muted-foreground">Total con intereses:</span><span className="font-medium">{formatCurrency(Number(formData.total_amount) * (1 + Number(formData.interest_rate) / 100))}</span></div>
-                  <div className="flex flex-col gap-1 sm:flex-row sm:justify-between"><span className="text-muted-foreground">Valor por cuota:</span><span className="font-medium">{formatCurrency((Number(formData.total_amount) * (1 + Number(formData.interest_rate) / 100)) / Number(formData.installments))}</span></div>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="space-y-2">
-              <Label>Descripción</Label>
-              <Input value={formData.description} onChange={e => setFormData(p => ({ ...p, description: e.target.value }))} placeholder="Descripción del préstamo" />
-            </div>
-            <div className="space-y-2">
-              <Label>Observaciones</Label>
-              <Textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2} />
-            </div>
-          </div>
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={!formData.employee_id || !formData.total_amount || !formData.installments}>
-              {editing ? 'Actualizar' : 'Registrar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LoanFormDialog 
+        open={showForm} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowForm(false);
+            resetForm();
+          } else {
+            setShowForm(true);
+          }
+        }} 
+        loan={editing} 
+      />
 
       {/* Detail Dialog */}
       <Dialog open={!!detailLoan} onOpenChange={o => { if (!o) setDetailLoan(null); }}>

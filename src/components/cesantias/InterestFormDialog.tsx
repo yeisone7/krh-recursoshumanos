@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
+import { Percent } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -160,173 +161,206 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto p-4 sm:w-full sm:p-6">
-        <DialogHeader>
-          <DialogTitle>
-            {interest ? 'Editar Pago de Intereses' : 'Nuevo Pago de Intereses'}
-          </DialogTitle>
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
+        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-violet/10 via-background to-violet/5 border-b border-violet/10">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-violet flex items-center justify-center shadow-lg shadow-violet/20">
+              <Percent className="w-6 h-6 text-violet-foreground" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-black tracking-tighter">
+                {interest ? 'Editar Intereses' : 'Nuevo Pago'}
+              </DialogTitle>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Periodo {form.watch('year')}</p>
+            </div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="employee_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Empleado *</FormLabel>
-                    <FormControl>
-                      <SearchableSelect
-                        options={employeeOptions}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Seleccionar empleado"
-                        searchPlaceholder="Buscar empleado..."
-                        disabled={!!interest}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 space-y-8">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-8 rounded-full bg-violet" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Información del Empleado</span>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="employee_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Empleado *</FormLabel>
+                      <FormControl>
+                        <SearchableSelect
+                          options={employeeOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Seleccionar empleado"
+                          searchPlaceholder="Buscar empleado..."
+                          disabled={!!interest}
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="year"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Año *</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-8 rounded-full bg-violet" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cálculo de Intereses</span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="cesantias_balance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Saldo Cesantías *</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="interest_rate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tasa (%) *</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="days_accrued"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Días *</FormLabel>
+                      <FormControl>
+                        <Input type="number" max={360} {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
-                name="year"
+                name="interest_amount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Año *</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Valor Intereses *</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} disabled={!!interest} />
+                      <Input type="number" {...field} className="h-12 rounded-xl border-violet/30 bg-violet/5 text-violet focus:bg-violet/10 transition-all font-black text-xl" />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-[10px] font-bold" />
                   </FormItem>
                 )}
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="cesantias_balance"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Saldo Cesantías *</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} disabled={!!interest} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-8 rounded-full bg-violet" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Pago y Estado</span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="due_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Límite *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="payment_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Pago</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold text-violet" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
-                name="interest_rate"
+                name="is_paid"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tasa (%) *</FormLabel>
+                  <FormItem className="flex items-center gap-3 bg-violet/5 p-4 rounded-2xl border border-violet/10 transition-all hover:bg-violet/10">
                     <FormControl>
-                      <Input type="number" step="0.01" {...field} disabled={!!interest} />
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} className="h-5 w-5 rounded-md border-violet data-[state=checked]:bg-violet data-[state=checked]:text-violet-foreground" />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="days_accrued"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Días *</FormLabel>
-                    <FormControl>
-                      <Input type="number" max={360} {...field} disabled={!!interest} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="interest_amount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor Intereses *</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} className="font-semibold text-lg" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="due_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha Límite *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} disabled={!!interest} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="payment_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha Pago</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-xs font-black uppercase tracking-widest text-violet cursor-pointer">Marcar como pagado</FormLabel>
+                      <p className="text-[10px] text-muted-foreground font-medium">Confirma que el pago ha sido efectuado al empleado</p>
+                    </div>
                   </FormItem>
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="is_paid"
-              render={({ field }) => (
-                <FormItem className="flex items-center gap-2">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <FormLabel className="!mt-0">Marcar como pagado</FormLabel>
-                </FormItem>
-              )}
-            />
 
             <FormField
               control={form.control}
               name="observations"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observaciones</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={2} />
+                    <Textarea {...field} rows={3} className="rounded-2xl border-border/50 bg-background/50 focus:bg-background transition-all resize-none" />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[10px] font-bold" />
                 </FormItem>
               )}
             />
 
-            <div className="sticky bottom-0 -mx-4 grid grid-cols-1 gap-2 border-t border-border bg-background/95 px-4 pt-3 pb-1 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:pt-4 sm:backdrop-blur-0">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-border/50">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-background transition-all">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {interest ? 'Actualizar' : 'Registrar'}
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-violet/20 hover:shadow-xl transition-all">
+                {interest ? 'Actualizar Registro' : 'Registrar Pago'}
               </Button>
             </div>
           </form>

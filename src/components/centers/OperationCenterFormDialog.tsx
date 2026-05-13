@@ -15,6 +15,11 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
   Form,
   FormControl,
   FormField,
@@ -175,7 +180,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95dvh] w-[calc(100vw-1rem)] max-w-2xl p-0 overflow-hidden sm:w-full border-none shadow-2xl bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex flex-col max-h-[95dvh] w-[calc(100vw-1rem)] max-w-2xl p-0 overflow-hidden sm:w-full border-none shadow-2xl bg-background/95 backdrop-blur-xl">
         <DialogTitle className="sr-only">
           {isEditing ? 'Editar Centro de Operación' : 'Nuevo Centro de Operación'}
         </DialogTitle>
@@ -183,21 +188,21 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
           Formulario para la gestión de centros de operación de la empresa.
         </DialogDescription>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/15 via-background to-accent/10 px-4 pt-10 pb-8 sm:px-10 sm:pt-12">
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/15 via-background to-accent/10 px-4 pt-4 pb-2 sm:px-10 sm:pt-6">
           {/* Enhanced decorative patterns */}
           <div className="absolute top-0 right-0 -mr-24 -mt-24 w-80 h-80 rounded-full bg-primary/10 blur-[100px] pointer-events-none animate-pulse" />
           <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 rounded-full bg-accent/10 blur-[80px] pointer-events-none" />
           
-          <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8">
+          <div className="relative flex flex-col md:flex-row items-center md:items-start gap-4">
             {/* Branded Avatar */}
             <div className="relative group shrink-0">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative w-20 h-20 rounded-2xl bg-background flex items-center justify-center text-primary font-black text-3xl shadow-xl border border-primary/10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-background flex items-center justify-center text-primary font-black text-2xl sm:text-3xl shadow-xl border border-primary/10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                 {form.watch('name') ? form.watch('name').substring(0, 2).toUpperCase() : 'CO'}
               </div>
             </div>
 
-            <div className="flex-1 space-y-3 text-center md:text-left">
+            <div className="flex-1 space-y-0.5 sm:space-y-1 text-center md:text-left">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                 <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 py-0.5 px-3 rounded-full font-bold uppercase tracking-widest text-[9px]">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2 animate-ping" />
@@ -233,10 +238,10 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="px-6 pt-4 sm:px-10">
-                <TabsList className="w-full h-12 bg-muted/30 p-1.5 rounded-2xl border border-primary/5">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+              <div className="px-6 pt-0 sm:px-10 shrink-0">
+                <TabsList className="w-full h-10 bg-muted/30 p-1 rounded-2xl border border-primary/5">
                   {tabItems.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
@@ -250,10 +255,10 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                 </TabsList>
               </div>
 
-              <ScrollArea className="h-[calc(95dvh-400px)] px-6 py-6 sm:px-10 sm:py-8">
+              <ScrollArea className="flex-1 px-4 py-1 sm:px-8 sm:py-2">
                 {/* General Tab */}
-                <TabsContent value="general" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+                <TabsContent value="general" className="mt-0 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="name"
@@ -332,8 +337,8 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                 </TabsContent>
 
                 {/* Location Tab */}
-                <TabsContent value="location" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="grid grid-cols-1 gap-8">
+                <TabsContent value="location" className="mt-0 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="grid grid-cols-1 gap-4">
                     <FormField
                       control={form.control}
                       name="address"
@@ -351,7 +356,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                       )}
                     />
 
-                    <div className="bg-primary/[0.02] p-8 rounded-[2rem] border border-primary/5 relative overflow-hidden group">
+                    <div className="bg-primary/[0.02] p-4 rounded-2xl border border-primary/5 relative overflow-hidden group">
                       <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                          <Globe className="w-24 h-24" />
                       </div>
@@ -402,21 +407,21 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                 </TabsContent>
 
                 {/* Contract Tab */}
-                <TabsContent value="contract" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="relative overflow-hidden bg-gradient-to-br from-primary/[0.08] to-accent/[0.04] p-8 rounded-[2rem] border border-primary/10 shadow-inner">
+                <TabsContent value="contract" className="mt-0 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="relative overflow-hidden bg-gradient-to-br from-primary/[0.08] to-accent/[0.04] p-5 rounded-2xl border border-primary/10 shadow-inner">
                     <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
                     
-                    <div className="flex items-center gap-4 mb-10">
-                      <div className="w-12 h-12 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-primary-foreground transform -rotate-3">
-                        <Handshake className="w-6 h-6" />
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-primary-foreground transform -rotate-3">
+                        <Handshake className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-xl font-black text-foreground tracking-tight">Periodo de Vigencia</h4>
-                        <p className="text-xs font-bold text-primary/70 uppercase tracking-widest">Cronograma Contractual Comercial</p>
+                        <h4 className="text-lg font-black text-foreground tracking-tight">Periodo de Vigencia</h4>
+                        <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest">Cronograma Contractual Comercial</p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 relative z-10">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 relative z-10">
                       <FormField
                         control={form.control}
                         name="contractStartDate"
@@ -424,13 +429,32 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                           <FormItem className="flex flex-col">
                             <FormLabel className="text-[10px] font-black uppercase tracking-wider text-primary/80 mb-2 ml-1">Apertura de Operación</FormLabel>
                             <FormControl>
-                               <DatePickerWithDropdowns
-                                 selected={field.value ?? undefined}
-                                 onSelect={field.onChange}
-                                 fromYear={2000}
-                                 toYear={new Date().getFullYear() + 5}
-                                 className="h-12 rounded-2xl bg-background border-primary/10 font-bold"
-                               />
+                               <Popover>
+                                 <PopoverTrigger asChild>
+                                   <Button
+                                     variant="outline"
+                                     className={cn(
+                                       "h-12 w-full justify-start text-left font-bold rounded-2xl bg-background border-primary/10",
+                                       !field.value && "text-muted-foreground"
+                                     )}
+                                   >
+                                     <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                                     {field.value ? (
+                                       format(field.value, "PPP", { locale: es })
+                                     ) : (
+                                       <span>Seleccionar fecha</span>
+                                     )}
+                                   </Button>
+                                 </PopoverTrigger>
+                                 <PopoverContent className="w-auto p-0 bg-background" align="start">
+                                   <DatePickerWithDropdowns
+                                     selected={field.value ?? undefined}
+                                     onSelect={field.onChange}
+                                     fromYear={2000}
+                                     toYear={new Date().getFullYear() + 5}
+                                   />
+                                 </PopoverContent>
+                               </Popover>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -444,13 +468,32 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                           <FormItem className="flex flex-col">
                             <FormLabel className="text-[10px] font-black uppercase tracking-wider text-primary/80 mb-2 ml-1">Clausura Estimada</FormLabel>
                             <FormControl>
-                               <DatePickerWithDropdowns
-                                 selected={field.value ?? undefined}
-                                 onSelect={field.onChange}
-                                 fromYear={2000}
-                                 toYear={new Date().getFullYear() + 10}
-                                 className="h-12 rounded-2xl bg-background border-primary/10 font-bold"
-                               />
+                               <Popover>
+                                 <PopoverTrigger asChild>
+                                   <Button
+                                     variant="outline"
+                                     className={cn(
+                                       "h-12 w-full justify-start text-left font-bold rounded-2xl bg-background border-primary/10",
+                                       !field.value && "text-muted-foreground"
+                                     )}
+                                   >
+                                     <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                                     {field.value ? (
+                                       format(field.value, "PPP", { locale: es })
+                                     ) : (
+                                       <span>Seleccionar fecha</span>
+                                     )}
+                                   </Button>
+                                 </PopoverTrigger>
+                                 <PopoverContent className="w-auto p-0 bg-background" align="start">
+                                   <DatePickerWithDropdowns
+                                     selected={field.value ?? undefined}
+                                     onSelect={field.onChange}
+                                     fromYear={2000}
+                                     toYear={new Date().getFullYear() + 10}
+                                   />
+                                 </PopoverContent>
+                               </Popover>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -458,7 +501,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                       />
                     </div>
                     
-                    <div className="mt-10 p-4 rounded-xl bg-background/50 border border-primary/5 flex items-start gap-3">
+                    <div className="mt-4 p-3 rounded-xl bg-background/50 border border-primary/5 flex items-start gap-3">
                        <Target className="w-5 h-5 text-primary shrink-0" />
                        <p className="text-[11px] font-medium text-muted-foreground leading-relaxed italic">
                           Asegúrese de que las fechas comerciales coincidan con los anexos legales firmados con el cliente principal para evitar discrepancias en la facturación.
@@ -468,7 +511,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                 </TabsContent>
               </ScrollArea>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 px-6 py-6 sm:px-10 sm:py-8 bg-muted/5 border-t border-border/50">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 px-6 py-3 sm:px-10 sm:py-4 bg-muted/5 border-t border-border/50 shrink-0">
                 <Button 
                   type="button" 
                   variant="ghost" 

@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -65,20 +66,36 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] overflow-y-auto p-4 sm:max-w-lg sm:p-6">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="h-5 w-5 text-primary" />
-            Exportar Reporte de Incapacidades
-          </DialogTitle>
-          <DialogDescription>
-            Genera un archivo Excel con el historial de incapacidades, días perdidos y montos de recobro.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] overflow-y-auto p-0 bg-background border-border/50 shadow-2xl rounded-[2rem] sm:max-w-lg">
+        
+        {/* Premium Gradient Header */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
+          <DialogHeader className="relative z-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
+                <FileSpreadsheet className="w-6 h-6" />
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+                  REPORTES
+                </Badge>
+                <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
+                  Exportar Excel
+                </DialogTitle>
+                <DialogDescription className="font-medium mt-1">
+                  Genera un reporte completo con el historial de incapacidades
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
 
-        <div className="space-y-4 py-4">
-          {/* Preset Ranges */}
-          <div className="space-y-2">
+        <div className="px-8 py-6 space-y-6">
+          <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+            {/* Preset Ranges */}
+            <div className="space-y-3">
             <Label>Rangos rápidos</Label>
             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {presetRanges.map((range) => (
@@ -91,10 +108,10 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
                     setEndDate(range.end);
                   }}
                   className={cn(
-                    'w-full sm:w-auto',
+                    'w-full sm:w-auto rounded-xl',
                     startDate.getTime() === range.start.getTime() &&
                     endDate.getTime() === range.end.getTime() &&
-                    'bg-primary text-primary-foreground'
+                    'bg-primary text-primary-foreground font-bold shadow-md'
                   )}
                 >
                   {range.label}
@@ -111,7 +128,7 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="w-full justify-start text-left font-normal rounded-xl h-12"
                   >
                     {format(startDate, 'PPP', { locale: es })}
                   </Button>
@@ -133,7 +150,7 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="w-full justify-start text-left font-normal rounded-xl h-12"
                   >
                     {format(endDate, 'PPP', { locale: es })}
                   </Button>
@@ -182,9 +199,11 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
             </div>
           </div>
 
+          </div>
+
           {/* Info */}
-          <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground mb-1">El reporte incluye:</p>
+          <div className="rounded-2xl bg-muted/50 p-4 text-sm text-muted-foreground border border-border/50">
+            <p className="font-bold text-foreground mb-2 text-xs uppercase tracking-widest">El reporte incluye:</p>
             <ul className="list-disc list-inside space-y-1">
               <li>Hoja de detalle con todas las incapacidades</li>
               <li>Resumen mensual con días perdidos y montos</li>
@@ -193,11 +212,11 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
           </div>
         </div>
 
-        <DialogFooter className="grid grid-cols-2 gap-3 sm:flex sm:gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end px-8 py-6 border-t bg-muted/10">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
             Cancelar
           </Button>
-          <Button onClick={handleExport} disabled={exportMutation.isPending} className="w-full sm:w-auto">
+          <Button onClick={handleExport} disabled={exportMutation.isPending} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto">
             {exportMutation.isPending ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -205,7 +224,7 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
             )}
             Exportar Excel
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -55,6 +55,7 @@ import {
   EVENT_STYLES,
 } from '@/hooks/useUnifiedCalendar';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const EVENT_TYPE_LABELS: Record<CalendarEventType, string> = {
   vacation: 'Vacaciones',
@@ -159,68 +160,82 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 sm:gap-4">
       {/* Summary KPI Row */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {(Object.keys(EVENT_TYPE_LABELS) as CalendarEventType[]).map((type) => {
           const isActive = enabledTypes.includes(type);
           return (
-            <button
+            <motion.button
               key={type}
+              whileHover={{ y: -4, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => toggleEventType(type)}
               className={cn(
-                'min-w-0 rounded-xl border px-3 py-2.5 text-left transition-all sm:flex sm:items-center sm:gap-3 sm:px-4 sm:py-3',
+                'relative flex flex-col items-center justify-center rounded-[2rem] border p-4 transition-all duration-300 text-center',
                 isActive
-                  ? 'bg-white shadow-sm border-border dark:bg-background'
-                  : 'bg-white/60 border-transparent opacity-60 dark:bg-muted/40',
+                  ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-primary/20 ring-1 ring-primary/5'
+                  : 'bg-muted/30 border-transparent opacity-50 grayscale hover:grayscale-0 hover:opacity-100',
               )}
             >
-              <div className={cn('mb-2 inline-flex rounded-lg p-2 sm:mb-0', EVENT_STYLES[type].bgColor, EVENT_STYLES[type].color)}>
+              <div className={cn(
+                'mb-3 flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110',
+                EVENT_STYLES[type].bgColor, 
+                EVENT_STYLES[type].color
+              )}>
                 {EVENT_ICONS[type]}
               </div>
-              <div className="min-w-0">
-                <p className="text-base font-bold leading-none sm:text-lg">{typeCounts[type]}</p>
-                <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-black tracking-tight leading-none">{typeCounts[type]}</span>
+                <span className="mt-1 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
                   {EVENT_TYPE_LABELS[type]}
-                </p>
+                </span>
               </div>
-            </button>
+              {isActive && (
+                <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+              )}
+            </motion.button>
           );
         })}
       </div>
 
       {/* Main layout: Calendar + Sidebar */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row lg:gap-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-6 overflow-hidden">
         {/* Calendar Card */}
-        <Card className="flex min-h-[420px] min-w-0 flex-1 flex-col sm:min-h-[640px] lg:min-h-0">
+        <Card className="flex min-h-[420px] min-w-0 flex-1 flex-col sm:min-h-[640px] lg:min-h-0 rounded-[2.5rem] border-border/50 shadow-[0_20px_50px_rgba(0,0,0,0.02)] overflow-hidden">
           {/* Header */}
-          <div className="flex flex-col gap-3 px-3 pb-3 pt-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:justify-start">
-              <h2 className="text-base font-semibold capitalize sm:text-lg">{viewTitle}</h2>
-              <div className="flex items-center gap-1 self-start sm:self-auto">
-                <Button variant="ghost" size="sm" onClick={goToToday} className="h-7 text-xs">
+          <div className="flex flex-col gap-4 px-4 pb-4 pt-6 xl:flex-row xl:items-center xl:justify-between border-b border-border/40">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
+              <h2 className="text-xl font-black uppercase tracking-widest text-foreground/90 whitespace-nowrap">
+                {viewTitle}
+              </h2>
+              <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-2xl border border-border/50 w-fit">
+                <Button variant="ghost" size="sm" onClick={goToToday} className="h-9 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-background transition-all">
                   Hoy
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={goToPrevious}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={goToNext}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                <Separator orientation="vertical" className="h-4 mx-1 opacity-50" />
+                <div className="flex items-center gap-0.5">
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-background" onClick={goToPrevious}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-background" onClick={goToNext}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-              <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week' | 'agenda')}>
-                <TabsList className="flex h-auto w-full max-w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:inline-flex sm:w-auto">
-                  <TabsTrigger value="agenda" className="min-h-8 shrink-0 gap-1 px-2.5 text-xs whitespace-nowrap sm:px-3">
-                    <List className="h-3.5 w-3.5" />
+            <div className="flex flex-wrap items-center gap-3">
+              <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week' | 'agenda')} className="w-full sm:w-auto">
+                <TabsList className="bg-muted/30 p-1.5 rounded-2xl border border-border/50 w-full sm:w-auto overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <TabsTrigger value="agenda" className="rounded-xl px-4 py-2 font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shadow-sm transition-all whitespace-nowrap">
+                    <List className="mr-2 h-3.5 w-3.5" />
                     Agenda
                   </TabsTrigger>
-                  <TabsTrigger value="month" className="min-h-8 shrink-0 gap-1 px-2.5 text-xs whitespace-nowrap sm:px-3">
-                    <CalendarIcon className="h-3.5 w-3.5" />
+                  <TabsTrigger value="month" className="rounded-xl px-4 py-2 font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shadow-sm transition-all whitespace-nowrap">
+                    <CalendarIcon className="mr-2 h-3.5 w-3.5" />
                     Mes
                   </TabsTrigger>
-                  <TabsTrigger value="week" className="min-h-8 shrink-0 gap-1 px-2.5 text-xs whitespace-nowrap sm:px-3">
-                    <CalendarIcon className="h-3.5 w-3.5" />
+                  <TabsTrigger value="week" className="rounded-xl px-4 py-2 font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shadow-sm transition-all whitespace-nowrap">
+                    <CalendarIcon className="mr-2 h-3.5 w-3.5" />
                     Semana
                   </TabsTrigger>
                 </TabsList>
@@ -228,11 +243,11 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 w-full gap-1.5 sm:w-auto">
-                    <Filter className="h-3.5 w-3.5" />
+                  <Button variant="outline" size="sm" className="h-11 rounded-2xl border-2 px-5 font-black uppercase tracking-widest text-[9px] hover:bg-muted/50 transition-all ml-auto sm:ml-0">
+                    <Filter className="mr-2 h-4 w-4 text-primary" />
                     Filtros
                     {enabledTypes.length < 5 && (
-                      <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                      <Badge variant="default" className="ml-2 h-5 px-1.5 text-[10px] rounded-full">
                         {enabledTypes.length}
                       </Badge>
                     )}
@@ -263,10 +278,8 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
             </div>
           </div>
 
-          <Separator />
-
           {/* Calendar body */}
-          <CardContent className="min-h-0 flex-1 overflow-hidden p-2 sm:p-3">
+          <CardContent className="min-h-0 flex-1 overflow-hidden p-0">
             {isLoading ? (
               <div className="h-full flex items-center justify-center text-muted-foreground">
                 Cargando eventos...
@@ -501,79 +514,110 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
         )}
 
         {/* Sidebar: Selected day detail */}
-        <Card className="hidden lg:flex w-[300px] flex-col shrink-0">
-          <div className="px-4 pt-4 pb-3">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
-              Agenda del día
-            </p>
-            <p className="text-base font-bold capitalize mt-1">
-              {format(selectedDay, "EEEE d 'de' MMMM", { locale: es })}
-            </p>
-            {isToday(selectedDay) && (
-              <Badge variant="default" className="mt-1.5 text-[10px]">Hoy</Badge>
-            )}
+        <Card className="hidden xl:flex w-[340px] flex-col shrink-0 rounded-[2.5rem] border-border/50 shadow-xl bg-background/95 backdrop-blur-xl">
+          <div className="px-6 pt-8 pb-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black">
+                Agenda del día
+              </p>
+              {isToday(selectedDay) && (
+                <Badge variant="default" className="bg-primary/10 text-primary border-transparent hover:bg-primary/20 text-[9px] font-black uppercase tracking-widest rounded-full px-3">
+                  Hoy
+                </Badge>
+              )}
+            </div>
+            <h3 className="text-xl font-black capitalize mt-2 text-foreground">
+              {format(selectedDay, "EEEE d", { locale: es })}
+              <span className="text-primary block text-sm font-bold opacity-80">{format(selectedDay, "'de' MMMM yyyy", { locale: es })}</span>
+            </h3>
           </div>
-          <Separator />
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <div className="p-4 space-y-2">
+          
+          <div className="px-6 py-4">
+            <Separator className="opacity-50" />
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 custom-scrollbar">
+            <div className="space-y-3 pb-6">
               {selectedDayEvents.length === 0 ? (
-                <div className="py-10 text-center text-muted-foreground">
-                  <CalendarIcon className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">Sin eventos este día</p>
+                <div className="py-20 text-center">
+                  <div className="mx-auto w-16 h-16 rounded-3xl bg-muted/30 flex items-center justify-center mb-4">
+                    <CalendarIcon className="h-8 w-8 text-muted-foreground/30" />
+                  </div>
+                  <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Sin eventos</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">Tu agenda está libre hoy</p>
                 </div>
               ) : (
                 selectedDayEvents.map((event) => (
-                  <button
+                  <motion.button
                     key={event.id}
+                    whileHover={{ scale: 1.02, x: 4 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handleEventClick(event)}
                     className={cn(
-                      'w-full text-left rounded-lg border p-3 transition-all hover:shadow-sm group',
-                      'hover:border-primary/30',
+                      'group w-full text-left rounded-3xl border p-4 transition-all duration-300 relative overflow-hidden',
+                      'bg-card hover:shadow-lg hover:border-primary/20 hover:shadow-primary/5',
                     )}
                   >
-                    <div className="flex items-start gap-2.5">
-                      <div className={cn('rounded-md p-1.5 mt-0.5 shrink-0', event.bgColor, event.color)}>
+                    <div className="flex items-start gap-4">
+                      <div className={cn(
+                        'flex h-12 w-12 items-center justify-center rounded-2xl shrink-0 transition-transform duration-300 group-hover:rotate-12',
+                        event.bgColor, 
+                        event.color
+                      )}>
                         {EVENT_ICONS[event.type]}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{event.title}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        <p className="text-sm font-black text-foreground truncate uppercase tracking-wide">
+                          {event.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1 font-medium">
                           {event.description}
                         </p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        
+                        <div className="flex items-center gap-3 mt-3">
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest",
+                            event.bgColor,
+                            event.color
+                          )}>
                             {EVENT_TYPE_LABELS[event.type]}
-                          </Badge>
+                          </span>
                           {!isSameDay(event.startDate, event.endDate) && (
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-tighter">
                               {format(event.startDate, 'dd/MM')} – {format(event.endDate, 'dd/MM')}
                             </span>
                           )}
                         </div>
                       </div>
-                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-1" />
+                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ExternalLink className="h-4 w-4 text-primary" />
+                      </div>
                     </div>
-                  </button>
+                  </motion.button>
                 ))
               )}
             </div>
           </div>
-          {/* Bottom summary */}
-          <Separator />
-          <div className="p-3 flex flex-wrap gap-1.5">
-            {enabledTypes.map((type) => (
-              <div
-                key={type}
-                className={cn(
-                  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium',
-                  EVENT_STYLES[type].bgColor,
-                  EVENT_STYLES[type].color,
-                )}
-              >
-                <div className={cn('w-1.5 h-1.5 rounded-full', EVENT_STYLES[type].bgColor)} />
-                {EVENT_TYPE_LABELS[type]}
-              </div>
-            ))}
+
+          {/* Bottom legend summary */}
+          <div className="p-6 bg-muted/20 border-t border-border/50">
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4">Leyenda</p>
+            <div className="flex flex-wrap gap-2">
+              {enabledTypes.map((type) => (
+                <div
+                  key={type}
+                  className={cn(
+                    'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-black uppercase tracking-widest border transition-colors',
+                    EVENT_STYLES[type].bgColor,
+                    EVENT_STYLES[type].color,
+                    'border-transparent'
+                  )}
+                >
+                  <div className={cn('w-2 h-2 rounded-full ring-2 ring-background', EVENT_STYLES[type].color.replace('text-', 'bg-'))} />
+                  {EVENT_TYPE_LABELS[type]}
+                </div>
+              ))}
+            </div>
           </div>
         </Card>
       </div>

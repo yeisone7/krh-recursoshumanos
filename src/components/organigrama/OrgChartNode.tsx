@@ -43,7 +43,7 @@ export function OrgChartNode({
 
   return (
     <div className="flex flex-col items-center">
-      {level > 0 && <div className="h-6 w-px bg-border/60" />}
+      {level > 0 && <div className="h-8 w-px bg-gradient-to-b from-primary/40 to-primary/10" />}
 
       <motion.div
         layout
@@ -51,25 +51,33 @@ export function OrgChartNode({
         animate={{ 
           opacity: 1, 
           scale: 1,
-          borderColor: highlighted ? 'hsl(var(--primary))' : 'hsl(var(--border))',
-          boxShadow: highlighted ? '0 0 20px -5px hsl(var(--primary)/0.4)' : '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+          borderColor: highlighted ? 'hsl(var(--primary))' : 'hsl(var(--border)/0.5)',
+          boxShadow: highlighted ? '0 10px 40px -10px hsl(var(--primary)/0.3)' : '0 10px 30px rgba(0,0,0,0.02)',
         }}
+        whileHover={{ y: -4, scale: 1.02 }}
         className={cn(
-          "relative min-w-[220px] max-w-[280px] rounded-xl border-2 bg-card p-4 transition-all",
-          "hover:border-primary/40 hover:shadow-md cursor-pointer",
-          level === 0 && !highlighted && "border-primary/20 bg-primary/5",
-          highlighted && "border-primary ring-2 ring-primary/20 ring-offset-2 ring-offset-background"
+          "relative min-w-[240px] max-w-[300px] rounded-[2rem] border-2 bg-background/80 backdrop-blur-xl p-6 transition-all duration-300",
+          "hover:border-primary/30 cursor-pointer overflow-hidden group",
+          level === 0 && !highlighted && "border-primary/20 shadow-primary/5 bg-primary/[0.02]",
+          highlighted && "border-primary ring-4 ring-primary/10"
         )}
         onClick={hasChildren ? onToggle : undefined}
       >
+        {/* Level accent line */}
+        <div className={cn(
+          "absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r transition-all duration-500",
+          level === 0 ? "from-primary via-primary/80 to-primary/60" : "from-border/40 to-border/20",
+          highlighted && "from-primary to-primary/40"
+        )} />
+
         {hasChildren && (
-          <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 z-10">
+          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-10">
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 onToggle();
               }}
-              className="flex h-7 w-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:text-primary hover:border-primary transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-2xl border-2 bg-background text-muted-foreground shadow-lg hover:text-primary hover:border-primary hover:scale-110 active:scale-95 transition-all duration-300"
             >
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
@@ -81,62 +89,85 @@ export function OrgChartNode({
         )}
 
         {/* Position name */}
-        <div className="text-center mb-3">
-          <div className="mb-1 flex min-w-0 items-start justify-center gap-1.5">
-            <Briefcase className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", highlighted ? "text-primary" : "text-muted-foreground")} />
-            <h3 className="break-words text-sm font-bold leading-tight text-foreground">{position.name}</h3>
+        <div className="text-left mb-5 relative z-10">
+          <div className="flex items-start gap-3">
+            <div className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-500 group-hover:rotate-6 shadow-inner",
+              highlighted || level === 0 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+            )}>
+              <Briefcase className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="break-words text-sm font-black leading-tight text-foreground uppercase tracking-wide group-hover:text-primary transition-colors">
+                {position.name}
+              </h3>
+              {position.areaName && (
+                <p className="mt-1 break-words text-[10px] uppercase tracking-[0.15em] font-black text-muted-foreground/60">{position.areaName}</p>
+              )}
+            </div>
           </div>
-          {position.areaName && (
-            <p className="mt-0.5 break-words text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/80">{position.areaName}</p>
-          )}
         </div>
 
         {/* Employee info */}
         {mainEmployee ? (
-          <div className="flex min-w-0 items-center gap-3 border-t border-border/50 pt-3">
-            <Avatar className="h-10 w-10 shrink-0 border border-border/50">
-              <AvatarImage src={mainEmployee.avatar_url} />
-              <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-                {getInitials(mainEmployee.first_name, mainEmployee.last_name)}
-              </AvatarFallback>
-            </Avatar>
+          <div className="flex min-w-0 items-center gap-4 border-t border-border/40 pt-4 relative z-10">
+            <div className="relative">
+              <Avatar className="h-12 w-12 shrink-0 border-2 border-background shadow-md">
+                <AvatarImage src={mainEmployee.avatar_url} className="object-cover" />
+                <AvatarFallback className="bg-primary/5 text-primary text-xs font-black uppercase tracking-tighter">
+                  {getInitials(mainEmployee.first_name, mainEmployee.last_name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-background border-2 border-background shadow-sm flex items-center justify-center">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              </div>
+            </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">
+              <p className="text-sm font-black text-foreground truncate uppercase tracking-tight">
                 {mainEmployee.first_name} {mainEmployee.last_name}
               </p>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                {position.employees.length} {position.employees.length === 1 ? 'Persona' : 'Personas'}
-              </p>
+              <div className="mt-1 flex items-center gap-2">
+                <div className="flex items-center justify-center h-4 w-4 rounded-full bg-muted text-muted-foreground">
+                  <Users className="h-2.5 w-2.5" />
+                </div>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  {position.employees.length} {position.employees.length === 1 ? 'Persona' : 'Personas'}
+                </span>
+              </div>
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-3 border-t border-border/50 pt-3 text-muted-foreground">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/50 border border-dashed border-border">
-              <Users className="h-4 w-4" />
+          <div className="flex items-center gap-4 border-t border-border/40 pt-4 text-muted-foreground relative z-10">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted/30 border-2 border-dashed border-border/40 transition-colors group-hover:border-primary/20">
+              <Users className="h-5 w-5 opacity-40 group-hover:text-primary transition-colors" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-medium italic">Cargo Vacante</span>
-              <span className="text-[10px]">Sin personal asignado</span>
+              <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/40">Cargo Vacante</span>
+              <span className="text-[9px] font-bold uppercase tracking-tighter opacity-60">Asignación pendiente</span>
             </div>
           </div>
         )}
+
+        {/* Decorative background element */}
+        <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700 pointer-events-none transform rotate-12 scale-150">
+          <Briefcase className="h-24 w-24" />
+        </div>
       </motion.div>
 
       {/* Children */}
       <AnimatePresence>
         {hasChildren && isExpanded && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col items-center"
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="flex flex-col items-center w-full"
           >
-            <div className="h-8 w-px bg-border/60" />
-            <div className="relative">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px bg-border/60"
-                style={{ width: 'calc(100% - 240px)' }} />
-              <div className="flex gap-8 pt-0 sm:gap-16">
+            <div className="h-12 w-px bg-gradient-to-b from-primary/20 to-primary/5" />
+            <div className="relative w-full">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent w-full" />
+              <div className="flex gap-12 pt-0 sm:gap-24 justify-center">
                 {children}
               </div>
             </div>

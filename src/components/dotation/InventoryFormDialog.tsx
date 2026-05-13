@@ -108,140 +108,193 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-lg">
-        <DialogHeader className="pr-12">
-          <DialogTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5 text-primary" />
-            {editItem ? 'Editar Artículo' : 'Nuevo Artículo de Inventario'}
-          </DialogTitle>
-          <DialogDescription>
-            {editItem ? 'Modifica los datos del artículo' : 'Agrega un nuevo artículo al inventario de dotación'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+        {/* Header con gradiente */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          <div className="relative flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <Package className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="font-black text-2xl tracking-tighter sm:text-3xl truncate">
+                {editItem ? 'Editar Artículo' : 'Nuevo Ingreso'}
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground font-medium truncate">
+                {editItem ? 'Actualiza los niveles de stock y parámetros' : 'Registra un nuevo producto en el inventario'}
+              </DialogDescription>
+            </div>
+          </div>
+        </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 overflow-y-auto pr-1">
-            <FormField
-              control={form.control}
-              name="operation_center_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Centro de Operación</FormLabel>
-                  <Select onValueChange={(v) => field.onChange(v === '__general__' ? '' : v)} value={field.value || '__general__'}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="General (todos los centros)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="__general__">General</SelectItem>
-                      {centers.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex-1 min-h-0 flex flex-col">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+              
+              {/* Sección: Clasificación */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 px-1">
+                  <div className="h-4 w-1 rounded-full bg-primary" />
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Clasificación de Inventario</h3>
+                </div>
 
-            <FormField
-              control={form.control}
-              name="item_type"
-              rules={{ required: 'Seleccione el tipo de dotación' }}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Dotación *</FormLabel>
-                  <FormControl>
-                    <SearchableSelect
-                      options={activeItemTypes.map((t: any) => ({
-                        value: t.id,
-                        label: `${t.name}${t.code ? ` (${t.code})` : ''}`,
-                      }))}
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      placeholder="Seleccionar tipo de dotación"
-                      searchPlaceholder="Buscar tipo..."
-                      emptyMessage="No se encontraron tipos de dotación."
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="operation_center_id"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Centro de Operación</FormLabel>
+                      <Select onValueChange={(v) => field.onChange(v === '__general__' ? '' : v)} value={field.value || '__general__'}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 rounded-xl border-border/50 bg-background/50 font-bold text-sm shadow-sm transition-all focus:ring-primary/20">
+                            <SelectValue placeholder="General (todos los centros)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-xl">
+                          <SelectItem value="__general__" className="rounded-lg font-bold text-xs italic">General (Global)</SelectItem>
+                          {centers.map((c) => (
+                            <SelectItem key={c.id} value={c.id} className="rounded-lg font-bold text-xs">{c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage className="text-[10px] font-bold uppercase" />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="size"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Talla</FormLabel>
-                  <Select onValueChange={(v) => field.onChange(v === '__none__' ? '' : v)} value={field.value || '__none__'}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sin talla" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="__none__">Sin talla</SelectItem>
-                      {(isFootwear ? shoeSizeOptions : sizeOptions).map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="item_type"
+                  rules={{ required: 'Seleccione el tipo de dotación' }}
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tipo de Dotación *</FormLabel>
+                      <FormControl>
+                        <SearchableSelect
+                          options={activeItemTypes.map((t: any) => ({
+                            value: t.id,
+                            label: `${t.name}${t.code ? ` (${t.code})` : ''}`,
+                          }))}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Seleccionar tipo de dotación"
+                          searchPlaceholder="Buscar tipo..."
+                          emptyMessage="No se encontraron tipos de dotación."
+                          triggerClassName="h-12 rounded-xl border-border/50 bg-background/50 font-bold text-sm"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold uppercase" />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="quantity_available"
-                rules={{ min: { value: 0, message: 'Mínimo 0' } }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cantidad Disponible *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Sección: Detalles y Stock */}
+              <div className="space-y-4 pt-4">
+                <div className="flex items-center gap-2 px-1">
+                  <div className="h-4 w-1 rounded-full bg-primary" />
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Especificaciones y Niveles</h3>
+                </div>
 
-              <FormField
-                control={form.control}
-                name="minimum_stock"
-                rules={{ min: { value: 0, message: 'Mínimo 0' } }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Stock Mínimo</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={0}
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="size"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Talla</FormLabel>
+                        <Select onValueChange={(v) => field.onChange(v === '__none__' ? '' : v)} value={field.value || '__none__'}>
+                          <FormControl>
+                            <SelectTrigger className="h-12 rounded-xl border-border/50 bg-background/50 font-bold text-sm">
+                              <SelectValue placeholder="Sin talla" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-xl">
+                            <SelectItem value="__none__" className="rounded-lg font-bold text-xs">Sin talla</SelectItem>
+                            {(isFootwear ? shoeSizeOptions : sizeOptions).map((s) => (
+                              <SelectItem key={s} value={s} className="rounded-lg font-bold text-xs">{s}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="text-[10px] font-bold uppercase" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="quantity_available"
+                    rules={{ min: { value: 0, message: 'Mínimo 0' } }}
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cantidad Inicial *</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={0}
+                            className="h-12 rounded-xl border-border/50 bg-background/50 font-black text-sm text-primary focus-visible:ring-primary/20"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-[10px] font-bold uppercase" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="minimum_stock"
+                  rules={{ min: { value: 0, message: 'Mínimo 0' } }}
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Punto de Reorden (Stock Mínimo)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          className="h-12 rounded-xl border-border/50 bg-background/50 font-black text-sm focus-visible:ring-primary/20"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-[9px] font-bold uppercase tracking-tight ml-1 text-muted-foreground/70">
+                        Se activará una alerta cuando el inventario baje de este valor
+                      </FormDescription>
+                      <FormMessage className="text-[10px] font-bold uppercase" />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 pt-4 border-t sm:flex sm:justify-end">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            {/* Footer */}
+            <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-muted/10 sm:flex-row sm:items-center sm:justify-end">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => onOpenChange(false)}
+                className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-background transition-colors"
+              >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createItem.isPending || updateItem.isPending}>
-                {editItem ? 'Guardar Cambios' : 'Agregar al Inventario'}
+              <Button 
+                type="submit" 
+                size="lg"
+                disabled={createItem.isPending || updateItem.isPending}
+                className="h-12 px-8 rounded-2xl gap-2 bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px] transition-all"
+              >
+                {createItem.isPending || updateItem.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Procesando...
+                  </>
+                ) : (
+                  <>
+                    {editItem ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    {editItem ? 'Guardar Cambios' : 'Confirmar Ingreso'}
+                  </>
+                )}
               </Button>
             </div>
           </form>

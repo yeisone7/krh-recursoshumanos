@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -60,7 +60,6 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
   const createPosition = useCreatePosition();
   const updatePosition = useUpdatePosition();
 
-  // Filter out the current position from parent options to avoid self-reference
   const parentPositionOptions = positions.filter(p => p.id !== position?.id && p.is_active !== false);
 
   const form = useForm<PositionFormData>({
@@ -78,7 +77,6 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
     },
   });
 
-  // Reset form when dialog opens or position changes
   useEffect(() => {
     if (open) {
       if (position) {
@@ -141,203 +139,216 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
-        <DialogHeader className="shrink-0">
-          <DialogTitle>{isEditing ? 'Editar Cargo' : 'Nuevo Cargo'}</DialogTitle>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre del Cargo</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Analista de RRHH" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Código</FormLabel>
-                    <FormControl>
-                      <Input placeholder="ANL-RRHH" maxLength={15} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nivel</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={10}
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden p-0 sm:max-w-xl border-none bg-transparent shadow-none">
+        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-primary/10 bg-background/95 backdrop-blur-2xl shadow-2xl">
+          {/* Modal Header */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-primary/10 shrink-0">
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+                <Briefcase className="h-7 w-7 text-primary-foreground" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
+                  {isEditing ? 'Editar' : 'Nuevo'} <span className="text-primary">Cargo</span>
+                </DialogTitle>
+                <p className="text-sm font-medium text-muted-foreground mt-1">
+                  {isEditing ? 'Ajusta los detalles de la posición.' : 'Crea una nueva posición jerárquica.'}
+                </p>
+              </div>
             </div>
+            {/* Decorative blurs */}
+            <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="area_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Área</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} 
-                    value={field.value || "__none__"}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccione área" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-background">
-                      <SelectItem value="__none__">Sin área asignada</SelectItem>
-                      {areas.map((area) => (
-                        <SelectItem key={area.id} value={area.id}>
-                          {area.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col p-8">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nombre del Cargo</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Ej. Desarrollador Senior" 
+                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <FormField
-              control={form.control}
-              name="parent_position_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cargo Superior</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} 
-                    value={field.value || "__none__"}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccione cargo superior" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-background">
-                      <SelectItem value="__none__">Sin cargo superior</SelectItem>
-                      {parentPositionOptions.map((pos) => (
-                        <SelectItem key={pos.id} value={pos.id}>
-                          {pos.name} {pos.areas ? `(${pos.areas.name})` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <FormField
+                    control={form.control}
+                    name="code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Código</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="DES-001" 
+                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="min_salary"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Salario Mínimo</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="1.300.000" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="level"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nivel (1-10)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold text-center"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="max_salary"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Salario Máximo</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="2.500.000" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                  <FormField
+                    control={form.control}
+                    name="area_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Área</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} value={field.value || "__none__"}>
+                          <FormControl>
+                            <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
+                              <SelectValue placeholder="Seleccione área" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl border-primary/10 backdrop-blur-xl bg-background/95">
+                            <SelectItem value="__none__" className="font-bold">Sin área</SelectItem>
+                            {areas.map((area) => (
+                              <SelectItem key={area.id} value={area.id} className="font-bold">{area.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descripción</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Descripción del cargo..."
-                      className="min-h-[60px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <FormField
+                    control={form.control}
+                    name="parent_position_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cargo Superior</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} value={field.value || "__none__"}>
+                          <FormControl>
+                            <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
+                              <SelectValue placeholder="Cargo superior" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl border-primary/10 backdrop-blur-xl bg-background/95">
+                            <SelectItem value="__none__" className="font-bold">Sin superior</SelectItem>
+                            {parentPositionOptions.map((pos) => (
+                              <SelectItem key={pos.id} value={pos.id} className="font-bold">{pos.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            <FormField
-              control={form.control}
-              name="requirements"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Requisitos</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Requisitos del cargo..."
-                      className="min-h-[60px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <FormField
+                    control={form.control}
+                    name="min_salary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Sueldo Base Mínimo</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="0" 
+                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            </div>
+                  <FormField
+                    control={form.control}
+                    name="max_salary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Sueldo Base Máximo</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="0" 
+                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <DialogFooter className="shrink-0 flex-col-reverse gap-2 pt-4 sm:flex-row sm:gap-0">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createPosition.isPending || updatePosition.isPending} className="w-full sm:w-auto">
-                {(createPosition.isPending || updatePosition.isPending) && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
-                {isEditing ? 'Guardar' : 'Crear'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Descripción del Cargo</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Breve resumen de responsabilidades..."
+                          className="min-h-[80px] rounded-2xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-primary/10">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={() => onOpenChange(false)}
+                  className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-muted"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createPosition.isPending || updatePosition.isPending}
+                  className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                >
+                  {(createPosition.isPending || updatePosition.isPending) ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    isEditing ? 'Guardar Cambios' : 'Crear Cargo'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

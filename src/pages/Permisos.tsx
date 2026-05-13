@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { es } from 'date-fns/locale';
-import { Plus, Calendar, List, Settings, Filter, Search } from 'lucide-react';
+import { Plus, Calendar, List, Settings, Filter, Search, FileText } from 'lucide-react';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { Button } from '@/components/ui/button';
@@ -96,136 +96,177 @@ export default function Permisos() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold sm:text-3xl">Permisos y Licencias</h1>
-          <p className="text-sm text-muted-foreground sm:text-base">
-            Gestión de solicitudes de permisos y licencias
-          </p>
+      {/* Premium Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 rounded-[2rem] border border-primary/10 p-8 sm:p-10 shadow-sm">
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+          <div className="flex items-start sm:items-center gap-5">
+            <div className="w-16 h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
+              <List className="w-8 h-8" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
+                  GESTIÓN
+                </Badge>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground mb-1">
+                Permisos y Licencias
+              </h1>
+              <p className="text-sm font-medium text-muted-foreground max-w-xl">
+                Gestión de solicitudes de permisos, licencias y ausencias laborales
+              </p>
+            </div>
+          </div>
+          <Button 
+            onClick={() => setShowNewRequestDialog(true)}
+            size="lg"
+            className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all shrink-0 w-full sm:w-auto"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Nueva Solicitud
+          </Button>
         </div>
-        <Button className="w-full sm:w-auto" onClick={() => setShowNewRequestDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Solicitud
-        </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-        <Card>
-          <CardContent className="p-3 sm:pt-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pendientes</p>
-                <p className="text-2xl font-bold">{pendingCount}</p>
+      {/* KPIs Premium */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5 relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Pendientes</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-black tracking-tight">{pendingCount}</h3>
+                <p className="text-xs text-muted-foreground font-medium">Por revisar</p>
               </div>
-              <Badge variant="outline" className="h-7 w-fit sm:h-8">
-                Por revisar
-              </Badge>
+            </div>
+            <div className="w-12 h-12 rounded-[1rem] bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+              <List className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-3 sm:pt-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Aprobados (mes)</p>
-                <p className="text-2xl font-bold">
+
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5 relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Aprobados</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-black tracking-tight text-emerald-600">
                   {requests.filter(r => r.status === 'aprobado').length}
-                </p>
+                </h3>
+                <p className="text-xs text-muted-foreground font-medium">Este mes</p>
               </div>
-              <Badge className="h-7 w-fit sm:h-8">Aprobados</Badge>
+            </div>
+            <div className="w-12 h-12 rounded-[1rem] bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+              <Calendar className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-3 sm:pt-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Rechazados (mes)</p>
-                <p className="text-2xl font-bold">
+
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-destructive/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5 relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Rechazados</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-black tracking-tight text-destructive">
                   {requests.filter(r => r.status === 'rechazado').length}
-                </p>
+                </h3>
+                <p className="text-xs text-muted-foreground font-medium">Este mes</p>
               </div>
-              <Badge variant="destructive" className="h-7 w-fit sm:h-8">Rechazados</Badge>
+            </div>
+            <div className="w-12 h-12 rounded-[1rem] bg-destructive/10 text-destructive flex items-center justify-center shrink-0">
+              <Filter className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-3 sm:pt-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Tipos Activos</p>
-                <p className="text-2xl font-bold">
+
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-5 relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Tipos Activos</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-black tracking-tight text-primary">
                   {typeConfigs.filter(c => c.is_active).length}
-                </p>
+                </h3>
+                <p className="text-xs text-muted-foreground font-medium">Configurados</p>
               </div>
-              <Badge variant="secondary" className="h-7 w-fit sm:h-8">Configurados</Badge>
+            </div>
+            <div className="w-12 h-12 rounded-[1rem] bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Settings className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto sm:flex-wrap">
-          <TabsTrigger value="solicitudes" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-            <List className="h-4 w-4" />
-            Solicitudes
-            {pendingCount > 0 && (
-              <Badge variant="destructive" className="ml-0 h-5 min-w-5 px-1 flex items-center justify-center text-xs sm:ml-1">
-                {pendingCount}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="calendario" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-            <Calendar className="h-4 w-4" />
-            Calendario
-          </TabsTrigger>
-          <TabsTrigger value="alertas" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-            <Filter className="h-4 w-4" />
-            Alertas
-          </TabsTrigger>
-          <TabsTrigger value="configuracion" className="min-h-10 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-            <Settings className="h-4 w-4" />
-            Configuración
-          </TabsTrigger>
-        </TabsList>
+      {/* Tabs Premium */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="flex justify-center sm:justify-start">
+          <TabsList className="grid h-14 w-full sm:w-auto grid-cols-4 p-1 bg-muted/30 rounded-2xl">
+            <TabsTrigger value="solicitudes" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2 relative">
+              <List className="h-4 w-4 hidden sm:block" />
+              Solicitudes
+              {pendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full text-[9px] flex items-center justify-center font-bold">
+                  {pendingCount}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="calendario" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
+              <Calendar className="h-4 w-4 hidden sm:block" />
+              Calendario
+            </TabsTrigger>
+            <TabsTrigger value="alertas" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
+              <Filter className="h-4 w-4 hidden sm:block" />
+              Alertas
+            </TabsTrigger>
+            <TabsTrigger value="configuracion" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
+              <Settings className="h-4 w-4 hidden sm:block" />
+              Configurar
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Solicitudes Tab */}
         <TabsContent value="solicitudes" className="space-y-4">
-          {/* Filters */}
-          <div className="flex flex-col gap-3">
+          {/* Filters Premium */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-muted-foreground" />
+              </div>
               <Input
-                placeholder="Buscar por empleado o tipo..."
+                placeholder="Buscar empleado o tipo de permiso..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="pl-11 h-14 rounded-2xl bg-muted/20 border-none shadow-sm text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/50"
               />
             </div>
-            <CollapsibleFilters activeCount={statusFilter !== 'all' ? 1 : 0}>
+            
+            <div className="w-full sm:w-[220px]">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectTrigger className="h-14 rounded-2xl bg-muted/20 border-none shadow-sm text-sm font-medium focus:ring-1 focus:ring-primary/50">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="pendiente">Pendiente</SelectItem>
-                  <SelectItem value="aprobado">Aprobado</SelectItem>
-                  <SelectItem value="rechazado">Rechazado</SelectItem>
-                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                <SelectContent className="rounded-2xl border-primary/10">
+                  <SelectItem value="all" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Todos los estados</SelectItem>
+                  <SelectItem value="pendiente" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Pendientes</SelectItem>
+                  <SelectItem value="aprobado" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Aprobados</SelectItem>
+                  <SelectItem value="rechazado" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Rechazados</SelectItem>
+                  <SelectItem value="cancelado" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Cancelados</SelectItem>
                 </SelectContent>
               </Select>
-            </CollapsibleFilters>
+            </div>
           </div>
 
           {/* Requests Table */}
-          <Card>
+          <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden">
             <CardContent className={cn("p-0", !isMobile && "overflow-x-auto")}>
               {isMobile ? (
-                <div className="p-3">
+                <div className="p-4 bg-muted/10">
                   {isLoading ? (
                     <div className="text-center py-8 text-muted-foreground">Cargando...</div>
                   ) : (
@@ -236,7 +277,7 @@ export default function Permisos() {
                           title: request.employees_v2 ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}` : 'N/A',
                           subtitle: LEAVE_TYPE_LABELS[request.leave_type],
                           badge: (
-                            <Badge variant={getStatusBadgeVariant(request.status)}>
+                            <Badge variant={getStatusBadgeVariant(request.status)} className="rounded-lg font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
                               {LEAVE_STATUS_LABELS[request.status]}
                             </Badge>
                           ),
@@ -253,15 +294,14 @@ export default function Permisos() {
                 </div>
               ) : (
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Empleado</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead className="hidden md:table-cell">Fechas</TableHead>
-                    <TableHead>Días</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="hidden lg:table-cell">Solicitado</TableHead>
-                    <TableHead className="hidden sm:table-cell"></TableHead>
+                <TableHeader className="bg-muted/30">
+                  <TableRow className="hover:bg-transparent border-b-primary/5">
+                    <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Empleado</TableHead>
+                    <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Tipo</TableHead>
+                    <TableHead className="hidden md:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Fechas</TableHead>
+                    <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5 text-center">Días</TableHead>
+                    <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Estado</TableHead>
+                    <TableHead className="hidden lg:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Solicitado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -281,13 +321,20 @@ export default function Permisos() {
                     filteredRequests.map((request) => (
                       <TableRow 
                         key={request.id} 
-                        className="cursor-pointer hover:bg-muted/50"
+                        className="cursor-pointer hover:bg-muted/50 transition-colors border-b-border/50 group"
                         onClick={() => handleViewRequest(request)}
                       >
-                        <TableCell className="font-medium">
-                          {request.employees_v2
-                            ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}`
-                            : 'N/A'}
+                        <TableCell className="font-medium py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                              {request.employees_v2 ? request.employees_v2.first_name.charAt(0) + request.employees_v2.last_name.charAt(0) : '?'}
+                            </div>
+                            <span>
+                              {request.employees_v2
+                                ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}`
+                                : 'N/A'}
+                            </span>
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -295,25 +342,24 @@ export default function Permisos() {
                               className="w-3 h-3 rounded-full"
                               style={{ backgroundColor: getTypeColor(request.leave_type) }}
                             />
-                            {LEAVE_TYPE_LABELS[request.leave_type]}
+                            <span className="font-medium text-muted-foreground">{LEAVE_TYPE_LABELS[request.leave_type]}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">
+                        <TableCell className="hidden md:table-cell font-medium">
                           {format(new Date(request.start_date), 'dd MMM', { locale: es })} - {format(new Date(request.end_date), 'dd MMM', { locale: es })}
                         </TableCell>
-                        <TableCell>{request.total_days}</TableCell>
+                        <TableCell className="text-center">
+                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary font-bold text-sm">
+                            {request.total_days}
+                          </span>
+                        </TableCell>
                         <TableCell>
-                          <Badge variant={getStatusBadgeVariant(request.status)}>
+                          <Badge variant={getStatusBadgeVariant(request.status)} className="rounded-lg font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
                             {LEAVE_STATUS_LABELS[request.status]}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground hidden lg:table-cell">
+                        <TableCell className="text-muted-foreground hidden lg:table-cell text-xs font-medium">
                           {format(new Date(request.requested_at), 'dd/MM/yyyy', { locale: es })}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          <Button variant="ghost" size="sm">
-                            Ver
-                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -340,41 +386,51 @@ export default function Permisos() {
 
         {/* Configuración Tab */}
         <TabsContent value="configuracion" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tipos de Permisos</CardTitle>
+          <Card className="rounded-[2rem] border-none shadow-sm">
+            <CardHeader className="p-8 border-b border-border/50 bg-muted/10 rounded-t-[2rem]">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Settings className="w-6 h-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl font-black">Tipos de Permisos</CardTitle>
+                  <p className="text-sm font-medium text-muted-foreground">Configura las reglas para cada tipo de licencia</p>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <div className="grid gap-3">
                 {typeConfigs.map((config) => (
                   <div
                     key={config.id}
-                    className="flex flex-col gap-3 p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 p-4 border border-border/50 rounded-2xl hover:bg-muted/30 cursor-pointer transition-colors sm:flex-row sm:items-center sm:justify-between group"
                     onClick={() => handleConfigClick(config)}
                   >
-                    <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-4">
                       <div 
-                        className="w-4 h-4 shrink-0 rounded-full"
-                        style={{ backgroundColor: config.color }}
-                      />
+                        className="w-10 h-10 shrink-0 rounded-xl shadow-sm flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity"
+                        style={{ backgroundColor: `${config.color}20`, color: config.color }}
+                      >
+                        <FileText className="w-5 h-5" />
+                      </div>
                       <div className="min-w-0">
-                        <p className="font-medium">{config.display_name}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-bold text-base">{config.display_name}</p>
+                        <p className="text-sm text-muted-foreground font-medium">
                           {config.description || 'Sin descripción'}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-start justify-between gap-3 pl-7 sm:items-center sm:pl-0">
+                    <div className="flex items-start justify-between gap-3 pl-14 sm:items-center sm:pl-0">
                       <div className="text-left text-sm sm:text-right">
-                        <p className="text-muted-foreground">
+                        <p className="text-muted-foreground font-medium">
                           {config.max_days_per_year ? `${config.max_days_per_year} días/año` : 'Sin límite'}
                         </p>
-                        <div className="flex flex-wrap gap-2 sm:justify-end">
-                          {config.is_paid && <Badge variant="outline">Remunerado</Badge>}
-                          {config.requires_document && <Badge variant="secondary">Doc. requerido</Badge>}
+                        <div className="flex flex-wrap gap-2 sm:justify-end mt-1">
+                          {config.is_paid && <Badge variant="outline" className="rounded-lg text-[10px] uppercase font-bold tracking-wider">Remunerado</Badge>}
+                          {config.requires_document && <Badge variant="secondary" className="rounded-lg text-[10px] uppercase font-bold tracking-wider">Doc. requerido</Badge>}
                         </div>
                       </div>
-                      <Badge variant={config.is_active ? 'default' : 'secondary'}>
+                      <Badge variant={config.is_active ? 'default' : 'secondary'} className="rounded-lg text-[10px] uppercase font-bold tracking-wider">
                         {config.is_active ? 'Activo' : 'Inactivo'}
                       </Badge>
                     </div>

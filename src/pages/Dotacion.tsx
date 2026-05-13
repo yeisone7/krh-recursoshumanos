@@ -277,7 +277,7 @@ export default function Dotacion() {
         <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+              <div className="p-2.5 rounded-2xl bg-primary shadow-sm shadow-primary/5 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
                 <Package className="w-6 h-6" />
               </div>
               <div>
@@ -294,7 +294,7 @@ export default function Dotacion() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
             {kpis.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-500">
                 <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
                 </div>
@@ -351,7 +351,7 @@ export default function Dotacion() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="entregas" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {/* Entregas Header & Actions */}
-              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-background/40 backdrop-blur-xl p-4 rounded-[2rem] border border-primary/5 shadow-xl">
+              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-background/40 backdrop-blur-xl p-4 rounded-[2rem] border border-primary/5 shadow-sm">
                 <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
                   <div className="relative w-full sm:w-80 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -388,7 +388,7 @@ export default function Dotacion() {
                     Entrega Masiva
                   </Button>
                   <Button
-                    className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20"
+                    className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-sm shadow-primary/5"
                     onClick={() => setIsFormOpen(true)}
                   >
                     <Plus className="w-4 h-4 mr-2" />
@@ -407,7 +407,7 @@ export default function Dotacion() {
                 </div>
 
                 <div className="lg:col-span-2">
-                  <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-2xl bg-background/40 backdrop-blur-xl">
+                  <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
                     {filteredTransactions.length === 0 ? (
                       <div className="text-center py-32">
                          <Package className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
@@ -539,7 +539,7 @@ export default function Dotacion() {
 
             <TabsContent value="ajustes" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="max-w-3xl mx-auto py-8">
-                <div className="rounded-[2.5rem] border border-primary/5 shadow-2xl bg-background/40 backdrop-blur-xl p-8 space-y-8">
+                <div className="rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl p-8 space-y-8">
                   <div>
                     <h3 className="text-2xl font-black tracking-tighter flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-primary/10 text-primary">

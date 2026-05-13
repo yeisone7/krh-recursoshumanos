@@ -206,120 +206,149 @@ export function ImportProfesiogramaDialog({ open, onOpenChange, centers, positio
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
-        <DialogHeader className="pr-12">
-          <DialogTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="w-5 h-5 text-primary" />
-            Importar Profesiogramas desde Excel
-          </DialogTitle>
-          <DialogDescription>
-            {isParsed
-              ? 'Revisa los datos antes de confirmar la importación'
-              : 'Selecciona un archivo .xlsx con los profesiogramas a importar'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+        {/* Header con gradiente */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          <div className="relative flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <FileSpreadsheet className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="font-black text-2xl tracking-tighter sm:text-3xl truncate">
+                Importación Masiva
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground font-medium truncate">
+                Sincroniza profesiogramas desde Excel
+              </DialogDescription>
+            </div>
+          </div>
+        </div>
 
-        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
           {!isParsed ? (
-            /* File upload area */
-            <label className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors">
-              <Upload className="w-10 h-10 text-muted-foreground mb-3" />
-              <p className="text-sm font-medium">Haz clic para seleccionar archivo</p>
-              <p className="text-xs text-muted-foreground mt-1">.xlsx o .xls</p>
-              <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleFileSelect} />
-            </label>
+            <div className="space-y-6">
+              <label className="group relative flex flex-col items-center justify-center py-16 border-2 border-dashed border-border/50 rounded-[2rem] cursor-pointer hover:border-primary/40 hover:bg-primary/[0.02] transition-all duration-300">
+                <div className="p-5 rounded-2xl bg-muted/20 group-hover:bg-primary/10 transition-colors">
+                  <Upload className="w-10 h-10 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <div className="mt-4 text-center">
+                  <p className="font-black text-sm uppercase tracking-widest text-foreground">Seleccionar Archivo Excel</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Soporta formatos .xlsx y .xls</p>
+                </div>
+                <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleFileSelect} />
+              </label>
+              
+              <div className="rounded-2xl border border-border/50 bg-muted/20 p-5 space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5" /> Estructura del Archivo
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {['Centro de Operación', 'Cargo', 'Código Artículo', 'Cantidad'].map((col) => (
+                    <div key={col} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-background/50 border border-border/30">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">{col}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           ) : (
-            <>
-              {/* Summary badges */}
+            <div className="space-y-6">
+              {/* Summary */}
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="gap-1 text-xs">
-                  <FileSpreadsheet className="w-3 h-3" /> {fileName}
+                <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-background border-border/50 font-bold text-[10px] uppercase tracking-widest text-muted-foreground">
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-primary" /> {fileName}
                 </Badge>
                 {newCount > 0 && (
-                  <Badge className="bg-success/10 text-success border-success/20 gap-1">
-                    <Plus className="w-3 h-3" /> {newCount} nuevo{newCount > 1 ? 's' : ''}
+                  <Badge className="h-8 rounded-xl px-3 gap-2 bg-green-500/10 text-green-600 border-0 font-bold text-[10px] uppercase tracking-widest">
+                    <Plus className="w-3.5 h-3.5" /> {newCount} Nuevos
                   </Badge>
                 )}
                 {updateCount > 0 && (
-                  <Badge className="bg-primary/10 text-primary border-primary/20 gap-1">
-                    <RefreshCw className="w-3 h-3" /> {updateCount} existente{updateCount > 1 ? 's' : ''}
+                  <Badge className="h-8 rounded-xl px-3 gap-2 bg-primary/10 text-primary border-0 font-bold text-[10px] uppercase tracking-widest">
+                    <RefreshCw className="w-3.5 h-3.5" /> {updateCount} Existentes
                   </Badge>
                 )}
                 {invalidCount > 0 && (
-                  <Badge className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
-                    <XCircle className="w-3 h-3" /> {invalidCount} inválido{invalidCount > 1 ? 's' : ''}
+                  <Badge className="h-8 rounded-xl px-3 gap-2 bg-destructive/10 text-destructive border-0 font-bold text-[10px] uppercase tracking-widest">
+                    <XCircle className="w-3.5 h-3.5" /> {invalidCount} Inválidos
                   </Badge>
                 )}
               </div>
 
               {/* Upsert toggle */}
               {updateCount > 0 && (
-                <div className="flex flex-col gap-3 rounded-lg border border-border p-3 bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Modo actualización (upsert)</p>
-                    <p className="text-xs text-muted-foreground">
-                      Actualiza los artículos de {updateCount} profesiograma{updateCount > 1 ? 's' : ''} que ya existen
-                    </p>
+                <div className="flex items-center justify-between p-5 rounded-[2rem] border border-border/50 bg-primary/[0.02]">
+                  <div className="space-y-1">
+                    <p className="font-black text-[11px] uppercase tracking-widest text-foreground">Modo Actualización (Upsert)</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Sobrescribe dotación en registros existentes</p>
                   </div>
-                  <Switch checked={upsertMode} onCheckedChange={setUpsertMode} />
+                  <Switch 
+                    checked={upsertMode} 
+                    onCheckedChange={setUpsertMode}
+                    className="data-[state=checked]:bg-primary"
+                  />
                 </div>
               )}
 
-              {/* Preview table */}
-              <div className="max-h-[40vh] overflow-auto overscroll-x-contain">
-                <Table className="min-w-[680px]">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Centro</TableHead>
-                      <TableHead>Cargo</TableHead>
-                      <TableHead>Artículos</TableHead>
+              {/* Table */}
+              <div className="overflow-hidden rounded-2xl border border-border/50 bg-background/50">
+                <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow className="hover:bg-transparent border-border/50">
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground h-10 px-4">Estado</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground h-10 px-4">Localización / Cargo</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground h-10 px-4">Dotación</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {parsedData.map((prof, idx) => (
-                      <TableRow key={idx} className={prof.status === 'skip_invalid' ? 'opacity-50' : ''}>
-                        <TableCell>
+                      <TableRow key={idx} className={cn(
+                        "hover:bg-primary/[0.01] border-border/50 transition-colors",
+                        prof.status === 'skip_invalid' && 'opacity-50 grayscale bg-muted/5'
+                      )}>
+                        <TableCell className="px-4 py-3">
                           {prof.status === 'new' && (
-                            <Badge variant="outline" className="bg-success/10 text-success border-success/20 text-xs gap-1">
-                              <CheckCircle2 className="w-3 h-3" /> Nuevo
+                            <Badge className="h-6 rounded-lg bg-green-500/10 text-green-600 font-black text-[8px] uppercase tracking-widest border-0">
+                              <CheckCircle2 className="w-3 h-3 mr-1" /> Nuevo
                             </Badge>
                           )}
                           {prof.status === 'update' && (
-                            <Badge variant="outline" className={`text-xs gap-1 ${upsertMode ? 'bg-primary/10 text-primary border-primary/20' : 'bg-muted text-muted-foreground border-border'}`}>
-                              <RefreshCw className="w-3 h-3" /> {upsertMode ? 'Actualizar' : 'Omitir'}
+                            <Badge className={cn(
+                              "h-6 rounded-lg font-black text-[8px] uppercase tracking-widest border-0",
+                              upsertMode ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                            )}>
+                              <RefreshCw className="w-3 h-3 mr-1" /> {upsertMode ? 'Actualizar' : 'Omitir'}
                             </Badge>
                           )}
                           {prof.status === 'skip_invalid' && (
-                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-xs gap-1">
-                              <AlertTriangle className="w-3 h-3" /> Inválido
+                            <Badge className="h-6 rounded-lg bg-destructive/10 text-destructive font-black text-[8px] uppercase tracking-widest border-0">
+                              <AlertTriangle className="w-3 h-3 mr-1" /> Inválido
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-sm">
-                          <span className={!prof.centerId ? 'text-destructive' : ''}>
-                            {prof.centerName || '—'}
-                          </span>
-                          {!prof.centerId && <span className="text-xs text-destructive ml-1">(no encontrado)</span>}
+                        <TableCell className="px-4 py-3">
+                          <div className="space-y-0.5">
+                            <p className={cn("text-xs font-bold truncate", !prof.centerId && 'text-destructive')}>
+                              {prof.centerName || '—'}
+                            </p>
+                            <p className={cn("text-[9px] font-black uppercase tracking-widest truncate text-muted-foreground", !prof.positionId && 'text-destructive/70')}>
+                              {prof.positionName || 'Cargo no mapeado'}
+                            </p>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-sm">
-                          <span className={!prof.positionId ? 'text-destructive' : ''}>
-                            {prof.positionName || '—'}
-                          </span>
-                          {!prof.positionId && <span className="text-xs text-destructive ml-1">(no encontrado)</span>}
-                        </TableCell>
-                        <TableCell>
+                        <TableCell className="px-4 py-3">
                           <div className="flex flex-wrap gap-1">
                             {prof.items.slice(0, 2).map((item, i) => (
-                              <Badge key={i} variant="secondary" className="text-xs">
-                                {item.name}{item.quantity > 1 && ` x${item.quantity}`}
+                              <Badge key={i} variant="secondary" className="h-5 px-1.5 rounded bg-muted/50 font-bold text-[8px] uppercase tracking-tight text-foreground">
+                                {item.name} <span className="ml-1 text-primary">×{item.quantity}</span>
                               </Badge>
                             ))}
                             {prof.items.length > 2 && (
-                              <Badge variant="outline" className="text-xs">+{prof.items.length - 2}</Badge>
-                            )}
-                            {prof.items.length === 0 && (
-                              <span className="text-xs text-destructive">Sin artículos válidos</span>
+                              <Badge variant="outline" className="h-5 px-1.5 rounded border-border/50 font-bold text-[8px]">
+                                +{prof.items.length - 2}
+                              </Badge>
                             )}
                           </div>
                         </TableCell>
@@ -328,33 +357,64 @@ export function ImportProfesiogramaDialog({ open, onOpenChange, centers, positio
                   </TableBody>
                 </Table>
               </div>
-            </>
+            </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 pt-4 border-t mt-2 sm:flex sm:items-center sm:justify-between">
-          {isParsed ? (
-            <>
-              <Button variant="ghost" size="sm" onClick={resetState} className="text-muted-foreground">
-                Cambiar archivo
+        {/* Footer */}
+        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-muted/10 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col">
+            {isParsed ? (
+              <>
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resumen de Carga</span>
+                <p className="text-xs font-bold text-muted-foreground">
+                  {actionableCount} registros preparados para procesar
+                </p>
+              </>
+            ) : (
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">
+                Asegúrate que los nombres coincidan exactamente
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {isParsed && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={resetState} 
+                className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest text-muted-foreground hover:bg-background"
+              >
+                Cambiar Archivo
               </Button>
-              <div className="grid grid-cols-1 gap-3 sm:flex">
-                <Button variant="outline" onClick={() => handleClose(false)}>Cancelar</Button>
-                <Button
-                  onClick={handleConfirmImport}
-                  disabled={isImporting || actionableCount === 0}
-                  className="gap-2"
-                >
-                  {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                  {isImporting ? 'Importando...' : `Importar ${actionableCount} profesiograma${actionableCount !== 1 ? 's' : ''}`}
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="flex justify-end w-full">
-              <Button variant="outline" onClick={() => handleClose(false)}>Cancelar</Button>
-            </div>
-          )}
+            )}
+            <Button 
+              variant="outline" 
+              onClick={() => handleClose(false)}
+              className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest border-border/50"
+            >
+              Cancelar
+            </Button>
+            {isParsed && (
+              <Button 
+                size="lg"
+                onClick={handleConfirmImport} 
+                disabled={isImporting || actionableCount === 0} 
+                className="h-12 px-8 rounded-2xl gap-2 bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px] transition-all"
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Procesando...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    Ejecutar Importación
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

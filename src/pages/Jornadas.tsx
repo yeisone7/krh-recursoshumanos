@@ -217,7 +217,7 @@ export default function Jornadas() {
       {/* Navigation & Controls */}
       <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full md:w-auto">
-          <TabsList className="h-12 bg-muted/40 p-1 rounded-2xl border border-primary/5 w-full sm:w-auto overflow-x-auto no-scrollbar">
+          <TabsList className="h-12 bg-muted/40 p-1 rounded-2xl border border-primary/5 w-full sm:w-auto overflow-x-auto overflow-y-hidden scrollbar-hide">
             <TabsTrigger value="calendar" className="flex-1 sm:flex-none gap-2 rounded-xl font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all">
               <Calendar className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Calendario</span>

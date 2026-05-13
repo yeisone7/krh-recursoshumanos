@@ -31,7 +31,7 @@ import {
   RequisitionReason,
 } from '@/types/requisition';
 
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 export default function Requisiciones() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -133,7 +133,7 @@ export default function Requisiciones() {
         <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+              <div className="p-2.5 rounded-2xl bg-primary shadow-md shadow-primary/10 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
                 <FileText className="w-6 h-6" />
               </div>
               <div>
@@ -148,9 +148,9 @@ export default function Requisiciones() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
             {kpis.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-md hover:border-primary/10 transition-all duration-500">
                 <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
                 </div>
@@ -166,7 +166,7 @@ export default function Requisiciones() {
       </div>
 
       {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
           <div className="relative w-full sm:w-80 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -193,14 +193,14 @@ export default function Requisiciones() {
           </div>
         </div>
 
-        <Button className="h-12 w-full xl:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={() => { setEditRequisition(null); setShowForm(true); }}>
+        <Button className="h-12 w-full lg:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-md shadow-primary/10" onClick={() => { setEditRequisition(null); setShowForm(true); }}>
           <Plus className="w-4 h-4 mr-2" />
           Nueva Requisición
         </Button>
       </div>
 
       <ScrollArea className="flex-1 p-6 sm:p-10">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-full mx-auto w-full">
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -214,14 +214,14 @@ export default function Requisiciones() {
             </div>
           ) : (
             <>
-              {/* Mobile View */}
-              <div className="space-y-4 md:hidden">
+              {/* Card Grid View (Mobile and Tablet/Small PC) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:hidden">
                 {filtered.map(req => {
                   const status = req.estado_requisicion as RequisitionStatus;
                   const cfg = requisitionStatusConfig[status];
                   const progress = getApprovalProgress(req);
                   return (
-                    <Card key={req.id} className="group relative overflow-hidden rounded-[2rem] border border-primary/5 shadow-lg bg-background/50 backdrop-blur-sm" onClick={() => openDetail(req.id)}>
+                    <Card key={req.id} className="group relative overflow-hidden rounded-[2rem] border border-primary/5 shadow-md bg-background/50 backdrop-blur-sm" onClick={() => openDetail(req.id)}>
                       <div className={cn("absolute left-0 top-0 h-full w-1.5", cfg.bg)} />
                       <CardContent className="p-6 space-y-4">
                         <div className="flex justify-between items-start gap-4">
@@ -283,17 +283,16 @@ export default function Requisiciones() {
                 })}
               </div>
 
-              {/* Desktop Table View */}
-              <div className="hidden md:block overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-2xl bg-background/40 backdrop-blur-xl">
-                <Table>
+              <div className="hidden xl:block rounded-[2.5rem] border border-primary/5 shadow-md bg-background/40 backdrop-blur-xl">
+                <Table className="w-full table-fixed">
                   <TableHeader>
                     <TableRow className="bg-muted/30 border-b border-primary/5 hover:bg-muted/30">
-                      <TableHead className="px-8 h-16 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Flujo de Aprobación</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
-                      <TableHead className="px-8 h-16 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
+                      <TableHead className="px-4 h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[25%]">Cargo / Solicitante</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[18%]">Ubicación / Motivo</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[10%]">Fecha</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[22%]">Flujo de Aprobación</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[12%]">Estado</TableHead>
+                      <TableHead className="px-4 h-16 text-right font-black text-[10px] uppercase tracking-[0.2em] w-[13%]">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -304,13 +303,13 @@ export default function Requisiciones() {
                       const progress = getApprovalProgress(req);
                       return (
                         <TableRow key={req.id} className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors cursor-pointer" onClick={() => openDetail(req.id)}>
-                          <TableCell className="px-8 py-5">
+                          <TableCell className="px-4 py-5">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
-                                <FileText className="w-6 h-6" />
+                              <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shrink-0">
+                                <FileText className="w-5 h-5" />
                               </div>
-                              <div className="min-w-0">
-                                <p className="font-black tracking-tight text-foreground text-base leading-none mb-1 uppercase">{req.cargo_solicitado}</p>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-black tracking-tight text-foreground text-sm leading-none mb-1 uppercase truncate">{req.cargo_solicitado}</p>
                                 <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                                   <Users className="w-3.5 h-3.5 text-primary/60" />
                                   <span>{req.cantidad_vacantes_requeridas} vacantes</span>
@@ -323,8 +322,8 @@ export default function Requisiciones() {
                           <TableCell>
                             <div className="space-y-1.5">
                               <div className="flex items-center gap-2">
-                                <Building2 className="w-4 h-4 text-primary/60" />
-                                <span className="text-sm font-black tracking-tight text-foreground/80 truncate max-w-[150px]">{req.operation_centers?.name || '-'}</span>
+                                <Building2 className="w-3.5 h-3.5 text-primary/60" />
+                                <span className="text-[11px] font-black tracking-tight text-foreground/80 truncate">{req.operation_centers?.name || '-'}</span>
                               </div>
                               <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-muted/50 border-primary/5 px-2 py-0">
                                 {requisitionReasonLabels[req.motivo_solicitud as RequisitionReason]}
@@ -349,9 +348,9 @@ export default function Requisiciones() {
                                         <button
                                           type="button"
                                           className={cn(
-                                            'w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black transition-all duration-300 border-2',
-                                            s.approved === true && 'bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-500/20',
-                                            s.approved === false && 'bg-red-500 text-white border-red-400 shadow-lg shadow-red-500/20',
+                                            'w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black transition-all duration-300 border-2',
+                                            s.approved === true && 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/10',
+                                            s.approved === false && 'bg-red-500 text-white border-red-400 shadow-md shadow-red-500/10',
                                             s.approved === null && 'bg-muted text-muted-foreground border-border hover:border-primary/30'
                                           )}
                                           onClick={e => e.stopPropagation()}
@@ -359,16 +358,16 @@ export default function Requisiciones() {
                                           {s.approved === true ? <CheckCircle className="w-4 h-4" /> : s.approved === false ? <XCircle className="w-4 h-4" /> : s.label}
                                         </button>
                                       </TooltipTrigger>
-                                      <TooltipContent side="top" className="text-xs bg-popover/90 backdrop-blur-sm border-primary/20 p-3 rounded-xl shadow-2xl">
+                                      <TooltipContent side="top" className="text-xs bg-popover/90 backdrop-blur-sm border-primary/20 p-3 rounded-xl shadow-lg">
                                         <p className="font-black uppercase tracking-widest text-[10px] mb-1">{s.key === 'operaciones' ? 'Operaciones' : s.key === 'rrhh' ? 'RH' : s.key === 'juridico' ? 'Jurídico' : s.key === 'gerencia' ? 'Gerencia' : 'Selección'}</p>
                                         <p className={cn('font-bold', s.approved === true ? 'text-emerald-500' : s.approved === false ? 'text-red-500' : 'text-muted-foreground')}>
                                           {s.approved === true ? '✓ APROBADO' : s.approved === false ? '✗ RECHAZADO' : '○ PENDIENTE'}
                                         </p>
                                       </TooltipContent>
                                     </Tooltip>
-                                    {idx < progress.length - 1 && (
-                                      <div className={cn('w-3 h-0.5 mx-0.5 rounded-full', s.approved === true ? 'bg-emerald-500' : 'bg-muted')} />
-                                    )}
+                                      {idx < progress.length - 1 && (
+                                        <div className={cn('w-2 h-0.5 mx-0.5 rounded-full', s.approved === true ? 'bg-emerald-500' : 'bg-muted')} />
+                                      )}
                                   </div>
                                 ))}
                               </div>
@@ -379,8 +378,8 @@ export default function Requisiciones() {
                               {requisitionStatusLabels[status]}
                             </Badge>
                           </TableCell>
-                          <TableCell className="px-8 text-right">
-                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0" onClick={e => e.stopPropagation()}>
+                          <TableCell className="px-4 text-right">
+                            <div className="flex justify-end gap-2 transition-all duration-300" onClick={e => e.stopPropagation()}>
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -399,7 +398,7 @@ export default function Requisiciones() {
                                   <TooltipContent className="rounded-xl font-bold">Ver detalle</TooltipContent>
                                 </Tooltip>
                                 {step && (
-                                  <Button size="sm" className="h-10 rounded-xl px-4 bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
+                                  <Button size="sm" className="h-10 rounded-xl px-4 bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-md shadow-primary/10 hover:scale-105 active:scale-95 transition-all" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
                                     <CheckCircle className="w-4 h-4 mr-2" />
                                     Gestionar
                                   </Button>

@@ -212,19 +212,36 @@ export default function Evidencias() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-3xl font-bold">Evidencias</h1><p className="text-muted-foreground">Registro de capacitaciones completadas con firma digital</p></div>
-        <div className="flex gap-1 border rounded-lg p-1">
-          <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" onClick={() => setViewMode('table')}><List className="h-4 w-4" /></Button>
-          <Button variant={viewMode === 'tree' ? 'default' : 'ghost'} size="icon" onClick={() => setViewMode('tree')}><FolderTree className="h-4 w-4" /></Button>
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">Evidencias</h1>
+            <p className="text-muted-foreground font-medium mt-1">Registro de capacitaciones completadas con firma digital</p>
+          </div>
+          <div className="flex gap-1 bg-background border border-border/50 rounded-xl p-1 shadow-inner shrink-0">
+            <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'table' ? 'shadow-md' : ''}`} onClick={() => setViewMode('table')}><List className="h-4 w-4" /></Button>
+            <Button variant={viewMode === 'tree' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'tree' ? 'shadow-md' : ''}`} onClick={() => setViewMode('tree')}><FolderTree className="h-4 w-4" /></Button>
+          </div>
         </div>
       </div>
 
-      <div className="flex gap-3 items-center">
-        <div className="relative flex-1 max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Buscar por nombre o cédula..." className="pl-10" value={search} onChange={e => setSearch(e.target.value)} /></div>
-        <Select value={filterCourse} onValueChange={setFilterCourse}><SelectTrigger className="w-48"><SelectValue placeholder="Capacitación" /></SelectTrigger><SelectContent><SelectItem value="all">Todas</SelectItem>{courses.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
-        {selected.size > 0 && <Button variant="destructive" size="sm" onClick={handleBulkDelete}><Trash2 className="h-4 w-4 mr-1" /> Eliminar ({selected.size})</Button>}
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/20 border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
+        <div className="relative flex-1 w-full sm:max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input placeholder="Buscar por nombre o cédula..." className="pl-12 h-12 rounded-xl border-border/50 bg-background shadow-inner text-sm" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <Select value={filterCourse} onValueChange={setFilterCourse}>
+          <SelectTrigger className="w-full sm:w-64 h-12 rounded-xl border-border/50 bg-background shadow-inner text-sm">
+            <SelectValue placeholder="Capacitación" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl">
+            <SelectItem value="all">Todas</SelectItem>
+            {courses.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {selected.size > 0 && <Button variant="destructive" className="h-12 px-6 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-destructive/20 w-full sm:w-auto" onClick={handleBulkDelete}><Trash2 className="h-4 w-4 mr-2" /> Eliminar ({selected.size})</Button>}
       </div>
 
       {viewMode === 'tree' ? (
@@ -235,30 +252,36 @@ export default function Evidencias() {
           onDelete={handleDelete}
         />
       ) : (
-        <Card>
-          <CardContent className="pt-4">
+        <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+          <CardContent className="p-0">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/30">
                 <TableRow>
-                  <TableHead className="w-10"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></TableHead>
-                  <TableHead>Nombre</TableHead><TableHead>Cédula</TableHead><TableHead>Capacitación</TableHead><TableHead>Fecha</TableHead><TableHead>Acciones</TableHead>
+                  <TableHead className="w-10 h-12"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Nombre</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Cédula</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Capacitación</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Fecha</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12 text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No hay evidencias registradas</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-16 h-32">No hay evidencias registradas</TableCell></TableRow>
                 ) : filtered.map(c => (
-                  <TableRow key={c.id}>
+                  <TableRow key={c.id} className="hover:bg-muted/10 transition-colors">
                     <TableCell><Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} /></TableCell>
-                    <TableCell className="font-medium">{c.operator_name}</TableCell>
-                    <TableCell>{c.operator_cedula || '-'}</TableCell>
-                    <TableCell>{c.course?.name || '-'}</TableCell>
-                    <TableCell>{format(parseISO(c.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
+                    <TableCell className="font-bold text-sm">{c.operator_name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground font-medium">{c.operator_cedula || '-'}</TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => setSignatureView(c.signature_data)}><Eye className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => exportPdf(c)}><Download className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">{c.course?.name || '-'}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">{format(parseISO(c.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setSignatureView(c.signature_data)}><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10" onClick={() => exportPdf(c)}><Download className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>

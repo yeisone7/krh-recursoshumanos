@@ -23,6 +23,11 @@ import {
   Video,
   Shield,
   Cpu,
+  Layout,
+  Palette,
+  Fingerprint,
+  Activity,
+  History
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -36,6 +41,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompany, useUpdateCompany } from '@/hooks/useCompanies';
@@ -52,7 +58,7 @@ import { DiversityGoalsConfig } from '@/components/config/DiversityGoalsConfig';
 import { AITab } from '@/components/config/AITab';
 
 export default function Configuracion() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, isAdmin } = useAuth();
   const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
   const updateCompany = useUpdateCompany();
   
@@ -369,119 +375,192 @@ export default function Configuracion() {
   };
 
   return (
-    <div className="space-y-4 overflow-x-hidden p-4 sm:space-y-6 sm:p-0">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="font-display text-xl font-bold text-foreground sm:text-2xl">Configuración</h1>
-        <p className="mt-1 text-sm text-muted-foreground sm:text-base">Administra la configuración del sistema</p>
+    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto px-4 sm:px-6">
+      {/* Header Premium */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }}
+        className="relative p-8 rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 overflow-hidden shadow-lg shadow-primary/5"
+      >
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className="relative shrink-0 group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-foreground rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border/40 shadow-md overflow-hidden group-hover:scale-105 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Settings className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent uppercase sm:text-4xl">
+                Configuración
+              </h1>
+              <p className="text-muted-foreground font-medium mt-1 tracking-wide">
+                Personaliza la experiencia, políticas y seguridad global del sistema
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="h-10 px-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-black text-primary uppercase tracking-widest">Protocolo Activo</span>
+            </div>
+          </div>
+        </div>
       </motion.div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0">
-        <div className="scrollbar-hide w-full overflow-x-auto pb-1">
-        <TabsList className="inline-flex h-auto min-w-max justify-start sm:grid sm:w-full sm:grid-cols-5">
-          <TabsTrigger value="company" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
-            <Building2 className="w-4 h-4" /><span>Empresa</span>
-          </TabsTrigger>
-          <TabsTrigger value="alerts" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
-            <Bell className="w-4 h-4" /><span>Alertas</span>
-          </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
-            <Shield className="w-4 h-4" /><span>Seguridad</span>
-          </TabsTrigger>
-          <TabsTrigger value="ai" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
-            <Brain className="w-4 h-4" /><span>IA</span>
-          </TabsTrigger>
-          <TabsTrigger value="watermark" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
-            <Stamp className="w-4 h-4" /><span>Marca de agua</span>
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8 min-w-0">
+        <div className="flex justify-center">
+          <TabsList className="inline-flex h-16 p-2 rounded-[1.25rem] bg-muted/30 backdrop-blur-md border border-border/50 shadow-inner">
+            <TabsTrigger value="company" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
+              <Building2 className="w-4 h-4" />
+              Identidad
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
+              <Bell className="w-4 h-4" />
+              Alertas
+            </TabsTrigger>
+            <TabsTrigger value="security" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
+              <Shield className="w-4 h-4" />
+              Seguridad
+            </TabsTrigger>
+            <TabsTrigger value="ai" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
+              <Brain className="w-4 h-4" />
+              IA
+            </TabsTrigger>
+            <TabsTrigger value="watermark" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
+              <Stamp className="w-4 h-4" />
+              Marca de agua
+            </TabsTrigger>
+          </TabsList>
         </div>
 
         {/* Company Tab */}
-        <TabsContent value="company" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle>Información de la Empresa</CardTitle>
-                <CardDescription>Datos generales y contacto</CardDescription>
+        <TabsContent value="company" className="space-y-8">
+          <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-black uppercase tracking-tight">Identidad Corporativa</CardTitle>
+                    <CardDescription className="text-xs font-bold uppercase tracking-widest text-slate-400">Datos legales y puntos de contacto de tu organización</CardDescription>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => setEditingCompany(!editingCompany)}
+                  className={cn(
+                    "h-11 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all",
+                    editingCompany 
+                      ? "bg-slate-200 text-slate-600 hover:bg-slate-300 shadow-none" 
+                      : "bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20"
+                  )}
+                >
+                  {editingCompany ? "CANCELAR EDICIÓN" : "MODIFICAR DATOS"}
+                </Button>
               </div>
-              <Button 
-                variant={editingCompany ? "ghost" : "outline"}
-                size="sm"
-                onClick={() => setEditingCompany(!editingCompany)}
-              >
-                {editingCompany ? "Cancelar" : "Editar"}
-              </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-8">
               {loadingCompany ? (
-                <Skeleton className="h-32 w-full" />
+                <div className="space-y-4">
+                  <Skeleton className="h-12 w-full rounded-xl" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <Skeleton className="h-12 w-full rounded-xl" />
+                    <Skeleton className="h-12 w-full rounded-xl" />
+                  </div>
+                </div>
               ) : company && (
-                <div className="space-y-6">
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Nombre de la Empresa</Label>
+                <div className="space-y-8">
+                  <div className="grid gap-8 md:grid-cols-2">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Razón Social</Label>
                       {editingCompany ? (
                         <Input 
+                          className="h-12 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs"
                           value={companyForm.name} 
                           onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})} 
                         />
                       ) : (
-                        <p className="font-medium p-2 bg-muted/30 rounded-md border border-transparent">{company.name}</p>
+                        <div className="h-12 flex items-center px-4 rounded-xl bg-slate-50 border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
+                          {company.name}
+                        </div>
                       )}
                     </div>
-                    <div className="space-y-2">
-                      <Label>NIT</Label>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">NIT / Identificación</Label>
                       {editingCompany ? (
                         <Input 
+                          className="h-12 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs"
                           value={companyForm.nit} 
                           onChange={(e) => setCompanyForm({...companyForm, nit: e.target.value})} 
                         />
                       ) : (
-                        <p className="font-medium p-2 bg-muted/30 rounded-md border border-transparent">{company.nit}</p>
+                        <div className="h-12 flex items-center px-4 rounded-xl bg-slate-50 border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
+                          {company.nit}
+                        </div>
                       )}
                     </div>
-                    <div className="space-y-2">
-                      <Label>Email Corporativo</Label>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Correo Institucional</Label>
                       {editingCompany ? (
                         <Input 
+                          className="h-12 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs"
                           value={companyForm.email} 
                           onChange={(e) => setCompanyForm({...companyForm, email: e.target.value})} 
                         />
                       ) : (
-                        <p className="font-medium p-2 bg-muted/30 rounded-md border border-transparent">{company.email || '-'}</p>
+                        <div className="h-12 flex items-center px-4 rounded-xl bg-slate-50 border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
+                          {company.email || 'SIN ASIGNAR'}
+                        </div>
                       )}
                     </div>
-                    <div className="space-y-2">
-                      <Label>Teléfono</Label>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Línea de Atención</Label>
                       {editingCompany ? (
                         <Input 
+                          className="h-12 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs"
                           value={companyForm.phone} 
                           onChange={(e) => setCompanyForm({...companyForm, phone: e.target.value})} 
                         />
                       ) : (
-                        <p className="font-medium p-2 bg-muted/30 rounded-md border border-transparent">{company.phone || '-'}</p>
+                        <div className="h-12 flex items-center px-4 rounded-xl bg-slate-50 border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
+                          {company.phone || 'SIN ASIGNAR'}
+                        </div>
                       )}
                     </div>
-                    <div className="md:col-span-2 space-y-2">
-                      <Label>Dirección</Label>
+                    <div className="md:col-span-2 space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Dirección Principal</Label>
                       {editingCompany ? (
                         <Input 
+                          className="h-12 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs"
                           value={companyForm.address} 
                           onChange={(e) => setCompanyForm({...companyForm, address: e.target.value})} 
                         />
                       ) : (
-                        <p className="font-medium p-2 bg-muted/30 rounded-md border border-transparent">{company.address || '-'}</p>
+                        <div className="h-12 flex items-center px-4 rounded-xl bg-slate-50 border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
+                          {company.address || 'SIN ASIGNAR'}
+                        </div>
                       )}
                     </div>
                   </div>
 
                   {editingCompany && (
-                    <div className="flex justify-end">
-                      <Button onClick={handleSaveCompanyInfo} disabled={updateCompany.isPending}>
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end pt-4 border-t border-slate-100">
+                      <Button 
+                        onClick={handleSaveCompanyInfo} 
+                        disabled={updateCompany.isPending}
+                        className="h-12 px-10 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+                      >
                         {updateCompany.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                        Guardar Cambios
+                        CONFIRMAR ACTUALIZACIÓN
                       </Button>
-                    </div>
+                    </motion.div>
                   )}
                 </div>
               )}
@@ -634,204 +713,164 @@ export default function Configuracion() {
         </TabsContent>
 
         {/* Alerts Tab */}
-        <TabsContent value="alerts">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuración de Alertas por Empresa</CardTitle>
-              <CardDescription>Define destinatarios, preavisos y niveles para cada tipo de alerta</CardDescription>
+        <TabsContent value="alerts" className="space-y-8">
+          <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                    <Bell className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-black uppercase tracking-tight">Protocolos de Alerta</CardTitle>
+                    <CardDescription className="text-xs font-bold uppercase tracking-widest text-slate-400">Tiempos de preaviso y destinatarios globales</CardDescription>
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleSaveAlertConfig}
+                  className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+                >
+                  GUARDAR CONFIGURACIÓN
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" /> Correos destinatarios
+            <CardContent className="p-8 space-y-8">
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1 flex items-center gap-2">
+                  <Mail className="h-3.5 w-3.5" /> Suscriptores a Notificaciones
                 </Label>
                 <Textarea
                   value={alertRecipients}
                   onChange={(e) => setAlertRecipients(e.target.value)}
                   placeholder="gerencia.talento@empresa.com&#10;coordinacion.rrhh@empresa.com"
-                  className="min-h-24"
+                  className="min-h-32 rounded-2xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs p-4"
                 />
-                <p className="text-xs text-muted-foreground">Puedes separar los correos por salto de línea, coma o punto y coma.</p>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <div className="space-y-3 p-4 border rounded-lg">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <FileText className="w-4 h-4" />Contratos
-                  </h4>
-                  <div>
-                    <Label>Info (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertContractInfo} 
-                      onChange={(e) => setAlertContractInfo(parseInt(e.target.value) || 60)} 
-                    />
-                  </div>
-                  <div>
-                    <Label>Advertencia (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertContractWarning} 
-                      onChange={(e) => setAlertContractWarning(parseInt(e.target.value) || 30)} 
-                    />
-                  </div>
-                  <div>
-                    <Label>Crítico (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertContractCritical} 
-                      onChange={(e) => setAlertContractCritical(parseInt(e.target.value) || 7)} 
-                    />
-                  </div>
-                </div>
-                <div className="space-y-3 p-4 border rounded-lg">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <Users className="w-4 h-4" />Exámenes Médicos
-                  </h4>
-                  <div>
-                    <Label>Info (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertExamInfo} 
-                      onChange={(e) => setAlertExamInfo(parseInt(e.target.value) || 60)} 
-                    />
-                  </div>
-                  <div>
-                    <Label>Advertencia (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertExamWarning} 
-                      onChange={(e) => setAlertExamWarning(parseInt(e.target.value) || 30)} 
-                    />
-                  </div>
-                  <div>
-                    <Label>Crítico (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertExamCritical} 
-                      onChange={(e) => setAlertExamCritical(parseInt(e.target.value) || 7)} 
-                    />
-                  </div>
-                </div>
-                <div className="space-y-3 p-4 border rounded-lg">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <Shirt className="w-4 h-4" />Dotación
-                  </h4>
-                  <div>
-                    <Label>Info (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertDotationInfo} 
-                      onChange={(e) => setAlertDotationInfo(parseInt(e.target.value) || 60)} 
-                    />
-                  </div>
-                  <div>
-                    <Label>Advertencia (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertDotationWarning} 
-                      onChange={(e) => setAlertDotationWarning(parseInt(e.target.value) || 30)} 
-                    />
-                  </div>
-                  <div>
-                    <Label>Crítico (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertDotationCritical} 
-                      onChange={(e) => setAlertDotationCritical(parseInt(e.target.value) || 7)} 
-                    />
-                  </div>
-                </div>
-                <div className="space-y-3 p-4 border rounded-lg bg-warning/5 border-warning/20">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-warning" />Notificación Retiros
-                  </h4>
-                  <div>
-                    <Label>Info (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertTerminationInfo} 
-                      onChange={(e) => setAlertTerminationInfo(parseInt(e.target.value) || 15)} 
-                    />
-                  </div>
-                  <div>
-                    <Label>Advertencia (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertTerminationWarning} 
-                      onChange={(e) => setAlertTerminationWarning(parseInt(e.target.value) || 7)} 
-                    />
-                  </div>
-                  <div>
-                    <Label>Crítico (días)</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertTerminationCritical} 
-                      onChange={(e) => setAlertTerminationCritical(parseInt(e.target.value) || 3)} 
-                    />
-                  </div>
-                  <div>
-                    <Label>Días pendientes mínimos</Label>
-                    <Input 
-                      type="number" 
-                      min={1}
-                      value={alertTerminationPendingDays} 
-                      onChange={(e) => setAlertTerminationPendingDays(parseInt(e.target.value) || 7)} 
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Envía email si el proceso de retiro lleva más de estos días sin completar
-                  </p>
+                <div className="flex items-center gap-2 px-1">
+                  <div className="h-1 w-1 rounded-full bg-slate-300" />
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Separa los correos por salto de línea para una mejor organización.</p>
                 </div>
               </div>
 
-              {/* Hiring notification role */}
-              <Card className="border-primary/20 bg-primary/5">
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="flex-1">
-                      <h4 className="font-medium flex items-center gap-2">
-                        <Users className="w-4 h-4 text-primary" />
-                        Notificación de Contratación
-                      </h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Cuando se contrata un candidato, se enviará una notificación a todos los usuarios con el rol seleccionado
-                      </p>
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                {/* Contratos Card */}
+                <div className="relative group p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+                  <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                    <FileText className="w-4 h-4 text-primary" />
+                  </div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 mb-6 flex items-center gap-2">
+                    Contratos
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Información</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs" value={alertContractInfo} onChange={(e) => setAlertContractInfo(parseInt(e.target.value) || 60)} />
                     </div>
-                    <Select value={hiringNotifRoleId} onValueChange={setHiringNotifRoleId}>
-                      <SelectTrigger className="w-full sm:w-[220px]">
-                        <SelectValue placeholder="Seleccionar rol" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Sin notificación</SelectItem>
-                        {customRoles?.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-amber-500 uppercase tracking-widest">Advertencia</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-amber-200 bg-amber-50/30" value={alertContractWarning} onChange={(e) => setAlertContractWarning(parseInt(e.target.value) || 30)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-destructive uppercase tracking-widest">Crítico</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-red-200 bg-red-50/30" value={alertContractCritical} onChange={(e) => setAlertContractCritical(parseInt(e.target.value) || 7)} />
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
 
-              <Button onClick={handleSaveAlertConfig} disabled={updateConfig.isPending} className="w-full sm:w-auto">
-                {updateConfig.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                <Save className="w-4 h-4 mr-2" />Guardar Configuración
-              </Button>
+                {/* Exámenes Card */}
+                <div className="relative group p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+                  <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                    <Activity className="w-4 h-4 text-primary" />
+                  </div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 mb-6">Exámenes</h4>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Información</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs" value={alertExamInfo} onChange={(e) => setAlertExamInfo(parseInt(e.target.value) || 60)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-amber-500 uppercase tracking-widest">Advertencia</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-amber-200 bg-amber-50/30" value={alertExamWarning} onChange={(e) => setAlertExamWarning(parseInt(e.target.value) || 30)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-destructive uppercase tracking-widest">Crítico</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-red-200 bg-red-50/30" value={alertExamCritical} onChange={(e) => setAlertExamCritical(parseInt(e.target.value) || 7)} />
+                    </div>
+                  </div>
+                </div>
 
-              {/* Diversity Goals */}
-              <DiversityGoalsConfig />
+                {/* Dotación Card */}
+                <div className="relative group p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+                  <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                    <Shirt className="w-4 h-4 text-primary" />
+                  </div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 mb-6">Dotación</h4>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Información</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs" value={alertDotationInfo} onChange={(e) => setAlertDotationInfo(parseInt(e.target.value) || 60)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-amber-500 uppercase tracking-widest">Advertencia</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-amber-200 bg-amber-50/30" value={alertDotationWarning} onChange={(e) => setAlertDotationWarning(parseInt(e.target.value) || 30)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-destructive uppercase tracking-widest">Crítico</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-red-200 bg-red-50/30" value={alertDotationCritical} onChange={(e) => setAlertDotationCritical(parseInt(e.target.value) || 7)} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Retiros Card */}
+                <div className="relative group p-6 rounded-[2rem] bg-slate-900 text-white transition-all hover:shadow-2xl hover:shadow-primary/20">
+                  <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white/10 flex items-center justify-center">
+                    <History className="w-4 h-4 text-primary" />
+                  </div>
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-6">Procesos de Retiro</h4>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Advertencia</Label>
+                      <Input type="number" className="h-10 rounded-xl bg-white/5 border-white/10 font-black text-xs text-white" value={alertTerminationWarning} onChange={(e) => setAlertTerminationWarning(parseInt(e.target.value) || 7)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black text-primary uppercase tracking-widest">Días Críticos</Label>
+                      <Input type="number" className="h-10 rounded-xl bg-white/5 border-white/10 font-black text-xs text-white" value={alertTerminationCritical} onChange={(e) => setAlertTerminationCritical(parseInt(e.target.value) || 3)} />
+                    </div>
+                    <div className="pt-2">
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-tighter">
+                        Alertas automáticas por inactividad en liquidaciones
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Hiring notification role */}
+              <div className="p-6 rounded-[2rem] bg-primary/5 border border-primary/10">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+                  <div className="flex-1">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-1">
+                      <Users className="w-3.5 h-3.5" /> Notificación de Contratación
+                    </h4>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed">
+                      Al contratar un candidato, se notificará automáticamente a los usuarios con este rol.
+                    </p>
+                  </div>
+                  <Select value={hiringNotifRoleId} onValueChange={setHiringNotifRoleId}>
+                    <SelectTrigger className="w-full sm:w-[240px] h-11 rounded-xl bg-white border-slate-200 shadow-sm font-bold text-[10px] uppercase tracking-widest">
+                      <SelectValue placeholder="SELECCIONAR ROL" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-slate-200">
+                      <SelectItem value="none" className="text-[10px] font-bold uppercase tracking-widest">SIN NOTIFICACIÓN</SelectItem>
+                      {customRoles?.map((role) => (
+                        <SelectItem key={role.id} value={role.id} className="text-[10px] font-bold uppercase tracking-widest">{role.name.toUpperCase()}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100">
+                <DiversityGoalsConfig />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -847,128 +886,143 @@ export default function Configuracion() {
         </TabsContent>
 
         {/* Watermark Tab */}
-        <TabsContent value="watermark">
-          <Card>
-            <CardHeader>
-                <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Stamp className="h-5 w-5 text-primary" />
+        {/* Watermark Tab */}
+        <TabsContent value="watermark" className="space-y-8">
+          <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                    <Stamp className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-black uppercase tracking-tight">Marca de Agua</CardTitle>
+                    <CardDescription className="text-xs font-bold uppercase tracking-widest text-slate-400">Protección visual para contenido generado</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle>Marca de Agua</CardTitle>
-                  <CardDescription>Configura el logo que se aplica a las imágenes generadas con IA en capacitaciones</CardDescription>
-                </div>
+                <Button 
+                  onClick={handleSaveWatermarkConfig} 
+                  disabled={savingWatermark}
+                  className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+                >
+                  {savingWatermark ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  GUARDAR CONFIGURACIÓN
+                </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Enable/Disable */}
-              <div className="flex items-start justify-between gap-4 p-4 border rounded-lg">
-                <div className="min-w-0 space-y-0.5">
-                  <Label className="text-base font-medium">Activar marca de agua</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Agrega automáticamente el logo a las imágenes, mapas mentales e infografías generadas
-                  </p>
+            <CardContent className="p-8 space-y-10">
+              {/* Enable/Disable Toggle Card */}
+              <div className="flex items-center justify-between p-6 rounded-[2rem] bg-primary/5 border border-primary/10">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Estado de Protección</Label>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Activar superposición automática en imágenes e infografías IA</p>
                 </div>
                 <Switch
                   checked={watermarkEnabled}
                   onCheckedChange={setWatermarkEnabled}
+                  className="data-[state=checked]:bg-primary"
                 />
               </div>
 
-              <div className={`space-y-5 transition-opacity ${watermarkEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-                {/* Logo Upload */}
-                <div className="space-y-3">
-                  <Label className="flex items-center gap-1.5">
-                    <ImageIcon className="h-4 w-4" /> Logo personalizado
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    Sube un logo PNG transparente. Si no subes uno, se usará el logo por defecto de Petrocasinos.
-                  </p>
-
-                  <div className="flex flex-col items-start gap-4 sm:flex-row">
-                    {/* Preview */}
-                    <div className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30 overflow-hidden flex-shrink-0">
-                      {watermarkLogoUrl ? (
-                        <img
-                          src={watermarkLogoUrl}
-                          alt="Logo watermark"
-                          className="max-w-full max-h-full object-contain p-2"
-                        />
-                      ) : (
-                        <div className="text-center p-2">
-                          <ImageIcon className="h-8 w-8 text-muted-foreground/40 mx-auto mb-1" />
-                          <span className="text-xs text-muted-foreground">Logo por defecto</span>
+              <div className={cn(
+                "grid gap-12 md:grid-cols-2 transition-all duration-500",
+                !watermarkEnabled && "opacity-40 pointer-events-none grayscale"
+              )}>
+                {/* Logo Section */}
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1 block mb-4">Identidad de Marca</Label>
+                    <div className="flex flex-col sm:flex-row items-center gap-8 p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100">
+                      <div className="relative group w-32 h-32 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
+                        {watermarkLogoUrl ? (
+                          <img src={watermarkLogoUrl} alt="Logo preview" className="max-w-[80%] max-h-[80%] object-contain" />
+                        ) : (
+                          <div className="text-center p-2 opacity-40">
+                            <ImageIcon className="h-8 w-8 mx-auto mb-1 text-slate-400" />
+                            <span className="text-[8px] font-black uppercase tracking-tighter">POR DEFECTO</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                          <Upload className="w-6 h-6 text-white" />
                         </div>
-                      )}
-                    </div>
+                      </div>
 
-                    <div className="flex w-full flex-col gap-2 sm:w-auto">
-                      <input
-                        ref={logoInputRef}
-                        type="file"
-                        accept="image/png,image/svg+xml,image/webp"
-                        className="hidden"
-                        onChange={handleUploadWatermarkLogo}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => logoInputRef.current?.click()}
-                        disabled={uploadingLogo}
-                        className="gap-2"
-                      >
-                        {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                        Subir logo
-                      </Button>
-                      {watermarkLogoUrl && (
+                      <div className="flex flex-col gap-3 flex-1">
+                        <input
+                          ref={logoInputRef}
+                          type="file"
+                          accept="image/png,image/svg+xml,image/webp"
+                          className="hidden"
+                          onChange={handleUploadWatermarkLogo}
+                        />
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setWatermarkLogoUrl(null)}
-                          className="gap-2 text-destructive hover:text-destructive"
+                          variant="outline"
+                          onClick={() => logoInputRef.current?.click()}
+                          disabled={uploadingLogo}
+                          className="h-10 rounded-xl border-slate-200 bg-white font-black uppercase tracking-widest text-[9px] w-full"
                         >
-                          <X className="h-4 w-4" /> Usar por defecto
+                          {uploadingLogo ? <Loader2 className="h-3 w-3 mr-2 animate-spin" /> : <Upload className="h-3 w-3 mr-2" />}
+                          SUBIR NUEVO LOGO
                         </Button>
-                      )}
+                        {watermarkLogoUrl && (
+                          <Button
+                            variant="ghost"
+                            onClick={() => setWatermarkLogoUrl(null)}
+                            className="h-10 rounded-xl text-destructive hover:text-destructive hover:bg-red-50 font-black uppercase tracking-widest text-[9px] w-full"
+                          >
+                            <X className="h-3 w-3 mr-2" /> RESTABLECER
+                          </Button>
+                        )}
+                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter leading-relaxed">Formatos: PNG, WEBP o SVG transparente</p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Position */}
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-1.5">Posición del logo</Label>
-                  <Select value={watermarkPosition} onValueChange={(v) => setWatermarkPosition(v as WatermarkPosition)}>
-                    <SelectTrigger className="w-full sm:w-64">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(Object.entries(positionLabels) as [WatermarkPosition, string][]).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>{label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Position Section */}
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1 block mb-4">Ubicación Visual</Label>
+                    <div className="space-y-6">
+                      <Select value={watermarkPosition} onValueChange={(v) => setWatermarkPosition(v as WatermarkPosition)}>
+                        <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-slate-200 font-bold text-[10px] uppercase tracking-widest">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {(Object.entries(positionLabels) as [WatermarkPosition, string][]).map(([value, label]) => (
+                            <SelectItem key={value} value={value} className="text-[10px] font-bold uppercase tracking-widest">{label.toUpperCase()}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
-                  {/* Visual position indicator */}
-                  <div className="relative mt-3 h-32 w-full max-w-48 border rounded-lg bg-muted/20">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground/50">Imagen</span>
-                    </div>
-                    <div className={`absolute w-10 h-6 rounded bg-primary/20 border border-primary/40 flex items-center justify-center ${
-                      watermarkPosition === 'top-left' ? 'top-2 left-2' :
-                      watermarkPosition === 'top-right' ? 'top-2 right-2' :
-                      watermarkPosition === 'bottom-left' ? 'bottom-2 left-2' :
-                      'bottom-2 right-2'
-                    }`}>
-                      <Stamp className="h-3 w-3 text-primary" />
+                      {/* Visual Guide */}
+                      <div className="relative aspect-video rounded-[2rem] bg-slate-100 border border-slate-200 overflow-hidden shadow-inner group/preview">
+                        <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover/preview:opacity-40 transition-opacity">
+                          <ImageIcon className="w-24 h-24 text-slate-400" />
+                        </div>
+                        <motion.div 
+                          layout
+                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                          className={cn(
+                            "absolute w-12 h-12 flex items-center justify-center",
+                            watermarkPosition === 'top-left' ? 'top-6 left-6' :
+                            watermarkPosition === 'top-right' ? 'top-6 right-6' :
+                            watermarkPosition === 'bottom-left' ? 'bottom-6 left-6' :
+                            'bottom-6 right-6'
+                          )}
+                        >
+                          <div className="w-full h-full rounded-xl bg-white shadow-xl border border-slate-200 flex items-center justify-center">
+                            <Stamp className="w-5 h-5 text-primary" />
+                          </div>
+                        </motion.div>
+                        <div className="absolute bottom-4 left-0 right-0 text-center">
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.3em]">Vista Previa de Composición</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-
-              <Button onClick={handleSaveWatermarkConfig} disabled={savingWatermark} className="w-full sm:w-auto">
-                {savingWatermark ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Guardar Configuración
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>

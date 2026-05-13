@@ -275,56 +275,62 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-xl p-0 sm:h-auto sm:max-h-[95vh] sm:rounded-lg">
-        {/* Header */}
-        <div className="shrink-0 space-y-3 px-3 pb-3 pl-3 pr-10 pt-3 sm:px-6 sm:pb-4 sm:pt-6">
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary/10 sm:h-auto sm:w-auto sm:p-3">
-              <GraduationCap className="h-5 w-5 text-primary sm:h-7 sm:w-7" />
-            </div>
-            <div className="flex-1 min-w-0 space-y-1.5">
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <Badge variant="outline" className="max-w-full text-[10px] font-medium sm:text-xs">
-                  {categoryLabels[course.category] || course.category} {durationLabel}
-                </Badge>
-                <Badge className={`text-[10px] sm:text-xs ${statusColors[course.status] || 'bg-muted text-muted-foreground'}`}>
-                  {course.status === 'borrador' ? 'Borrador' : course.status === 'publicado' ? 'Publicado' : 'Completado'}
-                </Badge>
-                {content && !content.isManual && (
-                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 gap-1 text-[10px] sm:text-xs">
-                    <Sparkles className="h-3 w-3" /> IA
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col gap-0 overflow-hidden bg-background border-border/50 shadow-2xl rounded-[2rem] p-0 sm:h-auto sm:max-h-[95vh]">
+        {/* Premium Gradient Header */}
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner">
+                <GraduationCap className="h-6 w-6" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5">
+                    {categoryLabels[course.category] || course.category} {durationLabel}
                   </Badge>
-                )}
-                {content?.isManual && (
-                  <Badge variant="outline" className="text-[10px] sm:text-xs">Manual</Badge>
-                )}
-              </div>
-              <h2 className="line-clamp-2 text-base font-bold leading-tight sm:text-xl">{course.name}</h2>
-              <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground flex-wrap">
-                {course.audience && (
-                  <span className="flex items-center gap-1"><Users className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {course.audience}</span>
-                )}
-                <span className="flex items-center gap-1"><Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {durationLabel}</span>
-                <span className="flex items-center gap-1"><Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> v{course.version}</span>
+                  <Badge className={`font-black uppercase tracking-widest text-[9px] px-2 py-0.5 ${statusColors[course.status] || 'bg-muted text-muted-foreground'}`}>
+                    {course.status === 'borrador' ? 'Borrador' : course.status === 'publicado' ? 'Publicado' : 'Completado'}
+                  </Badge>
+                  {content && !content.isManual && (
+                    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 gap-1 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5">
+                      <Sparkles className="h-3 w-3" /> IA
+                    </Badge>
+                  )}
+                  {content?.isManual && (
+                    <Badge variant="outline" className="font-bold uppercase tracking-widest text-[9px] px-2 py-0.5">Manual</Badge>
+                  )}
+                </div>
+                <DialogHeader>
+                  <h2 className="text-2xl font-black tracking-tight text-foreground line-clamp-2">{course.name}</h2>
+                </DialogHeader>
+                <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-widest text-muted-foreground flex-wrap mt-2">
+                  {course.audience && (
+                    <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {course.audience}</span>
+                  )}
+                  <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {durationLabel}</span>
+                  <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> v{course.version}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {course.status === 'borrador' && onPublish && (
-            <Button
-              onClick={() => onPublish(course.id)}
-              className="gap-2 w-full sm:w-auto"
-              size="sm"
-            >
-              <Send className="h-4 w-4" /> Publicar Capacitación
-            </Button>
-          )}
+            {course.status === 'borrador' && onPublish && (
+              <Button
+                onClick={() => onPublish(course.id)}
+                className="gap-2 w-full sm:w-auto h-10 px-4 rounded-xl font-bold uppercase tracking-widest text-[10px] shadow-md"
+                size="sm"
+              >
+                <Send className="h-4 w-4" /> Publicar Capacitación
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="scrollbar-header-auto max-w-full shrink-0 touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain border-b px-3 sm:px-6">
-            <TabsList className="h-auto min-w-max justify-start gap-1 rounded-none bg-transparent p-0 sm:w-full sm:gap-0">
+          <div className="scrollbar-header-auto max-w-full shrink-0 touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain border-b border-border/50 px-8 py-3 bg-muted/10">
+            <TabsList className="h-auto w-fit justify-start gap-2 rounded-[1.5rem] bg-muted/30 p-1.5 flex flex-nowrap">
               {[
                 { value: 'general', icon: BookOpen, label: 'General' },
                 { value: 'contenido', icon: FileText, label: 'Contenido' },
@@ -335,12 +341,12 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="min-h-11 min-w-fit rounded-t-md border-b-2 border-transparent px-3.5 py-3 text-xs font-medium whitespace-nowrap data-[state=active]:border-primary data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none sm:min-h-10 sm:gap-1.5 sm:rounded-none sm:px-4 sm:py-2.5 sm:text-sm sm:data-[state=active]:bg-transparent"
+                  className="rounded-2xl px-5 py-2 font-bold uppercase tracking-widest text-[10px] whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
                 >
-                  <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <tab.icon className="h-3.5 w-3.5 mr-2" />
                   {tab.label}
                   {tab.value === 'media' && media.length > 0 && (
-                    <Badge className="ml-1 h-4 sm:h-5 min-w-[16px] sm:min-w-[20px] px-1 sm:px-1.5 text-[9px] sm:text-[10px] bg-primary text-primary-foreground">
+                    <Badge className="ml-2 h-5 min-w-[20px] px-1.5 text-[9px] bg-primary text-primary-foreground font-black">
                       {media.length}
                     </Badge>
                   )}
@@ -350,42 +356,44 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
           </div>
 
           <ScrollArea className="min-h-0 flex-1 overflow-y-auto sm:max-h-[60vh]">
-            <div className="p-3 sm:p-6">
+            <div className="p-8">
               {/* General Tab */}
-              <TabsContent value="general" className="mt-0 space-y-5">
+              <TabsContent value="general" className="mt-0 space-y-6">
                 {content?.introduccion && (
-                  <Card>
-                    <CardContent className="p-5">
-                      <h3 className="font-semibold mb-2 flex items-center gap-2">
-                        <BookOpen className="h-4 w-4" /> Introducción
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+                    <CardContent className="p-8 bg-muted/10">
+                      <h3 className="font-black text-lg text-foreground tracking-tight mb-3 flex items-center gap-2">
+                        <BookOpen className="h-5 w-5 text-primary" /> Introducción
                       </h3>
-                      <p className="line-clamp-6 break-words text-sm leading-relaxed text-muted-foreground sm:line-clamp-none">{content.introduccion}</p>
+                      <p className="text-sm font-medium leading-relaxed opacity-80">{content.introduccion}</p>
                     </CardContent>
                   </Card>
                 )}
 
                 {course.objective && !content?.introduccion && (
-                  <Card>
-                    <CardContent className="p-5">
-                      <h3 className="font-semibold mb-2 flex items-center gap-2">
-                        <Target className="h-4 w-4" /> Objetivo
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+                    <CardContent className="p-8 bg-muted/10">
+                      <h3 className="font-black text-lg text-foreground tracking-tight mb-3 flex items-center gap-2">
+                        <Target className="h-5 w-5 text-primary" /> Objetivo
                       </h3>
-                      <p className="line-clamp-6 break-words text-sm leading-relaxed text-muted-foreground sm:line-clamp-none">{course.objective}</p>
+                      <p className="text-sm font-medium leading-relaxed opacity-80">{course.objective}</p>
                     </CardContent>
                   </Card>
                 )}
 
                 {content?.objetivos && content.objetivos.length > 0 && (
-                  <Card>
-                    <CardContent className="p-5">
-                      <h3 className="font-semibold mb-3 flex items-center gap-2">
-                        <Target className="h-4 w-4" /> Objetivos
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+                    <CardContent className="p-8">
+                      <h3 className="font-black text-lg text-foreground tracking-tight mb-4 flex items-center gap-2">
+                        <Target className="h-5 w-5 text-primary" /> Objetivos
                       </h3>
-                      <ul className="space-y-2">
+                      <ul className="space-y-3">
                         {content.objetivos.map((obj, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                            <ChevronRight className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
-                            <span className="line-clamp-3 min-w-0 break-words sm:line-clamp-none">{obj}</span>
+                          <li key={i} className="flex items-start gap-3 p-3 rounded-2xl bg-muted/20 border border-border/50">
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                              <ChevronRight className="h-3 w-3 text-primary" />
+                            </div>
+                            <span className="text-sm font-medium leading-relaxed text-foreground/80">{obj}</span>
                           </li>
                         ))}
                       </ul>
@@ -394,33 +402,41 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                 )}
 
                 {/* Metadata cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <Card>
-                    <CardContent className="p-4 flex flex-col items-center text-center gap-1.5">
-                      <Users className="h-5 w-5 text-primary" />
-                      <span className="text-xs text-muted-foreground">Nivel</span>
-                      <span className="font-semibold text-sm capitalize">{course.level}</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm">
+                    <CardContent className="p-6 flex flex-col items-center text-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nivel</span>
+                      <span className="font-bold text-sm capitalize">{course.level}</span>
                     </CardContent>
                   </Card>
-                  <Card>
-                    <CardContent className="p-4 flex flex-col items-center text-center gap-1.5">
-                      {riskIcons[course.risk_level] || <Shield className="h-5 w-5 text-muted-foreground" />}
-                      <span className="text-xs text-muted-foreground">Riesgo</span>
-                      <span className="font-semibold text-sm capitalize">{course.risk_level}</span>
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm">
+                    <CardContent className="p-6 flex flex-col items-center text-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-background/50 flex items-center justify-center">
+                        {riskIcons[course.risk_level] || <Shield className="h-5 w-5 text-muted-foreground" />}
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Riesgo</span>
+                      <span className="font-bold text-sm capitalize">{course.risk_level}</span>
                     </CardContent>
                   </Card>
-                  <Card>
-                    <CardContent className="p-4 flex flex-col items-center text-center gap-1.5">
-                      <Scale className="h-5 w-5 text-primary" />
-                      <span className="text-xs text-muted-foreground">Marco Legal</span>
-                      <span className="line-clamp-2 break-words text-sm font-semibold capitalize">{course.legal_framework || 'Interno'}</span>
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm">
+                    <CardContent className="p-6 flex flex-col items-center text-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Scale className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Marco Legal</span>
+                      <span className="font-bold text-sm capitalize line-clamp-2">{course.legal_framework || 'Interno'}</span>
                     </CardContent>
                   </Card>
-                  <Card>
-                    <CardContent className="p-4 flex flex-col items-center text-center gap-1.5">
-                      <Globe className="h-5 w-5 text-primary" />
-                      <span className="text-xs text-muted-foreground">Modalidad</span>
-                      <span className="font-semibold text-sm capitalize">{course.modality === 'mixto' ? 'híbrida' : course.modality}</span>
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm">
+                    <CardContent className="p-6 flex flex-col items-center text-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Globe className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Modalidad</span>
+                      <span className="font-bold text-sm capitalize">{course.modality === 'mixto' ? 'híbrida' : course.modality}</span>
                     </CardContent>
                   </Card>
                 </div>
@@ -429,18 +445,18 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
               {/* Contenido Tab */}
               <TabsContent value="contenido" className="mt-0">
                 {content?.contenido ? (
-                  <Card>
-                    <CardContent className="p-5">
-                      <h3 className="font-semibold mb-3 flex items-center gap-2">
-                        <FileText className="h-4 w-4" /> Desarrollo del Contenido
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+                    <CardContent className="p-8">
+                      <h3 className="font-black text-lg text-foreground tracking-tight mb-6 flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" /> Desarrollo del Contenido
                       </h3>
                       <MarkdownContent content={content.contenido} />
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <FileText className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                    <p>No hay contenido generado aún</p>
+                  <div className="text-center py-16 text-muted-foreground border-2 border-dashed border-border/50 rounded-[2rem]">
+                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="font-bold uppercase tracking-widest text-xs opacity-60">No hay contenido generado aún</p>
                   </div>
                 )}
               </TabsContent>
@@ -448,30 +464,30 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
               {/* Claves Tab */}
               <TabsContent value="claves" className="mt-0">
                 {content?.puntosClave && content.puntosClave.length > 0 ? (
-                  <Card>
-                    <CardContent className="p-5">
-                      <h3 className="font-semibold mb-4 flex items-center gap-2">
-                        <Lightbulb className="h-4 w-4" /> Puntos Clave
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+                    <CardContent className="p-8">
+                      <h3 className="font-black text-lg text-foreground tracking-tight mb-6 flex items-center gap-2">
+                        <Lightbulb className="h-5 w-5 text-amber-500" /> Puntos Clave
                       </h3>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {content.puntosClave.map((punto, i) => (
                           <div
                             key={i}
-                            className="flex items-start gap-3 rounded-lg border-l-4 border-amber-400 bg-amber-50/50 dark:bg-amber-900/10 p-4"
+                            className="flex items-start gap-4 rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50 to-orange-50/30 dark:from-amber-900/10 dark:to-orange-900/5 p-5 shadow-sm"
                           >
-                            <span className="bg-amber-500 text-white rounded-full w-7 h-7 flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                            <span className="bg-gradient-to-br from-amber-400 to-orange-500 text-white rounded-xl w-10 h-10 flex items-center justify-center flex-shrink-0 text-sm font-black shadow-inner">
                               {i + 1}
                             </span>
-                            <span className="line-clamp-4 min-w-0 break-words text-sm leading-relaxed sm:line-clamp-none">{punto}</span>
+                            <span className="text-sm font-medium leading-relaxed text-foreground/80 mt-1">{punto}</span>
                           </div>
                         ))}
                       </div>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Lightbulb className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                    <p>No hay puntos clave definidos</p>
+                  <div className="text-center py-16 text-muted-foreground border-2 border-dashed border-border/50 rounded-[2rem]">
+                    <Lightbulb className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="font-bold uppercase tracking-widest text-xs opacity-60">No hay puntos clave definidos</p>
                   </div>
                 )}
               </TabsContent>
@@ -479,32 +495,38 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
               {/* Evaluación Tab */}
               <TabsContent value="evaluacion" className="mt-0">
                 {content?.evaluacion && content.evaluacion.length > 0 ? (
-                  <Card>
-                    <CardContent className="p-3 sm:p-5">
-                      <div className="mb-4 flex flex-wrap items-center gap-2">
-                        <h3 className="flex items-center gap-2 font-semibold">
-                          <CircleHelp className="h-4 w-4" /> Preguntas de Evaluación
+                  <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+                    <CardContent className="p-8">
+                      <div className="mb-6 flex flex-wrap items-center gap-3">
+                        <h3 className="font-black text-lg text-foreground tracking-tight flex items-center gap-2">
+                          <CircleHelp className="h-5 w-5 text-primary" /> Preguntas de Evaluación
                         </h3>
-                        <Badge className="bg-primary text-primary-foreground text-xs">
-                          {content.evaluacion.length} pregunta{content.evaluacion.length !== 1 ? 's' : ''}
+                        <Badge className="bg-primary/10 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5">
+                          {content.evaluacion.length} PREGUNTAS
                         </Badge>
                       </div>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {content.evaluacion.map((q, i) => (
-                          <div key={i} className="space-y-3 rounded-lg border p-3 sm:p-4">
-                            <div className="flex items-start gap-3">
-                              <span className="font-bold text-sm text-muted-foreground flex-shrink-0">P{i + 1}</span>
-                              <p className="line-clamp-3 min-w-0 break-words text-sm font-medium leading-relaxed sm:line-clamp-none">{q.pregunta}</p>
-                            </div>
-                            <div className="flex items-start gap-1.5 pl-0 text-sm sm:pl-8">
-                              <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                              <span className="text-green-700 dark:text-green-400 font-medium">Respuesta:</span>
-                              <span className="line-clamp-3 min-w-0 break-words text-muted-foreground sm:line-clamp-none">
-                                {q.opciones.findIndex(o => o === q.respuestaCorrecta) >= 0
-                                  ? `${String.fromCharCode(65 + q.opciones.findIndex(o => o === q.respuestaCorrecta))}) ${q.respuestaCorrecta}`
-                                  : q.respuestaCorrecta
-                                }
+                          <div key={i} className="space-y-4 rounded-2xl border border-border/50 bg-muted/10 p-6">
+                            <div className="flex items-start gap-4">
+                              <span className="w-8 h-8 rounded-xl bg-background border border-border flex items-center justify-center font-black text-xs text-muted-foreground flex-shrink-0 shadow-sm">
+                                P{i + 1}
                               </span>
+                              <p className="text-sm font-bold leading-relaxed text-foreground mt-1.5">{q.pregunta}</p>
+                            </div>
+                            <div className="flex items-start gap-3 pl-12">
+                              <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Respuesta Correcta:</span>
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  {q.opciones.findIndex(o => o === q.respuestaCorrecta) >= 0
+                                    ? `${String.fromCharCode(65 + q.opciones.findIndex(o => o === q.respuestaCorrecta))}) ${q.respuestaCorrecta}`
+                                    : q.respuestaCorrecta
+                                  }
+                                </span>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -512,9 +534,9 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <CircleHelp className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                    <p>No hay evaluación definida</p>
+                  <div className="text-center py-16 text-muted-foreground border-2 border-dashed border-border/50 rounded-[2rem]">
+                    <CircleHelp className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="font-bold uppercase tracking-widest text-xs opacity-60">No hay evaluación definida</p>
                   </div>
                 )}
               </TabsContent>
@@ -714,34 +736,35 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
         </Tabs>
 
         {/* Footer */}
-        <div className="shrink-0 border-t px-3 py-2.5 text-xs text-muted-foreground sm:flex sm:items-center sm:justify-between sm:gap-0 sm:px-6 sm:py-3 sm:text-sm">
-          <div className="flex items-center gap-3 sm:gap-5 flex-wrap">
+        <div className="shrink-0 border-t border-border/50 bg-muted/10 px-8 py-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4 flex-wrap text-xs text-muted-foreground">
             {media.length > 0 && (
-              <span className="flex items-center gap-1.5">
-                <ImageIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <strong className="text-foreground">{media.length}</strong> Media
+              <span className="flex items-center gap-2 bg-background border border-border/50 rounded-xl px-3 py-1.5 shadow-sm">
+                <ImageIcon className="h-4 w-4" />
+                <strong className="text-foreground font-black">{media.length}</strong> 
+                <span className="font-bold uppercase tracking-widest text-[9px]">Media</span>
               </span>
             )}
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {format(parseISO(course.created_at), "dd MMM yyyy", { locale: es })}
-              <span className="text-[10px] sm:text-xs">Creación</span>
+            <span className="flex items-center gap-2 bg-background border border-border/50 rounded-xl px-3 py-1.5 shadow-sm">
+              <Calendar className="h-4 w-4" />
+              <span className="font-bold">{format(parseISO(course.created_at), "dd MMM yyyy", { locale: es })}</span>
+              <span className="font-bold uppercase tracking-widest text-[9px] border-l pl-2 ml-1">Creación</span>
             </span>
           </div>
-          <div className="flex items-center gap-2 mt-2 w-full sm:mt-0 sm:w-auto">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             {course.status === 'borrador' && (
               <Button 
                 onClick={() => {
                   publishCourse.mutate(course.id);
                   onOpenChange(false);
                 }} 
-                className="flex-1 sm:flex-none gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="flex-1 sm:flex-none h-12 px-6 rounded-2xl gap-2 font-black uppercase tracking-widest text-xs shadow-xl shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 <Send className="h-4 w-4" />
                 Publicar
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 sm:flex-none h-12 px-6 rounded-2xl font-bold tracking-widest text-xs uppercase bg-background">
               Cerrar
             </Button>
           </div>

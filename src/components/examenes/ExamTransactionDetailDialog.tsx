@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Stethoscope, Calendar, FileText, CheckCircle, AlertTriangle, PenTool, MapPin, User, Upload, Paperclip, ExternalLink, Trash2, FileDown } from 'lucide-react';
+import { Stethoscope, Calendar, FileText, CheckCircle, AlertTriangle, PenTool, MapPin, User, Upload, Paperclip, ExternalLink, Trash2, FileDown, Loader2 } from 'lucide-react';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -172,181 +172,239 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl flex-col overflow-hidden p-0 sm:w-full">
-        <div className="shrink-0 px-4 pb-4 pt-5 sm:px-6 sm:pt-6">
-          <DialogHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-              <Stethoscope className="w-6 h-6 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0 space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="text-xs font-medium">
-                  {transaction.items.length} examen{transaction.items.length !== 1 ? 'es' : ''}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {examTypeLabels[transaction.exam_type as ExamType] || transaction.exam_type}
-                </Badge>
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
+        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                <Stethoscope className="w-6 h-6 text-primary-foreground" />
               </div>
-              <DialogTitle className="font-display text-lg text-foreground leading-tight">
-                {employeeName}
-              </DialogTitle>
-              <p className="text-muted-foreground text-sm flex items-center gap-3">
-                <span>C.C. {transaction.employees?.document_number}</span>
-                <span>·</span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {format(new Date(transaction.exam_date), 'dd MMM yyyy', { locale: es })}
-                </span>
-              </p>
-            </div>
-            <Button variant="outline" size="sm" className="w-full shrink-0 gap-1.5 sm:w-auto" onClick={handleExportPdf}>
-              <FileDown className="w-4 h-4" /> Exportar
-            </Button>
-          </DialogHeader>
-        </div>
-
-        <Separator />
-
-        <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
-          {/* Items */}
-          <div className="space-y-2">
-            {transaction.items.map((item) => {
-              const rs = resultStyles[item.result] || resultStyles.pendiente;
-              return (
-                <div key={item.id} className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/30 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <Stethoscope className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{item.exam_name}</p>
-                      {item.expiration_date && (
-                        <p className="text-xs text-muted-foreground">
-                          Vence {format(new Date(item.expiration_date), 'dd/MM/yyyy')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <Badge variant="outline" className={cn('gap-1 text-xs whitespace-nowrap', rs.bg, rs.text)}>
-                    {resultLabels[item.result] || item.result}
+              <div>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <Badge variant="outline" className="h-5 px-2 rounded-lg text-[8px] font-black uppercase tracking-widest bg-primary/10 text-primary border-primary/20">
+                    {transaction.items.length} Procedimientos
+                  </Badge>
+                  <Badge variant="outline" className="h-5 px-2 rounded-lg text-[8px] font-black uppercase tracking-widest bg-secondary/10 text-secondary border-secondary/20">
+                    {examTypeLabels[transaction.exam_type as ExamType] || transaction.exam_type}
                   </Badge>
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Info */}
-          <div className="border border-border rounded-xl p-4 space-y-3">
-            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <FileText className="w-4 h-4 text-primary" />
-              Información de la Aplicación
-            </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="flex items-center gap-3 rounded-lg border border-border p-3">
-                <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Centro de Operación</p>
-                  <p className="text-sm font-medium truncate">{transaction.employees?.operation_centers?.name || 'Sin centro'}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-lg border border-border p-3">
-                <User className="w-4 h-4 text-muted-foreground shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Proveedor / IPS</p>
-                  <p className="text-sm font-medium truncate">{transaction.provider || '—'}</p>
+                <DialogTitle className="text-2xl font-black tracking-tighter">
+                  {employeeName}
+                </DialogTitle>
+                <div className="flex items-center gap-3 mt-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
+                    <User className="w-3 h-3" /> C.C. {transaction.employees?.document_number}
+                  </p>
+                  <span className="text-muted-foreground/30">·</span>
+                  <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3" /> {format(new Date(transaction.exam_date), 'dd MMM yyyy', { locale: es })}
+                  </p>
                 </div>
               </div>
             </div>
-            {transaction.doctor_name && (
-              <div className="text-sm">
-                <p className="text-muted-foreground text-xs">Médico</p>
-                <p className="text-foreground">{transaction.doctor_name}</p>
-              </div>
-            )}
-            {transaction.observations && (
-              <>
-                <Separator />
-                <div className="text-sm">
-                  <p className="text-muted-foreground mb-1 text-xs">Observaciones</p>
-                  <p className="text-foreground">{transaction.observations}</p>
-                </div>
-              </>
-            )}
+            <Button 
+              variant="outline" 
+              onClick={handleExportPdf}
+              className="h-10 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background/50 border-border/50 hover:bg-background transition-all shadow-sm"
+            >
+              <FileDown className="w-4 h-4" /> Exportar Orden
+            </Button>
+          </div>
+        </DialogHeader>
+
+        <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Items Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <h4 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Procedimientos Realizados</h4>
+              <Stethoscope className="w-4 h-4 text-primary/30" />
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              {transaction.items.map((item) => {
+                const rs = resultStyles[item.result] || resultStyles.pendiente;
+                return (
+                  <div key={item.id} className="group relative overflow-hidden flex flex-col gap-4 rounded-2xl border border-border/50 bg-background/50 p-5 transition-all hover:bg-background hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                        <Stethoscope className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black tracking-tight text-foreground truncate">{item.exam_name}</p>
+                        {item.expiration_date && (
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
+                            <Calendar className="w-3 h-3 text-primary/40" />
+                            Vence: {format(new Date(item.expiration_date), 'dd MMM yyyy', { locale: es })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <Badge variant="outline" className={cn('h-7 px-3 rounded-xl text-[9px] font-black uppercase tracking-widest border-0 shadow-sm', rs.bg, rs.text)}>
+                      {resultLabels[item.result] || item.result}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Document */}
-          <div className="border border-border rounded-xl p-4 space-y-3">
-            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Paperclip className="w-4 h-4 text-primary" />
-              Documento Adjunto
+          {/* Detailed Info Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-1">
+                <FileText className="w-4 h-4 text-primary/40" />
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Información General</h4>
+              </div>
+              <div className="bg-primary/[0.02] border border-primary/10 rounded-[2rem] p-6 space-y-6">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Centro de Operación</p>
+                  <p className="font-black tracking-tight text-foreground flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-primary/40" />
+                    {transaction.employees?.operation_centers?.name || 'Sin centro asignado'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Proveedor / IPS</p>
+                  <p className="font-black tracking-tight text-foreground flex items-center gap-2">
+                    <User className="w-4 h-4 text-primary/40" />
+                    {transaction.provider || 'No especificado'}
+                  </p>
+                </div>
+                {transaction.doctor_name && (
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Médico Especialista</p>
+                    <p className="font-black tracking-tight text-foreground">{transaction.doctor_name}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-1">
+                <Paperclip className="w-4 h-4 text-primary/40" />
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Soportes y Notas</h4>
+              </div>
+              <div className="bg-background/50 border border-border/50 rounded-[2rem] p-6 space-y-6">
+                {transaction.observations ? (
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Observaciones</p>
+                    <p className="text-sm font-medium text-foreground leading-relaxed italic">"{transaction.observations}"</p>
+                  </div>
+                ) : (
+                  <div className="py-4 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 italic">Sin observaciones adicionales</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Document Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <Paperclip className="w-4 h-4 text-primary/40" />
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Expediente Médico Digital</h4>
+              </div>
               {documentUrl && (
-                <Badge variant="outline" className="text-xs bg-success-light text-success border-0 ml-1">
-                  <CheckCircle className="w-3 h-3 mr-1" /> Adjunto
+                <Badge variant="outline" className="h-5 px-2 rounded-lg text-[8px] font-black uppercase tracking-widest bg-success/10 text-success border-success/20 animate-pulse">
+                  <CheckCircle className="w-2.5 h-2.5 mr-1" /> Archivo Adjunto
                 </Badge>
               )}
-            </p>
+            </div>
 
             <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleUploadPdf} />
 
             {documentUrl ? (
-              <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-3 sm:flex-row sm:items-center">
-                <FileText className="w-5 h-5 text-destructive shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">Documento PDF</p>
+              <div className="relative overflow-hidden group bg-background/50 border border-border/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 transition-all hover:bg-background hover:shadow-md">
+                <div className="h-12 w-12 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <FileText className="w-6 h-6" />
                 </div>
-                <div className="grid w-full grid-cols-3 gap-1 sm:flex sm:w-auto sm:shrink-0 sm:items-center">
-                  <Button variant="outline" size="sm" className="gap-1.5" asChild>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-black tracking-tight text-foreground truncate">Resultados Médicos Ocupacionales.pdf</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Documento PDF Oficial</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background/50" asChild>
                     <a href={documentUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-3.5 h-3.5" /> Ver
+                      <ExternalLink className="w-3.5 h-3.5" /> Ver PDF
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPdf}>
+                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPdf} className="h-9 w-9 rounded-xl p-0 bg-background/50">
                     <Upload className="w-3.5 h-3.5" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={handleRemoveDocument} className="text-destructive hover:text-destructive">
+                  <Button variant="ghost" size="sm" onClick={handleRemoveDocument} className="h-9 w-9 rounded-xl p-0 text-destructive hover:bg-destructive/10">
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </div>
             ) : (
-              <Button variant="outline" className="w-full gap-2 border-dashed" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPdf}>
-                <Upload className="w-4 h-4" />
-                {isUploadingPdf ? 'Subiendo...' : 'Adjuntar PDF'}
+              <Button 
+                variant="outline" 
+                className="w-full h-16 rounded-2xl border-dashed border-2 gap-3 hover:bg-primary/5 hover:border-primary/30 transition-all group" 
+                onClick={() => fileInputRef.current?.click()} 
+                disabled={isUploadingPdf}
+              >
+                <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <Upload className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Adjuntar Reporte Médico</p>
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{isUploadingPdf ? 'Subiendo archivo...' : 'Formato PDF (Máx. 10MB)'}</p>
+                </div>
               </Button>
             )}
           </div>
 
-          {/* Signature */}
-          <div className="border border-border rounded-xl p-4 space-y-3">
-            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <PenTool className="w-4 h-4 text-primary" />
-              Firma del Empleado
+          {/* Signature Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <PenTool className="w-4 h-4 text-primary/40" />
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Firma Digital de Recibido</h4>
+              </div>
               {signatureDataUrl && !showSignature && (
-                <Badge variant="outline" className="text-xs bg-success-light text-success border-0 ml-1">
-                  <CheckCircle className="w-3 h-3 mr-1" /> Guardada
+                <Badge variant="outline" className="h-5 px-2 rounded-lg text-[8px] font-black uppercase tracking-widest bg-success/10 text-success border-success/20">
+                  <CheckCircle className="w-2.5 h-2.5 mr-1" /> Firma Registrada
                 </Badge>
               )}
-            </p>
+            </div>
 
-            {signatureDataUrl && !showSignature ? (
-              <div className="space-y-2">
-                <div className="bg-muted/30 rounded-lg p-3">
-                  <img src={signatureDataUrl} alt="Firma" className="w-full max-h-[100px] object-contain" />
+            <div className="bg-background/50 border border-border/50 rounded-[2rem] p-8">
+              {signatureDataUrl && !showSignature ? (
+                <div className="flex flex-col items-center gap-6">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-border/50 w-full flex items-center justify-center min-h-[150px] shadow-inner">
+                    <img src={signatureDataUrl} alt="Firma" className="max-h-[100px] object-contain filter drop-shadow-sm" />
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-10 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background/50" 
+                    onClick={() => { setSignatureDataUrl(null); setShowSignature(true); }}
+                  >
+                    Actualizar Firma
+                  </Button>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => { setSignatureDataUrl(null); setShowSignature(true); }}>
-                  Volver a firmar
-                </Button>
-              </div>
-            ) : showSignature || !signatureDataUrl ? (
-              <SignatureCanvas
-                onSave={handleSaveSignature}
-                width={400}
-                height={150}
-              />
-            ) : null}
-            {isSavingSignature && (
-              <p className="text-xs text-muted-foreground">Guardando firma...</p>
-            )}
+              ) : showSignature || !signatureDataUrl ? (
+                <div className="space-y-4">
+                  <div className="bg-white rounded-2xl border border-border/50 overflow-hidden shadow-inner">
+                    <SignatureCanvas
+                      onSave={handleSaveSignature}
+                      width={600}
+                      height={180}
+                    />
+                  </div>
+                  <p className="text-center text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Firma utilizando tu mouse o pantalla táctil</p>
+                </div>
+              ) : null}
+              
+              {isSavingSignature && (
+                <div className="flex items-center justify-center gap-2 mt-4 text-primary animate-pulse">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <p className="text-[10px] font-black uppercase tracking-widest">Sincronizando firma...</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>

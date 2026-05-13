@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -186,7 +186,7 @@ export default function Seleccion() {
         <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+              <div className="p-2.5 rounded-2xl bg-primary shadow-md shadow-primary/10 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
                 <Users className="w-6 h-6" />
               </div>
               <div>
@@ -201,9 +201,9 @@ export default function Seleccion() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
             {kpis.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-md hover:border-primary/10 transition-all duration-500">
                 <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
                 </div>
@@ -219,7 +219,7 @@ export default function Seleccion() {
       </div>
 
       {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
           <div className="relative w-full sm:w-80 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -239,7 +239,7 @@ export default function Seleccion() {
                   <SelectValue placeholder="Estado" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+              <SelectContent className="rounded-2xl border-primary/10 shadow-md">
                 <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los estados</SelectItem>
                 <SelectItem value="open" className="font-bold text-xs uppercase p-3 text-emerald-600">Abierta</SelectItem>
                 <SelectItem value="in_process" className="font-bold text-xs uppercase p-3 text-amber-600">En Proceso</SelectItem>
@@ -255,7 +255,7 @@ export default function Seleccion() {
                   <SelectValue placeholder="Centro" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+              <SelectContent className="rounded-2xl border-primary/10 shadow-md">
                 <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los centros</SelectItem>
                 {operationCenters.map((center) => (
                   <SelectItem key={center.id} value={center.id} className="font-bold text-xs uppercase p-3">
@@ -267,14 +267,14 @@ export default function Seleccion() {
           </div>
         </div>
 
-        <Button className="h-12 w-full xl:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={() => setShowVacancyForm(true)}>
+        <Button className="h-12 w-full lg:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-md shadow-primary/10" onClick={() => setShowVacancyForm(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Nueva Vacante
         </Button>
       </div>
 
       <ScrollArea className="flex-1 p-6 sm:p-10">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-full mx-auto w-full">
           {loadingVacancies ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -296,16 +296,16 @@ export default function Seleccion() {
               />
 
               {/* Desktop Table View */}
-              <div className="hidden md:block overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-2xl bg-background/40 backdrop-blur-xl">
-                <Table>
+              <div className="hidden md:block rounded-[2.5rem] border border-primary/5 shadow-md bg-background/40 backdrop-blur-xl">
+                <Table className="w-full table-fixed">
                   <TableHeader>
                     <TableRow className="bg-muted/30 border-b border-primary/5 hover:bg-muted/30">
-                      <TableHead className="px-8 h-16 font-black text-[10px] uppercase tracking-[0.2em]">Vacante</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Ubicación</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Candidatos</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Apertura</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
-                      <TableHead className="px-8 h-16 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
+                      <TableHead className="px-4 h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[30%]">Vacante</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[18%]">Ubicación</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[15%]">Candidatos</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[12%]">Apertura</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[12%]">Estado</TableHead>
+                      <TableHead className="px-4 h-16 text-right font-black text-[10px] uppercase tracking-[0.2em] w-[13%]">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -321,13 +321,13 @@ export default function Seleccion() {
                           className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors cursor-pointer"
                           onClick={() => openVacancyDetail(vacancy.id)}
                         >
-                          <TableCell className="px-8 py-5">
+                          <TableCell className="px-4 py-5">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
-                                <Briefcase className="w-6 h-6" />
+                              <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shrink-0">
+                                <Briefcase className="w-5 h-5" />
                               </div>
-                              <div className="min-w-0">
-                                <p className="font-black tracking-tight text-foreground text-base leading-none mb-1">{vacancy.position_title}</p>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-black tracking-tight text-foreground text-sm leading-none mb-1 truncate">{vacancy.position_title}</p>
                                 <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest truncate">
                                   {vacancy.department_area || 'Sin área'} • {vacancy.positions_count} {vacancy.positions_count > 1 ? 'Posiciones' : 'Posición'}
                                 </p>
@@ -336,9 +336,9 @@ export default function Seleccion() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <Building2 className="w-4 h-4 text-primary/60" />
-                              <span className="text-sm font-black tracking-tight text-foreground/80">{centerName}</span>
-                            </div>
+                                <Building2 className="w-3.5 h-3.5 text-primary/60" />
+                                <span className="text-[11px] font-black tracking-tight text-foreground/80 truncate">{centerName}</span>
+                              </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
@@ -364,8 +364,8 @@ export default function Seleccion() {
                               {vacancyStatusLabels[status]}
                             </Badge>
                           </TableCell>
-                          <TableCell className="px-8 text-right">
-                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0" onClick={e => e.stopPropagation()}>
+                          <TableCell className="px-4 text-right">
+                            <div className="flex items-center justify-end gap-2 transition-all duration-300" onClick={e => e.stopPropagation()}>
                               <Button
                                 size="icon"
                                 variant="ghost"

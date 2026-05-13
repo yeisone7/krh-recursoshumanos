@@ -28,6 +28,7 @@ interface MultiSelectProps {
   onChange: (value: string[]) => void
   placeholder?: string
   className?: string
+  maxCount?: number
 }
 
 export function MultiSelect({
@@ -36,6 +37,7 @@ export function MultiSelect({
   onChange,
   placeholder = "Seleccionar...",
   className,
+  maxCount = 3,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -60,30 +62,40 @@ export function MultiSelect({
         >
           <div className="flex flex-wrap gap-1">
             {selectedOptions.length > 0 ? (
-              selectedOptions.map((option) => (
-                <Badge
-                  key={option.value}
-                  variant="default"
-                  className="rounded-md px-2 py-0.5 font-medium bg-[#004a7c] hover:bg-[#003a62] text-white flex items-center gap-1 border-none shadow-sm animate-in zoom-in-95 duration-200"
-                >
-                  {option.label}
-                  <button
-                    className="ml-1 rounded-full outline-none hover:bg-white/20 p-0.5 transition-colors"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleUnselect(option.value)
-                      }
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                    }}
-                    onClick={() => handleUnselect(option.value)}
+              <>
+                {selectedOptions.slice(0, maxCount).map((option) => (
+                  <Badge
+                    key={option.value}
+                    variant="default"
+                    className="rounded-md px-2 py-0.5 font-medium bg-[#004a7c] hover:bg-[#003a62] text-white flex items-center gap-1 border-none shadow-sm animate-in zoom-in-95 duration-200"
                   >
-                    <X className="h-3 w-3 text-white/80 hover:text-white" />
-                  </button>
-                </Badge>
-              ))
+                    {option.label}
+                    <button
+                      className="ml-1 rounded-full outline-none hover:bg-white/20 p-0.5 transition-colors"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleUnselect(option.value)
+                        }
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
+                      onClick={() => handleUnselect(option.value)}
+                    >
+                      <X className="h-3 w-3 text-white/80 hover:text-white" />
+                    </button>
+                  </Badge>
+                ))}
+                {selectedOptions.length > maxCount && (
+                  <Badge
+                    variant="secondary"
+                    className="rounded-md px-2 py-0.5 font-medium bg-muted text-muted-foreground border-none shadow-sm"
+                  >
+                    + {selectedOptions.length - maxCount} más
+                  </Badge>
+                )}
+              </>
             ) : (
               <span className="text-muted-foreground">{placeholder}</span>
             )}

@@ -340,33 +340,44 @@ export default function CrearCapacitacion() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/capacitaciones')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">{editId ? 'Editar' : 'Crear'} Capacitación con IA</h1>
-          <p className="text-muted-foreground">Genera contenido estructurado automáticamente</p>
+    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        <div className="relative z-10 flex items-center gap-5">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/capacitaciones')} className="h-12 w-12 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-background/80 shrink-0">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+              {editId ? 'EDICIÓN CON IA' : 'CREACIÓN CON IA'}
+            </Badge>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">{editId ? 'Editar' : 'Crear'} Capacitación con IA</h1>
+            <p className="text-muted-foreground font-medium mt-1">Genera contenido estructurado y multimedia automáticamente</p>
+          </div>
         </div>
       </div>
 
-      <TrainingStepIndicator steps={STEPS} currentStep={step} />
+      <div className="px-2 mb-8">
+        <TrainingStepIndicator steps={STEPS} currentStep={step} />
+      </div>
 
       {/* Step 1: Parameters */}
       {step === 0 && (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <BookOpen className="h-6 w-6 text-primary" />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-primary/40 to-primary/10 w-full" />
+            <CardHeader className="px-8 pt-8 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
+                  <BookOpen className="w-6 h-6" />
+                </div>
                 <div>
-                  <CardTitle>Parámetros de la Capacitación</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-0.5">Define las características principales</p>
+                  <CardTitle className="text-xl font-bold">Parámetros de la Capacitación</CardTitle>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Define las características principales</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="px-8 pb-8 space-y-6">
               <div className="space-y-1.5">
                 <Label className="flex items-center gap-1.5"><Tag className="h-4 w-4" /> Título de la Capacitación *</Label>
                 <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej: Manipulación segura de alimentos en cocina industrial" />
@@ -440,12 +451,14 @@ export default function CrearCapacitacion() {
                   </SelectContent></Select>
                 </div>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 pt-4">
                 <Label className="flex items-center gap-1.5"><AlignLeft className="h-4 w-4" /> Descripción o Contexto Adicional</Label>
-                <Textarea value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Proporciona información adicional que ayude a la IA a generar contenido más preciso..." rows={4} />
+                <Textarea className="resize-none rounded-xl bg-muted/30" value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Proporciona información adicional que ayude a la IA a generar contenido más preciso..." rows={4} />
               </div>
-              <div className="flex justify-end">
-                <Button onClick={() => setStep(1)} disabled={!title}><ArrowRight className="h-4 w-4 mr-2" /> Siguiente</Button>
+              <div className="flex justify-end pt-6 border-t border-border/50">
+                <Button onClick={() => setStep(1)} disabled={!title} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
+                  Siguiente <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -454,20 +467,21 @@ export default function CrearCapacitacion() {
 
       {/* Step 2: Context + AI */}
       {step === 1 && (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-primary" />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-blue-500/40 to-blue-500/10 w-full" />
+            <CardHeader className="px-8 pt-8 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 shadow-inner">
+                  <FileText className="w-6 h-6" />
                 </div>
                 <div>
-                  <CardTitle>Documentos de Contexto</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-0.5">Sube PDFs que la IA usará como referencia</p>
+                  <CardTitle className="text-xl font-bold">Documentos de Contexto</CardTitle>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Sube PDFs que la IA usará como referencia</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="px-8 pb-8 space-y-6">
               <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center bg-muted/30">
                 {pdfName ? (
                   <div className="flex items-center justify-center gap-2">
@@ -490,13 +504,15 @@ export default function CrearCapacitacion() {
                   </>
                 )}
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 pt-2">
                 <Label>Contenido adicional para la IA</Label>
-                <Textarea value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Puedes pegar aquí texto adicional de procedimientos, normativas, o información que la IA deba considerar..." rows={5} />
+                <Textarea className="resize-none rounded-xl bg-muted/30" value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Puedes pegar aquí texto adicional de procedimientos, normativas, o información que la IA deba considerar..." rows={5} />
               </div>
-              <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(0)}><ArrowLeft className="h-4 w-4 mr-2" /> Anterior</Button>
-                <Button onClick={handleGenerate} disabled={isGenerating} className="bg-primary hover:bg-primary/90">
+              <div className="flex justify-between pt-6 border-t border-border/50">
+                <Button variant="outline" onClick={() => setStep(0)} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs">
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Anterior
+                </Button>
+                <Button onClick={handleGenerate} disabled={isGenerating} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
                   {isGenerating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generando...</> : <><Sparkles className="h-4 w-4 mr-2" /> Generar Capacitación</>}
                 </Button>
               </div>
@@ -507,20 +523,21 @@ export default function CrearCapacitacion() {
 
       {/* Step 3: Review */}
       {step === 2 && content && (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-primary" />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-amber-500/40 to-amber-500/10 w-full" />
+            <CardHeader className="px-8 pt-8 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 shadow-inner">
+                  <Sparkles className="w-6 h-6" />
                 </div>
                 <div>
-                  <CardTitle>Contenido Generado</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-0.5">Revisa y edita el contenido antes de publicar</p>
+                  <CardTitle className="text-xl font-bold">Contenido Generado</CardTitle>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Revisa y edita el contenido antes de publicar</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="px-8 pb-8 space-y-8">
               {/* Título */}
               <div className="space-y-1.5">
                 <Label>Título</Label>
@@ -622,21 +639,21 @@ export default function CrearCapacitacion() {
               </div>
 
               {/* Summary bar */}
-              <div className="grid grid-cols-4 gap-3">
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground">Tipo</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-muted/30 rounded-3xl border border-border/50">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tipo</p>
                   <p className="font-semibold text-sm">{tipo === 'Otro' ? tipoOtro : tipo || '-'}</p>
                 </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground">Área</p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Área</p>
                   <p className="font-semibold text-sm">{area === 'Otro' ? areaOtra : area || '-'}</p>
                 </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground">Norma</p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Norma</p>
                   <p className="font-semibold text-sm">{marcoLegal === 'Otro' ? marcoLegalOtro : marcoLegal || '-'}</p>
                 </div>
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground">Duración</p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Duración</p>
                   <p className="font-semibold text-sm">{duracion >= 60 ? `${duracion / 60} hora${duracion > 60 ? 's' : ''}` : `${duracion} minutos`}</p>
                 </div>
               </div>
@@ -644,15 +661,16 @@ export default function CrearCapacitacion() {
           </Card>
 
           {/* Multimedia generation section */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-primary" />
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-violet-500/40 to-violet-500/10 w-full" />
+            <CardContent className="p-8">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 rounded-2xl bg-violet-500/10 text-violet-500 flex items-center justify-center shrink-0 shadow-inner">
+                  <Sparkles className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="font-semibold">Generación Multimedia</p>
-                  <p className="text-sm text-muted-foreground">Genera materiales visuales adicionales con IA (opcional)</p>
+                  <h3 className="text-xl font-bold">Generación Multimedia</h3>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Genera materiales visuales adicionales con IA (opcional)</p>
                 </div>
               </div>
 
@@ -882,18 +900,19 @@ export default function CrearCapacitacion() {
 
           {/* Avatar Presentador */}
           {editId && (
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-violet-100 dark:bg-violet-900/30">
-                    <UserCircle className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+            <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+              <div className="h-2 bg-gradient-to-r from-fuchsia-500/40 to-fuchsia-500/10 w-full" />
+              <CardContent className="p-8 space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 text-fuchsia-500 flex items-center justify-center shrink-0 shadow-inner">
+                    <UserCircle className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm">Avatar Presentador</span>
-                      {avatarVideoUrl && <span className="text-xs text-muted-foreground">Video generado</span>}
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-xl font-bold">Avatar Presentador</h3>
+                      {avatarVideoUrl && <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5">Video Generado</Badge>}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">Genera un video con un avatar IA que presenta la capacitación (requiere API key de HeyGen)</p>
+                    <p className="text-sm text-muted-foreground font-medium mt-1">Genera un video con un avatar IA que presenta la capacitación (requiere API key de HeyGen)</p>
                   </div>
                 </div>
 
@@ -1004,15 +1023,15 @@ export default function CrearCapacitacion() {
             </Card>
           )}
 
-          <div className="flex items-center justify-between">
-            <Button variant="outline" onClick={() => setStep(0)}>
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-4">
+            <Button variant="outline" onClick={() => setStep(0)} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">
               <ArrowLeft className="h-4 w-4 mr-2" /> Editar Parámetros
             </Button>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => handleSave('borrador')} disabled={createCourse.isPending || updateCourse.isPending}>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <Button variant="outline" onClick={() => handleSave('borrador')} disabled={createCourse.isPending || updateCourse.isPending} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">
                 <FileText className="h-4 w-4 mr-2" /> Guardar Borrador
               </Button>
-              <Button onClick={() => handleSave('publicado')} disabled={createCourse.isPending || updateCourse.isPending} className="bg-green-600 hover:bg-green-700 text-white">
+              <Button onClick={() => handleSave('publicado')} disabled={createCourse.isPending || updateCourse.isPending} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-green-500/20 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto transition-all">
                 Publicar Capacitación
               </Button>
             </div>

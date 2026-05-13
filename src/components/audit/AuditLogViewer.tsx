@@ -16,6 +16,8 @@ import {
   Search, ChevronLeft, ChevronRight,
   History, AlertCircle, Eye,
   ShieldAlert, Info, AlertTriangle, XCircle,
+  FileSpreadsheet, User, Calendar as CalendarIcon,
+  Filter, ArrowUpDown, MoreHorizontal
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -29,6 +31,8 @@ import {
   TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 
 import { AuditFilters } from './AuditFilters';
 import { AuditDetailDrawer } from './AuditDetailDrawer';
@@ -49,7 +53,7 @@ interface AuditLogViewerProps {
 // ─── Componente de Fila ───────────────────────────────────────
 
 function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void }) {
-  const actionCfg = actionConfig[log.action] ?? { class: 'bg-muted text-muted-foreground border-border' };
+  const actionCfg = actionConfig[log.action] ?? { class: 'bg-slate-100 text-slate-500 border-slate-200' };
   const severityCfg = log.severity ? severityConfig[log.severity] : severityConfig.info;
 
   const SevIcon = log.severity === 'critical' ? XCircle
@@ -58,77 +62,96 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
 
   return (
     <TableRow
-      className="cursor-pointer hover:bg-muted/40 transition-colors group"
+      className="cursor-pointer hover:bg-primary/[0.03] transition-all border-slate-100/60 group"
       onClick={onClick}
     >
-      {/* Fecha */}
-      <TableCell className="whitespace-nowrap">
-        <div className="text-sm font-medium">
-          {format(new Date(log.created_at), 'dd MMM yyyy', { locale: es })}
-        </div>
-        <div className="text-xs text-muted-foreground">
-          {format(new Date(log.created_at), 'HH:mm:ss')}
+      <TableCell className="px-6 py-4">
+        <div className="flex flex-col">
+          <span className="text-xs font-black text-slate-900 tabular-nums">
+            {format(new Date(log.created_at), 'dd MMM yyyy', { locale: es }).toUpperCase()}
+          </span>
+          <span className="text-[10px] font-bold text-slate-400 tabular-nums">
+            {format(new Date(log.created_at), 'HH:mm:ss')}
+          </span>
         </div>
       </TableCell>
 
-      {/* Usuario */}
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <span className="text-[10px] font-bold text-primary">
-              {(log.user_email ?? 'S')[0].toUpperCase()}
+      <TableCell className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="relative h-9 w-9 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
+            <div className="absolute inset-0 bg-primary/5" />
+            <User className="relative w-4 h-4 text-primary" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-xs font-black text-slate-900 truncate tracking-tight">
+              {log.user_email?.split('@')[0] ?? 'SISTEMA'}
+            </span>
+            <span className="text-[10px] font-medium text-slate-400 truncate tracking-wide">
+              {log.user_email ?? 'Automático'}
             </span>
           </div>
-          <span className="text-sm truncate max-w-[160px]">{log.user_email ?? 'Sistema'}</span>
         </div>
       </TableCell>
 
-      {/* Acción */}
-      <TableCell>
-        <Badge variant="outline" className={`text-xs ${actionCfg.class}`}>
+      <TableCell className="px-6 py-4">
+        <Badge 
+          variant="outline" 
+          className={cn(
+            "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 border-none",
+            actionCfg.class
+          )}
+        >
           {actionLabels[log.action] ?? log.action}
         </Badge>
       </TableCell>
 
-      {/* Módulo */}
-      <TableCell className="text-sm text-muted-foreground">
-        {resolveModuleLabel(log.module)}
-      </TableCell>
-
-      {/* Entidad */}
-      <TableCell>
-        <div className="text-sm font-medium">
-          {entityTypeLabels[log.entity_type] ?? log.entity_type}
+      <TableCell className="px-6 py-4">
+        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+          {resolveModuleLabel(log.module)}
         </div>
-        {log.entity_name && (
-          <div className="text-xs text-muted-foreground truncate max-w-[140px]">
-            {log.entity_name}
-          </div>
-        )}
       </TableCell>
 
-      {/* Severidad */}
-      <TableCell>
+      <TableCell className="px-6 py-4">
+        <div className="flex flex-col min-w-0">
+          <span className="text-xs font-black text-slate-900 tracking-tight truncate">
+            {entityTypeLabels[log.entity_type] ?? log.entity_type}
+          </span>
+          {log.entity_name && (
+            <span className="text-[10px] font-medium text-slate-400 truncate max-w-[180px]">
+              {log.entity_name}
+            </span>
+          )}
+        </div>
+      </TableCell>
+
+      <TableCell className="px-6 py-4">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge variant="outline" className={`text-[11px] gap-1 ${severityCfg.class}`}>
-              <SevIcon className="w-3 h-3" />
+            <div className={cn(
+              "inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider",
+              severityCfg.class
+            )}>
+              <SevIcon className="w-3.5 h-3.5" />
               {severityCfg.label}
-            </Badge>
+            </div>
           </TooltipTrigger>
-          <TooltipContent>{log.description ?? 'Sin descripción'}</TooltipContent>
+          <TooltipContent className="bg-slate-900 text-white border-none font-bold text-xs p-3 rounded-xl shadow-2xl">
+            {log.description ?? 'Sin descripción detallada'}
+          </TooltipContent>
         </Tooltip>
       </TableCell>
 
-      {/* Acción ver */}
-      <TableCell>
+      <TableCell className="px-6 py-4 text-right">
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={onClick}
+          className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
         >
-          <Eye className="w-3.5 h-3.5" />
+          <MoreHorizontal className="w-4 h-4 text-slate-400" />
         </Button>
       </TableCell>
     </TableRow>
@@ -182,72 +205,114 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
 
   return (
     <>
-      <Card className={compact ? 'border-0 shadow-none' : ''}>
-        {!compact && (
-          <CardHeader className="pb-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <History className="w-4 h-4 text-primary" />
-                  Registro de Actividad
-                </CardTitle>
-                <CardDescription className="mt-0.5">
-                  {total > 0 ? `${total.toLocaleString('es-CO')} eventos registrados` : 'Sin eventos'}
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1 sm:w-56">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar…"
-                    className="pl-8 h-8 text-sm"
-                    value={localSearch}
-                    onChange={e => handleSearch(e.target.value)}
-                  />
-                </div>
-                <AuditFilters
-                  filters={filters}
-                  onFiltersChange={handleFiltersChange}
-                  onReset={() => { setFilters({}); setPage(0); }}
-                />
-              </div>
-            </div>
-          </CardHeader>
-        )}
+      <div className="space-y-6">
+        <div className="flex flex-col gap-8 px-2">
+          {/* Tabs Internas Estilo Premium */}
+          <div className="flex justify-center">
+            <Tabs defaultValue="all" className="inline-flex h-14 p-1.5 rounded-2xl bg-slate-50/50 backdrop-blur-md border border-slate-200 shadow-inner">
+              <TabsList className="bg-transparent border-none p-0">
+                <TabsTrigger value="all" onClick={() => handleFiltersChange({})} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">
+                  <History className="w-3.5 h-3.5 mr-2" />
+                  Todo el Registro
+                </TabsTrigger>
+                <TabsTrigger value="critical" onClick={() => handleFiltersChange({ severity: 'critical' })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-destructive transition-all">
+                  <AlertCircle className="w-3.5 h-3.5 mr-2" />
+                  Eventos Críticos
+                </TabsTrigger>
+                <TabsTrigger value="user" onClick={() => handleFiltersChange({ user_email: user?.email })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">
+                  <User className="w-3.5 h-3.5 mr-2" />
+                  Por Usuario
+                </TabsTrigger>
+                <TabsTrigger value="exports" onClick={() => handleFiltersChange({ action: 'export_excel' })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">
+                  <FileSpreadsheet className="w-3.5 h-3.5 mr-2" />
+                  Exportaciones
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
-        <CardContent className={compact ? 'p-0' : 'pt-0'}>
-          {isLoading ? (
-            <div className="space-y-2 p-1">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full rounded-lg" />
-              ))}
-            </div>
-          ) : logs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-              <div className="p-4 rounded-full bg-muted/50">
-                <ShieldAlert className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="font-semibold">Sin registros de auditoría</h3>
-              <p className="text-sm text-muted-foreground max-w-xs">
-                {Object.keys(activeFilters).some(k => activeFilters[k as keyof AuditFiltersType])
-                  ? 'No hay eventos que coincidan con los filtros activos.'
-                  : 'Las acciones del sistema comenzarán a aparecer aquí automáticamente.'}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                <History className="w-5 h-5 text-primary" />
+                Historial de Auditoría
+              </h3>
+              <p className="text-xs font-medium text-slate-500 mt-1">
+                Trazabilidad completa de operaciones y cambios en el sistema
               </p>
             </div>
-          ) : (
-            <>
-              <ScrollArea className={compact ? 'h-[380px]' : 'h-[calc(100vh-22rem)]'}>
+
+            <div className="flex items-center gap-3">
+              <div className="relative group min-w-[320px]">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                  <Search className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                </div>
+                <Input
+                  placeholder="Buscar usuario, acción o módulo..."
+                  className="pl-11 h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-bold text-xs"
+                  value={localSearch}
+                  onChange={e => handleSearch(e.target.value)}
+                />
+              </div>
+              <AuditFilters
+                filters={filters}
+                onFiltersChange={handleFiltersChange}
+                onReset={() => { setFilters({}); setPage(0); }}
+              />
+              <Button
+                className="h-12 px-6 rounded-2xl bg-[#004a80] hover:bg-[#003a66] text-white shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
+                onClick={() => { /* Implementar exportación */ }}
+              >
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                EXPORTAR LOGS
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.01] overflow-hidden">
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="p-8 space-y-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+                ))}
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center gap-6 px-6">
+                <div className="relative h-24 w-24 flex items-center justify-center rounded-[2.5rem] bg-slate-50 border border-slate-100 shadow-inner group">
+                  <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5rem]" />
+                  <ShieldAlert className="relative w-10 h-10 text-slate-300" />
+                </div>
+                <div className="space-y-2 max-w-sm">
+                  <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Sin registros detectados</h3>
+                  <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                    {Object.keys(activeFilters).some(k => activeFilters[k as keyof AuditFiltersType])
+                      ? 'No hemos encontrado eventos que coincidan con los criterios de filtrado actuales.'
+                      : 'La red de auditoría está activa. Las acciones del sistema comenzarán a aparecer aquí automáticamente.'}
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={() => { setFilters({}); setLocalSearch(''); setPage(0); }}
+                  className="rounded-xl font-black uppercase text-[10px] tracking-widest px-8"
+                >
+                  RESTAURAR VISTA
+                </Button>
+              </div>
+            ) : (
+              <>
                 <div className="overflow-x-auto">
-                  <Table className="min-w-[760px]">
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[120px]">Fecha</TableHead>
-                        <TableHead className="w-[180px]">Usuario</TableHead>
-                        <TableHead className="w-[150px]">Acción</TableHead>
-                        <TableHead className="w-[130px]">Módulo</TableHead>
-                        <TableHead>Entidad</TableHead>
-                        <TableHead className="w-[100px]">Severidad</TableHead>
-                        <TableHead className="w-[50px]" />
+                  <Table>
+                    <TableHeader className="bg-slate-50/50">
+                      <TableRow className="hover:bg-transparent border-slate-100">
+                        <TableHead className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Temporalidad</TableHead>
+                        <TableHead className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Actor</TableHead>
+                        <TableHead className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Operación</TableHead>
+                        <TableHead className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Contexto</TableHead>
+                        <TableHead className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Entidad de Datos</TableHead>
+                        <TableHead className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Impacto</TableHead>
+                        <TableHead className="w-12 px-6" />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -261,41 +326,47 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
                     </TableBody>
                   </Table>
                 </div>
-              </ScrollArea>
 
-              {/* Paginación */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-1 pt-4 border-t">
-                  <p className="text-xs text-muted-foreground">
-                    {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} de {total.toLocaleString('es-CO')}
-                  </p>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline" size="icon" className="h-7 w-7"
-                      disabled={page === 0}
-                      onClick={() => setPage(p => p - 1)}
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                    </Button>
-                    <span className="text-xs text-muted-foreground px-2 tabular-nums">
-                      {page + 1} / {totalPages}
-                    </span>
-                    <Button
-                      variant="outline" size="icon" className="h-7 w-7"
-                      disabled={page >= totalPages - 1}
-                      onClick={() => setPage(p => p + 1)}
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Button>
+                {/* Paginación Premium */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-8 py-6 bg-slate-50/30 border-t border-slate-100">
+                    <div className="flex items-center gap-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        MOSTRANDO <span className="text-slate-900">{page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)}</span> DE <span className="text-slate-900">{total.toLocaleString('es-CO')}</span> EVENTOS
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-200 shadow-sm transition-all active:scale-90"
+                        disabled={page === 0}
+                        onClick={() => setPage(p => p - 1)}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      
+                      <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-100 shadow-sm">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">PÁGINA</span>
+                        <span className="text-xs font-black text-primary tabular-nums">{page + 1}</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">DE {totalPages}</span>
+                      </div>
+
+                      <Button
+                        variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-200 shadow-sm transition-all active:scale-90"
+                        disabled={page >= totalPages - 1}
+                        onClick={() => setPage(p => p + 1)}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Drawer de detalle */}
       <AuditDetailDrawer
         log={selectedLog}
         open={!!selectedLog}

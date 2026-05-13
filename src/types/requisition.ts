@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Day of Week
-export type DayOfWeek = 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo';
+export type DayOfWeek = 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo' | '2_dias' | '4_dias' | '7_dias';
 
 // Requisition Reason
 export type RequisitionReason = 
@@ -49,6 +49,9 @@ export const dayOfWeekLabels: Record<DayOfWeek, string> = {
   viernes: 'Viernes',
   sabado: 'Sábado',
   domingo: 'Domingo',
+  '2_dias': '2 Días',
+  '4_dias': '4 Días',
+  '7_dias': '7 Días',
 };
 
 export const requisitionReasonLabels: Record<RequisitionReason, string> = {
@@ -184,10 +187,10 @@ export const requisitionFormSchema = z.object({
   area_id: z.string().min(1, 'El área es requerida'),
   operation_center_id: z.string().min(1, 'El centro de operación es requerido'),
   cargo_a_reemplazar: z.string().optional(),
-  persona_a_reemplazar: z.string().optional(),
+  persona_a_reemplazar: z.array(z.string()).optional(),
   requiere_herramienta_trabajo: z.boolean().default(false),
   horario_trabajo: z.string().optional(),
-  dia_descanso_obligatorio: z.enum(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'], { required_error: 'El día de descanso es requerido' }),
+  dia_descanso_obligatorio: z.enum(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo', '2_dias', '4_dias', '7_dias'], { required_error: 'El día de descanso es requerido' }),
   // Contract type
   tipo_contrato_solicitado: z.string().optional(),
   // Turno y condiciones
@@ -231,6 +234,7 @@ export const rrhhApprovalSchema = z.object({
   rrhh_fuente_asignacion_salarial: z.string().optional(),
   rrhh_nivel_politica_salarial: z.string().optional(),
   rrhh_tipo_convocatoria: z.enum(['externa', 'interna', 'mixta']).optional(),
+  rrhh_incluye_auxilio_transporte: z.boolean().optional(),
   rrhh_observaciones: z.string().optional(),
   rrhh_aprobado: z.boolean(),
 });

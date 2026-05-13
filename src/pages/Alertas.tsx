@@ -81,54 +81,68 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      className={cn(
-        "flex flex-col gap-3 rounded-xl border p-4 transition-all duration-200 hover:shadow-md card-elevated sm:flex-row sm:items-center sm:gap-4 sm:p-5",
-        styles.border
-      )}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      className="group relative"
     >
-      <div className={cn("h-10 w-10 shrink-0 rounded-xl flex items-center justify-center sm:h-12 sm:w-12", styles.bg)}>
-        <Icon className={cn("w-6 h-6", styles.icon)} />
-      </div>
-      
-      <div className="min-w-0 flex-1 self-stretch sm:self-auto">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <p className="min-w-0 break-words font-semibold text-foreground">{alert.title}</p>
-          <Badge variant="outline" className={cn("text-xs", styles.badge)}>
-            {isExpired ? `Vencido hace ${Math.abs(alert.daysRemaining)} días` : `${alert.daysRemaining} días`}
-          </Badge>
-          <Badge variant="outline" className="text-xs bg-muted">
-            {typeLabels[alert.type]}
-          </Badge>
-          {alert.status && (
-            <Badge variant="outline" className="text-xs bg-muted">
-              {alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
-            </Badge>
-          )}
+      <div className={cn(
+        "relative flex flex-col gap-4 rounded-[2rem] border-2 bg-background/50 backdrop-blur-xl p-6 transition-all duration-300 group-hover:shadow-[0_10px_30px_rgba(0,0,0,0.03)]",
+        styles.border,
+        "group-hover:border-primary/20"
+      )}>
+        {/* Decorative background icon */}
+        <div className="absolute right-6 top-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700 pointer-events-none transform rotate-12 scale-150">
+          <Icon className="h-20 w-20" />
         </div>
-        <p className="break-words text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">{alert.entityName}</span>
-          {' • '}
-          {alert.description}
-        </p>
-        {alert.eventDate && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Fecha evento: {new Date(alert.eventDate).toLocaleDateString('es-CO')}
-          </p>
-        )}
-      </div>
 
-      <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full gap-1.5 sm:w-auto"
-          onClick={() => onNavigate(alert.navigateTo || '/')}
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          Gestionar
-        </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5 relative z-10">
+          <div className={cn(
+            "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
+            styles.bg
+          )}>
+            <Icon className={cn("w-7 h-7", styles.icon)} />
+          </div>
+          
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <h3 className="text-lg font-black tracking-tight text-foreground uppercase leading-tight">
+                {alert.title}
+              </h3>
+              <Badge variant="outline" className={cn("rounded-lg px-2 py-0.5 font-black uppercase tracking-tighter text-[10px]", styles.badge)}>
+                {isExpired ? `Vencido hace ${Math.abs(alert.daysRemaining)} días` : `En ${alert.daysRemaining} días`}
+              </Badge>
+              <Badge variant="secondary" className="rounded-lg px-2 py-0.5 font-black uppercase tracking-tighter text-[10px] bg-muted/50">
+                {typeLabels[alert.type]}
+              </Badge>
+            </div>
+            
+            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+              <span className="font-black text-foreground uppercase tracking-tight mr-2">{alert.entityName}</span>
+              <span className="opacity-60">•</span>
+              <span className="ml-2">{alert.description}</span>
+            </p>
+
+            {alert.eventDate && (
+              <div className="mt-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                <Clock className="h-3 w-3" />
+                Fecha evento: {new Date(alert.eventDate).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </div>
+            )}
+          </div>
+
+          <div className="flex shrink-0">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="h-12 px-6 rounded-xl border-2 font-black uppercase tracking-widest text-[10px] gap-2 transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary group/btn"
+              onClick={() => onNavigate(alert.navigateTo || '/')}
+            >
+              <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+              Gestionar
+            </Button>
+          </div>
+        </div>
       </div>
     </motion.div>
   );
@@ -184,149 +198,126 @@ export default function Alertas() {
   }
 
   return (
-    <div className="min-w-0 space-y-4 sm:space-y-6">
-      {/* Page Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex min-w-0 flex-col gap-4 md:flex-row md:items-center md:justify-between"
-      >
-        <div className="min-w-0">
-          <h1 className="break-words font-display text-xl font-bold text-foreground sm:text-2xl">Centro de Alertas</h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">Monitoreo centralizado de vencimientos y eventos críticos</p>
+    <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-primary/10 shadow-sm">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-md shadow-primary/10">
+            <Bell className="h-8 w-8 text-primary-foreground" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-black tracking-tight sm:text-4xl text-foreground uppercase">
+              Centro de <span className="text-primary">Alertas</span>
+            </h1>
+            <p className="mt-2 text-sm font-medium text-muted-foreground sm:text-lg max-w-2xl leading-relaxed">
+              Monitoreo centralizado de vencimientos y eventos críticos. Mantén el control total sobre los hitos operativos de tu organización.
+            </p>
+          </div>
         </div>
-      </motion.div>
-
-      {/* Stats */}
-      <div className="hidden gap-4 md:grid md:grid-cols-4">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-destructive" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : stats.criticalCount}
-            </p>
-            <p className="text-sm text-muted-foreground">Críticas</p>
-          </div>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.15 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center">
-            <Clock className="w-5 h-5 text-warning" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : stats.warningCount}
-            </p>
-            <p className="text-sm text-muted-foreground">Advertencias</p>
-          </div>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center">
-            <Bell className="w-5 h-5 text-info" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : stats.infoCount}
-            </p>
-            <p className="text-sm text-muted-foreground">Informativas</p>
-          </div>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.25 }}
-          className="card-elevated p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
-            <CheckCircle className="w-5 h-5 text-success" />
-          </div>
-          <div>
-            <p className="text-2xl font-display font-bold text-foreground">
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : stats.totalActive}
-            </p>
-            <p className="text-sm text-muted-foreground">Total Activas</p>
-          </div>
-        </motion.div>
+        {/* Decorative elements */}
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl" />
       </div>
 
-      {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.3 }}
-        className="card-elevated p-4"
-      >
-        <div className="flex min-w-0 flex-col gap-3 md:flex-row md:gap-4">
-          <div className="relative min-w-0 flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      {/* KPI Tiles */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: 'Críticas', value: stats.criticalCount, icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
+          { label: 'Advertencias', value: stats.warningCount, icon: Clock, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
+          { label: 'Informativas', value: stats.infoCount, icon: Bell, color: 'text-info', bg: 'bg-info/10', border: 'border-info/20' },
+          { label: 'Total Activas', value: stats.totalActive, icon: CheckCircle, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
+        ].map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className={cn(
+              "relative overflow-hidden rounded-[2rem] border-2 bg-background/50 backdrop-blur-xl p-6 transition-all duration-300 hover:shadow-md",
+              stat.border
+            )}
+          >
+            <div className="flex items-center justify-between relative z-10">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
+                <h2 className="text-3xl font-black tracking-tight text-foreground">
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : stat.value}
+                </h2>
+              </div>
+              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center shadow-inner", stat.bg)}>
+                <stat.icon className={cn("h-6 w-6", stat.color)} />
+              </div>
+            </div>
+            {/* Decorative sparkline-like line */}
+            <div className={cn("absolute bottom-0 left-0 right-0 h-1", stat.bg)} />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Advanced Filters */}
+      <div className="relative group">
+        <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+        <div className="relative flex flex-col md:flex-row items-center gap-4 bg-background/60 backdrop-blur-xl p-3 rounded-[2rem] border border-border/50 shadow-md">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/60" />
             <Input
-              type="text"
-              placeholder="Buscar alertas por empleado, tipo..."
+              placeholder="Buscar por empleado, tipo o descripción..."
+              className="h-14 pl-12 bg-transparent border-none shadow-none focus-visible:ring-0 text-base font-medium placeholder:text-muted-foreground/40"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
             />
           </div>
-          <div className="flex min-w-0 gap-3">
+          
+          <div className="flex w-full md:w-auto items-center gap-3 pr-2">
+            <div className="h-10 w-px bg-border/40 hidden md:block mx-2" />
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full min-w-0 md:w-[180px]">
-                <SelectValue placeholder="Tipo" />
+              <SelectTrigger className="h-12 w-full md:w-[220px] rounded-2xl bg-muted/30 border-none shadow-none font-black uppercase tracking-widest text-[10px]">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-3.5 w-3.5 text-primary" />
+                  <SelectValue placeholder="Filtrar por tipo" />
+                </div>
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los tipos</SelectItem>
-                <SelectItem value="contract">Contratos</SelectItem>
-                <SelectItem value="extension">Prórrogas</SelectItem>
-                <SelectItem value="medical">Exámenes Médicos</SelectItem>
-                <SelectItem value="dotation">Dotación</SelectItem>
-                <SelectItem value="certification">Certificaciones</SelectItem>
-                <SelectItem value="incapacity">Incapacidades</SelectItem>
-                <SelectItem value="vacation">Vacaciones</SelectItem>
-                <SelectItem value="cesantias">Cesantías</SelectItem>
+              <SelectContent className="rounded-2xl border-border/50 backdrop-blur-xl bg-background/95">
+                <SelectItem value="all">TODOS LOS TIPOS</SelectItem>
+                <SelectItem value="contract">CONTRATOS</SelectItem>
+                <SelectItem value="extension">PRÓRROGAS</SelectItem>
+                <SelectItem value="medical">EXÁMENES MÉDICOS</SelectItem>
+                <SelectItem value="dotation">DOTACIÓN</SelectItem>
+                <SelectItem value="certification">CERTIFICACIONES</SelectItem>
+                <SelectItem value="incapacity">INCAPACIDADES</SelectItem>
+                <SelectItem value="vacation">VACACIONES</SelectItem>
+                <SelectItem value="cesantias">CESANTÍAS</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Tabs and Alerts List */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0 space-y-4">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1 sm:inline-flex sm:w-auto">
-          <TabsTrigger value="all" className="min-w-0 px-2 text-xs sm:text-sm">Todas</TabsTrigger>
-          <TabsTrigger value="critical" className="min-w-0 gap-1 px-2 text-xs sm:text-sm">
-            Críticas
-            {stats.criticalCount > 0 && (
-              <span className="ml-1 rounded-full bg-destructive px-1.5 py-0.5 text-xs text-destructive-foreground">
-                {stats.criticalCount}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="warning" className="min-w-0 px-2 text-xs sm:text-sm">
-            <span className="truncate">Advertencias</span>
-          </TabsTrigger>
-          <TabsTrigger value="info" className="min-w-0 px-2 text-xs sm:text-sm">
-            <span className="truncate">Informativas</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Tabs Navigation */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex items-center justify-between mb-6">
+          <TabsList className="flex h-auto w-fit gap-2 bg-muted/30 p-1.5 rounded-[1.5rem] border border-border/50">
+            {[
+              { value: 'all', label: 'TODAS' },
+              { value: 'critical', label: 'CRÍTICAS', count: stats.criticalCount },
+              { value: 'warning', label: 'ADVERTENCIAS' },
+              { value: 'info', label: 'INFORMATIVAS' },
+            ].map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="rounded-2xl px-6 py-2.5 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all whitespace-nowrap relative"
+              >
+                {tab.label}
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span className="ml-2 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-destructive px-1 text-[8px] text-destructive-foreground">
+                    {tab.count}
+                  </span>
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         <TabsContent value={activeTab} className="space-y-3">
           {isLoading ? (

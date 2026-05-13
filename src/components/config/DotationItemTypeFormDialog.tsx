@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, ImagePlus, X } from 'lucide-react';
+import { Loader2, ImagePlus, X, Shirt, Box } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -10,6 +11,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import { useCreateDotationItemType, useUpdateDotationItemType } from '@/hooks/useSystemConfig';
 import { DOTATION_CATEGORIES, STANDARD_SIZES, SHOE_SIZES } from '@/types/config';
 import type { DotationItemType } from '@/types/config';
@@ -172,202 +175,263 @@ export function DotationItemTypeFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden p-0">
-        <DialogHeader className="shrink-0 px-4 pt-4 sm:px-6 sm:pt-6">
-          <DialogTitle>
-            {isEditing ? 'Editar Tipo de Dotación' : 'Nuevo Tipo de Dotación'}
-          </DialogTitle>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
-            {/* Image Upload */}
-            <div className="space-y-2">
-              <FormLabel>Imagen</FormLabel>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                {imagePreview ? (
-                  <div className="relative w-20 h-20 rounded-lg border overflow-hidden bg-muted">
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-destructive text-destructive-foreground"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-20 h-20 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
-                  >
-                    <ImagePlus className="w-5 h-5" />
-                    <span className="text-[10px]">Subir</span>
-                  </button>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageSelect}
-                />
-                {imagePreview && (
-                  <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full sm:w-auto">
-                    Cambiar
-                  </Button>
-                )}
+      <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] max-w-xl flex-col gap-0 overflow-hidden p-0 border-none bg-transparent shadow-none">
+        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-primary/10 bg-background/95 backdrop-blur-2xl shadow-2xl">
+          
+          {/* Premium Header */}
+          <DialogHeader className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-primary/10 shrink-0">
+            <div className="relative z-10 flex items-center gap-5">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+                <Shirt className="h-7 w-7 text-primary-foreground" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-2xl font-black uppercase tracking-tight text-foreground leading-tight">
+                  {isEditing ? 'Editar' : 'Nuevo'} <span className="text-primary">Tipo</span>
+                </DialogTitle>
+                <p className="text-sm font-medium text-muted-foreground mt-1">
+                  Gestión de artículos y suministros corporativos.
+                </p>
               </div>
             </div>
+            {/* Decorative blurs */}
+            <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+          </DialogHeader>
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Camisa Polo" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="code"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Código</FormLabel>
-                    <FormControl>
-                      <Input placeholder="CPOLO" maxLength={10} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoría</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        if (value === 'calzado') {
-                          form.setValue('sizes_available', SHOE_SIZES);
-                        } else if (value !== 'epp' && value !== 'herramientas' && value !== 'otros') {
-                          form.setValue('sizes_available', STANDARD_SIZES);
-                        }
-                      }} 
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-background">
-                        {DOTATION_CATEGORIES.map((cat) => (
-                          <SelectItem key={cat.value} value={cat.value}>
-                            {cat.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="requires_size"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <FormLabel>Requiere Talla</FormLabel>
-                    <FormDescription>
-                      El artículo tiene variantes de talla
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {requiresSize && (
-              <FormField
-                control={form.control}
-                name="sizes_available"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tallas Disponibles</FormLabel>
-                    <div className="flex flex-wrap gap-2">
-                      {getDefaultSizes().map((size) => (
-                        <Button
-                          key={size}
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col p-8">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
+                
+                {/* Image Upload Area */}
+                <div className="space-y-3">
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Imagen del Artículo</FormLabel>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    {imagePreview ? (
+                      <div className="relative group w-32 h-32 rounded-[2rem] border-2 border-primary/20 overflow-hidden bg-muted/30 shadow-inner p-2">
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-contain rounded-[1.5rem]" />
+                        <button
                           type="button"
-                          size="sm"
-                          variant={field.value?.includes(size) ? 'default' : 'outline'}
-                          onClick={() => {
-                            const current = field.value || [];
-                            if (current.includes(size)) {
-                              field.onChange(current.filter((s) => s !== size));
-                            } else {
-                              field.onChange([...current, size]);
-                            }
-                          }}
+                          onClick={removeImage}
+                          className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-destructive-foreground shadow-lg hover:scale-110 transition-transform"
                         >
-                          {size}
-                        </Button>
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descripción</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Descripción del artículo..."
-                      className="min-h-[60px]"
-                      {...field}
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-32 h-32 rounded-[2rem] border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center gap-2 text-primary hover:bg-primary/10 hover:border-primary/40 transition-all group"
+                      >
+                        <div className="p-3 rounded-xl bg-primary/10 group-hover:scale-110 transition-transform">
+                          <ImagePlus className="w-6 h-6" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Subir Foto</span>
+                      </button>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageSelect}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <div className="flex-1 space-y-2">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Sube una imagen representativa del artículo para facilitar su identificación en el inventario. Máx 5MB.
+                      </p>
+                      {imagePreview && (
+                        <Button type="button" size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-xl border-2 font-black uppercase tracking-widest text-[10px]">
+                          Cambiar Imagen
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-            <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end sm:gap-3">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
-                {isPending && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nombre del Artículo</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Ej. Camisa Polo Institucional" 
+                          className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Código Interno</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="CPOLO-01" 
+                            maxLength={10} 
+                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Categoría</FormLabel>
+                        <Select 
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            if (value === 'calzado') {
+                              form.setValue('sizes_available', SHOE_SIZES);
+                            } else if (value !== 'epp' && value !== 'herramientas' && value !== 'otros') {
+                              form.setValue('sizes_available', STANDARD_SIZES);
+                            }
+                          }} 
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl border-primary/10 backdrop-blur-xl bg-background/95">
+                            {DOTATION_CATEGORIES.map((cat) => (
+                              <SelectItem key={cat.value} value={cat.value} className="font-bold">
+                                {cat.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="requires_size"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-[1.5rem] border-2 border-border/50 bg-muted/20 p-4 transition-all hover:border-primary/20">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-xs font-black uppercase tracking-widest">Requiere Talla</FormLabel>
+                        <FormDescription className="text-[11px] font-medium">
+                          Habilita la selección de variantes de talla para este artículo.
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch 
+                          checked={field.value} 
+                          onCheckedChange={field.onChange}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {requiresSize && (
+                  <FormField
+                    control={form.control}
+                    name="sizes_available"
+                    render={({ field }) => (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-3"
+                      >
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tallas Disponibles</FormLabel>
+                        <div className="flex flex-wrap gap-2 p-4 rounded-2xl bg-muted/30 border-2 border-dashed border-border/50">
+                          {getDefaultSizes().map((size) => {
+                            const isSelected = field.value?.includes(size);
+                            return (
+                              <Button
+                                key={size}
+                                type="button"
+                                size="sm"
+                                variant={isSelected ? 'default' : 'outline'}
+                                onClick={() => {
+                                  const current = field.value || [];
+                                  if (current.includes(size)) {
+                                    field.onChange(current.filter((s: string) => s !== size));
+                                  } else {
+                                    field.onChange([...current, size]);
+                                  }
+                                }}
+                                className={cn(
+                                  "h-10 min-w-[3rem] rounded-xl font-black transition-all",
+                                  isSelected ? "shadow-md shadow-primary/20 scale-105" : "bg-background/50 border-2"
+                                )}
+                              >
+                                {size}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                        <FormMessage />
+                      </motion.div>
+                    )}
+                  />
                 )}
-                {isEditing ? 'Guardar' : 'Crear'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Descripción / Especificaciones</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Detalles adicionales del artículo..."
+                          className="min-h-[100px] rounded-2xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-primary/10">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  onClick={() => onOpenChange(false)}
+                  className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-muted"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isPending}
+                  className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                >
+                  {isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    isEditing ? 'Guardar Cambios' : 'Crear Artículo'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

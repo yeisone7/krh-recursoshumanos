@@ -41,6 +41,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateDocument } from '@/hooks/useEmployeeHealth';
+import { useCreateCandidateDocument } from '@/hooks/useCandidates';
 import { supabase } from '@/integrations/supabase/client';
 import { employeeDocumentFolderOrder, employeeDocumentTypeLabels } from '@/types/employee';
 
@@ -60,9 +61,10 @@ type FormData = z.infer<typeof formSchema>;
 interface DocumentFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  employeeId: string;
+  entityId: string;
+  entityType: 'employee' | 'candidate';
   companyId: string;
-  employeeName: string;
+  entityName: string;
   onSuccess?: () => void;
 }
 
@@ -72,13 +74,15 @@ const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 export function DocumentFormDialog({
   open,
   onOpenChange,
-  employeeId,
+  entityId,
+  entityType,
   companyId,
-  employeeName,
+  entityName,
   onSuccess,
 }: DocumentFormDialogProps) {
   const { toast } = useToast();
-  const createDocument = useCreateDocument();
+  const createEmployeeDocument = useCreateDocument();
+  const createCandidateDocument = useCreateCandidateDocument();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
@@ -149,7 +153,8 @@ export function DocumentFormDialog({
 
       for (const [index, file] of selectedFiles.entries()) {
         const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const filePath = `${companyId}/employees/${employeeId}/${data.documentType}_${Date.now()}_${index}_${sanitizedFileName}`;
+        const folderPath = entityType === 'employee' ? 'employees' : 'candidates';
+        const filePath = `${companyId}/${folderPath}/${entityId}/${data.documentType}_${Date.now()}_${index}_${sanitizedFileName}`;
         
         const { error: uploadError } = await supabase.storage
           .from('documents')
@@ -157,18 +162,33 @@ export function DocumentFormDialog({
 
         if (uploadError) throw uploadError;
 
-        await createDocument.mutateAsync({
-          employeeId,
-          companyId,
-          documentType: data.documentType,
-          documentName: data.documentName || employeeDocumentTypeLabels[data.documentType],
-          fileUrl: filePath,
-          fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
-          expiryDate: data.hasExpiry ? data.expiryDate : undefined,
-          observations: data.observations,
-        });
+        if (entityType === 'employee') {
+          await createEmployeeDocument.mutateAsync({
+            employeeId: entityId,
+            companyId,
+            documentType: data.documentType,
+            documentName: data.documentName || employeeDocumentTypeLabels[data.documentType],
+            fileUrl: filePath,
+            fileName: file.name,
+            fileSize: file.size,
+            mimeType: file.type,
+            expiryDate: data.hasExpiry ? data.expiryDate : undefined,
+            observations: data.observations,
+          });
+        } else {
+          await createCandidateDocument.mutateAsync({
+            candidateId: entityId,
+            companyId,
+            documentType: data.documentType,
+            documentName: data.documentName || employeeDocumentTypeLabels[data.documentType],
+            fileUrl: filePath,
+            fileName: file.name,
+            fileSize: file.size,
+            mimeType: file.type,
+            expiryDate: data.hasExpiry ? data.expiryDate : undefined,
+            observations: data.observations,
+          });
+        }
       }
 
       toast({
@@ -200,7 +220,7 @@ export function DocumentFormDialog({
             Cargar Documento
           </DialogTitle>
           <DialogDescription>
-            Subir documento para {employeeName}
+            Subir documento para {entityName}
           </DialogDescription>
         </DialogHeader>
 
@@ -355,8 +375,8 @@ export function DocumentFormDialog({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={uploading || createDocument.isPending}>
-                {(uploading || createDocument.isPending) && (
+              <Button type="submit" disabled={uploading || createEmployeeDocument.isPending || createCandidateDocument.isPending}>
+                {(uploading || createEmployeeDocument.isPending || createCandidateDocument.isPending) && (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 )}
                 Guardar

@@ -135,135 +135,195 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
-        <DialogHeader className="pr-12">
-          <DialogTitle className="flex items-center gap-2">
-            <Copy className="w-5 h-5 text-primary" />
-            Clonación Masiva de Profesiograma
-          </DialogTitle>
-          <DialogDescription>
-            Copia los artículos a múltiples combinaciones de Centro + Cargo.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+        {/* Header con gradiente */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          <div className="relative flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <Copy className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="font-black text-2xl tracking-tighter sm:text-3xl truncate">
+                Clonación Masiva
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground font-medium truncate">
+                Replica matrices de dotación por centro y cargo
+              </DialogDescription>
+            </div>
+          </div>
+        </div>
 
-        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
           {/* Source info */}
-          <div className="rounded-lg bg-muted/50 p-3 space-y-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Origen</p>
-            <p className="text-sm font-medium">{sourceCenterName} — {sourcePositionName}</p>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {sourceData.items.map((item, i) => (
-                <Badge key={i} variant="secondary" className="text-xs">
-                  {item.dotation_item_types?.name || 'Artículo'}
-                  {item.quantity > 1 && ` x${item.quantity}`}
-                </Badge>
-              ))}
+          <div className="group relative overflow-hidden rounded-2xl border border-border/50 bg-muted/20 p-5 transition-all">
+            <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Copy className="w-12 h-12 text-primary" />
+            </div>
+            <div className="relative space-y-3">
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <span className="flex h-1.5 w-1.5 rounded-full bg-primary" /> Origen de Datos
+              </div>
+              <div>
+                <p className="text-sm font-black text-foreground">{sourceCenterName}</p>
+                <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{sourcePositionName}</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {sourceData.items.map((item, i) => (
+                  <Badge key={i} variant="outline" className="h-6 rounded-lg px-2 bg-background border-border/50 font-bold text-[9px] uppercase tracking-widest text-muted-foreground">
+                    {item.dotation_item_types?.name || 'Artículo'}
+                    <span className="ml-1 text-primary font-black">×{item.quantity}</span>
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Quick action: all centers */}
-          <div className="rounded-lg border border-dashed border-primary/30 bg-primary-light/30 p-3 space-y-2">
-            <p className="text-xs font-medium text-primary uppercase tracking-wider flex items-center gap-1">
-              <Building2 className="w-3.5 h-3.5" /> Acción rápida: Todos los centros
-            </p>
-            <div className="grid grid-cols-1 gap-2 sm:flex sm:items-end">
-              <div className="flex-1 space-y-1">
-                <Label className="text-xs">Cargo a aplicar</Label>
+          <div className="rounded-2xl border border-dashed border-primary/20 bg-primary/[0.02] p-5 space-y-4">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
+              <Building2 className="w-3.5 h-3.5" /> Acción rápida: Propagar a todos los centros
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex-1 space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cargo Destino</Label>
                 <Select value={quickPositionId} onValueChange={setQuickPositionId}>
-                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Seleccionar cargo" /></SelectTrigger>
-                  <SelectContent>
+                  <SelectTrigger className="h-11 rounded-xl border-border/50 bg-background/80 font-bold text-sm">
+                    <SelectValue placeholder="Seleccionar cargo" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
                     {positions.map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      <SelectItem key={p.id} value={p.id} className="rounded-lg font-bold text-xs">{p.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <Button
                 variant="outline"
-                size="sm"
-                  className="gap-1 h-9 whitespace-nowrap border-primary/30 text-primary hover:bg-primary-light"
+                size="lg"
+                className="h-11 rounded-xl gap-2 font-black text-[10px] uppercase tracking-widest border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40 transition-all shadow-sm"
                 onClick={() => handleSelectAllCenters(quickPositionId)}
               >
-                <Building2 className="w-3.5 h-3.5" />
-                Todos los centros ({centers.length})
+                Aplicar a {centers.length} Centros
               </Button>
             </div>
           </div>
 
+          <Separator className="bg-border/50" />
+
           {/* Destinations */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Destinos ({destinations.length})
-              </p>
-              <Button type="button" variant="outline" size="sm" onClick={addDestination} className="gap-1 h-7 text-xs">
-                <Plus className="w-3 h-3" /> Agregar destino
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Destinos Definidos ({destinations.length})</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addDestination} className="h-8 rounded-lg gap-1.5 font-black text-[9px] uppercase tracking-widest border-border/50">
+                <Plus className="w-3 h-3" /> Añadir Destino
               </Button>
             </div>
 
-            {destinations.map((dest, idx) => {
-              const status = getDestinationStatus(dest);
-              return (
-                <div key={idx} className="rounded-lg border border-border p-3 space-y-2 relative">
-                  {destinations.length > 1 && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 absolute top-2 right-2 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeDestination(idx)}
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
-                  <p className="text-xs text-muted-foreground font-medium">Destino {idx + 1}</p>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Centro</Label>
-                      <Select value={dest.centerId} onValueChange={(v) => updateDestination(idx, 'centerId', v)}>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Centro" /></SelectTrigger>
-                        <SelectContent>
-                          {centers.map(c => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+            <div className="grid grid-cols-1 gap-3">
+              {destinations.map((dest, idx) => {
+                const status = getDestinationStatus(dest);
+                return (
+                  <div key={idx} className="group relative rounded-2xl border border-border/50 bg-background/50 p-4 transition-all hover:border-primary/20">
+                    <div className="absolute -top-2 -left-2 flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-[10px] font-black border border-border/50 text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      {idx + 1}
                     </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs">Cargo</Label>
-                      <Select value={dest.positionId} onValueChange={(v) => updateDestination(idx, 'positionId', v)}>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Cargo" /></SelectTrigger>
-                        <SelectContent>
-                          {positions.map(p => (
-                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    {destinations.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 absolute top-2 right-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        onClick={() => removeDestination(idx)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                    
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 pt-1">
+                      <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Centro</Label>
+                        <Select value={dest.centerId} onValueChange={(v) => updateDestination(idx, 'centerId', v)}>
+                          <SelectTrigger className="h-10 rounded-xl border-border/50 bg-background/80 font-bold text-xs">
+                            <SelectValue placeholder="Centro" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            {centers.map(c => (
+                              <SelectItem key={c.id} value={c.id} className="rounded-lg font-bold text-xs">{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cargo</Label>
+                        <Select value={dest.positionId} onValueChange={(v) => updateDestination(idx, 'positionId', v)}>
+                          <SelectTrigger className="h-10 rounded-xl border-border/50 bg-background/80 font-bold text-xs">
+                            <SelectValue placeholder="Cargo" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            {positions.map(p => (
+                              <SelectItem key={p.id} value={p.id} className="rounded-lg font-bold text-xs">{p.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-end">
+                      {status === 'same' && (
+                        <Badge variant="outline" className="h-5 rounded-lg bg-destructive/10 text-destructive border-0 font-bold text-[8px] uppercase tracking-widest">
+                          Mismo que origen
+                        </Badge>
+                      )}
+                      {status === 'exists' && (
+                        <Badge variant="outline" className="h-5 rounded-lg bg-amber-500/10 text-amber-600 border-0 font-bold text-[8px] uppercase tracking-widest">
+                          Ya existe
+                        </Badge>
+                      )}
+                      {status === 'ok' && (
+                        <Badge variant="outline" className="h-5 rounded-lg bg-green-500/10 text-green-600 border-0 font-bold text-[8px] uppercase tracking-widest">
+                          ✓ Listo
+                        </Badge>
+                      )}
                     </div>
                   </div>
-                  {status === 'same' && (
-                    <p className="text-xs text-destructive">⚠ Igual al origen, se omitirá</p>
-                  )}
-                  {status === 'exists' && (
-                    <p className="text-xs text-destructive">⚠ Ya existe, se omitirá</p>
-                  )}
-                  {status === 'ok' && (
-                    <p className="text-xs text-success">✓ Válido</p>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 pt-4 border-t mt-2 sm:flex sm:items-center sm:justify-between">
-          <p className="text-xs text-muted-foreground">
-            {validDestinations.length} destino{validDestinations.length !== 1 ? 's' : ''} válido{validDestinations.length !== 1 ? 's' : ''}
-          </p>
-          <div className="grid grid-cols-1 gap-3 sm:flex">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={handleClone} disabled={isCloning || validDestinations.length === 0} className="gap-2">
-              {isCloning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
-              {isCloning ? 'Clonando...' : `Clonar a ${validDestinations.length} destino${validDestinations.length !== 1 ? 's' : ''}`}
+        {/* Footer */}
+        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-muted/10 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resumen de Destino</span>
+            <p className="text-xs font-bold text-muted-foreground">
+              {validDestinations.length} combinaciones {validDestinations.length === 1 ? 'lista' : 'listas'} para replicar
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              onClick={() => onOpenChange(false)}
+              className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-background transition-colors"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              size="lg"
+              onClick={handleClone} 
+              disabled={isCloning || validDestinations.length === 0} 
+              className="h-12 px-8 rounded-2xl gap-2 bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px] transition-all"
+            >
+              {isCloning ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Procesando...
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  Ejecutar Clonación
+                </>
+              )}
             </Button>
           </div>
         </div>

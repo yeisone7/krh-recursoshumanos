@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
+import { ArrowRightLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateCesantiasWithdrawal, useUpdateCesantiasWithdrawal } from '@/hooks/useCesantias';
@@ -153,256 +154,296 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:w-full sm:p-6">
-        <DialogHeader>
-          <DialogTitle>
-            {withdrawal ? 'Editar Retiro Parcial' : 'Nuevo Retiro Parcial'}
-          </DialogTitle>
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
+        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-info/10 via-background to-info/5 border-b border-info/10">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-info flex items-center justify-center shadow-lg shadow-info/20">
+              <ArrowRightLeft className="w-6 h-6 text-info-foreground" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-black tracking-tighter">
+                {withdrawal ? 'Editar Retiro' : 'Nuevo Retiro'}
+              </DialogTitle>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Solicitud de Cesantías</p>
+            </div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="employee_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Empleado *</FormLabel>
-                    <FormControl>
-                      <SearchableSelect
-                        options={employeeOptions}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Seleccionar empleado"
-                        searchPlaceholder="Buscar empleado..."
-                        disabled={!!withdrawal}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 space-y-8">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-8 rounded-full bg-info" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Información Básica</span>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="employee_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Empleado *</FormLabel>
+                      <FormControl>
+                        <SearchableSelect
+                          options={employeeOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Seleccionar empleado"
+                          searchPlaceholder="Buscar empleado..."
+                          disabled={!!withdrawal}
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="request_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Solicitud *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} disabled={!!withdrawal} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="withdrawal_reason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Motivo del Retiro *</FormLabel>
+                      <FormControl>
+                        <SearchableSelect
+                          options={reasonOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Seleccionar motivo"
+                          searchPlaceholder="Buscar motivo..."
+                          disabled={!!withdrawal}
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fund_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fondo de Cesantías *</FormLabel>
+                      <FormControl>
+                        <SearchableSelect
+                          options={fundOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Seleccionar fondo"
+                          searchPlaceholder="Buscar fondo..."
+                          disabled={!!withdrawal}
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold text-info"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-8 rounded-full bg-info" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Montos y Destino</span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="amount_requested"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Monto Solicitado *</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} disabled={!!withdrawal} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="amount_approved"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Monto Aprobado</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} className="h-11 rounded-xl border-info/30 bg-info/5 text-info focus:bg-info/10 transition-all font-black" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
-                name="request_date"
+                name="destination_description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Fecha Solicitud *</FormLabel>
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Descripción del Destino</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} disabled={!!withdrawal} />
+                      <Textarea {...field} placeholder="Ej: Compra de vivienda, pago de matrícula universitaria..." rows={3} className="rounded-2xl border-border/50 bg-background/50 focus:bg-background transition-all resize-none" />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-[10px] font-bold" />
                   </FormItem>
                 )}
               />
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="withdrawal_reason"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Motivo del Retiro *</FormLabel>
-                    <FormControl>
-                      <SearchableSelect
-                        options={reasonOptions}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Seleccionar motivo"
-                        searchPlaceholder="Buscar motivo..."
-                        disabled={!!withdrawal}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-8 rounded-full bg-info" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Beneficiario</span>
+              </div>
 
-              <FormField
-                control={form.control}
-                name="fund_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fondo de Cesantías *</FormLabel>
-                    <FormControl>
-                      <SearchableSelect
-                        options={fundOptions}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Seleccionar fondo"
-                        searchPlaceholder="Buscar fondo..."
-                        disabled={!!withdrawal}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="beneficiary_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nombre</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Nombre completo" className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="beneficiary_document"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Documento</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-mono" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="amount_requested"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto Solicitado *</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} disabled={!!withdrawal} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-8 rounded-full bg-info" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estado y Fechas</span>
+              </div>
 
-              <FormField
-                control={form.control}
-                name="amount_approved"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monto Aprobado</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Estado *</FormLabel>
+                      <FormControl>
+                        <SearchableSelect
+                          options={statusOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Seleccionar estado"
+                          searchPlaceholder="Buscar estado..."
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-black text-xs"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="destination_description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descripción del Destino</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} placeholder="Ej: Compra de vivienda, pago de matrícula universitaria..." rows={2} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+                <FormField
+                  control={form.control}
+                  name="authorization_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Autorización</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="disbursement_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Desembolso</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {status === 'rechazado' && (
+                <FormField
+                  control={form.control}
+                  name="rejection_reason"
+                  render={({ field }) => (
+                    <FormItem className="animate-in fade-in slide-in-from-top-2 duration-300">
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-destructive ml-1">Motivo de Rechazo</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} rows={2} className="rounded-2xl border-destructive/30 bg-destructive/5 focus:bg-destructive/10 transition-all resize-none" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="beneficiary_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Beneficiario</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Nombre del beneficiario" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="beneficiary_document"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Documento Beneficiario</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estado *</FormLabel>
-                    <FormControl>
-                      <SearchableSelect
-                        options={statusOptions}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Seleccionar estado"
-                        searchPlaceholder="Buscar estado..."
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="authorization_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha Autorización</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="disbursement_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha Desembolso</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {status === 'rechazado' && (
-              <FormField
-                control={form.control}
-                name="rejection_reason"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Motivo de Rechazo</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} rows={2} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             <FormField
               control={form.control}
               name="observations"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observaciones</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={2} />
+                    <Textarea {...field} rows={3} className="rounded-2xl border-border/50 bg-background/50 focus:bg-background transition-all resize-none" />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[10px] font-bold" />
                 </FormItem>
               )}
             />
 
-            <div className="sticky bottom-0 -mx-4 grid grid-cols-1 gap-2 border-t border-border bg-background/95 px-4 pt-3 pb-1 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:pt-4 sm:backdrop-blur-0">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-border/50">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-background transition-all">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {withdrawal ? 'Actualizar' : 'Registrar'}
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-info/20 hover:shadow-xl transition-all">
+                {withdrawal ? 'Actualizar Registro' : 'Registrar Solicitud'}
               </Button>
             </div>
           </form>

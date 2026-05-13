@@ -232,321 +232,408 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
-        <DialogHeader className="pr-12">
-          <DialogTitle className="font-display text-lg flex items-center gap-2 sm:text-xl">
-            <Package className="w-5 h-5 text-primary" />
-            Nueva Entrega de Dotación
-          </DialogTitle>
-          <DialogDescription>
-            Registra una nueva entrega de dotación a un empleado
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background/95 backdrop-blur-xl">
+        {/* Header con gradiente */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          <div className="relative flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <Package className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <div>
+              <DialogTitle className="font-black text-2xl tracking-tighter sm:text-3xl">
+                Nueva Entrega
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground font-medium">
+                Gestión de dotación para el personal
+              </DialogDescription>
+            </div>
+          </div>
+        </div>
 
-        <Tabs defaultValue="employee" className="flex-1 min-h-0 overflow-hidden flex flex-col">
-          <TabsList className="grid h-auto w-full grid-cols-3 mb-4 bg-primary/5 border border-primary/10">
-            <TabsTrigger value="employee" className="min-w-0 gap-1 px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground sm:gap-2 sm:text-sm">
-              <User className="w-4 h-4" /> Empleado
-            </TabsTrigger>
-            <TabsTrigger value="items" className="min-w-0 gap-1 px-2 text-xs data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground sm:gap-2 sm:text-sm">
-              <Package className="w-4 h-4" /> Artículos
-              {selectedItems.length > 0 && (
-                <Badge className="ml-1 h-5 px-1.5 text-xs bg-secondary text-secondary-foreground">{selectedItems.length}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="delivery" className="min-w-0 gap-1 px-2 text-xs data-[state=active]:bg-tertiary data-[state=active]:text-primary-foreground sm:gap-2 sm:text-sm">
-              <FileText className="w-4 h-4" /> Entrega
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-6">
+          <Tabs defaultValue="employee" className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            <TabsList className="grid h-14 w-full grid-cols-3 mb-6 bg-muted/50 p-1 rounded-2xl border border-border/50">
+              <TabsTrigger 
+                value="employee" 
+                className="rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-300 font-bold text-xs uppercase tracking-widest"
+              >
+                <User className="w-4 h-4" /> <span className="hidden sm:inline">Empleado</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="items" 
+                className="rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-300 font-bold text-xs uppercase tracking-widest"
+              >
+                <Package className="w-4 h-4" /> <span className="hidden sm:inline">Artículos</span>
+                {selectedItems.length > 0 && (
+                  <Badge className="h-5 min-w-[20px] px-1 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center border-0">
+                    {selectedItems.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="delivery" 
+                className="rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-300 font-bold text-xs uppercase tracking-widest"
+              >
+                <FileText className="w-4 h-4" /> <span className="hidden sm:inline">Entrega</span>
+              </TabsTrigger>
+            </TabsList>
 
-          <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2">
-            {/* Employee Tab */}
-            <TabsContent value="employee" className="space-y-4 mt-0">
-              <div className="space-y-2">
-                <Label>Empleado *</Label>
-                <Select value={employeeId} onValueChange={setEmployeeId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar empleado" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background max-h-[200px]">
-                    {employees.filter(e => e.is_active).map((emp) => (
-                      <SelectItem key={emp.id} value={emp.id}>
-                        {getEmployeeFullName(emp)} - {emp.document_number}
-                      </SelectItem>
+            <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
+              {/* Employee Tab */}
+              <TabsContent value="employee" className="space-y-6 mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="space-y-3">
+                  <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Empleado Responsable *</Label>
+                  <Select value={employeeId} onValueChange={setEmployeeId}>
+                    <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20">
+                      <SelectValue placeholder="Seleccionar colaborador" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl">
+                      {employees.filter(e => e.is_active).map((emp) => (
+                        <SelectItem key={emp.id} value={emp.id} className="rounded-xl focus:bg-primary/10">
+                          {getEmployeeFullName(emp)} - {emp.document_number}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedEmployee && (
+                  <div className="bg-gradient-to-br from-muted/50 to-muted/20 p-5 rounded-2xl border border-border/50 space-y-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <span className="font-bold text-sm text-foreground">Ficha de Empleado</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Documento</p>
+                        <p className="font-semibold text-sm">{selectedEmployee.document_number}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Centro</p>
+                        <p className="font-semibold text-sm truncate">{selectedEmployee.operation_centers?.name || 'No asignado'}</p>
+                      </div>
+                      <div className="space-y-1 col-span-2">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cargo actual</p>
+                        <p className="font-semibold text-sm">{selectedEmployee.work_info?.position_name || 'Sin cargo'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {employeeId && loadingProf && (
+                  <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/10 animate-pulse">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    <span className="text-sm font-medium text-primary">Analizando profesiograma...</span>
+                  </div>
+                )}
+
+                {employeeId && !loadingProf && profesiograma && profesiograma.items.length > 0 && (
+                  <div className="bg-green-500/5 border border-green-500/20 rounded-2xl p-4 flex items-start gap-4">
+                    <div className="p-2 rounded-xl bg-green-500/10 text-green-600">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-bold text-sm text-green-700">Dotación Sugerida Cargada</p>
+                      <p className="text-xs text-green-600/80 leading-relaxed">
+                        Se han precargado {profesiograma.items.length} artículos basados en el perfil del cargo.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {employeeId && !loadingProf && (!profesiograma || profesiograma.items.length === 0) && (
+                  <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-4">
+                    <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600">
+                      <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-bold text-sm text-amber-700">Sin Profesiograma</p>
+                      <p className="text-xs text-amber-600/80 leading-relaxed">
+                        No hay artículos predefinidos para este cargo. Por favor, agregue los ítems manualmente.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {employeeId && (() => {
+                  const empDeliveries = allDeliveries.filter((d: any) => d.employee_id === employeeId);
+                  if (empDeliveries.length === 0) return null;
+                  const recent = empDeliveries.slice(0, 3);
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 px-1">
+                        <History className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Historial Reciente</span>
+                      </div>
+                      <div className="rounded-2xl border border-border/50 overflow-hidden bg-background/40">
+                        <Table>
+                          <TableBody>
+                            {recent.map((d: any) => (
+                              <TableRow key={d.id} className="hover:bg-muted/30 transition-colors">
+                                <TableCell className="py-3 px-4 font-medium text-xs">{d.item_name}</TableCell>
+                                <TableCell className="py-3 px-4 text-xs text-muted-foreground">
+                                  {format(new Date(d.delivery_date), 'dd/MM/yy')}
+                                </TableCell>
+                                <TableCell className="py-3 px-4 text-right">
+                                  <Badge variant="outline" className="text-[10px] rounded-full border-border/50">
+                                    {format(new Date(d.expiration_date), 'dd/MM/yy')}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </TabsContent>
+
+              <TabsContent value="items" className="space-y-6 mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center justify-between px-1">
+                  <div className="space-y-0.5">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Artículos de Dotación</Label>
+                    <p className="text-[10px] text-muted-foreground">Seleccione los ítems que entregará</p>
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={addManualItem} 
+                    className="h-9 rounded-xl gap-1.5 font-bold text-xs hover:bg-primary/5 hover:text-primary transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Agregar Ítem
+                  </Button>
+                </div>
+
+                {items.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
+                    <div className="p-4 rounded-full bg-background shadow-sm">
+                      <Package className="w-10 h-10 text-muted-foreground/30" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-bold text-muted-foreground">Lista Vacía</p>
+                      <p className="text-xs text-muted-foreground/60 max-w-[200px] mx-auto">
+                        {employeeId ? 'Añada artículos manualmente para continuar' : 'Seleccione un empleado primero'}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {items.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className={cn(
+                          'group relative overflow-hidden rounded-2xl border p-4 transition-all duration-300',
+                          item.selected 
+                            ? 'bg-primary/[0.03] border-primary/20 shadow-sm' 
+                            : 'bg-background border-border/50 opacity-60 grayscale-[0.5]'
+                        )}
+                      >
+                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                           <div className="flex items-center gap-3 shrink-0">
+                             <Checkbox
+                               checked={item.selected}
+                               onCheckedChange={(v) => updateItem(idx, 'selected', !!v)}
+                               className="h-5 w-5 rounded-md border-border/50 data-[state=active]:bg-primary data-[state=active]:border-primary"
+                             />
+                           </div>
+                           
+                           <div className="flex-1 min-w-0">
+                             {item.fromProfesiograma ? (
+                               <div className="flex items-center gap-2">
+                                 <p className="font-bold text-sm truncate text-foreground">{item.itemName}</p>
+                                 <Badge variant="outline" className="text-[9px] uppercase tracking-tighter bg-primary/5 text-primary border-primary/20 rounded-full h-4">
+                                   Sugerido
+                                 </Badge>
+                               </div>
+                             ) : (
+                               <SearchableSelect
+                                 options={itemTypeCatalog
+                                   .filter((c: any) => c.is_active)
+                                   .map((c: any) => ({ value: c.name, label: c.name }))}
+                                 value={item.itemName || undefined}
+                                 onValueChange={(v) => handleCatalogSelect(idx, v)}
+                                 placeholder="Buscar artículo..."
+                                 triggerClassName="h-10 rounded-xl bg-background border-border/50"
+                               />
+                             )}
+                           </div>
+
+                            <div className="grid grid-cols-[80px_1fr_40px] items-center gap-3 sm:flex sm:shrink-0">
+                             <div className="space-y-1">
+                               <Input
+                                 type="number"
+                                 min={1}
+                                 value={item.quantity}
+                                 onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
+                                 className="h-10 w-full sm:w-20 rounded-xl bg-background border-border/50 text-center font-bold"
+                               />
+                             </div>
+                             <Select
+                               value={item.size || '__none__'}
+                               onValueChange={(v) => updateItem(idx, 'size', v === '__none__' ? undefined : v)}
+                             >
+                                <SelectTrigger className="h-10 w-full sm:w-24 rounded-xl bg-background border-border/50">
+                                 <SelectValue placeholder="Talla" />
+                               </SelectTrigger>
+                               <SelectContent className="bg-background/95 backdrop-blur-xl rounded-xl shadow-2xl">
+                                 <SelectItem value="__none__" className="rounded-lg">—</SelectItem>
+                                 {(isFootwear(item.itemTypeEnum) ? shoeSizeOptions : sizeOptions).map(s => (
+                                   <SelectItem key={s} value={s} className="rounded-lg">{s}</SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                             <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-10 w-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-colors" 
+                              onClick={() => removeItem(idx)}
+                             >
+                               <Trash2 className="w-4 h-4" />
+                             </Button>
+                           </div>
+                         </div>
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {selectedEmployee && (
-                <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Documento:</span>
-                    <span className="font-medium">{selectedEmployee.document_number}</span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Centro de Operación:</span>
-                    <span className="font-medium">
-                      {selectedEmployee.operation_centers?.name || 'No asignado'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Cargo:</span>
-                    <span className="font-medium">{selectedEmployee.work_info?.position_name || 'Sin cargo'}</span>
-                  </div>
-                </div>
-              )}
+                )}
+              </TabsContent>
 
-              {employeeId && loadingProf && (
-                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 animate-pulse" />
-                  Buscando profesiograma...
-                </div>
-              )}
+              {/* Delivery Tab */}
+              <TabsContent value="delivery" className="space-y-6 mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha de Entrega *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'h-12 w-full pl-4 text-left font-semibold rounded-xl bg-muted/50 border-border/50',
+                            !deliveryDate && 'text-muted-foreground'
+                          )}
+                        >
+                          {deliveryDate ? format(deliveryDate, 'PPP', { locale: es }) : 'Seleccionar fecha'}
+                          <CalendarIcon className="ml-auto h-4 w-4 text-primary opacity-70" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-background border-border/50 rounded-2xl shadow-2xl" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={deliveryDate}
+                          onSelect={(date) => {
+                            if (date) {
+                              setDeliveryDate(date);
+                              setExpirationDate(addMonths(date, DOTATION_PERIOD_MONTHS));
+                            }
+                          }}
+                          locale={es}
+                          initialFocus
+                          className="rounded-2xl"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
 
-              {employeeId && !loadingProf && profesiograma && profesiograma.items.length > 0 && (
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 flex items-start gap-2">
-                  <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-medium text-primary">Profesiograma encontrado</p>
-                    <p className="text-muted-foreground">
-                      Se cargaron {profesiograma.items.length} artículo(s) sugeridos. Revísalos en la pestaña "Artículos".
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Vencimiento Sugerido</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            'h-12 w-full pl-4 text-left font-semibold rounded-xl bg-muted/50 border-border/50',
+                            !expirationDate && 'text-muted-foreground'
+                          )}
+                        >
+                          {expirationDate ? format(expirationDate, 'PPP', { locale: es }) : 'Seleccionar fecha'}
+                          <CalendarIcon className="ml-auto h-4 w-4 text-primary opacity-70" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-background border-border/50 rounded-2xl shadow-2xl" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={expirationDate}
+                          onSelect={(date) => date && setExpirationDate(date)}
+                          disabled={(date) => date <= deliveryDate}
+                          locale={es}
+                          initialFocus
+                          className="rounded-2xl"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1.5 ml-1">
+                      <AlertTriangle className="w-3 h-3 text-amber-500" />
+                      Periodicidad legal: {DOTATION_PERIOD_MONTHS} meses
                     </p>
                   </div>
                 </div>
-              )}
 
-              {employeeId && !loadingProf && (!profesiograma || profesiograma.items.length === 0) && (
-                <div className="bg-muted/30 border border-border rounded-lg p-3 text-sm text-muted-foreground">
-                  No hay profesiograma configurado para este centro + cargo. Puedes agregar artículos manualmente en la pestaña "Artículos".
-                </div>
-              )}
-              {/* Employee delivery history */}
-              {employeeId && (() => {
-                const empDeliveries = allDeliveries.filter((d: any) => d.employee_id === employeeId);
-                if (empDeliveries.length === 0) return null;
-                const recent = empDeliveries.slice(0, 5);
-                return (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                      <History className="w-4 h-4" />
-                      Últimas entregas ({empDeliveries.length} total)
-                    </div>
-                    <div className="border border-border rounded-lg overflow-x-auto overscroll-x-contain">
-                      <Table className="min-w-[460px]">
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="text-xs py-2">Artículo</TableHead>
-                            <TableHead className="text-xs py-2">Fecha</TableHead>
-                            <TableHead className="text-xs py-2">Vencimiento</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {recent.map((d: any) => (
-                            <TableRow key={d.id}>
-                              <TableCell className="text-xs py-1.5">{d.item_name}</TableCell>
-                              <TableCell className="text-xs py-1.5">{format(new Date(d.delivery_date), 'dd/MM/yyyy')}</TableCell>
-                              <TableCell className="text-xs py-1.5">{format(new Date(d.expiration_date), 'dd/MM/yyyy')}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </div>
-                );
-              })()}
-            </TabsContent>
-            <TabsContent value="items" className="space-y-4 mt-0">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <Label>Artículos a entregar</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addManualItem} className="gap-1">
-                  <Plus className="w-3 h-3" /> Agregar Manual
-                </Button>
-              </div>
-
-              {items.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
-                  <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">
-                    {employeeId
-                      ? 'No hay artículos sugeridos. Agrega manualmente.'
-                      : 'Selecciona un empleado primero.'}
-                  </p>
-                </div>
-              ) : (
                 <div className="space-y-2">
-                  {items.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className={cn(
-                        'border rounded-lg p-3 space-y-3 transition-colors',
-                        item.selected ? 'border-primary/30 bg-primary/5' : 'border-border bg-muted/20 opacity-60'
-                      )}
-                    >
-                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
-                         <Checkbox
-                           checked={item.selected}
-                           onCheckedChange={(v) => updateItem(idx, 'selected', !!v)}
-                         />
-                         {item.fromProfesiograma ? (
-                           <div className="flex-1 flex items-center gap-2 min-w-0">
-                             <span className="font-medium text-sm truncate">{item.itemName}</span>
-                             <Badge variant="outline" className="text-xs gap-1 bg-amber-50 text-amber-700 border-amber-200 shrink-0">
-                               <Sparkles className="w-3 h-3" /> Sugerido
-                             </Badge>
-                           </div>
-                         ) : (
-                           <div className="flex-1 min-w-[180px]">
-                             <SearchableSelect
-                               options={itemTypeCatalog
-                                 .filter((c: any) => c.is_active)
-                                 .map((c: any) => ({ value: c.name, label: c.name }))}
-                               value={item.itemName || undefined}
-                               onValueChange={(v) => handleCatalogSelect(idx, v)}
-                               placeholder="Seleccionar artículo"
-                               searchPlaceholder="Buscar artículo..."
-                               emptyMessage="No se encontraron artículos"
-                               triggerClassName="h-9"
-                             />
-                           </div>
-                         )}
-                          <div className="grid w-full grid-cols-[72px_1fr_auto] items-center gap-2 sm:flex sm:w-auto sm:shrink-0">
-                           <Input
-                             type="number"
-                             min={1}
-                             value={item.quantity}
-                             onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
-                              className="h-9 w-full sm:w-16"
-                           />
-                           <Select
-                             value={item.size || '__none__'}
-                             onValueChange={(v) => updateItem(idx, 'size', v === '__none__' ? undefined : v)}
-                           >
-                              <SelectTrigger className="h-9 w-full sm:w-20">
-                               <SelectValue placeholder="Talla" />
-                             </SelectTrigger>
-                             <SelectContent>
-                               <SelectItem value="__none__">—</SelectItem>
-                               {(isFootwear(item.itemTypeEnum) ? shoeSizeOptions : sizeOptions).map(s => (
-                                 <SelectItem key={s} value={s}>{s}</SelectItem>
-                               ))}
-                             </SelectContent>
-                           </Select>
-                           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeItem(idx)}>
-                             <Trash2 className="w-4 h-4" />
-                           </Button>
-                         </div>
-                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Delivery Tab */}
-            <TabsContent value="delivery" className="space-y-4 mt-0">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="flex flex-col space-y-2">
-                  <Label>Fecha de Entrega *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'w-full pl-3 text-left font-normal',
-                          !deliveryDate && 'text-muted-foreground'
-                        )}
-                      >
-                        {deliveryDate ? format(deliveryDate, 'PPP', { locale: es }) : 'Seleccionar'}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-background" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={deliveryDate}
-                        onSelect={(date) => {
-                          if (date) {
-                            setDeliveryDate(date);
-                            setExpirationDate(addMonths(date, DOTATION_PERIOD_MONTHS));
-                          }
-                        }}
-                        locale={es}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Entregado por *</Label>
+                  <Input
+                    placeholder="Nombre del responsable de almacén"
+                    value={deliveredBy}
+                    onChange={(e) => setDeliveredBy(e.target.value)}
+                    className="h-12 rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20 font-medium"
+                  />
                 </div>
 
-                <div className="flex flex-col space-y-2">
-                  <Label>Fecha de Vencimiento *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          'w-full pl-3 text-left font-normal',
-                          !expirationDate && 'text-muted-foreground'
-                        )}
-                      >
-                        {expirationDate ? format(expirationDate, 'PPP', { locale: es }) : 'Seleccionar'}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-background" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={expirationDate}
-                        onSelect={(date) => date && setExpirationDate(date)}
-                        disabled={(date) => date <= deliveryDate}
-                        locale={es}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <p className="text-xs text-muted-foreground">
-                    Por ley, la dotación vence cada {DOTATION_PERIOD_MONTHS} meses
-                  </p>
+                <div className="space-y-2">
+                  <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observaciones</Label>
+                  <Textarea
+                    placeholder="Notas adicionales sobre el estado de la dotación o condiciones de entrega..."
+                    className="resize-none rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20 min-h-[100px] p-4 font-medium"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label>Entregado por *</Label>
-                <Input
-                  placeholder="Nombre de quien entrega"
-                  value={deliveredBy}
-                  onChange={(e) => setDeliveredBy(e.target.value)}
-                />
-              </div>
+                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-4">
+                  <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                    <PenTool className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-bold text-primary">Firma Biométrica</p>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      La firma digital se capturará automáticamente al generar el acta de entrega oficial.
+                    </p>
+                  </div>
+                </div>
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
 
-              <div className="space-y-2">
-                <Label>Observaciones</Label>
-                <Textarea
-                  placeholder="Observaciones adicionales sobre la entrega..."
-                  className="resize-none"
-                  rows={3}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </div>
-
-              <div className="bg-muted/30 border border-border rounded-lg p-3 text-sm text-muted-foreground flex items-center gap-2">
-                <PenTool className="w-4 h-4 shrink-0" />
-                La firma del empleado se captura al descargar el Acta de Entrega en PDF.
-              </div>
-            </TabsContent>
-          </div>
-        </Tabs>
-
-        <div className="grid grid-cols-1 gap-3 pt-4 border-t border-primary/10 mt-4 sm:flex sm:justify-end">
-          <Button variant="outline" onClick={() => { handleReset(); onOpenChange(false); }}>
-            Cancelar
+        {/* Footer con gradiente sutil */}
+        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-muted/10 sm:flex-row sm:justify-end">
+          <Button 
+            variant="ghost" 
+            onClick={() => { handleReset(); onOpenChange(false); }}
+            className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-background transition-colors"
+          >
+            Descartar
           </Button>
-          <Button onClick={handleSubmit} className="gap-2 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 shadow-md" disabled={isSubmitting}>
-            <Package className="w-4 h-4" />
-            {isSubmitting ? 'Registrando...' : `Registrar ${selectedItems.length > 0 ? `(${selectedItems.length})` : 'Entrega'}`}
+          <Button 
+            onClick={handleSubmit} 
+            className="h-12 px-8 rounded-2xl gap-2 bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs shadow-md shadow-primary/10 hover:shadow-lg hover:translate-y-[-1px] active:translate-y-[1px] transition-all" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Registrando...
+              </>
+            ) : (
+              <>
+                <CheckSquare className="w-4 h-4" />
+                Finalizar Entrega {selectedItems.length > 0 ? `(${selectedItems.length})` : ''}
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>

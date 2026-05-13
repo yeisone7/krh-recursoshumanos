@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGallery } from '@/components/training';
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { toast } from 'sonner';
@@ -102,30 +103,43 @@ export default function CrearManual() {
   const handleSaveChanges = () => handleSave(existingCourse?.status || 'borrador');
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/capacitaciones')}><ArrowLeft className="h-5 w-5" /></Button>
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><PenLine className="h-6 w-6" /> {editId ? 'Editar' : 'Crear'} Capacitación Manual</h1>
-          <p className="text-muted-foreground">Crea contenido y evaluaciones manualmente{existingCourse?.version ? ` · Versión ${existingCourse.version}` : ''}</p>
+    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        <div className="relative z-10 flex items-center gap-5">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/capacitaciones')} className="h-12 w-12 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-background/80 shrink-0">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+              {editId ? 'EDICIÓN MANUAL' : 'CREACIÓN MANUAL'}
+            </Badge>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">{editId ? 'Editar' : 'Crear'} Capacitación Manual</h1>
+            <p className="text-muted-foreground font-medium mt-1">Crea contenido y evaluaciones manualmente{existingCourse?.version ? ` · Versión ${existingCourse.version}` : ''}</p>
+          </div>
         </div>
       </div>
 
-      <TrainingStepIndicator steps={STEPS} currentStep={step} />
+      <div className="px-2 mb-8">
+        <TrainingStepIndicator steps={STEPS} currentStep={step} />
+      </div>
 
       {step === 0 && (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <PenLine className="h-6 w-6 text-primary" />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-primary/40 to-primary/10 w-full" />
+            <CardHeader className="px-8 pt-8 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
+                  <PenLine className="w-6 h-6" />
+                </div>
                 <div>
-                  <CardTitle>Parámetros de la Capacitación</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-0.5">Define las características principales</p>
+                  <CardTitle className="text-xl font-bold">Parámetros de la Capacitación</CardTitle>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Define las características principales</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="px-8 pb-8 space-y-6">
               <div className="space-y-1.5">
                 <Label className="flex items-center gap-1.5"><Tag className="h-4 w-4" /> Título de la Capacitación *</Label>
                 <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej: Manipulación segura de alimentos en cocina industrial" />
@@ -195,13 +209,15 @@ export default function CrearManual() {
                   </SelectContent></Select>
                 </div>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 pt-4">
                 <Label className="flex items-center gap-1.5"><AlignLeft className="h-4 w-4" /> Descripción o Contexto Adicional</Label>
-                <Textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Proporciona información adicional que ayude a definir el contenido de la capacitación..." rows={4} />
+                <Textarea className="resize-none rounded-xl bg-muted/30" value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Proporciona información adicional que ayude a definir el contenido de la capacitación..." rows={4} />
               </div>
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                {editId && <Button variant="outline" onClick={handleSaveChanges} disabled={!title || isSaving}>{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
-                <Button onClick={() => setStep(1)} disabled={!title}>Siguiente <ArrowRight className="h-4 w-4 ml-2" /></Button>
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t border-border/50">
+                {editId && <Button variant="outline" className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs" onClick={handleSaveChanges} disabled={!title || isSaving}>{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
+                <Button onClick={() => setStep(1)} disabled={!title} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
+                  Siguiente <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -209,43 +225,66 @@ export default function CrearManual() {
       )}
 
       {step === 1 && (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-          <Card>
-            <CardHeader><CardTitle>Contenido</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div><Label>Introducción</Label><Textarea value={content.introduccion || ''} onChange={e => setContent({ ...content, introduccion: e.target.value })} rows={3} /></div>
-              <div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-blue-500/40 to-blue-500/10 w-full" />
+            <CardHeader className="px-8 pt-8 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 shadow-inner">
+                  <AlignLeft className="w-6 h-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold">Contenido</CardTitle>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Escribe o copia el contenido de la capacitación</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="px-8 pb-8 space-y-6">
+              <div className="space-y-1.5">
+                <Label>Introducción</Label>
+                <Textarea className="resize-none rounded-xl bg-muted/30" value={content.introduccion || ''} onChange={e => setContent({ ...content, introduccion: e.target.value })} rows={3} />
+              </div>
+              <div className="space-y-1.5">
                 <Label>Objetivos</Label>
-                {content.objetivos?.map((obj, i) => (
-                  <div key={i} className="flex gap-2 mt-1"><Input value={obj} onChange={e => { const n = [...(content.objetivos || [])]; n[i] = e.target.value; setContent({ ...content, objetivos: n }); }} /><Button variant="ghost" size="icon" onClick={() => setContent({ ...content, objetivos: content.objetivos?.filter((_, idx) => idx !== i) })}><X className="h-4 w-4" /></Button></div>
-                ))}
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => setContent({ ...content, objetivos: [...(content.objetivos || []), ''] })}>+ Agregar</Button>
+                <div className="space-y-2">
+                  {content.objetivos?.map((obj, i) => (
+                    <div key={i} className="flex gap-2"><Input className="rounded-xl bg-muted/30" value={obj} onChange={e => { const n = [...(content.objetivos || [])]; n[i] = e.target.value; setContent({ ...content, objetivos: n }); }} /><Button variant="ghost" size="icon" className="shrink-0 text-destructive hover:bg-destructive/10" onClick={() => setContent({ ...content, objetivos: content.objetivos?.filter((_, idx) => idx !== i) })}><X className="h-4 w-4" /></Button></div>
+                  ))}
+                  <Button variant="outline" size="sm" className="rounded-xl border-dashed" onClick={() => setContent({ ...content, objetivos: [...(content.objetivos || []), ''] })}>+ Agregar Objetivo</Button>
+                </div>
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label>Secciones</Label>
-                <Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} className="font-mono text-sm" />
-                <p className="text-xs text-muted-foreground mt-1">Usa títulos Markdown como ## Sección para organizar el contenido.</p>
+                <Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} className="font-mono text-sm resize-none rounded-xl bg-muted/30" />
+                <p className="text-xs text-muted-foreground font-medium mt-1">Usa títulos Markdown como ## Sección para organizar el contenido.</p>
               </div>
-              {content.contenido && <div><Label>Vista previa</Label><div className="border rounded-lg p-4 mt-1"><MarkdownContent content={content.contenido} /></div></div>}
-              <div>
+              {content.contenido && <div className="space-y-1.5"><Label>Vista previa</Label><div className="border border-border/50 rounded-xl p-6 mt-1 bg-background shadow-inner"><MarkdownContent content={content.contenido} /></div></div>}
+              <div className="space-y-1.5">
                 <Label>Puntos Clave</Label>
-                {content.puntosClave?.map((p, i) => (
-                  <div key={i} className="flex gap-2 mt-1"><Input value={p} onChange={e => { const n = [...(content.puntosClave || [])]; n[i] = e.target.value; setContent({ ...content, puntosClave: n }); }} /><Button variant="ghost" size="icon" onClick={() => setContent({ ...content, puntosClave: content.puntosClave?.filter((_, idx) => idx !== i) })}><X className="h-4 w-4" /></Button></div>
-                ))}
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => setContent({ ...content, puntosClave: [...(content.puntosClave || []), ''] })}>+ Agregar</Button>
+                <div className="space-y-2">
+                  {content.puntosClave?.map((p, i) => (
+                    <div key={i} className="flex gap-2"><Input className="rounded-xl bg-muted/30" value={p} onChange={e => { const n = [...(content.puntosClave || [])]; n[i] = e.target.value; setContent({ ...content, puntosClave: n }); }} /><Button variant="ghost" size="icon" className="shrink-0 text-destructive hover:bg-destructive/10" onClick={() => setContent({ ...content, puntosClave: content.puntosClave?.filter((_, idx) => idx !== i) })}><X className="h-4 w-4" /></Button></div>
+                  ))}
+                  <Button variant="outline" size="sm" className="rounded-xl border-dashed" onClick={() => setContent({ ...content, puntosClave: [...(content.puntosClave || []), ''] })}>+ Agregar Punto Clave</Button>
+                </div>
               </div>
               {editId && (
-                <div className="pt-4 border-t">
-                  <Label>Multimedia</Label>
-                  <div className="mt-2"><ImageUploader courseId={editId} onUploaded={async (url, fn, fs) => { await createMedia.mutateAsync({ courseId: editId, type: 'imagen', title: fn, fileUrl: url, fileSize: fs }); }} /></div>
-                  <div className="mt-3"><TrainingMediaGallery media={media as any} onDelete={async (id) => { await deleteMedia.mutateAsync({ id, courseId: editId }); }} /></div>
+                <div className="pt-6 border-t border-border/50">
+                  <Label className="text-base font-semibold">Multimedia</Label>
+                  <p className="text-sm text-muted-foreground font-medium mb-4">Sube imágenes para complementar el contenido</p>
+                  <div className="p-4 rounded-xl border border-dashed border-border/50 bg-muted/20"><ImageUploader courseId={editId} onUploaded={async (url, fn, fs) => { await createMedia.mutateAsync({ courseId: editId, type: 'imagen', title: fn, fileUrl: url, fileSize: fs }); }} /></div>
+                  <div className="mt-4"><TrainingMediaGallery media={media as any} onDelete={async (id) => { await deleteMedia.mutateAsync({ id, courseId: editId }); }} /></div>
                 </div>
               )}
-              <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
-                <Button variant="outline" onClick={() => setStep(0)}><ArrowLeft className="h-4 w-4 mr-2" /> Anterior</Button>
-                <div className="flex flex-col-reverse sm:flex-row gap-2">
-                  {editId && <Button variant="outline" onClick={handleSaveChanges} disabled={!title || isSaving}>{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
-                  <Button onClick={() => setStep(2)}>Siguiente <ArrowRight className="h-4 w-4 ml-2" /></Button>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/50">
+                <Button variant="outline" onClick={() => setStep(0)} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Anterior
+                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                  {editId && <Button variant="outline" onClick={handleSaveChanges} disabled={!title || isSaving} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
+                  <Button onClick={() => setStep(2)} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto">
+                    Siguiente <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -254,38 +293,63 @@ export default function CrearManual() {
       )}
 
       {step === 2 && (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-          <Card>
-            <CardHeader><CardTitle>Evaluación</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              {content.evaluacion?.map((q, qi) => (
-                <Card key={qi} className="p-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm">P{qi + 1}.</span>
-                      <Input value={q.pregunta} onChange={e => { const ne = [...(content.evaluacion || [])]; ne[qi] = { ...ne[qi], pregunta: e.target.value }; setContent({ ...content, evaluacion: ne }); }} />
-                      <Button variant="ghost" size="icon" onClick={() => setContent({ ...content, evaluacion: content.evaluacion?.filter((_, idx) => idx !== qi) })}><X className="h-4 w-4" /></Button>
-                    </div>
-                    {q.opciones.map((opt, oi) => (
-                      <div key={oi} className="flex items-center gap-2 ml-6">
-                        <span className={`text-xs font-bold w-5 ${oi === 0 ? 'text-green-600' : ''}`}>{String.fromCharCode(65 + oi)})</span>
-                        <Input value={opt} onChange={e => {
-                          const ne = [...(content.evaluacion || [])]; const no = [...ne[qi].opciones]; no[oi] = e.target.value;
-                          ne[qi] = { ...ne[qi], opciones: no }; if (oi === 0) ne[qi].respuestaCorrecta = e.target.value;
-                          setContent({ ...content, evaluacion: ne });
-                        }} className={oi === 0 ? 'border-green-300' : ''} />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+            <div className="h-2 bg-gradient-to-r from-amber-500/40 to-amber-500/10 w-full" />
+            <CardHeader className="px-8 pt-8 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 shadow-inner">
+                  <Target className="w-6 h-6" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold">Evaluación</CardTitle>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">Configura las preguntas para validar el conocimiento</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="px-8 pb-8 space-y-6">
+              <div className="space-y-4">
+                {content.evaluacion?.map((q, qi) => (
+                  <Card key={qi} className="p-6 rounded-2xl border-border/50 bg-muted/20">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-background border flex items-center justify-center font-bold text-sm shrink-0">
+                          {qi + 1}
+                        </div>
+                        <Input className="rounded-xl bg-background" placeholder="Escribe la pregunta aquí..." value={q.pregunta} onChange={e => { const ne = [...(content.evaluacion || [])]; ne[qi] = { ...ne[qi], pregunta: e.target.value }; setContent({ ...content, evaluacion: ne }); }} />
+                        <Button variant="ghost" size="icon" className="shrink-0 text-destructive hover:bg-destructive/10" onClick={() => setContent({ ...content, evaluacion: content.evaluacion?.filter((_, idx) => idx !== qi) })}><X className="h-4 w-4" /></Button>
                       </div>
-                    ))}
-                  </div>
-                </Card>
-              ))}
-              <Button variant="outline" onClick={() => setContent({ ...content, evaluacion: [...(content.evaluacion || []), { pregunta: '', respuestaCorrecta: '', opciones: ['', '', '', ''] }] })}>+ Agregar Pregunta</Button>
-              <p className="text-xs text-muted-foreground">La opción A siempre es la respuesta correcta.</p>
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4 mr-2" /> Anterior</Button>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => handleSave('borrador')} disabled={createCourse.isPending || updateCourse.isPending}>Guardar Borrador</Button>
-                  <Button onClick={() => handleSave('publicado')} disabled={createCourse.isPending || updateCourse.isPending}>Publicar</Button>
+                      <div className="pl-11 space-y-2">
+                        {q.opciones.map((opt, oi) => (
+                          <div key={oi} className="flex items-center gap-3">
+                            <span className={`text-xs font-bold w-5 text-center ${oi === 0 ? 'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 p-1 rounded' : 'text-muted-foreground'}`}>{String.fromCharCode(65 + oi)}</span>
+                            <Input value={opt} placeholder={`Opción ${String.fromCharCode(65 + oi)}`} onChange={e => {
+                              const ne = [...(content.evaluacion || [])]; const no = [...ne[qi].opciones]; no[oi] = e.target.value;
+                              ne[qi] = { ...ne[qi], opciones: no }; if (oi === 0) ne[qi].respuestaCorrecta = e.target.value;
+                              setContent({ ...content, evaluacion: ne });
+                            }} className={`rounded-xl bg-background ${oi === 0 ? 'border-green-300 dark:border-green-800' : ''}`} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+              <div className="flex items-center justify-between border border-dashed border-border/50 p-4 rounded-2xl bg-muted/10">
+                <p className="text-xs text-muted-foreground font-medium ml-2"><span className="text-green-600 font-bold dark:text-green-400">Nota:</span> La opción A siempre es la respuesta correcta. El sistema la mezclará aleatoriamente para los usuarios.</p>
+                <Button variant="outline" className="rounded-xl font-bold uppercase tracking-widest text-[10px]" onClick={() => setContent({ ...content, evaluacion: [...(content.evaluacion || []), { pregunta: '', respuestaCorrecta: '', opciones: ['', '', '', ''] }] })}>+ Agregar Pregunta</Button>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/50">
+                <Button variant="outline" onClick={() => setStep(1)} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Anterior
+                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                  <Button variant="outline" onClick={() => handleSave('borrador')} disabled={createCourse.isPending || updateCourse.isPending} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">
+                    Guardar Borrador
+                  </Button>
+                  <Button onClick={() => handleSave('publicado')} disabled={createCourse.isPending || updateCourse.isPending} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-green-500/20 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto transition-all">
+                    Publicar
+                  </Button>
                 </div>
               </div>
             </CardContent>

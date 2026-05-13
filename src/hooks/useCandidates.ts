@@ -713,3 +713,89 @@ export function useConvertToEmployee() {
     },
   });
 }
+
+// Candidate Documents
+export function useCandidateDocuments(candidateId: string | undefined) {
+  return useQuery({
+    queryKey: ['candidate_documents', candidateId],
+    queryFn: async () => {
+      if (!candidateId) return [];
+      
+      const { data, error } = await supabase
+        .from('candidate_documents')
+        .select('*')
+        .eq('candidate_id', candidateId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!candidateId,
+  });
+}
+
+export interface CreateCandidateDocumentData {
+  candidateId: string;
+  companyId: string;
+  documentType: string;
+  documentName?: string;
+  fileUrl: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  expiryDate?: Date;
+  observations?: string;
+}
+
+export function useCreateCandidateDocument() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (data: CreateCandidateDocumentData) => {
+      const { data: doc, error } = await supabase
+        .from('candidate_documents')
+        .insert({
+          candidate_id: data.candidateId,
+          company_id: data.companyId,
+          document_type: data.documentType,
+          document_name: data.documentName || null,
+          file_url: data.fileUrl,
+          file_name: data.fileName || null,
+          file_size: data.fileSize || null,
+          mime_type: data.mimeType || null,
+          expiry_date: data.expiryDate ? data.expiryDate.toISOString().split('T')[0] : null,
+          observations: data.observations || null,
+          uploaded_by: user?.id || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return doc;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['candidate_documents', variables.candidateId] });
+      queryClient.invalidateQueries({ queryKey: ['candidate', variables.candidateId] });
+    },
+  });
+}
+
+export function useDeleteCandidateDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, candidateId }: { id: string; candidateId: string }) => {
+      const { error } = await supabase
+        .from('candidate_documents')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return { id, candidateId };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['candidate_documents', data.candidateId] });
+    },
+  });
+}

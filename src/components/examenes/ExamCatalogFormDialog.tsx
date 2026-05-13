@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Stethoscope, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -79,64 +79,103 @@ export function ExamCatalogFormDialog({ open, onOpenChange, item }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-md overflow-y-auto p-4 sm:w-full sm:p-6">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? 'Editar Tipo de Examen' : 'Nuevo Tipo de Examen'}
-          </DialogTitle>
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-md overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
+        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="relative flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+              <Stethoscope className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-black tracking-tighter text-foreground">
+                {isEditing ? 'Editar Examen' : 'Nuevo Examen'}
+              </DialogTitle>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-primary" /> Configuración de Catálogo
+              </p>
+            </div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: Audiometría clínica" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 space-y-6">
+            <div className="space-y-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-primary">Nombre del Procedimiento *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Ej: Audiometría Clínica" 
+                        {...field} 
+                        className="h-12 rounded-xl bg-background border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all font-medium"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px] font-bold uppercase" />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="code"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ej: AUD" maxLength={10} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-primary">Código / Identificador</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Ej: AUD-01" 
+                        maxLength={10} 
+                        {...field} 
+                        className="h-12 rounded-xl bg-background border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all font-medium uppercase"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px] font-bold uppercase" />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descripción</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Descripción del examen..." className="min-h-[60px]" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel className="text-[10px] font-black uppercase tracking-widest text-primary">Descripción Detallada</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Describe el propósito o detalles del examen..." 
+                        className="min-h-[100px] rounded-2xl bg-background border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all font-medium resize-none" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage className="text-[10px] font-bold uppercase" />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-            <div className="grid grid-cols-1 gap-2 pt-4 sm:flex sm:justify-end sm:gap-3">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => onOpenChange(false)}
+                className="h-12 flex-1 rounded-xl font-black uppercase tracking-widest text-[10px]"
+              >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {isEditing ? 'Guardar' : 'Crear'}
+              <Button 
+                type="submit" 
+                disabled={isPending}
+                className="h-12 flex-[2] rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:shadow-xl transition-all gap-2"
+              >
+                {isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+                {isEditing ? 'Actualizar Información' : 'Registrar Examen'}
               </Button>
             </div>
           </form>

@@ -38,6 +38,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -79,6 +81,7 @@ export function LeaveRequestFormDialog({
   const [calculatedDays, setCalculatedDays] = useState<number>(0);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState('general');
   const { currentCompanyId } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -188,346 +191,451 @@ export function LeaveRequestFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle>Nueva Solicitud de Permiso</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-background border-border/50 shadow-2xl rounded-[2rem]">
+        
+        {/* Premium Gradient Header */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
+          <DialogHeader className="relative z-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+                  PERMISOS
+                </Badge>
+                <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
+                  Nueva Solicitud
+                </DialogTitle>
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Employee Selection */}
-            <FormField
-              control={form.control}
-              name="employee_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Empleado</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccione un empleado" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {employees.filter(e => e.is_active).map((emp) => (
-                        <SelectItem key={emp.id} value={emp.id}>
-                          {emp.first_name} {emp.last_name} - {emp.document_number}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <div className="px-8 py-6 max-h-[70vh] overflow-y-auto">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-3 h-14 p-1 bg-muted/30 rounded-2xl mb-6">
+                  <TabsTrigger value="general" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
+                    General
+                  </TabsTrigger>
+                  <TabsTrigger value="fechas" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
+                    Fechas
+                  </TabsTrigger>
+                  <TabsTrigger value="notas" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
+                    Detalles
+                  </TabsTrigger>
+                </TabsList>
 
-            {/* Leave Type */}
-            <FormField
-              control={form.control}
-              name="leave_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Permiso</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccione el tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {activeLeaveTypes.map((type) => (
-                        <SelectItem key={type.leave_type} value={type.leave_type}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: type.color }}
-                            />
-                            {type.display_name}
-                            {!type.is_paid && (
-                              <span className="text-xs text-muted-foreground">(No remunerado)</span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedTypeConfig?.description && (
-                    <FormDescription>{selectedTypeConfig.description}</FormDescription>
+                {/* GENERAL TAB */}
+                <TabsContent value="general" className="space-y-6 mt-0">
+                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                    {/* Employee Selection */}
+                    <FormField
+                      control={form.control}
+                      name="employee_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Empleado</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-14 rounded-2xl bg-background border-border/50 font-medium">
+                                <SelectValue placeholder="Seleccione un empleado" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="rounded-2xl border-primary/10">
+                              {employees.filter(e => e.is_active).map((emp) => (
+                                <SelectItem key={emp.id} value={emp.id} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{emp.first_name} {emp.last_name}</span>
+                                    <span className="text-[10px] text-muted-foreground opacity-70">CC: {emp.document_number}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Leave Type */}
+                    <FormField
+                      control={form.control}
+                      name="leave_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Tipo de Permiso</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-14 rounded-2xl bg-background border-border/50 font-medium">
+                                <SelectValue placeholder="Seleccione el tipo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="rounded-2xl border-primary/10">
+                              {activeLeaveTypes.map((type) => (
+                                <SelectItem key={type.leave_type} value={type.leave_type} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
+                                  <div className="flex items-center gap-2">
+                                    <div 
+                                      className="w-3 h-3 rounded-full" 
+                                      style={{ backgroundColor: type.color }}
+                                    />
+                                    {type.display_name}
+                                    {!type.is_paid && (
+                                      <span className="text-xs text-muted-foreground ml-2">(No remunerado)</span>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {selectedTypeConfig?.description && (
+                            <FormDescription>{selectedTypeConfig.description}</FormDescription>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Info Alert for Selected Type */}
+                  {selectedTypeConfig && (
+                    <Alert className="rounded-2xl border-primary/20 bg-primary/5">
+                      <AlertCircle className="h-4 w-4 text-primary" />
+                      <AlertDescription className="space-y-1 ml-2 text-primary font-medium">
+                        <div className="flex flex-wrap gap-4 text-sm">
+                          {selectedTypeConfig.max_days_per_year && (
+                            <span>Máximo: {selectedTypeConfig.max_days_per_year} días/año</span>
+                          )}
+                          {selectedTypeConfig.min_days_advance > 0 && (
+                            <span>Anticipación mínima: {selectedTypeConfig.min_days_advance} días</span>
+                          )}
+                          <span>{selectedTypeConfig.is_paid ? 'Remunerado' : 'No remunerado'}</span>
+                          {selectedTypeConfig.requires_document && (
+                            <span className="text-destructive font-bold flex items-center gap-1">
+                              Soporte obligatorio
+                            </span>
+                          )}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
                   )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  
+                  <div className="flex justify-end pt-4">
+                    <Button 
+                      type="button" 
+                      onClick={() => setActiveTab('fechas')}
+                      className="rounded-xl bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors h-12 px-8"
+                    >
+                      Continuar a Fechas →
+                    </Button>
+                  </div>
+                </TabsContent>
 
-            {/* Info Alert for Selected Type */}
-            {selectedTypeConfig && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="space-y-1">
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    {selectedTypeConfig.max_days_per_year && (
-                      <span>Máximo: {selectedTypeConfig.max_days_per_year} días/año</span>
+                {/* DATES TAB */}
+                <TabsContent value="fechas" className="space-y-6 mt-0">
+                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                    {/* Duration Type */}
+                    <FormField
+                      control={form.control}
+                      name="duration_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Tipo de Duración</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-14 rounded-2xl bg-background border-border/50 font-medium">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="rounded-2xl border-primary/10">
+                              <SelectItem value="dias_completos" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">Días Completos</SelectItem>
+                              {selectedTypeConfig?.allows_half_day && (
+                                <SelectItem value="medio_dia" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">Medio Día</SelectItem>
+                              )}
+                              {selectedTypeConfig?.allows_hours && (
+                                <SelectItem value="horas" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">Horas</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Dates */}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <FormField
+                        control={form.control}
+                        name="start_date"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Fecha de Inicio</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      'h-14 rounded-2xl w-full justify-start whitespace-normal pl-3 text-left font-medium border-border/50 bg-background',
+                                      !field.value && 'text-muted-foreground'
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, 'PPP', { locale: es })
+                                    ) : (
+                                      <span>Seleccione fecha</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 rounded-2xl border-primary/10" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) => date < new Date()}
+                                  initialFocus
+                                  className="pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="end_date"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Fecha de Fin</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      'h-14 rounded-2xl w-full justify-start whitespace-normal pl-3 text-left font-medium border-border/50 bg-background',
+                                      !field.value && 'text-muted-foreground'
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, 'PPP', { locale: es })
+                                    ) : (
+                                      <span>Seleccione fecha</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 rounded-2xl border-primary/10" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) => 
+                                    date < new Date() || 
+                                    (watchStartDate && date < watchStartDate)
+                                  }
+                                  initialFocus
+                                  className="pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Time fields for hours duration */}
+                    {watchDurationType === 'horas' && (
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <FormField
+                          control={form.control}
+                          name="start_time"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Hora de Inicio</FormLabel>
+                              <FormControl>
+                                <Input type="time" className="h-14 rounded-2xl bg-background border-border/50 font-medium" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="end_time"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Hora de Fin</FormLabel>
+                              <FormControl>
+                                <Input type="time" className="h-14 rounded-2xl bg-background border-border/50 font-medium" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     )}
-                    {selectedTypeConfig.min_days_advance > 0 && (
-                      <span>Anticipación mínima: {selectedTypeConfig.min_days_advance} días</span>
-                    )}
-                    <span>{selectedTypeConfig.is_paid ? 'Remunerado' : 'No remunerado'}</span>
-                    {selectedTypeConfig.requires_document && (
-                      <span className="text-destructive">Requiere soporte</span>
+
+                    {/* Calculated Days Display */}
+                    {calculatedDays > 0 && (
+                      <div className="rounded-2xl bg-primary/10 border border-primary/20 p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-black uppercase tracking-widest text-primary">Días Hábiles:</span>
+                          <span className="text-xl font-black text-primary">{calculatedDays}</span>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </AlertDescription>
-              </Alert>
-            )}
+                  
+                  <div className="flex justify-between pt-4">
+                    <Button 
+                      type="button" 
+                      variant="ghost"
+                      onClick={() => setActiveTab('general')}
+                      className="rounded-xl text-muted-foreground hover:bg-muted h-12 px-6"
+                    >
+                      ← Volver
+                    </Button>
+                    <Button 
+                      type="button" 
+                      onClick={() => setActiveTab('notas')}
+                      className="rounded-xl bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors h-12 px-8"
+                    >
+                      Continuar a Detalles →
+                    </Button>
+                  </div>
+                </TabsContent>
 
-            {/* Duration Type */}
-            <FormField
-              control={form.control}
-              name="duration_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Duración</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="dias_completos">Días Completos</SelectItem>
-                      {selectedTypeConfig?.allows_half_day && (
-                        <SelectItem value="medio_dia">Medio Día</SelectItem>
+                {/* OBSERVACIONES TAB */}
+                <TabsContent value="notas" className="space-y-6 mt-0">
+                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                    {/* Reason */}
+                    <FormField
+                      control={form.control}
+                      name="reason"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Motivo de la Solicitud</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Describa de forma detallada el motivo del permiso..."
+                              className="min-h-[120px] rounded-2xl bg-background border-border/50 resize-none font-medium p-4"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                      {selectedTypeConfig?.allows_hours && (
-                        <SelectItem value="horas">Horas</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Dates */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="start_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Fecha de Inicio</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              'w-full justify-start whitespace-normal pl-3 text-left font-normal',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'PPP', { locale: es })
-                            ) : (
-                              <span>Seleccione fecha</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="end_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Fecha de Fin</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              'w-full justify-start whitespace-normal pl-3 text-left font-normal',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'PPP', { locale: es })
-                            ) : (
-                              <span>Seleccione fecha</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => 
-                            date < new Date() || 
-                            (watchStartDate && date < watchStartDate)
-                          }
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* Time fields for hours duration */}
-            {watchDurationType === 'horas' && (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="start_time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hora de Inicio</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="end_time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hora de Fin</FormLabel>
-                      <FormControl>
-                        <Input type="time" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {/* Calculated Days Display */}
-            {calculatedDays > 0 && (
-              <div className="rounded-lg bg-muted p-4">
-                <p className="text-sm text-muted-foreground">
-                  Total de días hábiles: <span className="font-semibold text-foreground">{calculatedDays}</span>
-                </p>
-              </div>
-            )}
-
-            {/* Reason */}
-            <FormField
-              control={form.control}
-              name="reason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Motivo de la Solicitud</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describa el motivo del permiso..."
-                      className="min-h-[100px]"
-                      {...field}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            {/* Document Upload */}
-            <div className="space-y-2">
-              <FormLabel>
-                Documento de Soporte
-                {selectedTypeConfig?.requires_document && (
-                  <span className="text-destructive ml-1">*</span>
-                )}
-              </FormLabel>
-              {selectedTypeConfig?.requires_document && selectedTypeConfig.document_description && (
-                <p className="text-xs text-muted-foreground">{selectedTypeConfig.document_description}</p>
-              )}
-              {documentFile ? (
-                <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
-                  <FileText className="h-4 w-4 text-primary shrink-0" />
-                  <span className="text-sm truncate flex-1">{documentFile.name}</span>
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {(documentFile.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 shrink-0"
-                    onClick={() => setDocumentFile(null)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                  <Upload className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    Haga clic para seleccionar un archivo
-                  </span>
-                  <span className="text-xs text-muted-foreground">PDF, JPG, PNG (máx. 10 MB)</span>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        if (file.size > 10 * 1024 * 1024) {
-                          toast.error('El archivo no puede superar 10 MB');
-                          return;
-                        }
-                        setDocumentFile(file);
-                      }
-                    }}
-                  />
-                </label>
-              )}
-              {selectedTypeConfig?.requires_document && !documentFile && (
-                <p className="text-xs text-warning-foreground">Se recomienda adjuntar un documento de soporte. Puede agregarlo después.</p>
-              )}
-            </div>
+                    {/* Document Upload */}
+                    <div className="space-y-2">
+                      <FormLabel className="font-bold text-xs uppercase tracking-widest text-muted-foreground">
+                        Documento de Soporte
+                        {selectedTypeConfig?.requires_document && (
+                          <span className="text-destructive ml-1">*</span>
+                        )}
+                      </FormLabel>
+                      {selectedTypeConfig?.requires_document && selectedTypeConfig.document_description && (
+                        <p className="text-xs text-muted-foreground font-medium mb-2">{selectedTypeConfig.document_description}</p>
+                      )}
+                      
+                      {documentFile ? (
+                        <div className="flex items-center gap-3 p-4 border border-primary/20 bg-primary/5 rounded-2xl shadow-sm">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate text-foreground">{documentFile.name}</p>
+                            <p className="text-xs text-muted-foreground">{(documentFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0 hover:bg-destructive/10 hover:text-destructive rounded-full"
+                            onClick={() => setDocumentFile(null)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-border hover:border-primary/50 rounded-2xl cursor-pointer hover:bg-muted/30 transition-all group">
+                          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 group-hover:scale-110 transition-all">
+                            <Upload className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                          </div>
+                          <div className="text-center">
+                            <span className="block text-sm font-medium text-foreground mb-1">
+                              Haga clic para seleccionar o arrastre un archivo
+                            </span>
+                            <span className="block text-xs text-muted-foreground">PDF, JPG, PNG (máx. 10 MB)</span>
+                          </div>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                if (file.size > 10 * 1024 * 1024) {
+                                  toast.error('El archivo no puede superar 10 MB');
+                                  return;
+                                }
+                                setDocumentFile(file);
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                      
+                      {selectedTypeConfig?.requires_document && !documentFile && (
+                        <p className="text-xs text-amber-600 font-medium mt-2 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Este tipo de permiso requiere un soporte para su aprobación.
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
-            {/* Absence Conflict Alert */}
-            <AbsenceConflictAlert conflicts={leaveConflicts} />
+                  {/* Absence Conflict Alert */}
+                  <div className="mt-4">
+                    <AbsenceConflictAlert conflicts={leaveConflicts} />
+                  </div>
 
-            {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" className="w-full sm:w-auto" disabled={createRequest.isPending || isUploading || hasLeaveConflicts}>
-                {isUploading ? 'Subiendo documento...' : createRequest.isPending ? 'Creando...' : 'Crear Solicitud'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+                  {/* Actions */}
+                  <div className="flex flex-col-reverse gap-3 pt-6 sm:flex-row sm:justify-between border-t border-border/50">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      className="rounded-xl font-bold uppercase tracking-widest text-xs h-12 px-6" 
+                      onClick={() => onOpenChange(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={createRequest.isPending || isUploading || hasLeaveConflicts}
+                      className="rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-12 px-8"
+                    >
+                      {isUploading ? 'Subiendo documento...' : createRequest.isPending ? 'Procesando...' : 'Crear Solicitud'}
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1177,7 +1177,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
           <EmployeeFormDialog open={isEditOpen} onOpenChange={setIsEditOpen} employee={employee} onSuccess={() => setIsEditOpen(false)} />
           <CertificationFormDialog open={isCertFormOpen} onOpenChange={setIsCertFormOpen} employeeId={employee.id} employeeName={employeeFullName} />
           <VaccinationFormDialog open={isVacFormOpen} onOpenChange={setIsVacFormOpen} employeeId={employee.id} employeeName={employeeFullName} />
-          <DocumentFormDialog open={isDocFormOpen} onOpenChange={setIsDocFormOpen} employeeId={employee.id} companyId={employee.company_id} employeeName={employeeFullName} />
+          <DocumentFormDialog 
+            open={isDocFormOpen} 
+            onOpenChange={setIsDocFormOpen} 
+            entityId={employee.id} 
+            entityType="employee"
+            companyId={employee.company_id} 
+            entityName={employeeFullName} 
+          />
           <ContractFormDialog 
             open={isContractFormOpen} 
             onOpenChange={setIsContractFormOpen} 

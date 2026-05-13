@@ -47,121 +47,119 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border">
-        {/* Hero header */}
-        <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-4 pt-5 pb-4 sm:px-6 sm:pt-6">
-          <DialogHeader className="space-y-1 pr-12">
-            <DialogTitle className="font-display text-lg flex items-center gap-2.5 sm:text-xl">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <ClipboardList className="w-5 h-5 text-primary" />
-              </div>
-              Profesiograma
-            </DialogTitle>
-            <DialogDescription className="sr-only">
-              Vista previa de los artículos asignados
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid grid-cols-1 gap-3 mt-4 sm:grid-cols-2 sm:gap-4">
-            <div className="flex items-start gap-2.5">
-              <Building2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Centro</p>
-                <p className="text-sm font-semibold leading-tight mt-0.5">{cName}</p>
-              </div>
+      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+        {/* Header con gradiente */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          <div className="relative flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <ClipboardList className="w-7 h-7 text-primary-foreground" />
             </div>
-            <div className="flex items-start gap-2.5">
-              <Briefcase className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-              <div>
-                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Cargo</p>
-                <p className="text-sm font-semibold leading-tight mt-0.5">{pName}</p>
-              </div>
+            <div className="min-w-0">
+              <DialogTitle className="font-black text-2xl tracking-tighter sm:text-3xl truncate">
+                Profesiograma
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground font-medium truncate">
+                Artículos asignados por perfil
+              </DialogDescription>
             </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              Creado {format(new Date(data.created_at), "dd MMM yyyy", { locale: es })}
-            </span>
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              Actualizado {format(new Date(data.updated_at), "dd MMM yyyy", { locale: es })}
-            </span>
           </div>
         </div>
 
-        {/* Summary strip */}
-        <div className="px-4 py-3 border-y border-border bg-muted/20 flex items-center gap-2 flex-wrap sm:px-6">
-          <Badge variant="secondary" className="gap-1.5 py-1">
-            <Package className="w-3.5 h-3.5" />
-            {data.items.length} artículo{data.items.length !== 1 ? 's' : ''}
-          </Badge>
-          {requiredItems.length > 0 && (
-            <Badge className="gap-1.5 py-1 bg-emerald-500/10 text-emerald-700 border border-emerald-200 hover:bg-emerald-500/15">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {requiredItems.length} obligatorio{requiredItems.length !== 1 ? 's' : ''}
-            </Badge>
-          )}
-          {optionalItems.length > 0 && (
-            <Badge variant="outline" className="gap-1.5 py-1 border-dashed">
-              <Circle className="w-3.5 h-3.5" />
-              {optionalItems.length} opcional{optionalItems.length !== 1 ? 'es' : ''}
-            </Badge>
-          )}
-        </div>
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 space-y-1">
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <Building2 className="w-3.5 h-3.5 text-primary" /> Centro Operativo
+              </div>
+              <p className="font-bold text-sm leading-tight text-foreground">{cName}</p>
+            </div>
+            <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 space-y-1">
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <Briefcase className="w-3.5 h-3.5 text-primary" /> Cargo Asignado
+              </div>
+              <p className="font-bold text-sm leading-tight text-foreground">{pName}</p>
+            </div>
+          </div>
 
-        {/* Items */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 sm:px-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-background border-border/50 font-bold text-[10px] uppercase tracking-widest">
+              <Package className="w-3.5 h-3.5 text-primary" />
+              {data.items.length} Ítems
+            </Badge>
+            {requiredItems.length > 0 && (
+              <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-emerald-500/5 text-emerald-600 border-emerald-500/20 font-bold text-[10px] uppercase tracking-widest">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {requiredItems.length} Obligatorios
+              </Badge>
+            )}
+            {optionalItems.length > 0 && (
+              <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 border-dashed font-bold text-[10px] uppercase tracking-widest text-muted-foreground">
+                <Circle className="w-3.5 h-3.5" />
+                {optionalItems.length} Opcionales
+              </Badge>
+            )}
+          </div>
+
+          <Separator className="bg-border/50" />
+
           {data.items.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">
-              <div className="p-3 rounded-full bg-muted/50 w-fit mx-auto mb-3">
-                <Package className="w-8 h-8 opacity-40" />
+            <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+              <div className="p-4 rounded-full bg-muted/20">
+                <Package className="w-10 h-10 text-muted-foreground/30" />
               </div>
-              <p className="text-sm font-medium">Sin artículos asignados</p>
-              <p className="text-xs mt-1">Este profesiograma aún no tiene artículos configurados.</p>
+              <div className="space-y-1">
+                <p className="font-bold text-muted-foreground">Sin artículos</p>
+                <p className="text-xs text-muted-foreground/60 max-w-[200px]">Este perfil no tiene dotación configurada aún.</p>
+              </div>
             </div>
           ) : (
-            <div className="space-y-4 pt-2">
+            <div className="space-y-6">
               {groupByCategory(data.items).map(([category, catItems]) => (
-                <div key={category}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 ${getCategoryStyle(category)}`}>
+                <div key={category} className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className={cn(
+                      "text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border-0 shadow-sm",
+                      getCategoryStyle(category).split(' ').find(c => c.startsWith('bg-')) || 'bg-muted',
+                      getCategoryStyle(category).split(' ').find(c => c.startsWith('text-')) || 'text-muted-foreground'
+                    )}>
                       {category}
                     </Badge>
-                    <Separator className="flex-1" />
-                    <span className="text-[10px] text-muted-foreground font-medium">{catItems.length}</span>
+                    <div className="h-[1px] flex-1 bg-gradient-to-r from-border/50 to-transparent" />
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="grid grid-cols-1 gap-2">
                     {catItems.map((item) => {
                       const isReq = (item as any).is_required !== false;
                       return (
                         <div
                           key={item.id}
-                          className="flex flex-col gap-2 px-3 py-2.5 rounded-lg border border-border/60 bg-card hover:bg-accent/30 transition-colors group sm:flex-row sm:items-center sm:gap-3"
+                          className="group relative flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-border/50 bg-background/50 hover:bg-primary/[0.02] hover:border-primary/20 transition-all duration-300"
                         >
-                          <div className={`w-2 h-2 rounded-full shrink-0 ${isReq ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />
+                          <div className={cn(
+                            "w-2 h-2 rounded-full shrink-0 shadow-[0_0_8px_rgba(0,0,0,0.1)]",
+                            isReq ? "bg-emerald-500 shadow-emerald-500/20" : "bg-muted-foreground/30"
+                          )} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium truncate">
+                              <span className="text-sm font-bold truncate text-foreground">
                                 {item.dotation_item_types?.name || '—'}
                               </span>
                               {item.dotation_item_types?.code && (
-                                <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded font-mono">
+                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 rounded bg-muted/50 border-0 font-mono text-muted-foreground">
                                   {item.dotation_item_types.code}
-                                </span>
+                                </Badge>
                               )}
                             </div>
                             {item.notes && (
-                              <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{item.notes}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5 truncate italic">{item.notes}</p>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-                            <span className="text-sm font-semibold font-mono tabular-nums bg-muted/50 px-2 py-0.5 rounded">
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="flex h-7 w-12 items-center justify-center rounded-lg bg-muted/50 font-black text-xs tabular-nums text-primary">
                               ×{item.quantity}
                             </span>
                             {!isReq && (
-                              <Badge variant="outline" className="text-[10px] border-dashed px-1.5 py-0">
+                              <Badge variant="outline" className="text-[9px] border-dashed rounded-lg px-2 text-muted-foreground">
                                 Opcional
                               </Badge>
                             )}
@@ -174,6 +172,24 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
               ))}
             </div>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between p-6 border-t border-border/50 bg-muted/10">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Última actualización</span>
+            <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" />
+              {format(new Date(data.updated_at), "dd MMM yyyy", { locale: es })}
+            </span>
+          </div>
+          <Button 
+            variant="ghost" 
+            onClick={() => onOpenChange(false)}
+            className="h-11 px-6 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-background transition-all"
+          >
+            Cerrar
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

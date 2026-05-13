@@ -120,22 +120,30 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
-        <DialogHeader className="pr-12">
-          <DialogTitle className="font-display text-lg flex items-center gap-2 sm:text-xl">
-            <ClipboardList className="w-5 h-5 text-primary" />
-            {isEditing ? 'Editar Profesiograma' : 'Nuevo Profesiograma'}
-          </DialogTitle>
-          <DialogDescription>
-            Asocia artículos de dotación a un Centro de Operación + Cargo
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+        {/* Header con gradiente */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          <div className="relative flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <ClipboardList className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="font-black text-2xl tracking-tighter sm:text-3xl truncate">
+                {isEditing ? 'Editar Profesiograma' : 'Nuevo Profesiograma'}
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground font-medium truncate">
+                Estructura de dotación por perfil de cargo
+              </DialogDescription>
+            </div>
+          </div>
+        </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
-          {/* Center + Position selectors */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Centro de Operación *</Label>
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-8">
+          {/* selectors */}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="space-y-2.5">
+              <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Centro de Operación *</Label>
               <SearchableSelect
                 options={centers.map(c => ({ value: c.id, label: c.name }))}
                 value={centerId}
@@ -144,10 +152,11 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                 searchPlaceholder="Buscar centro..."
                 emptyMessage="No se encontraron centros."
                 disabled={isEditing}
+                className="h-12 rounded-xl border-border/50 bg-background/50"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Cargo *</Label>
+            <div className="space-y-2.5">
+              <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cargo *</Label>
               <SearchableSelect
                 options={positions.map(p => ({ value: p.id, label: p.name }))}
                 value={positionId}
@@ -156,99 +165,148 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                 searchPlaceholder="Buscar cargo..."
                 emptyMessage="No se encontraron cargos."
                 disabled={isEditing}
+                className="h-12 rounded-xl border-border/50 bg-background/50"
               />
             </div>
           </div>
 
           {/* Items list */}
-          <div className="space-y-2">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <Label>Artículos de Dotación</Label>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <div className="space-y-0.5">
+                <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Matriz de Artículos</Label>
                 {items.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {requiredCount} obligatorio{requiredCount !== 1 ? 's' : ''}, {optionalCount} opcional{optionalCount !== 1 ? 'es' : ''}
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-tight">
+                    {requiredCount} Obligatorios • {optionalCount} Opcionales
                   </p>
                 )}
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={addItem} disabled={availableTypes.length === 0} className="gap-1">
-                <Plus className="w-3 h-3" /> Agregar
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={addItem} 
+                disabled={availableTypes.length === 0} 
+                className="h-9 rounded-xl gap-2 font-black text-[10px] uppercase tracking-widest border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" /> Agregar Artículo
               </Button>
             </div>
 
             {items.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
-                <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No hay artículos. Haz clic en "Agregar" para comenzar.</p>
+              <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 rounded-[2rem] border border-dashed border-border/50 bg-muted/5">
+                <div className="p-4 rounded-full bg-muted/20">
+                  <ClipboardList className="w-10 h-10 text-muted-foreground/30" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-bold text-muted-foreground">Lista vacía</p>
+                  <p className="text-xs text-muted-foreground/60 max-w-[240px]">Define los elementos que componen este profesiograma.</p>
+                </div>
               </div>
             ) : (
-              <div className="overflow-x-auto overscroll-x-contain">
-              <Table className="min-w-[560px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Artículo</TableHead>
-                    <TableHead className="w-20">Cant.</TableHead>
-                    <TableHead className="w-24 text-center">Obligatorio</TableHead>
-                    <TableHead className="w-10"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((item, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell>
-                        <Select
-                          value={item.dotation_item_type_id}
-                          onValueChange={(v) => updateItem(idx, 'dotation_item_type_id', v)}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {activeItemTypes
-                              .filter((t: any) => t.id === item.dotation_item_type_id || !items.some(i => i.dotation_item_type_id === t.id))
-                              .map((t: any) => (
-                                <SelectItem key={t.id} value={t.id}>
-                                  {t.name}
-                                  {t.category && <span className="text-muted-foreground ml-1">({t.category})</span>}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={item.quantity}
-                          onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
-                          className="h-9"
-                        />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Switch
-                          checked={item.is_required}
-                          onCheckedChange={(v) => updateItem(idx, 'is_required', v)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeItem(idx)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
+              <div className="overflow-hidden rounded-2xl border border-border/50 bg-background/50">
+                <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow className="hover:bg-transparent border-border/50">
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground h-10 px-4">Artículo</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground h-10 w-24 px-4">Cant.</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground h-10 w-28 text-center px-4">Estado</TableHead>
+                      <TableHead className="w-12 px-4"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((item, idx) => (
+                      <TableRow key={idx} className="hover:bg-primary/[0.01] border-border/50 transition-colors">
+                        <TableCell className="px-4 py-3">
+                          <Select
+                            value={item.dotation_item_type_id}
+                            onValueChange={(v) => updateItem(idx, 'dotation_item_type_id', v)}
+                          >
+                            <SelectTrigger className="h-10 rounded-xl border-border/50 bg-background/80 font-bold text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              {activeItemTypes
+                                .filter((t: any) => t.id === item.dotation_item_type_id || !items.some(i => i.dotation_item_type_id === t.id))
+                                .map((t: any) => (
+                                  <SelectItem key={t.id} value={t.id} className="rounded-lg">
+                                    <div className="flex flex-col">
+                                      <span className="font-bold text-xs">{t.name}</span>
+                                      {t.category && <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{t.category}</span>}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <Input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
+                            className="h-10 rounded-xl border-border/50 bg-background/80 font-black text-center text-xs tabular-nums"
+                          />
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-3">
+                            <span className={cn(
+                              "text-[10px] font-black uppercase tracking-widest transition-colors",
+                              item.is_required ? "text-primary" : "text-muted-foreground/60"
+                            )}>
+                              {item.is_required ? "Oblig" : "Opc"}
+                            </span>
+                            <Switch
+                              checked={item.is_required}
+                              onCheckedChange={(v) => updateItem(idx, 'is_required', v)}
+                              className="scale-90 data-[state=checked]:bg-primary"
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive" 
+                            onClick={() => removeItem(idx)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 pt-4 border-t mt-4 sm:flex sm:justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isPending} className="gap-2">
-            <ClipboardList className="w-4 h-4" />
-            {isPending ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear Profesiograma'}
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-border/50 bg-muted/10">
+          <Button 
+            variant="ghost" 
+            onClick={() => onOpenChange(false)}
+            className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-background transition-colors"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            size="lg"
+            onClick={handleSubmit} 
+            disabled={isPending} 
+            className="h-12 px-8 rounded-2xl gap-2 bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px] transition-all"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Guardando...
+              </>
+            ) : (
+              <>
+                <ClipboardList className="w-4 h-4" />
+                {isEditing ? 'Actualizar Matriz' : 'Guardar Profesiograma'}
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>

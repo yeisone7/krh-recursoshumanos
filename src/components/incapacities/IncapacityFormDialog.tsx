@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, Stethoscope } from 'lucide-react';
 import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
 import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
 import { toast } from 'sonner';
@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 import { useEmployees } from '@/hooks/useEmployees';
@@ -157,30 +158,49 @@ export function IncapacityFormDialog({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? 'Editar Incapacidad' : isExtension ? 'Registrar Prórroga' : 'Nueva Incapacidad'}
-          </DialogTitle>
-          <DialogDescription>
-            {isExtension 
-              ? 'Registre una prórroga de incapacidad existente'
-              : 'Complete la información de la incapacidad médica'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 bg-background border-border/50 shadow-2xl rounded-[2rem]">
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid h-auto w-full grid-cols-3">
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="clinical">Clínico</TabsTrigger>
-                <TabsTrigger value="payment">Pago</TabsTrigger>
-              </TabsList>
-              
-              {/* General Tab */}
-              <TabsContent value="general" className="space-y-4 mt-4">
-                <FormField
+        {/* Premium Gradient Header */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
+          <DialogHeader className="relative z-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
+                <Stethoscope className="w-6 h-6" />
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+                  {isEditing ? 'EDICIÓN' : isExtension ? 'PRÓRROGA' : 'NUEVO'}
+                </Badge>
+                <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
+                  {isEditing ? 'Editar Incapacidad' : isExtension ? 'Registrar Prórroga' : 'Nueva Incapacidad'}
+                </DialogTitle>
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
+        
+        <div className="px-8 py-6 max-h-[70vh] overflow-y-auto">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-3 h-14 p-1 bg-muted/30 rounded-2xl mb-6">
+                  <TabsTrigger value="general" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
+                    General
+                  </TabsTrigger>
+                  <TabsTrigger value="clinical" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
+                    Clínico
+                  </TabsTrigger>
+                  <TabsTrigger value="payment" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
+                    Pago
+                  </TabsTrigger>
+                </TabsList>
+                
+                {/* General Tab */}
+                <TabsContent value="general" className="space-y-6 mt-0">
+                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                    <FormField
                   control={form.control}
                   name="employee_id"
                   render={({ field }) => (
@@ -366,11 +386,13 @@ export function IncapacityFormDialog({
                     )}
                   />
                 )}
-              </TabsContent>
-              
-              {/* Clinical Tab */}
-              <TabsContent value="clinical" className="space-y-4 mt-4">
-                <FormField
+                  </div>
+                </TabsContent>
+                
+                {/* Clinical Tab */}
+                <TabsContent value="clinical" className="space-y-6 mt-0">
+                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                    <FormField
                   control={form.control}
                   name="diagnosis"
                   render={({ field }) => (
@@ -473,11 +495,13 @@ export function IncapacityFormDialog({
                     </FormItem>
                   )}
                 />
-              </TabsContent>
-              
-              {/* Payment Tab */}
-              <TabsContent value="payment" className="space-y-4 mt-4">
-                <FormField
+                  </div>
+                </TabsContent>
+                
+                {/* Payment Tab */}
+                <TabsContent value="payment" className="space-y-6 mt-0">
+                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                    <FormField
                   control={form.control}
                   name="daily_base_salary"
                   render={({ field }) => (
@@ -515,23 +539,25 @@ export function IncapacityFormDialog({
                     </ul>
                   </div>
                 </div>
-              </TabsContent>
-            </Tabs>
+                  </div>
+                </TabsContent>
+              </Tabs>
 
-            {/* Absence Conflict Alert */}
-            <AbsenceConflictAlert conflicts={incapConflicts} />
-            
-            <div className="grid grid-cols-2 gap-3 pt-4 border-t sm:flex sm:justify-end">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isLoading || hasIncapConflicts} className="w-full sm:w-auto">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? 'Actualizar' : 'Registrar'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+              {/* Absence Conflict Alert */}
+              <AbsenceConflictAlert conflicts={incapConflicts} />
+              
+              <div className="grid grid-cols-2 gap-3 pt-6 border-t sm:flex sm:justify-end">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isLoading || hasIncapConflicts} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto">
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isEditing ? 'Actualizar' : 'Registrar'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

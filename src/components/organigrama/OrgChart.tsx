@@ -225,63 +225,79 @@ export function OrgChart({ positions, areas, employees, isLoading }: OrgChartPro
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-xl border bg-muted/20" style={{ height: '700px' }}>
+    <div className="relative w-full overflow-hidden bg-muted/5 select-none" style={{ height: '800px' }}>
       {/* Search and Global Controls */}
-      <div className="absolute left-4 top-4 z-20 flex flex-col gap-2 sm:flex-row sm:items-center w-full max-w-[calc(100%-2rem)] pointer-events-none">
-        <div className="relative w-full sm:w-80 pointer-events-auto">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar cargo o empleado..."
-            className="pl-9 bg-background/80 backdrop-blur-sm"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
-        <div className="flex gap-2 pointer-events-auto">
-          <Button variant="secondary" size="sm" onClick={expandAll} className="h-9 px-3 gap-2">
-            <ChevronDown className="h-4 w-4" /> Expandir Todo
-          </Button>
-          <Button variant="secondary" size="sm" onClick={collapseAll} className="h-9 px-3 gap-2">
-            <ChevronUp className="h-4 w-4" /> Contraer Todo
-          </Button>
+      <div className="absolute left-1/2 top-8 z-20 flex -translate-x-1/2 flex-col items-center gap-4 w-full max-w-4xl px-4 pointer-events-none">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full pointer-events-auto bg-background/60 backdrop-blur-xl p-2 rounded-[2rem] border border-border/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/60" />
+            <Input
+              placeholder="Buscar por cargo o nombre de colaborador..."
+              className="h-12 pl-11 bg-transparent border-none shadow-none focus-visible:ring-0 text-sm font-medium placeholder:text-muted-foreground/50"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          
+          <div className="flex items-center gap-1.5 pr-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={expandAll} 
+              className="h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              <ChevronDown className="mr-2 h-3.5 w-3.5" /> Expandir
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={collapseAll} 
+              className="h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-primary/10 hover:text-primary transition-all"
+            >
+              <ChevronUp className="mr-2 h-3.5 w-3.5" /> Contraer
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Navigation Controls (Zoom/Reset) */}
-      <div className="absolute right-4 bottom-4 z-20 flex flex-col gap-2">
-        <div className="flex flex-col overflow-hidden rounded-lg border bg-background/80 shadow-lg backdrop-blur-sm">
-          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-none border-b" onClick={() => setZoom(prev => Math.min(prev + 0.1, 2))}>
-            <Plus className="h-4 w-4" />
+      <div className="absolute right-8 bottom-8 z-20 flex flex-col gap-3">
+        <div className="flex flex-col overflow-hidden rounded-2xl border border-border/50 bg-background/80 shadow-2xl backdrop-blur-xl">
+          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-none border-b border-border/40 hover:bg-primary/5 hover:text-primary transition-all" onClick={() => setZoom(prev => Math.min(prev + 0.1, 2))}>
+            <Plus className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-none" onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.4))}>
-            <Minus className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-none hover:bg-primary/5 hover:text-primary transition-all" onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.4))}>
+            <Minus className="h-5 w-5" />
           </Button>
         </div>
-        <Button variant="secondary" size="icon" className="h-10 w-10 rounded-lg shadow-lg" onClick={resetView} title="Resetear vista">
-          <RotateCcw className="h-4 w-4" />
+        <Button variant="secondary" size="icon" className="h-12 w-12 rounded-2xl shadow-2xl bg-background/80 backdrop-blur-xl border border-border/50 hover:scale-110 active:scale-95 transition-all" onClick={resetView} title="Resetear vista">
+          <RotateCcw className="h-5 w-5 text-primary" />
         </Button>
       </div>
 
       {/* Zoom indicator */}
-      <div className="absolute left-4 bottom-4 z-20 bg-background/80 px-2 py-1 rounded border text-[10px] font-mono shadow-sm">
-        {Math.round(zoom * 100)}%
+      <div className="absolute left-8 bottom-8 z-20 bg-background/80 px-4 py-2 rounded-2xl border border-border/50 text-[10px] font-black uppercase tracking-widest shadow-xl backdrop-blur-xl text-primary">
+        Zoom: {Math.round(zoom * 100)}%
       </div>
 
       {/* The Canvas */}
-      <div className="h-full w-full cursor-grab active:cursor-grabbing overflow-hidden" ref={containerRef}>
+      <div className="h-full w-full cursor-grab active:cursor-grabbing overflow-hidden outline-none" ref={containerRef} tabIndex={0}>
         <motion.div
           drag
           dragMomentum={false}
           style={{ x, y, scale: zoom }}
-          className="flex min-w-max flex-col items-center p-32 origin-top"
+          className="flex min-w-max flex-col items-center p-64 origin-top"
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
+          {/* Grid Pattern Background for canvas */}
+          <div className="absolute inset-0 -z-10 opacity-[0.03] [mask-image:radial-gradient(ellipse_at_center,black,transparent)] pointer-events-none" 
+               style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+
           <div className="inline-flex flex-col items-center">
             {positionTree.length === 1 ? (
               renderNode(positionTree[0], 0)
             ) : (
-              <div className="flex gap-12 sm:gap-24">
+              <div className="flex gap-24 sm:gap-48 justify-center">
                 {positionTree.map(root => renderNode(root, 0))}
               </div>
             )}

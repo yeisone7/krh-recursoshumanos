@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { User, Calendar, Clock, FileText, MessageSquare, Briefcase } from 'lucide-react';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +12,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { useCreatePayrollNovelty, useUpdatePayrollNovelty } from '@/hooks/usePayrollNovelties';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useNoveltyReasons } from '@/hooks/useNoveltyReasons';
 import { NOVELTY_TYPE_LABELS, type NoveltyType, type PayrollNovelty } from '@/types/payroll';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface Props {
   open: boolean;
@@ -26,6 +33,8 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
   const create = useCreatePayrollNovelty();
   const update = useUpdatePayrollNovelty();
 
+  const [activeTab, setActiveTab] = useState('detalles');
+
   const [form, setForm] = useState({
     employee_id: '',
     novelty_date: '',
@@ -38,6 +47,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
   });
 
   const isEditing = !!novelty;
+  const selectedEmployee = employees.find(e => e.id === form.employee_id);
 
   useEffect(() => {
     if (open) {
@@ -51,6 +61,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
         end_time: (novelty as any)?.end_time || '',
         reason_id: (novelty as any)?.reason_id || '',
       });
+      setActiveTab('detalles');
     }
   }, [open, novelty]);
 
@@ -77,6 +88,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
   const handleSave = async () => {
     if (!form.employee_id || !form.novelty_date) {
       toast({ title: 'Complete los campos requeridos', variant: 'destructive' });
+      setActiveTab('detalles');
       return;
     }
 
@@ -107,103 +119,211 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
-        <DialogHeader className="shrink-0">
+      <DialogContent className="p-0 border-0 shadow-2xl w-[calc(100vw-2rem)] sm:max-w-2xl overflow-hidden rounded-[2rem] flex flex-col max-h-[90vh]">
+        <DialogHeader className="sr-only">
           <DialogTitle>{isEditing ? 'Editar Novedad' : 'Nueva Novedad'}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 overflow-y-auto min-h-0 pr-1">
-          <div className="space-y-2">
-            <Label>Empleado *</Label>
-            <SearchableSelect
-              options={employeeOptions}
-              value={form.employee_id}
-              onValueChange={v => setForm(f => ({ ...f, employee_id: v }))}
-              placeholder="Seleccionar empleado..."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Fecha *</Label>
-            <Input
-              type="date"
-              value={form.novelty_date}
-              onChange={e => setForm(f => ({ ...f, novelty_date: e.target.value }))}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Tipo de novedad</Label>
-            <Select value={form.novelty_type} onValueChange={v => setForm(f => ({ ...f, novelty_type: v as NoveltyType }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {noveltyTypeOptions.map(o => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-2">
-              <Label>Hora inicio</Label>
-              <Input
-                type="time"
-                value={form.start_time}
-                onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))}
-              />
+        {/* Header Premium */}
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-primary/5">
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+          
+          <div className="flex items-start gap-4 sm:gap-5 relative">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center font-black text-xl sm:text-2xl shrink-0 shadow-inner">
+              NN
             </div>
-            <div className="space-y-2">
-              <Label>Horas</Label>
-              <Input
-                type="number"
-                step="0.5"
-                value={form.hours}
-                onChange={e => setForm(f => ({ ...f, hours: Number(e.target.value) }))}
-              />
+            <div className="flex-1 min-w-0 pr-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
+                  {isEditing ? 'Edición' : 'Nueva'}
+                </Badge>
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
+                  Nómina
+                </Badge>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tighter text-foreground mb-3 truncate">
+                {isEditing ? 'Editar Novedad' : 'Nueva Novedad'}
+              </h2>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-muted-foreground/80">
+                <div className="flex items-center gap-1.5">
+                  <User className="w-4 h-4 text-primary/60" />
+                  {selectedEmployee ? `${selectedEmployee.first_name} ${selectedEmployee.last_name}` : 'Empleado no seleccionado'}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-primary/60" />
+                  {form.novelty_date ? format(new Date(`${form.novelty_date}T12:00:00`), 'MMMM yyyy', { locale: es }) : 'Mes sin definir'}
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Hora final</Label>
-              <Input
-                type="time"
-                value={form.end_time}
-                readOnly
-                className="bg-muted"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Motivo</Label>
-            <Select value={form.reason_id} onValueChange={v => setForm(f => ({ ...f, reason_id: v }))}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar motivo..." /></SelectTrigger>
-              <SelectContent>
-                {reasons.map(r => (
-                  <SelectItem key={r.id} value={r.id}>
-                    {r.item_number}. {r.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Observaciones</Label>
-            <Textarea
-              value={form.notes}
-              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-              rows={2}
-            />
           </div>
         </div>
 
-        <DialogFooter className="flex-col-reverse sm:flex-row gap-2 pt-3 shrink-0">
-          <Button variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button className="w-full sm:w-auto" onClick={handleSave} disabled={create.isPending || update.isPending}>
-            {isEditing ? 'Actualizar' : 'Crear'}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col min-h-0">
+          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-muted/20">
+            <TabsList className="bg-transparent h-auto p-0 gap-6 w-full justify-start overflow-x-auto no-scrollbar">
+              <TabsTrigger value="detalles" className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
+                <div className="flex items-center gap-2">
+                  <FileText className={cn("w-4 h-4 transition-colors", activeTab === 'detalles' ? "text-primary" : "text-muted-foreground")} />
+                  <span className={cn("text-xs font-black uppercase tracking-widest transition-colors", activeTab === 'detalles' ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>
+                    Solicitud
+                  </span>
+                </div>
+                {activeTab === 'detalles' && (
+                  <motion.div layoutId="activeTabDotNovelty" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="horario" className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
+                <div className="flex items-center gap-2">
+                  <Clock className={cn("w-4 h-4 transition-colors", activeTab === 'horario' ? "text-primary" : "text-muted-foreground")} />
+                  <span className={cn("text-xs font-black uppercase tracking-widest transition-colors", activeTab === 'horario' ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>
+                    Condiciones
+                  </span>
+                </div>
+                {activeTab === 'horario' && (
+                  <motion.div layoutId="activeTabDotNovelty" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="observaciones" className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className={cn("w-4 h-4 transition-colors", activeTab === 'observaciones' ? "text-primary" : "text-muted-foreground")} />
+                  <span className={cn("text-xs font-black uppercase tracking-widest transition-colors", activeTab === 'observaciones' ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>
+                    Observaciones
+                  </span>
+                </div>
+                {activeTab === 'observaciones' && (
+                  <motion.div layoutId="activeTabDotNovelty" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
+                )}
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <div className="p-6 sm:p-8 overflow-y-auto">
+             <TabsContent value="detalles" className="m-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               <div className="space-y-2">
+                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Empleado Requerido *</Label>
+                 <SearchableSelect
+                   options={employeeOptions}
+                   value={form.employee_id}
+                   onValueChange={v => setForm(f => ({ ...f, employee_id: v }))}
+                   placeholder="Seleccionar empleado..."
+                 />
+               </div>
+
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                 <div className="space-y-2">
+                   <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Fecha Novedad *</Label>
+                   <Input
+                     type="date"
+                     value={form.novelty_date}
+                     onChange={e => setForm(f => ({ ...f, novelty_date: e.target.value }))}
+                     className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background"
+                   />
+                 </div>
+
+                 <div className="space-y-2">
+                   <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tipo de Novedad</Label>
+                   <Select value={form.novelty_type} onValueChange={v => setForm(f => ({ ...f, novelty_type: v as NoveltyType }))}>
+                     <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background">
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent className="rounded-2xl border-primary/10">
+                       {noveltyTypeOptions.map(o => (
+                         <SelectItem key={o.value} value={o.value} className="font-medium text-sm p-3">
+                           {o.label}
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                 </div>
+               </div>
+               
+               <div className="space-y-2">
+                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Motivo Específico</Label>
+                 <Select value={form.reason_id} onValueChange={v => setForm(f => ({ ...f, reason_id: v }))}>
+                   <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background">
+                     <SelectValue placeholder="Seleccionar motivo..." />
+                   </SelectTrigger>
+                   <SelectContent className="rounded-2xl border-primary/10">
+                     {reasons.map(r => (
+                       <SelectItem key={r.id} value={r.id} className="font-medium text-sm p-3">
+                         {r.item_number}. {r.name}
+                       </SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
+               </div>
+             </TabsContent>
+
+             <TabsContent value="horario" className="m-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 mb-6">
+                 <div className="flex items-center gap-3 mb-2">
+                   <Clock className="w-5 h-5 text-primary" />
+                   <h3 className="font-black tracking-tight text-primary">Configuración de Tiempos</h3>
+                 </div>
+                 <p className="text-xs font-medium text-primary/80">
+                   Indique la hora de inicio y el número de horas para calcular automáticamente la hora final de la novedad reportada.
+                 </p>
+               </div>
+
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                 <div className="space-y-2">
+                   <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Hora de Inicio</Label>
+                   <Input
+                     type="time"
+                     value={form.start_time}
+                     onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))}
+                     className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background"
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Cantidad Horas</Label>
+                   <Input
+                     type="number"
+                     step="0.5"
+                     min="0"
+                     value={form.hours || ''}
+                     onChange={e => setForm(f => ({ ...f, hours: Number(e.target.value) }))}
+                     className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background"
+                   />
+                 </div>
+                 <div className="space-y-2">
+                   <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Hora Final</Label>
+                   <Input
+                     type="time"
+                     value={form.end_time}
+                     readOnly
+                     className="h-12 rounded-2xl bg-muted/50 border-transparent text-muted-foreground pointer-events-none"
+                   />
+                 </div>
+               </div>
+             </TabsContent>
+
+             <TabsContent value="observaciones" className="m-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+               <div className="space-y-2">
+                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Comentarios y Observaciones</Label>
+                 <Textarea
+                   value={form.notes}
+                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                   rows={6}
+                   placeholder="Añada cualquier detalle adicional relevante para esta novedad..."
+                   className="rounded-2xl bg-muted/20 border-primary/5 focus:bg-background p-4 resize-none"
+                 />
+               </div>
+             </TabsContent>
+          </div>
+        </Tabs>
+
+        <div className="p-6 border-t border-border/50 bg-muted/10 flex items-center justify-end gap-3 shrink-0">
+          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-primary/10" onClick={() => onOpenChange(false)}>
+            Cancelar
           </Button>
-        </DialogFooter>
+          <Button className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" onClick={handleSave} disabled={create.isPending || update.isPending}>
+            {isEditing ? 'Actualizar Novedad' : 'Crear Novedad'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
+

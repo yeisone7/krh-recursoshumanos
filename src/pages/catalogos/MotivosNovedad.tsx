@@ -1,5 +1,18 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Plus, 
+  Pencil, 
+  Trash2, 
+  Search, 
+  Settings2, 
+  Info,
+  Filter,
+  CheckCircle2,
+  XCircle,
+  FileText,
+  MessageSquare
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +24,7 @@ import { useNoveltyReasons, useDeleteNoveltyReason, type NoveltyReason } from '@
 import { NoveltyReasonFormDialog } from '@/components/config/NoveltyReasonFormDialog';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function MotivosNovedad() {
   const { data: reasons = [], isLoading } = useNoveltyReasons();
@@ -35,110 +49,186 @@ export default function MotivosNovedad() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold sm:text-3xl">Motivos de Novedad</h1>
-          <p className="text-muted-foreground">Catálogo de motivos para novedades de nómina</p>
+    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto">
+      {/* Header Premium */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }}
+        className="relative p-8 rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/10 overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
+        
+        <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+              <Settings2 className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Configuración de Nómina</span>
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-5xl font-black tracking-tight text-slate-900 leading-none">
+                Motivos de Novedad
+              </h1>
+              <p className="text-lg text-slate-500 font-medium max-w-xl">
+                Gestiona las razones predefinidas para las novedades y ajustes de nómina.
+              </p>
+            </div>
+          </div>
+          
+          <Button 
+            onClick={() => { setEditing(null); setShowDialog(true); }} 
+            className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-xs transition-all active:scale-95"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            NUEVO MOTIVO
+          </Button>
         </div>
-        <Button className="w-full sm:w-auto" onClick={() => { setEditing(null); setShowDialog(true); }}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nuevo Motivo
-        </Button>
-      </div>
+      </motion.div>
 
-      <div className="relative w-full sm:max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar motivo..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-9"
-        />
-      </div>
-
-      {isLoading ? (
-        <Card className="md:hidden">
-          <CardContent className="py-8 text-center text-muted-foreground">Cargando...</CardContent>
+      {/* Grid de Estadísticas Rápidas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 overflow-hidden bg-white group hover:scale-[1.02] transition-all duration-500">
+          <CardContent className="p-8">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Motivos Registrados</p>
+                <p className="text-4xl font-black text-slate-900 tracking-tighter">{reasons.length}</p>
+              </div>
+              <div className="h-14 w-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:rotate-12 transition-transform">
+                <FileText className="w-7 h-7" />
+              </div>
+            </div>
+          </CardContent>
         </Card>
-      ) : (
-        <MobileCardList
-          className="md:hidden"
-          emptyMessage="No se encontraron motivos"
-          items={filtered.map(r => ({
-            id: r.id,
-            title: r.name,
-            subtitle: r.description || 'Sin descripción',
-            badge: (
-              <Badge variant={r.is_active ? 'default' : 'secondary'}>
-                {r.is_active ? 'Activo' : 'Inactivo'}
-              </Badge>
-            ),
-            actions: (
-              <>
-                <Button size="sm" variant="outline" onClick={() => { setEditing(r); setShowDialog(true); }}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Editar
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => handleDelete(r.id)}>
-                  <Trash2 className="mr-2 h-4 w-4 text-destructive" />
-                  Eliminar
-                </Button>
-              </>
-            ),
-          }))}
-        />
-      )}
 
-      <Card className="hidden md:block">
-        <CardContent className="overflow-x-auto p-0">
-          <Table className="min-w-[680px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Motivo</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead className="w-[100px]">Estado</TableHead>
-                <TableHead className="w-[100px]">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">Cargando...</TableCell>
-                </TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                    No se encontraron motivos
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map(r => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.name}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm max-w-[300px] truncate">
-                      {r.description || '—'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={r.is_active ? 'default' : 'secondary'}>
-                        {r.is_active ? 'Activo' : 'Inactivo'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => { setEditing(r); setShowDialog(true); }}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
+        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 overflow-hidden bg-white group hover:scale-[1.02] transition-all duration-500">
+          <CardContent className="p-8">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Activos</p>
+                <p className="text-4xl font-black text-emerald-600 tracking-tighter">
+                  {reasons.filter(r => r.is_active).length}
+                </p>
+              </div>
+              <div className="h-14 w-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:rotate-12 transition-transform">
+                <CheckCircle2 className="w-7 h-7" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 overflow-hidden bg-white group hover:scale-[1.02] transition-all duration-500">
+          <CardContent className="p-8">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivos</p>
+                <p className="text-4xl font-black text-slate-300 tracking-tighter">
+                  {reasons.filter(r => !r.is_active).length}
+                </p>
+              </div>
+              <div className="h-14 w-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:rotate-12 transition-transform">
+                <XCircle className="w-7 h-7" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Listado */}
+      <Card className="rounded-[3rem] border-none shadow-2xl shadow-slate-200/60 overflow-hidden bg-white/70 backdrop-blur-xl">
+        <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input 
+              placeholder="Buscar motivo..." 
+              className="pl-11 h-12 rounded-2xl bg-white border-slate-200 shadow-sm focus:ring-4 focus:ring-primary/5 transition-all font-medium text-slate-600"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Button variant="outline" className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-white shadow-sm font-bold text-slate-600">
+            <Filter className="w-4 h-4 mr-2" />
+            Filtros
+          </Button>
+        </div>
+
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-8 space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-20 w-full bg-slate-50 rounded-3xl animate-pulse" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
+              <div className="h-24 w-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center text-slate-200">
+                <Search className="w-12 h-12" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl font-black text-slate-900">Sin resultados</h3>
+                <p className="text-slate-500 font-medium">No se encontraron motivos que coincidan con tu búsqueda.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50/50">
+                  <TableRow className="hover:bg-transparent border-none">
+                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Información del Motivo</TableHead>
+                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Descripción Detallada</TableHead>
+                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Estado</TableHead>
+                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  <AnimatePresence mode="popLayout">
+                    {filtered.map((r, idx) => (
+                      <motion.tr 
+                        key={r.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="group hover:bg-slate-50/50 border-slate-100 transition-colors"
+                      >
+                        <TableCell className="px-8 py-6">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform text-primary font-black">
+                              {r.item_number}
+                            </div>
+                            <div>
+                              <div className="font-black text-slate-900 leading-none">{r.name}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-8 py-6">
+                          <div className="text-sm font-medium text-slate-500 max-w-[400px] truncate">
+                            {r.description || 'Sin descripción adicional'}
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-8 py-6 text-center">
+                          <Badge className={cn(
+                            "h-7 px-3 rounded-lg border-none font-black text-[10px] uppercase tracking-widest",
+                            r.is_active ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"
+                          )}>
+                            {r.is_active ? 'Activo' : 'Inactivo'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-8 py-6 text-right">
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" onClick={() => { setEditing(r); setShowDialog(true); }} className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary">
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)} className="h-10 w-10 rounded-xl hover:bg-destructive/10 hover:text-destructive">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
