@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
+import { Landmark } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateCesantiasDeposit, useUpdateCesantiasDeposit } from '@/hooks/useCesantias';
@@ -241,210 +242,242 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:w-full sm:p-6">
-        <DialogHeader>
-          <DialogTitle>
-            {deposit ? 'Editar Depósito de Cesantías' : 'Nuevo Depósito de Cesantías'}
-          </DialogTitle>
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
+        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+              <Landmark className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-black tracking-tighter">
+                {deposit ? 'Editar Depósito' : 'Nuevo Depósito'}
+              </DialogTitle>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Cesantías {form.watch('year')}</p>
+            </div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="employee_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Empleado *</FormLabel>
-                    <FormControl>
-                      <SearchableSelect
-                        options={employeeOptions}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Seleccionar empleado"
-                        searchPlaceholder="Buscar empleado..."
-                        disabled={!!deposit}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 space-y-8">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-8 rounded-full bg-primary" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Información General</span>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="employee_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Empleado *</FormLabel>
+                      <FormControl>
+                        <SearchableSelect
+                          options={employeeOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Seleccionar empleado"
+                          searchPlaceholder="Buscar empleado..."
+                          disabled={!!deposit}
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="year"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Año *</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} disabled={!!deposit} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="year"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Año *</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="calculation_start_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Inicio Cálculo *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="calculation_end_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Fin Cálculo *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="calculation_start_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha Inicio Cálculo *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} disabled={!!deposit} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-8 rounded-full bg-primary" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cálculos y Fondo</span>
+              </div>
 
-              <FormField
-                control={form.control}
-                name="calculation_end_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha Fin Cálculo *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} disabled={!!deposit} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="base_salary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Salario Base *</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="days_worked"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Días Trabajados *</FormLabel>
+                      <FormControl>
+                        <Input type="number" max={360} {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cesantias_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Valor Cesantías *</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} className="h-11 rounded-xl border-primary/30 bg-primary/5 text-primary focus:bg-primary/10 transition-all font-black text-lg" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="fund_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fondo de Cesantías *</FormLabel>
+                      <FormControl>
+                        <SearchableSelect
+                          options={fundOptions}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Seleccionar fondo"
+                          searchPlaceholder="Buscar fondo..."
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fund_account"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Número de Cuenta</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-medium" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="base_salary"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Salario Base *</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} disabled={!!deposit} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1 w-8 rounded-full bg-primary" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estado y Fechas</span>
+              </div>
 
-              <FormField
-                control={form.control}
-                name="days_worked"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Días Trabajados *</FormLabel>
-                    <FormControl>
-                      <Input type="number" max={360} {...field} disabled={!!deposit} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="due_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Límite *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="cesantias_amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Valor Cesantías *</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} className="font-semibold" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                <FormField
+                  control={form.control}
+                  name="deposit_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Depósito</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold text-primary" />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="fund_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fondo de Cesantías *</FormLabel>
-                    <FormControl>
-                      <SearchableSelect
-                        options={fundOptions}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Seleccionar fondo"
-                        searchPlaceholder="Buscar fondo..."
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="fund_account"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número de Cuenta</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-              <FormField
-                control={form.control}
-                name="due_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha Límite *</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} disabled={!!deposit} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="deposit_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha Depósito</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estado *</FormLabel>
-                    <FormControl>
-                      <SearchableSelect
-                        options={STATUS_OPTIONS}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Seleccionar estado"
-                        searchPlaceholder="Buscar estado..."
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Estado *</FormLabel>
+                      <FormControl>
+                        <SearchableSelect
+                          options={STATUS_OPTIONS}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Seleccionar estado"
+                          searchPlaceholder="Buscar estado..."
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold"
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px] font-bold" />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <FormField
@@ -452,21 +485,21 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
               name="observations"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
+                  <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observaciones</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={2} />
+                    <Textarea {...field} rows={3} className="rounded-2xl border-border/50 bg-background/50 focus:bg-background transition-all resize-none" />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[10px] font-bold" />
                 </FormItem>
               )}
             />
 
-            <div className="sticky bottom-0 -mx-4 grid grid-cols-1 gap-2 border-t border-border bg-background/95 px-4 pt-3 pb-1 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:pt-4 sm:backdrop-blur-0">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-border/50">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-background transition-all">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {deposit ? 'Actualizar' : 'Registrar'}
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:shadow-xl transition-all">
+                {deposit ? 'Actualizar Registro' : 'Registrar Depósito'}
               </Button>
             </div>
           </form>

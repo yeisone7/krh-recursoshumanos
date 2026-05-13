@@ -18,8 +18,10 @@ import {
   Truck,
   Coffee,
   Tool,
-  Wrench
+  Wrench,
+  Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import {
   Dialog,
@@ -46,6 +48,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
+  SelectSeparator,
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -56,6 +61,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { cn } from '@/lib/utils';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -129,7 +135,14 @@ export function RequisitionFormDialog({
       incluye_desplazamiento: false,
       motivo_solicitud: 'nuevo_cargo',
       solicitante_nombre: '',
+      persona_a_reemplazar: [],
     },
+  });
+
+  const selectedOperationCenterId = form.watch('operation_center_id');
+  const filteredActiveEmployees = activeEmployees.filter((e) => {
+    if (!selectedOperationCenterId) return true;
+    return e.work_info?.operation_center_id === selectedOperationCenterId;
   });
 
   useEffect(() => {
@@ -142,7 +155,7 @@ export function RequisitionFormDialog({
         area_id: requisition.area_id || undefined,
         operation_center_id: requisition.operation_center_id || undefined,
         cargo_a_reemplazar: requisition.cargo_a_reemplazar || undefined,
-        persona_a_reemplazar: requisition.persona_a_reemplazar || undefined,
+        persona_a_reemplazar: requisition.persona_a_reemplazar ? requisition.persona_a_reemplazar.split(', ') : [],
         requiere_herramienta_trabajo: requisition.requiere_herramienta_trabajo || false,
         horario_trabajo: requisition.horario_trabajo || undefined,
         dia_descanso_obligatorio: requisition.dia_descanso_obligatorio as DayOfWeek | undefined,
@@ -167,6 +180,7 @@ export function RequisitionFormDialog({
         incluye_desplazamiento: false,
         motivo_solicitud: 'nuevo_cargo',
         solicitante_nombre: defaultRequesterName,
+        persona_a_reemplazar: [],
       });
     }
   }, [requisition, form, defaultRequesterName]);
@@ -180,7 +194,7 @@ export function RequisitionFormDialog({
       area_id: data.area_id || null,
       operation_center_id: data.operation_center_id || null,
       cargo_a_reemplazar: data.cargo_a_reemplazar || null,
-      persona_a_reemplazar: data.persona_a_reemplazar || null,
+      persona_a_reemplazar: data.persona_a_reemplazar && data.persona_a_reemplazar.length > 0 ? data.persona_a_reemplazar.join(', ') : null,
       requiere_herramienta_trabajo: data.requiere_herramienta_trabajo,
       horario_trabajo: data.horario_trabajo || null,
       dia_descanso_obligatorio: data.dia_descanso_obligatorio || null,
@@ -275,7 +289,14 @@ export function RequisitionFormDialog({
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+            const missingFields = Object.keys(errors).length;
+            if (missingFields > 0) {
+              toast.error('Campos incompletos', {
+                description: 'Por favor diligencie todos los campos obligatorios antes de guardar la requisición.'
+              });
+            }
+          })}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="px-4 pt-2 sm:px-6">
                 <TabsList className="w-full h-auto flex-wrap gap-2 bg-transparent p-0 justify-start">
@@ -595,20 +616,17 @@ export function RequisitionFormDialog({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Persona a Reemplazar</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || ''}>
-                              <FormControl>
-                                <SelectTrigger className="h-11 bg-background">
-                                  <SelectValue placeholder="Si aplica..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                {activeEmployees.map((employee) => (
-                                  <SelectItem key={employee.id} value={`${employee.first_name} ${employee.last_name}`}>
-                                    {employee.first_name} {employee.last_name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <FormControl>
+                              <MultiSelect
+                                options={filteredActiveEmployees.map(employee => ({
+                                  label: `${employee.first_name} ${employee.last_name}`,
+                                  value: `${employee.first_name} ${employee.last_name}`
+                                }))}
+                                value={field.value || []}
+                                onChange={field.onChange}
+                                placeholder="Seleccionar personas..."
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -653,11 +671,23 @@ export function RequisitionFormDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-background">
-                              {(Object.keys(dayOfWeekLabels) as DayOfWeek[]).map((day) => (
-                                <SelectItem key={day} value={day}>
-                                  {dayOfWeekLabels[day]}
-                                </SelectItem>
-                              ))}
+                              <SelectGroup>
+                                <SelectLabel className="text-primary/70 text-[10px] font-bold uppercase tracking-widest bg-muted/30 py-2 mb-1">Horario de Oficina</SelectLabel>
+                                {(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'] as DayOfWeek[]).map((day) => (
+                                  <SelectItem key={day} value={day}>
+                                    {dayOfWeekLabels[day]}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                              <SelectSeparator className="my-1" />
+                              <SelectGroup>
+                                <SelectLabel className="text-primary/70 text-[10px] font-bold uppercase tracking-widest bg-muted/30 py-2 mb-1">Turnos</SelectLabel>
+                                {(['2_dias', '4_dias', '7_dias'] as DayOfWeek[]).map((day) => (
+                                  <SelectItem key={day} value={day}>
+                                    {dayOfWeekLabels[day]}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
                             </SelectContent>
                           </Select>
                           <FormMessage />

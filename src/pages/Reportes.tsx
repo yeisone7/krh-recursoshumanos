@@ -32,35 +32,42 @@ const TABS = [
 
 export default function Reportes() {
   return (
-    <div className="min-w-0 space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex min-w-0 items-start gap-3">
-        <div className="shrink-0 rounded-lg bg-primary/10 p-2">
-          <FileBarChart className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+    <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-primary/10 shadow-sm">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-lg shadow-primary/20">
+            <FileBarChart className="h-8 w-8 text-primary-foreground" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-black tracking-tight sm:text-4xl text-foreground uppercase">
+              Centro de <span className="text-primary">Reportes</span>
+            </h1>
+            <p className="mt-2 text-sm font-medium text-muted-foreground sm:text-lg max-w-2xl leading-relaxed">
+              Analítica y exportación de datos en tiempo real. Genera reportes inteligentes en Excel y PDF estructurados por categoría.
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold text-foreground sm:text-2xl">Reportes</h1>
-          <p className="text-sm text-muted-foreground sm:text-base">
-            Genera y exporta reportes en Excel y PDF por categoría
-          </p>
-        </div>
+        {/* Decorative elements */}
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl" />
       </div>
 
       {/* Categorized Tabs */}
-      <Tabs defaultValue="personal" className="w-full min-w-0">
-        <div className="min-w-0 overflow-hidden">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1 sm:grid-cols-3 lg:grid-cols-7">
-          {TABS.map(({ value, label, icon: Icon }) => (
-            <TabsTrigger
-              key={value}
-              value={value}
-              className="min-w-0 justify-start gap-1.5 px-2 text-xs sm:px-3 sm:text-sm data-[state=active]:bg-background"
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="min-w-0 truncate">{label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      <Tabs defaultValue="personal" className="w-full">
+        <div className="sticky top-0 z-20 -mx-4 px-4 py-2 bg-background/50 backdrop-blur-md">
+          <TabsList className="flex h-auto w-fit gap-2 bg-muted/30 p-1.5 rounded-[1.5rem] border border-border/50 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {TABS.map(({ value, label, icon: Icon }) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="rounded-2xl px-6 py-2.5 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shadow-sm transition-all whitespace-nowrap"
+              >
+                <Icon className="mr-2 h-4 w-4" />
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
         </div>
 
         {/* Personal */}

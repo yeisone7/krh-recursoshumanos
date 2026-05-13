@@ -93,6 +93,7 @@ export function RequisitionApprovalDialog({
   const [observations, setObservations] = useState('');
   const [salarioAprobado, setSalarioAprobado] = useState(true);
   const [asignacionSalarial, setAsignacionSalarial] = useState<number | undefined>();
+  const [incluyeAuxilioTransporte, setIncluyeAuxilioTransporte] = useState(false);
   const [tipoConvocatoria, setTipoConvocatoria] = useState<string>('');
   const [condicionesAdicionales, setCondicionesAdicionales] = useState('');
   const [tipoContrato, setTipoContrato] = useState('');
@@ -116,6 +117,7 @@ export function RequisitionApprovalDialog({
       setObservations('');
       setSalarioAprobado(true);
       setAsignacionSalarial(undefined);
+      setIncluyeAuxilioTransporte(false);
       setTipoConvocatoria('');
       setCondicionesAdicionales('');
       setTipoContrato('');
@@ -173,6 +175,7 @@ export function RequisitionApprovalDialog({
       data.operaciones_aprobado_salario = salarioAprobado;
     } else if (step === 'rrhh') {
       data.rrhh_asignacion_salarial = asignacionSalarial;
+      data.rrhh_incluye_auxilio_transporte = incluyeAuxilioTransporte;
       data.rrhh_tipo_convocatoria = tipoConvocatoria || null;
       data.rrhh_condiciones_adicionales = condicionesAdicionales || null;
     } else if (step === 'juridico') {
@@ -280,6 +283,17 @@ export function RequisitionApprovalDialog({
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Incluye Auxilio de Transporte</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Aplica para salarios hasta 2 SMMLV
+                  </p>
+                </div>
+                <Switch checked={incluyeAuxilioTransporte} onCheckedChange={setIncluyeAuxilioTransporte} />
+              </div>
+
               <div className="space-y-2">
                 <Label>Condiciones Adicionales</Label>
                 <Textarea

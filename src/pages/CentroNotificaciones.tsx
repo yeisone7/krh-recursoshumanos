@@ -97,70 +97,139 @@ export default function CentroNotificaciones() {
   }
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <h1 className="break-words font-display text-xl font-bold text-foreground sm:text-2xl">Centro de Notificaciones</h1>
-          <p className="text-muted-foreground mt-1">
-            {canManageCompanyHistory ? 'Historial de alertas y envíos de la empresa por usuario' : 'Historial de tus alertas y envíos'}
-          </p>
+    <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-primary/10 shadow-sm">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-md shadow-primary/10">
+              <Bell className="h-8 w-8 text-primary-foreground" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black tracking-tight sm:text-4xl text-foreground uppercase leading-tight">
+                Centro de <span className="text-primary">Notificaciones</span>
+              </h1>
+              <p className="mt-2 text-sm font-medium text-muted-foreground sm:text-lg max-w-2xl leading-relaxed">
+                {canManageCompanyHistory ? 'Historial de alertas y envíos de la empresa por usuario' : 'Historial de tus alertas y envíos'}
+              </p>
+            </div>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={refetch} 
+            disabled={isLoading} 
+            className="h-12 px-6 rounded-xl border-2 font-black uppercase tracking-widest text-[10px] gap-2 transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary"
+          >
+            <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} /> 
+            Actualizar
+          </Button>
         </div>
-        <Button variant="outline" onClick={refetch} disabled={isLoading} className="w-full gap-2 sm:w-auto">
-          <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} /> Actualizar
-        </Button>
-      </motion.div>
-
-      <div className="hidden gap-4 md:grid md:grid-cols-4">
-        <Card><CardContent className="p-4 flex items-center gap-3"><Bell className="h-5 w-5 text-primary" /><div><p className="text-2xl font-bold">{stats.totalNotifications}</p><p className="text-sm text-muted-foreground">Alertas</p></div></CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3"><Users className="h-5 w-5 text-warning" /><div><p className="text-2xl font-bold">{stats.unread}</p><p className="text-sm text-muted-foreground">Sin leer</p></div></CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3"><Mail className="h-5 w-5 text-info" /><div><p className="text-2xl font-bold">{stats.emails}</p><p className="text-sm text-muted-foreground">Correos</p></div></CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3"><Mail className="h-5 w-5 text-destructive" /><div><p className="text-2xl font-bold">{stats.failed}</p><p className="text-sm text-muted-foreground">Fallidos</p></div></CardContent></Card>
+        {/* Decorative elements */}
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl" />
       </div>
 
-      <Card>
-        <CardHeader className="px-4 sm:px-6">
-          <CardTitle>Historial</CardTitle>
-          <CardDescription>Filtra por usuario, estado, canal, correo o asunto.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 px-4 sm:px-6">
-          <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar historial..." className="pl-10" />
+      {/* KPI Tiles */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: 'Total Alertas', value: stats.totalNotifications, icon: Bell, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
+          { label: 'Sin Leer', value: stats.unread, icon: Users, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
+          { label: 'Correos', value: stats.emails, icon: Mail, color: 'text-info', bg: 'bg-info/10', border: 'border-info/20' },
+          { label: 'Fallidos', value: stats.failed, icon: Mail, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
+        ].map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className={cn(
+              "relative overflow-hidden rounded-[2rem] border-2 bg-background/50 backdrop-blur-xl p-6 transition-all duration-300 hover:shadow-sm",
+              stat.border
+            )}
+          >
+            <div className="flex items-center justify-between relative z-10">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
+                <h2 className="text-3xl font-black tracking-tight text-foreground">
+                  {isLoading ? <RefreshCw className="h-6 w-6 animate-spin text-primary" /> : stat.value}
+                </h2>
+              </div>
+              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center shadow-inner", stat.bg)}>
+                <stat.icon className={cn("h-6 w-6", stat.color)} />
+              </div>
             </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="rounded-[2.5rem] border-2 border-border/50 bg-background/50 backdrop-blur-xl p-8">
+        <div className="mb-6">
+          <h2 className="text-xl font-black tracking-tight text-foreground uppercase">Historial Operativo</h2>
+          <p className="text-sm font-medium text-muted-foreground mt-1">Gestión detallada de comunicaciones y notificaciones de sistema.</p>
+        </div>
+      <div className="relative group">
+        <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+        <div className="relative flex flex-col md:flex-row items-center gap-4 bg-background/60 backdrop-blur-xl p-3 rounded-[2rem] border border-border/50 shadow-sm">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/60" />
+            <Input
+              placeholder="Buscar por usuario, asunto o mensaje..."
+              className="h-14 pl-12 bg-transparent border-none shadow-none focus-visible:ring-0 text-base font-medium placeholder:text-muted-foreground/40"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          
+          <div className="flex w-full md:w-auto items-center gap-3 pr-2">
+            <div className="h-10 w-px bg-border/40 hidden md:block mx-2" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="unread">Sin leer</SelectItem>
-                <SelectItem value="read">Leídas</SelectItem>
-                <SelectItem value="sent">Enviado</SelectItem>
-                <SelectItem value="pending">Pendiente</SelectItem>
-                <SelectItem value="failed">Fallido</SelectItem>
-                <SelectItem value="suppressed">Suprimido</SelectItem>
+              <SelectTrigger className="h-12 w-full md:w-[180px] rounded-2xl bg-muted/30 border-none shadow-none font-black uppercase tracking-widest text-[10px]">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-border/50 backdrop-blur-xl bg-background/95">
+                <SelectItem value="all">TODOS</SelectItem>
+                <SelectItem value="unread">SIN LEER</SelectItem>
+                <SelectItem value="read">LEÍDAS</SelectItem>
+                <SelectItem value="sent">ENVIADO</SelectItem>
+                <SelectItem value="pending">PENDIENTE</SelectItem>
+                <SelectItem value="failed">FALLIDO</SelectItem>
+                <SelectItem value="suppressed">SUPRIMIDO</SelectItem>
               </SelectContent>
             </Select>
+
             <Select value={channelFilter} onValueChange={setChannelFilter}>
-              <SelectTrigger><SelectValue placeholder="Canal" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los canales</SelectItem>
-                <SelectItem value="email">Correo</SelectItem>
-                <SelectItem value="in_app">App</SelectItem>
-                <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                <SelectItem value="telegram">Telegram</SelectItem>
+              <SelectTrigger className="h-12 w-full md:w-[180px] rounded-2xl bg-muted/30 border-none shadow-none font-black uppercase tracking-widest text-[10px]">
+                <SelectValue placeholder="Canal" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-border/50 backdrop-blur-xl bg-background/95">
+                <SelectItem value="all">TODOS CANALES</SelectItem>
+                <SelectItem value="email">CORREO</SelectItem>
+                <SelectItem value="in_app">APP</SelectItem>
+                <SelectItem value="whatsapp">WHATSAPP</SelectItem>
+                <SelectItem value="telegram">TELEGRAM</SelectItem>
               </SelectContent>
             </Select>
           </div>
+        </div>
+      </div>
 
-          <Tabs defaultValue="alerts" className="space-y-4">
-            <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-muted/50 p-1">
-              <TabsTrigger value="alerts" className="min-w-0 px-2 text-xs sm:text-sm">
-                <span className="min-w-0 truncate">Alertas en app</span>
+      <Tabs defaultValue="alerts" className="w-full">
+        <div className="flex items-center justify-between mb-6">
+          <TabsList className="flex h-auto w-fit gap-2 bg-muted/30 p-1.5 rounded-[1.5rem] border border-border/50">
+            {[
+              { value: 'alerts', label: 'ALERTAS EN APP' },
+              { value: 'deliveries', label: 'CORREOS Y ENVÍOS' },
+            ].map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="rounded-2xl px-6 py-2.5 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all whitespace-nowrap relative"
+              >
+                {tab.label}
               </TabsTrigger>
-              <TabsTrigger value="deliveries" className="min-w-0 px-2 text-xs sm:text-sm">
-                <span className="min-w-0 truncate">Correos y envíos</span>
-              </TabsTrigger>
-            </TabsList>
+            ))}
+          </TabsList>
+        </div>
             <TabsContent value="alerts">
               <div className="space-y-3 md:hidden">
                 {filteredNotifications.map((item) => (
@@ -245,9 +314,8 @@ export default function CentroNotificaciones() {
               </Table>
               </div>
             </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+      </Tabs>
+      </div>
     </div>
   );
 }

@@ -199,214 +199,253 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-3xl flex-col overflow-hidden rounded-none border-0 p-4 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border sm:p-6">
-        <DialogHeader className="pr-12">
-          <DialogTitle className="font-display text-lg flex items-center gap-2 sm:text-xl">
-            <Users className="w-5 h-5 text-primary" />
-            Entrega Masiva por Centro
-          </DialogTitle>
-          <DialogDescription>
-            Registra entregas de dotación a todos los empleados de un centro según su profesiograma
-          </DialogDescription>
-        </DialogHeader>
-
-        {step === 'config' ? (
-          <div className="space-y-5 overflow-y-auto py-2 pr-1">
-            <div className="space-y-2">
-              <Label>Centro de Operación *</Label>
-              <SearchableSelect
-                options={centerOptions}
-                value={centerId}
-                onValueChange={setCenterId}
-                placeholder="Seleccionar centro"
-              />
+      <DialogContent className="flex h-[100dvh] w-screen max-w-4xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background/95 backdrop-blur-xl">
+        {/* Header con gradiente */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          <div className="relative flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <Users className="w-7 h-7 text-primary-foreground" />
             </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Fecha de Entrega *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !deliveryDate && 'text-muted-foreground')}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {deliveryDate ? format(deliveryDate, 'dd/MM/yyyy') : 'Seleccionar'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={deliveryDate} onSelect={(d) => d && setDeliveryDate(d)} locale={es} />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="space-y-2">
-                <Label>Fecha de Vencimiento *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !expirationDate && 'text-muted-foreground')}>
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {expirationDate ? format(expirationDate, 'dd/MM/yyyy') : 'Seleccionar'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={expirationDate} onSelect={(d) => d && setExpirationDate(d)} locale={es} />
-                  </PopoverContent>
-                </Popover>
-              </div>
+            <div>
+              <DialogTitle className="font-black text-2xl tracking-tighter sm:text-3xl">
+                Entrega Masiva
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground font-medium">
+                Sincronización de dotación por centro operativo
+              </DialogDescription>
             </div>
-
-            <div className="space-y-2">
-              <Label>Entregado por *</Label>
-              <Input value={deliveredBy} onChange={(e) => setDeliveredBy(e.target.value)} placeholder="Nombre de quien entrega" />
-            </div>
-
-            <Button onClick={handleGenerate} className="w-full gap-2">
-              <Package className="w-4 h-4" />
-              Generar Vista Previa
-            </Button>
           </div>
-        ) : (
-          <div className="flex-1 overflow-hidden flex flex-col space-y-4">
-            {/* Summary badges */}
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="gap-1">
-                <Building2 className="w-3 h-3" />
-                {operationCenters.find((c: any) => c.id === centerId)?.name}
-              </Badge>
-              <Badge variant="outline" className="gap-1 bg-primary/5 text-primary border-primary/20">
-                <Users className="w-3 h-3" />
-                {rows.length} empleados
-              </Badge>
-              <Badge variant="outline" className="gap-1 bg-green-50 text-green-700 border-green-200">
-                <CheckCircle className="w-3 h-3" />
-                {withProfCount} con profesiograma
-              </Badge>
-              {withoutProfCount > 0 && (
-                <Badge variant="outline" className="gap-1 bg-amber-50 text-amber-700 border-amber-200">
-                  <AlertTriangle className="w-3 h-3" />
-                  {withoutProfCount} sin profesiograma
-                </Badge>
-              )}
-              <Badge className="gap-1 bg-secondary text-secondary-foreground">
-                <Package className="w-3 h-3" />
-                {totalDeliveries} entregas a registrar
-              </Badge>
-            </div>
+        </div>
 
-            {/* Table */}
-            <div className="hidden flex-1 min-h-0 overflow-auto rounded-lg border overscroll-x-contain sm:block">
-              <Table className="min-w-[760px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10">
-                      <Checkbox
-                        checked={withProfCount > 0 && selectedRows.length === withProfCount}
-                        onCheckedChange={(v) => toggleAll(!!v)}
-                      />
-                    </TableHead>
-                    <TableHead>Empleado</TableHead>
-                    <TableHead>Cargo</TableHead>
-                    <TableHead>Artículos</TableHead>
-                    <TableHead className="text-center">Cant.</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-6">
+          {step === 'config' ? (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3">
+                <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Centro de Operación *</Label>
+                <SearchableSelect
+                  options={centerOptions}
+                  value={centerId}
+                  onValueChange={setCenterId}
+                  placeholder="Seleccionar centro de trabajo"
+                  triggerClassName="h-12 rounded-xl bg-muted/50 border-border/50"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha de Entrega *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn('h-12 w-full justify-start text-left font-semibold rounded-xl bg-muted/50 border-border/50', !deliveryDate && 'text-muted-foreground')}>
+                        <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                        {deliveryDate ? format(deliveryDate, 'dd/MM/yyyy') : 'Seleccionar'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-background border-border/50 rounded-2xl shadow-2xl">
+                      <Calendar mode="single" selected={deliveryDate} onSelect={(d) => d && setDeliveryDate(d)} locale={es} className="rounded-2xl" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha de Vencimiento *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn('h-12 w-full justify-start text-left font-semibold rounded-xl bg-muted/50 border-border/50', !expirationDate && 'text-muted-foreground')}>
+                        <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                        {expirationDate ? format(expirationDate, 'dd/MM/yyyy') : 'Seleccionar'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-background border-border/50 rounded-2xl shadow-2xl">
+                      <Calendar mode="single" selected={expirationDate} onSelect={(d) => d && setExpirationDate(d)} locale={es} className="rounded-2xl" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Responsable de Entrega *</Label>
+                <Input 
+                  value={deliveredBy} 
+                  onChange={(e) => setDeliveredBy(e.target.value)} 
+                  placeholder="Nombre de quien autoriza la entrega" 
+                  className="h-12 rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20 font-medium"
+                />
+              </div>
+
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 flex items-start gap-4">
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-bold text-sm text-primary">Importante</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Esta acción generará automáticamente las entregas para todos los empleados activos del centro seleccionado que tengan un profesiograma configurado.
+                  </p>
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleGenerate} 
+                className="h-14 w-full gap-2 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs shadow-md shadow-primary/10 hover:shadow-lg hover:translate-y-[-1px] transition-all"
+              >
+                <Package className="w-5 h-5" />
+                Analizar Personal y Generar Previa
+              </Button>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-hidden flex flex-col space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+              {/* Summary badges */}
+              <div className="flex flex-wrap gap-2 px-1">
+                <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-muted/30 border-border/50 font-bold text-[10px] uppercase tracking-widest">
+                  <Building2 className="w-3.5 h-3.5 text-primary" />
+                  {operationCenters.find((c: any) => c.id === centerId)?.name}
+                </Badge>
+                <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-primary/5 text-primary border-primary/20 font-bold text-[10px] uppercase tracking-widest">
+                  <Users className="w-3.5 h-3.5" />
+                  {rows.length} Empleados
+                </Badge>
+                <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-green-500/5 text-green-600 border-green-500/20 font-bold text-[10px] uppercase tracking-widest">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  {withProfCount} Listos
+                </Badge>
+                {withoutProfCount > 0 && (
+                  <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-amber-500/5 text-amber-600 border-amber-500/20 font-bold text-[10px] uppercase tracking-widest">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    {withoutProfCount} Pendientes
+                  </Badge>
+                )}
+                <Badge className="h-8 rounded-xl px-3 gap-2 bg-secondary text-secondary-foreground font-bold text-[10px] uppercase tracking-widest shadow-sm">
+                  <Package className="w-3.5 h-3.5" />
+                  {totalDeliveries} Ítems Totales
+                </Badge>
+              </div>
+
+              {/* Table */}
+              <div className="hidden flex-1 min-h-0 overflow-auto rounded-[1.5rem] border border-border/50 bg-background/40 overscroll-x-contain sm:block custom-scrollbar">
+                <Table className="min-w-[760px]">
+                  <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                    <TableRow className="hover:bg-transparent border-border/50">
+                      <TableHead className="w-14 py-4 px-6">
+                        <Checkbox
+                          checked={withProfCount > 0 && selectedRows.length === withProfCount}
+                          onCheckedChange={(v) => toggleAll(!!v)}
+                          className="h-5 w-5 rounded-md"
+                        />
+                      </TableHead>
+                      <TableHead className="font-black text-[10px] uppercase tracking-widest py-4">Empleado</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase tracking-widest py-4">Cargo</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase tracking-widest py-4">Dotación Requerida</TableHead>
+                      <TableHead className="text-center font-black text-[10px] uppercase tracking-widest py-4">Cant.</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map((row, idx) => (
+                      <TableRow key={row.employeeId} className={cn('hover:bg-primary/[0.02] border-border/40 transition-colors', !row.selected && 'opacity-40 grayscale')}>
+                        <TableCell className="py-4 px-6">
+                          <Checkbox
+                            checked={row.selected}
+                            disabled={row.items.length === 0}
+                            onCheckedChange={() => toggleRow(idx)}
+                            className="h-5 w-5 rounded-md"
+                          />
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <div>
+                            <p className="font-bold text-sm text-foreground">{row.employeeName}</p>
+                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{row.documentNumber}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4 font-medium text-xs text-muted-foreground">{row.positionName || '—'}</TableCell>
+                        <TableCell className="py-4">
+                          {row.items.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {row.items.map((item, i) => (
+                                <Badge key={i} variant="outline" className="text-[9px] h-5 rounded-full border-border/50 bg-background font-semibold">
+                                  {item.itemName}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-amber-600/70 font-bold uppercase tracking-widest italic">Falta Profesiograma</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center py-4">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-muted font-black text-xs">
+                            {row.items.reduce((a, b) => a + b.quantity, 0) || 0}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile version */}
+              <div className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-border/50 sm:hidden bg-background/40">
+                <div className="divide-y divide-border/50">
                   {rows.map((row, idx) => (
-                    <TableRow key={row.employeeId} className={cn(!row.selected && 'opacity-50')}>
-                      <TableCell>
+                    <div key={row.employeeId} className={cn('space-y-4 p-5 transition-all', !row.selected && 'opacity-40 grayscale')}>
+                      <div className="flex items-start gap-4">
                         <Checkbox
                           checked={row.selected}
                           disabled={row.items.length === 0}
                           onCheckedChange={() => toggleRow(idx)}
+                          className="mt-1 h-5 w-5 rounded-md"
                         />
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-sm">{row.employeeName}</p>
-                          <p className="text-xs text-muted-foreground">{row.documentNumber}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-sm text-foreground leading-none">{row.employeeName}</p>
+                          <p className="mt-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{row.documentNumber}</p>
+                          <p className="mt-2 text-xs font-semibold text-primary">{row.positionName || '—'}</p>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-sm">{row.positionName || '—'}</TableCell>
-                      <TableCell>
-                        {row.items.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {row.items.map((item, i) => (
-                              <Badge key={i} variant="outline" className="text-xs">
-                                {item.itemName}
-                              </Badge>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic">Sin profesiograma</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center text-sm font-medium">
-                        {row.items.reduce((a, b) => a + b.quantity, 0) || '—'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="flex-1 min-h-0 overflow-y-auto rounded-lg border sm:hidden">
-              <div className="divide-y divide-border">
-                {rows.map((row, idx) => (
-                  <div key={row.employeeId} className={cn('space-y-3 p-4', !row.selected && 'opacity-50')}>
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={row.selected}
-                        disabled={row.items.length === 0}
-                        onCheckedChange={() => toggleRow(idx)}
-                        className="mt-1"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm text-foreground">{row.employeeName}</p>
-                        <p className="text-xs text-muted-foreground">{row.documentNumber}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{row.positionName || '—'}</p>
+                        <Badge variant="outline" className="shrink-0 h-7 w-7 p-0 flex items-center justify-center rounded-lg font-black text-xs bg-muted">
+                          {row.items.reduce((a, b) => a + b.quantity, 0) || 0}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="shrink-0 text-xs">
-                        {row.items.reduce((a, b) => a + b.quantity, 0) || '—'}
-                      </Badge>
+                      {row.items.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pl-9">
+                          {row.items.map((item, i) => (
+                            <Badge key={i} variant="outline" className="text-[9px] h-5 rounded-full border-border/50 bg-background font-semibold">
+                              {item.itemName}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {row.items.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 pl-8">
-                        {row.items.map((item, i) => (
-                          <Badge key={i} variant="outline" className="text-xs">
-                            {item.itemName}
-                          </Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="pl-8 text-xs italic text-muted-foreground">Sin profesiograma</p>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="grid grid-cols-1 gap-3 pt-4 border-t border-border/50 sm:flex sm:items-center sm:justify-between">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setStep('config')}
+                  className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-muted/50"
+                >
+                  ← Configuración
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || selectedRows.length === 0}
+                  className="h-12 px-8 rounded-2xl gap-2 bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs shadow-md shadow-primary/10 hover:shadow-lg transition-all"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Confirmar {totalDeliveries} Entregas
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="grid grid-cols-1 gap-2 pt-2 border-t sm:flex sm:items-center sm:justify-between">
-              <Button variant="outline" onClick={() => setStep('config')}>
-                ← Volver
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting || selectedRows.length === 0}
-                className="gap-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Registrando...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    Confirmar {totalDeliveries} Entregas
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

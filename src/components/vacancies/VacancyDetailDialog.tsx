@@ -30,6 +30,8 @@ import {
   LayoutList,
   Upload,
   User,
+  Trash2,
+  UserX,
 } from 'lucide-react';
 import {
   Dialog,
@@ -37,13 +39,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -53,6 +63,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUpdateCandidate, useConvertToEmployee } from '@/hooks/useCandidates';
 import { CandidateFormDialog } from './CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
+import { CandidateReasonDialog } from '@/components/selection/CandidateReasonDialog';
 import { CandidateKanban } from '@/components/selection/CandidateKanban';
 import { GenerateRegistrationLinkDialog } from '@/components/registration/GenerateRegistrationLinkDialog';
 import { RegistrationTokensList } from '@/components/registration/RegistrationTokensList';
@@ -77,6 +88,7 @@ interface VacancyDetailDialogProps {
 const statusIcons: Record<VacancyStatus, React.ElementType> = {
   open: CheckCircle,
   in_process: Clock,
+  paused: Pause,
   closed: CheckCircle,
   cancelled: XCircle,
 };
@@ -87,6 +99,12 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const [showCandidateForm, setShowCandidateForm] = useState(false);
   const [showCandidateDetail, setShowCandidateDetail] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [isCanceledDialogOpen, setIsCanceledDialogOpen] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [isSubmittingCancellation, setIsSubmittingCancellation] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  const [actingCandidate, setActingCandidate] = useState<{ id: string; name: string } | null>(null);
   const [showGenerateLink, setShowGenerateLink] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
@@ -220,7 +238,16 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const candidates = (vacancy as any).candidates || [];
   const requisition = (vacancy as any).personnel_requisitions;
 
+  const selectedCount = candidates.filter((c: any) => c.status === 'selected' || c.status === 'hired').length;
+  const positionsCount = vacancy.positions_count || 1;
+  const isSelectionLimitReached = selectedCount >= positionsCount;
+
   const handleStatusChange = async (newStatus: VacancyStatus) => {
+    if (newStatus === 'cancelled') {
+      setIsCanceledDialogOpen(true);
+      return;
+    }
+    
     try {
       await updateVacancy.mutateAsync({
         id: vacancy.id,
@@ -233,17 +260,69 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
     }
   };
 
-  const handleCandidateStatusChange = async (candidateId: string, newStatus: CandidateStatus) => {
+  const handleCancelConfirm = async () => {
+    if (!cancellationReason.trim()) {
+      toast.error('Debe ingresar una justificación para la cancelación');
+      return;
+    }
+
+    setIsSubmittingCancellation(true);
+    try {
+      await updateVacancy.mutateAsync({
+        id: vacancy.id,
+        status: 'cancelled',
+        actual_close_date: new Date().toISOString().split('T')[0],
+        // @ts-ignore - these are new columns
+        cancellation_reason: cancellationReason,
+        cancelled_by: user?.id,
+        cancelled_at: new Date().toISOString(),
+      });
+      toast.success('Vacante cancelada exitosamente');
+      setIsCanceledDialogOpen(false);
+      setCancellationReason('');
+    } catch (error) {
+      toast.error('Error al cancelar la vacante');
+    } finally {
+      setIsSubmittingCancellation(false);
+    }
+  };
+
+  const handleCandidateStatusChange = async (
+    candidateId: string, 
+    newStatus: CandidateStatus,
+    extra?: { rejection_reason?: string; withdrawal_reason?: string; general_notes?: string }
+  ) => {
     try {
       await updateCandidate.mutateAsync({
         id: candidateId,
         status: newStatus,
         is_selected: newStatus === 'selected',
+        ...(extra || {}),
       });
       toast.success('Estado del candidato actualizado');
     } catch (error) {
       toast.error('Error al actualizar candidato');
     }
+  };
+
+  const handleReject = (reason: string, observations: string) => {
+    if (!actingCandidate) return;
+    handleCandidateStatusChange(actingCandidate.id, 'not_selected', {
+      rejection_reason: reason,
+      general_notes: observations,
+    });
+    setShowRejectDialog(false);
+    setActingCandidate(null);
+  };
+
+  const handleWithdraw = (reason: string, observations: string) => {
+    if (!actingCandidate) return;
+    handleCandidateStatusChange(actingCandidate.id, 'withdrawn', {
+      withdrawal_reason: reason,
+      general_notes: observations,
+    });
+    setShowWithdrawDialog(false);
+    setActingCandidate(null);
   };
 
   const handleConvertToEmployee = async (candidateId: string) => {
@@ -287,10 +366,11 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full">
+        <DialogContent className="flex flex-col max-h-[95dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full border-none shadow-2xl bg-background/95 backdrop-blur-xl">
+        <TooltipProvider>
         <DialogTitle className="sr-only">Detalles de la Vacante</DialogTitle>
         <DialogDescription className="sr-only">Información detallada de la vacante para el cargo {vacancy.position_title}</DialogDescription>
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4 pt-8 pb-6 sm:px-8 sm:pt-10">
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4 pt-6 pb-4 sm:px-8 sm:pt-8">
           {/* Decorative patterns */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
@@ -300,7 +380,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
 
           <div className="relative flex flex-col md:flex-row items-start gap-6">
             {/* Avatar/Initial */}
-            <div className="w-16 h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-primary/10 transition-transform hover:scale-105 duration-300">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-primary/10 transition-transform hover:scale-105 duration-300">
               {vacancy.position_title.substring(0, 2).toUpperCase()}
             </div>
 
@@ -318,7 +398,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                 </Badge>
               </div>
               
-              <h2 className="text-3xl font-display font-bold text-foreground tracking-tight sm:text-4xl">
+              <h2 className="text-2xl font-display font-bold text-foreground tracking-tight sm:text-3xl">
                 {vacancy.position_title}
               </h2>
               
@@ -344,17 +424,17 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
         </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-            <div className="px-4 pt-2 flex-shrink-0 sm:px-8 border-b">
-              <TabsList className="w-full h-auto flex-wrap gap-2 bg-transparent p-0 justify-start pb-2">
-                <TabsTrigger value="info" className="h-10 flex-1 min-w-[100px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
+            <div className="px-4 pt-0 flex-shrink-0 sm:px-8 border-b">
+              <TabsList className="w-full h-auto flex-wrap gap-1 bg-transparent p-0 justify-start pb-1">
+                <TabsTrigger value="info" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
                   <FileText className="h-4 w-4 shrink-0" />
                   <span className="font-medium">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="candidates" className="h-10 flex-1 min-w-[100px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
+                <TabsTrigger value="candidates" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
                   <Users className="h-4 w-4 shrink-0" />
                   <span className="font-medium">Candidatos</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="h-10 flex-1 min-w-[100px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
+                <TabsTrigger value="documents" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
                   <Paperclip className="h-4 w-4 shrink-0" />
                   <span className="font-medium">Documentos</span>
                 </TabsTrigger>
@@ -364,6 +444,48 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
             <div className="flex-1 min-h-0 overflow-y-auto">
               {/* Info Tab */}
               <TabsContent value="info" className="p-4 mt-0 space-y-6 sm:p-6">
+                {/* Cancellation Info Card */}
+                {status === 'cancelled' && (
+                  <Card className="border-destructive/20 bg-destructive/5">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base flex items-center gap-2 text-destructive">
+                        <XCircle className="w-4 h-4" />
+                        Detalles de Cancelación
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 space-y-3">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Cancelado por</p>
+                          <div className="flex items-center gap-1.5">
+                            <User className="w-3.5 h-3.5 text-muted-foreground" />
+                            <p className="font-medium text-sm">
+                              {(vacancy as any).cancelled_by_profile?.full_name || 'Sistema'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha de Cancelación</p>
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                            <p className="font-medium text-sm">
+                              {(vacancy as any).cancelled_at 
+                                ? format(new Date((vacancy as any).cancelled_at), 'dd MMM yyyy, hh:mm a', { locale: es })
+                                : 'No registrada'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-1 pt-2 border-t border-destructive/10">
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Justificación</p>
+                        <p className="text-sm italic text-foreground/80 leading-relaxed">
+                          {(vacancy as any).cancellation_reason || 'Sin justificación registrada'}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Requisition Info Card */}
                 {requisition && (
                   <Card className="border-primary/20 bg-primary/5">
@@ -569,7 +691,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsContent>
 
               {/* Candidates Tab */}
-              <TabsContent value="candidates" className="mt-0 p-4 space-y-4 sm:p-6">
+              <TabsContent value="candidates" className="mt-0 p-3 space-y-3 sm:p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-semibold text-foreground flex items-center gap-2">
                     <div className="w-7 h-7 rounded-md bg-violet-light flex items-center justify-center">
@@ -660,7 +782,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                         return (
                           <div
                             key={candidate.id}
-                            className="flex flex-col gap-3 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-col gap-2 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer sm:flex-row sm:items-center sm:justify-between"
                             onClick={() => openCandidateDetail(candidate.id)}
                           >
                             <div className="flex min-w-0 items-center gap-3">
@@ -691,46 +813,95 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               </Badge>
 
                               {candidateStatus === 'selected' && (
-                                <Button
-                                  size="sm"
-                                  variant="default"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleConvertToEmployee(candidate.id);
-                                  }}
-                                  disabled={convertToEmployee.isPending}
-                                >
-                                  <CheckCircle className="w-4 h-4 mr-1" />
-                                  Contratar
-                                </Button>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleConvertToEmployee(candidate.id);
+                                      }}
+                                      disabled={convertToEmployee.isPending || status === 'cancelled'}
+                                    >
+                                      <CheckCircle className="w-4 h-4 mr-1" />
+                                      Contratar
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Convertir candidato seleccionado en empleado</p>
+                                  </TooltipContent>
+                                </Tooltip>
                               )}
 
                               {candidateStatus !== 'hired' && candidateStatus !== 'withdrawn' && candidateStatus !== 'not_selected' && (
-                                  <div className="flex justify-end gap-1">
+                                <div className="flex justify-end gap-1">
                                   {candidateStatus !== 'selected' && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="text-success hover:text-success"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleCandidateStatusChange(candidate.id, 'selected');
-                                      }}
-                                    >
-                                      <CheckCircle className="w-4 h-4" />
-                                    </Button>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="text-success hover:text-success"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleCandidateStatusChange(candidate.id, 'selected');
+                                          }}
+                                          disabled={status === 'cancelled' || isSelectionLimitReached}
+                                        >
+                                          <CheckCircle className="w-4 h-4 mr-1" />
+                                          Seleccionar
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>{isSelectionLimitReached ? `Límite de vacantes alcanzado (${positionsCount})` : 'Seleccionar como finalista'}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
                                   )}
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-destructive hover:text-destructive"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleCandidateStatusChange(candidate.id, 'not_selected');
-                                    }}
-                                  >
-                                    <XCircle className="w-4 h-4" />
-                                  </Button>
+                                  
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-destructive hover:text-destructive"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActingCandidate({ id: candidate.id, name: `${candidate.first_name} ${candidate.last_name}` });
+                                          setShowRejectDialog(true);
+                                        }}
+                                        disabled={status === 'cancelled' || (isSelectionLimitReached && candidateStatus !== 'selected')}
+                                      >
+                                        <XCircle className="w-4 h-4 mr-1" />
+                                        Descartar
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{isSelectionLimitReached && candidateStatus !== 'selected' ? `Límite de vacantes alcanzado (${positionsCount})` : 'Descartar candidato del proceso'}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-warning hover:text-warning"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActingCandidate({ id: candidate.id, name: `${candidate.first_name} ${candidate.last_name}` });
+                                          setShowWithdrawDialog(true);
+                                        }}
+                                        disabled={status === 'cancelled' || (isSelectionLimitReached && candidateStatus !== 'selected')}
+                                      >
+                                        <UserX className="w-4 h-4 mr-1" />
+                                        Desistió
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{isSelectionLimitReached && candidateStatus !== 'selected' ? `Límite de vacantes alcanzado (${positionsCount})` : 'Registrar que el candidato desistió'}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
                                 </div>
                               )}
                             </div>
@@ -752,7 +923,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               </TabsContent>
 
               {/* Documents Tab */}
-              <TabsContent value="documents" className="mt-0 space-y-4 p-4 sm:p-6">
+              <TabsContent value="documents" className="mt-0 space-y-3 p-3 sm:p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-semibold text-foreground flex items-center gap-2">
                     <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
@@ -847,12 +1018,24 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                 </Button>
               )}
               {status === 'in_process' && (
-                <Button variant="outline" onClick={() => handleStatusChange('closed')}>
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Cerrar Vacante
+                <>
+                  <Button variant="outline" onClick={() => handleStatusChange('paused')}>
+                    <Pause className="w-4 h-4 mr-2" />
+                    Pausar Vacante
+                  </Button>
+                  <Button variant="outline" onClick={() => handleStatusChange('closed')}>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Cerrar Vacante
+                  </Button>
+                </>
+              )}
+              {status === 'paused' && (
+                <Button variant="outline" onClick={() => handleStatusChange('in_process')}>
+                  <Play className="w-4 h-4 mr-2" />
+                  Reanudar Proceso
                 </Button>
               )}
-              {(status === 'open' || status === 'in_process') && (
+              {(status === 'open' || status === 'in_process' || status === 'paused') && (
                 <Button
                   variant="outline"
                   className="text-destructive"
@@ -867,6 +1050,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
               Cerrar
             </Button>
           </div>
+        </TooltipProvider>
         </DialogContent>
       </Dialog>
 
@@ -898,6 +1082,72 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           candidateId={selectedCandidateId}
         />
       )}
+
+      {/* Cancellation Justification Dialog */}
+      <Dialog open={isCanceledDialogOpen} onOpenChange={setIsCanceledDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <XCircle className="w-5 h-5" />
+              Cancelar Vacante
+            </DialogTitle>
+            <DialogDescription>
+              Por favor, ingrese el motivo de la cancelación. Esta acción desactivará las opciones de los candidatos vinculados.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              placeholder="Escriba aquí la justificación de la cancelación..."
+              className="min-h-[120px] resize-none"
+              value={cancellationReason}
+              onChange={(e) => setCancellationReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsCanceledDialogOpen(false)}
+              disabled={isSubmittingCancellation}
+            >
+              Cerrar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelConfirm}
+              disabled={isSubmittingCancellation || !cancellationReason.trim()}
+            >
+              {isSubmittingCancellation ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Cancelando...
+                </>
+              ) : (
+                'Confirmar Cancelación'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rejection Reason Dialog */}
+      <CandidateReasonDialog
+        open={showRejectDialog}
+        onOpenChange={setShowRejectDialog}
+        type="rejection"
+        onConfirm={handleReject}
+        isPending={updateCandidate.isPending}
+        candidateName={actingCandidate?.name || ''}
+      />
+
+      {/* Withdrawal Reason Dialog */}
+      <CandidateReasonDialog
+        open={showWithdrawDialog}
+        onOpenChange={setShowWithdrawDialog}
+        type="withdrawal"
+        onConfirm={handleWithdraw}
+        isPending={updateCandidate.isPending}
+        candidateName={actingCandidate?.name || ''}
+      />
     </>
   );
 }

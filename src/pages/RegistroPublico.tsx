@@ -345,8 +345,6 @@ export default function RegistroPublico() {
           p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
           p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
           p_identification_type_id: formData.identificationTypeId || null,
-          p_education_level_id: formData.educationLevelId || null,
-          p_profession_id: formData.professionId || null,
         });
         result = data;
       }

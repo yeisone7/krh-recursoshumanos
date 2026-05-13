@@ -93,48 +93,52 @@ export function IncapacityAlertsPanel({
   }
   
   return (
-    <Card>
-      <CardHeader className={compact ? 'pb-2' : ''}>
+    <Card className="rounded-[2rem] border-border/50 shadow-lg overflow-hidden">
+      <CardHeader className={compact ? 'pb-2 bg-muted/20' : 'bg-muted/20 border-b border-border/50 pb-4'}>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
-              <Stethoscope className="h-4 w-4" />
+              <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Stethoscope className="h-4 w-4" />
+              </div>
               Alertas de Incapacidades
             </CardTitle>
             {!compact && (
-              <CardDescription>
+              <CardDescription className="mt-1 font-medium">
                 {totalAlerts} alerta{totalAlerts !== 1 ? 's' : ''} 
                 {criticalCount > 0 && ` (${criticalCount} crítica${criticalCount !== 1 ? 's' : ''})`}
               </CardDescription>
             )}
           </div>
           {criticalCount > 0 && (
-            <Badge variant="destructive">{criticalCount}</Badge>
+            <Badge variant="destructive" className="rounded-xl px-2 py-1 font-bold">{criticalCount}</Badge>
           )}
         </div>
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className={compact ? 'h-48' : 'h-64'}>
-          <div className="px-4 pb-4 space-y-2">
+          <div className="p-4 space-y-3">
             {displayAlerts.map((alert) => (
               <div
                 key={alert.id}
-                className={`p-3 rounded-lg border cursor-pointer transition-colors hover:bg-accent/50 ${getAlertColor(alert.level)}`}
+                className={`p-4 rounded-2xl border cursor-pointer transition-all hover:shadow-md ${getAlertColor(alert.level)}`}
                 onClick={() => onIncapacityClick?.(alert.incapacity.id)}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-start gap-2 flex-1">
-                    <span className="mt-0.5">{getAlertIcon(alert.type)}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{alert.title}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="w-8 h-8 rounded-xl bg-background/50 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                      {getAlertIcon(alert.type)}
+                    </div>
+                    <div className="flex-1 min-w-0 pt-1">
+                      <p className="font-bold text-sm tracking-tight">{alert.title}</p>
+                      <p className="text-xs opacity-80 mt-1 line-clamp-2 leading-relaxed">
                         {alert.description}
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex flex-col items-end gap-2 shrink-0">
                     {getLevelBadge(alert.level)}
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 opacity-50" />
                   </div>
                 </div>
               </div>
@@ -143,8 +147,8 @@ export function IncapacityAlertsPanel({
         </ScrollArea>
         
         {totalAlerts > maxItems && (
-          <div className="px-4 pb-4">
-            <Button variant="ghost" size="sm" className="w-full" onClick={() => onIncapacityClick?.('')}>
+          <div className="p-4 border-t border-border/50 bg-muted/10">
+            <Button variant="outline" size="sm" className="w-full rounded-xl h-10 font-bold uppercase tracking-widest text-[10px]" onClick={() => onIncapacityClick?.('')}>
               Ver todas ({totalAlerts - maxItems} más)
             </Button>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { cn } from '@/lib/utils';
 import {
   Table,
   TableBody,
@@ -301,13 +302,15 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   return (
     <>
       {/* Search bar */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="relative group px-2 mb-8">
+        <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+          <Search className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+        </div>
         <Input
-          placeholder="Buscar por nombre, email o rol..."
+          placeholder="BUSCAR OPERADOR POR NOMBRE, EMAIL O ROL ESTRATÉGICO..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
+          className="h-12 pl-12 rounded-2xl bg-white/50 border-slate-200 focus:bg-white focus:border-primary focus:ring-primary/10 transition-all font-bold text-[10px] uppercase tracking-widest shadow-sm"
         />
       </div>
 
@@ -375,75 +378,92 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         }))}
       />
 
-      <div className="hidden overflow-hidden rounded-lg border border-border md:block">
+      <div className="hidden md:block rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
         <div className="overflow-auto max-h-[600px]">
         <Table className="min-w-[860px]">
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead>Usuario</TableHead>
-              <TableHead className="w-[100px]">Estado</TableHead>
-              <TableHead>Roles</TableHead>
-              <TableHead>Empresas</TableHead>
-              <TableHead>Centros</TableHead>
-              <TableHead className="w-[80px]"></TableHead>
+          <TableHeader className="bg-slate-50/50">
+            <TableRow className="hover:bg-transparent border-slate-100">
+              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Identidad Digital</TableHead>
+              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-[150px]">Estado Acceso</TableHead>
+              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Asignación de Roles</TableHead>
+              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Estructura Corporativa</TableHead>
+              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Nodos de Operación</TableHead>
+              <TableHead className="w-[80px] px-8"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredUsers.map(user => (
-              <TableRow key={user.id} className={!user.is_active ? 'opacity-60' : ''}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className={`h-9 w-9 ${!user.is_active ? 'opacity-50' : ''}`}>
+              <TableRow key={user.id} className={cn(
+                "group hover:bg-primary/[0.02] transition-colors border-slate-50",
+                !user.is_active && "opacity-60 grayscale-[0.5]"
+              )}>
+                <TableCell className="px-8 py-6">
+                  <div className="flex items-center gap-4">
+                    <Avatar className={cn(
+                      "h-12 w-12 rounded-2xl border border-slate-100 shadow-sm transition-transform group-hover:scale-110",
+                      !user.is_active && "opacity-50"
+                    )}>
                       <AvatarImage src={user.avatar_url} alt={getUserDisplayName(user)} />
-                      <AvatarFallback className={user.is_active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}>
+                      <AvatarFallback className={cn(
+                        "font-black text-xs",
+                        user.is_active ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400'
+                      )}>
                         {getUserInitials(user)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="font-medium text-sm truncate">
+                      <div className="font-black text-slate-900 uppercase tracking-tight leading-none mb-1 flex items-center gap-2">
                         {getUserDisplayName(user)}
                         {user.id === currentUser?.id && (
-                          <span className="ml-1.5 text-xs text-muted-foreground">(Tú)</span>
+                          <Badge className="bg-primary/10 text-primary border-none font-black text-[8px] px-1.5 h-4 uppercase tracking-widest">TÚ</Badge>
                         )}
-                      </p>
+                      </div>
                       {user.email && (
-                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        <p className="text-[10px] font-bold text-slate-400 lowercase tracking-tight truncate">{user.email}</p>
                       )}
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
+                <TableCell className="px-8 py-6">
+                  <div className="flex items-center gap-3">
                     <Switch
                       checked={user.is_active}
                       onCheckedChange={() => handleToggleStatus(user)}
                       disabled={user.id === currentUser?.id || toggleStatus.isPending}
-                      className="data-[state=checked]:bg-success"
+                      className="data-[state=checked]:bg-emerald-500 scale-90"
                     />
                     <Badge 
-                      variant={user.is_active ? 'outline' : 'secondary'}
-                      className={user.is_active ? 'bg-success-light text-success border-success/20' : 'bg-muted text-muted-foreground'}
+                      variant="outline"
+                      className={cn(
+                        "font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest",
+                        user.is_active 
+                          ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
+                          : 'bg-slate-50 border-slate-100 text-slate-400'
+                      )}
                     >
-                      {user.is_active ? 'Activo' : 'Inactivo'}
+                      {user.is_active ? 'ACTIVO' : 'INACTIVO'}
                     </Badge>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
+                <TableCell className="px-8 py-6">
+                  <div className="flex flex-wrap gap-1.5">
                     {user.custom_roles.length === 0 && user.roles.length === 0 ? (
-                      <span className="text-sm text-muted-foreground italic">Sin roles</span>
+                      <span className="text-[10px] font-bold text-slate-300 uppercase italic">Sin roles</span>
                     ) : (
                       <>
                       {user.custom_roles.map(role => (
-                        <Badge key={role} variant="secondary" className="text-xs">
+                        <Badge key={role} variant="secondary" className="bg-slate-100 text-slate-600 border-none font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">
                           {role}
                         </Badge>
                       ))}
                       {user.roles.map(role => (
                         <Badge 
                           key={role} 
-                          variant={ROLE_LABELS[role]?.variant || 'outline'}
-                          className="text-xs"
+                          variant="outline"
+                          className={cn(
+                            "font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest border-primary/20",
+                            ROLE_LABELS[role]?.variant === 'default' ? 'bg-primary/5 text-primary' : 'bg-slate-50 text-slate-500'
+                          )}
                         >
                           {ROLE_LABELS[role]?.label || role}
                         </Badge>
@@ -452,36 +472,37 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                     )}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
+                <TableCell className="px-8 py-6">
+                  <div className="flex flex-wrap gap-1.5">
                     {user.companies.map(company => (
-                      <Badge key={company.id} variant="outline" className="text-xs">
-                        <Building2 className="w-3 h-3 mr-1" />
+                      <Badge key={company.id} variant="outline" className="bg-white border-slate-100 text-slate-500 font-bold text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest flex items-center gap-1">
+                        <Building2 className="w-3 h-3" />
                         {company.name}
                       </Badge>
                     ))}
+                    {user.companies.length === 0 && <span className="text-[10px] font-bold text-slate-300 uppercase italic">Sin asignar</span>}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
+                <TableCell className="px-8 py-6">
+                  <div className="flex flex-wrap gap-1.5">
                     {user.centers.length === 0 ? (
-                      <span className="text-sm text-muted-foreground italic">Todos</span>
+                      <Badge variant="outline" className="bg-emerald-50 border-emerald-100 text-emerald-600 font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">Global</Badge>
                     ) : (
                       user.centers.slice(0, 2).map(center => (
-                        <Badge key={center.id} variant="outline" className="text-xs">
-                          <MapPin className="w-3 h-3 mr-1" />
+                        <Badge key={center.id} variant="outline" className="bg-white border-slate-100 text-slate-500 font-bold text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
                           {center.name}
                         </Badge>
                       ))
                     )}
                     {user.centers.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-400 font-black text-[9px] px-2 py-0.5 rounded-lg">
                         +{user.centers.length - 2}
                       </Badge>
                     )}
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="px-8 py-6 text-right">
                   {renderActionsMenu(user)}
                 </TableCell>
               </TableRow>

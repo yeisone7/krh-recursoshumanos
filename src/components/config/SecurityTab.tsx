@@ -130,245 +130,252 @@ export function SecurityTab({
   return (
     <div className="space-y-6">
       {/* Global Sign Out */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-              <Monitor className="h-5 w-5 text-destructive" />
-            </div>
-            <div>
-              <CardTitle>Cerrar sesión en todos los dispositivos</CardTitle>
-              <CardDescription>
-                Invalida todas las sesiones activas de tu cuenta en cualquier navegador o dispositivo
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-lg border border-destructive/20 bg-destructive/5">
-            <div className="flex-1">
-              <p className="text-sm font-medium">¿Sospecha de acceso no autorizado?</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Esta acción cerrará la sesión en todos los dispositivos, incluyendo este. Deberás iniciar sesión de nuevo.
-              </p>
+      {/* Global Sign Out */}
+      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+        <CardHeader className="bg-red-50/50 border-b border-red-100 p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-white border border-red-200 shadow-sm flex items-center justify-center">
+                <Monitor className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black uppercase tracking-tight text-red-900">Seguridad de Sesiones</CardTitle>
+                <CardDescription className="text-xs font-bold uppercase tracking-widest text-red-400">Control de acceso multi-dispositivo</CardDescription>
+              </div>
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-            <Button variant="destructive" disabled={signingOutAll} className="w-full sm:w-auto">
-                  {signingOutAll ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <LogOut className="w-4 h-4 mr-2" />
-                  )}
-                  Cerrar todas las sesiones
+                <Button 
+                  variant="destructive" 
+                  disabled={signingOutAll}
+                  className="h-11 px-8 rounded-xl bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-900/20 font-black uppercase tracking-widest text-[10px]"
+                >
+                  {signingOutAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LogOut className="w-4 h-4 mr-2" />}
+                  CERRAR TODAS LAS SESIONES
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden sm:max-w-lg">
-                <AlertDialogHeader className="min-h-0 shrink overflow-y-auto pr-1">
-                  <AlertDialogTitle>¿Cerrar sesión en todos los dispositivos?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Se cerrarán todas las sesiones activas de tu cuenta. Tendrás que iniciar sesión nuevamente en cada dispositivo.
+              <AlertDialogContent className="rounded-[2rem] border-slate-200 shadow-2xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-black uppercase tracking-tight">¿Cerrar todas las sesiones?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-xs font-bold uppercase tracking-widest text-slate-400 leading-relaxed">
+                    Se invalidarán todos los accesos activos. Tendrás que autenticarte de nuevo en cada navegador o dispositivo vinculado.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
-                  <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleSignOutAll} className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 sm:w-auto">
-                    Sí, cerrar todas
-                  </AlertDialogAction>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="rounded-xl font-black uppercase tracking-widest text-[10px]">CANCELAR</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleSignOutAll} className="rounded-xl bg-red-600 font-black uppercase tracking-widest text-[10px]">CONFIRMAR CIERRE GLOBAL</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+          </div>
+        </CardHeader>
+        <CardContent className="p-8">
+          <div className="p-6 rounded-[2rem] bg-red-50/30 border border-red-100 flex items-start gap-6">
+            <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm shrink-0">
+              <Shield className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-red-900 mb-1">Protección de Cuenta</p>
+              <p className="text-[10px] font-bold text-red-500/70 uppercase tracking-tight leading-relaxed">
+                Si sospechas de actividad inusual, utiliza el botón de cierre global para desconectar inmediatamente todos los puntos de acceso a tu perfil.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Inactivity Timeout */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center">
-              <Timer className="h-5 w-5 text-warning" />
+      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                <Timer className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black uppercase tracking-tight">Timeout Automático</CardTitle>
+                <CardDescription className="text-xs font-bold uppercase tracking-widest text-slate-400">Finalización de sesión por inactividad</CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle>Timeout por inactividad</CardTitle>
-              <CardDescription>
-                Cierra la sesión automáticamente después de un periodo sin actividad del usuario
-              </CardDescription>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estado</span>
+                <Switch checked={inactivityEnabled} onCheckedChange={onInactivityEnabledChange} className="data-[state=checked]:bg-primary" />
+              </div>
+              <Button 
+                onClick={handleSaveTimeout} 
+                disabled={savingTimeout || !inactivityEnabled}
+                className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+              >
+                {savingTimeout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                GUARDAR AJUSTES
+              </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border">
-            <div className="min-w-0">
-              <Label className="text-sm font-medium">Activar cierre automático por inactividad</Label>
-              <p className="text-xs text-muted-foreground mt-1">
-                El sistema detecta movimientos del ratón, teclado y scroll
-              </p>
-            </div>
-            <Switch
-              checked={inactivityEnabled}
-              onCheckedChange={onInactivityEnabledChange}
-            />
-          </div>
-
+        <CardContent className="p-8">
           {inactivityEnabled && (
-            <div className="p-4 rounded-lg border space-y-3">
-              <Label>Tiempo de inactividad (minutos)</Label>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                <Input
-                  type="number"
-                  min={1}
-                  max={480}
-                  value={inactivityMinutes}
-                  onChange={(e) => onInactivityMinutesChange(Math.max(1, parseInt(e.target.value) || 15))}
-                  className="w-32"
-                />
-                <span className="text-sm text-muted-foreground">
-                  = {inactivityMinutes >= 60
-                    ? `${Math.floor(inactivityMinutes / 60)}h ${inactivityMinutes % 60}min`
-                    : `${inactivityMinutes} minutos`}
-                </span>
+            <div className="p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center gap-8">
+                <div className="space-y-2 flex-1">
+                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Tiempo de Espera (Minutos)</Label>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={480}
+                      value={inactivityMinutes}
+                      onChange={(e) => onInactivityMinutesChange(Math.max(1, parseInt(e.target.value) || 15))}
+                      className="h-12 w-32 rounded-xl bg-white border-slate-200 shadow-sm font-black text-xs text-slate-900 text-center"
+                    />
+                    <div className="h-12 px-6 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-[10px] uppercase tracking-widest">
+                      {inactivityMinutes >= 60
+                        ? `${Math.floor(inactivityMinutes / 60)}H ${inactivityMinutes % 60}MIN`
+                        : `${inactivityMinutes} MINUTOS`}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 flex items-center gap-4 flex-1">
+                  <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                    <Timer className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <p className="text-[9px] font-bold text-amber-700 uppercase tracking-tight leading-relaxed">
+                    Se mostrará una advertencia visual 60 segundos antes del cierre automático.
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Se mostrará una advertencia 1 minuto antes de cerrar la sesión. Recomendado: 15-60 minutos.
-              </p>
             </div>
           )}
-
-          <Button onClick={handleSaveTimeout} disabled={savingTimeout} className="w-full sm:w-auto">
-            {savingTimeout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            Guardar Configuración
-          </Button>
         </CardContent>
       </Card>
 
       {/* Account Lockout */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-              <Lock className="h-5 w-5 text-destructive" />
+      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                <Lock className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black uppercase tracking-tight">Protección de Acceso</CardTitle>
+                <CardDescription className="text-xs font-bold uppercase tracking-widest text-slate-400">Bloqueo preventivo por intentos fallidos</CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle>Bloqueo de cuenta por intentos fallidos</CardTitle>
-              <CardDescription>
-                Bloquea temporalmente una cuenta después de múltiples intentos de inicio de sesión fallidos
-              </CardDescription>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Protección</span>
+                <Switch checked={lockoutEnabled} onCheckedChange={onLockoutEnabledChange} className="data-[state=checked]:bg-primary" />
+              </div>
+              <Button 
+                onClick={handleSaveLockout} 
+                disabled={savingLockout || !lockoutEnabled}
+                className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+              >
+                {savingLockout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                APLICAR REGLAS
+              </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border">
-            <div className="min-w-0">
-              <Label className="text-sm font-medium">Activar bloqueo de cuenta</Label>
-              <p className="text-xs text-muted-foreground mt-1">
-                Protege contra ataques de fuerza bruta bloqueando temporalmente tras intentos fallidos
-              </p>
-            </div>
-            <Switch
-              checked={lockoutEnabled}
-              onCheckedChange={onLockoutEnabledChange}
-            />
-          </div>
-
+        <CardContent className="p-8">
           {lockoutEnabled && (
-            <div className="p-4 rounded-lg border space-y-4">
-              <div className="space-y-2">
-                <Label>Máximo de intentos fallidos</Label>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <div className="grid gap-8 md:grid-cols-2">
+              <div className="p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 space-y-4 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Umbral de Intentos</Label>
+                <div className="flex items-center gap-4">
                   <Input
                     type="number"
                     min={3}
                     max={20}
                     value={lockoutMaxAttempts}
                     onChange={(e) => onLockoutMaxAttemptsChange(Math.max(3, Math.min(20, parseInt(e.target.value) || 5)))}
-                    className="w-32"
+                    className="h-12 w-32 rounded-xl bg-white border-slate-200 shadow-sm font-black text-xs text-slate-900 text-center"
                   />
-                  <span className="text-sm text-muted-foreground">intentos antes de bloquear</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">INTENTOS FALLIDOS</span>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label>Duración del bloqueo (minutos)</Label>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+
+              <div className="p-6 rounded-[2rem] bg-slate-900 text-white space-y-4 transition-all hover:shadow-2xl hover:shadow-primary/20">
+                <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Duración del Bloqueo</Label>
+                <div className="flex items-center gap-4">
                   <Input
                     type="number"
                     min={1}
                     max={120}
                     value={lockoutMinutes}
                     onChange={(e) => onLockoutMinutesChange(Math.max(1, Math.min(120, parseInt(e.target.value) || 15)))}
-                    className="w-32"
+                    className="h-12 w-32 rounded-xl bg-white/10 border-white/10 text-white font-black text-xs text-center"
                   />
-                  <span className="text-sm text-muted-foreground">
-                    = {lockoutMinutes >= 60
-                      ? `${Math.floor(lockoutMinutes / 60)}h ${lockoutMinutes % 60}min`
-                      : `${lockoutMinutes} minutos`}
-                  </span>
+                  <div className="h-12 px-6 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-black text-[10px] uppercase tracking-widest">
+                    {lockoutMinutes >= 60
+                      ? `${Math.floor(lockoutMinutes / 60)}H ${lockoutMinutes % 60}MIN`
+                      : `${lockoutMinutes} MINUTOS`}
+                  </div>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Después de {lockoutMaxAttempts} intentos fallidos, la cuenta se bloqueará por {lockoutMinutes} minutos. Recomendado: 5 intentos / 15 minutos.
-              </p>
             </div>
           )}
-
-          <Button onClick={handleSaveLockout} disabled={savingLockout} className="w-full sm:w-auto">
-            {savingLockout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            Guardar Configuración
-          </Button>
         </CardContent>
       </Card>
 
       {/* App Update Check */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <RefreshCw className="h-5 w-5 text-primary" />
+      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                <RefreshCw className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black uppercase tracking-tight">Ciclo de Actualización</CardTitle>
+                <CardDescription className="text-xs font-bold uppercase tracking-widest text-slate-400">Verificación de nuevas versiones del software</CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle>Chequeo automático de actualizaciones</CardTitle>
-              <CardDescription>
-                Revisa si hay una nueva versión publicada y avisa a los usuarios que tengan la app abierta
-              </CardDescription>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Auto-check</span>
+                <Switch checked={updateCheckEnabled} onCheckedChange={onUpdateCheckEnabledChange} className="data-[state=checked]:bg-primary" />
+              </div>
+              <Button 
+                onClick={handleSaveUpdateCheck} 
+                disabled={savingUpdateCheck || !updateCheckEnabled}
+                className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+              >
+                {savingUpdateCheck ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                CONFIRMAR CICLO
+              </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start justify-between gap-4 p-4 rounded-lg border">
-            <div className="min-w-0">
-              <Label className="text-sm font-medium">Activar chequeo automático</Label>
-              <p className="text-xs text-muted-foreground mt-1">
-                Al desactivarlo no se mostrará el aviso automático de actualización pendiente
-              </p>
-            </div>
-            <Switch checked={updateCheckEnabled} onCheckedChange={onUpdateCheckEnabledChange} />
-          </div>
-
+        <CardContent className="p-8">
           {updateCheckEnabled && (
-            <div className="p-4 rounded-lg border space-y-3">
-              <Label>Revisar cada (minutos)</Label>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                <Input
-                  type="number"
-                  min={1}
-                  max={1440}
-                  value={updateCheckMinutes}
-                  onChange={(e) => onUpdateCheckMinutesChange(Math.max(1, Math.min(1440, parseInt(e.target.value) || 5)))}
-                  className="w-32"
-                />
-                <span className="text-sm text-muted-foreground">
-                  = {updateCheckMinutes >= 60
-                    ? `${Math.floor(updateCheckMinutes / 60)}h ${updateCheckMinutes % 60}min`
-                    : `${updateCheckMinutes} minutos`}
-                </span>
+            <div className="p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 flex flex-col md:flex-row items-center gap-8">
+              <div className="space-y-2 flex-1">
+                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Frecuencia de Chequeo (Minutos)</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={1440}
+                    value={updateCheckMinutes}
+                    onChange={(e) => onUpdateCheckMinutesChange(Math.max(1, Math.min(1440, parseInt(e.target.value) || 5)))}
+                    className="h-12 w-32 rounded-xl bg-white border-slate-200 shadow-sm font-black text-xs text-slate-900 text-center"
+                  />
+                  <div className="h-12 px-6 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-[10px] uppercase tracking-widest">
+                    CADA {updateCheckMinutes >= 60
+                      ? `${Math.floor(updateCheckMinutes / 60)}H ${updateCheckMinutes % 60}MIN`
+                      : `${updateCheckMinutes} MINUTOS`}
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter leading-relaxed">
+                  El sistema verificará silenciosamente la existencia de parches o nuevas funcionalidades en el servidor según este intervalo.
+                </p>
               </div>
             </div>
           )}
-
-          <Button onClick={handleSaveUpdateCheck} disabled={savingUpdateCheck} className="w-full sm:w-auto">
-            {savingUpdateCheck ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            Guardar Configuración
-          </Button>
         </CardContent>
       </Card>
 

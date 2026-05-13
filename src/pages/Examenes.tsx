@@ -177,47 +177,76 @@ export default function Examenes() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Exámenes Médicos</h1>
-          <p className="text-muted-foreground mt-1">Gestión de exámenes médicos ocupacionales, catálogo y profesiogramas</p>
+    <div className="space-y-8 pb-12">
+      {/* Header Section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 rounded-[2.5rem] border border-primary/10 shadow-sm">
+        <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <Stethoscope className="w-8 h-8 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black tracking-tighter sm:text-4xl text-foreground">Exámenes Médicos</h1>
+              <p className="text-sm font-medium text-muted-foreground mt-1 flex items-center gap-2">
+                Gestión de exámenes ocupacionales, catálogo y profesiogramas
+                <Badge variant="outline" className="rounded-lg px-2 bg-primary/5 border-primary/20 text-primary font-bold text-[10px] uppercase tracking-widest">SST</Badge>
+              </p>
+            </div>
+          </div>
+          {activeTab === 'aplicaciones' && (
+            <Button 
+              onClick={() => setIsFormOpen(true)} 
+              className="h-12 px-8 rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:shadow-xl transition-all"
+            >
+              <Plus className="w-4 h-4" /> Nueva Aplicación
+            </Button>
+          )}
         </div>
-        {activeTab === 'aplicaciones' && (
-          <Button onClick={() => setIsFormOpen(true)} className="w-full gap-2 sm:w-auto">
-            <Plus className="w-4 h-4" /> Nueva Aplicación
-          </Button>
-        )}
-      </motion.div>
+      </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="min-w-0">
-        <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto overscroll-x-contain p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:inline-flex sm:w-auto">
-          <TabsTrigger value="aplicaciones" className="shrink-0 gap-2 whitespace-nowrap text-xs sm:text-sm">
-            <Stethoscope className="w-4 h-4" /> Aplicaciones
-          </TabsTrigger>
-          <TabsTrigger value="catalogo" className="shrink-0 gap-2 whitespace-nowrap text-xs sm:text-sm">
-            <ClipboardList className="w-4 h-4" /> Catálogo
-          </TabsTrigger>
-          <TabsTrigger value="profesiograma" className="shrink-0 gap-2 whitespace-nowrap text-xs sm:text-sm">
-            <ShieldCheck className="w-4 h-4" /> Profesiograma
-          </TabsTrigger>
-        </TabsList>
+      {/* Main Content Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <div className="flex justify-center sm:justify-start">
+          <TabsList className="h-14 bg-background/50 backdrop-blur-md border border-border/50 p-1.5 rounded-[1.25rem] shadow-sm">
+            {[
+              { value: 'aplicaciones', label: 'Aplicaciones', icon: Stethoscope },
+              { value: 'catalogo', label: 'Catálogo', icon: ClipboardList },
+              { value: 'profesiograma', label: 'Profesiograma', icon: ShieldCheck },
+            ].map((tab) => (
+              <TabsTrigger 
+                key={tab.value}
+                value={tab.value} 
+                className="rounded-[1rem] px-6 py-2 font-black text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20"
+              >
+                <tab.icon className="w-3.5 h-3.5 mr-2" />
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
-        <TabsContent value="aplicaciones" className="mt-6 space-y-6">
-          {/* Stats + Alerts */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-elevated p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary-light flex items-center justify-center">
-                <Stethoscope className="w-5 h-5 text-primary" />
+        <TabsContent value="aplicaciones" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Stats + Alerts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-1">
+              <div className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background/40 backdrop-blur-xl border border-primary/5 shadow-sm hover:shadow-md transition-all duration-500 h-full flex flex-col justify-center">
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/10 transition-all duration-500" />
+                <div className="flex items-center justify-between mb-6">
+                  <div className="p-4 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-500">
+                    <Stethoscope className="w-8 h-8" />
+                  </div>
+                  <div className="text-4xl font-black tracking-tighter text-foreground">{stats.total}</div>
+                </div>
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total Aplicaciones</p>
+                  <p className="text-xs font-bold text-primary flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-lg w-fit">
+                    {stats.totalExams} exámenes realizados
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-display font-bold text-foreground">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Aplicaciones ({stats.totalExams} exámenes)</p>
-              </div>
-            </motion.div>
-            <div className="lg:col-span-2">
+            </div>
+            <div className="lg:col-span-3">
               <ExamAlertsCard
                 alerts={examAlerts}
                 onAlertClick={(alert) => {
@@ -228,160 +257,188 @@ export default function Examenes() {
             </div>
           </div>
 
-          {/* Filters + Table */}
-          <div className="card-elevated">
-            <div className="p-4 border-b border-border">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar por empleado o examen..."
-                    className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
-                  />
+          {/* Main Table Container */}
+          <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
+            <div className="px-8 py-8 border-b border-border/50 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h3 className="text-2xl font-black tracking-tighter flex items-center gap-3">
+                    Historial de Aplicaciones
+                  </h3>
+                  <p className="text-sm font-medium text-muted-foreground mt-1">Registros de exámenes médicos por empleado</p>
                 </div>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="h-10 w-full text-sm md:w-[160px]">
-                    <SelectValue placeholder="Tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los tipos</SelectItem>
-                    {(Object.keys(examTypeLabels) as ExamType[]).map((type) => (
-                      <SelectItem key={type} value={type}>{examTypeLabels[type]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative group">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <input
+                      type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Buscar empleado o examen..."
+                      className="w-full sm:w-64 h-11 pl-10 pr-4 rounded-xl bg-background/50 border-border/50 focus:border-primary focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10 text-sm font-medium transition-all"
+                    />
+                  </div>
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
+                    <SelectTrigger className="h-11 w-full sm:w-48 rounded-xl border-border/50 bg-background/50 font-bold text-[10px] uppercase tracking-widest">
+                      <SelectValue placeholder="Tipo" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border/50">
+                      <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest">Todos los tipos</SelectItem>
+                      {(Object.keys(examTypeLabels) as ExamType[]).map((type) => (
+                        <SelectItem key={type} value={type} className="text-[10px] font-black uppercase tracking-widest">{examTypeLabels[type]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            {filteredTransactions.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Stethoscope className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>{searchQuery || typeFilter !== 'all' ? 'No se encontraron aplicaciones con los filtros seleccionados' : 'No hay aplicaciones de exámenes registradas'}</p>
-                {!searchQuery && typeFilter === 'all' && (
-                  <Button onClick={() => setIsFormOpen(true)} className="mt-4"><Plus className="w-4 h-4 mr-2" /> Nueva Aplicación</Button>
-                )}
-              </div>
-            ) : (
-              <>
-              <div className="hidden overflow-x-auto sm:block">
-              <Table className="min-w-[820px]">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Empleado</TableHead>
-                    <TableHead>Exámenes</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.map((tx) => {
+            <div className="p-2">
+              {filteredTransactions.length === 0 ? (
+                <div className="text-center py-32">
+                  <Stethoscope className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
+                  <p className="text-lg font-black tracking-tighter text-muted-foreground">
+                    {searchQuery || typeFilter !== 'all' ? 'No hay resultados para los filtros aplicados' : 'No hay aplicaciones registradas'}
+                  </p>
+                  {!searchQuery && typeFilter === 'all' && (
+                    <Button variant="ghost" className="mt-4 font-bold text-xs uppercase tracking-widest text-primary" onClick={() => setIsFormOpen(true)}>Registrar la primera aplicación</Button>
+                  )}
+                </div>
+              ) : (
+                <>
+                <div className="hidden overflow-x-auto sm:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-border/50">
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest px-6 py-4">Empleado</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest px-6 py-4">Detalle Exámenes</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest px-6 py-4">Tipo Aplicación</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest px-6 py-4">Fecha</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-widest px-6 py-4 text-right">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactions.map((tx) => {
+                        const itemsSummary = tx.items.length <= 2
+                          ? tx.items.map(i => i.exam_name).join(', ')
+                          : `${tx.items[0].exam_name}, ${tx.items[1].exam_name} +${tx.items.length - 2} más`;
+                        const badgeStyle = examTypeBadgeStyles[tx.exam_type] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
+
+                        return (
+                          <TableRow key={tx.id} className="group border-border/40 hover:bg-primary/[0.02] transition-colors">
+                            <TableCell className="px-6 py-4">
+                              <div>
+                                <p className="font-black tracking-tight text-foreground">{tx.employees?.first_name} {tx.employees?.last_name}</p>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{tx.employees?.operation_centers?.name || 'Sin centro'}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-6 py-4">
+                              <div className="max-w-[250px]">
+                                <p className="font-bold text-sm text-foreground truncate">{itemsSummary}</p>
+                                <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest">{tx.items.length} examen(es)</p>
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-6 py-4">
+                              <Badge variant="outline" className={cn('rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-tighter border', badgeStyle.bg, badgeStyle.text, badgeStyle.border)}>
+                                {examTypeLabels[tx.exam_type as ExamType] || tx.exam_type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="px-6 py-4">
+                              <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                                <Calendar className="w-4 h-4 text-primary/40" />
+                                {format(new Date(tx.exam_date), 'dd MMM yyyy', { locale: es })}
+                              </div>
+                            </TableCell>
+                            <TableCell className="px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleView(tx.id)}
+                                  className="h-9 w-9 rounded-xl hover:bg-background hover:shadow-sm text-primary transition-all"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleExportPdf(tx)}
+                                  className="h-9 w-9 rounded-xl hover:bg-background hover:shadow-sm text-primary transition-all"
+                                >
+                                  <FileDown className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-9 w-9 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
+                                  onClick={() => setDeleteConfirmId(tx.id)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                <MobileCardList
+                  className="sm:hidden p-4"
+                  items={filteredTransactions.map((tx) => {
                     const itemsSummary = tx.items.length <= 2
                       ? tx.items.map(i => i.exam_name).join(', ')
                       : `${tx.items[0].exam_name}, ${tx.items[1].exam_name} +${tx.items.length - 2} más`;
                     const badgeStyle = examTypeBadgeStyles[tx.exam_type] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
 
-                    return (
-                      <TableRow key={tx.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{tx.employees?.first_name} {tx.employees?.last_name}</p>
-                            <p className="text-sm text-muted-foreground">{tx.employees?.operation_centers?.name || 'Sin centro'}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium text-sm">{itemsSummary}</p>
-                            <p className="text-xs text-muted-foreground">{tx.items.length} examen(es)</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={cn('text-xs border', badgeStyle.bg, badgeStyle.text, badgeStyle.border)}>
-                            {examTypeLabels[tx.exam_type as ExamType] || tx.exam_type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                            {format(new Date(tx.exam_date), 'dd/MM/yyyy')}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => handleView(tx.id)}>
-                              <Eye className="w-4 h-4 mr-1" /> Ver
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleExportPdf(tx)} title="Exportar orden">
-                              <FileDown className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost" size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => setDeleteConfirmId(tx.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
+                    return {
+                      id: tx.id,
+                      title: `${tx.employees?.first_name || ''} ${tx.employees?.last_name || ''}`.trim() || 'Empleado',
+                      subtitle: tx.employees?.operation_centers?.name || 'Sin centro',
+                      badge: (
+                        <Badge variant="outline" className={cn('rounded-lg px-2 text-[10px] font-black uppercase tracking-tighter border', badgeStyle.bg, badgeStyle.text, badgeStyle.border)}>
+                          {examTypeLabels[tx.exam_type as ExamType] || tx.exam_type}
+                        </Badge>
+                      ),
+                      fields: [
+                        { label: 'Exámenes', value: itemsSummary, className: 'col-span-2' },
+                        { label: 'Cantidad', value: `${tx.items.length} exámenes` },
+                        { label: 'Fecha', value: format(new Date(tx.exam_date), 'dd/MM/yyyy') },
+                      ],
+                      actions: (
+                        <div className="grid grid-cols-3 gap-2 w-full mt-2">
+                          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => handleView(tx.id)}>
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => handleExportPdf(tx)}>
+                            <FileDown className="w-4 h-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="rounded-xl text-destructive" onClick={() => setDeleteConfirmId(tx.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ),
+                    };
                   })}
-                </TableBody>
-              </Table>
-              </div>
-              <MobileCardList
-                className="sm:hidden"
-                items={filteredTransactions.map((tx) => {
-                  const itemsSummary = tx.items.length <= 2
-                    ? tx.items.map(i => i.exam_name).join(', ')
-                    : `${tx.items[0].exam_name}, ${tx.items[1].exam_name} +${tx.items.length - 2} más`;
-                  const badgeStyle = examTypeBadgeStyles[tx.exam_type] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
-
-                  return {
-                    id: tx.id,
-                    title: `${tx.employees?.first_name || ''} ${tx.employees?.last_name || ''}`.trim() || 'Empleado',
-                    subtitle: tx.employees?.operation_centers?.name || 'Sin centro',
-                    badge: (
-                      <Badge variant="outline" className={cn('text-xs border', badgeStyle.bg, badgeStyle.text, badgeStyle.border)}>
-                        {examTypeLabels[tx.exam_type as ExamType] || tx.exam_type}
-                      </Badge>
-                    ),
-                    fields: [
-                      { label: 'Exámenes', value: itemsSummary, className: 'col-span-2' },
-                      { label: 'Cantidad', value: `${tx.items.length} examen(es)` },
-                      { label: 'Fecha', value: format(new Date(tx.exam_date), 'dd/MM/yyyy') },
-                    ],
-                    actions: (
-                      <>
-                        <Button variant="outline" size="sm" onClick={() => handleView(tx.id)}>
-                          <Eye className="w-4 h-4 mr-2" /> Ver
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleExportPdf(tx)} title="Exportar orden">
-                          <FileDown className="w-4 h-4" />
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteConfirmId(tx.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </>
-                    ),
-                  };
-                })}
-              />
-              </>
-            )}
+                />
+                </>
+              )}
+            </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="catalogo" className="mt-6">
-          <ExamCatalogTab />
+        <TabsContent value="catalogo" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
+            <ExamCatalogTab />
+          </div>
         </TabsContent>
 
-        <TabsContent value="profesiograma" className="mt-6">
-          <ExamProfesiogramaTab
-            centers={operationCenters.map(c => ({ id: c.id, name: c.name }))}
-            positions={(positionsData as any[]).map((p: any) => ({ id: p.id, name: p.name }))}
-          />
+        <TabsContent value="profesiograma" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
+            <ExamProfesiogramaTab
+              centers={operationCenters.map(c => ({ id: c.id, name: c.name }))}
+              positions={(positionsData as any[]).map((p: any) => ({ id: p.id, name: p.name }))}
+            />
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -390,28 +447,44 @@ export default function Examenes() {
       <ExamTransactionDetailDialog open={isDetailOpen} onOpenChange={setIsDetailOpen} transaction={selectedTransaction} />
 
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
-        <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar aplicación de exámenes</AlertDialogTitle>
-            <AlertDialogDescription>¿Estás seguro? Se eliminarán todos los exámenes de esta aplicación. Esta acción no se puede deshacer.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (deleteConfirmId) {
-                  deleteMutation.mutate(deleteConfirmId, {
-                    onSuccess: () => toast.success('Aplicación eliminada'),
-                    onError: () => toast.error('Error al eliminar'),
-                  });
-                  setDeleteConfirmId(null);
-                }
-              }}
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
+        <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md rounded-[2rem] border-0 shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden p-0">
+          <div className="px-8 py-8 bg-gradient-to-br from-destructive/10 via-background to-destructive/5 border-b border-destructive/10">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-destructive flex items-center justify-center shadow-lg shadow-destructive/20">
+                <Trash2 className="w-6 h-6 text-destructive-foreground" />
+              </div>
+              <div>
+                <AlertDialogTitle className="text-2xl font-black tracking-tighter">Eliminar Registro</AlertDialogTitle>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Esta acción es irreversible</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-8">
+            <AlertDialogDescription className="text-sm font-medium text-muted-foreground leading-relaxed">
+              ¿Estás seguro de que deseas eliminar esta aplicación de exámenes? Se eliminarán permanentemente todos los resultados y datos asociados a este registro.
+            </AlertDialogDescription>
+            
+            <div className="flex items-center justify-end gap-3 mt-8">
+              <AlertDialogCancel className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-0 bg-muted hover:bg-muted/80 transition-all">
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] bg-destructive text-destructive-foreground shadow-lg shadow-destructive/20 hover:bg-destructive/90 transition-all"
+                onClick={() => {
+                  if (deleteConfirmId) {
+                    deleteMutation.mutate(deleteConfirmId, {
+                      onSuccess: () => toast.success('Aplicación eliminada satisfactoriamente'),
+                      onError: () => toast.error('Error al procesar la eliminación'),
+                    });
+                    setDeleteConfirmId(null);
+                  }
+                }}
+              >
+                Confirmar Eliminación
+              </AlertDialogAction>
+            </div>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </div>

@@ -52,44 +52,49 @@ export default function GenerarAcceso() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Generar Enlaces de Acceso</h1>
-        <p className="text-muted-foreground text-sm">Crea enlaces temporales para que el personal acceda a las capacitaciones</p>
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">Generar Enlaces de Acceso</h1>
+            <p className="text-muted-foreground font-medium mt-1">Crea enlaces temporales para que el personal acceda a las capacitaciones</p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Form */}
-        <div className="border rounded-xl bg-card p-6 space-y-5">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Link2 className="h-5 w-5 text-primary" />
+        <div className="border border-border/50 rounded-[2rem] bg-card p-8 shadow-sm space-y-6 h-fit bg-gradient-to-b from-background to-muted/10">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner">
+              <Link2 className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h2 className="font-semibold">Nuevo Enlace de Acceso</h2>
-              <p className="text-xs text-muted-foreground">Configura los parámetros del enlace</p>
+              <h2 className="font-bold text-xl">Nuevo Enlace de Acceso</h2>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">Configura los parámetros del enlace</p>
             </div>
           </div>
 
-          <Separator />
+          <Separator className="bg-border/50" />
 
           {/* Capacitación */}
           <div className="space-y-1.5">
-            <Label className="text-sm font-medium">Capacitación *</Label>
+            <Label className="text-sm font-semibold">Capacitación *</Label>
             <Select value={courseId} onValueChange={setCourseId}>
-              <SelectTrigger><SelectValue placeholder="Selecciona una capacitación" /></SelectTrigger>
-              <SelectContent>{publishedCourses.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+              <SelectTrigger className="h-12 rounded-xl bg-background"><SelectValue placeholder="Selecciona una capacitación" /></SelectTrigger>
+              <SelectContent className="rounded-xl">{publishedCourses.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
             </Select>
            </div>
 
           {/* Centro de Operación */}
           <div className="space-y-1.5">
-            <Label className="text-sm font-medium flex items-center gap-1.5">
-              <Building2 className="h-3.5 w-3.5 text-muted-foreground" /> Centro de Operación
+            <Label className="text-sm font-semibold flex items-center gap-1.5">
+              <Building2 className="h-4 w-4 text-muted-foreground" /> Centro de Operación
             </Label>
             <Select value={operationCenterId} onValueChange={setOperationCenterId}>
-              <SelectTrigger><SelectValue placeholder="Selecciona un centro (opcional)" /></SelectTrigger>
-              <SelectContent>
+              <SelectTrigger className="h-12 rounded-xl bg-background"><SelectValue placeholder="Selecciona un centro (opcional)" /></SelectTrigger>
+              <SelectContent className="rounded-xl">
                 <SelectItem value="sin_centro">Sin centro específico</SelectItem>
                 {centers.map(c => (
                   <SelectItem key={c.id} value={c.id}>
@@ -103,50 +108,50 @@ export default function GenerarAcceso() {
 
           {/* Tipo de Acceso */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium flex items-center gap-1.5">
-              <Shield className="h-3.5 w-3.5 text-muted-foreground" /> Tipo de Acceso
+            <Label className="text-sm font-semibold flex items-center gap-1.5">
+              <Shield className="h-4 w-4 text-muted-foreground" /> Tipo de Acceso
             </Label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setAccessType('solo_link')}
-                className={`rounded-lg border-2 p-4 text-left transition-all ${accessType === 'solo_link' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/30'}`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all ${accessType === 'solo_link' ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
               >
-                <span className="font-medium text-sm">Solo Link</span>
-                <p className="text-xs text-muted-foreground mt-0.5">Acceso directo sin identificación</p>
+                <span className="font-bold text-sm">Solo Link</span>
+                <p className="text-xs text-muted-foreground mt-1">Acceso directo sin identificación</p>
               </button>
               <button
                 type="button"
                 onClick={() => setAccessType('link_cedula')}
-                className={`rounded-lg border-2 p-4 text-left transition-all ${accessType === 'link_cedula' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/30'}`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all ${accessType === 'link_cedula' ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
               >
-                <span className="font-medium text-sm">Link + Cédula</span>
-                <p className="text-xs text-muted-foreground mt-0.5">Requiere nombre y cédula</p>
+                <span className="font-bold text-sm">Link + Cédula</span>
+                <p className="text-xs text-muted-foreground mt-1">Requiere nombre y cédula</p>
               </button>
             </div>
           </div>
 
           {/* Tipo de Uso */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-muted-foreground" /> Tipo de Uso
+            <Label className="text-sm font-semibold flex items-center gap-1.5">
+              <Users className="h-4 w-4 text-muted-foreground" /> Tipo de Uso
             </Label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setUsageType('unico')}
-                className={`rounded-lg border-2 p-4 text-left transition-all ${usageType === 'unico' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/30'}`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all ${usageType === 'unico' ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
               >
-                <span className="font-medium text-sm">Uso Único</span>
-                <p className="text-xs text-muted-foreground mt-0.5">Solo una persona puede usar el enlace</p>
+                <span className="font-bold text-sm">Uso Único</span>
+                <p className="text-xs text-muted-foreground mt-1">Solo una persona puede usar el enlace</p>
               </button>
               <button
                 type="button"
                 onClick={() => setUsageType('multiple')}
-                className={`rounded-lg border-2 p-4 text-left transition-all ${usageType === 'multiple' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/30'}`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all ${usageType === 'multiple' ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
               >
-                <span className="font-medium text-sm">Múltiple</span>
-                <p className="text-xs text-muted-foreground mt-0.5">Varias personas pueden usar el enlace</p>
+                <span className="font-bold text-sm">Múltiple</span>
+                <p className="text-xs text-muted-foreground mt-1">Varias personas pueden usar el enlace</p>
               </button>
             </div>
           </div>
@@ -154,25 +159,26 @@ export default function GenerarAcceso() {
           {/* Máximo de usos */}
           {usageType === 'multiple' && (
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Máximo de Usos (opcional)</Label>
+              <Label className="text-sm font-semibold">Máximo de Usos (opcional)</Label>
               <Input
                 type="number"
                 placeholder="Sin límite"
+                className="h-12 rounded-xl bg-background"
                 value={maxUses || ''}
                 onChange={e => setMaxUses(e.target.value ? Number(e.target.value) : undefined)}
               />
-              <p className="text-xs text-muted-foreground">Deja vacío para usos ilimitados</p>
+              <p className="text-xs text-muted-foreground font-medium">Deja vacío para usos ilimitados</p>
             </div>
           )}
 
           {/* Expiración */}
           <div className="space-y-1.5">
-            <Label className="text-sm font-medium flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-muted-foreground" /> Expiración
+            <Label className="text-sm font-semibold flex items-center gap-1.5">
+              <Clock className="h-4 w-4 text-muted-foreground" /> Expiración
             </Label>
             <Select value={String(expiresInDays)} onValueChange={v => setExpiresInDays(Number(v))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
+              <SelectTrigger className="h-12 rounded-xl bg-background"><SelectValue /></SelectTrigger>
+              <SelectContent className="rounded-xl">
                 {[1, 3, 7, 14, 30, 90].map(d => <SelectItem key={d} value={String(d)}>{d} días</SelectItem>)}
               </SelectContent>
             </Select>
@@ -180,13 +186,13 @@ export default function GenerarAcceso() {
 
           {/* Evaluación */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium flex items-center gap-1.5">
-              <ClipboardCheck className="h-3.5 w-3.5 text-muted-foreground" /> Evaluación Requerida
+            <Label className="text-sm font-semibold flex items-center gap-1.5">
+              <ClipboardCheck className="h-4 w-4 text-muted-foreground" /> Evaluación Requerida
             </Label>
-            <div className={`rounded-lg border-2 p-4 flex items-center justify-between transition-all ${requiresEvaluation ? 'border-primary bg-primary/5' : 'border-border'}`}>
+            <div className={`rounded-2xl border-2 p-4 flex items-center justify-between transition-all bg-background ${requiresEvaluation ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/50'}`}>
               <div>
-                <span className="font-medium text-sm">{requiresEvaluation ? 'Con Evaluación' : 'Sin Evaluación'}</span>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <span className="font-bold text-sm">{requiresEvaluation ? 'Con Evaluación' : 'Sin Evaluación'}</span>
+                <p className="text-xs text-muted-foreground mt-1">
                   {requiresEvaluation ? 'El operador debe aprobar la evaluación' : 'El operador puede firmar directamente después de leer'}
                 </p>
               </div>
@@ -194,23 +200,23 @@ export default function GenerarAcceso() {
             </div>
           </div>
 
-          <Button className="w-full" size="lg" onClick={handleCreate} disabled={createToken.isPending}>
-            <Link2 className="h-4 w-4 mr-2" /> Generar Enlace de Acceso
+          <Button className="w-full h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all mt-4" onClick={handleCreate} disabled={createToken.isPending}>
+            <Link2 className="h-5 w-5 mr-2" /> Generar Enlace de Acceso
           </Button>
         </div>
 
         {/* List */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-lg">Enlaces Creados</h2>
-            <Badge variant="secondary">{tokens.length} enlaces</Badge>
+          <div className="flex items-center justify-between px-2">
+            <h2 className="font-bold text-xl">Enlaces Creados</h2>
+            <Badge variant="outline" className="bg-muted/50 rounded-full px-3">{tokens.length} enlaces</Badge>
           </div>
 
-          <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto pr-1">
+          <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-2 pb-4">
             {tokens.length === 0 && (
-              <div className="border rounded-xl p-8 text-center text-muted-foreground bg-card">
-                <Link2 className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                <p>No hay enlaces creados</p>
+              <div className="border border-border/50 rounded-[2rem] p-12 text-center text-muted-foreground bg-card shadow-sm">
+                <Link2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                <p className="font-medium">No hay enlaces creados</p>
               </div>
             )}
             {(tokens as TrainingAccessToken[]).map(token => {
@@ -219,20 +225,20 @@ export default function GenerarAcceso() {
               const maxReached = token.max_uses && token.uses_count >= token.max_uses;
 
               return (
-                <div key={token.id} className={`border rounded-xl bg-card p-4 space-y-3 transition-opacity ${!token.is_active ? 'opacity-50 pointer-events-none select-none' : ''}`}>
+                <div key={token.id} className={`border border-border/50 rounded-2xl bg-card p-5 space-y-4 shadow-sm hover:shadow-md transition-all ${!token.is_active ? 'opacity-50 pointer-events-none select-none grayscale-[50%]' : ''}`}>
                   {/* Header row */}
                   <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <h3 className="font-semibold">{token.course?.name || 'Capacitación'}</h3>
+                    <div className="space-y-1.5">
+                      <h3 className="font-bold text-base leading-snug">{token.course?.name || 'Capacitación'}</h3>
                       {token.center && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
+                        <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5" />
                           {token.center.name}
                         </p>
                       )}
                       {token.course?.category && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Building2 className="h-3 w-3" />
+                        <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                          <Building2 className="h-3.5 w-3.5" />
                           {token.course.category}
                         </p>
                       )}
@@ -288,36 +294,35 @@ export default function GenerarAcceso() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2 pt-2 border-t border-border/40">
                     <Button
                       variant="outline"
-                      size="sm"
-                      className="flex-1"
+                      className="flex-1 rounded-xl h-10 font-bold text-xs hover:bg-muted/50"
                       onClick={() => handleCopy(token.token)}
                     >
-                      <Copy className="h-3.5 w-3.5 mr-1.5" /> Copiar Enlace
+                      <Copy className="h-4 w-4 mr-2" /> Copiar Enlace
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-9 w-9"
+                      className="h-10 w-10 rounded-xl hover:bg-muted/50"
                       onClick={() => setQrDialog({ url: getAccessUrl(token.token), title: token.course?.name || 'QR' })}
                     >
-                      <QrCode className="h-3.5 w-3.5" />
+                      <QrCode className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-9 w-9"
+                      className="h-10 w-10 rounded-xl hover:bg-muted/50"
                       onClick={() => window.open(getAccessUrl(token.token), '_blank')}
                     >
-                      <ExternalLink className="h-3.5 w-3.5" />
+                      <ExternalLink className="h-4 w-4" />
                     </Button>
                     {token.is_active && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 text-destructive hover:text-destructive"
+                        className="h-10 w-10 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
                         title="Desactivar enlace"
                         onClick={() => {
                           toggleToken.mutateAsync({ id: token.id, isActive: false })
@@ -325,7 +330,7 @@ export default function GenerarAcceso() {
                             .catch(() => toast.error('Error al desactivar enlace'));
                         }}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
                   </div>

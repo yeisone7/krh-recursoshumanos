@@ -350,54 +350,54 @@ export default function Evaluaciones() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-12">
       {/* Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Evaluación de Desempeño</h1>
-          <p className="text-muted-foreground mt-1">
-            Gestión de evaluaciones y desarrollo profesional
-          </p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-3xl font-black tracking-tight text-foreground">Evaluación de Desempeño</h1>
+            <p className="text-muted-foreground font-medium mt-1">
+              Gestión de evaluaciones y desarrollo profesional
+            </p>
+          </div>
         </div>
       </div>
-
-
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="sticky top-0 z-30 -mx-4 border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList className="grid h-auto w-full grid-cols-3 sm:w-auto">
-            <TabsTrigger value="cycles" className="gap-2 px-2 sm:px-3">
-              <Calendar className="h-4 w-4" />
-              Ciclos
-            </TabsTrigger>
-            <TabsTrigger value="evaluations" className="gap-2 px-2 sm:px-3">
-              <ClipboardCheck className="h-4 w-4" />
-              <span className="hidden sm:inline">Evaluaciones</span>
-              <span className="sm:hidden">Eval.</span>
-            </TabsTrigger>
-            <TabsTrigger value="templates" className="gap-2 px-2 sm:px-3">
-              <FileText className="h-4 w-4" />
-              Plantillas
-            </TabsTrigger>
-          </TabsList>
+        <div className="sticky top-0 z-30 -mx-4 border-b border-border/50 bg-background/95 px-4 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-muted/20 border border-border/50 rounded-[2rem] p-3 shadow-sm">
+            <TabsList className="grid h-14 w-full grid-cols-3 sm:w-auto bg-background/50 rounded-xl p-1 border border-border/50">
+              <TabsTrigger value="cycles" className="gap-2 px-2 sm:px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <Calendar className="h-4 w-4" />
+                <span className="font-semibold">Ciclos</span>
+              </TabsTrigger>
+              <TabsTrigger value="evaluations" className="gap-2 px-2 sm:px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <ClipboardCheck className="h-4 w-4" />
+                <span className="hidden sm:inline font-semibold">Evaluaciones</span>
+                <span className="sm:hidden font-semibold">Eval.</span>
+              </TabsTrigger>
+              <TabsTrigger value="templates" className="gap-2 px-2 sm:px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <FileText className="h-4 w-4" />
+                <span className="font-semibold">Plantillas</span>
+              </TabsTrigger>
+            </TabsList>
 
-          <Button onClick={handleNewAction}>
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="sm:hidden">Nuevo</span>
-            <span className="hidden sm:inline">{newButtonLabel}</span>
-            
-          </Button>
+            <Button className="h-12 px-6 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto" onClick={handleNewAction}>
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="sm:hidden">Nuevo</span>
+              <span className="hidden sm:inline">{newButtonLabel}</span>
+            </Button>
           </div>
         </div>
 
         {/* Cycles Tab */}
-        <TabsContent value="cycles">
-          <Card>
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle>Ciclos de Evaluación</CardTitle>
+        <TabsContent value="cycles" className="focus-visible:outline-none focus-visible:ring-0">
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+            <CardHeader className="bg-muted/10 border-b border-border/50 p-6">
+              <CardTitle className="text-xl font-bold">Ciclos de Evaluación</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <CardContent className="p-0">
               {loadingCycles ? (
                 <p className="text-muted-foreground">Cargando...</p>
               ) : cycles.length === 0 ? (
@@ -405,16 +405,16 @@ export default function Evaluaciones() {
                   No hay ciclos de evaluación configurados
                 </p>
               ) : (
-                <div className="w-full overflow-x-auto rounded-md border sm:border-0">
+                <div className="w-full overflow-x-auto">
                 <Table className="min-w-[720px] table-fixed sm:table-auto">
-                  <TableHeader>
+                  <TableHeader className="bg-muted/30">
                     <TableRow>
-                      <TableHead className="w-[220px]">Nombre</TableHead>
-                      <TableHead className="hidden sm:table-cell">Plantilla</TableHead>
-                      <TableHead className="hidden md:table-cell">Periodo</TableHead>
-                      <TableHead className="hidden sm:table-cell">Progreso</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead className="w-12"></TableHead>
+                      <TableHead className="w-[220px] font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Nombre</TableHead>
+                      <TableHead className="hidden sm:table-cell font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Plantilla</TableHead>
+                      <TableHead className="hidden md:table-cell font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Periodo</TableHead>
+                      <TableHead className="hidden sm:table-cell font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Progreso</TableHead>
+                      <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Estado</TableHead>
+                      <TableHead className="w-12 h-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -422,14 +422,14 @@ export default function Evaluaciones() {
                       const stats = getCycleStats(cycle.id);
                       const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
                       return (
-                      <TableRow key={cycle.id}>
-                        <TableCell className="font-medium">
+                      <TableRow key={cycle.id} className="hover:bg-muted/10 transition-colors">
+                        <TableCell className="font-bold text-sm">
                           <span className="block max-w-[210px] truncate">{cycle.name}</span>
                         </TableCell>
-                        <TableCell className="hidden sm:table-cell">
+                        <TableCell className="hidden sm:table-cell text-sm font-medium text-muted-foreground">
                           <span className="block max-w-[180px] truncate">{cycle.template?.name || '-'}</span>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">
+                        <TableCell className="hidden md:table-cell text-sm font-medium">
                           {format(new Date(cycle.start_date), 'dd MMM', { locale: es })} -{' '}
                           {format(new Date(cycle.end_date), 'dd MMM yyyy', { locale: es })}
                         </TableCell>
@@ -447,7 +447,7 @@ export default function Evaluaciones() {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge className={statusColors[cycle.status]}>
+                          <Badge className={`${statusColors[cycle.status]} border-0 shadow-sm font-semibold`}>
                             {CYCLE_STATUS_LABELS[cycle.status]}
                           </Badge>
                         </TableCell>
@@ -499,17 +499,17 @@ export default function Evaluaciones() {
         </TabsContent>
 
         {/* Evaluations Tab */}
-        <TabsContent value="evaluations">
-          <Card>
-            <CardHeader className="flex flex-col gap-3 p-4 sm:p-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-              <CardTitle>Evaluaciones de Desempeño</CardTitle>
-              <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto lg:items-center">
+        <TabsContent value="evaluations" className="focus-visible:outline-none focus-visible:ring-0">
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden bg-muted/20">
+            <CardHeader className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 border-b border-border/50 bg-background/50">
+              <CardTitle className="text-xl font-bold">Evaluaciones de Desempeño</CardTitle>
+              <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto lg:items-center">
                 <Select value={evaluationCycleFilter} onValueChange={setEvaluationCycleFilter}>
-                  <SelectTrigger className="w-full sm:w-[220px]">
-                    <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                  <SelectTrigger className="w-full sm:w-[220px] h-12 rounded-xl bg-background shadow-inner">
+                    <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Filtrar por ciclo" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl">
                     <SelectItem value="all">Todos los ciclos</SelectItem>
                     {cycles.map(c => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -517,20 +517,20 @@ export default function Evaluaciones() {
                   </SelectContent>
                 </Select>
                 {/* View mode toggle */}
-                <div className="grid grid-cols-2 border rounded-md sm:flex sm:items-center">
+                <div className="flex items-center bg-background border border-border/50 rounded-xl p-1 shadow-inner h-12">
                   <Button
-                    variant="ghost"
+                    variant={evalViewMode === 'kanban' ? 'default' : 'ghost'}
                     size="icon"
-                    className={`h-9 w-full rounded-r-none sm:h-8 sm:w-8 ${evalViewMode === 'kanban' ? 'bg-muted' : ''}`}
+                    className={`h-full w-12 rounded-lg ${evalViewMode === 'kanban' ? 'shadow-md' : ''}`}
                     onClick={() => setEvalViewMode('kanban')}
                     title="Vista Kanban"
                   >
                     <Columns3 className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={evalViewMode === 'table' ? 'default' : 'ghost'}
                     size="icon"
-                    className={`h-9 w-full rounded-l-none sm:h-8 sm:w-8 ${evalViewMode === 'table' ? 'bg-muted' : ''}`}
+                    className={`h-full w-12 rounded-lg ${evalViewMode === 'table' ? 'shadow-md' : ''}`}
                     onClick={() => setEvalViewMode('table')}
                     title="Vista Lista"
                   >
@@ -539,7 +539,7 @@ export default function Evaluaciones() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+            <CardContent className="p-6">
               {evalViewMode === 'kanban' ? (
                 <EvaluationKanbanBoard
                   evaluations={filteredEvaluations}
@@ -598,10 +598,10 @@ export default function Evaluaciones() {
 
 
         {/* Templates Tab */}
-        <TabsContent value="templates">
+        <TabsContent value="templates" className="focus-visible:outline-none focus-visible:ring-0">
             <div>
-            <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
-              <h3 className="text-lg font-semibold">Plantillas de Evaluación</h3>
+            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between bg-muted/20 border border-border/50 rounded-[2rem] p-4 shadow-sm">
+              <h3 className="text-xl font-bold ml-2">Plantillas de Evaluación</h3>
               {(() => {
                 const allPositions = Array.from(
                   new Map(
@@ -610,18 +610,20 @@ export default function Evaluaciones() {
                 );
                 if (allPositions.length === 0) return null;
                 return (
-                  <div className="flex w-full items-center gap-2 sm:w-auto">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
-                    <select
-                      value={templatePositionFilter}
-                      onChange={(e) => setTemplatePositionFilter(e.target.value)}
-                      className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm sm:w-auto"
-                    >
-                      <option value="">Todos los cargos</option>
-                      {allPositions.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
+                  <div className="flex w-full items-center gap-3 sm:w-auto">
+                    <div className="relative w-full sm:w-auto">
+                      <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <select
+                        value={templatePositionFilter}
+                        onChange={(e) => setTemplatePositionFilter(e.target.value)}
+                        className="h-12 w-full sm:w-[220px] pl-12 pr-10 rounded-xl border border-border/50 bg-background shadow-inner text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="">Todos los cargos</option>
+                        {allPositions.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 );
               })()}
@@ -665,41 +667,41 @@ export default function Evaluaciones() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                     >
-                      <Card className="relative overflow-hidden border shadow-card hover:shadow-card-hover transition-shadow bg-card cursor-pointer" onClick={() => setPreviewTemplate(template)}>
+                      <Card className="relative overflow-hidden border border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-all bg-card cursor-pointer h-full flex flex-col" onClick={() => setPreviewTemplate(template)}>
                         {/* Decorative top bar */}
-                        <div className="h-1.5 w-full bg-gradient-to-r from-[#3b3a59] to-[#5a587a]" />
+                        <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
 
-                        <CardHeader className="pb-3 pt-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-start gap-3 flex-1 min-w-0">
-                              <div className={`p-2 rounded-lg shrink-0 ${iconColor}`}>
-                                <FileText className="h-5 w-5" />
+                        <CardHeader className="pb-4 pt-5 px-6">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-start gap-4 flex-1 min-w-0">
+                              <div className={`h-12 w-12 flex items-center justify-center rounded-xl shrink-0 shadow-inner ${iconColor}`}>
+                                <FileText className="h-6 w-6" />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <CardTitle className="text-base font-semibold leading-tight truncate">
+                                <CardTitle className="text-lg font-bold leading-tight truncate mb-1.5">
                                   {template.name}
                                 </CardTitle>
                                 {template.positions && template.positions.length > 0 ? (
-                                  <div className="flex items-center gap-1 mt-1 flex-wrap">
-                                    <Briefcase className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                    <Briefcase className="h-4 w-4 text-muted-foreground shrink-0" />
                                     {template.positions.map(p => (
-                                      <Badge key={p.id} variant="outline" className="text-xs font-medium">
+                                      <Badge key={p.id} variant="outline" className="text-xs font-medium bg-background">
                                         {p.name}
                                       </Badge>
                                     ))}
                                   </div>
                                 ) : (
-                                  <div className="flex items-center gap-1 mt-1">
-                                    <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
-                                    <span className="text-xs text-muted-foreground">Todos los cargos</span>
+                                  <div className="flex items-center gap-1.5 mt-1">
+                                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm font-medium text-muted-foreground">Todos los cargos</span>
                                   </div>
                                 )}
                               </div>
                             </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                  <MoreHorizontal className="h-4 w-4" />
+                                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-xl hover:bg-muted/50" onClick={(e) => e.stopPropagation()}>
+                                  <MoreHorizontal className="h-5 w-5" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
@@ -754,30 +756,30 @@ export default function Evaluaciones() {
                           </div>
                         </CardHeader>
 
-                        <CardContent className="pt-0 space-y-3">
+                        <CardContent className="px-6 pb-6 pt-0 space-y-4 flex-1 flex flex-col justify-end">
                           {template.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-2">
+                            <p className="text-sm font-medium text-muted-foreground line-clamp-2">
                               {template.description}
                             </p>
                           )}
 
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Layers className="h-3.5 w-3.5 text-teal" />
-                              <span>{criteriaCount} criterios</span>
-                            </div>
-                            {questionsCount > 0 && (
-                              <div className="flex items-center gap-1">
-                                <ClipboardCheck className="h-3.5 w-3.5 text-violet" />
-                                <span>{questionsCount} preguntas</span>
+                          <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/40">
+                            <div className="flex items-center gap-4 text-sm font-semibold text-muted-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <Layers className="h-4 w-4 text-teal" />
+                                <span>{criteriaCount} criterios</span>
                               </div>
-                            )}
-                          </div>
+                              {questionsCount > 0 && (
+                                <div className="flex items-center gap-1.5">
+                                  <ClipboardCheck className="h-4 w-4 text-violet" />
+                                  <span>{questionsCount} preguntas</span>
+                                </div>
+                              )}
+                            </div>
 
-                          <div className="flex items-center justify-end">
                             <Badge
                               variant={template.is_active ? 'default' : 'secondary'}
-                              className={template.is_active ? 'bg-[#e65a0a] hover:bg-[#cf5109] text-white' : ''}
+                              className={template.is_active ? 'bg-primary text-primary-foreground font-bold border-0 shadow-sm' : 'font-bold'}
                             >
                               {template.is_active ? 'Activa' : 'Inactiva'}
                             </Badge>

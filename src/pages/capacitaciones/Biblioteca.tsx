@@ -99,20 +99,26 @@ export default function Biblioteca() {
   const hasActiveFilters = filterType !== 'all' || filterStatus !== 'all';
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Biblioteca de Capacitaciones</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Repositorio completo de capacitaciones para consulta y reutilización</p>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        <div className="relative z-10">
+          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-2">
+            REPOSITORIO GENERAL
+          </Badge>
+          <h1 className="text-3xl font-black tracking-tight text-foreground">Biblioteca de Capacitaciones</h1>
+          <p className="text-muted-foreground font-medium mt-1">Repositorio completo de capacitaciones para consulta y reutilización</p>
+        </div>
       </div>
 
       {/* Search + Filters + View Mode */}
-      <div className="flex items-center gap-3 bg-card border rounded-xl p-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/20 border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             placeholder="Buscar capacitaciones por título..."
-            className="pl-10 border-0 shadow-none bg-transparent focus-visible:ring-0"
+            className="pl-12 h-12 rounded-xl border-border/50 bg-background shadow-inner text-sm"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -120,19 +126,19 @@ export default function Biblioteca() {
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="h-12 px-6 rounded-xl gap-2 font-semibold">
               <Filter className="h-4 w-4" />
               Filtros
               {hasActiveFilters && (
-                <span className="h-2 w-2 rounded-full bg-primary" />
+                <span className="h-2 w-2 rounded-full bg-primary ml-1" />
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-64 space-y-4" align="end">
+          <PopoverContent className="w-72 space-y-5 p-5 rounded-[2rem] shadow-xl" align="end">
             <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Categoría</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Categoría</label>
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Todas" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
                   {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -140,9 +146,9 @@ export default function Biblioteca() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground">Estado</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Estado</label>
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Todos" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="borrador">Borrador</SelectItem>
@@ -152,17 +158,17 @@ export default function Biblioteca() {
               </Select>
             </div>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" className="w-full" onClick={() => { setFilterType('all'); setFilterStatus('all'); }}>
+              <Button variant="ghost" size="sm" className="w-full rounded-xl text-xs font-bold" onClick={() => { setFilterType('all'); setFilterStatus('all'); }}>
                 Limpiar filtros
               </Button>
             )}
           </PopoverContent>
         </Popover>
 
-        <div className="flex gap-0.5 border rounded-lg p-0.5">
-          <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setViewMode('grid')}><LayoutGrid className="h-4 w-4" /></Button>
-          <Button variant={viewMode === 'tree' ? 'default' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setViewMode('tree')}><FolderTree className="h-4 w-4" /></Button>
-          <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setViewMode('list')}><List className="h-4 w-4" /></Button>
+        <div className="flex gap-1 bg-background border border-border/50 rounded-xl p-1 shadow-inner shrink-0">
+          <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'grid' ? 'shadow-md' : ''}`} onClick={() => setViewMode('grid')}><LayoutGrid className="h-4 w-4" /></Button>
+          <Button variant={viewMode === 'tree' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'tree' ? 'shadow-md' : ''}`} onClick={() => setViewMode('tree')}><FolderTree className="h-4 w-4" /></Button>
+          <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'list' ? 'shadow-md' : ''}`} onClick={() => setViewMode('list')}><List className="h-4 w-4" /></Button>
         </div>
       </div>
 
@@ -171,19 +177,19 @@ export default function Biblioteca() {
 
       {/* Grid View */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filtered.map((course, i) => {
             const content = course.content as TrainingCourseContent | null;
             const statusCfg = STATUS_CONFIG[course.status] || STATUS_CONFIG.borrador;
             const evalCount = content?.evaluacion?.length ?? 0;
 
             return (
-              <motion.div key={course.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03, duration: 0.25 }}>
+              <motion.div key={course.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05, duration: 0.3 }}>
                 <Card
-                  className="hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer group border h-full"
+                  className="rounded-[2rem] border-border/50 hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 transition-all duration-300 cursor-pointer group h-full overflow-hidden bg-gradient-to-b from-background to-muted/10"
                   onClick={() => setPreviewCourse(course)}
                 >
-                  <CardContent className="p-6 flex flex-col gap-4 h-full">
+                  <CardContent className="p-6 flex flex-col gap-5 h-full">
                     {/* Top row: icon + badges + menu */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
@@ -276,8 +282,8 @@ export default function Biblioteca() {
 
       {/* List View */}
       {viewMode === 'list' && (
-        <Card>
-          <CardContent className="pt-4">
+        <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -325,8 +331,8 @@ export default function Biblioteca() {
 
       {/* Tree View */}
       {viewMode === 'tree' && (
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+          <CardContent className="p-6">
             {(() => {
               const tree = new Map<string, Map<string, Map<string, typeof filtered>>>();
               filtered.forEach(course => {

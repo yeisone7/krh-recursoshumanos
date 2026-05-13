@@ -15,7 +15,8 @@ import {
   Plus, Search, Trash2, Gavel, AlertTriangle, Pencil,
   DollarSign, PauseCircle, PlayCircle, CheckCircle
 } from 'lucide-react';
-import { useDeductions, useCreateDeduction, useUpdateDeduction, useDeleteDeduction, type EmployeeDeduction } from '@/hooks/useDeductions';
+import { useDeductions, useUpdateDeduction, useDeleteDeduction, type EmployeeDeduction } from '@/hooks/useDeductions';
+import { DeductionFormDialog } from '@/components/payroll/DeductionFormDialog';
 import { useEmployees } from '@/hooks/useEmployees';
 
 const DEDUCTION_TYPE_LABELS: Record<string, string> = {
@@ -46,7 +47,6 @@ const formatCurrency = (v: number) =>
 export default function Descuentos() {
   const { data: deductions = [], isLoading } = useDeductions();
   const { data: employees = [] } = useEmployees();
-  const createDeduction = useCreateDeduction();
   const updateDeduction = useUpdateDeduction();
   const deleteDeduction = useDeleteDeduction();
 
@@ -54,21 +54,6 @@ export default function Descuentos() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<EmployeeDeduction | null>(null);
-
-  const [formData, setFormData] = useState({
-    employee_id: '',
-    deduction_type: 'judicial',
-    description: '',
-    amount: '',
-    is_percentage: false,
-    percentage_value: '',
-    start_date: format(new Date(), 'yyyy-MM-dd'),
-    end_date: '',
-    is_recurring: true,
-    reference_number: '',
-    entity_name: '',
-    notes: '',
-  });
 
   const filtered = useMemo(() => {
     return deductions.filter(d => {
@@ -86,52 +71,13 @@ export default function Descuentos() {
   const responsabilidadCount = activeDeductions.filter(d => d.deduction_type === 'responsabilidad').length;
 
   const resetForm = () => {
-    setFormData({ employee_id: '', deduction_type: 'judicial', description: '', amount: '', is_percentage: false, percentage_value: '', start_date: format(new Date(), 'yyyy-MM-dd'), end_date: '', is_recurring: true, reference_number: '', entity_name: '', notes: '' });
     setEditing(null);
   };
 
   const openCreate = () => { resetForm(); setShowForm(true); };
   const openEdit = (d: EmployeeDeduction) => {
     setEditing(d);
-    setFormData({
-      employee_id: d.employee_id,
-      deduction_type: d.deduction_type,
-      description: d.description,
-      amount: String(d.amount),
-      is_percentage: d.is_percentage,
-      percentage_value: d.percentage_value ? String(d.percentage_value) : '',
-      start_date: d.start_date,
-      end_date: d.end_date || '',
-      is_recurring: d.is_recurring,
-      reference_number: d.reference_number || '',
-      entity_name: d.entity_name || '',
-      notes: d.notes || '',
-    });
     setShowForm(true);
-  };
-
-  const handleSave = () => {
-    const payload: any = {
-      employee_id: formData.employee_id,
-      deduction_type: formData.deduction_type,
-      description: formData.description,
-      amount: Number(formData.amount),
-      is_percentage: formData.is_percentage,
-      percentage_value: formData.is_percentage ? Number(formData.percentage_value) : null,
-      start_date: formData.start_date,
-      end_date: formData.end_date || null,
-      is_recurring: formData.is_recurring,
-      reference_number: formData.reference_number || null,
-      entity_name: formData.entity_name || null,
-      notes: formData.notes || null,
-    };
-
-    if (editing) {
-      updateDeduction.mutate({ id: editing.id, ...payload }, { onSuccess: () => setShowForm(false) });
-    } else {
-      payload.status = 'activo';
-      createDeduction.mutate(payload, { onSuccess: () => setShowForm(false) });
-    }
   };
 
   const toggleStatus = (d: EmployeeDeduction) => {
@@ -387,89 +333,18 @@ export default function Descuentos() {
         ))}
       </div>
 
-      {/* Form Dialog */}
-      <Dialog open={showForm} onOpenChange={o => { if (!o) { setShowForm(false); resetForm(); } }}>
-        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editing ? 'Editar Descuento' : 'Nuevo Descuento'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Empleado *</Label>
-              <Select value={formData.employee_id} onValueChange={v => setFormData(p => ({ ...p, employee_id: v }))}>
-                <SelectTrigger aria-label="Seleccionar empleado para el descuento"><SelectValue placeholder="Seleccionar empleado" /></SelectTrigger>
-                <SelectContent>
-                  {employees.filter(e => e.is_active).map(e => (
-                    <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name} - {e.document_number}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Tipo de Descuento *</Label>
-                <Select value={formData.deduction_type} onValueChange={v => setFormData(p => ({ ...p, deduction_type: v }))}>
-                  <SelectTrigger aria-label="Seleccionar tipo de descuento"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(DEDUCTION_TYPE_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Fecha Inicio *</Label>
-                <Input type="date" value={formData.start_date} onChange={e => setFormData(p => ({ ...p, start_date: e.target.value }))} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Descripción *</Label>
-              <Input value={formData.description} onChange={e => setFormData(p => ({ ...p, description: e.target.value }))} placeholder="Ej: Embargo alimentario Juzgado 3° Civil" />
-            </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={formData.is_percentage} onCheckedChange={v => setFormData(p => ({ ...p, is_percentage: v }))} aria-label="Indicar si el descuento es porcentaje del salario" />
-              <Label>Es porcentaje del salario</Label>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>{formData.is_percentage ? 'Porcentaje (%)' : 'Monto Fijo ($)'} *</Label>
-                <Input type="number" min="0" step="0.01" value={formData.is_percentage ? formData.percentage_value : formData.amount} onChange={e => {
-                  if (formData.is_percentage) setFormData(p => ({ ...p, percentage_value: e.target.value, amount: e.target.value }));
-                  else setFormData(p => ({ ...p, amount: e.target.value }));
-                }} />
-              </div>
-              <div className="space-y-2">
-                <Label>Fecha Fin</Label>
-                <Input type="date" value={formData.end_date} onChange={e => setFormData(p => ({ ...p, end_date: e.target.value }))} />
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={formData.is_recurring} onCheckedChange={v => setFormData(p => ({ ...p, is_recurring: v }))} aria-label="Indicar si el descuento es recurrente" />
-              <Label>Descuento recurrente (cada período de nómina)</Label>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Entidad</Label>
-                <Input value={formData.entity_name} onChange={e => setFormData(p => ({ ...p, entity_name: e.target.value }))} placeholder="Ej: Juzgado 3° Civil" />
-              </div>
-              <div className="space-y-2">
-                <Label>N° de Referencia</Label>
-                <Input value={formData.reference_number} onChange={e => setFormData(p => ({ ...p, reference_number: e.target.value }))} placeholder="Ej: RAD-2026-001" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Observaciones</Label>
-              <Textarea value={formData.notes} onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))} rows={2} />
-            </div>
-          </div>
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={!formData.employee_id || !formData.description || (!formData.amount && !formData.percentage_value)}>
-              {editing ? 'Actualizar' : 'Registrar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeductionFormDialog 
+        open={showForm} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowForm(false);
+            resetForm();
+          } else {
+            setShowForm(true);
+          }
+        }} 
+        deduction={editing} 
+      />
     </div>
   );
 }

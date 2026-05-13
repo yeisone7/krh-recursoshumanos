@@ -786,14 +786,92 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
         {/* Tools */}
         {toolsNavItems.length > 0 && (
-          <>
+          <div className="mt-4">
             <SectionLabel label="Herramientas" />
-            <div className="space-y-0.5">
-              {toolsNavItems.map((item) =>
-                <NavLinkItem key={item.href} item={item} />
-              )}
+            <div className={cn(
+              "gap-2",
+              isCollapsed ? "flex flex-col space-y-0.5" : "grid grid-cols-2 mt-2 px-1"
+            )}>
+              {toolsNavItems.map((item) => {
+                const isActive = location.pathname === item.href;
+                const toolColors: Record<string, string> = {
+                  'Calendario': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+                  'Reportes': 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+                  'Organigrama': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+                  'Asistente IA': 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+                  'Alertas': 'bg-rose-500/10 text-rose-500 border-rose-500/20',
+                  'Notificaciones': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+                };
+                const colorClass = toolColors[item.label] || 'bg-primary/10 text-primary border-primary/20';
+
+                const content = (
+                  <Link key={item.href} to={item.href} onClick={handleNavClick}>
+                    <motion.div
+                      whileHover={isCollapsed ? { x: 4 } : { scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={cn(
+                        "relative flex transition-all duration-200 group overflow-hidden",
+                        isCollapsed 
+                          ? "mx-auto h-11 w-11 items-center justify-center rounded-lg p-0" 
+                          : "h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-sidebar-border bg-sidebar-accent/30 p-2 text-center",
+                        isActive && !isCollapsed && "bg-sidebar-accent border-primary/30 shadow-lg shadow-primary/5 ring-1 ring-primary/20",
+                        isActive && isCollapsed && "bg-sidebar-accent"
+                      )}
+                    >
+                      {/* Icon Container */}
+                      <div className={cn(
+                        "flex items-center justify-center shrink-0 transition-all duration-300",
+                        isCollapsed 
+                          ? "h-full w-full" 
+                          : cn("h-10 w-10 rounded-xl border", colorClass, isActive && "bg-primary text-white border-transparent shadow-md shadow-primary/20")
+                      )}>
+                        {item.icon}
+                      </div>
+
+                      {!isCollapsed && (
+                        <span className={cn(
+                          "text-[10px] font-black uppercase tracking-widest leading-tight transition-colors",
+                          isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/80 group-hover:text-sidebar-accent-foreground"
+                        )}>
+                          {item.label}
+                        </span>
+                      )}
+
+                      {/* Badge */}
+                      {item.badge && (
+                        <span className={cn(
+                          "absolute flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm font-black",
+                          isCollapsed 
+                            ? "-top-1 -right-1 h-5 min-w-5 text-[10px] ring-2 ring-sidebar" 
+                            : "top-2 right-2 h-5 px-1.5 text-[9px] uppercase"
+                        )}>
+                          {item.badge}
+                        </span>
+                      )}
+
+                      {/* Active Indicator Bar */}
+                      {isActive && !isCollapsed && (
+                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full" />
+                      )}
+                    </motion.div>
+                  </Link>
+                );
+
+                if (isCollapsed) {
+                  return (
+                    <Tooltip key={item.href} delayDuration={0}>
+                      <TooltipTrigger asChild>{content}</TooltipTrigger>
+                      <TooltipContent side="right" sideOffset={8} className="rounded-lg border border-border bg-popover px-3 py-2 font-bold text-popover-foreground shadow-lg">
+                        {item.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                }
+
+                return content;
+              })}
             </div>
-          </>
+          </div>
         )}
 
         {/* Admin */}

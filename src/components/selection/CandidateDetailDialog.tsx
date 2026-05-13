@@ -29,6 +29,11 @@ import {
   FolderOpen,
   FileDown,
   Stethoscope,
+  ChevronDown,
+  ChevronRight,
+  Folder,
+  ExternalLink,
+  Plus,
 } from 'lucide-react';
 
 import {
@@ -41,6 +46,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -48,7 +54,14 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-import { useCandidate, useUpdateCandidate, useConvertToEmployee, useUpdateSelectionStep } from '@/hooks/useCandidates';
+import { 
+  useCandidate, 
+  useUpdateCandidate, 
+  useConvertToEmployee, 
+  useUpdateSelectionStep,
+  useCandidateDocuments,
+  useDeleteCandidateDocument 
+} from '@/hooks/useCandidates';
 import { useEmployeeDocuments } from '@/hooks/useEmployeeHealth';
 import { DocumentFormDialog } from '@/components/employees/DocumentFormDialog';
 import { SelectionTimeline } from './SelectionTimeline';
@@ -65,9 +78,33 @@ import {
   SelectionStepType,
   SelectionStepStatus,
 } from '@/types/vacancy';
+import { 
+  employeeDocumentFolderOrder, 
+  employeeDocumentTypeLabels, 
+  normalizeEmployeeDocumentFolder 
+} from '@/types/employee';
 import type { Database } from '@/integrations/supabase/types';
 
 type SelectionStep = Database['public']['Tables']['selection_steps']['Row'];
+
+function SectionCard({ title, icon: Icon, children, action }: { title: string; icon: any; children: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <Card className="border border-border shadow-none">
+      <CardContent className="p-3 sm:p-4">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
+            <div className="p-1.5 rounded-md bg-primary/10">
+              <Icon className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <span className="min-w-0 break-words">{title}</span>
+          </h3>
+          {action}
+        </div>
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
 
 interface CandidateDetailDialogProps {
   open: boolean;
@@ -82,11 +119,9 @@ export function CandidateDetailDialog({
 }: CandidateDetailDialogProps) {
   const [activeTab, setActiveTab] = useState('timeline');
   const [showStepForm, setShowStepForm] = useState(false);
-  const [documents, setDocuments] = useState<any[]>([]);
-  const [loadingDocs, setLoadingDocs] = useState(false);
-  const [uploadingDoc, setUploadingDoc] = useState(false);
   const [showSharedDocForm, setShowSharedDocForm] = useState(false);
-  const docInputRef = useRef<HTMLInputElement>(null);
+  const [isDocFormOpen, setIsDocFormOpen] = useState(false);
+  const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const { user, currentCompanyId, hasPermission } = useAuth();
   const [selectedStep, setSelectedStep] = useState<SelectionStep | undefined>();
   const [defaultStepType, setDefaultStepType] = useState<SelectionStepType | undefined>();
@@ -101,6 +136,8 @@ export function CandidateDetailDialog({
 
   const candidateEmployeeId = candidate?.employee_id || undefined;
   const { data: sharedDocs = [], isLoading: loadingSharedDocs } = useEmployeeDocuments(candidateEmployeeId);
+  const { data: candidateDocs = [], isLoading: loadingDocs } = useCandidateDocuments(candidateId);
+  const deleteCandidateDoc = useDeleteCandidateDocument();
   const { background, loading: bgLoading, checkBackground } = useCandidateBackground();
 
   // Auto-check background when candidate loads
@@ -110,29 +147,6 @@ export function CandidateDetailDialog({
     }
   }, [candidate?.document_number, open, currentCompanyId]);
 
-  const fetchCandidateDocs = useCallback(async () => {
-    if (!candidateId) return;
-    setLoadingDocs(true);
-    try {
-      const { data, error } = await supabase
-        .from('candidate_documents')
-        .select('*')
-        .eq('candidate_id', candidateId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setDocuments(data || []);
-    } catch {
-      // silent
-    } finally {
-      setLoadingDocs(false);
-    }
-  }, [candidateId]);
-
-  useEffect(() => {
-    if (open && candidateId) {
-      fetchCandidateDocs();
-    }
-  }, [open, candidateId, fetchCandidateDocs]);
 
   if (isLoading || !candidate) {
     return (
@@ -248,52 +262,6 @@ export function CandidateDetailDialog({
   };
 
 
-  const handleCandidateDocUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0 || !currentCompanyId) return;
-    setUploadingDoc(true);
-    try {
-      for (const file of Array.from(files)) {
-        if (file.size > 10 * 1024 * 1024) {
-          toast.error(`${file.name} excede 10MB`);
-          continue;
-        }
-        const ext = file.name.split('.').pop();
-        const filePath = `candidates/docs_${candidateId}_${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file);
-        if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
-
-        const { error: insertError } = await supabase.from('candidate_documents').insert({
-          candidate_id: candidateId,
-          company_id: currentCompanyId,
-          document_name: file.name,
-          file_url: urlData.publicUrl,
-          file_name: file.name,
-          file_size: file.size,
-          mime_type: file.type,
-          uploaded_by: user?.id,
-        });
-        if (insertError) throw insertError;
-      }
-      toast.success('Documento(s) subido(s) exitosamente');
-      fetchCandidateDocs();
-    } catch {
-      toast.error('Error al subir documento');
-    } finally {
-      setUploadingDoc(false);
-    }
-  };
-
-  const handleDeleteCandidateDoc = async (docId: string) => {
-    try {
-      const { error } = await supabase.from('candidate_documents').delete().eq('id', docId);
-      if (error) throw error;
-      toast.success('Documento eliminado');
-      setDocuments((prev) => prev.filter((d) => d.id !== docId));
-    } catch {
-      toast.error('Error al eliminar documento');
-    }
-  };
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return '';
@@ -740,89 +708,179 @@ export function CandidateDetailDialog({
               </TabsContent>
 
               {/* Documents Tab */}
-              <TabsContent value="documents" className="p-6 mt-0 space-y-4">
-                {/* Upload */}
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground flex items-center gap-2">
-                    <Paperclip className="w-4 h-4 text-primary" />
-                    Documentos del Candidato
-                  </h3>
-                  <div>
-                    <input
-                      ref={docInputRef}
-                      type="file"
-                      className="hidden"
-                      accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
-                      multiple
-                      onChange={(e) => handleCandidateDocUpload(e.target.files)}
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => docInputRef.current?.click()}
-                      disabled={uploadingDoc}
+              <TabsContent value="documents" className="p-0 mt-0">
+                <div className="p-4 sm:p-6 space-y-4">
+                  {loadingDocs ? (
+                    <div className="flex justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <SectionCard 
+                      title="Documentos del Candidato" 
+                      icon={FileText}
+                      action={
+                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsDocFormOpen(true)}>
+                          <Plus className="w-3.5 h-3.5 mr-1" /> Cargar
+                        </Button>
+                      }
                     >
-                      {uploadingDoc ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Upload className="w-4 h-4 mr-2" />
-                      )}
-                      Subir documento
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  PDF, imágenes, Word o Excel (máx. 10MB por archivo)
-                </p>
+                      <div className="space-y-1">
+                        {employeeDocumentFolderOrder.map((folder) => {
+                          const folderDocs = candidateDocs.filter(
+                            (d) => normalizeEmployeeDocumentFolder(d.document_type as any) === folder
+                          );
+                          const isExpanded = expandedFolders.includes(folder);
 
-                {loadingDocs ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : documents.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">No hay documentos adjuntos</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {documents.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <FileText className="w-5 h-5 text-primary shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{doc.document_name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatFileSize(doc.file_size)}
-                              {doc.created_at && ` • ${format(new Date(doc.created_at), 'dd MMM yyyy', { locale: es })}`}
-                            </p>
+                          return (
+                            <div key={folder} className="relative">
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted/60 group"
+                                onClick={() =>
+                                  setExpandedFolders((prev) =>
+                                    isExpanded ? prev.filter((f) => f !== folder) : [...prev, folder]
+                                  )
+                                }
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                )}
+                                <Folder className="h-4 w-4 shrink-0 text-warning" />
+                                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                                  {employeeDocumentTypeLabels[folder]}
+                                </span>
+                                <Badge 
+                                  variant="secondary" 
+                                  className="h-5 min-w-[20px] justify-center text-[10px] bg-[#004269] text-white hover:bg-[#004269]/90"
+                                >
+                                  {folderDocs.length}
+                                </Badge>
+                              </button>
+
+                              {isExpanded && (
+                                <div className="ml-5 border-l border-border pl-3">
+                                  {folderDocs.length > 0 ? (
+                                    folderDocs.map((doc) => (
+                                      <div 
+                                        key={doc.id} 
+                                        className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border"
+                                      >
+                                        <div className="flex flex-col gap-2 rounded-lg bg-muted/30 p-2.5 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between">
+                                          <div className="min-w-0 flex-1">
+                                            <span className="block truncate text-sm font-medium">
+                                              {doc.document_name}
+                                            </span>
+                                            <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
+                                              {formatFileSize(doc.file_size)} • {format(new Date(doc.created_at), 'dd MMM yyyy', { locale: es })}
+                                            </span>
+                                          </div>
+                                          <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
+                                            {doc.expiry_date && (
+                                              <Badge 
+                                                variant={new Date(doc.expiry_date) < new Date() ? 'destructive' : 'outline'} 
+                                                className="text-[10px] h-5"
+                                              >
+                                                Vence: {format(new Date(doc.expiry_date), 'dd MMM yyyy', { locale: es })}
+                                              </Badge>
+                                            )}
+                                            <div className="flex items-center gap-1">
+                                              <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-8 w-8" 
+                                                asChild
+                                              >
+                                                <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                                                  <ExternalLink className="h-4 w-4" />
+                                                </a>
+                                              </Button>
+                                              <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                                onClick={() => deleteCandidateDoc.mutate({ id: doc.id, candidateId })}
+                                              >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="relative py-2 pl-1 text-xs text-muted-foreground before:absolute before:-left-3 before:top-4 before:h-px before:w-3 before:bg-border">
+                                      Sin documentos
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* Otro folder for uncategorized docs */}
+                        {candidateDocs.some(d => !d.document_type || !employeeDocumentFolderOrder.includes(normalizeEmployeeDocumentFolder(d.document_type as any))) && (
+                          <div className="relative">
+                            <button
+                              type="button"
+                              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted/60 group"
+                              onClick={() =>
+                                setExpandedFolders((prev) =>
+                                  expandedFolders.includes('otro') ? prev.filter((f) => f !== 'otro') : [...prev, 'otro']
+                                )
+                              }
+                            >
+                              {expandedFolders.includes('otro') ? (
+                                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              )}
+                              <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              <span className="min-w-0 flex-1 truncate text-sm font-medium">Otros documentos</span>
+                              <Badge variant="secondary" className="h-5 text-[10px]">
+                                {candidateDocs.filter(d => !d.document_type || !employeeDocumentFolderOrder.includes(normalizeEmployeeDocumentFolder(d.document_type as any))).length}
+                              </Badge>
+                            </button>
+
+                            {expandedFolders.includes('otro') && (
+                              <div className="ml-5 border-l border-border pl-3">
+                                {candidateDocs
+                                  .filter(d => !d.document_type || !employeeDocumentFolderOrder.includes(normalizeEmployeeDocumentFolder(d.document_type as any)))
+                                  .map((doc) => (
+                                    <div 
+                                      key={doc.id} 
+                                      className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border"
+                                    >
+                                      <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30 transition-colors hover:bg-muted/50 px-3">
+                                        <span className="text-xs truncate max-w-[200px]">{doc.document_name}</span>
+                                        <div className="flex items-center gap-1">
+                                           <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
+                                             <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                                               <ExternalLink className="h-3.5 w-3.5" />
+                                             </a>
+                                           </Button>
+                                           <Button 
+                                             size="icon" 
+                                             variant="ghost" 
+                                             className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                             onClick={() => deleteCandidateDoc.mutate({ id: doc.id, candidateId })}
+                                           >
+                                             <Trash2 className="h-3.5 w-3.5" />
+                                           </Button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
                           </div>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => window.open(doc.file_url, '_blank')}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteCandidateDoc(doc.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </SectionCard>
+                  )}
+                </div>
               </TabsContent>
 
               {/* Shared Docs Tab */}
@@ -1036,14 +1094,25 @@ export function CandidateDetailDialog({
         vacancyPositionId={vacancy?.position_id}
       />
 
+      {/* Document Form Dialog */}
+      <DocumentFormDialog
+        open={isDocFormOpen}
+        onOpenChange={setIsDocFormOpen}
+        entityId={candidate.id}
+        entityType="candidate"
+        companyId={currentCompanyId!}
+        entityName={`${candidate.first_name} ${candidate.last_name}`}
+      />
+
       {/* Shared Document Form Dialog */}
       {candidate?.employee_id && currentCompanyId && (
         <DocumentFormDialog
           open={showSharedDocForm}
           onOpenChange={setShowSharedDocForm}
-          employeeId={candidate.employee_id}
+          entityId={candidate.employee_id}
+          entityType="employee"
           companyId={currentCompanyId}
-          employeeName={`${candidate.first_name} ${candidate.last_name}`}
+          entityName={`${candidate.first_name} ${candidate.last_name}`}
         />
       )}
 

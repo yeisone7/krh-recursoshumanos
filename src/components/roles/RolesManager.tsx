@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCustomRoles, useDeleteRole, useUpdateRole } from '@/hooks/useRolesPermissions';
 import { RoleFormDialog } from './RoleFormDialog';
 import { PermissionMatrix } from './PermissionMatrix';
+import { cn } from '@/lib/utils';
 
 export function RolesManager() {
   const { currentCompanyId, user } = useAuth();
@@ -61,28 +62,34 @@ export function RolesManager() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h3 className="text-lg font-semibold">Roles y permisos por empresa</h3>
-          <p className="text-sm text-muted-foreground">Crea roles para la empresa activa y define permisos por módulo</p>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-2">
+        <div>
+          <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            Roles de Empresa
+          </h3>
+          <p className="text-xs font-medium text-slate-500 mt-1">Gestión de jerarquías y privilegios para {currentCompanyId}</p>
         </div>
-        <Button onClick={handleCreate} className="w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-2" />
-          Nuevo Rol
+        <Button 
+          onClick={handleCreate} 
+          className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/10 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
+        >
+          <Plus className="w-4 h-4 mr-2 stroke-[3]" />
+          NUEVO ROL
         </Button>
       </div>
 
-      <Card>
+      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
         <CardContent className="p-0 overflow-x-auto">
-          <Table className="min-w-[760px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Rol</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead className="text-center">Usuarios</TableHead>
-                <TableHead className="text-center">Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+          <Table>
+            <TableHeader className="bg-muted/30">
+              <TableRow className="hover:bg-transparent border-border/50">
+                <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Identidad del Rol</TableHead>
+                <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Descripción</TableHead>
+                <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] text-center">Usuarios</TableHead>
+                <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] text-center">Estado</TableHead>
+                <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] text-right">Configuración</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -100,39 +107,52 @@ export function RolesManager() {
                 </TableRow>
               ) : (
                 roles.map((role) => (
-                  <TableRow key={role.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Shield className={`w-4 h-4 ${role.is_system ? 'text-destructive' : 'text-primary'}`} />
-                        <span className="font-medium">{role.name}</span>
-                        {role.is_system && (
-                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Sistema</Badge>
-                        )}
+                  <TableRow key={role.id} className="group hover:bg-primary/5 transition-colors border-border/50">
+                    <TableCell className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "h-12 w-12 rounded-2xl border border-border/50 shadow-sm flex items-center justify-center transition-transform group-hover:scale-110",
+                          role.is_system ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                        )}>
+                          <Shield className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="font-black text-foreground leading-none uppercase tracking-tight flex items-center gap-2">
+                            {role.name}
+                            {role.is_system && (
+                              <Badge className="bg-destructive/10 text-destructive border-none font-black text-[8px] px-1.5 h-4 uppercase tracking-widest">SISTEMA</Badge>
+                            )}
+                          </div>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Identificador: {role.id.split('-')[0]}</p>
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm max-w-[300px] truncate">
-                      {role.description || '—'}
+                    <TableCell className="px-8 py-6">
+                      <p className="text-sm font-medium text-slate-500 max-w-[250px] leading-tight">
+                        {role.description || 'Sin descripción asignada'}
+                      </p>
                     </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="outline" className="gap-1">
-                        <Users className="w-3 h-3" />
-                        {role.user_count || 0}
-                      </Badge>
+                    <TableCell className="px-8 py-6 text-center">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50 border border-border text-[10px] font-black text-foreground tracking-widest">
+                        <Users className="w-3.5 h-3.5 text-primary" />
+                        {role.user_count || 0} USUARIOS
+                      </div>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="px-8 py-6 text-center">
                       <Switch
                         checked={role.is_active}
                         onCheckedChange={() => handleToggleActive(role)}
                         disabled={role.is_system}
+                        className="data-[state=checked]:bg-primary"
                       />
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
+                    <TableCell className="px-8 py-6 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => setMatrixRoleId(role.id)}
-                          title="Configurar permisos"
+                          className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
                         >
                           <Settings2 className="w-4 h-4" />
                         </Button>
@@ -140,7 +160,7 @@ export function RolesManager() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(role)}
-                          title="Editar"
+                          className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
@@ -150,7 +170,7 @@ export function RolesManager() {
                             size="icon"
                             onClick={() => role.user_count === 0 ? setDeleteId(role.id) : null}
                             disabled={(role.user_count || 0) > 0}
-                            title={role.user_count ? 'No se puede eliminar (tiene usuarios)' : 'Eliminar'}
+                            className="h-10 w-10 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>

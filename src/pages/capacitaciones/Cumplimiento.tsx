@@ -102,19 +102,21 @@ function CenterComplianceSection({ center, courseFilter }: { center: CenterCompl
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
-        <Card className="cursor-pointer transition-colors hover:bg-muted/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
-          <CardContent className="flex min-h-20 flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              {isOpen ? <ChevronDown className="h-5 w-5 shrink-0" /> : <ChevronRight className="h-5 w-5 shrink-0" />}
-              <Building2 className="h-5 w-5 shrink-0 text-primary" />
+        <Card className="rounded-2xl border-border/50 shadow-sm overflow-hidden cursor-pointer transition-colors hover:bg-muted/30 hover:border-primary/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
+          <CardContent className="flex min-h-20 flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between px-6">
+            <div className="flex min-w-0 items-center gap-4">
+              {isOpen ? <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />}
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Building2 className="h-5 w-5 text-primary" />
+              </div>
               <div className="min-w-0">
-                <h3 className="break-words text-base font-semibold sm:text-lg">{center.center_name}</h3>
-                <p className="text-sm text-muted-foreground">{center.totalEmployees} empleados activos · {filteredCourses.length} cursos</p>
+                <h3 className="break-words text-lg font-bold">{center.center_name}</h3>
+                <p className="text-sm font-medium text-muted-foreground mt-0.5">{center.totalEmployees} empleados activos · {filteredCourses.length} cursos</p>
               </div>
             </div>
-            <div className="flex w-full items-center gap-3 sm:w-auto">
+            <div className="flex w-full items-center gap-4 sm:w-auto">
               <Progress value={avgPercentage} className="h-2.5 min-w-0 flex-1 sm:w-32 sm:flex-none" />
-              <Badge className="shrink-0" variant={avgPercentage === 100 ? 'default' : 'secondary'}>{avgPercentage}%</Badge>
+              <Badge className="shrink-0 text-xs px-2 py-0.5 rounded-md" variant={avgPercentage === 100 ? 'default' : 'secondary'}>{avgPercentage}%</Badge>
             </div>
           </CardContent>
         </Card>
@@ -182,18 +184,21 @@ export default function Cumplimiento() {
   }
 
   return (
-      <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="flex items-center gap-3 text-2xl font-bold leading-tight sm:text-3xl">
-            <ClipboardCheck className="h-6 w-6 shrink-0 text-primary sm:h-8 sm:w-8" />
-            Cumplimiento por Centro
-          </h1>
-          <p className="text-sm text-muted-foreground sm:text-base">Matriz de cumplimiento de capacitaciones por centro de operación</p>
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight text-foreground">
+              <ClipboardCheck className="h-8 w-8 shrink-0 text-primary" />
+              Cumplimiento por Centro
+            </h1>
+            <p className="text-muted-foreground font-medium mt-1">Matriz de cumplimiento de capacitaciones por centro de operación</p>
+          </div>
+          <Button className="h-12 px-6 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto" onClick={handleExport} disabled={filteredData.length === 0}>
+            <Download className="h-4 w-4 mr-2" /> <span className="truncate">Exportar Excel</span>
+          </Button>
         </div>
-        <Button className="min-h-11 w-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-h-10 sm:w-auto" variant="outline" onClick={handleExport} disabled={filteredData.length === 0}>
-          <Download className="h-4 w-4" /> <span className="truncate">Exportar Excel</span>
-        </Button>
       </div>
 
       {/* Filters */}
@@ -242,19 +247,19 @@ export default function Cumplimiento() {
         </Card>
       </Collapsible>
 
-      <Card className="hidden sm:block">
+      <Card className="hidden sm:block rounded-[2rem] border-border/50 shadow-sm overflow-hidden bg-muted/20">
         <CardContent className="pt-4 pb-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
             <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px] lg:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar centro..." className="min-h-11 pl-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:min-h-10" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input placeholder="Buscar centro..." className="h-12 pl-12 rounded-xl border-border/50 bg-background shadow-inner text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <Select value={centerFilter} onValueChange={setCenterFilter}>
-              <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background sm:min-h-10 lg:w-[220px]">
+              <SelectTrigger className="h-12 w-full rounded-xl border-border/50 bg-background shadow-inner text-sm focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background lg:w-[220px]">
                 <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Centro de Operación" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl">
                 <SelectItem value="all">Todos los centros</SelectItem>
                 {centers.map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -262,11 +267,11 @@ export default function Cumplimiento() {
               </SelectContent>
             </Select>
             <Select value={courseFilter} onValueChange={setCourseFilter}>
-              <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background sm:col-span-2 sm:min-h-10 lg:col-span-1 lg:w-[220px]">
+              <SelectTrigger className="h-12 w-full rounded-xl border-border/50 bg-background shadow-inner text-sm focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background sm:col-span-2 lg:col-span-1 lg:w-[220px]">
                 <BookOpen className="h-4 w-4 mr-2 text-muted-foreground" />
                 <SelectValue placeholder="Curso" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl">
                 <SelectItem value="all">Todos los cursos</SelectItem>
                 {courses.map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>

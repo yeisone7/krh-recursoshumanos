@@ -57,44 +57,69 @@ export default function Seguridad() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 overflow-x-hidden">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
+    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto px-4 sm:px-6">
+      {/* Header Premium */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
+        className="relative p-8 rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 overflow-hidden shadow-lg shadow-primary/5"
       >
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Seguridad</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Auditoría y políticas de seguridad del sistema
-        </p>
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className="relative shrink-0 group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-foreground rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border/40 shadow-md overflow-hidden group-hover:scale-105 transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ShieldCheck className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent uppercase sm:text-4xl">
+                Seguridad
+              </h1>
+              <p className="text-muted-foreground font-medium mt-1 tracking-wide">
+                Administra los niveles de acceso, auditoría y políticas de privacidad del sistema
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="h-10 px-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-black text-primary uppercase tracking-widest">Protocolo Activo</span>
+            </div>
+          </div>
+        </div>
       </motion.div>
 
-      {/* Main Content */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-          <Tabs defaultValue="roles" className="space-y-4 min-w-0">
-          <div className="scrollbar-hide w-full overflow-x-auto pb-1">
-            <TabsList className="inline-flex h-auto min-w-max justify-start">
-              <TabsTrigger value="roles" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+        <Tabs defaultValue="roles" className="space-y-8 min-w-0">
+          <div className="flex justify-center">
+            <TabsList className="inline-flex h-16 p-2 rounded-[1.25rem] bg-muted/30 backdrop-blur-md border border-border/50 shadow-inner">
+              <TabsTrigger value="roles" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
                 <ShieldCheck className="w-4 h-4" />
                 Roles y permisos
               </TabsTrigger>
-              <TabsTrigger value="quick-permissions" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+              <TabsTrigger value="quick-permissions" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
                 <ShieldCheck className="w-4 h-4" />
                 Permisos rápidos
               </TabsTrigger>
-              <TabsTrigger value="audit" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+              <TabsTrigger value="audit" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
                 <History className="w-4 h-4" />
                 Auditoría
               </TabsTrigger>
-              <TabsTrigger value="ai-access" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+              <TabsTrigger value="ai-access" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
                 <Bot className="w-4 h-4" />
                 Acceso IA
               </TabsTrigger>
-              <TabsTrigger value="info" className="gap-2 whitespace-nowrap text-xs sm:text-sm">
+              <TabsTrigger value="info" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
                 <Info className="w-4 h-4" />
                 Información
               </TabsTrigger>

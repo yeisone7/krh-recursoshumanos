@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -98,16 +99,36 @@ export function RecoveryFormDialog({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle>Gestionar Recobro</DialogTitle>
-          <DialogDescription>
-            Actualice el estado del trámite de recobro ante la entidad responsable
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto p-0 bg-background border-border/50 shadow-2xl rounded-[2rem]">
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Premium Gradient Header */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
+          <DialogHeader className="relative z-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
+                <Clock className="w-6 h-6" />
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+                  RECOBRO
+                </Badge>
+                <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
+                  Gestionar Recobro
+                </DialogTitle>
+                <DialogDescription className="font-medium mt-1">
+                  Actualice el estado del trámite de recobro ante la entidad responsable
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+        </div>
+        
+        <div className="px-8 py-6 max-h-[70vh] overflow-y-auto">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
             <FormField
               control={form.control}
               name="recovery_status"
@@ -295,17 +316,20 @@ export function RecoveryFormDialog({
               )}
             />
             
-            <div className="grid grid-cols-2 gap-3 pt-4 border-t sm:flex sm:justify-end">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Guardar
-              </Button>
-            </div>
-          </form>
-        </Form>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 pt-6 border-t sm:flex sm:justify-end">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isLoading} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto">
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Guardar
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Vacancy Status
-export type VacancyStatus = 'open' | 'in_process' | 'closed' | 'cancelled';
+export type VacancyStatus = 'open' | 'in_process' | 'paused' | 'closed' | 'cancelled';
 
 // Vacancy Type
 export type VacancyType = 'internal' | 'external' | 'both';
@@ -41,6 +41,7 @@ export type SelectionStepStatus = 'pending' | 'scheduled' | 'completed' | 'passe
 export const vacancyStatusLabels: Record<VacancyStatus, string> = {
   open: 'Abierta',
   in_process: 'En Proceso',
+  paused: 'Pausada',
   closed: 'Cerrada',
   cancelled: 'Cancelada',
 };
@@ -112,6 +113,7 @@ export const stepsWithConcepto: SelectionStepType[] = ['examenes_medicos'];
 export const vacancyStatusConfig: Record<VacancyStatus, { bg: string; text: string; border: string }> = {
   open: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/20' },
   in_process: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/20' },
+  paused: { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20' },
   closed: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },
   cancelled: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/20' },
 };
