@@ -103,6 +103,15 @@ export const stepsWithNotApplicable: SelectionStepType[] = [
   'validacion_referencias',
 ];
 
+// Define which steps show an observations/notes field
+export const stepsWithObservation: SelectionStepType[] = [
+  'validacion_antecedentes',
+  'pruebas_psicotecnicas',
+  'pruebas_conocimiento',
+  'validacion_academica',
+  'validacion_referencias',
+];
+
 // Define which steps have a score/calificación field
 export const stepsWithScore: SelectionStepType[] = ['pruebas_conocimiento'];
 
