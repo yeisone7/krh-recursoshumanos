@@ -40,49 +40,50 @@ export function NoRoleGuard({ children }: NoRoleGuardProps) {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                className="mx-auto w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-4"
+                className="mx-auto w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6"
               >
-                <ShieldAlert className="w-10 h-10 text-amber-500" />
+                <Sparkles className="w-10 h-10 text-primary" />
               </motion.div>
-              <CardTitle className="text-2xl font-bold text-foreground">
-                Cuenta Pendiente de Activación
+              <CardTitle className="text-3xl font-bold text-foreground tracking-tight">
+                ¡Bienvenido a EmpatiQ!
               </CardTitle>
-              <CardDescription className="text-base mt-2">
-                Tu cuenta ha sido creada exitosamente, pero aún no tienes roles asignados en el sistema.
+              <CardDescription className="text-lg mt-3 leading-relaxed">
+                Tu cuenta ha sido creada exitosamente.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">¿Qué significa esto?</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Un administrador debe asignarte al menos un rol para que puedas acceder a las funcionalidades del sistema. 
-                      Este proceso garantiza la seguridad y el control de acceso adecuado.
+            <CardContent className="space-y-8">
+              <div className="space-y-4">
+                <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/30 border border-border/50">
+                  <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center shrink-0 shadow-sm">
+                    <Clock className="w-5 h-5 text-primary animate-pulse" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">Estamos preparando tu acceso</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Por seguridad, un administrador debe validar tu perfil y asignarte los permisos necesarios antes de que puedas comenzar.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
-                <p className="text-sm text-foreground">
-                  <span className="font-semibold">Sesión activa como:</span>{' '}
-                  <span className="text-primary">{user?.email}</span>
+              <div className="text-center space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Sesión iniciada como</p>
+                <p className="text-sm font-bold text-primary bg-primary/5 py-2 px-4 rounded-full inline-block border border-primary/10">
+                  {user?.email}
                 </p>
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3 pt-2">
                 <Button
                   variant="outline"
                   onClick={() => signOut()}
-                  className="w-full gap-2"
+                  className="w-full h-12 gap-2 rounded-xl border-border hover:bg-muted transition-all"
                 >
                   <LogOut className="w-4 h-4" />
                   Cerrar Sesión
                 </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  Contacta a un administrador si necesitas acceso inmediato.
+                <p className="text-[11px] text-center text-muted-foreground/80 italic">
+                  Te notificaremos una vez tu acceso esté habilitado.
                 </p>
               </div>
             </CardContent>

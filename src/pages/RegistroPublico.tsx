@@ -138,6 +138,7 @@ export default function RegistroPublico() {
   const [formData, setFormData] = useState<Record<string, string>>({ documentType: 'CC', identificationTypeId: '' });
   const [submitting, setSubmitting] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   
   // Use company_id from token for catalogs if not authenticated
   const targetCompanyId = tokenData?.company_id;
@@ -194,10 +195,13 @@ export default function RegistroPublico() {
 
       const { data: company } = await supabase
         .from('companies')
-        .select('name')
+        .select('name, logo_url')
         .eq('id', token.company_id)
         .single();
-      if (company) setCompanyName(company.name);
+      if (company) {
+        setCompanyName(company.name);
+        setCompanyLogo(company.logo_url);
+      }
 
       // Fetch identification types for this company
       const { data: idTypes } = await supabase
@@ -307,6 +311,10 @@ export default function RegistroPublico() {
         });
         result = data;
       } else {
+        const parsedSalary = formData.salaryExpectation 
+          ? parseFloat(formData.salaryExpectation.replace(/[^0-9.-]+/g, '')) 
+          : null;
+
         const { data } = await supabase.rpc('submit_candidate_registration', {
           p_token: tokenParam!,
           p_first_name: formData.firstName || '',
@@ -336,7 +344,7 @@ export default function RegistroPublico() {
           p_experience_years: formData.experienceYears ? parseInt(formData.experienceYears) : 0,
           p_current_company: formData.currentCompany || null,
           p_current_position: formData.currentPosition || null,
-          p_salary_expectation: formData.salaryExpectation ? parseFloat(formData.salaryExpectation.replace(/[^0-9.-]+/g, '')) : null,
+          p_salary_expectation: isNaN(parsedSalary as any) ? null : parsedSalary,
           p_general_notes: formData.generalNotes || null,
           p_is_first_job: formData.isFirstJob === 'true' ? true : formData.isFirstJob === 'false' ? false : null,
           p_is_head_of_household: formData.isHeadOfHousehold === 'true' ? true : formData.isHeadOfHousehold === 'false' ? false : null,
@@ -674,9 +682,27 @@ export default function RegistroPublico() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl shadow-xl border-border/50 overflow-hidden">
+        {/* Header with Logo */}
+        <div className="w-full flex flex-col items-center pt-8 pb-4 bg-background">
+          {companyLogo ? (
+            <motion.img
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              src={companyLogo}
+              alt={companyName}
+              className="max-h-24 max-w-[280px] object-contain mb-4"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              <Building className="w-8 h-8 text-primary" />
+            </div>
+          )}
+          <h2 className="text-xl font-bold text-foreground">{companyName}</h2>
+        </div>
+
         {/* Welcome image for candidates */}
         {!isEmployee && step === 'form' && (
-          <div className="w-full">
+          <div className="w-full border-t border-border/50">
             <img
               src="/images/IMAGEN_PROCESO_DE_SELECCION.png"
               alt="Proceso de Selección"
