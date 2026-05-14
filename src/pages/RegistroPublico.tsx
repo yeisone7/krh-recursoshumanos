@@ -249,6 +249,14 @@ export default function RegistroPublico() {
       }
     }
 
+    const mapGender = (val: string | undefined) => {
+      if (!val) return null;
+      if (val === 'femenino') return 'F';
+      if (val === 'masculino') return 'M';
+      if (val === 'trans' || val === 'otro') return 'O';
+      return val.length === 1 ? val : null;
+    };
+
     setSubmitting(true);
     try {
       let result: any;
@@ -266,7 +274,7 @@ export default function RegistroPublico() {
           p_birth_city: formData.birthCity || null,
           p_birth_department: formData.birthDepartment || null,
           p_birth_country: formData.birthCountry || null,
-          p_gender: formData.gender || null,
+          p_gender: mapGender(formData.gender),
           p_gender_identity: formData.genderIdentity || null,
           p_gender_identity_other: formData.genderIdentityOther || null,
           p_marital_status: formData.maritalStatus || null,
@@ -330,7 +338,7 @@ export default function RegistroPublico() {
           p_city: formData.city || null,
           p_department: formData.department || null,
           p_birth_date: formData.birthDate || null,
-          p_gender: formData.gender || null,
+          p_gender: mapGender(formData.gender),
           p_gender_identity: formData.genderIdentity || null,
           p_gender_identity_other: formData.genderIdentityOther || null,
           p_document_issue_date: formData.documentIssueDate || null,

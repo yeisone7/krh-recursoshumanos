@@ -45,6 +45,7 @@ export interface PersonnelRequisition {
   rrhh_tipo_convocatoria: string | null;
   rrhh_observaciones: string | null;
   rrhh_aprobado: boolean | null;
+  rrhh_incluye_auxilio_transporte: boolean;
   rrhh_quien_aprobo: string | null;
   rrhh_aprobador_id: string | null;
   rrhh_fecha_aprobacion: string | null;
@@ -270,11 +271,16 @@ export function useApproveRequisitionStep() {
       };
 
       // First fetch the requisition to get autoriza value
-      const { data: reqData } = await supabase
+      const { data: reqData, error: fetchError } = await supabase
         .from('personnel_requisitions')
         .select('autoriza')
         .eq('id', id)
         .single();
+
+      if (fetchError) {
+        console.error('Error fetching requisition for approval:', fetchError);
+        throw fetchError;
+      }
 
       const autoriza = (reqData as any)?.autoriza;
 
@@ -306,6 +312,8 @@ export function useApproveRequisitionStep() {
 
       updates.estado_requisicion = statusMap[step];
 
+      console.log('Final update payload:', updates);
+
       const { data: result, error } = await supabase
         .from('personnel_requisitions')
         .update(updates as any)
@@ -313,7 +321,15 @@ export function useApproveRequisitionStep() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Detailed Supabase Update Error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
 
       // Notify the next approver if approved and there's a next step
       if (approved && updates.estado_requisicion !== 'aprobada') {
@@ -322,7 +338,7 @@ export function useApproveRequisitionStep() {
             body: {
               requisitionId: id,
               currentStep: updates.estado_requisicion,
-              requisitionTitle: result.cargo_solicitado,
+              requisitionTitle: result?.cargo_solicitado || 'Requisición',
             },
           });
         } catch (notifyError) {

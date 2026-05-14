@@ -139,8 +139,8 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <OnboardingGuard>
-                    <CompanyGuard>
                     <NoRoleGuard>
+                    <CompanyGuard>
                     <AppLayout>
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
@@ -209,8 +209,8 @@ const App = () => (
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </AppLayout>
-                    </NoRoleGuard>
                     </CompanyGuard>
+                    </NoRoleGuard>
                   </OnboardingGuard>
                 </ProtectedRoute>
               }

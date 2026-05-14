@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useCreateRegistrationToken } from '@/hooks/useRegistrationTokens';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
   open: boolean;
@@ -112,6 +113,8 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const { companies, currentCompanyId } = useAuth();
+  const currentCompany = companies.find(c => c.id === currentCompanyId);
   const createToken = useCreateRegistrationToken();
 
   const toggleField = (key: string) => {
@@ -169,13 +172,23 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Link2 className="w-5 h-5 text-primary" />
-            Generar Enlace de Registro
-          </DialogTitle>
-          <DialogDescription>
-            Selecciona los campos que el {targetType === 'candidate' ? 'candidato' : 'empleado'} debe diligenciar.
-          </DialogDescription>
+          <div className="flex items-center gap-4 mb-4">
+            {currentCompany?.logo_url ? (
+              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border">
+                <img src={currentCompany.logo_url} alt={currentCompany.name} className="w-full h-full object-contain" />
+              </div>
+            ) : (
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Link2 className="w-6 h-6 text-primary" />
+              </div>
+            )}
+            <div>
+              <DialogTitle>Generar Enlace de Registro</DialogTitle>
+              <DialogDescription>
+                {currentCompany?.name} • Para {targetType === 'candidate' ? 'candidatos' : 'empleados'}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         {!generatedLink ? (
