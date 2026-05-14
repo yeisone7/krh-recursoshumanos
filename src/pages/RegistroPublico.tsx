@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useEducationLevels } from '@/hooks/useEducationLevels';
 import { useProfessions } from '@/hooks/useProfessions';
+import { motion } from 'framer-motion';
 
 type Step = 'loading' | 'error' | 'form' | 'done';
 
