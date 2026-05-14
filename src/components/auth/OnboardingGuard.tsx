@@ -17,10 +17,13 @@ export function OnboardingGuard({ children }: OnboardingGuardProps) {
     );
   }
 
-  // If user is logged in but has no company assigned, redirect to onboarding
+  // El Onboarding ha sido desactivado a petición del usuario.
+  // Ahora el flujo pasará directamente al NoRoleGuard para esperar asignación de roles.
+  /*
   if (user && companies.length === 0) {
     return <Navigate to="/onboarding" replace />;
   }
+  */
 
   return <>{children}</>;
 }
