@@ -60,7 +60,7 @@ import {
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import sidebarLogo from '@/assets/sidebar-logo.png';
+import sidebarLogo from '@/assets/empatiq-logo-new.jpg';
 
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || 'dev';
 const APP_VERSION_LABEL = APP_VERSION === 'dev' ? 'dev' : APP_VERSION.slice(0, 8);
@@ -652,7 +652,6 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                 <img src={sidebarLogo} alt="EmpatiQ Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
-                <span className="font-['Plus_Jakarta_Sans'] font-extrabold text-xl text-foreground leading-tight tracking-tight">EmpatiQ</span>
                  <span className="text-[10px] font-bold text-sidebar-foreground/60 leading-tight whitespace-nowrap uppercase tracking-wider">Talento Humano</span>
               </div>
             </motion.div> :

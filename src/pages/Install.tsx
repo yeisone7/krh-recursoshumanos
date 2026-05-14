@@ -125,7 +125,7 @@ const Install = () => {
         className="max-w-md w-full space-y-6"
       >
         <div className="text-center space-y-3">
-          <img src="/krh-install-icon.png" alt="KRH" className="w-20 h-20 mx-auto rounded-2xl shadow-lg" />
+          <img src="/krh-install-icon.jpg" alt="KRH" className="w-20 h-20 mx-auto rounded-2xl shadow-lg" />
           <h1 className="text-2xl font-bold text-foreground">Instalar KRH</h1>
           <p className="text-muted-foreground text-sm">
             Agrega KRH a tu pantalla de inicio para acceder rápidamente sin abrir el navegador.
