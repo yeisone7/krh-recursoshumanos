@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useRegistrationTokens, useDeactivateRegistrationToken, useDeleteRegistrationToken } from '@/hooks/useRegistrationTokens';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
   vacancyId?: string;
@@ -12,6 +13,8 @@ interface Props {
 }
 
 export function RegistrationTokensList({ vacancyId, targetType }: Props) {
+  const { companies, currentCompanyId } = useAuth();
+  const currentCompany = companies.find(c => c.id === currentCompanyId);
   const { data: allTokens = [], isLoading } = useRegistrationTokens(vacancyId);
   const tokens = targetType ? allTokens.filter(t => t.target_type === targetType) : allTokens;
   const deactivate = useDeactivateRegistrationToken();
@@ -67,8 +70,12 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
             className="flex items-center justify-between p-3 rounded-lg border bg-card"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                <Link2 className="w-4 h-4 text-primary" />
+              <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden border">
+                {currentCompany?.logo_url ? (
+                  <img src={currentCompany.logo_url} alt={currentCompany.name} className="w-full h-full object-contain" />
+                ) : (
+                  <Link2 className="w-5 h-5 text-primary" />
+                )}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
