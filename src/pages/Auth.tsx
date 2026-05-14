@@ -13,8 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Shield, Building2, ChevronRight, ChevronDown, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import empatiqIcon from '@/assets/empatiq-icon.png';
-import empatiqLogo from '@/assets/empatiq-logo.png';
+import empatiqLogo from '@/assets/empatiq-logo-horizontal.png';
+import empatiqIcon from '@/assets/empatiq-logo-vertical.jpg';
 
 const loginSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
@@ -302,17 +302,17 @@ export default function Auth() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between gap-8 p-5 lg:p-8 w-full min-h-screen">
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex justify-start pt-2 lg:pt-4">
-            <div className="relative h-24 w-full max-w-[220px] lg:h-32 lg:max-w-[320px]">
+        <div className="relative z-10 flex flex-col justify-between gap-4 p-4 lg:p-6 w-full min-h-screen">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex justify-start pt-0">
+            <div className="relative h-24 w-full max-w-[320px] lg:h-32 lg:max-w-[440px]">
             {!isHeroLogoLoaded && <div className="absolute inset-0 rounded bg-secondary/15 animate-pulse" aria-hidden="true" />}
             <picture className={cn("block origin-center transition-[opacity,transform] duration-500 ease-out", isHeroLogoLoaded ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0")}>
               <img
                 src={empatiqLogo}
                 alt="Logo EmpatiQ"
                 className="h-full max-w-full object-contain"
-                width={480}
-                height={240}
+                width={320}
+                height={320}
                 decoding="async"
                 loading="eager"
                 fetchpriority="high"
@@ -323,9 +323,9 @@ export default function Auth() {
             </div>
           </motion.div>
           
-          <div className="space-y-5">
+          <div className="space-y-3">
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/25 text-primary text-xs lg:text-sm font-medium mb-3 lg:mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/25 text-primary text-xs lg:text-sm font-medium mb-2 lg:mb-3">
                 <Sparkles className="w-4 h-4 shrink-0" />
                 Plataforma KRH
               </div>
@@ -335,19 +335,19 @@ export default function Auth() {
                   Recursos Humanos
                 </span>
               </h1>
-              <p className="text-sm lg:text-base text-muted-foreground mt-3 max-w-md leading-relaxed">
+              <p className="text-sm lg:text-base text-muted-foreground mt-1.5 max-w-md leading-relaxed">
                 Plataforma integral para la administración de empleados, contratos, dotación y exámenes médicos.
               </p>
             </motion.div>
             
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }} className="space-y-2">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }} className="space-y-1.5">
               {features.map((feat, i) =>
               <motion.div
                 key={feat.title}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
-                className="flex items-center gap-2.5 lg:gap-3 p-2 lg:p-2.5 bg-primary/5 backdrop-blur-sm border border-primary/15 hover:bg-primary/10 transition-colors group cursor-default">
+                className="flex items-center gap-2 lg:gap-3 p-1.5 lg:p-2 bg-primary/5 backdrop-blur-sm border border-primary/15 hover:bg-primary/10 transition-colors group cursor-default">
 
                   <div className="w-8 h-8 lg:w-9 lg:h-9 bg-primary/10 flex items-center justify-center shrink-0">
                     <feat.icon className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
@@ -386,10 +386,9 @@ export default function Auth() {
               aria-controls="mobile-brand-panel"
               onClick={() => setIsBrandPanelOpen((open) => !open)}
             >
-              <span className="flex items-center gap-3 min-w-0">
-                <img src={empatiqIcon} alt="EmpatiQ" className="h-11 w-11 shrink-0 object-contain" />
+              <span className="flex items-center gap-2 min-w-0">
+                <img src={empatiqIcon} alt="EmpatiQ" className="h-20 w-20 shrink-0 object-contain" />
                 <span className="min-w-0">
-                  <span className="block text-sm font-bold text-foreground">EmpatiQ</span>
                   <span className="block text-xs text-muted-foreground">Plataforma KRH</span>
                 </span>
               </span>
@@ -418,13 +417,13 @@ export default function Auth() {
             </AnimatePresence>
           </div>
 
-          <div className="bg-card border border-border p-8 shadow-xl">
+          <div className="bg-card border border-border p-5 shadow-xl">
             {/* Header */}
-            <div className="text-center mb-6">
-              <div className="hidden lg:flex flex-col items-center mb-3">
-                <img src={empatiqIcon} alt="EmpatiQ" className="w-16 h-16 object-contain" />
+            <div className="text-center mb-4">
+              <div className="hidden lg:flex flex-col items-center mb-1 gap-0">
+                <img src={empatiqIcon} alt="EmpatiQ" className="w-20 h-20 object-contain -mb-4" />
                 
-                <span className="text-xs font-semibold text-primary/80 leading-tight text-center">EmpatiQ<br />Gestión de Talento</span>
+                <span className="text-xs font-semibold text-primary/80 leading-tight text-center">Gestión de Talento Humano</span>
               </div>
               <AnimatePresence mode="wait">
                 <motion.div
@@ -437,7 +436,7 @@ export default function Auth() {
                   <h2 className="text-xl font-bold text-foreground">
                     {isRecoveryMode ? 'Recuperar contraseña' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
                   </h2>
-                  <p className="text-muted-foreground text-xs mt-1">
+                  <p className="text-muted-foreground text-[10px] mt-0.5">
                     {isRecoveryMode ?
                     'Te enviaremos un enlace seguro a tu correo' :
                     isLogin ?
@@ -469,7 +468,7 @@ export default function Auth() {
 
                   <Button
                     type="submit"
-                    className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
+                    className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-1"
                     disabled={isSubmitting || !recoveryForm.formState.isValid}
                     aria-busy={isSubmitting}
                     aria-live="polite"
@@ -483,7 +482,7 @@ export default function Auth() {
                 </form>
               </Form> : isLogin ?
             <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} onKeyDown={handleLoginKeyDown} className="space-y-3">
                   {loginErrorSummary && (
                     <div
                       ref={loginErrorSummaryRef}
@@ -539,7 +538,7 @@ export default function Auth() {
 
                   <Button
                     type="submit"
-                    className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-2"
+                    className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-1"
                     disabled={isSubmitting || !loginForm.formState.isValid}
                     aria-busy={isSubmitting}
                     aria-live="polite"
