@@ -34,11 +34,13 @@ export function useAdminUsers() {
   return useQuery({
     queryKey: ['admin-users', currentCompanyId],
     queryFn: async (): Promise<AdminUser[]> => {
+      if (!currentCompanyId) return [];
+
       // First get users assigned to the current company
       const { data: companyUsers, error: companyError } = await supabase
         .from('user_company_assignments')
         .select('user_id')
-        .eq('company_id', currentCompanyId!);
+        .eq('company_id', currentCompanyId);
 
       if (companyError) throw companyError;
 
@@ -46,74 +48,96 @@ export function useAdminUsers() {
       
       if (userIds.length === 0) return [];
 
-      // Fetch roles for these users
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', userIds);
+      // Use batching for all queries that use userIds to avoid URL length limits (400 Bad Request)
+      const { batchQuery } = await import('@/utils/supabaseBatch');
 
+      // 1. Fetch roles
+      const { data: rolesData, error: rolesError } = await batchQuery(
+        userIds,
+        100,
+        (chunk) => supabase.from('user_roles').select('user_id, role').in('user_id', chunk)
+      );
       if (rolesError) throw rolesError;
 
-      const { data: customRolesData, error: customRolesError } = await supabase
-        .from('user_custom_roles')
-        .select('user_id, custom_roles!inner(name, company_id)')
-        .in('user_id', userIds)
-        .eq('custom_roles.company_id', currentCompanyId!);
-
+      // 2. Fetch custom roles - Optimization: Filter by company_id
+      const { data: customRolesData, error: customRolesError } = await batchQuery(
+        userIds,
+        100,
+        (chunk) => supabase
+          .from('user_custom_roles')
+          .select('user_id, custom_roles!inner(name, company_id)')
+          .in('user_id', chunk)
+          .eq('custom_roles.company_id', currentCompanyId)
+      );
       if (customRolesError) throw customRolesError;
 
-      // Fetch company assignments
-      const { data: companyAssignments, error: assignError } = await supabase
-        .from('user_company_assignments')
-        .select('user_id, company_id, companies(id, name)')
-        .in('user_id', userIds);
-
+      // 3. Fetch company assignments
+      const { data: companyAssignments, error: assignError } = await batchQuery(
+        userIds,
+        100,
+        (chunk) => supabase
+          .from('user_company_assignments')
+          .select('user_id, company_id, companies(id, name)')
+          .in('user_id', chunk)
+      );
       if (assignError) throw assignError;
 
-      // Fetch center assignments
-      const { data: centerAssignments, error: centerError } = await supabase
-        .from('user_center_assignments')
-        .select('user_id, operation_center_id, operation_centers(id, name, companies(name))')
-        .in('user_id', userIds);
-
+      // 4. Fetch center assignments
+      const { data: centerAssignments, error: centerError } = await batchQuery(
+        userIds,
+        100,
+        (chunk) => supabase
+          .from('user_center_assignments')
+          .select('user_id, operation_center_id, operation_centers(id, name, companies(name))')
+          .in('user_id', chunk)
+      );
       if (centerError) throw centerError;
 
-      // Fetch user status (active/inactive)
-      const { data: statusData, error: statusError } = await supabase
-        .from('user_status')
-        .select('user_id, is_active, deactivated_at, deactivation_reason')
-        .in('user_id', userIds);
-
+      // 5. Fetch user status
+      const { data: statusData, error: statusError } = await batchQuery(
+        userIds,
+        100,
+        (chunk) => supabase
+          .from('user_status')
+          .select('user_id, is_active, deactivated_at, deactivation_reason')
+          .in('user_id', chunk)
+      );
       if (statusError) throw statusError;
 
-      // Fetch user profiles for names and avatars
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('user_profiles')
-        .select('id, full_name, display_name, avatar_url')
-        .in('id', userIds);
-
+      // 6. Fetch user profiles
+      const { data: profilesData, error: profilesError } = await batchQuery(
+        userIds,
+        100,
+        (chunk) => supabase
+          .from('user_profiles')
+          .select('id, full_name, display_name, avatar_url')
+          .in('id', chunk)
+      );
       if (profilesError) throw profilesError;
 
-      // Fetch employee links for fallback names and emails
-      const { data: employeeLinks, error: linksError } = await supabase
-        .from('employee_user_links')
-        .select(`
-          user_id,
-          employee_id,
-          employees_v2!employee_user_links_employee_id_fkey(
-            first_name, 
-            middle_name,
-            last_name, 
-            second_last_name,
-            employee_contact(email)
-          )
-        `)
-        .in('user_id', userIds)
-        .eq('is_active', true);
-
+      // 7. Fetch employee links
+      const { data: employeeLinks, error: linksError } = await batchQuery(
+        userIds,
+        100,
+        (chunk) => supabase
+          .from('employee_user_links')
+          .select(`
+            user_id,
+            employee_id,
+            employees_v2!employee_user_links_employee_id_fkey(
+              first_name, 
+              middle_name,
+              last_name, 
+              second_last_name,
+              employee_contact(email)
+            )
+          `)
+          .in('user_id', chunk)
+          .eq('is_active', true)
+      );
       if (linksError) throw linksError;
 
-      // Build user objects - we'll use user_id as the identifier
+      // Build user objects
       const usersMap = new Map<string, AdminUser>();
 
       userIds.forEach(userId => {
@@ -132,7 +156,7 @@ export function useAdminUsers() {
         });
       });
 
-      // Add profile data (primary source for names)
+      // Add profile data
       profilesData?.forEach(p => {
         const user = usersMap.get(p.id);
         if (user) {
@@ -142,13 +166,11 @@ export function useAdminUsers() {
         }
       });
 
-      // Add employee link data as fallback for names and emails
+      // Add employee link data
       employeeLinks?.forEach(link => {
         const user = usersMap.get(link.user_id);
         if (user && link.employees_v2) {
           const emp = link.employees_v2 as any;
-          
-          // Fallback name
           if (!user.full_name) {
             const fullName = [
               emp.first_name,
@@ -158,8 +180,6 @@ export function useAdminUsers() {
             ].filter(Boolean).join(' ');
             user.full_name = fullName || '';
           }
-
-          // Fallback email from employee contact
           if (!user.email && emp.employee_contact) {
             const contact = Array.isArray(emp.employee_contact) 
               ? emp.employee_contact[0] 

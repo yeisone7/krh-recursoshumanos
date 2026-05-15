@@ -255,7 +255,13 @@ export default function Auth() {
   const onRegisterSubmit = async (data: RegisterFormData) => {
     setIsSubmitting(true);
     try {
-      const { error } = await signUp(data.email, data.password);
+      const fullName = `${data.first_name} ${data.last_name}`.trim();
+      const { error } = await signUp(data.email, data.password, {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        full_name: fullName,
+        document_number: data.document_number
+      });
       if (error) {
         toast({
           variant: 'destructive',
