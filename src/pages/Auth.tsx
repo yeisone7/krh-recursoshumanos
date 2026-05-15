@@ -525,7 +525,7 @@ export default function Auth() {
                       <input type="checkbox" className="h-4 w-4 rounded border-border accent-primary disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} />
                       Recordar sesión
                     </label>
-                    <button type="button" className="font-semibold text-secondary hover:text-secondary/80 transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} onClick={() => {
+                    <button type="button" className="font-semibold text-primary hover:text-primary-hover hover:underline transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} onClick={() => {
                       setIsRecoveryMode(true);
                       setIsRecoverySent(false);
                       recoveryForm.setValue('email', loginForm.getValues('email'));
@@ -658,7 +658,7 @@ export default function Auth() {
               </span>{' '}
               <button
                 type="button"
-                className="text-secondary hover:text-secondary/80 font-semibold transition-colors"
+                className="text-primary hover:text-primary-hover font-bold hover:underline transition-colors"
                 onClick={() => {
                   if (isRecoveryMode) {
                     setIsRecoveryMode(false);

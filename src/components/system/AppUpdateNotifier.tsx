@@ -27,7 +27,10 @@ function AppUpdateNotifierContent() {
   const checkIntervalMs = updateCheckMinutes * 60 * 1000 || VERSION_CHECK_INTERVAL_MS;
 
   useEffect(() => {
-    if (!import.meta.env.PROD) return;
+    // En desarrollo local (localhost), evitamos la notificación de actualización 
+    // para no molestar durante el ciclo de trabajo de desarrollo.
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') return;
+
     if (!updateCheckEnabled) {
       toast.dismiss(UPDATE_TOAST_ID);
       updateNotifiedRef.current = false;
@@ -37,6 +40,8 @@ function AppUpdateNotifierContent() {
     let isMounted = true;
 
     const checkForUpdate = async () => {
+      // Si ya notificamos en esta sesión, no volvemos a preguntar 
+      // (a menos que se recargue o se limpie el ref)
       if (!navigator.onLine || updateNotifiedRef.current) return;
 
       try {
@@ -50,28 +55,53 @@ function AppUpdateNotifierContent() {
         const data = (await response.json()) as VersionResponse;
         const latestVersion = data.version;
 
-        if (!isMounted || !latestVersion || latestVersion === CURRENT_APP_VERSION) return;
-        if (window.sessionStorage.getItem(ACKNOWLEDGED_UPDATE_KEY) === latestVersion) return;
+        // Caso 1: Ya estamos en la versión más reciente
+        if (!isMounted || !latestVersion || latestVersion === CURRENT_APP_VERSION) {
+          // Si ya estábamos en la versión más reciente, nos aseguramos de limpiar 
+          // cualquier rastro de reconocimiento de versiones antiguas
+          if (latestVersion === CURRENT_APP_VERSION) {
+            localStorage.removeItem(ACKNOWLEDGED_UPDATE_KEY);
+          }
+          return;
+        }
 
+        // Caso 2: El usuario ya reconoció esta versión específica y decidió ignorarla por ahora
+        if (localStorage.getItem(ACKNOWLEDGED_UPDATE_KEY) === latestVersion) return;
+
+        // Evitar múltiples toasts
         updateNotifiedRef.current = true;
-        toast.dismiss(UPDATE_TOAST_ID);
-        toast.info('Hay una actualización disponible', {
+        
+        toast.info('Nueva versión disponible', {
           id: UPDATE_TOAST_ID,
-          description: 'Actualiza para cargar la versión más reciente de KRH.',
+          description: 'Se han aplicado mejoras y correcciones importantes.',
           duration: Infinity,
           action: {
-            label: 'Actualizar ahora',
+            label: 'Actualizar',
             onClick: () => {
-              window.sessionStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, latestVersion);
+              // Guardamos en localStorage para persistencia real
+              localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, latestVersion);
               toast.dismiss(UPDATE_TOAST_ID);
-              const url = new URL(window.location.href);
-              url.searchParams.set('refresh', latestVersion.slice(0, 12));
-              window.location.replace(url.toString());
+              
+              // Pequeño delay para que el usuario vea el feedback del click
+              setTimeout(() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('refresh', latestVersion.slice(0, 8));
+                window.location.replace(url.toString());
+              }, 100);
             },
           },
+          cancel: {
+            label: 'Más tarde',
+            onClick: () => {
+              // Si el usuario da a "Más tarde", marcamos como reconocida para que 
+              // no vuelva a aparecer en esta versión.
+              localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, latestVersion);
+              toast.dismiss(UPDATE_TOAST_ID);
+            }
+          }
         });
-      } catch {
-        // Si la verificación falla, se reintentará automáticamente en el siguiente ciclo.
+      } catch (error) {
+        // Silencioso, reintentará en el siguiente intervalo
       }
     };
 
