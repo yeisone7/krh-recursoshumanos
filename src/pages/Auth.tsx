@@ -652,13 +652,13 @@ export default function Auth() {
             </div>
 
             {/* Toggle */}
-            <div className="text-center text-sm">
-              <span className="text-muted-foreground">
+            <div className="text-center py-2 px-4 rounded-xl bg-slate-50 border border-slate-100">
+              <span className="text-slate-600 font-medium text-sm">
                 {isRecoveryMode ? '¿Recordaste tu contraseña?' : isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
               </span>{' '}
               <button
                 type="button"
-                className="text-primary hover:text-primary-hover font-bold hover:underline transition-colors"
+                className="text-primary hover:text-primary/80 font-black text-sm hover:underline transition-all active:scale-95 ml-1"
                 onClick={() => {
                   if (isRecoveryMode) {
                     setIsRecoveryMode(false);
@@ -672,7 +672,7 @@ export default function Auth() {
                   registerForm.reset();
                 }}>
 
-                {isRecoveryMode ? 'Inicia sesión' : isLogin ? 'Regístrate' : 'Inicia sesión'}
+                {isRecoveryMode ? 'Inicia sesión' : isLogin ? 'Regístrate aquí' : 'Inicia sesión'}
               </button>
             </div>
           </div>

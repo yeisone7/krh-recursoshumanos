@@ -94,14 +94,18 @@ export function useAdminUsers() {
 
       if (profilesError) throw profilesError;
 
-      // Fetch employee links for fallback names
+      // Fetch employee links for fallback names and emails
       const { data: employeeLinks, error: linksError } = await supabase
         .from('employee_user_links')
         .select(`
           user_id,
           employee_id,
           employees_v2!employee_user_links_employee_id_fkey(
-            first_name, last_name
+            first_name, 
+            middle_name,
+            last_name, 
+            second_last_name,
+            employee_contact(email)
           )
         `)
         .in('user_id', userIds)
@@ -138,12 +142,30 @@ export function useAdminUsers() {
         }
       });
 
-      // Add employee link data as fallback for names
+      // Add employee link data as fallback for names and emails
       employeeLinks?.forEach(link => {
         const user = usersMap.get(link.user_id);
-        if (user && !user.full_name && link.employees_v2) {
-          const emp = link.employees_v2 as { first_name: string; last_name: string };
-          user.full_name = `${emp.first_name} ${emp.last_name}`.trim();
+        if (user && link.employees_v2) {
+          const emp = link.employees_v2 as any;
+          
+          // Fallback name
+          if (!user.full_name) {
+            const fullName = [
+              emp.first_name,
+              emp.middle_name,
+              emp.last_name,
+              emp.second_last_name
+            ].filter(Boolean).join(' ');
+            user.full_name = fullName || '';
+          }
+
+          // Fallback email from employee contact
+          if (!user.email && emp.employee_contact) {
+            const contact = Array.isArray(emp.employee_contact) 
+              ? emp.employee_contact[0] 
+              : emp.employee_contact;
+            user.email = contact?.email || '';
+          }
         }
       });
 
