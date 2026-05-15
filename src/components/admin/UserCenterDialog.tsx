@@ -78,17 +78,39 @@ export function UserCenterDialog({ user, open, onOpenChange }: UserCenterDialogP
         </DialogHeader>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4 pr-1">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="text-sm text-muted-foreground">Centros actuales:</span>
-            {user?.centers.length === 0 && (
-              <span className="text-sm text-muted-foreground italic">Sin centros asignados</span>
-            )}
-            {user?.centers.map(center => (
-              <Badge key={center.id} variant="outline">
-                <Building2 className="w-3 h-3 mr-1" />
-                {center.name}
-              </Badge>
-            ))}
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm text-muted-foreground">Centros actuales:</span>
+              {user?.centers.length === 0 && (
+                <Badge variant="outline" className="bg-emerald-50 border-emerald-100 text-emerald-600">
+                  <Building2 className="w-3 h-3 mr-1" />
+                  Todos los centros
+                </Badge>
+              )}
+              {user?.centers.map(center => (
+                <Badge key={center.id} variant="outline">
+                  <Building2 className="w-3 h-3 mr-1" />
+                  {center.name}
+                </Badge>
+              ))}
+            </div>
+            
+            <div className="flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+              <Checkbox 
+                id="select-all" 
+                checked={selectedCenters.length === 0}
+                onCheckedChange={(checked) => {
+                  if (checked) setSelectedCenters([]);
+                }}
+              />
+              <Label htmlFor="select-all" className="text-xs font-bold uppercase cursor-pointer">Todos los Centros</Label>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg mb-4">
+            <p className="text-[11px] text-blue-700 leading-tight">
+              <strong>Nota:</strong> Si no seleccionas ningún centro específico, el sistema asignará automáticamente <strong>TODOS</strong> los centros disponibles al usuario.
+            </p>
           </div>
 
           {centers.length === 0 ? (
@@ -98,12 +120,18 @@ export function UserCenterDialog({ user, open, onOpenChange }: UserCenterDialogP
               <p className="text-sm">Crea centros desde la página de Centros</p>
             </div>
           ) : (
-            <div className="max-h-[45dvh] overflow-y-auto pr-1">
+            <div className={cn(
+              "max-h-[40dvh] overflow-y-auto pr-1 transition-opacity",
+              selectedCenters.length === 0 && "opacity-50 pointer-events-none"
+            )}>
               <div className="space-y-3">
                 {centers.map(center => (
                   <div 
                     key={center.id} 
-                    className="flex min-w-0 items-start space-x-3 rounded-lg border border-border p-3 transition-colors hover:bg-background"
+                    className={cn(
+                      "flex min-w-0 items-start space-x-3 rounded-lg border border-border p-3 transition-colors",
+                      selectedCenters.includes(center.id) ? "bg-primary/[0.03] border-primary/20" : "hover:bg-background"
+                    )}
                   >
                     <Checkbox
                       id={center.id}

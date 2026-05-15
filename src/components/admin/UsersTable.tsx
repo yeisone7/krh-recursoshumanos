@@ -48,8 +48,8 @@ import { MobileCardList } from '@/components/shared/MobileCardList';
 function getUserDisplayName(user: AdminUser): string {
   if (user.full_name) return user.full_name;
   if (user.display_name) return user.display_name;
-  if (user.email) return user.email.split('@')[0];
-  return user.id.slice(0, 8) + '...';
+  if (user.email) return user.email;
+  return `Usuario (${user.id.slice(0, 4)}...${user.id.slice(-4)})`;
 }
 
 // Helper to get initials for avatar
@@ -357,7 +357,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             },
             {
               label: 'Centros',
-              value: user.centers.length === 0 ? 'Todos' : `${user.centers.length}`,
+              value: user.centers.length === 0 ? 'Todos los centros' : `${user.centers.length}`,
             },
           ],
           actions: (
@@ -486,7 +486,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                 <TableCell className="px-8 py-6">
                   <div className="flex flex-wrap gap-1.5">
                     {user.centers.length === 0 ? (
-                      <Badge variant="outline" className="bg-emerald-50 border-emerald-100 text-emerald-600 font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">Global</Badge>
+                      <Badge variant="outline" className="bg-emerald-50 border-emerald-100 text-emerald-600 font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">Todos los centros</Badge>
                     ) : (
                       user.centers.slice(0, 2).map(center => (
                         <Badge key={center.id} variant="outline" className="bg-white border-slate-100 text-slate-500 font-bold text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest flex items-center gap-1">
