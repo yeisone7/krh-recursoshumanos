@@ -246,13 +246,13 @@ export default function SuperAdmin() {
                 <Badge className="bg-primary/10 text-primary border-primary/20 font-black text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest">
                   Panel de Control Maestro
                 </Badge>
-                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Protocolo de Alta Seguridad</span>
+                <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Protocolo de Alta Seguridad</span>
               </div>
               <h1 className="text-3xl font-black tracking-tight text-foreground uppercase sm:text-4xl">
                 Super Administrador
               </h1>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Gestión global de infraestructura multisectorial</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Gestión global de infraestructura multisectorial</p>
             </div>
           </div>
 
@@ -322,7 +322,7 @@ export default function SuperAdmin() {
             </div>
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button className="h-12 px-8 rounded-2xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]">
+                <Button className="h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]">
                   <Plus className="w-4 h-4 mr-2 stroke-[3]" />
                   REGISTRAR EMPRESA
                 </Button>
@@ -459,7 +459,7 @@ export default function SuperAdmin() {
                             
                             {editingCompany.logo_url && !logoFile && (
                               <div className="absolute top-1.5 right-1.5">
-                                <Badge className="bg-emerald-500 hover:bg-emerald-600 text-[8px] h-3.5 px-1 border-none shadow-sm">Actual</Badge>
+                                <Badge className="bg-success hover:bg-success/90 text-[8px] h-3.5 px-1 border-none shadow-sm">Actual</Badge>
                               </div>
                             )}
 
@@ -492,7 +492,7 @@ export default function SuperAdmin() {
 
                             {editingCompany.horizontal_logo_url && !horizontalLogoFile && (
                               <div className="absolute top-1.5 right-1.5">
-                                <Badge className="bg-emerald-500 hover:bg-emerald-600 text-[8px] h-3.5 px-1 border-none shadow-sm">Actual</Badge>
+                                <Badge className="bg-success hover:bg-success/90 text-[8px] h-3.5 px-1 border-none shadow-sm">Actual</Badge>
                               </div>
                             )}
 
@@ -683,7 +683,7 @@ export default function SuperAdmin() {
             </div>
             <Button 
               onClick={() => setInviteDialogOpen(true)} 
-              className="h-12 px-8 rounded-2xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+              className="h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
             >
               <UserPlus className="w-4 h-4 mr-2 stroke-[3]" />
               INVITAR OPERADOR

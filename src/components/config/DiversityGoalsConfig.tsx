@@ -83,7 +83,7 @@ export function DiversityGoalsConfig() {
             <Button 
               onClick={handleSave} 
               disabled={updateConfig.isPending || !goals.enabled}
-              className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+              className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
             >
               {updateConfig.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               GUARDAR METAS

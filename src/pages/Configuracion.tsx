@@ -458,7 +458,7 @@ export default function Configuracion() {
                     "h-11 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all",
                     editingCompany 
                       ? "bg-slate-200 text-slate-600 hover:bg-slate-300 shadow-none" 
-                      : "bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20"
+                      : "bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20"
                   )}
                 >
                   {editingCompany ? "CANCELAR EDICIÓN" : "MODIFICAR DATOS"}
@@ -554,7 +554,7 @@ export default function Configuracion() {
                       <Button 
                         onClick={handleSaveCompanyInfo} 
                         disabled={updateCompany.isPending}
-                        className="h-12 px-10 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+                        className="h-12 px-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
                       >
                         {updateCompany.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         CONFIRMAR ACTUALIZACIÓN
@@ -727,7 +727,7 @@ export default function Configuracion() {
                 </div>
                 <Button 
                   onClick={handleSaveAlertConfig}
-                  className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+                  className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
                 >
                   GUARDAR CONFIGURACIÓN
                 </Button>
@@ -765,12 +765,12 @@ export default function Configuracion() {
                       <Input type="number" className="h-10 rounded-xl font-black text-xs" value={alertContractInfo} onChange={(e) => setAlertContractInfo(parseInt(e.target.value) || 60)} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[9px] font-black text-amber-500 uppercase tracking-widest">Advertencia</Label>
-                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-amber-200 bg-amber-50/30" value={alertContractWarning} onChange={(e) => setAlertContractWarning(parseInt(e.target.value) || 30)} />
+                      <Label className="text-[9px] font-black text-warning uppercase tracking-widest">Advertencia</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-warning/20 bg-warning/5" value={alertContractWarning} onChange={(e) => setAlertContractWarning(parseInt(e.target.value) || 30)} />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black text-destructive uppercase tracking-widest">Crítico</Label>
-                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-red-200 bg-red-50/30" value={alertContractCritical} onChange={(e) => setAlertContractCritical(parseInt(e.target.value) || 7)} />
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-destructive/20 bg-destructive/5" value={alertContractCritical} onChange={(e) => setAlertContractCritical(parseInt(e.target.value) || 7)} />
                     </div>
                   </div>
                 </div>
@@ -787,12 +787,12 @@ export default function Configuracion() {
                       <Input type="number" className="h-10 rounded-xl font-black text-xs" value={alertExamInfo} onChange={(e) => setAlertExamInfo(parseInt(e.target.value) || 60)} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[9px] font-black text-amber-500 uppercase tracking-widest">Advertencia</Label>
-                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-amber-200 bg-amber-50/30" value={alertExamWarning} onChange={(e) => setAlertExamWarning(parseInt(e.target.value) || 30)} />
+                      <Label className="text-[9px] font-black text-warning uppercase tracking-widest">Advertencia</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-warning/20 bg-warning/5" value={alertExamWarning} onChange={(e) => setAlertExamWarning(parseInt(e.target.value) || 30)} />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black text-destructive uppercase tracking-widest">Crítico</Label>
-                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-red-200 bg-red-50/30" value={alertExamCritical} onChange={(e) => setAlertExamCritical(parseInt(e.target.value) || 7)} />
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-destructive/20 bg-destructive/5" value={alertExamCritical} onChange={(e) => setAlertExamCritical(parseInt(e.target.value) || 7)} />
                     </div>
                   </div>
                 </div>
@@ -809,12 +809,12 @@ export default function Configuracion() {
                       <Input type="number" className="h-10 rounded-xl font-black text-xs" value={alertDotationInfo} onChange={(e) => setAlertDotationInfo(parseInt(e.target.value) || 60)} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[9px] font-black text-amber-500 uppercase tracking-widest">Advertencia</Label>
-                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-amber-200 bg-amber-50/30" value={alertDotationWarning} onChange={(e) => setAlertDotationWarning(parseInt(e.target.value) || 30)} />
+                      <Label className="text-[9px] font-black text-warning uppercase tracking-widest">Advertencia</Label>
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-warning/20 bg-warning/5" value={alertDotationWarning} onChange={(e) => setAlertDotationWarning(parseInt(e.target.value) || 30)} />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[9px] font-black text-destructive uppercase tracking-widest">Crítico</Label>
-                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-red-200 bg-red-50/30" value={alertDotationCritical} onChange={(e) => setAlertDotationCritical(parseInt(e.target.value) || 7)} />
+                      <Input type="number" className="h-10 rounded-xl font-black text-xs border-destructive/20 bg-destructive/5" value={alertDotationCritical} onChange={(e) => setAlertDotationCritical(parseInt(e.target.value) || 7)} />
                     </div>
                   </div>
                 </div>
@@ -902,7 +902,7 @@ export default function Configuracion() {
                 <Button 
                   onClick={handleSaveWatermarkConfig} 
                   disabled={savingWatermark}
-                  className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+                  className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
                 >
                   {savingWatermark ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                   GUARDAR CONFIGURACIÓN

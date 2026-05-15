@@ -132,15 +132,15 @@ export function SecurityTab({
       {/* Global Sign Out */}
       {/* Global Sign Out */}
       <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
-        <CardHeader className="bg-red-50/50 border-b border-red-100 p-8">
+        <CardHeader className="bg-destructive/5 border-b border-destructive/10 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-white border border-red-200 shadow-sm flex items-center justify-center">
-                <Monitor className="w-6 h-6 text-red-600" />
+              <div className="h-12 w-12 rounded-2xl bg-white border border-destructive/20 shadow-sm flex items-center justify-center">
+                <Monitor className="w-6 h-6 text-destructive" />
               </div>
               <div>
-                <CardTitle className="text-xl font-black uppercase tracking-tight text-red-900">Seguridad de Sesiones</CardTitle>
-                <CardDescription className="text-xs font-bold uppercase tracking-widest text-red-400">Control de acceso multi-dispositivo</CardDescription>
+                <CardTitle className="text-xl font-black uppercase tracking-tight text-destructive">Seguridad de Sesiones</CardTitle>
+                <CardDescription className="text-xs font-bold uppercase tracking-widest text-destructive/60">Control de acceso multi-dispositivo</CardDescription>
               </div>
             </div>
             <AlertDialog>
@@ -148,7 +148,7 @@ export function SecurityTab({
                 <Button 
                   variant="destructive" 
                   disabled={signingOutAll}
-                  className="h-11 px-8 rounded-xl bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-900/20 font-black uppercase tracking-widest text-[10px]"
+                  className="h-11 px-8 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-destructive/20 font-black uppercase tracking-widest text-[10px]"
                 >
                   {signingOutAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LogOut className="w-4 h-4 mr-2" />}
                   CERRAR TODAS LAS SESIONES
@@ -170,13 +170,13 @@ export function SecurityTab({
           </div>
         </CardHeader>
         <CardContent className="p-8">
-          <div className="p-6 rounded-[2rem] bg-red-50/30 border border-red-100 flex items-start gap-6">
+          <div className="p-6 rounded-[2rem] bg-destructive/5 border border-destructive/10 flex items-start gap-6">
             <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm shrink-0">
-              <Shield className="w-5 h-5 text-red-500" />
+              <Shield className="w-5 h-5 text-destructive" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-red-900 mb-1">Protección de Cuenta</p>
-              <p className="text-[10px] font-bold text-red-500/70 uppercase tracking-tight leading-relaxed">
+              <p className="text-[10px] font-black uppercase tracking-widest text-destructive mb-1">Protección de Cuenta</p>
+              <p className="text-[10px] font-bold text-destructive/70 uppercase tracking-tight leading-relaxed">
                 Si sospechas de actividad inusual, utiliza el botón de cierre global para desconectar inmediatamente todos los puntos de acceso a tu perfil.
               </p>
             </div>
@@ -205,7 +205,7 @@ export function SecurityTab({
               <Button 
                 onClick={handleSaveTimeout} 
                 disabled={savingTimeout || !inactivityEnabled}
-                className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+                className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
               >
                 {savingTimeout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 GUARDAR AJUSTES
@@ -235,11 +235,11 @@ export function SecurityTab({
                     </div>
                   </div>
                 </div>
-                <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 flex items-center gap-4 flex-1">
+                <div className="p-4 rounded-xl bg-warning/5 border border-warning/10 flex items-center gap-4 flex-1">
                   <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                    <Timer className="w-4 h-4 text-amber-500" />
+                    <Timer className="w-4 h-4 text-warning" />
                   </div>
-                  <p className="text-[9px] font-bold text-amber-700 uppercase tracking-tight leading-relaxed">
+                  <p className="text-[9px] font-bold text-warning/80 uppercase tracking-tight leading-relaxed">
                     Se mostrará una advertencia visual 60 segundos antes del cierre automático.
                   </p>
                 </div>
@@ -270,7 +270,7 @@ export function SecurityTab({
               <Button 
                 onClick={handleSaveLockout} 
                 disabled={savingLockout || !lockoutEnabled}
-                className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+                className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
               >
                 {savingLockout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 APLICAR REGLAS
@@ -340,7 +340,7 @@ export function SecurityTab({
               <Button 
                 onClick={handleSaveUpdateCheck} 
                 disabled={savingUpdateCheck || !updateCheckEnabled}
-                className="h-11 px-8 rounded-xl bg-[#004a80] text-white hover:bg-[#003a66] shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px]"
+                className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
               >
                 {savingUpdateCheck ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 CONFIRMAR CICLO

@@ -160,21 +160,21 @@ export default function Auditoria() {
           value={todayData?.total}
           icon={TrendingUp}
           loading={loadingToday}
-          colorClass="text-emerald-500"
+          colorClass="text-success"
         />
         <KpiCard
           title="Críticos"
           value={criticalData?.total}
           icon={AlertTriangle}
           loading={loadingCritical}
-          colorClass="text-rose-500"
+          colorClass="text-destructive"
         />
         <KpiCard
           title="Eliminaciones"
           value={deletesData?.total}
           icon={Trash2}
           loading={loadingDeletes}
-          colorClass="text-amber-500"
+          colorClass="text-warning"
         />
       </div>
 
@@ -207,9 +207,9 @@ export default function Auditoria() {
         {/* Solo eventos críticos */}
         <TabsContent value="critical" className="mt-4">
           <div className="space-y-3">
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-500/5 border border-rose-500/20">
-              <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
-              <p className="text-sm text-rose-600">
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+              <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+              <p className="text-sm text-destructive font-medium">
                 Eventos marcados como críticos que requieren atención inmediata.
               </p>
             </div>

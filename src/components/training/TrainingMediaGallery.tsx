@@ -69,6 +69,16 @@ export function TrainingMediaGallery({ media, onDelete }: TrainingMediaGalleryPr
               </div>
             )}
 
+            {item.type === 'video' && (
+              <div className="mt-3 rounded-lg overflow-hidden bg-background ">
+                <video
+                  src={item.file_url}
+                  className="w-full h-32 object-cover"
+                  preload="metadata"
+                />
+              </div>
+            )}
+
             <div className="flex items-center gap-2 mt-3">
               <a
                 href={item.file_url}

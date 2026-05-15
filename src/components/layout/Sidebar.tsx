@@ -450,12 +450,15 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             const content = (
               <Link key={item.href} to={item.href} onClick={handleNavClick}>
                 <motion.div
-                  whileHover={{ backgroundColor: 'hsl(var(--sidebar-accent))' }}
+                  whileHover={{ 
+                    backgroundColor: 'rgb(255, 247, 237)', // orange-50
+                    borderColor: 'rgb(254, 215, 170)', // orange-200
+                  }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "relative flex items-center justify-center rounded-lg border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-white [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
+                    "relative flex items-center justify-center rounded-2xl border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground transition-all duration-300 hover:text-orange-600 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
                     isCollapsed ? "mx-auto h-11 w-11 p-0 [&_svg]:size-5" : "h-16 flex-col gap-1 px-1",
-                    isActive && "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
+                    isActive && "bg-orange-50 border-orange-200 text-orange-600 shadow-sm"
                   )}
                 >
                   {item.icon}

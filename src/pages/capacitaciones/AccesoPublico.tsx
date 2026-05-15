@@ -52,6 +52,7 @@ export default function AccesoPublico() {
   const [centerName, setCenterName] = useState<string | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [lightboxAlt, setLightboxAlt] = useState('');
+  const [companyBranding, setCompanyBranding] = useState<{ name: string; horizontal_logo_url: string | null } | null>(null);
 
   useEffect(() => {
     if (!tokenParam) {
@@ -100,6 +101,16 @@ export default function AccesoPublico() {
           .eq('id', data.operation_center_id)
           .single();
         if (centerData) setCenterName(centerData.name);
+      }
+
+      // Fetch company branding
+      if (data.company_id) {
+        const { data: companyData } = await supabase
+          .from('companies')
+          .select('name, horizontal_logo_url')
+          .eq('id', data.company_id)
+          .single();
+        if (companyData) setCompanyBranding(companyData);
       }
 
       // Fetch media for this course
@@ -208,20 +219,15 @@ export default function AccesoPublico() {
   const content = course?.content as TrainingCourseContent | null;
   const images = media.filter(m => m.type === 'imagen' || m.type === 'infografia');
   const audios = media.filter(m => m.type === 'audio');
+  
+  // Videos filtering
+  const avatarVideos = media.filter(m => m.type === 'video' && m.title === 'Avatar Presentador');
+  // Storyboard videos are usually those with a specific title format or just not the ones we want to show as standalone
+  // For now, let's assume any video that is NOT the avatar and NOT a storyboard scene is "complementary"
+  // Actually, let's show ALL videos that are not the avatar in a dedicated section if they are not being used in the storyboard
+  const complementaryVideos = media.filter(m => m.type === 'video' && m.title !== 'Avatar Presentador');
+  
   const todayStr = format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: es });
-
-  // ─── Branded Header ──────────────────────────
-  const BrandedHeader = () => (
-    <div className="gradient-primary text-primary-foreground py-4 px-4">
-      <div className="max-w-3xl mx-auto flex items-center gap-3">
-        <img src={petrocasinosIcon} alt="Logo" className="h-12 w-12 rounded-xl border-2 border-white" />
-        <div>
-          <h1 className="text-lg font-bold tracking-wide">PETROCASINOS S.A.</h1>
-          <p className="text-xs opacity-80 uppercase tracking-widest">Capacitación</p>
-        </div>
-      </div>
-    </div>
-  );
 
   // ─── Loading ──────────────────────────────────
   if (step === 'loading') {
@@ -253,50 +259,60 @@ export default function AccesoPublico() {
   // ─── Done ─────────────────────────────────────
   if (step === 'done') {
     return (
-      <div className="min-h-screen bg-background ">
-        <BrandedHeader />
-        <div className="max-w-lg mx-auto p-4 mt-8">
-          <Card>
-            <CardContent className="pt-8 text-center space-y-5">
-              <CheckCircle2 className="h-16 w-16 text-success mx-auto" />
-              <h2 className="text-2xl font-bold">¡Capacitación Completada!</h2>
-              <p className="text-muted-foreground">
-                Tu evidencia ha sido registrada exitosamente.
-              </p>
+      <div className="min-h-screen bg-[#f8fafc] bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent flex items-center justify-center p-4">
+        <div className="max-w-lg w-full">
+          <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white/70 backdrop-blur-xl">
+            <CardContent className="pt-12 text-center space-y-6">
+              <div className="flex justify-center mb-2">
+                {companyBranding?.horizontal_logo_url ? (
+                  <img src={companyBranding.horizontal_logo_url} alt="Logo" className="h-12 object-contain" />
+                ) : (
+                  <div className="h-16 w-16 rounded-2xl bg-success/10 flex items-center justify-center">
+                    <CheckCircle2 className="h-8 w-8 text-success" />
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-3xl font-black tracking-tight text-foreground">¡Capacitación Completada!</h2>
+                <p className="text-muted-foreground font-medium">
+                  Tu evidencia ha sido registrada exitosamente.
+                </p>
+              </div>
 
-              <div className="bg-background rounded-lg p-4 text-left space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Capacitación</span>
-                  <span className="font-medium">{course?.name}</span>
+              <div className="bg-background/50 rounded-3xl p-6 text-left space-y-3 text-sm border border-border/50">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Capacitación</span>
+                  <span className="font-bold text-foreground truncate max-w-[200px]">{course?.name}</span>
                 </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Nombre</span>
-                  <span className="font-medium">{operatorName}</span>
+                <Separator className="bg-border/30" />
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Colaborador</span>
+                  <span className="font-bold text-foreground">{operatorName}</span>
                 </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Cédula</span>
-                  <span className="font-medium">{operatorCedula}</span>
+                <Separator className="bg-border/30" />
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Identificación</span>
+                  <span className="font-bold text-foreground">{operatorCedula}</span>
                 </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Fecha</span>
-                  <span className="font-medium">{todayStr}</span>
+                <Separator className="bg-border/30" />
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Fecha</span>
+                  <span className="font-bold text-foreground">{todayStr}</span>
                 </div>
                 {quizScore !== null && (
                   <>
-                    <Separator />
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Evaluación</span>
-                      <span className="font-medium">{quizScore}%</span>
+                    <Separator className="bg-border/30" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Evaluación</span>
+                      <Badge className="bg-success/10 text-success border-success/20 font-black px-2 py-0.5">{quizScore}%</Badge>
                     </div>
                   </>
                 )}
               </div>
 
-              <p className="text-xs text-muted-foreground pt-2">
-                Puedes cerrar esta ventana.
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pt-4 opacity-40">
+                Puedes cerrar esta ventana de forma segura.
               </p>
             </CardContent>
           </Card>
@@ -307,53 +323,59 @@ export default function AccesoPublico() {
 
   // ─── Main Flow ────────────────────────────────
   return (
-    <div className="min-h-screen bg-background ">
-      <BrandedHeader />
+    <div className="min-h-screen bg-[#f8fafc] bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent">
 
       {/* Course title bar */}
       {step !== 'identify' && (
-        <div className="bg-card border-b px-4 py-3">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="font-semibold text-foreground">{course?.name}</h2>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {course?.category && (
-                <Badge variant="secondary" className="text-xs gap-1">
-                  <BookOpen className="h-3 w-3" />{course.category}
-                </Badge>
-              )}
-              {course?.duration_hours && (
-                <Badge variant="outline" className="text-xs gap-1">
-                  <Clock className="h-3 w-3" />{course.duration_hours}h
-                </Badge>
-              )}
-              {centerName && (
-                <Badge variant="outline" className="text-xs gap-1">
-                  <MapPin className="h-3 w-3" />{centerName}
-                </Badge>
-              )}
+        <div className="bg-white/80 backdrop-blur-md border-b sticky top-0 z-50 px-4 py-4 shadow-sm">
+          <div className="max-w-3xl mx-auto flex items-center justify-between">
+            <div>
+              <h2 className="font-bold text-foreground text-lg leading-tight">{course?.name}</h2>
+              <div className="flex flex-wrap gap-2 mt-1.5">
+                {course?.category && (
+                  <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-widest gap-1 py-0.5">
+                    <BookOpen className="h-3 w-3" />{course.category}
+                  </Badge>
+                )}
+                {course?.duration_hours && (
+                  <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest gap-1 py-0.5">
+                    <Clock className="h-3 w-3" />{course.duration_hours}h
+                  </Badge>
+                )}
+              </div>
             </div>
+            {companyBranding?.horizontal_logo_url && (
+              <img src={companyBranding.horizontal_logo_url} alt="Logo" className="h-8 object-contain hidden sm:block" />
+            )}
           </div>
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto p-4 space-y-6">
+      <div className="max-w-3xl mx-auto p-6 space-y-8">
         {/* ─── IDENTIFY ────────────────────────── */}
         {step === 'identify' && (
-          <Card className="mt-4">
-            <CardHeader className="text-center pb-2">
-              <div className="flex justify-center mb-3">
-                <img src={petrocasinosIcon} alt="Logo" className="h-16 w-16 rounded-xl" />
-              </div>
-              <CardTitle className="text-xl">{course?.name}</CardTitle>
-              <CardDescription className="flex items-center justify-center gap-2 mt-1">
-                <Badge variant="secondary" className="text-xs gap-1">
-                  <BookOpen className="h-3 w-3" />{course?.category}
-                </Badge>
-                <Badge variant="outline" className="text-xs gap-1">
-                  <Clock className="h-3 w-3" />{course?.duration_hours}h
-                </Badge>
-              </CardDescription>
-            </CardHeader>
+          <div className="flex flex-col items-center justify-center min-h-[80vh]">
+            <Card className="w-full max-w-md border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white/70 backdrop-blur-xl">
+              <CardHeader className="text-center pb-2 pt-10">
+                <div className="flex justify-center mb-8 px-8">
+                  {companyBranding?.horizontal_logo_url ? (
+                    <img src={companyBranding.horizontal_logo_url} alt="Logo" className="h-16 w-full object-contain" />
+                  ) : (
+                    <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                      <GraduationCap className="h-8 w-8 text-primary" />
+                    </div>
+                  )}
+                </div>
+                <CardTitle className="text-xl">{course?.name}</CardTitle>
+                <CardDescription className="flex items-center justify-center gap-2 mt-1">
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <BookOpen className="h-3 w-3" />{course?.category}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs gap-1">
+                    <Clock className="h-3 w-3" />{course?.duration_hours}h
+                  </Badge>
+                </CardDescription>
+              </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <Separator />
               <div className="space-y-2">
@@ -398,7 +420,8 @@ export default function AccesoPublico() {
               </Button>
             </CardContent>
           </Card>
-        )}
+        </div>
+      )}
 
         {/* ─── CONTENT ─────────────────────────── */}
         {step === 'content' && (
@@ -511,20 +534,28 @@ export default function AccesoPublico() {
               </Card>
             )}
 
-            {/* Storyboard */}
+            {/* Storyboard (Solo para escenas generadas por IA que se comportan como secuencias) */}
             {(() => {
-              const videoMedia = media.filter(m => m.type === 'video');
-              if (videoMedia.length === 0) return null;
-              const scenes = videoMedia.map(m => ({
+              // Consideramos escenas de storyboard solo aquellas que NO son los videos complementarios que mostramos abajo
+              // O aquellas que tienen un formato de título específico si existiera.
+              // Por ahora, si un video tiene una descripción larga o título de 'Escena', lo tratamos como storyboard.
+              // Pero para ser seguros y evitar duplicidad/errores, si hay videos complementarios, el storyboard 
+              // solo debería activarse si hay una intención clara.
+              const storyboardScenes = media.filter(m => m.type === 'video' && m.title !== 'Avatar Presentador' && (m.title?.toLowerCase().includes('escena') || m.description));
+              
+              if (storyboardScenes.length === 0) return null;
+              
+              const scenes = storyboardScenes.map(m => ({
                 title: (m.title || '').replace(/^[^:]*:\s*/, '').replace(/^\(regen\):\s*/, ''),
                 narration: m.description || '',
                 visual_description: '',
               }));
-              const imageUrls = videoMedia.map(m => m.file_url);
+              const imageUrls = storyboardScenes.map(m => m.file_url);
               const audioUrl = audios.length > 0 ? audios[audios.length - 1].file_url : null;
+              
               return (
                 <Card>
-                  <CardHeader><CardTitle className="text-lg">Storyboard</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="text-lg">Storyboard de la Capacitación</CardTitle></CardHeader>
                   <CardContent>
                     <StoryboardViewer scenes={scenes} imageUrls={imageUrls} audioUrl={audioUrl} />
                   </CardContent>
@@ -532,23 +563,51 @@ export default function AccesoPublico() {
               );
             })()}
 
-            {/* Avatar Video */}
-            {(() => {
-              const avatarMedia = media.filter(m => (m as any).type === 'video' && m.title === 'Avatar Presentador');
-              if (avatarMedia.length === 0) return null;
-              return (
-                <Card>
-                  <CardHeader><CardTitle className="text-lg">Presentación con Avatar</CardTitle></CardHeader>
-                  <CardContent>
-                    {avatarMedia.map((item) => (
-                      <div key={item.id} className="rounded-lg overflow-hidden border bg-black">
-                        <video controls className="w-full max-h-[400px]" src={item.file_url} preload="metadata" />
+            {/* Videos Complementarios (Cargas manuales y otros) */}
+            {complementaryVideos.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Maximize className="h-5 w-5 text-primary" /> Material Audiovisual
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 gap-8">
+                  {complementaryVideos.map((vid) => (
+                    <div key={vid.id} className="space-y-2">
+                      <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground">{vid.title}</p>
+                      <div className="rounded-2xl overflow-hidden border border-border/50 bg-black shadow-xl aspect-video max-h-[500px]">
+                        <video 
+                          controls 
+                          className="w-full h-full object-contain" 
+                          src={vid.file_url} 
+                          preload="metadata"
+                          poster={petrocasinosIcon} // Fallback poster
+                        />
                       </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              );
-            })()}
+                      {vid.description && <p className="text-sm text-muted-foreground italic">{vid.description}</p>}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Avatar Video */}
+            {avatarVideos.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" /> Presentación con Avatar
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {avatarVideos.map((item) => (
+                    <div key={item.id} className="rounded-2xl overflow-hidden border border-border/50 bg-black shadow-xl">
+                      <video controls className="w-full max-h-[500px]" src={item.file_url} preload="metadata" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             <Separator />
 
