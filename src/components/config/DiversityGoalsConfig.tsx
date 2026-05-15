@@ -63,11 +63,11 @@ export function DiversityGoalsConfig() {
   ];
 
   return (
-    <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+    <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
       <CardHeader className="bg-background border-b border-slate-100 p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+            <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
               <Target className="w-6 h-6 text-primary" />
             </div>
             <div>
@@ -76,14 +76,14 @@ export function DiversityGoalsConfig() {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm">
+            <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estado</span>
               <Switch checked={goals.enabled} onCheckedChange={(v) => setGoals(g => ({ ...g, enabled: v }))} className="data-[state=checked]:bg-primary" />
             </div>
             <Button 
               onClick={handleSave} 
               disabled={updateConfig.isPending || !goals.enabled}
-              className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
+              className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]"
             >
               {updateConfig.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               GUARDAR METAS
@@ -96,7 +96,7 @@ export function DiversityGoalsConfig() {
         <CardContent className="p-8 space-y-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {goalFields.map(f => (
-              <div key={f.key} className="group relative p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+              <div key={f.key} className="group relative p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white">
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xl grayscale group-hover:grayscale-0 transition-all">{f.icon}</span>

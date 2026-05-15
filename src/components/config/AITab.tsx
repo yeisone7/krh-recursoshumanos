@@ -182,11 +182,11 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
           }
         }}>
           <DialogTrigger asChild>
-            <Button className="rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-2 px-6 py-4 h-auto font-bold text-sm">
+            <Button className="rounded-xl transition-all hover:scale-105 active:scale-95 gap-2 px-6 py-4 h-auto font-bold text-sm">
               <Plus className="h-4 w-4" /> Agregar Proveedor
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[450px] rounded-[2rem] border-border bg-card/95 shadow-2xl p-0 overflow-hidden">
+          <DialogContent className="sm:max-w-[450px] rounded-[2rem] border-border bg-card/95 p-0 overflow-hidden">
             <div className="p-6 pt-8">
               <DialogHeader className="mb-6">
                 <DialogTitle className="text-xl font-black tracking-tight">Configurar Motor IA</DialogTitle>
@@ -206,7 +206,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
                         className={cn(
                           "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all relative group",
                           aiConfig.model === p.id 
-                            ? "border-primary shadow-inner" 
+                            ? "border-primary" 
                             : "border-muted bg-background /10 hover:border-border hover:bg-background"
                         )}
                       >
@@ -317,13 +317,13 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
       >
-        <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl rounded-[1.5rem] relative group border-2">
+        <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-card via-card to-primary/5 rounded-[1.5rem] relative group border-2">
           {/* Decorative elements */}
           
           
           <CardContent className="p-5 sm:p-6 flex flex-col md:flex-row items-center gap-6 relative z-10">
             <div className="relative">
-              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-background shadow-xl flex items-center justify-center border border-primary/20 relative z-10 overflow-hidden transition-transform duration-500 group-hover:scale-105">
+              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-background flex items-center justify-center border border-primary/20 relative z-10 overflow-hidden transition-transform duration-500 group-hover:scale-105">
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent opacity-50" />
                 {currentProviderData.icon && (
                   <div className="scale-[1.5] transition-transform duration-500">
@@ -331,7 +331,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
                   </div>
                 )}
               </div>
-              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-lg bg-primary shadow-lg flex items-center justify-center z-20 border-2 border-card">
+              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-lg bg-primary flex items-center justify-center z-20 border-2 border-card">
                 <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />
               </div>
             </div>
@@ -386,7 +386,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
             <Button 
               variant="outline" 
               onClick={() => setIsDialogOpen(true)}
-              className="h-auto rounded-2xl border-border bg-background shadow-md px-6 py-3 hover:bg-background transition-all gap-2 font-black text-xs group/btn"
+              className="h-auto rounded-2xl border-border bg-background px-6 py-3 hover:bg-background transition-all gap-2 font-black text-xs group/btn"
             >
               <Settings2 className="h-4 w-4 transition-transform group-hover/btn:rotate-45" /> 
               Personalizar

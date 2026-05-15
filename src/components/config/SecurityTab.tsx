@@ -131,11 +131,11 @@ export function SecurityTab({
     <div className="space-y-6">
       {/* Global Sign Out */}
       {/* Global Sign Out */}
-      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
         <CardHeader className="bg-destructive/5 border-b border-destructive/10 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-white border border-destructive/20 shadow-sm flex items-center justify-center">
+              <div className="h-12 w-12 rounded-2xl bg-white border border-destructive/20 flex items-center justify-center">
                 <Monitor className="w-6 h-6 text-destructive" />
               </div>
               <div>
@@ -148,13 +148,13 @@ export function SecurityTab({
                 <Button 
                   variant="destructive" 
                   disabled={signingOutAll}
-                  className="h-11 px-8 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-destructive/20 font-black uppercase tracking-widest text-[10px]"
+                  className="h-11 px-8 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90 font-black uppercase tracking-widest text-[10px]"
                 >
                   {signingOutAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LogOut className="w-4 h-4 mr-2" />}
                   CERRAR TODAS LAS SESIONES
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="rounded-[2rem] border-slate-200 shadow-2xl">
+              <AlertDialogContent className="rounded-[2rem] border-slate-200">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="font-black uppercase tracking-tight">¿Cerrar todas las sesiones?</AlertDialogTitle>
                   <AlertDialogDescription className="text-xs font-bold uppercase tracking-widest text-slate-400 leading-relaxed">
@@ -171,7 +171,7 @@ export function SecurityTab({
         </CardHeader>
         <CardContent className="p-8">
           <div className="p-6 rounded-[2rem] bg-destructive/5 border border-destructive/10 flex items-start gap-6">
-            <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm shrink-0">
+            <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shrink-0">
               <Shield className="w-5 h-5 text-destructive" />
             </div>
             <div>
@@ -185,11 +185,11 @@ export function SecurityTab({
       </Card>
 
       {/* Inactivity Timeout */}
-      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
         <CardHeader className="bg-background border-b border-slate-100 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+              <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
                 <Timer className="w-6 h-6 text-primary" />
               </div>
               <div>
@@ -198,14 +198,14 @@ export function SecurityTab({
               </div>
             </div>
             <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Estado</span>
                 <Switch checked={inactivityEnabled} onCheckedChange={onInactivityEnabledChange} className="data-[state=checked]:bg-primary" />
               </div>
               <Button 
                 onClick={handleSaveTimeout} 
                 disabled={savingTimeout || !inactivityEnabled}
-                className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
+                className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]"
               >
                 {savingTimeout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 GUARDAR AJUSTES
@@ -226,7 +226,7 @@ export function SecurityTab({
                       max={480}
                       value={inactivityMinutes}
                       onChange={(e) => onInactivityMinutesChange(Math.max(1, parseInt(e.target.value) || 15))}
-                      className="h-12 w-32 rounded-xl bg-white border-slate-200 shadow-sm font-black text-xs text-slate-900 text-center"
+                      className="h-12 w-32 rounded-xl bg-white border-slate-200 font-black text-xs text-slate-900 text-center"
                     />
                     <div className="h-12 px-6 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-[10px] uppercase tracking-widest">
                       {inactivityMinutes >= 60
@@ -236,7 +236,7 @@ export function SecurityTab({
                   </div>
                 </div>
                 <div className="p-4 rounded-xl bg-warning/5 border border-warning/10 flex items-center gap-4 flex-1">
-                  <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
+                  <div className="h-8 w-8 rounded-lg bg-white flex items-center justify-center">
                     <Timer className="w-4 h-4 text-warning" />
                   </div>
                   <p className="text-[9px] font-bold text-warning/80 uppercase tracking-tight leading-relaxed">
@@ -250,11 +250,11 @@ export function SecurityTab({
       </Card>
 
       {/* Account Lockout */}
-      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
         <CardHeader className="bg-background border-b border-slate-100 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+              <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
                 <Lock className="w-6 h-6 text-primary" />
               </div>
               <div>
@@ -263,14 +263,14 @@ export function SecurityTab({
               </div>
             </div>
             <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Protección</span>
                 <Switch checked={lockoutEnabled} onCheckedChange={onLockoutEnabledChange} className="data-[state=checked]:bg-primary" />
               </div>
               <Button 
                 onClick={handleSaveLockout} 
                 disabled={savingLockout || !lockoutEnabled}
-                className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
+                className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]"
               >
                 {savingLockout ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 APLICAR REGLAS
@@ -281,7 +281,7 @@ export function SecurityTab({
         <CardContent className="p-8">
           {lockoutEnabled && (
             <div className="grid gap-8 md:grid-cols-2">
-              <div className="p-6 rounded-[2rem] bg-background border border-slate-100 space-y-4 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+              <div className="p-6 rounded-[2rem] bg-background border border-slate-100 space-y-4 transition-all hover:bg-white">
                 <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Umbral de Intentos</Label>
                 <div className="flex items-center gap-4">
                   <Input
@@ -290,13 +290,13 @@ export function SecurityTab({
                     max={20}
                     value={lockoutMaxAttempts}
                     onChange={(e) => onLockoutMaxAttemptsChange(Math.max(3, Math.min(20, parseInt(e.target.value) || 5)))}
-                    className="h-12 w-32 rounded-xl bg-white border-slate-200 shadow-sm font-black text-xs text-slate-900 text-center"
+                    className="h-12 w-32 rounded-xl bg-white border-slate-200 font-black text-xs text-slate-900 text-center"
                   />
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">INTENTOS FALLIDOS</span>
                 </div>
               </div>
 
-              <div className="p-6 rounded-[2rem] bg-slate-900 text-white space-y-4 transition-all hover:shadow-2xl hover:shadow-primary/20">
+              <div className="p-6 rounded-[2rem] bg-slate-900 text-white space-y-4 transition-all">
                 <Label className="text-[10px] font-black text-primary uppercase tracking-widest px-1">Duración del Bloqueo</Label>
                 <div className="flex items-center gap-4">
                   <Input
@@ -320,11 +320,11 @@ export function SecurityTab({
       </Card>
 
       {/* App Update Check */}
-      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
         <CardHeader className="bg-background border-b border-slate-100 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+              <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
                 <RefreshCw className="w-6 h-6 text-primary" />
               </div>
               <div>
@@ -333,14 +333,14 @@ export function SecurityTab({
               </div>
             </div>
             <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white border border-slate-200">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Auto-check</span>
                 <Switch checked={updateCheckEnabled} onCheckedChange={onUpdateCheckEnabledChange} className="data-[state=checked]:bg-primary" />
               </div>
               <Button 
                 onClick={handleSaveUpdateCheck} 
                 disabled={savingUpdateCheck || !updateCheckEnabled}
-                className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
+                className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]"
               >
                 {savingUpdateCheck ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 CONFIRMAR CICLO
@@ -360,7 +360,7 @@ export function SecurityTab({
                     max={1440}
                     value={updateCheckMinutes}
                     onChange={(e) => onUpdateCheckMinutesChange(Math.max(1, Math.min(1440, parseInt(e.target.value) || 5)))}
-                    className="h-12 w-32 rounded-xl bg-white border-slate-200 shadow-sm font-black text-xs text-slate-900 text-center"
+                    className="h-12 w-32 rounded-xl bg-white border-slate-200 font-black text-xs text-slate-900 text-center"
                   />
                   <div className="h-12 px-6 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-[10px] uppercase tracking-widest">
                     CADA {updateCheckMinutes >= 60

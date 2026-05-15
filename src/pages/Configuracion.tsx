@@ -375,7 +375,7 @@ export default function Configuracion() {
   };
 
   return (
-    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto px-4 s">
+    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto px-4">
       {/* Header Premium Flat */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
@@ -385,7 +385,7 @@ export default function Configuracion() {
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-primary transition-all duration-300">
-              <Settings2 className="w-10 h-10 text-primary-foreground" />
+              <Settings className="w-10 h-10 text-primary-foreground" />
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -406,7 +406,6 @@ export default function Configuracion() {
               <span className="text-[10px] font-black text-primary uppercase tracking-widest">Protocolo Activo</span>
             </div>
           </div>
-        </div>
       </motion.div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8 min-w-0">
@@ -689,7 +688,7 @@ export default function Configuracion() {
                       <Button 
                         variant="secondary" 
                         size="sm" 
-                        className="rounded-xl px-6 font-bold shadow-sm hover:shadow-md transition-all h-10 w-full sm:w-auto"
+                        className="rounded-xl px-6 font-bold transition-all h-10 w-full sm:w-auto"
                         onClick={() => horizontalInputRef.current?.click()}
                         disabled={uploadingHorizontal}
                       >
@@ -883,7 +882,7 @@ export default function Configuracion() {
             <CardHeader className="bg-background border-b border-slate-100 p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
                     <Stamp className="w-6 h-6 text-primary" />
                   </div>
                   <div>
