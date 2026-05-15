@@ -73,14 +73,14 @@ export function RolesManager() {
         </div>
         <Button 
           onClick={handleCreate} 
-          className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/10 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
+          className="h-12 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
         >
           <Plus className="w-4 h-4 mr-2 stroke-[3]" />
           NUEVO ROL
         </Button>
       </div>
 
-      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader className="bg-background">
@@ -111,7 +111,7 @@ export function RolesManager() {
                     <TableCell className="px-8 py-6">
                       <div className="flex items-center gap-4">
                         <div className={cn(
-                          "h-12 w-12 rounded-2xl border border-border/50 shadow-sm flex items-center justify-center transition-transform group-hover:scale-110",
+                          "h-12 w-12 rounded-2xl border border-border/50 flex items-center justify-center transition-transform group-hover:scale-110",
                           role.is_system ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
                         )}>
                           <Shield className="w-5 h-5" />

@@ -167,7 +167,7 @@ export function QuickRolePermissions() {
   const isLoading = rolesLoading || modulesLoading || permissionsLoading || rolePermissionsLoading;
 
   return (
-    <Card>
+    <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-none overflow-hidden">
       <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" />

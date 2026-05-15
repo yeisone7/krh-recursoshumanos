@@ -310,7 +310,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
           placeholder="BUSCAR OPERADOR POR NOMBRE, EMAIL O ROL ESTRATÉGICO..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-12 pl-12 rounded-2xl bg-white/50 border-slate-200 focus:bg-white focus:border-primary focus:ring-primary/10 transition-all font-bold text-[10px] uppercase tracking-widest shadow-sm"
+          className="h-12 pl-12 rounded-2xl bg-white/50 border-slate-200 focus:bg-white focus:border-primary focus:ring-primary/10 transition-all font-bold text-[10px] uppercase tracking-widest"
         />
       </div>
 
@@ -378,7 +378,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         }))}
       />
 
-      <div className="hidden md:block rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+      <div className="hidden md:block rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
         <div className="overflow-auto max-h-[600px]">
         <Table className="min-w-[860px]">
           <TableHeader className="bg-background">
@@ -400,7 +400,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                 <TableCell className="px-8 py-6">
                   <div className="flex items-center gap-4">
                     <Avatar className={cn(
-                      "h-12 w-12 rounded-2xl border border-slate-100 shadow-sm transition-transform group-hover:scale-110",
+                      "h-12 w-12 rounded-2xl border border-slate-100 transition-transform group-hover:scale-110",
                       !user.is_active && "opacity-50"
                     )}>
                       <AvatarImage src={user.avatar_url} alt={getUserDisplayName(user)} />

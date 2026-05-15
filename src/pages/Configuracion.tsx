@@ -375,35 +375,32 @@ export default function Configuracion() {
   };
 
   return (
-    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto px-4 sm:px-6">
-      {/* Header Premium */}
+    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto px-4 s">
+      {/* Header Premium Flat */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] border border-border overflow-hidden shadow-lg shadow-primary/5"
+        className="relative p-8 rounded-[2.5rem] bg-background border border-border/40 overflow-hidden"
       >
-        
-        
-        
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
-            <div className="relative shrink-0 group">
-              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border shadow-md overflow-hidden group-hover:scale-105 transition-all duration-300">
-                <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Settings className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
-              </div>
+            <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-primary transition-all duration-300">
+              <Settings2 className="w-10 h-10 text-primary-foreground" />
             </div>
             <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest">
+                  Centro de Configuración
+                </Badge>
+              </div>
               <h1 className="text-3xl font-black tracking-tight text-foreground uppercase sm:text-4xl">
                 Configuración
               </h1>
               <p className="text-muted-foreground font-medium mt-1 tracking-wide">
-                Personaliza la experiencia, políticas y seguridad global del sistema
+                Personalización global de la experiencia y reglas de negocio
               </p>
             </div>
           </div>
-          
-          <div className="flex items-center gap-3">
             <div className="h-10 px-4 rounded-xl border border-border flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] font-black text-primary uppercase tracking-widest">Protocolo Activo</span>
@@ -414,37 +411,33 @@ export default function Configuracion() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8 min-w-0">
         <div className="flex justify-center">
-          <TabsList className="inline-flex h-16 p-2 rounded-[1.25rem] bg-background border border-border/50 shadow-inner">
-            <TabsTrigger value="company" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
-              <Building2 className="w-4 h-4" />
-              Identidad
-            </TabsTrigger>
-            <TabsTrigger value="alerts" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
-              <Bell className="w-4 h-4" />
-              Alertas
-            </TabsTrigger>
-            <TabsTrigger value="security" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
-              <Shield className="w-4 h-4" />
-              Seguridad
-            </TabsTrigger>
-            <TabsTrigger value="ai" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
-              <Brain className="w-4 h-4" />
-              IA
-            </TabsTrigger>
-            <TabsTrigger value="watermark" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
-              <Stamp className="w-4 h-4" />
-              Marca de agua
-            </TabsTrigger>
+          <TabsList className="h-14 bg-background border border-border/50 p-1.5 rounded-[1.25rem]">
+            {[
+              { value: 'company', label: 'Identidad', icon: Building2 },
+              { value: 'alerts', label: 'Alertas', icon: Bell },
+              { value: 'security', label: 'Seguridad', icon: Shield },
+              { value: 'ai', label: 'IA', icon: Brain },
+              { value: 'watermark', label: 'Marca de agua', icon: Stamp },
+            ].map((tab) => (
+              <TabsTrigger 
+                key={tab.value}
+                value={tab.value} 
+                className="rounded-[1rem] px-6 py-2 font-black text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <tab.icon className="w-3.5 h-3.5 mr-2" />
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
 
         {/* Company Tab */}
         <TabsContent value="company" className="space-y-8">
-          <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+          <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
             <CardHeader className="bg-background border-b border-slate-100 p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
                     <Building2 className="w-6 h-6 text-primary" />
                   </div>
                   <div>
@@ -458,7 +451,7 @@ export default function Configuracion() {
                     "h-11 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all",
                     editingCompany 
                       ? "bg-slate-200 text-slate-600 hover:bg-slate-300 shadow-none" 
-                      : "bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20"
+                      : "bg-primary text-primary-foreground hover:bg-primary-hover shadow-none"
                   )}
                 >
                   {editingCompany ? "CANCELAR EDICIÓN" : "MODIFICAR DATOS"}
@@ -481,7 +474,7 @@ export default function Configuracion() {
                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Razón Social</Label>
                       {editingCompany ? (
                         <Input 
-                          className="h-12 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs"
+                          className="h-12 rounded-xl bg-white border-slate-200 focus-visible:ring-4 ring-primary/5 font-bold text-xs"
                           value={companyForm.name} 
                           onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})} 
                         />
@@ -495,7 +488,7 @@ export default function Configuracion() {
                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">NIT / Identificación</Label>
                       {editingCompany ? (
                         <Input 
-                          className="h-12 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs"
+                          className="h-12 rounded-xl bg-white border-slate-200 focus-visible:ring-4 ring-primary/5 font-bold text-xs"
                           value={companyForm.nit} 
                           onChange={(e) => setCompanyForm({...companyForm, nit: e.target.value})} 
                         />
@@ -509,7 +502,7 @@ export default function Configuracion() {
                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Correo Institucional</Label>
                       {editingCompany ? (
                         <Input 
-                          className="h-12 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs"
+                          className="h-12 rounded-xl bg-white border-slate-200 focus-visible:ring-4 ring-primary/5 font-bold text-xs"
                           value={companyForm.email} 
                           onChange={(e) => setCompanyForm({...companyForm, email: e.target.value})} 
                         />
@@ -523,7 +516,7 @@ export default function Configuracion() {
                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Línea de Atención</Label>
                       {editingCompany ? (
                         <Input 
-                          className="h-12 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs"
+                          className="h-12 rounded-xl bg-white border-slate-200 focus-visible:ring-4 ring-primary/5 font-bold text-xs"
                           value={companyForm.phone} 
                           onChange={(e) => setCompanyForm({...companyForm, phone: e.target.value})} 
                         />
@@ -537,7 +530,7 @@ export default function Configuracion() {
                       <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">Dirección Principal</Label>
                       {editingCompany ? (
                         <Input 
-                          className="h-12 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs"
+                          className="h-12 rounded-xl bg-white border-slate-200 focus-visible:ring-4 ring-primary/5 font-bold text-xs"
                           value={companyForm.address} 
                           onChange={(e) => setCompanyForm({...companyForm, address: e.target.value})} 
                         />
@@ -554,7 +547,7 @@ export default function Configuracion() {
                       <Button 
                         onClick={handleSaveCompanyInfo} 
                         disabled={updateCompany.isPending}
-                        className="h-12 px-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
+                        className="h-12 px-10 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]"
                       >
                         {updateCompany.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         CONFIRMAR ACTUALIZACIÓN
@@ -573,7 +566,7 @@ export default function Configuracion() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="border-border overflow-hidden rounded-[2rem] shadow-xl shadow-black/5 bg-background group">
+              <Card className="border-border overflow-hidden rounded-[2rem] bg-background group">
                 <CardHeader className="bg-background border-b border-border/50 px-8 py-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
@@ -591,19 +584,19 @@ export default function Configuracion() {
                 <CardContent className="p-8">
                   <div className="flex flex-col items-center gap-8">
                     <div className="relative group/logo cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-                      <div className="w-40 h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden bg-background shadow-inner transition-all duration-500 group-hover/logo:border-border 0 group-hover/logo:shadow-2xl group-hover/logo:shadow-primary/10 group-hover/logo:-rotate-2">
+                      <div className="w-40 h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden bg-background transition-all duration-500 group-hover/logo:border-border 0 group-hover/logo:-rotate-2">
                         {company?.logo_url ? (
                           <img src={company.logo_url} alt="Avatar" className="w-full h-full object-contain p-4 transition-transform duration-700 group-hover/logo:scale-110" />
                         ) : (
                           <Building2 className="w-16 h-16 text-primary/10" />
                         )}
                         <div className="absolute inset-0 bg-primary/60 -[2px] opacity-0 group-hover/logo:opacity-100 transition-all duration-300 flex items-center justify-center">
-                          <div className="bg-white text-primary rounded-full p-3 shadow-xl">
+                          <div className="bg-white text-primary rounded-full p-3 border border-border/50">
                             <Upload className="w-6 h-6" />
                           </div>
                         </div>
                       </div>
-                      <div className="absolute -bottom-3 -right-3 h-12 w-12 rounded-2xl bg-primary shadow-xl flex items-center justify-center border-4 border-card z-10 group-hover/logo:scale-110 transition-transform">
+                      <div className="absolute -bottom-3 -right-3 h-12 w-12 rounded-2xl bg-primary flex items-center justify-center border-4 border-card z-10 group-hover/logo:scale-110 transition-transform">
                         <ImageIcon className="w-5 h-5 text-primary-foreground" />
                       </div>
                     </div>
@@ -624,7 +617,7 @@ export default function Configuracion() {
                       <Button 
                         variant="secondary" 
                         size="sm" 
-                        className="rounded-xl px-6 font-bold shadow-sm hover:shadow-md transition-all h-10"
+                        className="rounded-xl px-6 font-bold transition-all h-10"
                         onClick={() => avatarInputRef.current?.click()}
                         disabled={uploadingAvatar}
                       >
@@ -642,7 +635,7 @@ export default function Configuracion() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="border-border overflow-hidden rounded-[2rem] shadow-xl shadow-black/5 bg-background group">
+              <Card className="border-border overflow-hidden rounded-[2rem] bg-background group">
                 <CardHeader className="bg-background border-b border-border/50 px-8 py-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
@@ -660,7 +653,7 @@ export default function Configuracion() {
                 <CardContent className="p-8">
                   <div className="flex flex-col items-center gap-8">
                     <div className="relative group/logo w-full cursor-pointer" onClick={() => horizontalInputRef.current?.click()}>
-                      <div className="w-full h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden bg-background shadow-inner transition-all duration-500 group-hover/logo:border-border 0 group-hover/logo:shadow-2xl group-hover/logo:shadow-primary/10">
+                      <div className="w-full h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden bg-background transition-all duration-500 group-hover/logo:border-border 0">
                         {company?.horizontal_logo_url ? (
                           <img src={company.horizontal_logo_url} alt="Horizontal Logo" className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover/logo:scale-105" />
                         ) : (
@@ -670,12 +663,12 @@ export default function Configuracion() {
                           </div>
                         )}
                         <div className="absolute inset-0 bg-primary/60 -[2px] opacity-0 group-hover/logo:opacity-100 transition-all duration-300 flex items-center justify-center">
-                          <div className="bg-white text-primary rounded-full p-3 shadow-xl">
+                          <div className="bg-white text-primary rounded-full p-3 border border-border/50">
                             <Upload className="w-6 h-6" />
                           </div>
                         </div>
                       </div>
-                      <div className="absolute -bottom-3 -right-3 h-12 w-12 rounded-2xl bg-primary shadow-xl flex items-center justify-center border-4 border-card z-10 group-hover/logo:scale-110 transition-transform">
+                      <div className="absolute -bottom-3 -right-3 h-12 w-12 rounded-2xl bg-primary flex items-center justify-center border-4 border-card z-10 group-hover/logo:scale-110 transition-transform">
                         <FileText className="w-5 h-5 text-primary-foreground" />
                       </div>
                     </div>
@@ -712,12 +705,12 @@ export default function Configuracion() {
         </TabsContent>
 
         {/* Alerts Tab */}
-        <TabsContent value="alerts" className="space-y-8">
-          <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+        <TabsContent value="alerts" className="mt-0">
+          <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
             <CardHeader className="bg-background border-b border-slate-100 p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
                     <Bell className="w-6 h-6 text-primary" />
                   </div>
                   <div>
@@ -727,7 +720,7 @@ export default function Configuracion() {
                 </div>
                 <Button 
                   onClick={handleSaveAlertConfig}
-                  className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
+                  className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]"
                 >
                   GUARDAR CONFIGURACIÓN
                 </Button>
@@ -742,7 +735,7 @@ export default function Configuracion() {
                   value={alertRecipients}
                   onChange={(e) => setAlertRecipients(e.target.value)}
                   placeholder="gerencia.talento@empresa.com&#10;coordinacion.rrhh@empresa.com"
-                  className="min-h-32 rounded-2xl bg-white border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-xs p-4"
+                  className="min-h-32 rounded-2xl bg-white border-slate-200 focus-visible:ring-4 ring-primary/5 font-bold text-xs p-4"
                 />
                 <div className="flex items-center gap-2 px-1">
                   <div className="h-1 w-1 rounded-full bg-slate-300" />
@@ -752,8 +745,8 @@ export default function Configuracion() {
 
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
                 {/* Contratos Card */}
-                <div className="relative group p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
-                  <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                <div className="relative group p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white">
+                  <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center">
                     <FileText className="w-4 h-4 text-primary" />
                   </div>
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 mb-6 flex items-center gap-2">
@@ -776,8 +769,8 @@ export default function Configuracion() {
                 </div>
 
                 {/* Exámenes Card */}
-                <div className="relative group p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
-                  <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                <div className="relative group p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white">
+                  <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center">
                     <Activity className="w-4 h-4 text-primary" />
                   </div>
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 mb-6">Exámenes</h4>
@@ -798,8 +791,8 @@ export default function Configuracion() {
                 </div>
 
                 {/* Dotación Card */}
-                <div className="relative group p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
-                  <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
+                <div className="relative group p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white">
+                  <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center">
                     <Shirt className="w-4 h-4 text-primary" />
                   </div>
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 mb-6">Dotación</h4>
@@ -820,7 +813,7 @@ export default function Configuracion() {
                 </div>
 
                 {/* Retiros Card */}
-                <div className="relative group p-6 rounded-[2rem] bg-slate-900 text-white transition-all hover:shadow-2xl hover:shadow-primary/20">
+                <div className="relative group p-6 rounded-[2rem] bg-slate-900 text-white transition-all">
                   <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white/10 flex items-center justify-center">
                     <History className="w-4 h-4 text-primary" />
                   </div>
@@ -854,7 +847,7 @@ export default function Configuracion() {
                     </p>
                   </div>
                   <Select value={hiringNotifRoleId} onValueChange={setHiringNotifRoleId}>
-                    <SelectTrigger className="w-full sm:w-[240px] h-11 rounded-xl bg-white border-slate-200 shadow-sm font-bold text-[10px] uppercase tracking-widest">
+                    <SelectTrigger className="w-full sm:w-[240px] h-11 rounded-xl bg-white border-slate-200 font-bold text-[10px] uppercase tracking-widest">
                       <SelectValue placeholder="SELECCIONAR ROL" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-slate-200">
@@ -885,9 +878,8 @@ export default function Configuracion() {
         </TabsContent>
 
         {/* Watermark Tab */}
-        {/* Watermark Tab */}
-        <TabsContent value="watermark" className="space-y-8">
-          <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+        <TabsContent value="watermark" className="mt-0">
+          <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
             <CardHeader className="bg-background border-b border-slate-100 p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
@@ -902,7 +894,7 @@ export default function Configuracion() {
                 <Button 
                   onClick={handleSaveWatermarkConfig} 
                   disabled={savingWatermark}
-                  className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
+                  className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]"
                 >
                   {savingWatermark ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                   GUARDAR CONFIGURACIÓN
@@ -932,7 +924,7 @@ export default function Configuracion() {
                   <div>
                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1 block mb-4">Identidad de Marca</Label>
                     <div className="flex flex-col sm:flex-row items-center gap-8 p-6 rounded-[2rem] bg-background border border-slate-100">
-                      <div className="relative group w-32 h-32 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
+                      <div className="relative group w-32 h-32 rounded-2xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden">
                         {watermarkLogoUrl ? (
                           <img src={watermarkLogoUrl} alt="Logo preview" className="max-w-[80%] max-h-[80%] object-contain" />
                         ) : (
@@ -995,7 +987,7 @@ export default function Configuracion() {
                       </Select>
 
                       {/* Visual Guide */}
-                      <div className="relative aspect-video rounded-[2rem] bg-background border border-slate-200 overflow-hidden shadow-inner group/preview">
+                      <div className="relative aspect-video rounded-[2rem] bg-background border border-slate-200 overflow-hidden group/preview">
                         <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover/preview:opacity-40 transition-opacity">
                           <ImageIcon className="w-24 h-24 text-slate-400" />
                         </div>
@@ -1010,7 +1002,7 @@ export default function Configuracion() {
                             'bottom-6 right-6'
                           )}
                         >
-                          <div className="w-full h-full rounded-xl bg-white shadow-xl border border-slate-200 flex items-center justify-center">
+                          <div className="w-full h-full rounded-xl bg-white border border-slate-200 flex items-center justify-center">
                             <Stamp className="w-5 h-5 text-primary" />
                           </div>
                         </motion.div>
