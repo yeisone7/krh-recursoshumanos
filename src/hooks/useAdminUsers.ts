@@ -512,3 +512,36 @@ export function useToggleUserStatus() {
     },
   });
 }
+
+export function useUpdateUserProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      userId, 
+      fullName, 
+      displayName 
+    }: { 
+      userId: string; 
+      fullName: string; 
+      displayName?: string 
+    }) => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update({
+          full_name: fullName,
+          display_name: displayName || fullName.split(' ')[0],
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+}

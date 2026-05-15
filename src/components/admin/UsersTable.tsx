@@ -38,6 +38,7 @@ import { UserRoleDialog } from './UserRoleDialog';
 import { UserCenterDialog } from './UserCenterDialog';
 import { UserCompanyDialog } from './UserCompanyDialog';
 import { LinkEmployeeDialog } from './LinkEmployeeDialog';
+import { UserNameEditDialog } from './UserNameEditDialog';
 import { useRemoveCompanyAssignment, useToggleUserStatus, type AdminUser } from '@/hooks/useAdminUsers';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -88,6 +89,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [centerDialogOpen, setCenterDialogOpen] = useState(false);
   const [companyDialogOpen, setCompanyDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [nameDialogOpen, setNameDialogOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [deactivateReason, setDeactivateReason] = useState('');
   const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
@@ -104,6 +106,11 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => handleEditName(user)}>
+          <UserCheck className="w-4 h-4 mr-2" />
+          Editar Nombre
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => handleManageRoles(user)}>
           <Shield className="w-4 h-4 mr-2" />
@@ -176,6 +183,11 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const handleLinkEmployee = (user: AdminUser) => {
     setSelectedUser(user);
     setLinkDialogOpen(true);
+  };
+
+  const handleEditName = (user: AdminUser) => {
+    setSelectedUser(user);
+    setNameDialogOpen(true);
   };
 
   const handleRemoveFromCompany = async (user: AdminUser) => {
@@ -535,6 +547,12 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         onOpenChange={setLinkDialogOpen}
         userId={selectedUser?.id || ''}
         userEmail={selectedUser?.email}
+      />
+
+      <UserNameEditDialog
+        user={selectedUser}
+        open={nameDialogOpen}
+        onOpenChange={setNameDialogOpen}
       />
 
       {/* Deactivation Confirmation Dialog */}
