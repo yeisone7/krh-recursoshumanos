@@ -29,22 +29,34 @@ export interface AdminUser {
 }
 
 export function useAdminUsers() {
-  const { currentCompanyId, isAdmin } = useAuth();
+  const { currentCompanyId, isSuperAdmin } = useAuth();
 
   return useQuery({
-    queryKey: ['admin-users', currentCompanyId],
+    queryKey: ['admin-users', currentCompanyId, isSuperAdmin],
     queryFn: async (): Promise<AdminUser[]> => {
-      if (!currentCompanyId) return [];
+      // Si no hay empresa y no es super admin, no retornamos nada
+      if (!currentCompanyId && !isSuperAdmin) return [];
 
-      // First get users assigned to the current company
-      const { data: companyUsers, error: companyError } = await supabase
-        .from('user_company_assignments')
-        .select('user_id')
-        .eq('company_id', currentCompanyId);
+      let userIds: string[] = [];
 
-      if (companyError) throw companyError;
+      if (isSuperAdmin) {
+        // Super Admin ve a TODOS los usuarios registrados, estén asignados o no
+        const { data: allUsers, error: allUsersError } = await supabase
+          .from('user_profiles')
+          .select('id');
+        
+        if (allUsersError) throw allUsersError;
+        userIds = allUsers?.map(u => u.id) || [];
+      } else {
+        // Admins normales solo ven usuarios asignados a su empresa
+        const { data: companyUsers, error: companyError } = await supabase
+          .from('user_company_assignments')
+          .select('user_id')
+          .eq('company_id', currentCompanyId!);
 
-      const userIds = companyUsers?.map(u => u.user_id) || [];
+        if (companyError) throw companyError;
+        userIds = companyUsers?.map(u => u.user_id) || [];
+      }
       
       if (userIds.length === 0) return [];
 
