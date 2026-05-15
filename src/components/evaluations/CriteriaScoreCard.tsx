@@ -72,7 +72,7 @@ export function CriteriaScoreCard({
                   'relative rounded-lg border-2 p-2.5 text-left text-xs transition-all',
                   isSelected
                     ? `${option.color} ring-2 ring-primary/30`
-                    : 'border-border hover:border-muted-foreground/40 bg-muted/20'
+                    : 'border-border hover:border-muted-foreground/40 bg-background'
                 )}
               >
                 <div className="font-semibold mb-0.5">

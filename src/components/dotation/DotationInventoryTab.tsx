@@ -81,7 +81,7 @@ export function DotationInventoryTab() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar artículo..."
-            className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+            className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
           />
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:flex">
@@ -209,7 +209,7 @@ export function DotationInventoryTab() {
                       </Badge>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted/30 p-3 text-sm">
+                  <div className="grid grid-cols-2 gap-2 rounded-lg bg-background p-3 text-sm">
                     <div>
                       <p className="text-xs text-muted-foreground">Stock</p>
                       <p className="font-semibold text-foreground">{item.quantity_available}</p>

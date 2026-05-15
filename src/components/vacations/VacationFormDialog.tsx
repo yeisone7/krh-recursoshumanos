@@ -200,7 +200,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
         
         {/* Premium Gradient Header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           
           <DialogHeader className="relative z-10">
             <div className="flex items-center gap-4 mb-2">
@@ -208,7 +208,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                 <Plane className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+                <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
                   NOVEDADES
                 </Badge>
                 <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
@@ -226,7 +226,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
           <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 space-y-6">
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 h-14 p-1 bg-muted/30 rounded-2xl mb-6">
+              <TabsList className="grid w-full grid-cols-3 h-14 p-1 bg-background rounded-2xl mb-6">
                 <TabsTrigger value="general" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
                   <User className="w-4 h-4 mr-2" /> General
                 </TabsTrigger>
@@ -259,11 +259,11 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                             <FormLabel className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Empleado</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background transition-colors">
+                                <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-colors">
                                   <SelectValue placeholder="Seleccione el empleado..." />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="rounded-2xl border-primary/10">
+                              <SelectContent className="rounded-2xl border-border ">
                                 {activeEmployees.map((emp) => (
                                   <SelectItem key={emp.id} value={emp.id} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
                                     <div className="flex flex-col">
@@ -288,11 +288,11 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                             <FormLabel className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Tipo de Movimiento</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background transition-colors">
+                                <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-colors">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
-                              <SelectContent className="rounded-2xl border-primary/10">
+                              <SelectContent className="rounded-2xl border-border ">
                                 {(Object.entries(REQUEST_TYPE_LABELS) as [VacationRequestType, string][]).map(
                                   ([value, label]) => (
                                     <SelectItem key={value} value={value} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
@@ -317,11 +317,11 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                               <FormLabel className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Período Vacacional (Opcional)</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                  <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background transition-colors">
+                                  <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-colors">
                                     <SelectValue placeholder="Seleccione período a afectar..." />
                                   </SelectTrigger>
                                 </FormControl>
-                                <SelectContent className="rounded-2xl border-primary/10">
+                                <SelectContent className="rounded-2xl border-border ">
                                   {balances.map((balance) => (
                                     <SelectItem key={balance.id} value={balance.id} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
                                       <div className="flex flex-col">
@@ -335,7 +335,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                                 </SelectContent>
                               </Select>
                               {selectedBalance && (
-                                <div className="mt-2 p-3 bg-primary/5 rounded-xl border border-primary/10 flex items-center justify-between text-xs">
+                                <div className="mt-2 p-3 rounded-xl border border-border flex items-center justify-between text-xs">
                                   <div className="text-center">
                                     <span className="block font-black text-muted-foreground">Causados</span>
                                     <span className="font-medium">{selectedBalance.days_accrued}</span>
@@ -381,7 +381,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                                     <Button
                                       variant="outline"
                                       className={cn(
-                                        'h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background transition-colors pl-4 text-left font-normal',
+                                        'h-12 rounded-2xl bg-background border-border focus:bg-background transition-colors pl-4 text-left font-normal',
                                         !field.value && 'text-muted-foreground'
                                       )}
                                     >
@@ -394,7 +394,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 rounded-2xl border-primary/10 shadow-xl" align="start">
+                                <PopoverContent className="w-auto p-0 rounded-2xl border-border shadow-xl" align="start">
                                   <Calendar
                                     mode="single"
                                     selected={field.value}
@@ -421,7 +421,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                                     <Button
                                       variant="outline"
                                       className={cn(
-                                        'h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background transition-colors pl-4 text-left font-normal',
+                                        'h-12 rounded-2xl bg-background border-border focus:bg-background transition-colors pl-4 text-left font-normal',
                                         !field.value && 'text-muted-foreground'
                                       )}
                                     >
@@ -434,7 +434,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 rounded-2xl border-primary/10 shadow-xl" align="start">
+                                <PopoverContent className="w-auto p-0 rounded-2xl border-border shadow-xl" align="start">
                                   <Calendar
                                     mode="single"
                                     selected={field.value}
@@ -505,7 +505,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                                   placeholder="0"
                                   {...field}
                                   onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                  className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background text-lg font-mono"
+                                  className="h-12 rounded-2xl bg-background border-border focus:bg-background text-lg font-mono"
                                 />
                               </FormControl>
                               <FormMessage />
@@ -534,7 +534,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                             <FormControl>
                               <Textarea
                                 placeholder="Escribe cualquier detalle relevante sobre esta solicitud..."
-                                className="min-h-[200px] resize-none rounded-2xl bg-muted/20 border-primary/5 focus:bg-background p-4"
+                                className="min-h-[200px] resize-none rounded-2xl bg-background border-border focus:bg-background p-4"
                                 {...field}
                               />
                             </FormControl>

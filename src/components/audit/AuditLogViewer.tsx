@@ -53,7 +53,7 @@ interface AuditLogViewerProps {
 // ─── Componente de Fila ───────────────────────────────────────
 
 function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void }) {
-  const actionCfg = actionConfig[log.action] ?? { class: 'bg-slate-100 text-slate-500 border-slate-200' };
+  const actionCfg = actionConfig[log.action] ?? { class: 'bg-background text-slate-500 border-slate-200' };
   const severityCfg = log.severity ? severityConfig[log.severity] : severityConfig.info;
 
   const SevIcon = log.severity === 'critical' ? XCircle
@@ -79,7 +79,7 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
       <TableCell className="px-6 py-4">
         <div className="flex items-center gap-3">
           <div className="relative h-9 w-9 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
-            <div className="absolute inset-0 bg-primary/5" />
+            <div className="absolute inset-0 " />
             <User className="relative w-4 h-4 text-primary" />
           </div>
           <div className="flex flex-col min-w-0">
@@ -106,7 +106,7 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
       </TableCell>
 
       <TableCell className="px-6 py-4">
-        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-background border border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-tight">
           {resolveModuleLabel(log.module)}
         </div>
       </TableCell>
@@ -209,7 +209,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
         <div className="flex flex-col gap-8 px-2">
           {/* Tabs Internas Estilo Premium */}
           <div className="flex justify-center">
-            <Tabs defaultValue="all" className="inline-flex h-14 p-1.5 rounded-2xl bg-slate-50/50 backdrop-blur-md border border-slate-200 shadow-inner">
+            <Tabs defaultValue="all" className="inline-flex h-14 p-1.5 rounded-2xl bg-background border border-slate-200 shadow-inner">
               <TabsList className="bg-transparent border-none p-0">
                 <TabsTrigger value="all" onClick={() => handleFiltersChange({})} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">
                   <History className="w-3.5 h-3.5 mr-2" />
@@ -270,7 +270,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
           </div>
         </div>
 
-        <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.01] overflow-hidden">
+        <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.01] overflow-hidden">
           <CardContent className="p-0">
             {isLoading ? (
               <div className="p-8 space-y-4">
@@ -280,8 +280,8 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
               </div>
             ) : logs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center gap-6 px-6">
-                <div className="relative h-24 w-24 flex items-center justify-center rounded-[2.5rem] bg-slate-50 border border-slate-100 shadow-inner group">
-                  <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5rem]" />
+                <div className="relative h-24 w-24 flex items-center justify-center rounded-[2.5rem] bg-background border border-slate-100 shadow-inner group">
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5rem]" />
                   <ShieldAlert className="relative w-10 h-10 text-slate-300" />
                 </div>
                 <div className="space-y-2 max-w-sm">
@@ -304,7 +304,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
               <>
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader className="bg-slate-50/50">
+                    <TableHeader className="bg-background">
                       <TableRow className="hover:bg-transparent border-slate-100">
                         <TableHead className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Temporalidad</TableHead>
                         <TableHead className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Actor</TableHead>
@@ -329,7 +329,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
 
                 {/* Paginación Premium */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between px-8 py-6 bg-slate-50/30 border-t border-slate-100">
+                  <div className="flex items-center justify-between px-8 py-6 bg-background border-t border-slate-100">
                     <div className="flex items-center gap-4">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         MOSTRANDO <span className="text-slate-900">{page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)}</span> DE <span className="text-slate-900">{total.toLocaleString('es-CO')}</span> EVENTOS

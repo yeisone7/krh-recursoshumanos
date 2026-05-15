@@ -54,7 +54,7 @@ export function NoRoleGuard({ children }: NoRoleGuardProps) {
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="space-y-4">
-                <div className="flex items-start gap-4 p-5 rounded-2xl bg-muted/40 border border-border/60 relative overflow-hidden group">
+                <div className="flex items-start gap-4 p-5 rounded-2xl bg-background /40 border border-border/60 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                     <Clock className="w-12 h-12 text-primary" />
                   </div>
@@ -72,7 +72,7 @@ export function NoRoleGuard({ children }: NoRoleGuardProps) {
 
               <div className="text-center space-y-3">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Identidad de acceso</p>
-                <div className="bg-muted/50 py-2.5 px-5 rounded-full inline-flex items-center gap-2 border border-border/40">
+                <div className="bg-background py-2.5 px-5 rounded-full inline-flex items-center gap-2 border border-border/40">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                   <span className="text-sm font-semibold text-foreground">{user?.email}</span>
                 </div>
@@ -82,7 +82,7 @@ export function NoRoleGuard({ children }: NoRoleGuardProps) {
                 <Button
                   variant="outline"
                   onClick={() => signOut()}
-                  className="w-full h-12 gap-2 rounded-xl border-border/60 hover:bg-muted hover:text-foreground transition-all shadow-sm"
+                  className="w-full h-12 gap-2 rounded-xl border-border/60 hover:bg-background hover:text-foreground transition-all shadow-sm"
                 >
                   <LogOut className="w-4 h-4" />
                   Cerrar Sesión Segura

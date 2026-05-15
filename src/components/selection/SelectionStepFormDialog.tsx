@@ -325,7 +325,7 @@ export function SelectionStepFormDialog({
 
             {/* ── MEDICAL EXAM SPECIFIC ── */}
             {isMedicalExam && (
-              <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+              <div className="space-y-4 rounded-lg border border-primary/20 p-4">
                 <div className="flex items-center gap-2 text-sm font-semibold text-primary">
                   <Stethoscope className="w-4 h-4" />
                   Datos del Examen Médico de Ingreso
@@ -437,7 +437,7 @@ export function SelectionStepFormDialog({
                       {profesiograma.items.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center gap-3 p-2 rounded-md border bg-background hover:bg-muted/50 transition-colors"
+                          className="flex items-center gap-3 p-2 rounded-md border bg-background hover:bg-background transition-colors"
                         >
                           <Checkbox
                             checked={selectedExams.includes(item.exam_catalog_id)}

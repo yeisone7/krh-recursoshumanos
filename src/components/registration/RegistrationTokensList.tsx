@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useMemo } from 'react';
 import { Copy, Ban, Link2, CheckCircle, Clock, XCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +17,16 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
   const { companies, currentCompanyId } = useAuth();
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const { data: allTokens = [], isLoading } = useRegistrationTokens(vacancyId);
-  const tokens = targetType ? allTokens.filter(t => t.target_type === targetType) : allTokens;
+  const tokens = useMemo(() => {
+    let filtered = allTokens;
+    if (currentCompanyId) {
+      filtered = filtered.filter(t => t.company_id === currentCompanyId);
+    }
+    if (targetType) {
+      filtered = filtered.filter(t => t.target_type === targetType);
+    }
+    return filtered;
+  }, [allTokens, currentCompanyId, targetType]);
   const deactivate = useDeactivateRegistrationToken();
   const deleteToken = useDeleteRegistrationToken();
 
@@ -29,7 +39,7 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
   const statusConfig = {
     active: { label: 'Activo', icon: Clock, className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
     used: { label: 'Utilizado', icon: CheckCircle, className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-    expired: { label: 'Expirado', icon: XCircle, className: 'bg-muted text-muted-foreground' },
+    expired: { label: 'Expirado', icon: XCircle, className: 'bg-background text-muted-foreground' },
   };
 
   const handleCopy = (token: string) => {
@@ -46,11 +56,28 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
     }
   };
 
-  if (isLoading) return <div className="text-center py-4 text-sm text-muted-foreground">Cargando enlaces...</div>;
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center justify-between p-3 rounded-lg border bg-card animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-md bg-muted shrink-0" />
+              <div className="space-y-2">
+                <div className="h-4 w-24 bg-muted rounded" />
+                <div className="h-3 w-32 bg-muted rounded" />
+              </div>
+            </div>
+            <div className="h-8 w-8 bg-muted rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (tokens.length === 0) {
     return (
-      <div className="text-center py-6 bg-muted/30 rounded-lg">
+      <div className="text-center py-6 bg-background rounded-lg">
         <Link2 className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
         <p className="text-sm text-muted-foreground">No hay enlaces generados</p>
       </div>
@@ -70,7 +97,7 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
             className="flex items-center justify-between p-3 rounded-lg border bg-card"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden border">
+              <div className="w-10 h-10 rounded-md bg-background flex items-center justify-center shrink-0 overflow-hidden border">
                 {currentCompany?.logo_url ? (
                   <img src={currentCompany.logo_url} alt={currentCompany.name} className="w-full h-full object-contain" />
                 ) : (

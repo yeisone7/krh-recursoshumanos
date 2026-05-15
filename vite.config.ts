@@ -57,7 +57,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       manifest: {
-        name: "EmpatiQ - Gestión de Talento Humano",
+        name: "EmpatiQ",
         short_name: "EmpatiQ",
         description: "Sistema integral de gestión de talento humano",
         theme_color: "#2B3A5C",

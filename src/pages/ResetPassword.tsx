@@ -71,7 +71,7 @@ export default function ResetPassword() {
               <FormItem>
                 <FormLabel className="text-sm font-semibold">Nueva contraseña</FormLabel>
                 <FormControl>
-                  <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                  <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -84,7 +84,7 @@ export default function ResetPassword() {
               <FormItem>
                 <FormLabel className="text-sm font-semibold">Confirmar contraseña</FormLabel>
                 <FormControl>
-                  <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                  <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

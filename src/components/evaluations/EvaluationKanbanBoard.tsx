@@ -180,8 +180,8 @@ export function EvaluationKanbanBoard({
                       {...provided.droppableProps}
                       className={`flex-1 rounded-b-lg border border-t-0 p-2 transition-colors min-h-[400px] ${
                         snapshot.isDraggingOver
-                          ? 'bg-primary/5 border-primary/30'
-                          : 'bg-muted/30'
+                          ? 'border-primary/30'
+                          : 'bg-background'
                       }`}
                     >
                       <div className="space-y-2">
@@ -254,7 +254,7 @@ export function EvaluationKanbanBoard({
                                     {/* Score */}
                                     {ev.overall_score != null && (
                                       <div className="flex items-center gap-1.5">
-                                        <div className="flex-1 bg-muted rounded-full h-1.5 overflow-hidden">
+                                        <div className="flex-1 bg-background rounded-full h-1.5 overflow-hidden">
                                           <div
                                             className={`h-full rounded-full transition-all ${
                                               ev.overall_score >= 75 ? 'bg-green-500' :

@@ -96,8 +96,8 @@ export default function ConfiguracionLaboral() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-10">
       {/* Header Premium */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 rounded-[2rem] border border-primary/5 p-8 sm:p-10 shadow-sm">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 rounded-[2rem] border border-border p-8 sm:p-10 shadow-sm">
+        
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
           <div className="flex items-start sm:items-center gap-5">
             <div className="w-16 h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
@@ -105,7 +105,7 @@ export default function ConfiguracionLaboral() {
             </div>
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
+                <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
                   ADMINISTRACIÓN
                 </Badge>
               </div>
@@ -134,7 +134,7 @@ export default function ConfiguracionLaboral() {
         <div className="space-y-8 lg:col-span-1">
           {/* Card Jornada */}
           <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
-            <CardHeader className="bg-muted/20 border-b border-border/50 pb-6">
+            <CardHeader className="bg-background border-b border-border/50 pb-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
                   <Clock className="w-5 h-5" />
@@ -154,7 +154,7 @@ export default function ConfiguracionLaboral() {
                     min="0"
                     value={form.max_weekly_hours}
                     onChange={e => setForm(f => ({ ...f, max_weekly_hours: sanitizeNonNegative(e.target.value) }))}
-                    className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background font-mono text-lg"
+                    className="h-12 rounded-2xl bg-background border-border focus:bg-background font-mono text-lg"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">hrs</div>
                 </div>
@@ -168,7 +168,7 @@ export default function ConfiguracionLaboral() {
                     step="0.5"
                     value={form.daily_hours}
                     onChange={e => setForm(f => ({ ...f, daily_hours: sanitizeNonNegative(e.target.value) }))}
-                    className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background font-mono text-lg"
+                    className="h-12 rounded-2xl bg-background border-border focus:bg-background font-mono text-lg"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">hrs</div>
                 </div>
@@ -176,10 +176,10 @@ export default function ConfiguracionLaboral() {
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unidad de visualización UI</Label>
                 <Select value={form.display_unit} onValueChange={v => setForm(f => ({ ...f, display_unit: v as any }))}>
-                  <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background">
+                  <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-primary/10">
+                  <SelectContent className="rounded-2xl border-border ">
                     <SelectItem value="hours">Mostrar en Horas</SelectItem>
                     <SelectItem value="days">Mostrar en Días</SelectItem>
                   </SelectContent>
@@ -190,7 +190,7 @@ export default function ConfiguracionLaboral() {
 
           {/* Card Nocturna */}
           <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
-            <CardHeader className="bg-muted/20 border-b border-border/50 pb-6">
+            <CardHeader className="bg-background border-b border-border/50 pb-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center shrink-0">
                   <Moon className="w-5 h-5" />
@@ -208,7 +208,7 @@ export default function ConfiguracionLaboral() {
                   type="time"
                   value={form.night_start}
                   onChange={e => setForm(f => ({ ...f, night_start: e.target.value }))}
-                  className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background font-mono text-lg"
+                  className="h-12 rounded-2xl bg-background border-border focus:bg-background font-mono text-lg"
                 />
               </div>
               <div className="space-y-2">
@@ -217,7 +217,7 @@ export default function ConfiguracionLaboral() {
                   type="time"
                   value={form.night_end}
                   onChange={e => setForm(f => ({ ...f, night_end: e.target.value }))}
-                  className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background font-mono text-lg"
+                  className="h-12 rounded-2xl bg-background border-border focus:bg-background font-mono text-lg"
                 />
               </div>
             </CardContent>
@@ -227,7 +227,7 @@ export default function ConfiguracionLaboral() {
         {/* Columna Derecha: Recargos */}
         <div className="lg:col-span-2">
           <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden h-full">
-            <CardHeader className="bg-muted/20 border-b border-border/50 pb-6">
+            <CardHeader className="bg-background border-b border-border/50 pb-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
                   <Percent className="w-5 h-5" />
@@ -255,7 +255,7 @@ export default function ConfiguracionLaboral() {
                         min="0"
                         value={form[key as keyof typeof form]}
                         onChange={e => setForm(f => ({ ...f, [key]: sanitizeNonNegative(e.target.value) }))}
-                        className="h-12 pl-11 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background font-mono text-lg"
+                        className="h-12 pl-11 rounded-2xl bg-background border-border focus:bg-background font-mono text-lg"
                       />
                     </div>
                     <p className="text-xs text-muted-foreground/70">{desc}</p>

@@ -105,13 +105,13 @@ export default function CrearManual() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        
         <div className="relative z-10 flex items-center gap-5">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/capacitaciones')} className="h-12 w-12 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-background/80 shrink-0">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/capacitaciones')} className="h-12 w-12 rounded-full bg-background border border-border/50 hover:bg-background shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+            <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
               {editId ? 'EDICIÓN MANUAL' : 'CREACIÓN MANUAL'}
             </Badge>
             <h1 className="text-3xl font-black tracking-tight text-foreground">{editId ? 'Editar' : 'Crear'} Capacitación Manual</h1>
@@ -211,7 +211,7 @@ export default function CrearManual() {
               </div>
               <div className="space-y-1.5 pt-4">
                 <Label className="flex items-center gap-1.5"><AlignLeft className="h-4 w-4" /> Descripción o Contexto Adicional</Label>
-                <Textarea className="resize-none rounded-xl bg-muted/30" value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Proporciona información adicional que ayude a definir el contenido de la capacitación..." rows={4} />
+                <Textarea className="resize-none rounded-xl bg-background" value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Proporciona información adicional que ayude a definir el contenido de la capacitación..." rows={4} />
               </div>
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t border-border/50">
                 {editId && <Button variant="outline" className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs" onClick={handleSaveChanges} disabled={!title || isSaving}>{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
@@ -242,20 +242,20 @@ export default function CrearManual() {
             <CardContent className="px-8 pb-8 space-y-6">
               <div className="space-y-1.5">
                 <Label>Introducción</Label>
-                <Textarea className="resize-none rounded-xl bg-muted/30" value={content.introduccion || ''} onChange={e => setContent({ ...content, introduccion: e.target.value })} rows={3} />
+                <Textarea className="resize-none rounded-xl bg-background" value={content.introduccion || ''} onChange={e => setContent({ ...content, introduccion: e.target.value })} rows={3} />
               </div>
               <div className="space-y-1.5">
                 <Label>Objetivos</Label>
                 <div className="space-y-2">
                   {content.objetivos?.map((obj, i) => (
-                    <div key={i} className="flex gap-2"><Input className="rounded-xl bg-muted/30" value={obj} onChange={e => { const n = [...(content.objetivos || [])]; n[i] = e.target.value; setContent({ ...content, objetivos: n }); }} /><Button variant="ghost" size="icon" className="shrink-0 text-destructive hover:bg-destructive/10" onClick={() => setContent({ ...content, objetivos: content.objetivos?.filter((_, idx) => idx !== i) })}><X className="h-4 w-4" /></Button></div>
+                    <div key={i} className="flex gap-2"><Input className="rounded-xl bg-background" value={obj} onChange={e => { const n = [...(content.objetivos || [])]; n[i] = e.target.value; setContent({ ...content, objetivos: n }); }} /><Button variant="ghost" size="icon" className="shrink-0 text-destructive hover:bg-destructive/10" onClick={() => setContent({ ...content, objetivos: content.objetivos?.filter((_, idx) => idx !== i) })}><X className="h-4 w-4" /></Button></div>
                   ))}
                   <Button variant="outline" size="sm" className="rounded-xl border-dashed" onClick={() => setContent({ ...content, objetivos: [...(content.objetivos || []), ''] })}>+ Agregar Objetivo</Button>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Secciones</Label>
-                <Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} className="font-mono text-sm resize-none rounded-xl bg-muted/30" />
+                <Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} className="font-mono text-sm resize-none rounded-xl bg-background" />
                 <p className="text-xs text-muted-foreground font-medium mt-1">Usa títulos Markdown como ## Sección para organizar el contenido.</p>
               </div>
               {content.contenido && <div className="space-y-1.5"><Label>Vista previa</Label><div className="border border-border/50 rounded-xl p-6 mt-1 bg-background shadow-inner"><MarkdownContent content={content.contenido} /></div></div>}
@@ -263,7 +263,7 @@ export default function CrearManual() {
                 <Label>Puntos Clave</Label>
                 <div className="space-y-2">
                   {content.puntosClave?.map((p, i) => (
-                    <div key={i} className="flex gap-2"><Input className="rounded-xl bg-muted/30" value={p} onChange={e => { const n = [...(content.puntosClave || [])]; n[i] = e.target.value; setContent({ ...content, puntosClave: n }); }} /><Button variant="ghost" size="icon" className="shrink-0 text-destructive hover:bg-destructive/10" onClick={() => setContent({ ...content, puntosClave: content.puntosClave?.filter((_, idx) => idx !== i) })}><X className="h-4 w-4" /></Button></div>
+                    <div key={i} className="flex gap-2"><Input className="rounded-xl bg-background" value={p} onChange={e => { const n = [...(content.puntosClave || [])]; n[i] = e.target.value; setContent({ ...content, puntosClave: n }); }} /><Button variant="ghost" size="icon" className="shrink-0 text-destructive hover:bg-destructive/10" onClick={() => setContent({ ...content, puntosClave: content.puntosClave?.filter((_, idx) => idx !== i) })}><X className="h-4 w-4" /></Button></div>
                   ))}
                   <Button variant="outline" size="sm" className="rounded-xl border-dashed" onClick={() => setContent({ ...content, puntosClave: [...(content.puntosClave || []), ''] })}>+ Agregar Punto Clave</Button>
                 </div>
@@ -272,7 +272,7 @@ export default function CrearManual() {
                 <div className="pt-6 border-t border-border/50">
                   <Label className="text-base font-semibold">Multimedia</Label>
                   <p className="text-sm text-muted-foreground font-medium mb-4">Sube imágenes para complementar el contenido</p>
-                  <div className="p-4 rounded-xl border border-dashed border-border/50 bg-muted/20"><ImageUploader courseId={editId} onUploaded={async (url, fn, fs) => { await createMedia.mutateAsync({ courseId: editId, type: 'imagen', title: fn, fileUrl: url, fileSize: fs }); }} /></div>
+                  <div className="p-4 rounded-xl border border-dashed border-border/50 bg-background"><ImageUploader courseId={editId} onUploaded={async (url, fn, fs) => { await createMedia.mutateAsync({ courseId: editId, type: 'imagen', title: fn, fileUrl: url, fileSize: fs }); }} /></div>
                   <div className="mt-4"><TrainingMediaGallery media={media as any} onDelete={async (id) => { await deleteMedia.mutateAsync({ id, courseId: editId }); }} /></div>
                 </div>
               )}
@@ -310,7 +310,7 @@ export default function CrearManual() {
             <CardContent className="px-8 pb-8 space-y-6">
               <div className="space-y-4">
                 {content.evaluacion?.map((q, qi) => (
-                  <Card key={qi} className="p-6 rounded-2xl border-border/50 bg-muted/20">
+                  <Card key={qi} className="p-6 rounded-2xl border-border/50 bg-background">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-background border flex items-center justify-center font-bold text-sm shrink-0">
@@ -335,7 +335,7 @@ export default function CrearManual() {
                   </Card>
                 ))}
               </div>
-              <div className="flex items-center justify-between border border-dashed border-border/50 p-4 rounded-2xl bg-muted/10">
+              <div className="flex items-center justify-between border border-dashed border-border/50 p-4 rounded-2xl bg-background /10">
                 <p className="text-xs text-muted-foreground font-medium ml-2"><span className="text-green-600 font-bold dark:text-green-400">Nota:</span> La opción A siempre es la respuesta correcta. El sistema la mezclará aleatoriamente para los usuarios.</p>
                 <Button variant="outline" className="rounded-xl font-bold uppercase tracking-widest text-[10px]" onClick={() => setContent({ ...content, evaluacion: [...(content.evaluacion || []), { pregunta: '', respuestaCorrecta: '', opciones: ['', '', '', ''] }] })}>+ Agregar Pregunta</Button>
               </div>

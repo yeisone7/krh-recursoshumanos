@@ -280,7 +280,7 @@ export function ContractTerminationDialog({
                   control={form.control}
                   name="autoCreateExitExam"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border border-border p-4 bg-muted/30">
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border border-border p-4 bg-background">
                       <FormControl>
                         <Checkbox
                           checked={field.value}

@@ -380,22 +380,21 @@ export default function Configuracion() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 overflow-hidden shadow-lg shadow-primary/5"
+        className="relative p-8 rounded-[2.5rem] border border-border overflow-hidden shadow-lg shadow-primary/5"
       >
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        
+        
         
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             <div className="relative shrink-0 group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-foreground rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border/40 shadow-md overflow-hidden group-hover:scale-105 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border shadow-md overflow-hidden group-hover:scale-105 transition-all duration-300">
+                <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <Settings className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
               </div>
             </div>
             <div>
-              <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent uppercase sm:text-4xl">
+              <h1 className="text-3xl font-black tracking-tight text-foreground uppercase sm:text-4xl">
                 Configuración
               </h1>
               <p className="text-muted-foreground font-medium mt-1 tracking-wide">
@@ -405,7 +404,7 @@ export default function Configuracion() {
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="h-10 px-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center gap-2">
+            <div className="h-10 px-4 rounded-xl border border-border flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] font-black text-primary uppercase tracking-widest">Protocolo Activo</span>
             </div>
@@ -415,7 +414,7 @@ export default function Configuracion() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8 min-w-0">
         <div className="flex justify-center">
-          <TabsList className="inline-flex h-16 p-2 rounded-[1.25rem] bg-muted/30 backdrop-blur-md border border-border/50 shadow-inner">
+          <TabsList className="inline-flex h-16 p-2 rounded-[1.25rem] bg-background border border-border/50 shadow-inner">
             <TabsTrigger value="company" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
               <Building2 className="w-4 h-4" />
               Identidad
@@ -441,8 +440,8 @@ export default function Configuracion() {
 
         {/* Company Tab */}
         <TabsContent value="company" className="space-y-8">
-          <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+          <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+            <CardHeader className="bg-background border-b border-slate-100 p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
@@ -487,7 +486,7 @@ export default function Configuracion() {
                           onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})} 
                         />
                       ) : (
-                        <div className="h-12 flex items-center px-4 rounded-xl bg-slate-50 border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
+                        <div className="h-12 flex items-center px-4 rounded-xl bg-background border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
                           {company.name}
                         </div>
                       )}
@@ -501,7 +500,7 @@ export default function Configuracion() {
                           onChange={(e) => setCompanyForm({...companyForm, nit: e.target.value})} 
                         />
                       ) : (
-                        <div className="h-12 flex items-center px-4 rounded-xl bg-slate-50 border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
+                        <div className="h-12 flex items-center px-4 rounded-xl bg-background border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
                           {company.nit}
                         </div>
                       )}
@@ -515,7 +514,7 @@ export default function Configuracion() {
                           onChange={(e) => setCompanyForm({...companyForm, email: e.target.value})} 
                         />
                       ) : (
-                        <div className="h-12 flex items-center px-4 rounded-xl bg-slate-50 border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
+                        <div className="h-12 flex items-center px-4 rounded-xl bg-background border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
                           {company.email || 'SIN ASIGNAR'}
                         </div>
                       )}
@@ -529,7 +528,7 @@ export default function Configuracion() {
                           onChange={(e) => setCompanyForm({...companyForm, phone: e.target.value})} 
                         />
                       ) : (
-                        <div className="h-12 flex items-center px-4 rounded-xl bg-slate-50 border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
+                        <div className="h-12 flex items-center px-4 rounded-xl bg-background border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
                           {company.phone || 'SIN ASIGNAR'}
                         </div>
                       )}
@@ -543,7 +542,7 @@ export default function Configuracion() {
                           onChange={(e) => setCompanyForm({...companyForm, address: e.target.value})} 
                         />
                       ) : (
-                        <div className="h-12 flex items-center px-4 rounded-xl bg-slate-50 border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
+                        <div className="h-12 flex items-center px-4 rounded-xl bg-background border border-slate-100 font-black text-xs text-slate-900 tracking-tight">
                           {company.address || 'SIN ASIGNAR'}
                         </div>
                       )}
@@ -574,8 +573,8 @@ export default function Configuracion() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="border-primary/10 overflow-hidden rounded-[2rem] shadow-xl shadow-black/5 bg-gradient-to-b from-card to-muted/10 group">
-                <CardHeader className="bg-muted/30 border-b border-border/50 px-8 py-6">
+              <Card className="border-border overflow-hidden rounded-[2rem] shadow-xl shadow-black/5 bg-background group">
+                <CardHeader className="bg-background border-b border-border/50 px-8 py-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <CardTitle className="text-lg font-black flex items-center gap-2">
@@ -592,13 +591,13 @@ export default function Configuracion() {
                 <CardContent className="p-8">
                   <div className="flex flex-col items-center gap-8">
                     <div className="relative group/logo cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-                      <div className="w-40 h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden bg-background shadow-inner transition-all duration-500 group-hover/logo:border-primary/50 group-hover/logo:shadow-2xl group-hover/logo:shadow-primary/10 group-hover/logo:-rotate-2">
+                      <div className="w-40 h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden bg-background shadow-inner transition-all duration-500 group-hover/logo:border-border 0 group-hover/logo:shadow-2xl group-hover/logo:shadow-primary/10 group-hover/logo:-rotate-2">
                         {company?.logo_url ? (
                           <img src={company.logo_url} alt="Avatar" className="w-full h-full object-contain p-4 transition-transform duration-700 group-hover/logo:scale-110" />
                         ) : (
                           <Building2 className="w-16 h-16 text-primary/10" />
                         )}
-                        <div className="absolute inset-0 bg-primary/60 backdrop-blur-[2px] opacity-0 group-hover/logo:opacity-100 transition-all duration-300 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-primary/60 -[2px] opacity-0 group-hover/logo:opacity-100 transition-all duration-300 flex items-center justify-center">
                           <div className="bg-white text-primary rounded-full p-3 shadow-xl">
                             <Upload className="w-6 h-6" />
                           </div>
@@ -643,8 +642,8 @@ export default function Configuracion() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <Card className="border-primary/10 overflow-hidden rounded-[2rem] shadow-xl shadow-black/5 bg-gradient-to-b from-card to-muted/10 group">
-                <CardHeader className="bg-muted/30 border-b border-border/50 px-8 py-6">
+              <Card className="border-border overflow-hidden rounded-[2rem] shadow-xl shadow-black/5 bg-background group">
+                <CardHeader className="bg-background border-b border-border/50 px-8 py-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <CardTitle className="text-lg font-black flex items-center gap-2">
@@ -661,7 +660,7 @@ export default function Configuracion() {
                 <CardContent className="p-8">
                   <div className="flex flex-col items-center gap-8">
                     <div className="relative group/logo w-full cursor-pointer" onClick={() => horizontalInputRef.current?.click()}>
-                      <div className="w-full h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden bg-background shadow-inner transition-all duration-500 group-hover/logo:border-primary/50 group-hover/logo:shadow-2xl group-hover/logo:shadow-primary/10">
+                      <div className="w-full h-40 rounded-[2.5rem] border-2 border-dashed border-primary/20 flex items-center justify-center overflow-hidden bg-background shadow-inner transition-all duration-500 group-hover/logo:border-border 0 group-hover/logo:shadow-2xl group-hover/logo:shadow-primary/10">
                         {company?.horizontal_logo_url ? (
                           <img src={company.horizontal_logo_url} alt="Horizontal Logo" className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover/logo:scale-105" />
                         ) : (
@@ -670,7 +669,7 @@ export default function Configuracion() {
                             <span className="text-xs text-muted-foreground font-bold">Sin logo horizontal</span>
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-primary/60 backdrop-blur-[2px] opacity-0 group-hover/logo:opacity-100 transition-all duration-300 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-primary/60 -[2px] opacity-0 group-hover/logo:opacity-100 transition-all duration-300 flex items-center justify-center">
                           <div className="bg-white text-primary rounded-full p-3 shadow-xl">
                             <Upload className="w-6 h-6" />
                           </div>
@@ -714,8 +713,8 @@ export default function Configuracion() {
 
         {/* Alerts Tab */}
         <TabsContent value="alerts" className="space-y-8">
-          <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+          <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+            <CardHeader className="bg-background border-b border-slate-100 p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
@@ -753,7 +752,7 @@ export default function Configuracion() {
 
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
                 {/* Contratos Card */}
-                <div className="relative group p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+                <div className="relative group p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
                   <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
                     <FileText className="w-4 h-4 text-primary" />
                   </div>
@@ -777,7 +776,7 @@ export default function Configuracion() {
                 </div>
 
                 {/* Exámenes Card */}
-                <div className="relative group p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+                <div className="relative group p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
                   <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
                     <Activity className="w-4 h-4 text-primary" />
                   </div>
@@ -799,7 +798,7 @@ export default function Configuracion() {
                 </div>
 
                 {/* Dotación Card */}
-                <div className="relative group p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+                <div className="relative group p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
                   <div className="absolute top-4 right-4 h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center shadow-sm">
                     <Shirt className="w-4 h-4 text-primary" />
                   </div>
@@ -844,7 +843,7 @@ export default function Configuracion() {
                 </div>
               </div>
               {/* Hiring notification role */}
-              <div className="p-6 rounded-[2rem] bg-primary/5 border border-primary/10">
+              <div className="p-6 rounded-[2rem] border border-border ">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-6">
                   <div className="flex-1">
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2 mb-1">
@@ -888,8 +887,8 @@ export default function Configuracion() {
         {/* Watermark Tab */}
         {/* Watermark Tab */}
         <TabsContent value="watermark" className="space-y-8">
-          <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+          <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+            <CardHeader className="bg-background border-b border-slate-100 p-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
                   <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
@@ -912,7 +911,7 @@ export default function Configuracion() {
             </CardHeader>
             <CardContent className="p-8 space-y-10">
               {/* Enable/Disable Toggle Card */}
-              <div className="flex items-center justify-between p-6 rounded-[2rem] bg-primary/5 border border-primary/10">
+              <div className="flex items-center justify-between p-6 rounded-[2rem] border border-border ">
                 <div className="space-y-1">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-primary">Estado de Protección</Label>
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Activar superposición automática en imágenes e infografías IA</p>
@@ -932,7 +931,7 @@ export default function Configuracion() {
                 <div className="space-y-6">
                   <div>
                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1 block mb-4">Identidad de Marca</Label>
-                    <div className="flex flex-col sm:flex-row items-center gap-8 p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100">
+                    <div className="flex flex-col sm:flex-row items-center gap-8 p-6 rounded-[2rem] bg-background border border-slate-100">
                       <div className="relative group w-32 h-32 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
                         {watermarkLogoUrl ? (
                           <img src={watermarkLogoUrl} alt="Logo preview" className="max-w-[80%] max-h-[80%] object-contain" />
@@ -985,7 +984,7 @@ export default function Configuracion() {
                     <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 px-1 block mb-4">Ubicación Visual</Label>
                     <div className="space-y-6">
                       <Select value={watermarkPosition} onValueChange={(v) => setWatermarkPosition(v as WatermarkPosition)}>
-                        <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-slate-200 font-bold text-[10px] uppercase tracking-widest">
+                        <SelectTrigger className="h-12 rounded-xl bg-background border-slate-200 font-bold text-[10px] uppercase tracking-widest">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
@@ -996,7 +995,7 @@ export default function Configuracion() {
                       </Select>
 
                       {/* Visual Guide */}
-                      <div className="relative aspect-video rounded-[2rem] bg-slate-100 border border-slate-200 overflow-hidden shadow-inner group/preview">
+                      <div className="relative aspect-video rounded-[2rem] bg-background border border-slate-200 overflow-hidden shadow-inner group/preview">
                         <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover/preview:opacity-40 transition-opacity">
                           <ImageIcon className="w-24 h-24 text-slate-400" />
                         </div>

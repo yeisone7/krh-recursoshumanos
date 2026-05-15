@@ -117,7 +117,7 @@ export function InventoryMovementsReport() {
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-lg bg-muted/50 p-3 sm:grid-cols-3">
+      <div className="grid gap-3 rounded-lg bg-background p-3 sm:grid-cols-3">
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Total Movimientos</p>
           <p className="text-sm font-semibold">{filteredMovements.length}</p>

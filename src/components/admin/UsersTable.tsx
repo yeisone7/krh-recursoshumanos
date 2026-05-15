@@ -234,15 +234,15 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         {[1, 2, 3].map(i => (
           <div key={i} className="card-elevated space-y-3 p-4">
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+              <div className="h-9 w-9 rounded-full bg-background animate-pulse" />
               <div className="min-w-0 flex-1 space-y-2">
-                <div className="h-4 w-32 rounded bg-muted animate-pulse" />
-                <div className="h-3 w-44 rounded bg-muted animate-pulse" />
+                <div className="h-4 w-32 rounded bg-background animate-pulse" />
+                <div className="h-3 w-44 rounded bg-background animate-pulse" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="h-10 rounded bg-muted animate-pulse" />
-              <div className="h-10 rounded bg-muted animate-pulse" />
+              <div className="h-10 rounded bg-background animate-pulse" />
+              <div className="h-10 rounded bg-background animate-pulse" />
             </div>
           </div>
         ))}
@@ -263,19 +263,19 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             {[1, 2, 3].map(i => (
               <TableRow key={i}>
                 <TableCell>
-                  <div className="h-4 bg-muted rounded animate-pulse w-32" />
+                  <div className="h-4 bg-background rounded animate-pulse w-32" />
                 </TableCell>
                 <TableCell>
-                  <div className="h-4 bg-muted rounded animate-pulse w-16" />
+                  <div className="h-4 bg-background rounded animate-pulse w-16" />
                 </TableCell>
                 <TableCell>
-                  <div className="h-4 bg-muted rounded animate-pulse w-20" />
+                  <div className="h-4 bg-background rounded animate-pulse w-20" />
                 </TableCell>
                 <TableCell>
-                  <div className="h-4 bg-muted rounded animate-pulse w-24" />
+                  <div className="h-4 bg-background rounded animate-pulse w-24" />
                 </TableCell>
                 <TableCell>
-                  <div className="h-4 bg-muted rounded animate-pulse w-20" />
+                  <div className="h-4 bg-background rounded animate-pulse w-20" />
                 </TableCell>
                 <TableCell></TableCell>
               </TableRow>
@@ -329,7 +329,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
           badge: (
             <Badge
               variant={user.is_active ? 'outline' : 'secondary'}
-              className={user.is_active ? 'bg-success-light text-success border-success/20' : 'bg-muted text-muted-foreground'}
+              className={user.is_active ? 'bg-success-light text-success border-success/20' : 'bg-background text-muted-foreground'}
             >
               {user.is_active ? 'Activo' : 'Inactivo'}
             </Badge>
@@ -378,10 +378,10 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         }))}
       />
 
-      <div className="hidden md:block rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+      <div className="hidden md:block rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
         <div className="overflow-auto max-h-[600px]">
         <Table className="min-w-[860px]">
-          <TableHeader className="bg-slate-50/50">
+          <TableHeader className="bg-background">
             <TableRow className="hover:bg-transparent border-slate-100">
               <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Identidad Digital</TableHead>
               <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-[150px]">Estado Acceso</TableHead>
@@ -406,7 +406,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                       <AvatarImage src={user.avatar_url} alt={getUserDisplayName(user)} />
                       <AvatarFallback className={cn(
                         "font-black text-xs",
-                        user.is_active ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400'
+                        user.is_active ? 'bg-primary/10 text-primary' : 'bg-background text-slate-400'
                       )}>
                         {getUserInitials(user)}
                       </AvatarFallback>
@@ -438,7 +438,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                         "font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest",
                         user.is_active 
                           ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
-                          : 'bg-slate-50 border-slate-100 text-slate-400'
+                          : 'bg-background border-slate-100 text-slate-400'
                       )}
                     >
                       {user.is_active ? 'ACTIVO' : 'INACTIVO'}
@@ -452,7 +452,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                     ) : (
                       <>
                       {user.custom_roles.map(role => (
-                        <Badge key={role} variant="secondary" className="bg-slate-100 text-slate-600 border-none font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">
+                        <Badge key={role} variant="secondary" className="bg-background text-slate-600 border-none font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">
                           {role}
                         </Badge>
                       ))}
@@ -462,7 +462,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                           variant="outline"
                           className={cn(
                             "font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest border-primary/20",
-                            ROLE_LABELS[role]?.variant === 'default' ? 'bg-primary/5 text-primary' : 'bg-slate-50 text-slate-500'
+                            ROLE_LABELS[role]?.variant === 'default' ? 'text-primary' : 'bg-background text-slate-500'
                           )}
                         >
                           {ROLE_LABELS[role]?.label || role}
@@ -496,7 +496,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                       ))
                     )}
                     {user.centers.length > 2 && (
-                      <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-400 font-black text-[9px] px-2 py-0.5 rounded-lg">
+                      <Badge variant="outline" className="bg-background border-slate-200 text-slate-400 font-black text-[9px] px-2 py-0.5 rounded-lg">
                         +{user.centers.length - 2}
                       </Badge>
                     )}

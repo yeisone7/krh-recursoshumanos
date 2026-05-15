@@ -23,8 +23,8 @@ export default function AsistenteIA() {
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg
             transition-colors border-b-2 -mb-px
             ${activeTab === 'data'
-              ? 'border-primary text-primary bg-primary/5'
-              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              ? 'border-primary text-primary '
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-background'
             }`}
         >
           <BarChart2 className="w-4 h-4" />
@@ -39,8 +39,8 @@ export default function AsistenteIA() {
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg
             transition-colors border-b-2 -mb-px
             ${activeTab === 'help'
-              ? 'border-primary text-primary bg-primary/5'
-              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              ? 'border-primary text-primary '
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-background'
             }`}
         >
           <MessageCircle className="w-4 h-4" />

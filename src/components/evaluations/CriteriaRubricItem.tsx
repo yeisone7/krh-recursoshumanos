@@ -35,7 +35,7 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="p-3 border rounded-lg bg-muted/30 space-y-2">
+    <div className="p-3 border rounded-lg bg-background space-y-2">
       <div className="flex gap-2 items-start">
         <GripVertical className="w-4 h-4 mt-2 text-muted-foreground cursor-grab shrink-0" />
 

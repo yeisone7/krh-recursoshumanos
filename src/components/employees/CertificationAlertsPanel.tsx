@@ -110,7 +110,7 @@ export function CertificationAlertsPanel({ onEmployeeClick, alerts = [] }: Certi
             <div
               key={alert.id}
               className={cn(
-                'p-3 rounded-lg border-l-4 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors group',
+                'p-3 rounded-lg border-l-4 bg-background hover:bg-background cursor-pointer transition-colors group',
                 styles.border
               )}
               onClick={() => onEmployeeClick(alert.entityId)}

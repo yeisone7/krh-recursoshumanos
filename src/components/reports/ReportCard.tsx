@@ -37,7 +37,7 @@ export function ReportCard({
       transition={{ duration: 0.3 }}
       className={cn('group relative', className)}
     >
-      <Card className="overflow-hidden rounded-[2.5rem] border-border/50 bg-background/50 backdrop-blur-sm shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all duration-300 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] group-hover:border-primary/20">
+      <Card className="overflow-hidden rounded-[2.5rem] border-border/50 bg-background shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all duration-300 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] group-hover:border-primary/20">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 pointer-events-none">
           <div className="scale-[4] transform rotate-12">
             {icon}
@@ -74,7 +74,7 @@ export function ReportCard({
             </div>
 
             {children && (
-              <div className="relative rounded-2xl bg-muted/30 p-4 border border-border/40">
+              <div className="relative rounded-2xl bg-background p-4 border border-border/40">
                 {children}
               </div>
             )}

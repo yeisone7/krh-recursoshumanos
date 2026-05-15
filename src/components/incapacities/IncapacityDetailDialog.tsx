@@ -120,7 +120,7 @@ export function IncapacityDetailDialog({
           
           {/* Premium Gradient Header */}
           <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+            
             
             <DialogHeader className="relative z-10">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -129,7 +129,7 @@ export function IncapacityDetailDialog({
                     <Stethoscope className="w-6 h-6" />
                   </div>
                   <div>
-                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1 hidden sm:inline-flex">
+                    <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1 hidden sm:inline-flex">
                       DETALLE
                     </Badge>
                     <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
@@ -156,7 +156,7 @@ export function IncapacityDetailDialog({
           
           <div className="px-8 py-6 min-h-0">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="flex h-14 w-full justify-start overflow-x-auto p-1 bg-muted/30 rounded-2xl mb-6 custom-scrollbar">
+              <TabsList className="flex h-14 w-full justify-start overflow-x-auto p-1 bg-background rounded-2xl mb-6 custom-scrollbar">
                 <TabsTrigger value="general" className="shrink-0 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] uppercase tracking-widest transition-all">General</TabsTrigger>
                 <TabsTrigger value="payment" className="shrink-0 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] uppercase tracking-widest transition-all">Pagos</TabsTrigger>
                 <TabsTrigger value="recovery" className="shrink-0 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] uppercase tracking-widest transition-all">Recobro</TabsTrigger>
@@ -477,7 +477,7 @@ export function IncapacityDetailDialog({
                 </Card>
                 
                 {incapacity.certificate_url && (
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2 p-3 bg-background rounded-lg">
                     <FileText className="h-4 w-4 text-primary" />
                     <span className="text-sm">Documento actual: {incapacity.certificate_url.split('/').pop()}</span>
                   </div>
@@ -530,7 +530,7 @@ export function IncapacityDetailDialog({
                     <div className="space-y-3">
                       {/* Original incapacity */}
                       {!incapacity.is_extension && (
-                        <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                        <div className="flex items-center gap-3 p-3 rounded-lg border bg-background">
                           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
                             1
                           </div>
@@ -569,7 +569,7 @@ export function IncapacityDetailDialog({
                     </div>
                     
                     {totalChainDays > incapacity.total_days && (
-                      <div className="mt-4 p-3 rounded-lg bg-muted">
+                      <div className="mt-4 p-3 rounded-lg bg-background ">
                         <p className="text-sm font-medium">Total acumulado: {totalChainDays} días</p>
                       </div>
                     )}
@@ -579,7 +579,7 @@ export function IncapacityDetailDialog({
             </Tabs>
           </div>
           
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between px-8 py-6 border-t bg-muted/10">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between px-8 py-6 border-t bg-background /10">
             <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
               <Trash2 className="h-4 w-4 mr-1" />
               Eliminar

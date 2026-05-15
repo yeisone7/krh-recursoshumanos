@@ -54,7 +54,7 @@ export default function GenerarAcceso() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-foreground">Generar Enlaces de Acceso</h1>
@@ -115,7 +115,7 @@ export default function GenerarAcceso() {
               <button
                 type="button"
                 onClick={() => setAccessType('solo_link')}
-                className={`rounded-2xl border-2 p-4 text-left transition-all ${accessType === 'solo_link' ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all ${accessType === 'solo_link' ? 'border-primary shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
               >
                 <span className="font-bold text-sm">Solo Link</span>
                 <p className="text-xs text-muted-foreground mt-1">Acceso directo sin identificación</p>
@@ -123,7 +123,7 @@ export default function GenerarAcceso() {
               <button
                 type="button"
                 onClick={() => setAccessType('link_cedula')}
-                className={`rounded-2xl border-2 p-4 text-left transition-all ${accessType === 'link_cedula' ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all ${accessType === 'link_cedula' ? 'border-primary shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
               >
                 <span className="font-bold text-sm">Link + Cédula</span>
                 <p className="text-xs text-muted-foreground mt-1">Requiere nombre y cédula</p>
@@ -140,7 +140,7 @@ export default function GenerarAcceso() {
               <button
                 type="button"
                 onClick={() => setUsageType('unico')}
-                className={`rounded-2xl border-2 p-4 text-left transition-all ${usageType === 'unico' ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all ${usageType === 'unico' ? 'border-primary shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
               >
                 <span className="font-bold text-sm">Uso Único</span>
                 <p className="text-xs text-muted-foreground mt-1">Solo una persona puede usar el enlace</p>
@@ -148,7 +148,7 @@ export default function GenerarAcceso() {
               <button
                 type="button"
                 onClick={() => setUsageType('multiple')}
-                className={`rounded-2xl border-2 p-4 text-left transition-all ${usageType === 'multiple' ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all ${usageType === 'multiple' ? 'border-primary shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
               >
                 <span className="font-bold text-sm">Múltiple</span>
                 <p className="text-xs text-muted-foreground mt-1">Varias personas pueden usar el enlace</p>
@@ -189,7 +189,7 @@ export default function GenerarAcceso() {
             <Label className="text-sm font-semibold flex items-center gap-1.5">
               <ClipboardCheck className="h-4 w-4 text-muted-foreground" /> Evaluación Requerida
             </Label>
-            <div className={`rounded-2xl border-2 p-4 flex items-center justify-between transition-all bg-background ${requiresEvaluation ? 'border-primary bg-primary/5 shadow-inner' : 'border-border/50'}`}>
+            <div className={`rounded-2xl border-2 p-4 flex items-center justify-between transition-all bg-background ${requiresEvaluation ? 'border-primary shadow-inner' : 'border-border/50'}`}>
               <div>
                 <span className="font-bold text-sm">{requiresEvaluation ? 'Con Evaluación' : 'Sin Evaluación'}</span>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -209,7 +209,7 @@ export default function GenerarAcceso() {
         <div className="space-y-4">
           <div className="flex items-center justify-between px-2">
             <h2 className="font-bold text-xl">Enlaces Creados</h2>
-            <Badge variant="outline" className="bg-muted/50 rounded-full px-3">{tokens.length} enlaces</Badge>
+            <Badge variant="outline" className="bg-background rounded-full px-3">{tokens.length} enlaces</Badge>
           </div>
 
           <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto pr-2 pb-4">
@@ -297,7 +297,7 @@ export default function GenerarAcceso() {
                   <div className="flex items-center gap-2 pt-2 border-t border-border/40">
                     <Button
                       variant="outline"
-                      className="flex-1 rounded-xl h-10 font-bold text-xs hover:bg-muted/50"
+                      className="flex-1 rounded-xl h-10 font-bold text-xs hover:bg-background"
                       onClick={() => handleCopy(token.token)}
                     >
                       <Copy className="h-4 w-4 mr-2" /> Copiar Enlace
@@ -305,7 +305,7 @@ export default function GenerarAcceso() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-10 w-10 rounded-xl hover:bg-muted/50"
+                      className="h-10 w-10 rounded-xl hover:bg-background"
                       onClick={() => setQrDialog({ url: getAccessUrl(token.token), title: token.course?.name || 'QR' })}
                     >
                       <QrCode className="h-4 w-4" />
@@ -313,7 +313,7 @@ export default function GenerarAcceso() {
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-10 w-10 rounded-xl hover:bg-muted/50"
+                      className="h-10 w-10 rounded-xl hover:bg-background"
                       onClick={() => window.open(getAccessUrl(token.token), '_blank')}
                     >
                       <ExternalLink className="h-4 w-4" />

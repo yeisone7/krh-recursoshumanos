@@ -238,7 +238,7 @@ export default function Centros() {
                 </TableHeader>
                 <TableBody>
                   {filteredCenters.map((center) => (
-                    <TableRow key={center.id} className="cursor-pointer hover:bg-muted/50"
+                    <TableRow key={center.id} className="cursor-pointer hover:bg-background"
                       onClick={() => setDetailCenter(center)}>
                       <TableCell>
                         <div className="flex items-center gap-3">

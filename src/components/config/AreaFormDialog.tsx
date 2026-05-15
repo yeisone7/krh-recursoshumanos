@@ -121,9 +121,9 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden p-0 sm:max-w-lg border-none bg-transparent shadow-none">
-        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-primary/10 bg-background/95 backdrop-blur-2xl shadow-2xl">
+        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-border bg-background -2xl shadow-2xl">
           {/* Modal Header */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-primary/10">
+          <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-border ">
             <div className="relative z-10 flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
                 <Users className="h-7 w-7 text-primary-foreground" />
@@ -138,7 +138,7 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
               </div>
             </div>
             {/* Decorative blurs */}
-            <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+            
           </div>
 
           <Form {...form}>
@@ -154,7 +154,7 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
                         <FormControl>
                           <Input 
                             placeholder="Ej. Recursos Humanos" 
-                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-medium"
+                            className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-medium"
                             {...field} 
                           />
                         </FormControl>
@@ -173,7 +173,7 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
                           <Input 
                             placeholder="RRHH-01" 
                             maxLength={10} 
-                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-medium"
+                            className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-medium"
                             {...field} 
                           />
                         </FormControl>
@@ -193,11 +193,11 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
                           value={field.value || "__none__"}
                         >
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-medium">
+                            <SelectTrigger className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-medium">
                               <SelectValue placeholder="Sin área superior" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="rounded-2xl border-primary/10 backdrop-blur-xl bg-background/95">
+                          <SelectContent className="rounded-2xl border-border bg-background">
                             <SelectItem value="__none__" className="font-medium">Sin área superior</SelectItem>
                             {parentOptions.map((a) => (
                               <SelectItem key={a.id} value={a.id} className="font-medium">
@@ -221,7 +221,7 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
                       <FormControl>
                         <Textarea
                           placeholder="Propósito o detalles adicionales del área..."
-                          className="min-h-[100px] rounded-2xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-medium resize-none"
+                          className="min-h-[100px] rounded-2xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-medium resize-none"
                           {...field}
                         />
                       </FormControl>
@@ -231,12 +231,12 @@ export function AreaFormDialog({ open, onOpenChange, area }: AreaFormDialogProps
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-primary/10">
+              <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-border ">
                 <Button 
                   type="button" 
                   variant="ghost" 
                   onClick={() => onOpenChange(false)}
-                  className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-muted"
+                  className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-background "
                 >
                   Cancelar
                 </Button>

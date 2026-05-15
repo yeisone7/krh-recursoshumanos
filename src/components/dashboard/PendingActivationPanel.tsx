@@ -106,7 +106,7 @@ export function PendingActivationPanel() {
               {pendingUsers.map((user) => (
                 <div
                   key={user.user_id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                  className="flex items-center justify-between p-3 rounded-lg bg-background hover:bg-background transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">

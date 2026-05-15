@@ -225,10 +225,10 @@ export function OrgChart({ positions, areas, employees, isLoading }: OrgChartPro
   }
 
   return (
-    <div className="relative w-full overflow-hidden bg-muted/5 select-none" style={{ height: '800px' }}>
+    <div className="relative w-full overflow-hidden bg-background /5 select-none" style={{ height: '800px' }}>
       {/* Search and Global Controls */}
       <div className="absolute left-1/2 top-8 z-20 flex -translate-x-1/2 flex-col items-center gap-4 w-full max-w-4xl px-4 pointer-events-none">
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full pointer-events-auto bg-background/60 backdrop-blur-xl p-2 rounded-[2rem] border border-border/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full pointer-events-auto bg-background p-2 rounded-[2rem] border border-border/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-primary/60" />
             <Input
@@ -262,21 +262,21 @@ export function OrgChart({ positions, areas, employees, isLoading }: OrgChartPro
 
       {/* Navigation Controls (Zoom/Reset) */}
       <div className="absolute right-8 bottom-8 z-20 flex flex-col gap-3">
-        <div className="flex flex-col overflow-hidden rounded-2xl border border-border/50 bg-background/80 shadow-2xl backdrop-blur-xl">
-          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-none border-b border-border/40 hover:bg-primary/5 hover:text-primary transition-all" onClick={() => setZoom(prev => Math.min(prev + 0.1, 2))}>
+        <div className="flex flex-col overflow-hidden rounded-2xl border border-border/50 bg-background shadow-2xl ">
+          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-none border-b border-border/40 hover:hover:text-primary transition-all" onClick={() => setZoom(prev => Math.min(prev + 0.1, 2))}>
             <Plus className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-none hover:bg-primary/5 hover:text-primary transition-all" onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.4))}>
+          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-none hover:hover:text-primary transition-all" onClick={() => setZoom(prev => Math.max(prev - 0.1, 0.4))}>
             <Minus className="h-5 w-5" />
           </Button>
         </div>
-        <Button variant="secondary" size="icon" className="h-12 w-12 rounded-2xl shadow-2xl bg-background/80 backdrop-blur-xl border border-border/50 hover:scale-110 active:scale-95 transition-all" onClick={resetView} title="Resetear vista">
+        <Button variant="secondary" size="icon" className="h-12 w-12 rounded-2xl shadow-2xl bg-background border border-border/50 hover:scale-110 active:scale-95 transition-all" onClick={resetView} title="Resetear vista">
           <RotateCcw className="h-5 w-5 text-primary" />
         </Button>
       </div>
 
       {/* Zoom indicator */}
-      <div className="absolute left-8 bottom-8 z-20 bg-background/80 px-4 py-2 rounded-2xl border border-border/50 text-[10px] font-black uppercase tracking-widest shadow-xl backdrop-blur-xl text-primary">
+      <div className="absolute left-8 bottom-8 z-20 bg-background px-4 py-2 rounded-2xl border border-border/50 text-[10px] font-black uppercase tracking-widest shadow-xl text-primary">
         Zoom: {Math.round(zoom * 100)}%
       </div>
 

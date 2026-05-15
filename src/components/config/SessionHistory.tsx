@@ -87,9 +87,9 @@ export function SessionHistory() {
               {sessions.map((s) => (
                 <div
                   key={s.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-lg border hover:bg-background transition-colors"
                 >
-                  <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <div className="h-9 w-9 rounded-full bg-background flex items-center justify-center shrink-0">
                     {deviceIcon(s.device_type)}
                   </div>
                   <div className="flex-1 min-w-0">

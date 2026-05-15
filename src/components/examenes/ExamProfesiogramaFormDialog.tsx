@@ -118,9 +118,9 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2.5rem] border-0 shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2.5rem] border-0 shadow-2xl bg-background overflow-hidden">
         <DialogHeader className="px-8 py-8 bg-gradient-to-br from-violet/10 via-background to-violet/5 border-b border-violet/10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-violet/10 blur-3xl pointer-events-none" />
+          
           <div className="relative flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-violet flex items-center justify-center shadow-lg shadow-violet/20">
               <ClipboardList className="w-6 h-6 text-violet-foreground" />
@@ -175,7 +175,7 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
                     <Badge variant="outline" className="h-5 px-1.5 rounded-lg bg-violet/5 text-violet border-violet/20 font-black text-[8px] uppercase tracking-tighter">
                       {requiredCount} Obligatorios
                     </Badge>
-                    <Badge variant="outline" className="h-5 px-1.5 rounded-lg bg-muted text-muted-foreground border-border font-black text-[8px] uppercase tracking-tighter">
+                    <Badge variant="outline" className="h-5 px-1.5 rounded-lg bg-background text-muted-foreground border-border font-black text-[8px] uppercase tracking-tighter">
                       {optionalCount} Opcionales
                     </Badge>
                   </div>
@@ -194,7 +194,7 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
             </div>
 
             {items.length === 0 ? (
-              <div className="text-center py-16 rounded-[2rem] border border-dashed border-border/50 bg-muted/20">
+              <div className="text-center py-16 rounded-[2rem] border border-dashed border-border/50 bg-background">
                 <Info className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
                 <p className="text-sm font-medium text-muted-foreground">No hay exámenes configurados para este cargo.</p>
                 <Button variant="link" onClick={addItem} className="mt-2 font-black text-[10px] uppercase tracking-widest">Haz clic para agregar el primero</Button>
@@ -202,10 +202,10 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
             ) : (
               <div className="space-y-3">
                 {/* Table for Desktop */}
-                <div className="hidden sm:block overflow-hidden rounded-2xl border border-border/50 bg-background/50">
+                <div className="hidden sm:block overflow-hidden rounded-2xl border border-border/50 bg-background ">
                   <Table>
                     <TableHeader>
-                      <TableRow className="hover:bg-transparent bg-muted/30 border-border/50">
+                      <TableRow className="hover:bg-transparent bg-background border-border/50">
                         <TableHead className="text-[9px] font-black uppercase tracking-widest px-6 h-10">Procedimiento Médico</TableHead>
                         <TableHead className="w-24 text-center text-[9px] font-black uppercase tracking-widest px-6 h-10">Requerido</TableHead>
                         <TableHead className="w-10 px-6 h-10"></TableHead>
@@ -254,7 +254,7 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
                 {/* Cards for Mobile */}
                 <div className="grid grid-cols-1 gap-3 sm:hidden">
                   {items.map((item, idx) => (
-                    <div key={idx} className="rounded-2xl border border-border/50 p-4 space-y-4 bg-background/50">
+                    <div key={idx} className="rounded-2xl border border-border/50 p-4 space-y-4 bg-background ">
                       <div className="space-y-2">
                         <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Examen Seleccionado</Label>
                         <Select value={item.exam_catalog_id} onValueChange={(v) => updateItem(idx, 'exam_catalog_id', v)}>
@@ -283,7 +283,7 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
           </div>
         </div>
 
-        <div className="p-8 bg-muted/20 border-t border-border/50 flex flex-col sm:flex-row gap-3">
+        <div className="p-8 bg-background border-t border-border/50 flex flex-col sm:flex-row gap-3">
           <Button 
             variant="ghost" 
             onClick={() => onOpenChange(false)}

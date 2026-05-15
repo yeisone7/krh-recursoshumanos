@@ -50,7 +50,7 @@ export default function SelectCompany() {
           {companies.map((company) => (
             <Card
               key={company.id}
-              className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md group"
+              className="cursor-pointer transition-all hover:border-border 0 hover:shadow-md group"
               onClick={() => handleSelect(company.id)}
             >
               <CardContent className="flex items-center justify-between p-4">

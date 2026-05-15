@@ -63,8 +63,8 @@ export function DiversityGoalsConfig() {
   ];
 
   return (
-    <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
-      <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+    <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+      <CardHeader className="bg-background border-b border-slate-100 p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
@@ -96,7 +96,7 @@ export function DiversityGoalsConfig() {
         <CardContent className="p-8 space-y-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {goalFields.map(f => (
-              <div key={f.key} className="group relative p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+              <div key={f.key} className="group relative p-6 rounded-[2rem] bg-background border border-slate-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xl grayscale group-hover:grayscale-0 transition-all">{f.icon}</span>
@@ -121,11 +121,11 @@ export function DiversityGoalsConfig() {
           </div>
 
           <div className="p-8 rounded-[2.5rem] bg-slate-900 text-white shadow-2xl shadow-primary/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+            
             
             <div className="relative flex flex-col md:flex-row items-center justify-between gap-8">
               <div className="flex items-center gap-6">
-                <div className="h-14 w-14 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center backdrop-blur-md shrink-0">
+                <div className="h-14 w-14 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center shrink-0">
                   <Info className="w-7 h-7 text-primary" />
                 </div>
                 <div className="space-y-1">
@@ -136,7 +136,7 @@ export function DiversityGoalsConfig() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-8 px-8 py-4 rounded-[1.75rem] bg-white/5 border border-white/10 backdrop-blur-xl">
+              <div className="flex items-center gap-8 px-8 py-4 rounded-[1.75rem] bg-white/5 border border-white/10 ">
                 <div className="flex items-center gap-4">
                   <div className="space-y-1">
                     <Label className="text-[9px] font-black text-primary uppercase tracking-widest block text-right">Umbral Crítico</Label>

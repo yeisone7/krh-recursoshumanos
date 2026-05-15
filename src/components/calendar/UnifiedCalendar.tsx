@@ -173,7 +173,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                 'relative flex flex-col items-center justify-center rounded-[2rem] border p-4 transition-all duration-300 text-center',
                 isActive
                   ? 'bg-background shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-primary/20 ring-1 ring-primary/5'
-                  : 'bg-muted/30 border-transparent opacity-50 grayscale hover:grayscale-0 hover:opacity-100',
+                  : 'bg-background border-transparent opacity-50 grayscale hover:grayscale-0 hover:opacity-100',
               )}
             >
               <div className={cn(
@@ -207,7 +207,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
               <h2 className="text-xl font-black uppercase tracking-widest text-foreground/90 whitespace-nowrap">
                 {viewTitle}
               </h2>
-              <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-2xl border border-border/50 w-fit">
+              <div className="flex items-center gap-1 p-1 bg-background rounded-2xl border border-border/50 w-fit">
                 <Button variant="ghost" size="sm" onClick={goToToday} className="h-9 px-4 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-background transition-all">
                   Hoy
                 </Button>
@@ -225,7 +225,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
 
             <div className="flex flex-wrap items-center gap-3">
               <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week' | 'agenda')} className="w-full sm:w-auto">
-                <TabsList className="bg-muted/30 p-1.5 rounded-2xl border border-border/50 w-full sm:w-auto overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <TabsList className="bg-background p-1.5 rounded-2xl border border-border/50 w-full sm:w-auto overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   <TabsTrigger value="agenda" className="rounded-xl px-4 py-2 font-black uppercase tracking-widest text-[9px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shadow-sm transition-all whitespace-nowrap">
                     <List className="mr-2 h-3.5 w-3.5" />
                     Agenda
@@ -243,7 +243,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
 
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-11 rounded-2xl border-2 px-5 font-black uppercase tracking-widest text-[9px] hover:bg-muted/50 transition-all ml-auto sm:ml-0">
+                  <Button variant="outline" size="sm" className="h-11 rounded-2xl border-2 px-5 font-black uppercase tracking-widest text-[9px] hover:bg-background transition-all ml-auto sm:ml-0">
                     <Filter className="mr-2 h-4 w-4 text-primary" />
                     Filtros
                     {enabledTypes.length < 5 && (
@@ -315,7 +315,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                                   'flex items-center justify-center w-10 h-10 rounded-lg text-sm font-bold',
                                   isToday(date)
                                     ? 'bg-primary text-primary-foreground'
-                                    : 'bg-muted text-muted-foreground',
+                                    : 'bg-background text-muted-foreground',
                                 )}
                               >
                                 {format(date, 'd')}
@@ -399,8 +399,8 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                           className={cn(
                             'p-1.5 border rounded-lg transition-all text-left',
                             view === 'week' ? 'min-h-[150px] sm:min-h-[180px]' : 'min-h-[72px] sm:min-h-[85px]',
-                            isCurrentMonth ? 'bg-background hover:bg-accent/30' : 'bg-muted/20',
-                            isSelected && 'ring-2 ring-primary/60 bg-primary/5',
+                            isCurrentMonth ? 'bg-background hover:bg-accent/30' : 'bg-background',
+                            isSelected && 'ring-2 ring-primary/60 ',
                             isCurrentDay && !isSelected && 'ring-1 ring-primary/40',
                           )}
                         >
@@ -416,7 +416,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
                               {format(day, 'd')}
                             </span>
                             {dayEvents.length > 0 && view === 'month' && (
-                              <span className="text-[9px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
+                              <span className="text-[9px] text-muted-foreground bg-background rounded-full px-1.5 py-0.5">
                                 {dayEvents.length}
                               </span>
                             )}
@@ -514,7 +514,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
         )}
 
         {/* Sidebar: Selected day detail */}
-        <Card className="hidden xl:flex w-[340px] flex-col shrink-0 rounded-[2.5rem] border-border/50 shadow-xl bg-background/95 backdrop-blur-xl">
+        <Card className="hidden xl:flex w-[340px] flex-col shrink-0 rounded-[2.5rem] border-border/50 shadow-xl bg-background ">
           <div className="px-6 pt-8 pb-4">
             <div className="flex items-center justify-between">
               <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-black">
@@ -540,7 +540,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
             <div className="space-y-3 pb-6">
               {selectedDayEvents.length === 0 ? (
                 <div className="py-20 text-center">
-                  <div className="mx-auto w-16 h-16 rounded-3xl bg-muted/30 flex items-center justify-center mb-4">
+                  <div className="mx-auto w-16 h-16 rounded-3xl bg-background flex items-center justify-center mb-4">
                     <CalendarIcon className="h-8 w-8 text-muted-foreground/30" />
                   </div>
                   <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Sin eventos</p>
@@ -600,7 +600,7 @@ export function UnifiedCalendar({ defaultView = 'agenda' }: UnifiedCalendarProps
           </div>
 
           {/* Bottom legend summary */}
-          <div className="p-6 bg-muted/20 border-t border-border/50">
+          <div className="p-6 bg-background border-t border-border/50">
             <p className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-4">Leyenda</p>
             <div className="flex flex-wrap gap-2">
               {enabledTypes.map((type) => (

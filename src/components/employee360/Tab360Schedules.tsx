@@ -107,7 +107,7 @@ export function Tab360Schedules({ timeConfigs, isLoading }: Tab360SchedulesProps
 
               {/* Schedule Details */}
               {activeConfig.mode === 'administrative' && activeConfig.work_schedules && (
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <div className="bg-background rounded-lg p-4 space-y-2">
                   <div className="font-medium flex items-center gap-2">
                     <CalendarClock className="w-4 h-4" />
                     {activeConfig.work_schedules.name}
@@ -134,7 +134,7 @@ export function Tab360Schedules({ timeConfigs, isLoading }: Tab360SchedulesProps
               )}
 
               {activeConfig.mode === 'shift' && activeConfig.shift_cycles && (
-                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <div className="bg-background rounded-lg p-4 space-y-2">
                   <div className="font-medium flex items-center gap-2">
                     <RotateCcw className="w-4 h-4" />
                     {activeConfig.shift_cycles.name}

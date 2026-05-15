@@ -240,7 +240,7 @@ export function ApplyEvaluationDialog({
           <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6">
             <div className="space-y-6 py-4">
               {/* Score summary bar */}
-              <div className="flex flex-col gap-2 bg-muted/50 rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2 bg-background rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm">
                   <span className="text-muted-foreground">Progreso: </span>
                   <span className="font-medium">{scoredCount}/{criteria.length} criterios</span>

@@ -186,7 +186,7 @@ export function LeaveRequestDetailDialog({
 
         <div className="space-y-5 sm:space-y-6">
           {/* Employee Info */}
-          <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+          <div className="flex items-center gap-3 p-4 bg-background rounded-lg">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
               <User className="w-6 h-6 text-primary" />
             </div>
@@ -255,7 +255,7 @@ export function LeaveRequestDetailDialog({
           )}
 
           {/* Total Days/Hours */}
-          <div className="p-4 bg-primary/5 rounded-lg">
+          <div className="p-4 rounded-lg">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Total</span>
               <span className="text-xl font-bold">
@@ -274,14 +274,14 @@ export function LeaveRequestDetailDialog({
               <FileText className="w-4 h-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Motivo</p>
             </div>
-            <p className="p-3 bg-muted rounded-lg">{request.reason}</p>
+            <p className="p-3 bg-background rounded-lg">{request.reason}</p>
           </div>
 
           {/* Document Section */}
           <div>
             <p className="text-sm text-muted-foreground mb-2">Documento de Soporte</p>
             {request.document_url ? (
-            <div className="flex flex-col gap-3 p-3 border rounded-lg bg-muted/50 sm:flex-row sm:items-center sm:gap-2">
+            <div className="flex flex-col gap-3 p-3 border rounded-lg bg-background sm:flex-row sm:items-center sm:gap-2">
                 <FileText className="h-4 w-4 text-primary shrink-0" />
                 <span className="text-sm truncate flex-1">{request.document_name || 'Documento adjunto'}</span>
                 <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={handleDownloadDocument}>
@@ -290,7 +290,7 @@ export function LeaveRequestDetailDialog({
                 </Button>
               </div>
             ) : (
-              <label className={`flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+              <label className={`flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-background transition-colors ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                 <Upload className="h-5 w-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
                   {isUploading ? 'Subiendo...' : 'Haga clic para adjuntar un documento'}
@@ -329,7 +329,7 @@ export function LeaveRequestDetailDialog({
                 {request.review_notes && (
                   <div>
                     <p className="text-muted-foreground">Notas</p>
-                    <p className="p-2 bg-muted rounded">{request.review_notes}</p>
+                    <p className="p-2 bg-background rounded">{request.review_notes}</p>
                   </div>
                 )}
                 {request.rejection_reason && (
@@ -357,7 +357,7 @@ export function LeaveRequestDetailDialog({
                 {request.cancellation_reason && (
                   <div>
                     <p className="text-muted-foreground">Motivo</p>
-                    <p className="p-2 bg-muted rounded">{request.cancellation_reason}</p>
+                    <p className="p-2 bg-background rounded">{request.cancellation_reason}</p>
                   </div>
                 )}
               </div>

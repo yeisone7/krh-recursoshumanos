@@ -81,7 +81,7 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
 
                 <div className="mt-4 grid grid-cols-3 gap-2">
                   {conceptos.map(item => (
-                    <div key={item.label} className="rounded-md bg-muted/50 px-2 py-2 text-center">
+                    <div key={item.label} className="rounded-md bg-background px-2 py-2 text-center">
                       <div className="text-[11px] leading-tight text-muted-foreground">{item.label}</div>
                       <div className="mt-1 text-sm font-medium text-foreground">{item.value}</div>
                     </div>
@@ -89,15 +89,15 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 gap-2 text-sm">
-                  <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
+                  <div className="flex items-center justify-between rounded-md bg-background /40 px-3 py-2">
                     <span className="text-muted-foreground">Préstamos</span>
                     <span className="font-medium text-foreground">{fmtMoney(row.loanDeduction)}</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
+                  <div className="flex items-center justify-between rounded-md bg-background /40 px-3 py-2">
                     <span className="text-muted-foreground">Descuentos</span>
                     <span className="font-medium text-foreground">{fmtMoney(row.deductionTotal)}</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-md border border-primary/20 bg-primary/5 px-3 py-2">
+                  <div className="flex items-center justify-between rounded-md border border-primary/20 px-3 py-2">
                     <span className="font-medium text-foreground">Total deducciones</span>
                     <span className="font-semibold text-primary">{fmtMoney(row.totalDeducciones)}</span>
                   </div>
@@ -115,8 +115,8 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
       <div className="overflow-x-auto border rounded-lg">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="sticky left-0 bg-muted/50 z-10 min-w-[200px]">Empleado</TableHead>
+            <TableRow className="bg-background">
+              <TableHead className="sticky left-0 bg-background z-10 min-w-[200px]">Empleado</TableHead>
               <TableHead className="text-center min-w-[70px]">Jornada</TableHead>
               <TableHead className="text-center min-w-[70px]">Dom. Trab.</TableHead>
               <TableHead className="text-center min-w-[70px]">Fest. Trab.</TableHead>

@@ -108,7 +108,7 @@ export function ContractPlaceholdersInfo() {
                   {category.items.map((item) => (
                     <div
                       key={item.key}
-                      className="flex flex-col sm:flex-row sm:items-start gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-start gap-2 p-3 rounded-lg bg-background hover:bg-background transition-colors"
                     >
                       <Badge 
                         variant="outline" 

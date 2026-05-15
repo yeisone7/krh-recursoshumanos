@@ -241,15 +241,15 @@ export function RequisitionFormDialog({
 
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4 pt-8 pb-6 sm:px-8 sm:pt-10">
           {/* Decorative patterns */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          
+          
           
           {/* Pattern overlay (dots) */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
           <div className="relative flex flex-col md:flex-row items-start gap-6">
             {/* Avatar/Initial */}
-            <div className="w-16 h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-primary/10 transition-transform hover:scale-105 duration-300">
+            <div className="w-16 h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-border transition-transform hover:scale-105 duration-300">
               {form.watch('cargo_solicitado') ? form.watch('cargo_solicitado').substring(0, 2).toUpperCase() : 'RP'}
             </div>
 
@@ -304,7 +304,7 @@ export function RequisitionFormDialog({
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="h-10 flex-1 min-w-[120px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all"
+                      className="h-10 flex-1 min-w-[120px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:data-[state=active]:text-primary data-[state=active]:shadow-none transition-all"
                     >
                       <tab.icon className="w-4 h-4" />
                       <span className="hidden sm:inline font-medium">{tab.label}</span>
@@ -571,7 +571,7 @@ export function RequisitionFormDialog({
 
                 {/* Replacement Tab */}
                 <TabsContent value="replacement" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10">
+                  <div className="rounded-2xl p-6 border border-border ">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
                         <Users className="w-5 h-5" />
@@ -672,7 +672,7 @@ export function RequisitionFormDialog({
                             </FormControl>
                             <SelectContent className="bg-background">
                               <SelectGroup>
-                                <SelectLabel className="text-primary/70 text-[10px] font-bold uppercase tracking-widest bg-muted/30 py-2 mb-1">Horario de Oficina</SelectLabel>
+                                <SelectLabel className="text-primary/70 text-[10px] font-bold uppercase tracking-widest bg-background py-2 mb-1">Horario de Oficina</SelectLabel>
                                 {(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'] as DayOfWeek[]).map((day) => (
                                   <SelectItem key={day} value={day}>
                                     {dayOfWeekLabels[day]}
@@ -681,7 +681,7 @@ export function RequisitionFormDialog({
                               </SelectGroup>
                               <SelectSeparator className="my-1" />
                               <SelectGroup>
-                                <SelectLabel className="text-primary/70 text-[10px] font-bold uppercase tracking-widest bg-muted/30 py-2 mb-1">Turnos</SelectLabel>
+                                <SelectLabel className="text-primary/70 text-[10px] font-bold uppercase tracking-widest bg-background py-2 mb-1">Turnos</SelectLabel>
                                 {(['2_dias', '4_dias', '7_dias'] as DayOfWeek[]).map((day) => (
                                   <SelectItem key={day} value={day}>
                                     {dayOfWeekLabels[day]}
@@ -730,7 +730,7 @@ export function RequisitionFormDialog({
                     control={form.control}
                     name="requiere_herramienta_trabajo"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-muted/30 transition-colors hover:bg-muted/50">
+                      <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-background transition-colors hover:bg-background">
                         <div className="flex gap-4">
                           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
                             <Wrench className="w-5 h-5" />
@@ -757,7 +757,7 @@ export function RequisitionFormDialog({
                       control={form.control}
                       name="incluye_alimentacion"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-muted/30">
+                        <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-background">
                           <div className="flex gap-4">
                             <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success shrink-0">
                               <Coffee className="w-5 h-5" />
@@ -778,7 +778,7 @@ export function RequisitionFormDialog({
                       control={form.control}
                       name="incluye_desplazamiento"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-muted/30">
+                        <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-background">
                           <div className="flex gap-4">
                             <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center text-info shrink-0">
                               <Truck className="w-5 h-5" />
@@ -845,7 +845,7 @@ export function RequisitionFormDialog({
 
                 {/* Requester Tab */}
                 <TabsContent value="requester" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="bg-muted/20 rounded-3xl p-8 border border-dashed border-muted-foreground/30 flex flex-col items-center text-center space-y-4">
+                  <div className="bg-background rounded-3xl p-8 border border-dashed border-muted-foreground/30 flex flex-col items-center text-center space-y-4">
                     <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
                       <UserCheck className="w-10 h-10" />
                     </div>
@@ -865,7 +865,7 @@ export function RequisitionFormDialog({
                         <FormItem>
                           <FormLabel>Nombre del Solicitante</FormLabel>
                           <FormControl>
-                            <Input {...field} readOnly className="h-11 bg-muted/50 cursor-not-allowed font-medium" />
+                            <Input {...field} readOnly className="h-11 bg-background cursor-not-allowed font-medium" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -889,7 +889,7 @@ export function RequisitionFormDialog({
                 </TabsContent>
               </ScrollArea>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 px-4 py-4 sm:px-8 sm:py-6 bg-muted/5 border-t border-border/50">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 px-4 py-4 sm:px-8 sm:py-6 bg-background /5 border-t border-border/50">
                 <Button 
                   type="button" 
                   variant="ghost" 

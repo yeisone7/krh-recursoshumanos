@@ -188,7 +188,7 @@ export function ExtensionFormDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Current contract info */}
-            <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+            <div className="bg-background p-4 rounded-lg space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Vigencia actual:</span>
                 <span className="font-medium">{format(currentEndDate, 'PPP', { locale: es })}</span>
@@ -207,7 +207,7 @@ export function ExtensionFormDialog({
 
             {/* Colombian Labor Law Info */}
             {contractType === 'fijo' && (
-              <Alert variant="default" className="bg-primary/5 border-primary/20">
+              <Alert variant="default" className="border-primary/20">
                 <Scale className="h-4 w-4" />
                 <AlertTitle>Ley Colombiana (Art. 46 CST)</AlertTitle>
                 <AlertDescription className="text-sm space-y-1">
@@ -377,7 +377,7 @@ export function ExtensionFormDialog({
             )}
 
             {validationResult.info.length > 0 && (
-              <Alert className="bg-primary/5 border-primary/20">
+              <Alert className="border-primary/20">
                 <Info className="h-4 w-4 text-primary" />
                 <AlertTitle className="text-primary">Información</AlertTitle>
                 <AlertDescription>

@@ -379,7 +379,7 @@ export function TemplateFormDialog({
               <h4 className="font-medium">Tabla de Calificación</h4>
               <div className="w-full overflow-x-auto rounded-lg border">
                 <table className="min-w-[680px] w-full table-fixed text-sm sm:table-auto">
-                  <thead className="bg-muted/50">
+                  <thead className="bg-background">
                     <tr>
                       <th className="px-3 py-2 text-left">Nivel</th>
                       <th className="px-3 py-2 text-left">Mín %</th>

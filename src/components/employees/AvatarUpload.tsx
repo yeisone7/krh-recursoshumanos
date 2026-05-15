@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Camera, Upload, X, Loader2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -38,6 +38,11 @@ export function AvatarUpload({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentAvatarUrl || null);
   
+  // Sync preview with prop changes
+  useEffect(() => {
+    setPreviewUrl(currentAvatarUrl || null);
+  }, [currentAvatarUrl]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -213,7 +218,7 @@ export function AvatarUpload({
         </Avatar>
         
         {uploading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full">
+          <div className="absolute inset-0 flex items-center justify-center bg-background rounded-full">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         )}
@@ -278,7 +283,7 @@ export function AvatarUpload({
           </DialogHeader>
           
           <div className="space-y-4">
-            <div className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+            <div className="relative aspect-[4/3] bg-background rounded-lg overflow-hidden">
               <video
                 ref={videoRef}
                 autoPlay

@@ -175,7 +175,7 @@ export function FourYearLimitGauge({
           </span>
         </div>
         
-        <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+        <div className="relative h-3 bg-background rounded-full overflow-hidden">
           <div 
             className={cn(
               "absolute left-0 top-0 h-full rounded-full transition-all duration-500",

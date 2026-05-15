@@ -108,10 +108,10 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           <div className="relative flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
               <Package className="w-7 h-7 text-primary-foreground" />
@@ -146,7 +146,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Centro de Operación</FormLabel>
                       <Select onValueChange={(v) => field.onChange(v === '__general__' ? '' : v)} value={field.value || '__general__'}>
                         <FormControl>
-                          <SelectTrigger className="h-12 rounded-xl border-border/50 bg-background/50 font-bold text-sm shadow-sm transition-all focus:ring-primary/20">
+                          <SelectTrigger className="h-12 rounded-xl border-border/50 bg-background font-bold text-sm shadow-sm transition-all focus:ring-primary/20">
                             <SelectValue placeholder="General (todos los centros)" />
                           </SelectTrigger>
                         </FormControl>
@@ -180,7 +180,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                           placeholder="Seleccionar tipo de dotación"
                           searchPlaceholder="Buscar tipo..."
                           emptyMessage="No se encontraron tipos de dotación."
-                          triggerClassName="h-12 rounded-xl border-border/50 bg-background/50 font-bold text-sm"
+                          triggerClassName="h-12 rounded-xl border-border/50 bg-background font-bold text-sm"
                         />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold uppercase" />
@@ -205,7 +205,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Talla</FormLabel>
                         <Select onValueChange={(v) => field.onChange(v === '__none__' ? '' : v)} value={field.value || '__none__'}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl border-border/50 bg-background/50 font-bold text-sm">
+                            <SelectTrigger className="h-12 rounded-xl border-border/50 bg-background font-bold text-sm">
                               <SelectValue placeholder="Sin talla" />
                             </SelectTrigger>
                           </FormControl>
@@ -232,7 +232,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                           <Input
                             type="number"
                             min={0}
-                            className="h-12 rounded-xl border-border/50 bg-background/50 font-black text-sm text-primary focus-visible:ring-primary/20"
+                            className="h-12 rounded-xl border-border/50 bg-background font-black text-sm text-primary focus-visible:ring-primary/20"
                             {...field}
                             onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                           />
@@ -254,7 +254,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                         <Input
                           type="number"
                           min={0}
-                          className="h-12 rounded-xl border-border/50 bg-background/50 font-black text-sm focus-visible:ring-primary/20"
+                          className="h-12 rounded-xl border-border/50 bg-background font-black text-sm focus-visible:ring-primary/20"
                           {...field}
                           onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                         />
@@ -270,7 +270,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
             </div>
 
             {/* Footer */}
-            <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-muted/10 sm:flex-row sm:items-center sm:justify-end">
+            <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-background /10 sm:flex-row sm:items-center sm:justify-end">
               <Button 
                 type="button" 
                 variant="ghost" 

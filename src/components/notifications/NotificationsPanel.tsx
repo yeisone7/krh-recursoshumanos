@@ -59,12 +59,12 @@ function NotificationItem({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 p-3 rounded-lg transition-colors cursor-pointer hover:bg-muted/50",
-        !notification.is_read && "bg-primary/5 border-l-2 border-l-primary"
+        "flex items-start gap-3 p-3 rounded-lg transition-colors cursor-pointer hover:bg-background",
+        !notification.is_read && "border-l-2 border-l-primary"
       )}
       onClick={handleClick}
     >
-      <div className={cn("mt-0.5 p-1.5 rounded-full bg-muted", typeStyle.className)}>
+      <div className={cn("mt-0.5 p-1.5 rounded-full bg-background ", typeStyle.className)}>
         <CategoryIcon className="w-4 h-4" />
       </div>
       
@@ -144,7 +144,7 @@ export function NotificationsPanel() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative hover:bg-muted"
+          className="relative hover:bg-background "
         >
           <Bell className="w-5 h-5 text-muted-foreground" />
           {unreadCount > 0 && (

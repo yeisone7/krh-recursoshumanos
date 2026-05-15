@@ -36,7 +36,7 @@ function getActionColor(action: string) {
     case 'delete':
       return 'bg-destructive/10 text-destructive';
     default:
-      return 'bg-muted text-muted-foreground';
+      return 'bg-background text-muted-foreground';
   }
 }
 
@@ -130,7 +130,7 @@ export function Tab360Audit({ auditLogs, isLoading }: Tab360AuditProps) {
 
                       {/* Changes detail */}
                       {(log.old_values || log.new_values) && (
-                        <div className="mt-2 p-3 rounded-lg bg-muted/50 text-sm">
+                        <div className="mt-2 p-3 rounded-lg bg-background text-sm">
                           {log.new_values && Object.keys(log.new_values).length > 0 && (
                             <div className="space-y-1">
                               {Object.entries(log.new_values).slice(0, 5).map(([key, value]) => (

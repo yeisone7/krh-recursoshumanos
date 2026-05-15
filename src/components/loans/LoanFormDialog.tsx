@@ -178,8 +178,8 @@ export function LoanFormDialog({
         </DialogHeader>
 
         {/* Header Premium */}
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-primary/5">
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-border ">
+          
           
           <div className="flex items-start gap-4 sm:gap-5 relative">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center font-black text-xl sm:text-2xl shrink-0 shadow-inner">
@@ -219,7 +219,7 @@ export function LoanFormDialog({
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col min-h-0">
-          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-muted/20">
+          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-background">
             <TabsList className="bg-transparent h-auto p-0 gap-6 w-full justify-start overflow-x-auto no-scrollbar">
               <TabsTrigger value="solicitud" className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
                 <div className="flex items-center gap-2">
@@ -268,11 +268,11 @@ export function LoanFormDialog({
                       <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Empleado *</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background">
+                          <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
                             <SelectValue placeholder="Seleccionar empleado..." />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="rounded-2xl border-primary/10 max-h-[300px]">
+                        <SelectContent className="rounded-2xl border-border max-h-[300px]">
                           {employees.filter(e => e.is_active).map(e => (
                             <SelectItem key={e.id} value={e.id} className="py-2">
                               {e.first_name} {e.last_name} <span className="text-muted-foreground ml-1">({e.document_number})</span>
@@ -294,11 +294,11 @@ export function LoanFormDialog({
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tipo de Préstamo *</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background">
+                            <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
                               <SelectValue placeholder="Seleccionar tipo..." />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="rounded-2xl border-primary/10">
+                          <SelectContent className="rounded-2xl border-border ">
                             {Object.entries(LOAN_TYPE_LABELS).map(([key, label]) => (
                               <SelectItem key={key} value={key} className="py-2">{label}</SelectItem>
                             ))}
@@ -316,7 +316,7 @@ export function LoanFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Fecha de Inicio *</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                          <Input type="date" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -331,7 +331,7 @@ export function LoanFormDialog({
                     <FormItem className="space-y-2">
                       <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Motivo / Descripción (Opcional)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej: Compra de vivienda, calamidad familiar..." {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                        <Input placeholder="Ej: Compra de vivienda, calamidad familiar..." {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -350,7 +350,7 @@ export function LoanFormDialog({
                         <div className="relative">
                           <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                           <FormControl>
-                            <Input type="number" min="0" step="1000" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="h-12 pl-9 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background font-mono" />
+                            <Input type="number" min="0" step="1000" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="h-12 pl-9 rounded-2xl bg-background border-border focus:bg-background font-mono" />
                           </FormControl>
                         </div>
                         <FormMessage />
@@ -365,7 +365,7 @@ export function LoanFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tasa de Interés (%) *</FormLabel>
                         <FormControl>
-                          <Input type="number" min="0" step="0.1" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background font-mono" />
+                          <Input type="number" min="0" step="0.1" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="h-12 rounded-2xl bg-background border-border focus:bg-background font-mono" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -379,7 +379,7 @@ export function LoanFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">N° Cuotas *</FormLabel>
                         <FormControl>
-                          <Input type="number" min="1" step="1" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background font-mono" />
+                          <Input type="number" min="1" step="1" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="h-12 rounded-2xl bg-background border-border focus:bg-background font-mono" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -388,7 +388,7 @@ export function LoanFormDialog({
                 </div>
 
                 {/* Resumen de Condiciones */}
-                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 space-y-4">
+                <div className="border border-border rounded-2xl p-5 space-y-4">
                   <div className="flex items-center gap-2 mb-2">
                     <FileText className="w-4 h-4 text-primary" />
                     <h3 className="font-black text-sm text-primary uppercase tracking-widest">Resumen del Crédito</h3>
@@ -403,7 +403,7 @@ export function LoanFormDialog({
                       <p className="text-xs text-muted-foreground font-medium mb-1">Total con Intereses</p>
                       <p className="font-mono text-base font-bold text-primary">{formatCurrency(totalWithInterest)}</p>
                     </div>
-                    <div className="col-span-2 pt-3 border-t border-primary/10">
+                    <div className="col-span-2 pt-3 border-t border-border ">
                       <div className="flex justify-between items-center">
                         <p className="text-xs text-muted-foreground font-medium">Valor por Cuota</p>
                         <p className="font-mono text-xl font-black text-foreground">{formatCurrency(installmentAmount)}</p>
@@ -424,7 +424,7 @@ export function LoanFormDialog({
                       <FormControl>
                         <Textarea 
                           placeholder="Cualquier información adicional relevante..."
-                          className="min-h-[150px] rounded-2xl bg-muted/20 border-primary/5 focus:bg-background p-4 resize-none"
+                          className="min-h-[150px] rounded-2xl bg-background border-border focus:bg-background p-4 resize-none"
                           {...field} 
                         />
                       </FormControl>
@@ -437,8 +437,8 @@ export function LoanFormDialog({
           </Form>
         </Tabs>
 
-        <div className="p-6 border-t border-border/50 bg-muted/10 flex items-center justify-end gap-3 shrink-0">
-          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-primary/10" onClick={() => onOpenChange(false)}>
+        <div className="p-6 border-t border-border/50 bg-background /10 flex items-center justify-end gap-3 shrink-0">
+          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button type="submit" form="loanForm" className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" disabled={isPending}>

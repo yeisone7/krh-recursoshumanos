@@ -183,10 +183,10 @@ export default function Festivos() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/10 overflow-hidden"
+        className="relative p-8 rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-border overflow-hidden"
       >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-2xl" />
+        
+        
         
         <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-4">
@@ -205,7 +205,7 @@ export default function Festivos() {
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="flex items-center bg-white/50 backdrop-blur-md border border-slate-200 rounded-2xl p-1 shadow-sm">
+            <div className="flex items-center bg-white/50 border border-slate-200 rounded-2xl p-1 shadow-sm">
               <Button 
                 variant="ghost" 
                 size="icon"
@@ -251,7 +251,7 @@ export default function Festivos() {
               </div>
             </div>
             <div className="mt-4 flex items-center gap-2">
-              <div className="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-1.5 flex-1 bg-background rounded-full overflow-hidden">
                 <div className="h-full bg-blue-500 rounded-full" style={{ width: '100%' }} />
               </div>
               <span className="text-[10px] font-black text-blue-600 uppercase italic">Calendario {selectedYear}</span>
@@ -273,7 +273,7 @@ export default function Festivos() {
               </div>
             </div>
             <div className="mt-4 flex items-center gap-2">
-              <div className="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-1.5 flex-1 bg-background rounded-full overflow-hidden">
                 <div className="h-full bg-emerald-500 rounded-full" 
                   style={{ width: `${((holidays?.filter(h => h.is_national).length || 0) / (holidays?.length || 1)) * 100}%` }} 
                 />
@@ -297,7 +297,7 @@ export default function Festivos() {
               </div>
             </div>
             <div className="mt-4 flex items-center gap-2">
-              <div className="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-1.5 flex-1 bg-background rounded-full overflow-hidden">
                 <div className="h-full bg-amber-500 rounded-full" 
                   style={{ width: `${((holidays?.filter(h => !h.is_national).length || 0) / (holidays?.length || 1)) * 100}%` }} 
                 />
@@ -309,7 +309,7 @@ export default function Festivos() {
       </div>
 
       {/* Lista de Festivos */}
-      <Card className="rounded-[3rem] border-none shadow-2xl shadow-slate-200/60 overflow-hidden bg-white/70 backdrop-blur-xl">
+      <Card className="rounded-[3rem] border-none shadow-2xl shadow-slate-200/60 overflow-hidden bg-white/70 ">
         <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -337,7 +337,7 @@ export default function Festivos() {
             </div>
           ) : !filteredHolidays?.length ? (
             <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
-              <div className="h-24 w-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center text-slate-200">
+              <div className="h-24 w-24 rounded-[2.5rem] bg-background flex items-center justify-center text-slate-200">
                 <CalendarDays className="w-12 h-12" />
               </div>
               <div className="space-y-1">
@@ -351,7 +351,7 @@ export default function Festivos() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-slate-50/50">
+                <TableHeader className="bg-background">
                   <TableRow className="hover:bg-transparent border-none">
                     <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha</TableHead>
                     <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Información del Festivo</TableHead>
@@ -368,7 +368,7 @@ export default function Festivos() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="group hover:bg-slate-50/50 border-slate-100 transition-colors"
+                        className="group hover:bg-background border-slate-100 transition-colors"
                       >
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center gap-4">
@@ -467,14 +467,14 @@ export default function Festivos() {
         <DialogContent className="max-w-2xl max-h-[90dvh] p-0 overflow-hidden bg-white border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] focus:outline-none flex flex-col">
           <div className="relative flex-1 flex flex-col min-h-0">
             {/* Header Decorativo */}
-            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
             
-            <DialogHeader className="relative px-8 pt-10 pb-8 border-b border-slate-100 bg-slate-50/50">
+            
+            <DialogHeader className="relative px-8 pt-10 pb-8 border-b border-slate-100 bg-background">
               <div className="flex items-center gap-6">
                 <div className="relative">
-                  <div className="absolute -inset-2 bg-primary/5 rounded-3xl blur-xl" />
+                  <div className="absolute -inset-2 rounded-3xl blur-xl" />
                   <div className="relative h-20 w-20 flex items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-xl overflow-hidden group">
-                    <div className="absolute inset-0 bg-slate-50 group-hover:bg-primary/5 transition-colors" />
+                    <div className="absolute inset-0 bg-background group-hover:transition-colors" />
                     <span className="relative text-2xl font-black text-primary leading-none">FE</span>
                   </div>
                 </div>
@@ -615,7 +615,7 @@ export default function Festivos() {
               </AlertDialogDescription>
             </div>
           </div>
-          <AlertDialogFooter className="p-6 bg-slate-50 flex gap-3 sm:gap-0">
+          <AlertDialogFooter className="p-6 bg-background flex gap-3 sm:gap-0">
             <AlertDialogCancel className="flex-1 h-12 rounded-xl font-bold border-slate-200">CANCELAR</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}

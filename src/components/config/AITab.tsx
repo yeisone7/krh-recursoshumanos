@@ -186,7 +186,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
               <Plus className="h-4 w-4" /> Agregar Proveedor
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[450px] rounded-[2rem] border-border bg-card/95 backdrop-blur-xl shadow-2xl p-0 overflow-hidden">
+          <DialogContent className="sm:max-w-[450px] rounded-[2rem] border-border bg-card/95 shadow-2xl p-0 overflow-hidden">
             <div className="p-6 pt-8">
               <DialogHeader className="mb-6">
                 <DialogTitle className="text-xl font-black tracking-tight">Configurar Motor IA</DialogTitle>
@@ -206,13 +206,13 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
                         className={cn(
                           "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all relative group",
                           aiConfig.model === p.id 
-                            ? "border-primary bg-primary/5 shadow-inner" 
-                            : "border-muted bg-muted/10 hover:border-border hover:bg-muted/20"
+                            ? "border-primary shadow-inner" 
+                            : "border-muted bg-background /10 hover:border-border hover:bg-background"
                         )}
                       >
                         <div className={cn(
                           "p-1.5 rounded-lg transition-all duration-300",
-                          aiConfig.model === p.id ? "bg-primary/20 scale-110" : "bg-muted group-hover:scale-110"
+                          aiConfig.model === p.id ? "bg-primary/20 scale-110" : "bg-background group-hover:scale-110"
                         )}>
                           {p.icon}
                         </div>
@@ -250,12 +250,12 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
                         setAiConfig({ ...aiConfig, [key]: e.target.value });
                       }}
                       placeholder={`sk-... (Key de ${currentProviderData.name})`}
-                      className="h-11 px-4 rounded-xl bg-muted/20 border-border focus:ring-2 focus:ring-primary/20 transition-all font-mono text-sm"
+                      className="h-11 px-4 rounded-xl bg-background border-border focus:ring-2 focus:ring-primary/20 transition-all font-mono text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowKeys({ ...showKeys, [aiConfig.model]: !showKeys[aiConfig.model as keyof typeof showKeys] })}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-background transition-colors"
                     >
                       {showKeys[aiConfig.model as keyof typeof showKeys] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -319,11 +319,11 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
       >
         <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-card via-card to-primary/5 shadow-xl rounded-[1.5rem] relative group border-2">
           {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 blur-[100px] rounded-full -mr-40 -mt-40 pointer-events-none opacity-40" />
+          
           
           <CardContent className="p-5 sm:p-6 flex flex-col md:flex-row items-center gap-6 relative z-10">
             <div className="relative">
-              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-background/50 backdrop-blur-md shadow-xl flex items-center justify-center border border-primary/20 relative z-10 overflow-hidden transition-transform duration-500 group-hover:scale-105">
+              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-background shadow-xl flex items-center justify-center border border-primary/20 relative z-10 overflow-hidden transition-transform duration-500 group-hover:scale-105">
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent opacity-50" />
                 {currentProviderData.icon && (
                   <div className="scale-[1.5] transition-transform duration-500">
@@ -342,7 +342,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
                   <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                   Sincronizado
                 </Badge>
-                <div className="h-1 w-1 rounded-full bg-muted-foreground/30 hidden sm:block" />
+                <div className="h-1 w-1 rounded-full bg-background -foreground/30 hidden sm:block" />
                 <span className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.15em] opacity-70">Cerebro de la Plataforma</span>
               </div>
               
@@ -356,7 +356,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
               </div>
               
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                <div className="flex items-center gap-2.5 bg-muted/40 px-3 py-1.5 rounded-xl border border-border/50">
+                <div className="flex items-center gap-2.5 bg-background /40 px-3 py-1.5 rounded-xl border border-border/50">
                   <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Database className="h-4 w-4 text-primary" />
                   </div>
@@ -386,7 +386,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
             <Button 
               variant="outline" 
               onClick={() => setIsDialogOpen(true)}
-              className="h-auto rounded-2xl border-border bg-background shadow-md px-6 py-3 hover:bg-muted/50 transition-all gap-2 font-black text-xs group/btn"
+              className="h-auto rounded-2xl border-border bg-background shadow-md px-6 py-3 hover:bg-background transition-all gap-2 font-black text-xs group/btn"
             >
               <Settings2 className="h-4 w-4 transition-transform group-hover/btn:rotate-45" /> 
               Personalizar
@@ -428,7 +428,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
                     <div className="flex items-center justify-between">
                       <div className={cn(
                         "h-10 w-10 rounded-xl flex items-center justify-center border transition-all",
-                        isActive ? "bg-primary/10 border-primary/20" : "bg-muted/30 border-border/50"
+                        isActive ? "bg-primary/10 border-primary/20" : "bg-background border-border/50"
                       )}>
                         <div className={cn("scale-110", isActive ? "text-primary" : "text-muted-foreground")}>
                           {p.icon}
@@ -503,7 +503,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
 
       {/* Security & Info Grid */}
       <div className="grid gap-4 md:grid-cols-2 pt-2">
-        <Alert className="bg-primary/5 border-primary/10 rounded-2xl p-4 flex items-start group hover:bg-primary/[0.07] transition-all">
+        <Alert className="border-border rounded-2xl p-4 flex items-start group hover:bg-primary/[0.07] transition-all">
           <Shield className="h-5 w-5 text-primary mt-0.5 mr-3 shrink-0" />
           <div className="space-y-0.5">
             <AlertTitle className="text-foreground font-black text-sm tracking-tight">Privacidad Corporativa</AlertTitle>
@@ -513,7 +513,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
           </div>
         </Alert>
 
-        <Alert className="bg-muted/20 border-border/40 rounded-2xl p-4 flex items-start group hover:bg-muted/30 transition-all">
+        <Alert className="bg-background border-border/40 rounded-2xl p-4 flex items-start group hover:bg-background transition-all">
           <Cpu className="h-5 w-5 text-foreground mt-0.5 mr-3 shrink-0" />
           <div className="space-y-0.5">
             <AlertTitle className="text-foreground font-black text-sm tracking-tight">Cómputo & SLA</AlertTitle>

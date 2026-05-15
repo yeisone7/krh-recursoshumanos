@@ -231,7 +231,7 @@ export function ShiftReportExport({ open, onOpenChange }: ShiftReportExportProps
             </Select>
           </div>
 
-          <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground">
+          <div className="p-3 bg-background rounded-lg text-sm text-muted-foreground">
             <p>El reporte incluirá:</p>
             <ul className="list-disc list-inside mt-1">
               <li>Planilla diaria de turnos por empleado</li>

@@ -139,8 +139,8 @@ export function WorkScheduleFormDialog({
         </DialogHeader>
 
         {/* Header Premium */}
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-primary/5">
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-border ">
+          
           
           <div className="flex items-start gap-4 sm:gap-5 relative">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center font-black text-xl sm:text-2xl shrink-0 shadow-inner">
@@ -174,7 +174,7 @@ export function WorkScheduleFormDialog({
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col min-h-0">
-          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-muted/20">
+          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-background">
             <TabsList className="bg-transparent h-auto p-0 gap-6 w-full justify-start overflow-x-auto no-scrollbar">
               <TabsTrigger value="detalles" className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
                 <div className="flex items-center gap-2">
@@ -211,7 +211,7 @@ export function WorkScheduleFormDialog({
                     <FormItem className="space-y-2">
                       <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Nombre del Horario *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej: Administrativo estándar" {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                        <Input placeholder="Ej: Administrativo estándar" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -227,7 +227,7 @@ export function WorkScheduleFormDialog({
                       <FormControl>
                         <Textarea 
                           placeholder="Descripción del horario..."
-                          className="min-h-[100px] rounded-2xl bg-muted/20 border-primary/5 focus:bg-background p-4 resize-none"
+                          className="min-h-[100px] rounded-2xl bg-background border-border focus:bg-background p-4 resize-none"
                           {...field} 
                         />
                       </FormControl>
@@ -240,7 +240,7 @@ export function WorkScheduleFormDialog({
                   control={form.control}
                   name="is_active"
                   render={({ field }) => (
-                    <FormItem className="flex items-start sm:items-center justify-between gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                    <FormItem className="flex items-start sm:items-center justify-between gap-3 rounded-2xl border border-border p-4">
                       <div className="min-w-0 space-y-1">
                         <FormLabel className="text-sm font-black text-foreground">Estado Activo</FormLabel>
                         <FormDescription className="text-xs">
@@ -276,7 +276,7 @@ export function WorkScheduleFormDialog({
                                 flex items-center gap-1.5 px-4 py-2 rounded-2xl border cursor-pointer text-sm transition-colors font-medium
                                 ${isChecked 
                                   ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20' 
-                                  : 'bg-muted/20 border-primary/5 hover:bg-muted/50 text-muted-foreground'
+                                  : 'bg-background border-border hover:bg-background text-muted-foreground'
                                 }
                               `}
                             >
@@ -309,7 +309,7 @@ export function WorkScheduleFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Hora de inicio</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                          <Input type="time" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -323,7 +323,7 @@ export function WorkScheduleFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Hora de fin</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                          <Input type="time" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -343,7 +343,7 @@ export function WorkScheduleFormDialog({
                             max={180}
                             {...field}
                             onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                            className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background"
+                            className="h-12 rounded-2xl bg-background border-border focus:bg-background"
                           />
                         </FormControl>
                         <FormMessage />
@@ -356,8 +356,8 @@ export function WorkScheduleFormDialog({
           </Form>
         </Tabs>
 
-        <div className="p-6 border-t border-border/50 bg-muted/10 flex items-center justify-end gap-3 shrink-0">
-          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-primary/10" onClick={() => onOpenChange(false)}>
+        <div className="p-6 border-t border-border/50 bg-background /10 flex items-center justify-end gap-3 shrink-0">
+          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button type="submit" form="workScheduleForm" className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" disabled={isPending}>

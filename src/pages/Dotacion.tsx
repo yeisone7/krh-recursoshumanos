@@ -268,11 +268,11 @@ export default function Dotacion() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Premium Header */}
-      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+      <div className="relative shrink-0 overflow-hidden px-6 py-8 sm:px-10 sm:py-10 border-b border-border ">
+        
+        
         
         <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <div className="space-y-4">
@@ -281,7 +281,7 @@ export default function Dotacion() {
                 <Package className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
                   Control de Dotación
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Gestión de EPP y Uniformes</h1>
@@ -294,7 +294,7 @@ export default function Dotacion() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
             {kpis.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-500">
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-border shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-500">
                 <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
                 </div>
@@ -310,7 +310,7 @@ export default function Dotacion() {
       </div>
 
       {/* Tabs Sticky Bar */}
-      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-primary/5 px-6 sm:px-10 py-2">
+      <div className="sticky top-0 z-40 bg-background border-b border-border px-6 sm:px-10 py-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="bg-transparent h-auto p-0 gap-6">
             {[
@@ -351,25 +351,25 @@ export default function Dotacion() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsContent value="entregas" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {/* Entregas Header & Actions */}
-              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-background/40 backdrop-blur-xl p-4 rounded-[2rem] border border-primary/5 shadow-sm">
+              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-background p-4 rounded-[2rem] border border-border shadow-sm">
                 <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
                   <div className="relative w-full sm:w-80 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input
                       placeholder="Buscar por empleado o artículo..."
-                      className="pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+                      className="pl-11 h-12 rounded-2xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+                    <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
                       <div className="flex items-center gap-2">
                         <Filter className="w-3.5 h-3.5 text-primary" />
                         <SelectValue placeholder="Estado" />
                       </div>
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+                    <SelectContent className="rounded-2xl border-border shadow-2xl">
                       <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los estados</SelectItem>
                       <SelectItem value="vigente" className="font-bold text-xs uppercase p-3 text-emerald-600">Vigente</SelectItem>
                       <SelectItem value="por_vencer" className="font-bold text-xs uppercase p-3 text-amber-600">Por Vencer</SelectItem>
@@ -381,7 +381,7 @@ export default function Dotacion() {
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
-                    className="h-12 px-6 rounded-2xl border-primary/10 font-black uppercase tracking-widest text-[11px]"
+                    className="h-12 px-6 rounded-2xl border-border font-black uppercase tracking-widest text-[11px]"
                     onClick={() => setIsBulkOpen(true)}
                   >
                     <Users className="w-4 h-4 mr-2" />
@@ -407,7 +407,7 @@ export default function Dotacion() {
                 </div>
 
                 <div className="lg:col-span-2">
-                  <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
+                  <div className="overflow-hidden rounded-[2.5rem] border border-border shadow-sm bg-background ">
                     {filteredTransactions.length === 0 ? (
                       <div className="text-center py-32">
                          <Package className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
@@ -416,7 +416,7 @@ export default function Dotacion() {
                     ) : (
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-muted/30 border-b border-primary/5 hover:bg-muted/30">
+                          <TableRow className="bg-background border-b border-border hover:bg-background">
                             <TableHead className="px-8 h-16 font-black text-[10px] uppercase tracking-[0.2em]">Empleado</TableHead>
                             <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Artículos</TableHead>
                             <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
@@ -436,12 +436,12 @@ export default function Dotacion() {
                             return (
                               <TableRow
                                 key={tx.id}
-                                className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors cursor-pointer"
+                                className="group border-b border-border hover:bg-primary/[0.02] transition-colors cursor-pointer"
                                 onClick={() => handleViewTransaction(tx.id)}
                               >
                                 <TableCell className="px-8 py-5">
                                   <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
+                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
                                       <User className="w-6 h-6" />
                                     </div>
                                     <div className="min-w-0">
@@ -469,7 +469,7 @@ export default function Dotacion() {
                                   </div>
                                 </TableCell>
                                 <TableCell>
-                                  <Badge variant="outline" className={cn("h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-primary/10 shadow-sm", sc.bg, sc.text)}>
+                                  <Badge variant="outline" className={cn("h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-border shadow-sm", sc.bg, sc.text)}>
                                     <StatusIcon className="mr-1.5 h-3.5 w-3.5" />
                                     {sc.label}
                                   </Badge>
@@ -479,7 +479,7 @@ export default function Dotacion() {
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      className="h-10 w-10 rounded-xl bg-primary/5 hover:bg-primary text-primary hover:text-primary-foreground shadow-sm transition-all"
+                                      className="h-10 w-10 rounded-xl hover:bg-primary text-primary hover:text-primary-foreground shadow-sm transition-all"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleViewTransaction(tx.id);
@@ -490,7 +490,7 @@ export default function Dotacion() {
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      className="h-10 w-10 rounded-xl bg-muted hover:bg-foreground hover:text-background transition-all"
+                                      className="h-10 w-10 rounded-xl bg-background hover:bg-foreground hover:text-background transition-all"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleExportPdf(tx);
@@ -539,7 +539,7 @@ export default function Dotacion() {
 
             <TabsContent value="ajustes" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="max-w-3xl mx-auto py-8">
-                <div className="rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl p-8 space-y-8">
+                <div className="rounded-[2.5rem] border border-border shadow-sm bg-background p-8 space-y-8">
                   <div>
                     <h3 className="text-2xl font-black tracking-tighter flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-primary/10 text-primary">
@@ -597,7 +597,7 @@ export default function Dotacion() {
                         }
                       }
                     ].map((config) => (
-                      <div key={config.id} className={cn("flex items-center justify-between p-6 rounded-[2rem] border transition-all", config.enabled === false ? "opacity-40 grayscale pointer-events-none border-transparent bg-muted/10" : "bg-background/40 border-primary/5 hover:border-primary/20 shadow-sm")}>
+                      <div key={config.id} className={cn("flex items-center justify-between p-6 rounded-[2rem] border transition-all", config.enabled === false ? "opacity-40 grayscale pointer-events-none border-transparent bg-background /10" : "bg-background border-border hover:border-primary/20 shadow-sm")}>
                         <div className="space-y-1">
                           <Label className="text-base font-black tracking-tight">{config.label}</Label>
                           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{config.desc}</p>

@@ -176,10 +176,10 @@ export function DotationItemTypeFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] max-w-xl flex-col gap-0 overflow-hidden p-0 border-none bg-transparent shadow-none">
-        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-primary/10 bg-background/95 backdrop-blur-2xl shadow-2xl">
+        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-border bg-background -2xl shadow-2xl">
           
           {/* Premium Header */}
-          <DialogHeader className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-primary/10 shrink-0">
+          <DialogHeader className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-border shrink-0">
             <div className="relative z-10 flex items-center gap-5">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
                 <Shirt className="h-7 w-7 text-primary-foreground" />
@@ -194,7 +194,7 @@ export function DotationItemTypeFormDialog({
               </div>
             </div>
             {/* Decorative blurs */}
-            <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+            
           </DialogHeader>
 
           <Form {...form}>
@@ -206,7 +206,7 @@ export function DotationItemTypeFormDialog({
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Imagen del Artículo</FormLabel>
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                     {imagePreview ? (
-                      <div className="relative group w-32 h-32 rounded-[2rem] border-2 border-primary/20 overflow-hidden bg-muted/30 shadow-inner p-2">
+                      <div className="relative group w-32 h-32 rounded-[2rem] border-2 border-primary/20 overflow-hidden bg-background shadow-inner p-2">
                         <img src={imagePreview} alt="Preview" className="w-full h-full object-contain rounded-[1.5rem]" />
                         <button
                           type="button"
@@ -220,7 +220,7 @@ export function DotationItemTypeFormDialog({
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-32 h-32 rounded-[2rem] border-2 border-dashed border-primary/20 bg-primary/5 flex flex-col items-center justify-center gap-2 text-primary hover:bg-primary/10 hover:border-primary/40 transition-all group"
+                        className="w-32 h-32 rounded-[2rem] border-2 border-dashed border-primary/20 flex flex-col items-center justify-center gap-2 text-primary hover:bg-primary/10 hover:border-primary/40 transition-all group"
                       >
                         <div className="p-3 rounded-xl bg-primary/10 group-hover:scale-110 transition-transform">
                           <ImagePlus className="w-6 h-6" />
@@ -257,7 +257,7 @@ export function DotationItemTypeFormDialog({
                       <FormControl>
                         <Input 
                           placeholder="Ej. Camisa Polo Institucional" 
-                          className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                          className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
                           {...field} 
                         />
                       </FormControl>
@@ -277,7 +277,7 @@ export function DotationItemTypeFormDialog({
                           <Input 
                             placeholder="CPOLO-01" 
                             maxLength={10} 
-                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                            className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
                             {...field} 
                           />
                         </FormControl>
@@ -304,11 +304,11 @@ export function DotationItemTypeFormDialog({
                           value={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
+                            <SelectTrigger className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="rounded-2xl border-primary/10 backdrop-blur-xl bg-background/95">
+                          <SelectContent className="rounded-2xl border-border bg-background">
                             {DOTATION_CATEGORIES.map((cat) => (
                               <SelectItem key={cat.value} value={cat.value} className="font-bold">
                                 {cat.label}
@@ -326,7 +326,7 @@ export function DotationItemTypeFormDialog({
                   control={form.control}
                   name="requires_size"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-[1.5rem] border-2 border-border/50 bg-muted/20 p-4 transition-all hover:border-primary/20">
+                    <FormItem className="flex flex-row items-center justify-between rounded-[1.5rem] border-2 border-border/50 bg-background p-4 transition-all hover:border-primary/20">
                       <div className="space-y-0.5">
                         <FormLabel className="text-xs font-black uppercase tracking-widest">Requiere Talla</FormLabel>
                         <FormDescription className="text-[11px] font-medium">
@@ -355,7 +355,7 @@ export function DotationItemTypeFormDialog({
                         className="space-y-3"
                       >
                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tallas Disponibles</FormLabel>
-                        <div className="flex flex-wrap gap-2 p-4 rounded-2xl bg-muted/30 border-2 border-dashed border-border/50">
+                        <div className="flex flex-wrap gap-2 p-4 rounded-2xl bg-background border-2 border-dashed border-border/50">
                           {getDefaultSizes().map((size) => {
                             const isSelected = field.value?.includes(size);
                             return (
@@ -374,7 +374,7 @@ export function DotationItemTypeFormDialog({
                                 }}
                                 className={cn(
                                   "h-10 min-w-[3rem] rounded-xl font-black transition-all",
-                                  isSelected ? "shadow-md shadow-primary/20 scale-105" : "bg-background/50 border-2"
+                                  isSelected ? "shadow-md shadow-primary/20 scale-105" : "bg-background border-2"
                                 )}
                               >
                                 {size}
@@ -397,7 +397,7 @@ export function DotationItemTypeFormDialog({
                       <FormControl>
                         <Textarea
                           placeholder="Detalles adicionales del artículo..."
-                          className="min-h-[100px] rounded-2xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold resize-none"
+                          className="min-h-[100px] rounded-2xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold resize-none"
                           {...field}
                         />
                       </FormControl>
@@ -408,12 +408,12 @@ export function DotationItemTypeFormDialog({
               </div>
 
               {/* Footer Actions */}
-              <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-primary/10">
+              <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-border ">
                 <Button 
                   type="button" 
                   variant="ghost" 
                   onClick={() => onOpenChange(false)}
-                  className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-muted"
+                  className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-background "
                 >
                   Cancelar
                 </Button>

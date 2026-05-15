@@ -209,7 +209,7 @@ export function GlobalSearch() {
           onFocus={() => { if (query.trim()) setIsOpen(true); }}
           onKeyDown={handleKeyDown}
           placeholder="Buscar empleados, contratos, módulos... (Ctrl+K)"
-          className="w-full h-10 pl-10 pr-10 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+          className="w-full h-10 pl-10 pr-10 rounded-lg bg-background border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
         />
         {query && (
           <button
@@ -233,7 +233,7 @@ export function GlobalSearch() {
                 key={result.id}
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors",
-                  index === selectedIndex ? "bg-accent/10" : "hover:bg-muted/50",
+                  index === selectedIndex ? "bg-accent/10" : "hover:bg-background",
                   index !== results.length - 1 && "border-b border-border/50"
                 )}
                 onClick={() => handleSelect(result)}
@@ -246,7 +246,7 @@ export function GlobalSearch() {
                   <p className="text-sm font-medium text-foreground truncate">{result.title}</p>
                   <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
                 </div>
-                <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                <span className="shrink-0 text-[10px] uppercase tracking-wider text-muted-foreground bg-background px-1.5 py-0.5 rounded">
                   {typeLabels[result.type]}
                 </span>
               </button>

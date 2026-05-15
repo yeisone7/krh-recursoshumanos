@@ -30,7 +30,7 @@ export default function CatalogosAreas() {
   return (
     <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-primary/10 shadow-sm">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-border shadow-sm">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-md shadow-primary/10">
@@ -54,8 +54,8 @@ export default function CatalogosAreas() {
           </Button>
         </div>
         {/* Decorative elements */}
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl" />
+        
+        
       </div>
 
       {/* Stats Summary */}
@@ -63,7 +63,7 @@ export default function CatalogosAreas() {
         {[
           { label: 'Total Áreas', value: areas.length, icon: Users, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
           { label: 'Activas', value: areas.filter(a => a.is_active).length, icon: Users, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
-          { label: 'Inactivas', value: areas.filter(a => !a.is_active).length, icon: Users, color: 'text-muted-foreground', bg: 'bg-muted/10', border: 'border-muted/20' },
+          { label: 'Inactivas', value: areas.filter(a => !a.is_active).length, icon: Users, color: 'text-muted-foreground', bg: 'bg-background /10', border: 'border-muted/20' },
           { label: 'Jerarquías', value: areas.filter(a => a.parent_id).length, icon: Users, color: 'text-info', bg: 'bg-info/10', border: 'border-info/20' },
         ].map((stat, i) => (
           <motion.div
@@ -72,7 +72,7 @@ export default function CatalogosAreas() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
             className={cn(
-              "relative overflow-hidden rounded-[2rem] border-2 bg-background/50 backdrop-blur-xl p-6 transition-all duration-300 hover:shadow-sm",
+              "relative overflow-hidden rounded-[2rem] border-2 bg-background p-6 transition-all duration-300 hover:shadow-sm",
               stat.border
             )}
           >
@@ -91,7 +91,7 @@ export default function CatalogosAreas() {
         ))}
       </div>
 
-      <div className="rounded-[2.5rem] border-2 border-border/50 bg-background/50 backdrop-blur-xl p-8">
+      <div className="rounded-[2.5rem] border-2 border-border/50 bg-background p-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-black tracking-tight text-foreground uppercase">Estructura Organizacional</h2>
@@ -115,7 +115,7 @@ export default function CatalogosAreas() {
                 badge: (
                   <Badge
                     variant="outline"
-                    className={area.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-muted'}
+                    className={area.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-background '}
                   >
                     {area.is_active ? 'Activa' : 'Inactiva'}
                   </Badge>
@@ -156,7 +156,7 @@ export default function CatalogosAreas() {
                     <TableCell>
                       <Badge 
                         variant="outline" 
-                        className={area.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-muted'}
+                        className={area.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-background '}
                       >
                         {area.is_active ? 'Activa' : 'Inactiva'}
                       </Badge>

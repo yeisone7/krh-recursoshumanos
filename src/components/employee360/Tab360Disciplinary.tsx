@@ -20,8 +20,8 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   decision: { label: 'Decisión', color: 'bg-destructive/10 text-destructive' },
   sancion: { label: 'Sanción', color: 'bg-destructive/10 text-destructive' },
   apelacion: { label: 'Apelación', color: 'bg-warning-light text-warning' },
-  cerrado: { label: 'Cerrado', color: 'bg-muted text-muted-foreground' },
-  archivado: { label: 'Archivado', color: 'bg-muted text-muted-foreground' },
+  cerrado: { label: 'Cerrado', color: 'bg-background text-muted-foreground' },
+  archivado: { label: 'Archivado', color: 'bg-background text-muted-foreground' },
 };
 
 const faultTypeLabels: Record<string, string> = {

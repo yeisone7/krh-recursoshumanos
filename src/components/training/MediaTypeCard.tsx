@@ -35,7 +35,7 @@ export function MediaTypeCard({
     <Card className="border">
       <CardContent className="pt-5 pb-4 space-y-3">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-muted">
+          <div className="p-2 rounded-lg bg-background ">
             {icon}
           </div>
           <div className="flex-1 min-w-0">

@@ -87,7 +87,7 @@ export default function CentrosFichas() {
   if (!currentCompanyId) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <Card className="max-w-md border-none shadow-2xl bg-background/50 backdrop-blur-xl">
+        <Card className="max-w-md border-none shadow-2xl bg-background ">
           <CardContent className="pt-10 pb-10 text-center">
             <div className="p-4 rounded-3xl bg-primary/10 text-primary w-fit mx-auto mb-6">
               <Building2 className="w-12 h-12" />
@@ -103,11 +103,11 @@ export default function CentrosFichas() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Premium Header */}
-      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-border ">
+        
+        
         
         <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <div className="space-y-4">
@@ -116,7 +116,7 @@ export default function CentrosFichas() {
                 <FileText className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
                   Operación / Analítica
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Fichas Técnicas de Centros</h1>
@@ -129,7 +129,7 @@ export default function CentrosFichas() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
             {stats.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
                 <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
                 </div>
@@ -145,13 +145,13 @@ export default function CentrosFichas() {
       </div>
 
       {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
           <div className="relative w-full sm:w-96 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
               placeholder="Buscar por nombre, cliente, ciudad..."
-              className="pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+              className="pl-11 h-12 rounded-2xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -159,13 +159,13 @@ export default function CentrosFichas() {
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+              <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <Filter className="w-3.5 h-3.5 text-primary" />
                   <SelectValue placeholder="Estado" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+              <SelectContent className="rounded-2xl border-border shadow-2xl">
                 <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos</SelectItem>
                 <SelectItem value="active" className="font-bold text-xs uppercase p-3">Activos</SelectItem>
                 <SelectItem value="inactive" className="font-bold text-xs uppercase p-3">Inactivos</SelectItem>
@@ -173,13 +173,13 @@ export default function CentrosFichas() {
             </Select>
 
             <Select value={cityFilter} onValueChange={setCityFilter}>
-              <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+              <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5 text-primary" />
                   <SelectValue placeholder="Ciudad" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+              <SelectContent className="rounded-2xl border-border shadow-2xl">
                 <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todas las ciudades</SelectItem>
                 {cities.map(city => (
                   <SelectItem key={city} value={city} className="font-bold text-xs uppercase p-3">{city}</SelectItem>
@@ -187,7 +187,7 @@ export default function CentrosFichas() {
               </SelectContent>
             </Select>
 
-            <div className="hidden sm:flex items-center px-4 h-12 bg-primary/10 rounded-2xl border border-primary/5">
+            <div className="hidden sm:flex items-center px-4 h-12 bg-primary/10 rounded-2xl border border-border ">
               <span className="text-[10px] font-black text-primary uppercase tracking-[0.1em] whitespace-nowrap">
                 {filteredCenters.length} COINCIDENCIAS
               </span>

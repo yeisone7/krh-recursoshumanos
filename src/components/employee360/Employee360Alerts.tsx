@@ -53,7 +53,7 @@ const levelStyles: Record<AlertLevel, { badge: string; border: string; icon: str
     badge: 'bg-primary/10 text-primary border-primary/20',
     border: 'border-l-primary',
     icon: 'text-primary',
-    bg: 'bg-primary/5 hover:bg-primary/10',
+    bg: 'hover:bg-primary/10',
   },
 };
 

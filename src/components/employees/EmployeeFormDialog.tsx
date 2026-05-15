@@ -446,8 +446,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
               <div className="relative shrink-0 overflow-hidden bg-sidebar border-b">
                 <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:26px_26px] opacity-10" />
-                <div className="absolute -top-20 -right-16 h-56 w-56 rounded-full border border-primary/30 bg-primary/5" />
-                <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full border border-primary/20 bg-primary/5" />
+                <div className="absolute -top-20 -right-16 h-56 w-56 rounded-full border border-primary/30 " />
+                <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full border border-primary/20 " />
                 <div className="absolute top-8 right-28 h-28 w-28 rounded-full border border-primary/25" />
                 
                 <DialogHeader className="relative z-10 px-4 pt-6 pb-2 text-foreground sm:px-6">
@@ -464,7 +464,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                 </DialogHeader>
 
                 <div className="relative z-10 px-4 pb-4 sm:px-6">
-                  <TabsList className="grid h-auto w-full grid-cols-4 gap-1 rounded-xl bg-background/50 backdrop-blur-md border border-primary/10 p-1 sm:flex sm:flex-wrap shadow-sm">
+                  <TabsList className="grid h-auto w-full grid-cols-4 gap-1 rounded-xl bg-background border border-border p-1 sm:flex sm:flex-wrap shadow-sm">
                   {tabItems.map((tab) => {
                     const errorCount = getTabErrorCount(tab.value);
                     const hasErrors = tabsWithErrors.has(tab.value);
@@ -907,7 +907,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 value={field.value || []}
                                 onChange={field.onChange}
                                 placeholder="Seleccionar niveles educativos..."
-                                className="bg-background/50 border-input hover:border-primary/50 transition-colors"
+                                className="bg-background border-input hover:border-border 0 transition-colors"
                               />
                             </FormControl>
                             <FormMessage />
@@ -1109,7 +1109,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     )}
 
                     {(form.watch('familyMembers') || []).map((_, index) => (
-                      <div key={index} className="border rounded-lg p-4 space-y-3 relative bg-muted/30">
+                      <div key={index} className="border rounded-lg p-4 space-y-3 relative bg-background">
                         <div className="flex items-center justify-between">
                           <Badge variant="outline" className="text-xs">
                             Familiar #{index + 1}
@@ -1430,8 +1430,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 className={cn(
                                   'flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all',
                                   field.value === 'administrative'
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-input hover:border-primary/50'
+                                    ? 'border-primary '
+                                    : 'border-input hover:border-border 0'
                                 )}
                               >
                                 <RadioGroupItem value="administrative" className="sr-only" />
@@ -1448,8 +1448,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 className={cn(
                                   'flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all',
                                   field.value === 'shift'
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-input hover:border-primary/50'
+                                    ? 'border-primary '
+                                    : 'border-input hover:border-border 0'
                                 )}
                               >
                                 <RadioGroupItem value="shift" className="sr-only" />
@@ -1938,7 +1938,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
               </div>
 
               {/* Footer */}
-              <div className="flex flex-col-reverse gap-3 border-t border-border bg-muted/30 p-4 sm:flex-row sm:justify-end sm:p-6">
+              <div className="flex flex-col-reverse gap-3 border-t border-border bg-background p-4 sm:flex-row sm:justify-end sm:p-6">
                 <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>

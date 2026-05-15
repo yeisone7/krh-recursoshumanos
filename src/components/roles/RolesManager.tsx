@@ -80,10 +80,10 @@ export function RolesManager() {
         </Button>
       </div>
 
-      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
-            <TableHeader className="bg-muted/30">
+            <TableHeader className="bg-background">
               <TableRow className="hover:bg-transparent border-border/50">
                 <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Identidad del Rol</TableHead>
                 <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Descripción</TableHead>
@@ -107,7 +107,7 @@ export function RolesManager() {
                 </TableRow>
               ) : (
                 roles.map((role) => (
-                  <TableRow key={role.id} className="group hover:bg-primary/5 transition-colors border-border/50">
+                  <TableRow key={role.id} className="group hover:transition-colors border-border/50">
                     <TableCell className="px-8 py-6">
                       <div className="flex items-center gap-4">
                         <div className={cn(
@@ -133,7 +133,7 @@ export function RolesManager() {
                       </p>
                     </TableCell>
                     <TableCell className="px-8 py-6 text-center">
-                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50 border border-border text-[10px] font-black text-foreground tracking-widest">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-background border border-border text-[10px] font-black text-foreground tracking-widest">
                         <Users className="w-3.5 h-3.5 text-primary" />
                         {role.user_count || 0} USUARIOS
                       </div>

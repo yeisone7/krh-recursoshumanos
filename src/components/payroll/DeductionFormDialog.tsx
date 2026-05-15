@@ -197,8 +197,8 @@ export function DeductionFormDialog({
         </DialogHeader>
 
         {/* Header Premium */}
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-primary/5">
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-border ">
+          
           
           <div className="flex items-start gap-4 sm:gap-5 relative">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center font-black text-xl sm:text-2xl shrink-0 shadow-inner">
@@ -238,7 +238,7 @@ export function DeductionFormDialog({
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col min-h-0">
-          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-muted/20">
+          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-background">
             <TabsList className="bg-transparent h-auto p-0 gap-6 w-full justify-start overflow-x-auto no-scrollbar">
               <TabsTrigger value="detalles" className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
                 <div className="flex items-center gap-2">
@@ -287,11 +287,11 @@ export function DeductionFormDialog({
                       <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Empleado *</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background">
+                          <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
                             <SelectValue placeholder="Seleccionar empleado..." />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="rounded-2xl border-primary/10 max-h-[300px]">
+                        <SelectContent className="rounded-2xl border-border max-h-[300px]">
                           {employees.filter(e => e.is_active).map(e => (
                             <SelectItem key={e.id} value={e.id} className="py-2">
                               {e.first_name} {e.last_name} <span className="text-muted-foreground ml-1">({e.document_number})</span>
@@ -313,11 +313,11 @@ export function DeductionFormDialog({
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tipo de Descuento *</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background">
+                            <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
                               <SelectValue placeholder="Seleccionar tipo..." />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="rounded-2xl border-primary/10">
+                          <SelectContent className="rounded-2xl border-border ">
                             {Object.entries(DEDUCTION_TYPE_LABELS).map(([key, label]) => (
                               <SelectItem key={key} value={key} className="py-2">{label}</SelectItem>
                             ))}
@@ -335,7 +335,7 @@ export function DeductionFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Fecha de Inicio *</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                          <Input type="date" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -350,7 +350,7 @@ export function DeductionFormDialog({
                     <FormItem className="space-y-2">
                       <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Descripción del Descuento *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej: Embargo alimentario, aporte sindical..." {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                        <Input placeholder="Ej: Embargo alimentario, aporte sindical..." {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -365,7 +365,7 @@ export function DeductionFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Entidad (Opcional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: Juzgado 3° Civil" {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                          <Input placeholder="Ej: Juzgado 3° Civil" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -378,7 +378,7 @@ export function DeductionFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">N° Referencia (Opcional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: RAD-2026-001" {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                          <Input placeholder="Ej: RAD-2026-001" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -388,7 +388,7 @@ export function DeductionFormDialog({
               </TabsContent>
 
               <TabsContent value="condiciones" className="m-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 mb-4">
+                <div className="border border-border rounded-2xl p-5 mb-4">
                   <FormField
                     control={form.control}
                     name="is_percentage"
@@ -429,7 +429,7 @@ export function DeductionFormDialog({
                           <div className="relative">
                             <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <FormControl>
-                              <Input type="number" min="0" step="0.1" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="h-12 pl-9 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background font-mono" />
+                              <Input type="number" min="0" step="0.1" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="h-12 pl-9 rounded-2xl bg-background border-border focus:bg-background font-mono" />
                             </FormControl>
                           </div>
                           <FormMessage />
@@ -446,7 +446,7 @@ export function DeductionFormDialog({
                           <div className="relative">
                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <FormControl>
-                              <Input type="number" min="0" step="1000" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="h-12 pl-9 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background font-mono" />
+                              <Input type="number" min="0" step="1000" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="h-12 pl-9 rounded-2xl bg-background border-border focus:bg-background font-mono" />
                             </FormControl>
                           </div>
                           <FormMessage />
@@ -462,7 +462,7 @@ export function DeductionFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Fecha Fin (Opcional)</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                          <Input type="date" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -474,7 +474,7 @@ export function DeductionFormDialog({
                   control={form.control}
                   name="is_recurring"
                   render={({ field }) => (
-                    <FormItem className="flex items-start sm:items-center justify-between gap-3 rounded-2xl border border-primary/10 bg-muted/10 p-4">
+                    <FormItem className="flex items-start sm:items-center justify-between gap-3 rounded-2xl border border-border bg-background /10 p-4">
                       <div className="min-w-0 space-y-1">
                         <FormLabel className="text-sm font-black text-foreground">Descuento Recurrente</FormLabel>
                         <FormDescription className="text-xs">
@@ -492,7 +492,7 @@ export function DeductionFormDialog({
                 />
 
                 {/* Resumen */}
-                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5">
+                <div className="border border-border rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <HandCoins className="w-4 h-4 text-primary" />
                     <h3 className="font-black text-sm text-primary uppercase tracking-widest">Valor a descontar</h3>
@@ -518,7 +518,7 @@ export function DeductionFormDialog({
                       <FormControl>
                         <Textarea 
                           placeholder="Cualquier información adicional relevante..."
-                          className="min-h-[150px] rounded-2xl bg-muted/20 border-primary/5 focus:bg-background p-4 resize-none"
+                          className="min-h-[150px] rounded-2xl bg-background border-border focus:bg-background p-4 resize-none"
                           {...field} 
                         />
                       </FormControl>
@@ -531,8 +531,8 @@ export function DeductionFormDialog({
           </Form>
         </Tabs>
 
-        <div className="p-6 border-t border-border/50 bg-muted/10 flex items-center justify-end gap-3 shrink-0">
-          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-primary/10" onClick={() => onOpenChange(false)}>
+        <div className="p-6 border-t border-border/50 bg-background /10 flex items-center justify-end gap-3 shrink-0">
+          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button type="submit" form="deductionForm" className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" disabled={isPending}>

@@ -45,7 +45,7 @@ export function SuggestedQuestions({ onSelect }: SuggestedQuestionsProps) {
             key={text}
             onClick={() => onSelect(text)}
             className="flex items-start gap-3 rounded-xl border bg-card p-3 text-left
-                       hover:border-primary/50 hover:bg-primary/5 hover:shadow-sm
+                       hover:border-border 0 hover:hover:shadow-sm
                        transition-all duration-150 group"
           >
             <div className="mt-0.5 shrink-0 p-1.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">

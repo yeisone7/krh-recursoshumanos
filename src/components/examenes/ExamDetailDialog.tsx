@@ -139,7 +139,7 @@ export function ExamDetailDialog({ exam, open, onOpenChange }: ExamDetailDialogP
               <FileText className="w-4 h-4 text-primary" />
               <h4 className="font-semibold text-foreground">Concepto Médico</h4>
             </div>
-            <div className="p-4 bg-muted rounded-lg">
+            <div className="p-4 bg-background rounded-lg">
               <p className="text-foreground">{exam.concept}</p>
             </div>
           </div>

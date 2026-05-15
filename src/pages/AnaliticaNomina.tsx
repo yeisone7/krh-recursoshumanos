@@ -814,7 +814,7 @@ export default function AnaliticaNomina() {
           </CardHeader>
           <CardContent className="grid gap-2 md:grid-cols-2">
             {analytics.alerts.map((alert) => (
-              <div key={alert} className="rounded-md border border-warning/20 bg-background/70 p-3 text-sm text-foreground">
+              <div key={alert} className="rounded-md border border-warning/20 bg-background p-3 text-sm text-foreground">
                 {alert}
               </div>
             ))}

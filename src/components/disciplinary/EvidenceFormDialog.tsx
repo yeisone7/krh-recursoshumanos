@@ -259,7 +259,7 @@ export function EvidenceFormDialog({
               <div className="space-y-3">
                 <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Archivo Adjunto</FormLabel>
                 <div className="relative group">
-                  <label className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed rounded-[1.5rem] cursor-pointer bg-background/50 border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300">
+                  <label className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed rounded-[1.5rem] cursor-pointer bg-background border-border/50 hover:border-border 0 hover:transition-all duration-300">
                     <div className="p-3 rounded-full bg-primary/10 text-primary group-hover:scale-110 transition-transform">
                       <Upload className="h-6 w-6" />
                     </div>
@@ -282,12 +282,12 @@ export function EvidenceFormDialog({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-border/50 bg-background/80 backdrop-blur-md p-6">
+            <div className="flex items-center justify-end gap-3 border-t border-border/50 bg-background p-6">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                className="h-12 px-6 rounded-xl font-bold text-muted-foreground hover:bg-muted/50 transition-all"
+                className="h-12 px-6 rounded-xl font-bold text-muted-foreground hover:bg-background transition-all"
               >
                 Cancelar
               </Button>

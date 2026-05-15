@@ -181,7 +181,7 @@ export function LoanCollectionCalendar({ loans }: Props) {
                   {events.length > 0 ? (
                     <div className="space-y-2">
                       {events.map((e, i) => (
-                        <div key={i} className="rounded-md bg-muted/50 p-2">
+                        <div key={i} className="rounded-md bg-background p-2">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <p className="break-words text-sm font-medium text-foreground">{e.employeeName}</p>
@@ -207,7 +207,7 @@ export function LoanCollectionCalendar({ loans }: Props) {
           <div className="hidden grid-cols-7 gap-px bg-border rounded-lg overflow-hidden sm:grid">
             {/* Day headers */}
             {dayNames.map(d => (
-              <div key={d} className="bg-muted p-1.5 text-center text-[10px] font-medium text-muted-foreground sm:p-2 sm:text-xs">
+              <div key={d} className="bg-background p-1.5 text-center text-[10px] font-medium text-muted-foreground sm:p-2 sm:text-xs">
                 {d}
               </div>
             ))}
@@ -233,7 +233,7 @@ export function LoanCollectionCalendar({ loans }: Props) {
                         className={cn(
                           "bg-card p-1 min-h-[58px] cursor-default transition-colors sm:min-h-[80px]",
                           isToday(day) && "ring-2 ring-primary ring-inset",
-                          events.length > 0 && "hover:bg-muted/50"
+                          events.length > 0 && "hover:bg-background"
                         )}
                       >
                         <div className={cn(
@@ -252,7 +252,7 @@ export function LoanCollectionCalendar({ loans }: Props) {
                                   "hidden text-[10px] leading-tight px-1 py-0.5 rounded truncate sm:block",
                                   e.isPaid && "bg-primary/10 text-primary",
                                   e.isOverdue && "bg-destructive/10 text-destructive",
-                                  !e.isPaid && !e.isOverdue && "bg-muted text-muted-foreground"
+                                  !e.isPaid && !e.isOverdue && "bg-background text-muted-foreground"
                                 )}
                               >
                                 {e.employeeName.split(' ')[0]}
@@ -262,7 +262,7 @@ export function LoanCollectionCalendar({ loans }: Props) {
                                  "text-[10px] px-1 py-0.5 rounded text-center font-medium",
                                 hasOverdue ? "bg-destructive/10 text-destructive" :
                                 allPaid ? "bg-primary/10 text-primary" :
-                                "bg-muted text-muted-foreground"
+                                "bg-background text-muted-foreground"
                               )}>
                                 {events.length} cuotas
                               </div>

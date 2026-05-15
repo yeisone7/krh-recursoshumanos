@@ -103,7 +103,7 @@ export function UserCenterDialog({ user, open, onOpenChange }: UserCenterDialogP
                 {centers.map(center => (
                   <div 
                     key={center.id} 
-                    className="flex min-w-0 items-start space-x-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
+                    className="flex min-w-0 items-start space-x-3 rounded-lg border border-border p-3 transition-colors hover:bg-background"
                   >
                     <Checkbox
                       id={center.id}

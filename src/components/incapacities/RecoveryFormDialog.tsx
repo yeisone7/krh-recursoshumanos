@@ -103,7 +103,7 @@ export function RecoveryFormDialog({
         
         {/* Premium Gradient Header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           
           <DialogHeader className="relative z-10">
             <div className="flex items-center gap-4 mb-2">
@@ -111,7 +111,7 @@ export function RecoveryFormDialog({
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+                <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
                   RECOBRO
                 </Badge>
                 <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
@@ -128,7 +128,7 @@ export function RecoveryFormDialog({
         <div className="px-8 py-6 max-h-[70vh] overflow-y-auto">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+              <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
             <FormField
               control={form.control}
               name="recovery_status"

@@ -184,7 +184,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="px-4 pt-2 sm:px-6">
-                <TabsList className="w-full h-auto flex-wrap gap-1 bg-muted/50 p-1">
+                <TabsList className="w-full h-auto flex-wrap gap-1 bg-background p-1">
                   {tabItems.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
@@ -870,7 +870,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                   )}
 
                   {familyFields.map((field, index) => (
-                    <div key={field.id} className="border rounded-lg p-4 space-y-3 bg-muted/20 relative">
+                    <div key={field.id} className="border rounded-lg p-4 space-y-3 bg-background relative">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-muted-foreground bg-background border rounded-full px-3 py-0.5">
                           Familiar #{index + 1}

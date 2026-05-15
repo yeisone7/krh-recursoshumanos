@@ -14,7 +14,8 @@ import { Loader2, Users, Shield, Building2, ChevronRight, ChevronDown, Sparkles 
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import empatiqLogo from '@/assets/empatiq-logo-horizontal.png';
-import empatiqIcon from '@/assets/empatiq-logo-vertical.jpg';
+import empatiqLogoLeft from '@/assets/empatiq-logo-izquierdo.png';
+import empatiqIcon from '@/assets/empatiq-logo-derecho.png';
 
 const loginSchema = z.object({
   email: z.string().email('Ingrese un correo válido'),
@@ -49,19 +50,19 @@ const features = [
 const AuthFormSkeleton = () => (
   <div className="space-y-4" aria-hidden="true">
     <div className="space-y-2">
-      <div className="h-3 w-28 rounded bg-muted animate-pulse" />
-      <div className="h-10 w-full rounded bg-muted/70 animate-pulse" />
+      <div className="h-3 w-28 rounded bg-background animate-pulse" />
+      <div className="h-10 w-full rounded bg-background /70 animate-pulse" />
     </div>
     <div className="space-y-2">
-      <div className="h-3 w-20 rounded bg-muted animate-pulse" />
-      <div className="h-10 w-full rounded bg-muted/70 animate-pulse" />
+      <div className="h-3 w-20 rounded bg-background animate-pulse" />
+      <div className="h-10 w-full rounded bg-background /70 animate-pulse" />
     </div>
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <div className="h-4 w-4 rounded bg-muted animate-pulse" />
-        <div className="h-3 w-24 rounded bg-muted animate-pulse" />
+        <div className="h-4 w-4 rounded bg-background animate-pulse" />
+        <div className="h-3 w-24 rounded bg-background animate-pulse" />
       </div>
-      <div className="h-3 w-28 rounded bg-muted animate-pulse" />
+      <div className="h-3 w-28 rounded bg-background animate-pulse" />
     </div>
     <div className="h-10 w-full rounded bg-primary/20 animate-pulse" />
   </div>
@@ -277,7 +278,7 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex bg-background">
       {/* Left side - Hero Branding */}
-      <div className="hidden md:flex md:w-[42%] lg:w-[50%] xl:w-[55%] md:min-w-[320px] relative overflow-hidden bg-card">
+      <div className="hidden md:flex md:w-[42%] lg:w-[50%] xl:w-[55%] md:min-w-[320px] relative overflow-hidden bg-background">
         <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:28px_28px] opacity-15" />
         
         {/* Decorative geometric shapes */}
@@ -290,17 +291,14 @@ export default function Auth() {
           <motion.div
             animate={{ rotate: -360 }}
             transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
-            className="absolute -bottom-28 -left-20 lg:-bottom-48 lg:-left-24 w-80 h-80 lg:w-[500px] lg:h-[500px] rounded-full border border-primary/25 bg-primary/5" />
+            className="absolute -bottom-28 -left-20 lg:-bottom-48 lg:-left-24 w-80 h-80 lg:w-[500px] lg:h-[500px] rounded-full border border-primary/25 " />
 
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}
             className="absolute top-1/3 right-6 lg:right-12 w-40 h-40 lg:w-64 lg:h-64 rounded-full border border-primary/30" />
 
-          <div className="absolute inset-y-0 right-0 w-1/3 bg-primary/10" />
-          <div className="absolute bottom-0 left-0 h-28 w-full bg-gradient-to-t from-primary/15 to-transparent" />
         </div>
-
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between gap-4 p-4 lg:p-6 w-full min-h-screen">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="flex justify-start pt-0">
@@ -308,7 +306,7 @@ export default function Auth() {
             {!isHeroLogoLoaded && <div className="absolute inset-0 rounded bg-secondary/15 animate-pulse" aria-hidden="true" />}
             <picture className={cn("block origin-center transition-[opacity,transform] duration-500 ease-out", isHeroLogoLoaded ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0")}>
               <img
-                src={empatiqLogo}
+                src={empatiqLogoLeft}
                 alt="Logo EmpatiQ"
                 className="h-full max-w-full object-contain"
                 width={320}
@@ -347,7 +345,7 @@ export default function Auth() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
-                className="flex items-center gap-2 lg:gap-3 p-1.5 lg:p-2 bg-primary/5 backdrop-blur-sm border border-primary/15 hover:bg-primary/10 transition-colors group cursor-default">
+                className="flex items-center gap-2 lg:gap-3 p-1.5 lg:p-2 border border-primary/15 hover:bg-primary/10 transition-colors group cursor-default">
 
                   <div className="w-8 h-8 lg:w-9 lg:h-9 bg-primary/10 flex items-center justify-center shrink-0">
                     <feat.icon className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
@@ -369,8 +367,8 @@ export default function Auth() {
       </div>
 
       {/* Right side - Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8 relative">
-        <div className="absolute inset-0 bg-[radial-gradient(hsl(224,18%,88%)_1px,transparent_1px)] bg-[size:24px_24px] opacity-40" />
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8 relative bg-background">
+        <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary)/0.15)_1px,transparent_1px)] bg-[size:24px_24px] opacity-40" />
         
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -404,7 +402,7 @@ export default function Auth() {
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="relative border-t border-primary/10 px-4 py-4">
+                  <div className="relative border-t border-border px-4 py-4">
                     <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:20px_20px] opacity-10" aria-hidden="true" />
                     <div className="relative space-y-3">
                       <img src={empatiqLogo} alt="Logo EmpatiQ" className="h-14 max-w-full object-contain sm:h-16" />
@@ -420,10 +418,10 @@ export default function Auth() {
           <div className="bg-card border border-border p-5 shadow-xl">
             {/* Header */}
             <div className="text-center mb-4">
-              <div className="hidden lg:flex flex-col items-center mb-1 gap-0">
-                <img src={empatiqIcon} alt="EmpatiQ" className="w-20 h-20 object-contain -mb-4" />
+              <div className="hidden lg:flex flex-col items-center mb-2">
+                <img src={empatiqIcon} alt="EmpatiQ" className="w-24 h-24 object-contain" />
                 
-                <span className="text-xs font-semibold text-primary/80 leading-tight text-center">Gestión de Talento Humano</span>
+                <span className="text-xs font-semibold text-primary/80 leading-tight text-center mt-1">Gestión de Talento Humano</span>
               </div>
               <AnimatePresence mode="wait">
                 <motion.div
@@ -458,7 +456,7 @@ export default function Auth() {
                     <FormItem>
                       <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                        <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -468,7 +466,7 @@ export default function Auth() {
 
                   <Button
                     type="submit"
-                    className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-1"
+                    className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/10 transition-all text-sm mt-1"
                     disabled={isSubmitting || !recoveryForm.formState.isValid}
                     aria-busy={isSubmitting}
                     aria-live="polite"
@@ -503,7 +501,7 @@ export default function Auth() {
                   <FormItem>
                         <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -516,7 +514,7 @@ export default function Auth() {
                   <FormItem>
                         <FormLabel className="text-sm font-semibold">Contraseña</FormLabel>
                         <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-10 bg-muted/50 border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                          <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -538,7 +536,7 @@ export default function Auth() {
 
                   <Button
                     type="submit"
-                    className="w-full h-10 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm mt-1"
+                    className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/10 transition-all text-sm mt-1"
                     disabled={isSubmitting || !loginForm.formState.isValid}
                     aria-busy={isSubmitting}
                     aria-live="polite"
@@ -562,7 +560,7 @@ export default function Auth() {
                     <FormItem>
                           <FormLabel className="text-xs font-semibold">Nombre</FormLabel>
                           <FormControl>
-                            <Input placeholder="Juan" autoComplete="given-name" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
+                            <Input placeholder="Juan" autoComplete="given-name" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -575,7 +573,7 @@ export default function Auth() {
                     <FormItem>
                           <FormLabel className="text-xs font-semibold">Apellido</FormLabel>
                           <FormControl>
-                            <Input placeholder="Pérez" autoComplete="family-name" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
+                            <Input placeholder="Pérez" autoComplete="family-name" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -587,7 +585,7 @@ export default function Auth() {
                     <FormControl>
                       <Input 
                         placeholder="1234567890" 
-                        className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" 
+                        className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" 
                         {...registerForm.register("document_number")}
                       />
                     </FormControl>
@@ -603,7 +601,7 @@ export default function Auth() {
                         type="email" 
                         placeholder="correo@ejemplo.com" 
                         autoComplete="email" 
-                        className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" 
+                        className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" 
                         {...registerForm.register("email")}
                       />
                     </FormControl>
@@ -619,7 +617,7 @@ export default function Auth() {
                   <FormItem>
                         <FormLabel className="text-xs font-semibold">Contraseña</FormLabel>
                         <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
+                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -632,13 +630,13 @@ export default function Auth() {
                   <FormItem>
                         <FormLabel className="text-xs font-semibold">Confirmar contraseña</FormLabel>
                         <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-9 bg-muted/50 border-border focus:bg-background transition-colors text-sm" {...field} />
+                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                   } />
 
-                  <Button type="submit" className="w-full h-9 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/75 text-primary-foreground font-semibold shadow-lg shadow-primary/20 transition-all text-sm" disabled={isSubmitting || !registerForm.formState.isValid}>
+                  <Button type="submit" className="w-full h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/10 transition-all text-sm" disabled={isSubmitting || !registerForm.formState.isValid}>
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Crear Cuenta
                   </Button>

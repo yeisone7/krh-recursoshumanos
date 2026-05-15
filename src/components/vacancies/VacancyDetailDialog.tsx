@@ -366,21 +366,21 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex flex-col max-h-[95dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full border-none shadow-2xl bg-background/95 backdrop-blur-xl">
+        <DialogContent className="flex flex-col max-h-[95dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full border-none shadow-2xl bg-background ">
         <TooltipProvider>
         <DialogTitle className="sr-only">Detalles de la Vacante</DialogTitle>
         <DialogDescription className="sr-only">Información detallada de la vacante para el cargo {vacancy.position_title}</DialogDescription>
         <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4 pt-6 pb-4 sm:px-8 sm:pt-8">
           {/* Decorative patterns */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          
+          
           
           {/* Pattern overlay (dots) */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
           <div className="relative flex flex-col md:flex-row items-start gap-6">
             {/* Avatar/Initial */}
-            <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-primary/10 transition-transform hover:scale-105 duration-300">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-border transition-transform hover:scale-105 duration-300">
               {vacancy.position_title.substring(0, 2).toUpperCase()}
             </div>
 
@@ -426,15 +426,15 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <div className="px-4 pt-0 flex-shrink-0 sm:px-8 border-b">
               <TabsList className="w-full h-auto flex-wrap gap-1 bg-transparent p-0 justify-start pb-1">
-                <TabsTrigger value="info" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
+                <TabsTrigger value="info" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
                   <FileText className="h-4 w-4 shrink-0" />
                   <span className="font-medium">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="candidates" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
+                <TabsTrigger value="candidates" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
                   <Users className="h-4 w-4 shrink-0" />
                   <span className="font-medium">Candidatos</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
+                <TabsTrigger value="documents" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
                   <Paperclip className="h-4 w-4 shrink-0" />
                   <span className="font-medium">Documentos</span>
                 </TabsTrigger>
@@ -488,7 +488,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
 
                 {/* Requisition Info Card */}
                 {requisition && (
-                  <Card className="border-primary/20 bg-primary/5">
+                  <Card className="border-primary/20 ">
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base flex items-center gap-2">
                         <FileCheck className="w-4 h-4 text-primary" />
@@ -605,7 +605,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     </div>
                   </div>
                   {vacancy.other_benefits && (
-                    <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                    <div className="mt-3 p-3 bg-background rounded-lg">
                       <p className="text-sm">{vacancy.other_benefits}</p>
                     </div>
                   )}
@@ -740,7 +740,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
 
                 <div className="space-y-4">
                   {candidates.length === 0 ? (
-                    <div className="text-center py-8 bg-muted/30 rounded-lg">
+                    <div className="text-center py-8 bg-background rounded-lg">
                       <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
                       <p className="text-muted-foreground">No hay candidatos registrados</p>
                       <Button
@@ -782,7 +782,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                         return (
                           <div
                             key={candidate.id}
-                            className="flex flex-col gap-2 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer sm:flex-row sm:items-center sm:justify-between"
+                            className="flex flex-col gap-2 p-3 rounded-lg border bg-card hover:bg-background transition-colors cursor-pointer sm:flex-row sm:items-center sm:justify-between"
                             onClick={() => openCandidateDetail(candidate.id)}
                           >
                             <div className="flex min-w-0 items-center gap-3">
@@ -958,7 +958,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   </div>
                 ) : documents.length === 0 ? (
                   <div
-                    className="text-center py-10 bg-muted/30 rounded-lg border-2 border-dashed cursor-pointer hover:border-primary/40 transition-colors"
+                    className="text-center py-10 bg-background rounded-lg border-2 border-dashed cursor-pointer hover:border-primary/40 transition-colors"
                     onClick={() => document.getElementById(`vacancy-doc-upload-${vacancyId}`)?.click()}
                   >
                     <Paperclip className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
@@ -970,7 +970,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     {documents.map((doc) => (
                       <div
                         key={doc.id}
-                        className="flex flex-col gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center"
+                        className="flex flex-col gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-background sm:flex-row sm:items-center"
                       >
                         <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary shrink-0">
                           <FileText className="h-5 w-5" />
@@ -1009,7 +1009,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
 
 
           {/* Footer Actions */}
-          <div className="flex-shrink-0 px-4 py-4 border-t border-border bg-muted/30 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="flex-shrink-0 px-4 py-4 border-t border-border bg-background flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap">
               {status === 'open' && (
                 <Button variant="outline" onClick={() => handleStatusChange('in_process')}>
@@ -1179,7 +1179,7 @@ function ColocadoUpload({ vacancyId }: { vacancyId: string }) {
   return (
     <div className="space-y-3">
       <div
-        className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
+        className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-border 0 transition-colors"
         onClick={() => document.getElementById(`colocado-detail-${vacancyId}`)?.click()}
       >
         <input

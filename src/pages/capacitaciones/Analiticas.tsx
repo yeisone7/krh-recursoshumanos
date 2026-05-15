@@ -57,7 +57,7 @@ export default function Analiticas() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        
         <div className="relative z-10">
           <h1 className="text-3xl font-black tracking-tight text-foreground">Analíticas de Capacitaciones</h1>
           <p className="text-muted-foreground font-medium mt-1">Métricas y estadísticas del módulo</p>
@@ -87,7 +87,7 @@ export default function Analiticas() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
-          <CardHeader className="px-6 py-5 border-b border-border/50 bg-muted/10"><CardTitle className="text-lg font-bold">Completadas por Mes</CardTitle></CardHeader>
+          <CardHeader className="px-6 py-5 border-b border-border/50 bg-background /10"><CardTitle className="text-lg font-bold">Completadas por Mes</CardTitle></CardHeader>
           <CardContent className="p-6">
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={monthlyData}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" /><XAxis dataKey="month" tick={{fontSize: 12}} tickLine={false} axisLine={false} /><YAxis tick={{fontSize: 12}} tickLine={false} axisLine={false} /><Tooltip contentStyle={{ borderRadius: '1rem', border: '1px solid hsl(var(--border))' }} /><Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={3} fill="url(#colorPrimary)" name="Completadas" />
@@ -103,7 +103,7 @@ export default function Analiticas() {
         </Card>
 
         <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
-          <CardHeader className="px-6 py-5 border-b border-border/50 bg-muted/10"><CardTitle className="text-lg font-bold">Por Categoría</CardTitle></CardHeader>
+          <CardHeader className="px-6 py-5 border-b border-border/50 bg-background /10"><CardTitle className="text-lg font-bold">Por Categoría</CardTitle></CardHeader>
           <CardContent className="p-6">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart><Pie data={byCategory} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value" label={({ name, value }) => `${name} (${value})`} stroke="hsl(var(--background))" strokeWidth={2}>
@@ -114,7 +114,7 @@ export default function Analiticas() {
         </Card>
 
         <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
-          <CardHeader className="px-6 py-5 border-b border-border/50 bg-muted/10"><CardTitle className="text-lg font-bold">Por Público Objetivo</CardTitle></CardHeader>
+          <CardHeader className="px-6 py-5 border-b border-border/50 bg-background /10"><CardTitle className="text-lg font-bold">Por Público Objetivo</CardTitle></CardHeader>
           <CardContent className="p-6">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={byArea} layout="vertical" barSize={20}><CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" /><XAxis type="number" tick={{fontSize: 12}} tickLine={false} axisLine={false} /><YAxis dataKey="name" type="category" width={120} tick={{fontSize: 12}} tickLine={false} axisLine={false} /><Tooltip cursor={{fill: 'hsl(var(--muted))'}} contentStyle={{ borderRadius: '1rem', border: '1px solid hsl(var(--border))' }} /><Bar dataKey="value" fill="hsl(var(--primary))" name="Capacitaciones" radius={[0, 4, 4, 0]} /></BarChart>
@@ -123,10 +123,10 @@ export default function Analiticas() {
         </Card>
 
         <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
-          <CardHeader className="px-6 py-5 border-b border-border/50 bg-muted/10"><CardTitle className="text-lg font-bold">Últimas Evidencias</CardTitle></CardHeader>
+          <CardHeader className="px-6 py-5 border-b border-border/50 bg-background /10"><CardTitle className="text-lg font-bold">Últimas Evidencias</CardTitle></CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-muted/30">
+              <TableHeader className="bg-background">
                 <TableRow>
                   <TableHead className="font-semibold h-10">Nombre</TableHead>
                   <TableHead className="font-semibold h-10">Capacitación</TableHead>

@@ -195,7 +195,7 @@ export function LeaveRequestFormDialog({
         
         {/* Premium Gradient Header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           
           <DialogHeader className="relative z-10">
             <div className="flex items-center gap-4 mb-2">
@@ -203,7 +203,7 @@ export function LeaveRequestFormDialog({
                 <FileText className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+                <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
                   PERMISOS
                 </Badge>
                 <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
@@ -218,7 +218,7 @@ export function LeaveRequestFormDialog({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 h-14 p-1 bg-muted/30 rounded-2xl mb-6">
+                <TabsList className="grid w-full grid-cols-3 h-14 p-1 bg-background rounded-2xl mb-6">
                   <TabsTrigger value="general" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
                     General
                   </TabsTrigger>
@@ -232,7 +232,7 @@ export function LeaveRequestFormDialog({
 
                 {/* GENERAL TAB */}
                 <TabsContent value="general" className="space-y-6 mt-0">
-                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                  <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
                     {/* Employee Selection */}
                     <FormField
                       control={form.control}
@@ -246,7 +246,7 @@ export function LeaveRequestFormDialog({
                                 <SelectValue placeholder="Seleccione un empleado" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="rounded-2xl border-primary/10">
+                            <SelectContent className="rounded-2xl border-border ">
                               {employees.filter(e => e.is_active).map((emp) => (
                                 <SelectItem key={emp.id} value={emp.id} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
                                   <div className="flex flex-col">
@@ -275,7 +275,7 @@ export function LeaveRequestFormDialog({
                                 <SelectValue placeholder="Seleccione el tipo" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="rounded-2xl border-primary/10">
+                            <SelectContent className="rounded-2xl border-border ">
                               {activeLeaveTypes.map((type) => (
                                 <SelectItem key={type.leave_type} value={type.leave_type} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
                                   <div className="flex items-center gap-2">
@@ -303,7 +303,7 @@ export function LeaveRequestFormDialog({
 
                   {/* Info Alert for Selected Type */}
                   {selectedTypeConfig && (
-                    <Alert className="rounded-2xl border-primary/20 bg-primary/5">
+                    <Alert className="rounded-2xl border-primary/20 ">
                       <AlertCircle className="h-4 w-4 text-primary" />
                       <AlertDescription className="space-y-1 ml-2 text-primary font-medium">
                         <div className="flex flex-wrap gap-4 text-sm">
@@ -328,7 +328,7 @@ export function LeaveRequestFormDialog({
                     <Button 
                       type="button" 
                       onClick={() => setActiveTab('fechas')}
-                      className="rounded-xl bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors h-12 px-8"
+                      className="rounded-xl bg-background text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors h-12 px-8"
                     >
                       Continuar a Fechas →
                     </Button>
@@ -337,7 +337,7 @@ export function LeaveRequestFormDialog({
 
                 {/* DATES TAB */}
                 <TabsContent value="fechas" className="space-y-6 mt-0">
-                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                  <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
                     {/* Duration Type */}
                     <FormField
                       control={form.control}
@@ -351,7 +351,7 @@ export function LeaveRequestFormDialog({
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="rounded-2xl border-primary/10">
+                            <SelectContent className="rounded-2xl border-border ">
                               <SelectItem value="dias_completos" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">Días Completos</SelectItem>
                               {selectedTypeConfig?.allows_half_day && (
                                 <SelectItem value="medio_dia" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">Medio Día</SelectItem>
@@ -393,7 +393,7 @@ export function LeaveRequestFormDialog({
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 rounded-2xl border-primary/10" align="start">
+                              <PopoverContent className="w-auto p-0 rounded-2xl border-border " align="start">
                                 <Calendar
                                   mode="single"
                                   selected={field.value}
@@ -434,7 +434,7 @@ export function LeaveRequestFormDialog({
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 rounded-2xl border-primary/10" align="start">
+                              <PopoverContent className="w-auto p-0 rounded-2xl border-border " align="start">
                                 <Calendar
                                   mode="single"
                                   selected={field.value}
@@ -503,14 +503,14 @@ export function LeaveRequestFormDialog({
                       type="button" 
                       variant="ghost"
                       onClick={() => setActiveTab('general')}
-                      className="rounded-xl text-muted-foreground hover:bg-muted h-12 px-6"
+                      className="rounded-xl text-muted-foreground hover:bg-background h-12 px-6"
                     >
                       ← Volver
                     </Button>
                     <Button 
                       type="button" 
                       onClick={() => setActiveTab('notas')}
-                      className="rounded-xl bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors h-12 px-8"
+                      className="rounded-xl bg-background text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors h-12 px-8"
                     >
                       Continuar a Detalles →
                     </Button>
@@ -519,7 +519,7 @@ export function LeaveRequestFormDialog({
 
                 {/* OBSERVACIONES TAB */}
                 <TabsContent value="notas" className="space-y-6 mt-0">
-                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                  <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
                     {/* Reason */}
                     <FormField
                       control={form.control}
@@ -552,7 +552,7 @@ export function LeaveRequestFormDialog({
                       )}
                       
                       {documentFile ? (
-                        <div className="flex items-center gap-3 p-4 border border-primary/20 bg-primary/5 rounded-2xl shadow-sm">
+                        <div className="flex items-center gap-3 p-4 border border-primary/20 rounded-2xl shadow-sm">
                           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
                             <FileText className="h-5 w-5" />
                           </div>
@@ -571,8 +571,8 @@ export function LeaveRequestFormDialog({
                           </Button>
                         </div>
                       ) : (
-                        <label className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-border hover:border-primary/50 rounded-2xl cursor-pointer hover:bg-muted/30 transition-all group">
-                          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 group-hover:scale-110 transition-all">
+                        <label className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-border hover:border-border 0 rounded-2xl cursor-pointer hover:bg-background transition-all group">
+                          <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center group-hover:bg-primary/10 group-hover:scale-110 transition-all">
                             <Upload className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                           </div>
                           <div className="text-center">

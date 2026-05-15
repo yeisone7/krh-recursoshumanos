@@ -28,10 +28,10 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
           code: ({ children, className }) => {
             const isInline = !className;
             if (isInline) {
-              return <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>;
+              return <code className="bg-background px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>;
             }
             return (
-              <pre className="bg-muted p-4 rounded-lg overflow-x-auto my-3">
+              <pre className="bg-background p-4 rounded-lg overflow-x-auto my-3">
                 <code className="text-sm font-mono">{children}</code>
               </pre>
             );
@@ -41,7 +41,7 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
               <table className="w-full border-collapse border border-border">{children}</table>
             </div>
           ),
-          th: ({ children }) => <th className="border border-border bg-muted px-3 py-2 text-left font-medium">{children}</th>,
+          th: ({ children }) => <th className="border border-border bg-background px-3 py-2 text-left font-medium">{children}</th>,
           td: ({ children }) => <td className="border border-border px-3 py-2">{children}</td>,
         }}
       >

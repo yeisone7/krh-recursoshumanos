@@ -120,7 +120,7 @@ export function OvertimeDetailDialog({
 
         <div className="space-y-6">
           {/* Employee Info */}
-          <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+          <div className="flex items-center gap-3 p-4 bg-background rounded-lg">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
               <User className="w-6 h-6 text-primary" />
             </div>
@@ -198,7 +198,7 @@ export function OvertimeDetailDialog({
           </div>
 
           {record.total_value && (
-            <div className="p-4 bg-primary/5 rounded-lg">
+            <div className="p-4 rounded-lg">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Valor Total</span>
                 <span className="text-xl font-bold text-primary">
@@ -217,7 +217,7 @@ export function OvertimeDetailDialog({
                   <FileText className="w-4 h-4 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">Motivo</p>
                 </div>
-                <p className="p-3 bg-muted rounded-lg">{record.reason}</p>
+                <p className="p-3 bg-background rounded-lg">{record.reason}</p>
               </div>
             </>
           )}

@@ -65,7 +65,7 @@ export function CenterDetailSheet({ open, onOpenChange, center }: CenterDetailSh
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-[620px] overflow-y-auto p-0">
         {/* Header */}
-        <div className="p-6 pb-4 border-b bg-muted/30">
+        <div className="p-6 pb-4 border-b bg-background">
           <SheetHeader className="space-y-1">
             <div className="flex items-center gap-2">
               <div className="p-2 rounded-lg bg-primary/10">
@@ -180,7 +180,7 @@ export function CenterDetailSheet({ open, onOpenChange, center }: CenterDetailSh
                   <div className="rounded-md border">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b bg-muted/50">
+                        <tr className="border-b bg-background">
                           <th className="text-left px-3 py-2 font-medium">Cargo</th>
                           <th className="text-right px-3 py-2 font-medium">Cantidad</th>
                         </tr>

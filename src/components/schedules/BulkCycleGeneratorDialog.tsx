@@ -209,7 +209,7 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
               {shiftEmployeesWithConfig.length > 0 && (
                 <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
                   {shiftEmployeesWithConfig.map(({ employee, cycle }) => (
-                    <div key={employee.id} className="flex items-start sm:items-center justify-between gap-2 text-sm py-1 px-2 hover:bg-muted rounded">
+                    <div key={employee.id} className="flex items-start sm:items-center justify-between gap-2 text-sm py-1 px-2 hover:bg-background rounded">
                       <span className="min-w-0 truncate">{getEmployeeFullName(employee)}</span>
                       <Badge variant="outline" className="text-xs shrink-0">{cycle.name}</Badge>
                     </div>
@@ -290,7 +290,7 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
               </AlertDescription>
             </Alert>
 
-            <div className="p-3 bg-muted rounded-lg text-sm space-y-1">
+            <div className="p-3 bg-background rounded-lg text-sm space-y-1">
               <p><strong>Empleados:</strong> {shiftEmployeesWithConfig.length}</p>
               <p><strong>Periodo:</strong> {startDate && format(startDate, 'dd/MM/yyyy')} - {endDate && format(endDate, 'dd/MM/yyyy')}</p>
               {skippedCount > 0 && <p><strong>Omitidas por novedades:</strong> {skippedCount}</p>}

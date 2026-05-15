@@ -232,10 +232,10 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           <div className="relative flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
               <Package className="w-7 h-7 text-primary-foreground" />
@@ -253,7 +253,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-6">
           <Tabs defaultValue="employee" className="flex-1 min-h-0 overflow-hidden flex flex-col">
-            <TabsList className="grid h-14 w-full grid-cols-3 mb-6 bg-muted/50 p-1 rounded-2xl border border-border/50">
+            <TabsList className="grid h-14 w-full grid-cols-3 mb-6 bg-background p-1 rounded-2xl border border-border/50">
               <TabsTrigger 
                 value="employee" 
                 className="rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all duration-300 font-bold text-xs uppercase tracking-widest"
@@ -285,10 +285,10 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                 <div className="space-y-3">
                   <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Empleado Responsable *</Label>
                   <Select value={employeeId} onValueChange={setEmployeeId}>
-                    <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20">
+                    <SelectTrigger className="h-12 rounded-xl bg-background border-border/50 focus:ring-primary/20">
                       <SelectValue placeholder="Seleccionar colaborador" />
                     </SelectTrigger>
-                    <SelectContent className="bg-background/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl">
+                    <SelectContent className="bg-background border-border/50 rounded-2xl shadow-2xl">
                       {employees.filter(e => e.is_active).map((emp) => (
                         <SelectItem key={emp.id} value={emp.id} className="rounded-xl focus:bg-primary/10">
                           {getEmployeeFullName(emp)} - {emp.document_number}
@@ -324,7 +324,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                 )}
 
                 {employeeId && loadingProf && (
-                  <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/10 animate-pulse">
+                  <div className="flex items-center gap-3 p-4 rounded-2xl border border-border animate-pulse">
                     <Sparkles className="w-5 h-5 text-primary" />
                     <span className="text-sm font-medium text-primary">Analizando profesiograma...</span>
                   </div>
@@ -368,11 +368,11 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                         <History className="w-4 h-4 text-muted-foreground" />
                         <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Historial Reciente</span>
                       </div>
-                      <div className="rounded-2xl border border-border/50 overflow-hidden bg-background/40">
+                      <div className="rounded-2xl border border-border/50 overflow-hidden bg-background">
                         <Table>
                           <TableBody>
                             {recent.map((d: any) => (
-                              <TableRow key={d.id} className="hover:bg-muted/30 transition-colors">
+                              <TableRow key={d.id} className="hover:bg-background transition-colors">
                                 <TableCell className="py-3 px-4 font-medium text-xs">{d.item_name}</TableCell>
                                 <TableCell className="py-3 px-4 text-xs text-muted-foreground">
                                   {format(new Date(d.delivery_date), 'dd/MM/yy')}
@@ -403,14 +403,14 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                     variant="outline" 
                     size="sm" 
                     onClick={addManualItem} 
-                    className="h-9 rounded-xl gap-1.5 font-bold text-xs hover:bg-primary/5 hover:text-primary transition-all"
+                    className="h-9 rounded-xl gap-1.5 font-bold text-xs hover:hover:text-primary transition-all"
                   >
                     <Plus className="w-3.5 h-3.5" /> Agregar Ítem
                   </Button>
                 </div>
 
                 {items.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
+                  <div className="flex flex-col items-center justify-center py-20 bg-background border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
                     <div className="p-4 rounded-full bg-background shadow-sm">
                       <Package className="w-10 h-10 text-muted-foreground/30" />
                     </div>
@@ -446,7 +446,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                              {item.fromProfesiograma ? (
                                <div className="flex items-center gap-2">
                                  <p className="font-bold text-sm truncate text-foreground">{item.itemName}</p>
-                                 <Badge variant="outline" className="text-[9px] uppercase tracking-tighter bg-primary/5 text-primary border-primary/20 rounded-full h-4">
+                                 <Badge variant="outline" className="text-[9px] uppercase tracking-tighter text-primary border-primary/20 rounded-full h-4">
                                    Sugerido
                                  </Badge>
                                </div>
@@ -480,7 +480,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                                 <SelectTrigger className="h-10 w-full sm:w-24 rounded-xl bg-background border-border/50">
                                  <SelectValue placeholder="Talla" />
                                </SelectTrigger>
-                               <SelectContent className="bg-background/95 backdrop-blur-xl rounded-xl shadow-2xl">
+                               <SelectContent className="bg-background rounded-xl shadow-2xl">
                                  <SelectItem value="__none__" className="rounded-lg">—</SelectItem>
                                  {(isFootwear(item.itemTypeEnum) ? shoeSizeOptions : sizeOptions).map(s => (
                                    <SelectItem key={s} value={s} className="rounded-lg">{s}</SelectItem>
@@ -513,7 +513,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                         <Button
                           variant="outline"
                           className={cn(
-                            'h-12 w-full pl-4 text-left font-semibold rounded-xl bg-muted/50 border-border/50',
+                            'h-12 w-full pl-4 text-left font-semibold rounded-xl bg-background border-border/50',
                             !deliveryDate && 'text-muted-foreground'
                           )}
                         >
@@ -546,7 +546,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                         <Button
                           variant="outline"
                           className={cn(
-                            'h-12 w-full pl-4 text-left font-semibold rounded-xl bg-muted/50 border-border/50',
+                            'h-12 w-full pl-4 text-left font-semibold rounded-xl bg-background border-border/50',
                             !expirationDate && 'text-muted-foreground'
                           )}
                         >
@@ -579,7 +579,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                     placeholder="Nombre del responsable de almacén"
                     value={deliveredBy}
                     onChange={(e) => setDeliveredBy(e.target.value)}
-                    className="h-12 rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20 font-medium"
+                    className="h-12 rounded-xl bg-background border-border/50 focus:ring-primary/20 font-medium"
                   />
                 </div>
 
@@ -587,13 +587,13 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                   <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observaciones</Label>
                   <Textarea
                     placeholder="Notas adicionales sobre el estado de la dotación o condiciones de entrega..."
-                    className="resize-none rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20 min-h-[100px] p-4 font-medium"
+                    className="resize-none rounded-xl bg-background border-border/50 focus:ring-primary/20 min-h-[100px] p-4 font-medium"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                   />
                 </div>
 
-                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 flex items-center gap-4">
+                <div className="border border-primary/20 rounded-2xl p-4 flex items-center gap-4">
                   <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
                     <PenTool className="w-5 h-5" />
                   </div>
@@ -610,7 +610,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
         </div>
 
         {/* Footer con gradiente sutil */}
-        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-muted/10 sm:flex-row sm:justify-end">
+        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-background /10 sm:flex-row sm:justify-end">
           <Button 
             variant="ghost" 
             onClick={() => { handleReset(); onOpenChange(false); }}

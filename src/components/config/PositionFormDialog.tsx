@@ -140,9 +140,9 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden p-0 sm:max-w-xl border-none bg-transparent shadow-none">
-        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-primary/10 bg-background/95 backdrop-blur-2xl shadow-2xl">
+        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-border bg-background -2xl shadow-2xl">
           {/* Modal Header */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-primary/10 shrink-0">
+          <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-border shrink-0">
             <div className="relative z-10 flex items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
                 <Briefcase className="h-7 w-7 text-primary-foreground" />
@@ -157,7 +157,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
               </div>
             </div>
             {/* Decorative blurs */}
-            <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+            
           </div>
 
           <Form {...form}>
@@ -173,7 +173,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
                         <FormControl>
                           <Input 
                             placeholder="Ej. Desarrollador Senior" 
-                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                            className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
                             {...field} 
                           />
                         </FormControl>
@@ -191,7 +191,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
                         <FormControl>
                           <Input 
                             placeholder="DES-001" 
-                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                            className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
                             {...field} 
                           />
                         </FormControl>
@@ -209,7 +209,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
                         <FormControl>
                           <Input
                             type="number"
-                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold text-center"
+                            className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold text-center"
                             {...field}
                             onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                           />
@@ -227,11 +227,11 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Área</FormLabel>
                         <Select onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} value={field.value || "__none__"}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
+                            <SelectTrigger className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
                               <SelectValue placeholder="Seleccione área" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="rounded-2xl border-primary/10 backdrop-blur-xl bg-background/95">
+                          <SelectContent className="rounded-2xl border-border bg-background">
                             <SelectItem value="__none__" className="font-bold">Sin área</SelectItem>
                             {areas.map((area) => (
                               <SelectItem key={area.id} value={area.id} className="font-bold">{area.name}</SelectItem>
@@ -251,11 +251,11 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cargo Superior</FormLabel>
                         <Select onValueChange={(value) => field.onChange(value === "__none__" ? "" : value)} value={field.value || "__none__"}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
+                            <SelectTrigger className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
                               <SelectValue placeholder="Cargo superior" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="rounded-2xl border-primary/10 backdrop-blur-xl bg-background/95">
+                          <SelectContent className="rounded-2xl border-border bg-background">
                             <SelectItem value="__none__" className="font-bold">Sin superior</SelectItem>
                             {parentPositionOptions.map((pos) => (
                               <SelectItem key={pos.id} value={pos.id} className="font-bold">{pos.name}</SelectItem>
@@ -277,7 +277,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
                           <Input 
                             type="number" 
                             placeholder="0" 
-                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                            className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
                             {...field} 
                           />
                         </FormControl>
@@ -296,7 +296,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
                           <Input 
                             type="number" 
                             placeholder="0" 
-                            className="h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                            className="h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
                             {...field} 
                           />
                         </FormControl>
@@ -315,7 +315,7 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
                       <FormControl>
                         <Textarea
                           placeholder="Breve resumen de responsabilidades..."
-                          className="min-h-[80px] rounded-2xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold resize-none"
+                          className="min-h-[80px] rounded-2xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold resize-none"
                           {...field}
                         />
                       </FormControl>
@@ -325,12 +325,12 @@ export function PositionFormDialog({ open, onOpenChange, position }: PositionFor
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-primary/10">
+              <div className="flex items-center justify-end gap-3 pt-8 mt-4 border-t border-border ">
                 <Button 
                   type="button" 
                   variant="ghost" 
                   onClick={() => onOpenChange(false)}
-                  className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-muted"
+                  className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-background "
                 >
                   Cancelar
                 </Button>

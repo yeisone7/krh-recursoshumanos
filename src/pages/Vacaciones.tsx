@@ -106,8 +106,8 @@ export default function Vacaciones() {
   return (
     <div className="space-y-8 pb-10 max-w-7xl mx-auto">
       {/* Premium Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 rounded-[2rem] border border-primary/10 p-8 sm:p-10 shadow-sm">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+      <div className="relative overflow-hidden rounded-[2rem] border border-border p-8 sm:p-10 shadow-sm">
+        
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
           <div className="flex items-start sm:items-center gap-5">
             <div className="w-16 h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
@@ -140,8 +140,8 @@ export default function Vacaciones() {
 
       {/* KPIs Premium */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="rounded-3xl border-none shadow-sm bg-muted/20 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Card className="rounded-3xl border-none shadow-sm bg-background relative overflow-hidden group">
+          <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-4 sm:p-5 relative z-10">
             <div className="flex justify-between items-start mb-3">
               <div className="w-9 h-9 rounded-[0.85rem] bg-blue-500/10 text-blue-500 flex items-center justify-center">
@@ -154,8 +154,8 @@ export default function Vacaciones() {
           </CardContent>
         </Card>
         
-        <Card className="rounded-3xl border-none shadow-sm bg-muted/20 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Card className="rounded-3xl border-none shadow-sm bg-background relative overflow-hidden group">
+          <div className="absolute inset-0 bg-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-4 sm:p-5 relative z-10">
             <div className="flex justify-between items-start mb-3">
               <div className="w-9 h-9 rounded-[0.85rem] bg-orange-500/10 text-orange-500 flex items-center justify-center">
@@ -168,8 +168,8 @@ export default function Vacaciones() {
           </CardContent>
         </Card>
         
-        <Card className="rounded-3xl border-none shadow-sm bg-muted/20 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Card className="rounded-3xl border-none shadow-sm bg-background relative overflow-hidden group">
+          <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-4 sm:p-5 relative z-10">
             <div className="flex justify-between items-start mb-3">
               <div className="w-9 h-9 rounded-[0.85rem] bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
@@ -182,8 +182,8 @@ export default function Vacaciones() {
           </CardContent>
         </Card>
         
-        <Card className="rounded-3xl border-none shadow-sm bg-muted/20 relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Card className="rounded-3xl border-none shadow-sm bg-background relative overflow-hidden group">
+          <div className="absolute inset-0 bg-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-4 sm:p-5 relative z-10">
             <div className="flex justify-between items-start mb-3">
               <div className="w-9 h-9 rounded-[0.85rem] bg-violet-500/10 text-violet-500 flex items-center justify-center">
@@ -200,7 +200,7 @@ export default function Vacaciones() {
       {/* Main Content with Tabs */}
       <Tabs defaultValue="requests" className="space-y-6">
         <div className="flex justify-center sm:justify-start">
-          <TabsList className="grid h-14 w-full sm:w-auto grid-cols-4 p-1 bg-muted/30 rounded-2xl">
+          <TabsList className="grid h-14 w-full sm:w-auto grid-cols-4 p-1 bg-background rounded-2xl">
             <TabsTrigger value="requests" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
               <FileText className="h-4 w-4 hidden sm:block" />
               Lista
@@ -230,7 +230,7 @@ export default function Vacaciones() {
                 placeholder="Buscar por nombre o documento..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-14 pl-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background text-base"
+                className="h-14 pl-12 rounded-2xl bg-background border-border focus:bg-background text-base"
               />
             </div>
             
@@ -241,10 +241,10 @@ export default function Vacaciones() {
             >
               <div className="flex flex-col sm:flex-row gap-3">
                 <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-                  <SelectTrigger className="w-full sm:w-[220px] h-12 rounded-2xl bg-muted/20 border-primary/5">
+                  <SelectTrigger className="w-full sm:w-[220px] h-12 rounded-2xl bg-background border-border ">
                     <SelectValue placeholder="Estado" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-primary/10">
+                  <SelectContent className="rounded-2xl border-border ">
                     <SelectItem value="all">Todos los estados</SelectItem>
                     {Object.entries(STATUS_LABELS).map(([value, label]) => (
                       <SelectItem key={value} value={value}>{label}</SelectItem>
@@ -253,10 +253,10 @@ export default function Vacaciones() {
                 </Select>
                 
                 <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)}>
-                  <SelectTrigger className="w-full sm:w-[220px] h-12 rounded-2xl bg-muted/20 border-primary/5">
+                  <SelectTrigger className="w-full sm:w-[220px] h-12 rounded-2xl bg-background border-border ">
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-primary/10">
+                  <SelectContent className="rounded-2xl border-border ">
                     <SelectItem value="all">Todos los tipos</SelectItem>
                     {Object.entries(REQUEST_TYPE_LABELS).map(([value, label]) => (
                       <SelectItem key={value} value={value}>{label}</SelectItem>
@@ -301,7 +301,7 @@ export default function Vacaciones() {
                 </div>
               ) : (
               <Table>
-                <TableHeader className="bg-muted/30">
+                <TableHeader className="bg-background">
                   <TableRow className="hover:bg-transparent border-border/50">
                     <TableHead className="font-black uppercase tracking-widest text-[10px]">Empleado</TableHead>
                     <TableHead className="hidden sm:table-cell font-black uppercase tracking-widest text-[10px]">Tipo</TableHead>
@@ -327,7 +327,7 @@ export default function Vacaciones() {
                     filteredRequests.map((request) => (
                       <TableRow 
                         key={request.id}
-                        className="cursor-pointer hover:bg-muted/50 border-border/50 transition-colors"
+                        className="cursor-pointer hover:bg-background border-border/50 transition-colors"
                         onClick={() => handleRequestClick(request)}
                       >
                         <TableCell className="py-4">
@@ -375,14 +375,14 @@ export default function Vacaciones() {
 
         {/* Balances Tab */}
         <TabsContent value="balances" className="space-y-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-muted/20 p-4 rounded-[2rem] border border-border/50">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-background p-4 rounded-[2rem] border border-border/50">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 placeholder="Buscar empleado..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-12 pl-12 rounded-2xl bg-background border-primary/5 focus:bg-background text-sm"
+                className="h-12 pl-12 rounded-2xl bg-background border-border focus:bg-background text-sm"
               />
             </div>
             <Button 
@@ -398,7 +398,7 @@ export default function Vacaciones() {
           {balancesLoading ? (
             <div className="text-center py-12 text-muted-foreground font-black uppercase tracking-widest text-xs">Cargando...</div>
           ) : filteredBalances.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-muted/20 rounded-[2rem] border border-dashed border-border/50">
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-background rounded-[2rem] border border-dashed border-border/50">
               <Calendar className="h-16 w-16 mb-4 opacity-50" />
               <p className="font-bold text-lg">No hay saldos registrados</p>
               <p className="text-sm mt-1 max-w-md text-center">Los saldos se generan automáticamente al registrar solicitudes o puedes crearlos manualmente.</p>

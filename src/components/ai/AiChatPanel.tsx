@@ -280,7 +280,7 @@ export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = fal
         <p className="mt-1 text-sm text-muted-foreground">El asistente te guía paso a paso dentro de la aplicación.</p>
       </div>
       {pageContext && (
-        <div className="w-full max-w-2xl rounded-lg border border-border bg-muted/40 p-3 text-left">
+        <div className="w-full max-w-2xl rounded-lg border border-border bg-background /40 p-3 text-left">
           <p className="text-sm font-semibold">Sugerencias para {pageContext.moduleLabel}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {visibleModuleSuggestions.map((suggestion) => (

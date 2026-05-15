@@ -60,13 +60,13 @@ const stepIcons: Record<SelectionStepType, React.ElementType> = {
 };
 
 const statusStyles: Record<SelectionStepStatus, { icon: React.ElementType; color: string; bg: string }> = {
-  pending: { icon: Circle, color: 'text-muted-foreground', bg: 'bg-muted' },
+  pending: { icon: Circle, color: 'text-muted-foreground', bg: 'bg-background ' },
   scheduled: { icon: Calendar, color: 'text-info', bg: 'bg-info/10' },
   completed: { icon: Clock, color: 'text-warning', bg: 'bg-warning/10' },
   passed: { icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10' },
   failed: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/10' },
-  skipped: { icon: SkipForward, color: 'text-muted-foreground', bg: 'bg-muted/50' },
-  not_applicable: { icon: Ban, color: 'text-muted-foreground', bg: 'bg-muted/30' },
+  skipped: { icon: SkipForward, color: 'text-muted-foreground', bg: 'bg-background' },
+  not_applicable: { icon: Ban, color: 'text-muted-foreground', bg: 'bg-background' },
 };
 
 // Standard selection flow order
@@ -119,7 +119,7 @@ export function SelectionTimeline({
     <div className="space-y-4">
       {/* Progress Bar */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+        <div className="flex-1 h-2 bg-background rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-primary to-success transition-all duration-500"
             style={{ width: `${getStepProgress()}%` }}
@@ -167,7 +167,7 @@ export function SelectionTimeline({
                 <div
                   className={cn(
                     'p-4 rounded-lg border bg-card cursor-pointer transition-all hover:border-primary/30',
-                    isExpanded && 'border-primary/50 shadow-sm'
+                    isExpanded && 'border-border 0 shadow-sm'
                   )}
                   onClick={() => {
                     if (!readOnly && onEditStep) {
@@ -293,7 +293,7 @@ export function SelectionTimeline({
               <div className="absolute left-0 w-10 h-10 rounded-full flex items-center justify-center border-2 border-dashed border-muted-foreground/30 z-10">
                 <Plus className="w-5 h-5 text-muted-foreground" />
               </div>
-              <div className="p-4 rounded-lg border border-dashed hover:border-primary/50 transition-colors">
+              <div className="p-4 rounded-lg border border-dashed hover:border-border 0 transition-colors">
                 <p className="text-sm text-muted-foreground mb-2">Agregar etapa</p>
                 <div className="flex flex-wrap gap-2">
                   {missingSteps.map((stepType) => {

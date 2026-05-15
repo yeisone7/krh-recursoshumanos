@@ -244,7 +244,7 @@ export function ContractFormDialog({
   }, [selectedEmployeeId, employees]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95dvh] w-[calc(100vw-1rem)] max-w-3xl p-0 overflow-hidden sm:w-full border-none shadow-2xl bg-background/95 backdrop-blur-xl">
+      <DialogContent className="max-h-[95dvh] w-[calc(100vw-1rem)] max-w-3xl p-0 overflow-hidden sm:w-full border-none shadow-2xl bg-background ">
         <DialogTitle className="sr-only">
           {isEditMode ? 'Editar Contrato' : 'Nuevo Contrato'}
         </DialogTitle>
@@ -255,20 +255,20 @@ export function ContractFormDialog({
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/15 via-background to-accent/10 px-6 pt-12 pb-10 sm:px-12 sm:pt-14">
           {/* Enhanced decorative patterns */}
           <div className="absolute top-0 right-0 -mr-24 -mt-24 w-80 h-80 rounded-full bg-primary/10 blur-[120px] pointer-events-none animate-pulse" />
-          <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 rounded-full bg-accent/10 blur-[100px] pointer-events-none" />
+          
           
           <div className="relative flex flex-col md:flex-row items-center md:items-start gap-10">
             {/* Branded Avatar */}
             <div className="relative group shrink-0">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative w-24 h-24 rounded-2xl bg-background flex items-center justify-center text-primary font-black text-4xl shadow-xl border border-primary/10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+              <div className="relative w-24 h-24 rounded-2xl bg-background flex items-center justify-center text-primary font-black text-4xl shadow-xl border border-border transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                 {selectedEmployee ? getEmployeeFullName(selectedEmployee).substring(0, 2).toUpperCase() : 'CT'}
               </div>
             </div>
 
             <div className="flex-1 space-y-3 text-center md:text-left">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 py-0.5 px-3 rounded-full font-bold uppercase tracking-widest text-[9px]">
+                <Badge variant="outline" className="text-primary border-border py-0.5 px-3 rounded-full font-bold uppercase tracking-widest text-[9px]">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary mr-2 animate-ping" />
                   {isEditMode ? 'Edición' : 'Nueva Vinculación'}
                 </Badge>
@@ -315,7 +315,7 @@ export function ContractFormDialog({
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="px-8 pt-4 sm:px-12">
-                <TabsList className="w-full h-12 bg-muted/30 p-1.5 rounded-2xl border border-primary/5">
+                <TabsList className="w-full h-12 bg-background p-1.5 rounded-2xl border border-border ">
                   {tabItems.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
@@ -332,7 +332,7 @@ export function ContractFormDialog({
               <ScrollArea className="h-[calc(95dvh-400px)] px-8 py-8 sm:px-12 sm:py-10">
                 {/* General Tab */}
                 <TabsContent value="general" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="bg-primary/[0.02] p-8 rounded-[2rem] border border-primary/10 space-y-8 shadow-inner">
+                  <div className="bg-primary/[0.02] p-8 rounded-[2rem] border border-border space-y-8 shadow-inner">
                     <div className="flex items-center gap-4 mb-2">
                       <div className="w-12 h-12 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-primary-foreground transform rotate-3">
                         <UserCheck className="w-6 h-6" />
@@ -365,7 +365,7 @@ export function ContractFormDialog({
                               })}
                               value={field.value}
                               onValueChange={field.onChange}
-                              className="h-14 rounded-2xl bg-background border-primary/10 font-bold text-base"
+                              className="h-14 rounded-2xl bg-background border-border font-bold text-base"
                               placeholder="Seleccione el empleado para vincular..."
                             />
                           </FormControl>
@@ -375,7 +375,7 @@ export function ContractFormDialog({
                     />
 
                     {selectedEmployeeId && selectedEmployeeContracts.length > 0 && (
-                      <div className="rounded-[1.5rem] border border-primary/10 bg-background/50 p-6 space-y-4">
+                      <div className="rounded-[1.5rem] border border-border bg-background p-6 space-y-4">
                         <div className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-primary/80">
                           <History className="w-4 h-4" />
                           Historial Contractual
@@ -385,9 +385,9 @@ export function ContractFormDialog({
                             const isActive = !c.is_terminated;
                             const ctConfig = contractTypes.find(ct => ct.contract_type === c.contract_type);
                             return (
-                              <div key={c.id} className="flex flex-col sm:flex-row sm:items-center justify-between text-xs bg-muted/20 rounded-2xl px-5 py-4 border border-primary/5 hover:border-primary/20 transition-colors gap-3">
+                              <div key={c.id} className="flex flex-col sm:flex-row sm:items-center justify-between text-xs bg-background rounded-2xl px-5 py-4 border border-border hover:border-primary/20 transition-colors gap-3">
                                 <div className="flex items-center gap-4">
-                                  <div className={`w-2.5 h-2.5 shrink-0 rounded-full ${isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' : 'bg-muted-foreground/30'}`} />
+                                  <div className={`w-2.5 h-2.5 shrink-0 rounded-full ${isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' : 'bg-background -foreground/30'}`} />
                                   <div className="flex flex-col">
                                     <span className="font-black text-foreground tracking-tight uppercase">{ctConfig?.display_name || c.contract_type}</span>
                                     <span className="text-[10px] text-muted-foreground font-mono font-bold tracking-widest">{c.contract_number || 'SIN CONSECUTIVO'}</span>
@@ -424,11 +424,11 @@ export function ContractFormDialog({
                           </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-bold">
+                              <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold">
                                 <SelectValue placeholder="Seleccionar..." />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-background/95 backdrop-blur-xl">
+                            <SelectContent className="bg-background ">
                               {contractTypes.filter(ct => ct.is_active).map((ct) => (
                                 <SelectItem key={ct.id} value={ct.contract_type} className="rounded-xl m-1.5 font-bold">
                                   {ct.display_name}
@@ -455,7 +455,7 @@ export function ContractFormDialog({
                               type="number"
                               min="0"
                               max="60"
-                              className="h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-bold"
+                              className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold"
                               placeholder="Ej: 60"
                               {...field}
                               onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
@@ -481,7 +481,7 @@ export function ContractFormDialog({
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    'w-full pl-4 text-left font-bold h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all',
+                                    'w-full pl-4 text-left font-bold h-12 rounded-2xl bg-background border-border focus:bg-background transition-all',
                                     !field.value && 'text-muted-foreground font-normal'
                                   )}
                                 >
@@ -494,7 +494,7 @@ export function ContractFormDialog({
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl border-primary/10" align="start">
+                            <PopoverContent className="w-auto p-0 bg-background rounded-2xl shadow-2xl border-border " align="start">
                               <Calendar
                                 mode="single"
                                 selected={field.value}
@@ -525,7 +525,7 @@ export function ContractFormDialog({
                                   <Button
                                     variant="outline"
                                     className={cn(
-                                      'w-full pl-4 text-left font-bold h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all',
+                                      'w-full pl-4 text-left font-bold h-12 rounded-2xl bg-background border-border focus:bg-background transition-all',
                                       !field.value && 'text-muted-foreground font-normal'
                                     )}
                                   >
@@ -538,7 +538,7 @@ export function ContractFormDialog({
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl border-primary/10" align="start">
+                              <PopoverContent className="w-auto p-0 bg-background rounded-2xl shadow-2xl border-border " align="start">
                                 <Calendar
                                   mode="single"
                                   selected={field.value}
@@ -556,7 +556,7 @@ export function ContractFormDialog({
                   </div>
 
                   {selectedContractType === 'obra_labor' && (
-                    <div className="relative overflow-hidden bg-gradient-to-r from-primary/[0.05] to-transparent p-8 rounded-[2rem] border border-primary/10">
+                    <div className="relative overflow-hidden bg-gradient-to-r from-primary/[0.05] to-transparent p-8 rounded-[2rem] border border-border ">
                       <div className="absolute top-0 right-0 p-4 opacity-[0.05]">
                          <Award className="w-24 h-24" />
                       </div>
@@ -572,7 +572,7 @@ export function ContractFormDialog({
                             <FormControl>
                               <Textarea
                                 placeholder="Especifique el proyecto o tarea puntual que justifica este contrato temporal..."
-                                className="min-h-[140px] resize-none bg-background rounded-2xl border-primary/10 focus-visible:ring-primary/20 font-medium leading-relaxed"
+                                className="min-h-[140px] resize-none bg-background rounded-2xl border-border focus-visible:ring-primary/20 font-medium leading-relaxed"
                                 {...field}
                               />
                             </FormControl>
@@ -597,7 +597,7 @@ export function ContractFormDialog({
                           <FormControl>
                             <div className="relative group">
                               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-black text-lg">$</span>
-                              <Input placeholder="3.500.000" className="h-14 pl-10 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-black text-xl tracking-tight" {...field} />
+                              <Input placeholder="3.500.000" className="h-14 pl-10 rounded-2xl bg-background border-border focus:bg-background transition-all font-black text-xl tracking-tight" {...field} />
                               <div className="absolute bottom-0 left-6 right-6 h-1 bg-emerald-500 scale-x-0 group-focus-within:scale-x-100 transition-transform origin-left rounded-full" />
                             </div>
                           </FormControl>
@@ -617,11 +617,11 @@ export function ContractFormDialog({
                           </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-bold">
+                              <SelectTrigger className="h-14 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold">
                                 <SelectValue placeholder="Seleccionar" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-background/95 backdrop-blur-xl">
+                            <SelectContent className="bg-background ">
                               <SelectItem value="monthly" className="rounded-xl m-1.5 font-bold">Sueldo Mensual Ordinario</SelectItem>
                               <SelectItem value="integral" className="rounded-xl m-1.5 font-bold">Sueldo Mensual Integral</SelectItem>
                             </SelectContent>
@@ -674,11 +674,11 @@ export function ContractFormDialog({
                           </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-bold">
+                              <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold">
                                 <SelectValue placeholder="Seleccionar sede..." />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-background/95 backdrop-blur-xl">
+                            <SelectContent className="bg-background ">
                               {operationCenters.map((center) => (
                                 <SelectItem key={center.id} value={center.id} className="rounded-xl m-1.5 font-bold">
                                   {center.name}
@@ -705,7 +705,7 @@ export function ContractFormDialog({
                               value={field.value} 
                               onValueChange={(city) => field.onChange(city)}
                               placeholder="Buscar municipio..."
-                              className="h-12 rounded-2xl bg-muted/30 border-primary/5"
+                              className="h-12 rounded-2xl bg-background border-border "
                             />
                           </FormControl>
                           <FormMessage />
@@ -723,7 +723,7 @@ export function ContractFormDialog({
                             Dirección de Prestación de Servicios
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="Ej: Calle 100 # 15-20, Piso 5" className="h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-bold" {...field} />
+                            <Input placeholder="Ej: Calle 100 # 15-20, Piso 5" className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -751,7 +751,7 @@ export function ContractFormDialog({
                       control={form.control}
                       name="hasConfidentialityClause"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-5 space-y-0 rounded-[2rem] border-2 border-primary/5 p-8 bg-background/50 hover:border-primary/20 transition-all group cursor-pointer">
+                        <FormItem className="flex flex-row items-center space-x-5 space-y-0 rounded-[2rem] border-2 border-border p-8 bg-background hover:border-primary/20 transition-all group cursor-pointer">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -774,7 +774,7 @@ export function ContractFormDialog({
                       control={form.control}
                       name="hasNonCompeteClause"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-5 space-y-0 rounded-[2rem] border-2 border-primary/5 p-8 bg-background/50 hover:border-primary/20 transition-all group cursor-pointer">
+                        <FormItem className="flex flex-row items-center space-x-5 space-y-0 rounded-[2rem] border-2 border-border p-8 bg-background hover:border-primary/20 transition-all group cursor-pointer">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
@@ -794,7 +794,7 @@ export function ContractFormDialog({
                     />
                   </div>
 
-                  <div className="bg-primary/[0.03] p-10 rounded-[2.5rem] border border-primary/10 relative overflow-hidden group">
+                  <div className="bg-primary/[0.03] p-10 rounded-[2.5rem] border border-border relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                        <FileText className="w-32 h-32" />
                     </div>
@@ -810,7 +810,7 @@ export function ContractFormDialog({
                           <FormControl>
                             <Textarea
                               placeholder="Redacte aquí pactos de exclusividad, beneficios extralegales o condiciones particulares del cargo..."
-                              className="min-h-[200px] resize-none bg-background rounded-2xl border-primary/10 focus-visible:ring-primary/20 font-medium leading-relaxed"
+                              className="min-h-[200px] resize-none bg-background rounded-2xl border-border focus-visible:ring-primary/20 font-medium leading-relaxed"
                               {...field}
                             />
                           </FormControl>
@@ -822,7 +822,7 @@ export function ContractFormDialog({
                 </TabsContent>
               </ScrollArea>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 px-8 py-8 sm:px-12 sm:py-10 bg-muted/5 border-t border-border/50">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 px-8 py-8 sm:px-12 sm:py-10 bg-background /5 border-t border-border/50">
                 <Button 
                   type="button" 
                   variant="ghost" 

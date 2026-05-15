@@ -51,7 +51,7 @@ function TreeNode({
       {/* Node row */}
       <div
         className={cn(
-          'flex items-center gap-1 py-[3px] px-1 rounded-sm cursor-pointer text-sm hover:bg-muted/60 transition-colors',
+          'flex items-center gap-1 py-[3px] px-1 rounded-sm cursor-pointer text-sm hover:bg-background /60 transition-colors',
           isSelected && 'bg-primary/10 text-primary'
         )}
         style={{ paddingLeft: `${depth * 20 + 4}px` }}

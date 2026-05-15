@@ -53,7 +53,7 @@ export function FamilyMembersSection({ candidateId }: FamilyMembersSectionProps)
           {members.map((member) => (
             <div
               key={member.id}
-              className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+              className="flex items-center justify-between p-3 rounded-lg border bg-background"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold">

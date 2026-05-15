@@ -162,7 +162,7 @@ export function IncapacityFormDialog({
         
         {/* Premium Gradient Header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           
           <DialogHeader className="relative z-10">
             <div className="flex items-center gap-4 mb-2">
@@ -170,7 +170,7 @@ export function IncapacityFormDialog({
                 <Stethoscope className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+                <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
                   {isEditing ? 'EDICIÓN' : isExtension ? 'PRÓRROGA' : 'NUEVO'}
                 </Badge>
                 <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
@@ -185,7 +185,7 @@ export function IncapacityFormDialog({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 h-14 p-1 bg-muted/30 rounded-2xl mb-6">
+                <TabsList className="grid w-full grid-cols-3 h-14 p-1 bg-background rounded-2xl mb-6">
                   <TabsTrigger value="general" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
                     General
                   </TabsTrigger>
@@ -199,7 +199,7 @@ export function IncapacityFormDialog({
                 
                 {/* General Tab */}
                 <TabsContent value="general" className="space-y-6 mt-0">
-                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                  <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
                     <FormField
                   control={form.control}
                   name="employee_id"
@@ -391,7 +391,7 @@ export function IncapacityFormDialog({
                 
                 {/* Clinical Tab */}
                 <TabsContent value="clinical" className="space-y-6 mt-0">
-                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                  <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
                     <FormField
                   control={form.control}
                   name="diagnosis"
@@ -401,7 +401,7 @@ export function IncapacityFormDialog({
                       <FormControl>
                         <Textarea 
                           placeholder="Se completa automáticamente con el código CIE-10"
-                          className="resize-none bg-muted"
+                          className="resize-none bg-background "
                           readOnly
                           {...field}
                         />
@@ -500,7 +500,7 @@ export function IncapacityFormDialog({
                 
                 {/* Payment Tab */}
                 <TabsContent value="payment" className="space-y-6 mt-0">
-                  <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+                  <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
                     <FormField
                   control={form.control}
                   name="daily_base_salary"
@@ -524,7 +524,7 @@ export function IncapacityFormDialog({
                   )}
                 />
                 
-                <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                <div className="rounded-lg border bg-background p-4 space-y-2">
                   <h4 className="font-medium">Distribución de Pago (Ley Colombiana)</h4>
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p><strong>Origen Común:</strong></p>

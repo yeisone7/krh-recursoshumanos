@@ -486,7 +486,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const typeColors: Record<string, string> = {
     employee: 'bg-info/10 text-info',
     contract: 'bg-warning/10 text-warning',
-    module: 'bg-muted text-muted-foreground',
+    module: 'bg-background text-muted-foreground',
     action: 'bg-accent/10 text-accent',
   };
 
@@ -530,7 +530,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               <X className="w-4 h-4" />
             </button>
           )}
-          <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
+          <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-border bg-background px-1.5 text-[10px] font-medium text-muted-foreground">
             ESC
           </kbd>
         </div>
@@ -550,7 +550,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             ) : (
               groupedSections.map((section) => (
                 <div key={section.type}>
-                  <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30">
+                  <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-background">
                     {section.label}
                   </div>
                   {section.items.map((result) => {
@@ -562,12 +562,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                         data-result-item
                         className={cn(
                           "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
-                          currentFlatIndex === selectedIndex ? "bg-primary/5" : "hover:bg-muted/40"
+                          currentFlatIndex === selectedIndex ? "" : "hover:bg-background /40"
                         )}
                         onClick={() => handleSelect(result)}
                         onMouseEnter={() => setSelectedIndex(currentFlatIndex)}
                       >
-                        <div className={cn("shrink-0 w-8 h-8 rounded-lg flex items-center justify-center", typeColors[result.type] || 'bg-muted')}>
+                        <div className={cn("shrink-0 w-8 h-8 rounded-lg flex items-center justify-center", typeColors[result.type] || 'bg-background ')}>
                           <Icon className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -610,18 +610,18 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         </div>
 
         {/* Footer */}
-        <div className="hidden sm:flex items-center gap-4 px-4 py-2 border-t border-border bg-muted/20 text-[11px] text-muted-foreground">
+        <div className="hidden sm:flex items-center gap-4 px-4 py-2 border-t border-border bg-background text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1">
-            <kbd className="inline-flex h-4 items-center rounded border border-border bg-muted px-1 text-[10px]">↑</kbd>
-            <kbd className="inline-flex h-4 items-center rounded border border-border bg-muted px-1 text-[10px]">↓</kbd>
+            <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 text-[10px]">↑</kbd>
+            <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 text-[10px]">↓</kbd>
             Navegar
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="inline-flex h-4 items-center rounded border border-border bg-muted px-1 text-[10px]">↵</kbd>
+            <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 text-[10px]">↵</kbd>
             Seleccionar
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="inline-flex h-4 items-center rounded border border-border bg-muted px-1 text-[10px]">Esc</kbd>
+            <kbd className="inline-flex h-4 items-center rounded border border-border bg-background px-1 text-[10px]">Esc</kbd>
             Cerrar
           </span>
         </div>

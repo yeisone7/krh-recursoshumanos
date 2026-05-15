@@ -97,8 +97,8 @@ export default function Permisos() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Premium Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 rounded-[2rem] border border-primary/10 p-8 sm:p-10 shadow-sm">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 rounded-[2rem] border border-border p-8 sm:p-10 shadow-sm">
+        
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
           <div className="flex items-start sm:items-center gap-5">
             <div className="w-16 h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
@@ -131,7 +131,7 @@ export default function Permisos() {
 
       {/* KPIs Premium */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-5 relative z-10 flex items-center justify-between">
             <div>
@@ -147,7 +147,7 @@ export default function Permisos() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-5 relative z-10 flex items-center justify-between">
             <div>
@@ -165,7 +165,7 @@ export default function Permisos() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-destructive/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-5 relative z-10 flex items-center justify-between">
             <div>
@@ -183,7 +183,7 @@ export default function Permisos() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-5 relative z-10 flex items-center justify-between">
             <div>
@@ -205,7 +205,7 @@ export default function Permisos() {
       {/* Tabs Premium */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex justify-center sm:justify-start">
-          <TabsList className="grid h-14 w-full sm:w-auto grid-cols-4 p-1 bg-muted/30 rounded-2xl">
+          <TabsList className="grid h-14 w-full sm:w-auto grid-cols-4 p-1 bg-background rounded-2xl">
             <TabsTrigger value="solicitudes" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2 relative">
               <List className="h-4 w-4 hidden sm:block" />
               Solicitudes
@@ -242,16 +242,16 @@ export default function Permisos() {
                 placeholder="Buscar empleado o tipo de permiso..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-11 h-14 rounded-2xl bg-muted/20 border-none shadow-sm text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/50"
+                className="pl-11 h-14 rounded-2xl bg-background border-none shadow-sm text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/50"
               />
             </div>
             
             <div className="w-full sm:w-[220px]">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-14 rounded-2xl bg-muted/20 border-none shadow-sm text-sm font-medium focus:ring-1 focus:ring-primary/50">
+                <SelectTrigger className="h-14 rounded-2xl bg-background border-none shadow-sm text-sm font-medium focus:ring-1 focus:ring-primary/50">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
-                <SelectContent className="rounded-2xl border-primary/10">
+                <SelectContent className="rounded-2xl border-border ">
                   <SelectItem value="all" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Todos los estados</SelectItem>
                   <SelectItem value="pendiente" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Pendientes</SelectItem>
                   <SelectItem value="aprobado" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Aprobados</SelectItem>
@@ -266,7 +266,7 @@ export default function Permisos() {
           <Card className="rounded-[2rem] border-none shadow-sm overflow-hidden">
             <CardContent className={cn("p-0", !isMobile && "overflow-x-auto")}>
               {isMobile ? (
-                <div className="p-4 bg-muted/10">
+                <div className="p-4 bg-background /10">
                   {isLoading ? (
                     <div className="text-center py-8 text-muted-foreground">Cargando...</div>
                   ) : (
@@ -294,7 +294,7 @@ export default function Permisos() {
                 </div>
               ) : (
               <Table>
-                <TableHeader className="bg-muted/30">
+                <TableHeader className="bg-background">
                   <TableRow className="hover:bg-transparent border-b-primary/5">
                     <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Empleado</TableHead>
                     <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Tipo</TableHead>
@@ -321,7 +321,7 @@ export default function Permisos() {
                     filteredRequests.map((request) => (
                       <TableRow 
                         key={request.id} 
-                        className="cursor-pointer hover:bg-muted/50 transition-colors border-b-border/50 group"
+                        className="cursor-pointer hover:bg-background transition-colors border-b-border/50 group"
                         onClick={() => handleViewRequest(request)}
                       >
                         <TableCell className="font-medium py-4">
@@ -387,7 +387,7 @@ export default function Permisos() {
         {/* Configuración Tab */}
         <TabsContent value="configuracion" className="space-y-4">
           <Card className="rounded-[2rem] border-none shadow-sm">
-            <CardHeader className="p-8 border-b border-border/50 bg-muted/10 rounded-t-[2rem]">
+            <CardHeader className="p-8 border-b border-border/50 bg-background /10 rounded-t-[2rem]">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
                   <Settings className="w-6 h-6" />
@@ -403,7 +403,7 @@ export default function Permisos() {
                 {typeConfigs.map((config) => (
                   <div
                     key={config.id}
-                    className="flex flex-col gap-3 p-4 border border-border/50 rounded-2xl hover:bg-muted/30 cursor-pointer transition-colors sm:flex-row sm:items-center sm:justify-between group"
+                    className="flex flex-col gap-3 p-4 border border-border/50 rounded-2xl hover:bg-background cursor-pointer transition-colors sm:flex-row sm:items-center sm:justify-between group"
                     onClick={() => handleConfigClick(config)}
                   >
                     <div className="flex min-w-0 items-center gap-4">

@@ -37,7 +37,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   activo: 'bg-green-100 text-green-800 border-green-200',
   pausado: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  finalizado: 'bg-muted text-muted-foreground border-border',
+  finalizado: 'bg-background text-muted-foreground border-border',
   cancelado: 'bg-red-100 text-red-800 border-red-200',
 };
 
@@ -280,18 +280,18 @@ export default function Descuentos() {
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="rounded-md bg-muted/50 p-2">
+                <div className="rounded-md bg-background p-2">
                   <p className="text-xs text-muted-foreground">Monto</p>
                   <p className="font-medium">
                     {d.is_percentage ? `${d.percentage_value}%` : formatCurrency(Number(d.amount))}
                     {d.is_recurring && <span className="ml-1 text-xs text-muted-foreground">/mes</span>}
                   </p>
                 </div>
-                <div className="rounded-md bg-muted/50 p-2">
+                <div className="rounded-md bg-background p-2">
                   <p className="text-xs text-muted-foreground">Entidad</p>
                   <p className="truncate font-medium">{d.entity_name || '—'}</p>
                 </div>
-                <div className="col-span-2 rounded-md bg-muted/50 p-2">
+                <div className="col-span-2 rounded-md bg-background p-2">
                   <p className="text-xs text-muted-foreground">Referencia</p>
                   <p className="truncate font-medium">{d.reference_number || '—'}</p>
                 </div>

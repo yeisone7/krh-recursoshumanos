@@ -353,7 +353,7 @@ export function ImportCesantiasDialog({ open, onOpenChange, type }: ImportCesant
               </Table>
             </div>
 
-            <div className="sticky bottom-0 -mx-4 grid grid-cols-1 gap-2 border-t border-border bg-background/95 px-4 pt-3 pb-1 backdrop-blur sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-0">
+            <div className="sticky bottom-0 -mx-4 grid grid-cols-1 gap-2 border-t border-border bg-background px-4 pt-3 pb-1 sm:static sm:mx-0 sm:flex sm:justify-end sm:border-0 sm:bg-transparent sm:p-0 sm:-0">
               <Button variant="outline" onClick={() => { setParsedRows([]); setStep('upload'); }}>
                 Volver
               </Button>

@@ -52,7 +52,7 @@ const STATUS_COLORS: Record<string, string> = {
   aprobado: 'bg-blue-100 text-blue-800 border-blue-200',
   activo: 'bg-green-100 text-green-800 border-green-200',
   pagado: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  cancelado: 'bg-muted text-muted-foreground border-border',
+  cancelado: 'bg-background text-muted-foreground border-border',
   rechazado: 'bg-red-100 text-red-800 border-red-200',
 };
 
@@ -303,7 +303,7 @@ export default function Prestamos() {
               ) : filtered.map(loan => {
                 const progress = loan.installments > 0 ? (loan.paid_installments / loan.installments) * 100 : 0;
                 return (
-                  <TableRow key={loan.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setDetailLoan(loan)}>
+                  <TableRow key={loan.id} className="cursor-pointer hover:bg-background" onClick={() => setDetailLoan(loan)}>
                     <TableCell>
                       <div>
                         <p className="font-medium text-sm">{loan.employees_v2?.first_name} {loan.employees_v2?.last_name}</p>
@@ -401,19 +401,19 @@ export default function Prestamos() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-md bg-muted/50 p-2">
+                  <div className="rounded-md bg-background p-2">
                     <p className="text-xs text-muted-foreground">Tipo</p>
                     <p className="font-medium">{LOAN_TYPE_LABELS[loan.loan_type] || loan.loan_type}</p>
                   </div>
-                  <div className="rounded-md bg-muted/50 p-2">
+                  <div className="rounded-md bg-background p-2">
                     <p className="text-xs text-muted-foreground">Cuotas</p>
                     <p className="font-medium">{loan.paid_installments}/{loan.installments}</p>
                   </div>
-                  <div className="rounded-md bg-muted/50 p-2">
+                  <div className="rounded-md bg-background p-2">
                     <p className="text-xs text-muted-foreground">Monto total</p>
                     <p className="font-medium">{formatCurrency(Number(loan.total_with_interest))}</p>
                   </div>
-                  <div className="rounded-md bg-muted/50 p-2">
+                  <div className="rounded-md bg-background p-2">
                     <p className="text-xs text-muted-foreground">Saldo</p>
                     <p className="font-medium">{formatCurrency(Number(loan.remaining_balance))}</p>
                   </div>
@@ -528,7 +528,7 @@ export default function Prestamos() {
                 </div>
 
                 {/* Progress */}
-                <Card className="bg-muted/30">
+                <Card className="bg-background">
                   <CardContent className="pt-3 pb-2">
                     <div className="flex justify-between text-sm mb-2">
                       <span>Progreso de pago</span>
@@ -605,7 +605,7 @@ export default function Prestamos() {
                       </h3>
                       <div className="space-y-3">
                         {refinancingHistory.map(r => (
-                          <div key={r.id} className="p-3 rounded-lg border bg-muted/30 space-y-2 text-sm">
+                          <div key={r.id} className="p-3 rounded-lg border bg-background space-y-2 text-sm">
                             <div className="flex items-center justify-between">
                               <span className="font-medium">
                                 {format(new Date(r.refinance_date), 'dd MMM yyyy HH:mm', { locale: es })}

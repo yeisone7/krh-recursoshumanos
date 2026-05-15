@@ -163,7 +163,7 @@ export default function DescargosPublico() {
 
   if (step === 'loading') {
     return (
-      <div className="min-h-screen bg-muted flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground">Validando enlace...</p>
@@ -174,7 +174,7 @@ export default function DescargosPublico() {
 
   if (step === 'error') {
     return (
-      <div className="min-h-screen bg-muted flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-4">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
@@ -188,7 +188,7 @@ export default function DescargosPublico() {
 
   if (step === 'done') {
     return (
-      <div className="min-h-screen bg-muted">
+      <div className="min-h-screen bg-background ">
         <BrandedHeader />
         <div className="max-w-lg mx-auto p-4 mt-8">
           <Card>
@@ -198,7 +198,7 @@ export default function DescargosPublico() {
               <p className="text-muted-foreground">
                 Sus descargos han sido registrados exitosamente en el proceso <strong>{processInfo?.case_number || 'disciplinario'}</strong>.
               </p>
-              <div className="bg-muted rounded-lg p-4 text-left space-y-2 text-sm">
+              <div className="bg-background rounded-lg p-4 text-left space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Radicado</span>
                   <span className="font-medium">{processInfo?.case_number || '—'}</span>
@@ -221,7 +221,7 @@ export default function DescargosPublico() {
 
   // Form step
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="min-h-screen bg-background ">
       <BrandedHeader />
 
       <div className="max-w-3xl mx-auto p-4 space-y-6 mt-4">
@@ -269,7 +269,7 @@ export default function DescargosPublico() {
 
             <div>
               <span className="text-sm text-muted-foreground">Descripción de los hechos:</span>
-              <p className="mt-1 text-sm whitespace-pre-wrap bg-muted p-3 rounded-lg">
+              <p className="mt-1 text-sm whitespace-pre-wrap bg-background p-3 rounded-lg">
                 {processInfo?.facts_description}
               </p>
             </div>

@@ -41,7 +41,7 @@ const activityConfig: Record<string, ActivityConfig> = {
   logout: {
     icon: Shield,
     color: 'text-muted-foreground',
-    bg: 'bg-muted',
+    bg: 'bg-background ',
     label: 'Cierre de sesión',
   },
   assign_role: {
@@ -114,7 +114,7 @@ const entityLabels: Record<string, string> = {
 const defaultConfig: ActivityConfig = {
   icon: Activity,
   color: 'text-muted-foreground',
-  bg: 'bg-muted',
+  bg: 'bg-background ',
   label: 'Actividad',
 };
 

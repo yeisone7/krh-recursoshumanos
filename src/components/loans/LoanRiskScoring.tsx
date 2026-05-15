@@ -191,7 +191,7 @@ export function LoanRiskScoring({ loans }: Props) {
                 const cfg = RISK_CONFIG[emp.riskLevel];
                 const Icon = cfg.icon;
                 return (
-                  <div key={emp.employeeId} className="flex flex-col gap-3 p-3 rounded-lg border bg-card hover:bg-muted/30 transition-colors sm:flex-row sm:items-center sm:gap-4">
+                  <div key={emp.employeeId} className="flex flex-col gap-3 p-3 rounded-lg border bg-card hover:bg-background transition-colors sm:flex-row sm:items-center sm:gap-4">
                     {/* Risk indicator */}
                     <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", cfg.bg)}>
                       <Icon className={cn("w-5 h-5", cfg.color)} />
@@ -219,7 +219,7 @@ export function LoanRiskScoring({ loans }: Props) {
                       {/* Factors */}
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {emp.factors.map((f, i) => (
-                          <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                          <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-background text-muted-foreground">
                             {f}
                           </span>
                         ))}

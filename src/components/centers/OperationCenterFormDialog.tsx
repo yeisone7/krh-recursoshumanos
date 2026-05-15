@@ -180,7 +180,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col max-h-[95dvh] w-[calc(100vw-1rem)] max-w-2xl p-0 overflow-hidden sm:w-full border-none shadow-2xl bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex flex-col max-h-[95dvh] w-[calc(100vw-1rem)] max-w-2xl p-0 overflow-hidden sm:w-full border-none shadow-2xl bg-background ">
         <DialogTitle className="sr-only">
           {isEditing ? 'Editar Centro de Operación' : 'Nuevo Centro de Operación'}
         </DialogTitle>
@@ -190,14 +190,14 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
 
         <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/15 via-background to-accent/10 px-4 pt-4 pb-2 sm:px-10 sm:pt-6">
           {/* Enhanced decorative patterns */}
-          <div className="absolute top-0 right-0 -mr-24 -mt-24 w-80 h-80 rounded-full bg-primary/10 blur-[100px] pointer-events-none animate-pulse" />
-          <div className="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 rounded-full bg-accent/10 blur-[80px] pointer-events-none" />
+          
+          
           
           <div className="relative flex flex-col md:flex-row items-center md:items-start gap-4">
             {/* Branded Avatar */}
             <div className="relative group shrink-0">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-background flex items-center justify-center text-primary font-black text-2xl sm:text-3xl shadow-xl border border-primary/10 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-background flex items-center justify-center text-primary font-black text-2xl sm:text-3xl shadow-xl border border-border transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
                 {form.watch('name') ? form.watch('name').substring(0, 2).toUpperCase() : 'CO'}
               </div>
             </div>
@@ -209,7 +209,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                   {isEditing ? 'Gestión Activa' : 'Nuevo Registro'}
                 </Badge>
                 {form.watch('code') && (
-                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold py-0.5 px-3 rounded-full text-[10px]">
+                  <Badge variant="outline" className="text-primary border-border font-bold py-0.5 px-3 rounded-full text-[10px]">
                     ID: {form.watch('code')}
                   </Badge>
                 )}
@@ -241,7 +241,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
           <form onSubmit={form.handleSubmit(handleSubmit)} className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
               <div className="px-6 pt-0 sm:px-10 shrink-0">
-                <TabsList className="w-full h-10 bg-muted/30 p-1 rounded-2xl border border-primary/5">
+                <TabsList className="w-full h-10 bg-background p-1 rounded-2xl border border-border ">
                   {tabItems.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
@@ -270,7 +270,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                           </FormLabel>
                           <FormControl>
                             <div className="group relative">
-                              <Input placeholder="Ej: SEDE NORTE - LOGÍSTICA" className="h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal" {...field} />
+                              <Input placeholder="Ej: SEDE NORTE - LOGÍSTICA" className="h-12 rounded-2xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal" {...field} />
                               <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary scale-x-0 group-focus-within:scale-x-100 transition-transform origin-left rounded-full" />
                             </div>
                           </FormControl>
@@ -289,7 +289,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                             Código de Centro
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="CO-001" className="h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-mono font-bold" {...field} />
+                            <Input placeholder="CO-001" className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-mono font-bold" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -306,7 +306,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                             Cliente Principal
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="Nombre de la entidad" className="h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-bold" {...field} />
+                            <Input placeholder="Nombre de la entidad" className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -326,7 +326,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                         <FormControl>
                           <Textarea
                             placeholder="Detalle aquí particularidades de operación, accesos o requerimientos especiales..."
-                            className="min-h-[140px] resize-none rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-medium leading-relaxed"
+                            className="min-h-[140px] resize-none rounded-2xl bg-background border-border focus:bg-background transition-all font-medium leading-relaxed"
                             {...field}
                           />
                         </FormControl>
@@ -349,14 +349,14 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                             Dirección de Referencia
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="Ej: Av. Principal con Calle 10" className="h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-bold" {...field} />
+                            <Input placeholder="Ej: Av. Principal con Calle 10" className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    <div className="bg-primary/[0.02] p-4 rounded-2xl border border-primary/5 relative overflow-hidden group">
+                    <div className="bg-primary/[0.02] p-4 rounded-2xl border border-border relative overflow-hidden group">
                       <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                          <Globe className="w-24 h-24" />
                       </div>
@@ -379,7 +379,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                               Línea de Contacto
                             </FormLabel>
                             <FormControl>
-                              <Input placeholder="Fijo o Celular" className="h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-bold" {...field} />
+                              <Input placeholder="Fijo o Celular" className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -396,7 +396,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                               Líder / Responsable
                             </FormLabel>
                             <FormControl>
-                              <Input placeholder="Nombre Completo" className="h-12 rounded-2xl bg-muted/30 border-primary/5 focus:bg-background transition-all font-bold" {...field} />
+                              <Input placeholder="Nombre Completo" className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -408,8 +408,8 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
 
                 {/* Contract Tab */}
                 <TabsContent value="contract" className="mt-0 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="relative overflow-hidden bg-gradient-to-br from-primary/[0.08] to-accent/[0.04] p-5 rounded-2xl border border-primary/10 shadow-inner">
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+                  <div className="relative overflow-hidden bg-gradient-to-br from-primary/[0.08] to-accent/[0.04] p-5 rounded-2xl border border-border shadow-inner">
+                    
                     
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-primary-foreground transform -rotate-3">
@@ -434,7 +434,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                                    <Button
                                      variant="outline"
                                      className={cn(
-                                       "h-12 w-full justify-start text-left font-bold rounded-2xl bg-background border-primary/10",
+                                       "h-12 w-full justify-start text-left font-bold rounded-2xl bg-background border-border ",
                                        !field.value && "text-muted-foreground"
                                      )}
                                    >
@@ -473,7 +473,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                                    <Button
                                      variant="outline"
                                      className={cn(
-                                       "h-12 w-full justify-start text-left font-bold rounded-2xl bg-background border-primary/10",
+                                       "h-12 w-full justify-start text-left font-bold rounded-2xl bg-background border-border ",
                                        !field.value && "text-muted-foreground"
                                      )}
                                    >
@@ -501,7 +501,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                       />
                     </div>
                     
-                    <div className="mt-4 p-3 rounded-xl bg-background/50 border border-primary/5 flex items-start gap-3">
+                    <div className="mt-4 p-3 rounded-xl bg-background border border-border flex items-start gap-3">
                        <Target className="w-5 h-5 text-primary shrink-0" />
                        <p className="text-[11px] font-medium text-muted-foreground leading-relaxed italic">
                           Asegúrese de que las fechas comerciales coincidan con los anexos legales firmados con el cliente principal para evitar discrepancias en la facturación.
@@ -511,7 +511,7 @@ export function OperationCenterFormDialog({ open, onOpenChange, onSuccess, editC
                 </TabsContent>
               </ScrollArea>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 px-6 py-3 sm:px-10 sm:py-4 bg-muted/5 border-t border-border/50 shrink-0">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 px-6 py-3 sm:px-10 sm:py-4 bg-background /5 border-t border-border/50 shrink-0">
                 <Button 
                   type="button" 
                   variant="ghost" 

@@ -243,7 +243,7 @@ export default function Perfil() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-6">
-              <Avatar className="w-24 h-24 border-4 border-primary/10">
+              <Avatar className="w-24 h-24 border-4 border-border ">
                 <AvatarImage src={avatarUrl} />
                 <AvatarFallback className="text-2xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
                   {getInitials()}

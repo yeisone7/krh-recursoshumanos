@@ -82,12 +82,12 @@ export function DisciplinaryTreeView({
       {grouped.map(([centerName, centerProcesses]) => (
         <div
           key={centerName}
-          className="overflow-hidden rounded-[2.5rem] border border-primary/5 bg-background/40 backdrop-blur-xl shadow-xl transition-all duration-500"
+          className="overflow-hidden rounded-[2.5rem] border border-border bg-background shadow-xl transition-all duration-500"
         >
           {/* Center header */}
           <button
             onClick={() => toggle(centerName)}
-            className="flex w-full items-center justify-between gap-4 px-8 py-6 text-left transition-all hover:bg-primary/5"
+            className="flex w-full items-center justify-between gap-4 px-8 py-6 text-left transition-all hover:"
           >
             <div className="flex min-w-0 items-center gap-4">
               <div className="p-3 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent text-primary">
@@ -115,11 +115,11 @@ export function DisciplinaryTreeView({
 
           {/* Process rows */}
           {expanded[centerName] && (
-            <div className="border-t border-primary/5 bg-background/20 divide-y divide-primary/5">
+            <div className="border-t border-border bg-background divide-y divide-primary/5">
               {centerProcesses.map((process) => (
                 <div
                   key={process.id}
-                  className="group relative flex flex-col xl:flex-row xl:items-center justify-between gap-4 px-10 py-5 transition-all hover:bg-background/80 cursor-pointer"
+                  className="group relative flex flex-col xl:flex-row xl:items-center justify-between gap-4 px-10 py-5 transition-all hover:bg-background cursor-pointer"
                   onClick={() => onOpenDetail(process.id)}
                 >
                   {/* Hover indicator */}
@@ -175,11 +175,11 @@ export function DisciplinaryTreeView({
 
                        <DropdownMenu>
                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                           <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-muted transition-all">
+                           <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-background transition-all">
                              <MoreHorizontal className="h-5 w-5" />
                            </Button>
                          </DropdownMenuTrigger>
-                         <DropdownMenuContent align="end" className="rounded-2xl border-primary/10 shadow-2xl p-2">
+                         <DropdownMenuContent align="end" className="rounded-2xl border-border shadow-2xl p-2">
                            <DropdownMenuItem
                              onClick={(e) => onExportPdf(e, process)}
                              disabled={exportingId === process.id}

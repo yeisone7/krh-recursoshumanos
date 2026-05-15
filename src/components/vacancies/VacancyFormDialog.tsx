@@ -228,15 +228,15 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
         <DialogDescription className="sr-only">Formulario para la creación de una nueva vacante de empleo.</DialogDescription>
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4 pt-8 pb-6 sm:px-8 sm:pt-10">
           {/* Decorative patterns */}
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          
+          
           
           {/* Pattern overlay (dots) */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
           <div className="relative flex flex-col md:flex-row items-start gap-6">
             {/* Avatar/Initial */}
-            <div className="w-16 h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-primary/10 transition-transform hover:scale-105 duration-300">
+            <div className="w-16 h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-border transition-transform hover:scale-105 duration-300">
               {form.watch('positionTitle') ? form.watch('positionTitle').substring(0, 2).toUpperCase() : 'NV'}
             </div>
 
@@ -285,7 +285,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="h-10 flex-1 min-w-[100px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none transition-all"
+                      className="h-10 flex-1 min-w-[100px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:data-[state=active]:text-primary data-[state=active]:shadow-none transition-all"
                     >
                       <tab.icon className="w-4 h-4" />
                       <span className="hidden sm:inline font-medium">{tab.label}</span>
@@ -792,7 +792,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                   <div className="space-y-2">
                     <FormLabel>Colocado</FormLabel>
                     {colocadoFile ? (
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center justify-between p-3 bg-background rounded-lg">
                         <div className="flex items-center gap-2 min-w-0">
                           <FileText className="w-4 h-4 flex-shrink-0 text-muted-foreground" />
                           <span className="text-sm truncate">{colocadoFile.name}</span>
@@ -805,7 +805,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                         </Button>
                       </div>
                     ) : (
-                      <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
+                      <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-background transition-colors">
                         <input
                           id="colocado-file-input"
                           type="file"
@@ -847,7 +847,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
               </ScrollArea>
             </Tabs>
 
-            <div className="px-6 py-4 bg-muted/30 border-t border-border flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:px-8">
+            <div className="px-6 py-4 bg-background border-t border-border flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:px-8">
               <Button 
                 type="button" 
                 variant="ghost" 

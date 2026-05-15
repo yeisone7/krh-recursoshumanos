@@ -316,7 +316,7 @@ export function CandidateDetailDialog({
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
             <div className="px-4 pt-2 border-b sm:px-6">
-              <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-muted/50 p-1 sm:inline-flex sm:h-10 sm:w-auto sm:gap-0">
+              <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-background p-1 sm:inline-flex sm:h-10 sm:w-auto sm:gap-0">
                 <TabsTrigger value="timeline" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
                   <Clock className="w-4 h-4" />
                   <span className="truncate">Proceso</span>
@@ -735,7 +735,7 @@ export function CandidateDetailDialog({
                             <div key={folder} className="relative">
                               <button
                                 type="button"
-                                className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted/60 group"
+                                className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-background /60 group"
                                 onClick={() =>
                                   setExpandedFolders((prev) =>
                                     isExpanded ? prev.filter((f) => f !== folder) : [...prev, folder]
@@ -767,7 +767,7 @@ export function CandidateDetailDialog({
                                         key={doc.id} 
                                         className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border"
                                       >
-                                        <div className="flex flex-col gap-2 rounded-lg bg-muted/30 p-2.5 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="flex flex-col gap-2 rounded-lg bg-background p-2.5 transition-colors hover:bg-background sm:flex-row sm:items-center sm:justify-between">
                                           <div className="min-w-0 flex-1">
                                             <span className="block truncate text-sm font-medium">
                                               {doc.document_name}
@@ -825,7 +825,7 @@ export function CandidateDetailDialog({
                           <div className="relative">
                             <button
                               type="button"
-                              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted/60 group"
+                              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-background /60 group"
                               onClick={() =>
                                 setExpandedFolders((prev) =>
                                   expandedFolders.includes('otro') ? prev.filter((f) => f !== 'otro') : [...prev, 'otro']
@@ -853,7 +853,7 @@ export function CandidateDetailDialog({
                                       key={doc.id} 
                                       className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border"
                                     >
-                                      <div className="flex items-center justify-between p-2 rounded-lg bg-muted/30 transition-colors hover:bg-muted/50 px-3">
+                                      <div className="flex items-center justify-between p-2 rounded-lg bg-background transition-colors hover:bg-background px-3">
                                         <span className="text-xs truncate max-w-[200px]">{doc.document_name}</span>
                                         <div className="flex items-center gap-1">
                                            <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
@@ -968,7 +968,7 @@ export function CandidateDetailDialog({
           </Tabs>
 
           {/* Footer Actions */}
-          <div className="px-4 py-4 border-t border-border bg-muted/30 flex flex-col gap-3 sm:flex-row sm:justify-between sm:px-6">
+          <div className="px-4 py-4 border-t border-border bg-background flex flex-col gap-3 sm:flex-row sm:justify-between sm:px-6">
             <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap" role="group" aria-label="Acciones del candidato">
               {status === 'selected' && (
                 <>

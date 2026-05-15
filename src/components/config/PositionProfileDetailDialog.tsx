@@ -114,7 +114,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
 
           <div className="flex min-h-0 flex-1 flex-col gap-0 border-t md:flex-row">
             {/* Sidebar versiones */}
-            <div className="shrink-0 space-y-1 overflow-x-auto border-b bg-muted/30 p-3 md:w-48 md:overflow-visible md:border-b-0 md:border-r">
+            <div className="shrink-0 space-y-1 overflow-x-auto border-b bg-background p-3 md:w-48 md:overflow-visible md:border-b-0 md:border-r">
               <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground mb-2">
                 <History className="w-3 h-3" />Versiones
               </div>
@@ -125,7 +125,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                   className={`w-full text-left text-xs px-2 py-1.5 rounded transition-colors ${
                     (selectedVersion?.id || current?.id) === v.id
                       ? 'bg-primary/10 text-primary font-medium'
-                      : 'hover:bg-muted text-muted-foreground'
+                      : 'hover:bg-background text-muted-foreground'
                   }`}
                 >
                   v{v.version} {v.is_current && '✓'}

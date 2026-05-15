@@ -16,15 +16,15 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusStyles: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground border-border',
+  draft: 'bg-background text-muted-foreground border-border',
   open: 'bg-success-light text-success border-success/20',
   in_process: 'bg-info-light text-info border-info/20',
-  closed: 'bg-muted text-muted-foreground border-border',
+  closed: 'bg-background text-muted-foreground border-border',
   cancelled: 'bg-destructive-light text-destructive border-destructive/20',
 };
 
 const priorityStyles: Record<string, string> = {
-  low: 'bg-muted',
+  low: 'bg-background ',
   medium: 'bg-warning-light',
   high: 'bg-destructive-light',
   urgent: 'bg-destructive',

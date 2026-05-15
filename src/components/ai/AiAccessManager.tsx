@@ -153,7 +153,7 @@ export function AiAccessManager() {
               <div
                 key={user.id}
                 className={`flex items-center justify-between rounded-lg px-3 py-2.5 transition-colors
-                  ${user.is_current_user ? 'bg-primary/5 border border-primary/10' : 'hover:bg-muted/50'}`}
+                  ${user.is_current_user ? 'border border-border ' : 'hover:bg-background'}`}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-semibold

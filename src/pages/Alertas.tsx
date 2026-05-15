@@ -87,7 +87,7 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
       className="group relative"
     >
       <div className={cn(
-        "relative flex flex-col gap-4 rounded-[2rem] border-2 bg-background/50 backdrop-blur-xl p-6 transition-all duration-300 group-hover:shadow-[0_10px_30px_rgba(0,0,0,0.03)]",
+        "relative flex flex-col gap-4 rounded-[2rem] border-2 bg-background p-6 transition-all duration-300 group-hover:shadow-[0_10px_30px_rgba(0,0,0,0.03)]",
         styles.border,
         "group-hover:border-primary/20"
       )}>
@@ -112,7 +112,7 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
               <Badge variant="outline" className={cn("rounded-lg px-2 py-0.5 font-black uppercase tracking-tighter text-[10px]", styles.badge)}>
                 {isExpired ? `Vencido hace ${Math.abs(alert.daysRemaining)} días` : `En ${alert.daysRemaining} días`}
               </Badge>
-              <Badge variant="secondary" className="rounded-lg px-2 py-0.5 font-black uppercase tracking-tighter text-[10px] bg-muted/50">
+              <Badge variant="secondary" className="rounded-lg px-2 py-0.5 font-black uppercase tracking-tighter text-[10px] bg-background">
                 {typeLabels[alert.type]}
               </Badge>
             </div>
@@ -200,7 +200,7 @@ export default function Alertas() {
   return (
     <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-primary/10 shadow-sm">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-border shadow-sm">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-md shadow-primary/10">
             <Bell className="h-8 w-8 text-primary-foreground" />
@@ -215,8 +215,8 @@ export default function Alertas() {
           </div>
         </div>
         {/* Decorative elements */}
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl" />
+        
+        
       </div>
 
       {/* KPI Tiles */}
@@ -233,7 +233,7 @@ export default function Alertas() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
             className={cn(
-              "relative overflow-hidden rounded-[2rem] border-2 bg-background/50 backdrop-blur-xl p-6 transition-all duration-300 hover:shadow-md",
+              "relative overflow-hidden rounded-[2rem] border-2 bg-background p-6 transition-all duration-300 hover:shadow-md",
               stat.border
             )}
           >
@@ -257,7 +257,7 @@ export default function Alertas() {
       {/* Advanced Filters */}
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-        <div className="relative flex flex-col md:flex-row items-center gap-4 bg-background/60 backdrop-blur-xl p-3 rounded-[2rem] border border-border/50 shadow-md">
+        <div className="relative flex flex-col md:flex-row items-center gap-4 bg-background p-3 rounded-[2rem] border border-border/50 shadow-md">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/60" />
             <Input
@@ -271,13 +271,13 @@ export default function Alertas() {
           <div className="flex w-full md:w-auto items-center gap-3 pr-2">
             <div className="h-10 w-px bg-border/40 hidden md:block mx-2" />
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="h-12 w-full md:w-[220px] rounded-2xl bg-muted/30 border-none shadow-none font-black uppercase tracking-widest text-[10px]">
+              <SelectTrigger className="h-12 w-full md:w-[220px] rounded-2xl bg-background border-none shadow-none font-black uppercase tracking-widest text-[10px]">
                 <div className="flex items-center gap-2">
                   <Filter className="h-3.5 w-3.5 text-primary" />
                   <SelectValue placeholder="Filtrar por tipo" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-border/50 backdrop-blur-xl bg-background/95">
+              <SelectContent className="rounded-2xl border-border/50 bg-background">
                 <SelectItem value="all">TODOS LOS TIPOS</SelectItem>
                 <SelectItem value="contract">CONTRATOS</SelectItem>
                 <SelectItem value="extension">PRÓRROGAS</SelectItem>
@@ -296,7 +296,7 @@ export default function Alertas() {
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between mb-6">
-          <TabsList className="flex h-auto w-fit gap-2 bg-muted/30 p-1.5 rounded-[1.5rem] border border-border/50">
+          <TabsList className="flex h-auto w-fit gap-2 bg-background p-1.5 rounded-[1.5rem] border border-border/50">
             {[
               { value: 'all', label: 'TODAS' },
               { value: 'critical', label: 'CRÍTICAS', count: stats.criticalCount },

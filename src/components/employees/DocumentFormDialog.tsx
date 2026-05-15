@@ -255,7 +255,7 @@ export function DocumentFormDialog({
             {/* File Upload */}
             <div className="space-y-2">
               <FormLabel>Archivos *</FormLabel>
-              <div className="border-2 border-dashed rounded-lg p-5 text-center hover:bg-muted/50 transition-colors">
+              <div className="border-2 border-dashed rounded-lg p-5 text-center hover:bg-background transition-colors">
                 <input
                   id="file-input"
                   type="file"
@@ -275,7 +275,7 @@ export function DocumentFormDialog({
                 </label>
               </div>
               {selectedFiles.length > 0 && (
-                <div className="space-y-2 rounded-lg border bg-muted/30 p-2">
+                <div className="space-y-2 rounded-lg border bg-background p-2">
                   {selectedFiles.map((file, index) => (
                     <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 rounded-md bg-background p-2">
                       <div className="flex min-w-0 items-center gap-2">
