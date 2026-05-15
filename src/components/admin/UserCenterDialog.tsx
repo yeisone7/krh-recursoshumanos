@@ -15,6 +15,7 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAssignCenter, useRemoveCenterAssignment, type AdminUser } from '@/hooks/useAdminUsers';
 import { toast } from 'sonner';
 import { Building2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface UserCenterDialogProps {
   user: AdminUser | null;

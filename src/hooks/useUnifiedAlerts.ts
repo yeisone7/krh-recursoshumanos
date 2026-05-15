@@ -81,7 +81,7 @@ export function useUnifiedAlerts() {
           created_at,
           contract_extensions(id, end_date, extension_number)
         `)
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId!)
         .eq('is_terminated', false)
         .neq('contract_type', 'indefinido');
 
@@ -130,7 +130,7 @@ export function useUnifiedAlerts() {
       const { data: exams } = await supabase
         .from('medical_exams')
         .select('id, employee_id, exam_type, expiration_date, created_at')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId!)
         .not('expiration_date', 'is', null)
         .neq('exam_type', 'egreso');
 
@@ -171,7 +171,7 @@ export function useUnifiedAlerts() {
       const { data: dotations } = await supabase
         .from('dotation_deliveries')
         .select('id, employee_id, item_name, expiration_date, created_at')
-        .in('employee_id', employeeIds);
+        .eq('company_id', currentCompanyId!);
 
       if (dotations) {
         for (const dotation of dotations) {
@@ -204,7 +204,7 @@ export function useUnifiedAlerts() {
       const { data: certifications } = await supabase
         .from('employee_certifications')
         .select('id, employee_id, certification_type, certification_name, license_category, expiry_date, created_at')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId!)
         .eq('is_valid', true)
         .not('expiry_date', 'is', null);
 
@@ -492,10 +492,15 @@ export function useUnifiedAlerts() {
 
       if (profs && (profs as any[]).length > 0) {
         const profIds = (profs as any[]).map((p: any) => p.id);
-        const { data: profItems } = await supabase
-          .from('dotation_profesiograma_items' as any)
-          .select('profesiograma_id, dotation_item_type_id, is_required, dotation_item_types(id, name)')
-          .in('profesiograma_id', profIds);
+        const { batchQuery } = await import('@/utils/supabaseBatch');
+        const { data: profItems } = await batchQuery(
+          profIds,
+          100,
+          (chunk) => supabase
+            .from('dotation_profesiograma_items' as any)
+            .select('profesiograma_id, dotation_item_type_id, is_required, dotation_item_types(id, name)')
+            .in('profesiograma_id', chunk)
+        );
 
         // Build profMap: centerId|positionId -> required item names
         const profMap = new Map<string, { itemTypeId: string; itemName: string }[]>();
@@ -511,7 +516,7 @@ export function useUnifiedAlerts() {
         const { data: workInfos } = await supabase
           .from('employee_work_info')
           .select('employee_id, operation_center_id, position_id')
-          .in('employee_id', employeeIds)
+          .eq('company_id', currentCompanyId!)
           .eq('is_current', true);
 
         if (workInfos) {
@@ -519,7 +524,7 @@ export function useUnifiedAlerts() {
           const { data: allDeliveries } = await supabase
             .from('dotation_deliveries')
             .select('employee_id, item_name, expiration_date')
-            .in('employee_id', employeeIds);
+            .eq('company_id', currentCompanyId!);
 
           const deliveryByEmpItem = new Map<string, string>(); // emp|itemName -> latest expiration
           for (const d of (allDeliveries || []) as any[]) {
