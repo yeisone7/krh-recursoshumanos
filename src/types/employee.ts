@@ -291,13 +291,13 @@ export const employeeWorkInfoSchema = z.object({
 
 // E. Social Security Schema
 export const employeeSocialSecuritySchema = z.object({
-  riskLevel: z.enum(['I', 'II', 'III', 'IV', 'V'], { required_error: 'Seleccione el nivel de riesgo ARL' }),
-  arl: z.string().min(1, 'Seleccione la ARL').max(100),
-  eps: z.string().min(1, 'Seleccione la EPS').max(100),
-  afp: z.string().min(1, 'Seleccione la AFP').max(100),
-  ccf: z.string().min(1, 'Seleccione la Caja de Compensación').max(100),
-  afc: z.string().min(1, 'Seleccione la AFC').max(100),
-  ips: z.string().max(100).optional(),
+  riskLevel: z.enum(['I', 'II', 'III', 'IV', 'V']).optional(),
+  arl: z.string().max(100).optional().or(z.literal('')),
+  eps: z.string().max(100).optional().or(z.literal('')),
+  afp: z.string().max(100).optional().or(z.literal('')),
+  ccf: z.string().max(100).optional().or(z.literal('')),
+  afc: z.string().max(100).optional().or(z.literal('')),
+  ips: z.string().max(100).optional().or(z.literal('')),
 });
 
 // F. Bank Info Schema
