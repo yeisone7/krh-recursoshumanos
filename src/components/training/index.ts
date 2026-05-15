@@ -12,3 +12,4 @@ export { QRCodeDialog } from './QRCodeDialog';
 export { TrainingStepIndicator } from './TrainingStepIndicator';
 export { MediaTypeCard } from './MediaTypeCard';
 export { StoryboardViewer } from './StoryboardViewer';
+export { VideoUploader } from './VideoUploader';

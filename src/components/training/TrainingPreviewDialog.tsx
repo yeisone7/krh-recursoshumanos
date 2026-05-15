@@ -708,25 +708,68 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                   </>
                 )}
 
-                {/* Storyboard viewer from video media */}
+                {/* Storyboard viewer (Solo para escenas IA) */}
                 {(() => {
-                  const videoMedia = media.filter(m => m.type === 'video');
-                  if (videoMedia.length === 0) return null;
-                  const scenes = videoMedia.map(m => ({
+                  // Solo incluimos en el storyboard los videos que parecen ser escenas (tienen título 'Escena' o descripción)
+                  // y que no son el avatar.
+                  const storyboardScenes = media.filter(m => 
+                    m.type === 'video' && 
+                    !(m.metadata as any)?.is_avatar && 
+                    (m.title?.toLowerCase().includes('escena') || m.description)
+                  );
+                  
+                  if (storyboardScenes.length === 0) return null;
+                  
+                  const scenes = storyboardScenes.map(m => ({
                     title: (m.title || '').replace(/^[^:]*:\s*/, '').replace(/^\(regen\):\s*/, ''),
                     narration: m.description || '',
                     visual_description: (m.metadata as any)?.visual_description || '',
                   }));
-                  const imageUrls = videoMedia.map(m => m.file_url);
+                  const imageUrls = storyboardScenes.map(m => m.file_url);
                   const audioItems = media.filter(m => m.type === 'audio');
                   const audioUrl = audioItems.length > 0 ? audioItems[audioItems.length - 1].file_url : null;
+                  
                   return (
-                    <div className="mt-4 min-w-0 overflow-hidden">
+                    <div className="mt-8 min-w-0 overflow-hidden space-y-4">
+                      <div className="flex items-center gap-2 px-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <h4 className="text-sm font-black uppercase tracking-widest text-foreground">Visor de Storyboard (IA)</h4>
+                      </div>
                       <StoryboardViewer
                         scenes={scenes}
                         imageUrls={imageUrls}
                         audioUrl={audioUrl}
                       />
+                    </div>
+                  );
+                })()}
+
+                {/* Vista previa de Videos Manuales/Complementarios */}
+                {(() => {
+                  const manualVideos = media.filter(m => 
+                    m.type === 'video' && 
+                    !(m.metadata as any)?.is_avatar && 
+                    !(m.title?.toLowerCase().includes('escena') || m.description)
+                  );
+                  
+                  if (manualVideos.length === 0) return null;
+                  
+                  return (
+                    <div className="mt-8 space-y-4">
+                      <div className="flex items-center gap-2 px-2">
+                        <Video className="h-4 w-4 text-primary" />
+                        <h4 className="text-sm font-black uppercase tracking-widest text-foreground">Videos Complementarios</h4>
+                      </div>
+                      <div className="grid grid-cols-1 gap-6">
+                        {manualVideos.map((vid) => (
+                          <Card key={vid.id} className="overflow-hidden border-border/50 bg-black">
+                            <video controls className="w-full aspect-video max-h-96 object-contain" src={vid.file_url} preload="metadata" />
+                            <div className="p-3 bg-background/50 backdrop-blur-sm border-t border-border/50">
+                              <p className="text-xs font-bold uppercase tracking-widest truncate">{vid.title}</p>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
                     </div>
                   );
                 })()}

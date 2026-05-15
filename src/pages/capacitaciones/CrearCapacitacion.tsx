@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGallery, MediaTypeCard, StoryboardViewer } from '@/components/training';
+import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery, MediaTypeCard, StoryboardViewer } from '@/components/training';
 import { AvatarVideoPlayer } from '@/components/training/AvatarVideoPlayer';
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { supabase } from '@/integrations/supabase/client';
@@ -897,6 +897,47 @@ export default function CrearCapacitacion() {
               )}
             </CardContent>
           </Card>
+
+          {/* Subir Videos Manuales */}
+          {editId && (
+            <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden mt-6">
+              <div className="h-2 bg-gradient-to-r from-blue-500/40 to-blue-500/10 w-full" />
+              <CardContent className="p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 shadow-inner">
+                    <Video className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Subir Videos</h3>
+                    <p className="text-sm text-muted-foreground font-medium mt-1">Sube videos complementarios para esta capacitación</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl border border-dashed border-border/50 bg-background">
+                    <VideoUploader 
+                      courseId={editId} 
+                      onUploaded={async (url, fn, fs) => { 
+                        await createMedia.mutateAsync({ courseId: editId, type: 'video', title: fn, fileUrl: url, fileSize: fs }); 
+                      }} 
+                    />
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <p className="text-xs text-muted-foreground text-center px-4">
+                      Los videos subidos aparecerán en la galería multimedia de la capacitación y estarán disponibles para los usuarios.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <TrainingMediaGallery 
+                    media={(media as any[]).filter(m => m.type === 'video')} 
+                    onDelete={handleDeleteMedia} 
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Avatar Presentador */}
           {editId && (

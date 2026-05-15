@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrainingStepIndicator, MarkdownContent, ImageUploader, TrainingMediaGallery } from '@/components/training';
+import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery } from '@/components/training';
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
 import { toast } from 'sonner';
 import type { TrainingCourseContent } from '@/types/training';
@@ -271,9 +271,33 @@ export default function CrearManual() {
               {editId && (
                 <div className="pt-6 border-t border-border/50">
                   <Label className="text-base font-semibold">Multimedia</Label>
-                  <p className="text-sm text-muted-foreground font-medium mb-4">Sube imágenes para complementar el contenido</p>
-                  <div className="p-4 rounded-xl border border-dashed border-border/50 bg-background"><ImageUploader courseId={editId} onUploaded={async (url, fn, fs) => { await createMedia.mutateAsync({ courseId: editId, type: 'imagen', title: fn, fileUrl: url, fileSize: fs }); }} /></div>
-                  <div className="mt-4"><TrainingMediaGallery media={media as any} onDelete={async (id) => { await deleteMedia.mutateAsync({ id, courseId: editId }); }} /></div>
+                  <p className="text-sm text-muted-foreground font-medium mb-4">Sube imágenes o videos para complementar el contenido</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl border border-dashed border-border/50 bg-background">
+                      <ImageUploader 
+                        courseId={editId} 
+                        onUploaded={async (url, fn, fs) => { 
+                          await createMedia.mutateAsync({ courseId: editId, type: 'imagen', title: fn, fileUrl: url, fileSize: fs }); 
+                        }} 
+                      />
+                    </div>
+                    <div className="p-4 rounded-xl border border-dashed border-border/50 bg-background">
+                      <VideoUploader 
+                        courseId={editId} 
+                        onUploaded={async (url, fn, fs) => { 
+                          await createMedia.mutateAsync({ courseId: editId, type: 'video', title: fn, fileUrl: url, fileSize: fs }); 
+                        }} 
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <TrainingMediaGallery 
+                      media={media as any} 
+                      onDelete={async (id) => { 
+                        await deleteMedia.mutateAsync({ id, courseId: editId }); 
+                      }} 
+                    />
+                  </div>
                 </div>
               )}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/50">
