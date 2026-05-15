@@ -3,10 +3,15 @@ import { toast } from 'sonner';
 import { useOptionalAuth } from '@/contexts/AuthContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 
+import { useLocation } from 'react-router-dom';
+
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const UPDATE_TOAST_ID = 'app-update-available';
 const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
 const ACKNOWLEDGED_UPDATE_KEY = 'krh_acknowledged_update_version';
+
+// Rutas públicas donde no queremos mostrar notificaciones de actualización
+const PUBLIC_ROUTES = ['/registro', '/capacitacion', '/descargos'];
 
 type VersionResponse = {
   version?: string;
@@ -14,8 +19,14 @@ type VersionResponse = {
 
 export function AppUpdateNotifier() {
   const auth = useOptionalAuth();
+  const location = useLocation();
 
-  return auth ? <AppUpdateNotifierContent /> : null;
+  // No mostrar en rutas públicas o si el usuario no está autenticado
+  const isPublicRoute = PUBLIC_ROUTES.some(route => location.pathname.startsWith(route));
+  
+  if (isPublicRoute || !auth) return null;
+
+  return <AppUpdateNotifierContent />;
 }
 
 function AppUpdateNotifierContent() {

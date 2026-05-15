@@ -1348,11 +1348,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 </FormControl>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 bg-background" align="start">
-                                <Calendar
-                                  mode="single"
+                                <DatePickerWithDropdowns
                                   selected={field.value}
                                   onSelect={field.onChange}
                                   initialFocus
+                                  fromYear={1940}
                                 />
                               </PopoverContent>
                             </Popover>

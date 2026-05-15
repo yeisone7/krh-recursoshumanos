@@ -119,6 +119,9 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   bankName: { label: 'Nombre del Banco', type: 'select-catalog-banks', section: 'Información Bancaria' },
   accountType: { label: 'Tipo de Cuenta', type: 'select-account-type', section: 'Información Bancaria' },
   accountNumber: { label: 'Número de Cuenta', type: 'text', section: 'Información Bancaria' },
+  // Perfil Profesional
+  educationLevelId: { label: 'Nivel Escolar', type: 'select-education-id', section: 'Perfil Profesional' },
+  professionId: { label: 'Profesión / Título', type: 'select-profession-id', section: 'Perfil Profesional' },
   // Especificaciones
   isFirstJob: { label: 'Primer Empleo', type: 'select-yes-no', section: 'Especificaciones' },
   isHeadOfHousehold: { label: 'Cabeza de Familia', type: 'select-yes-no', section: 'Especificaciones' },
@@ -132,7 +135,7 @@ const CANDIDATE_REQUIRED = ['firstName', 'lastName', 'documentType', 'documentNu
 const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'documentType', 'documentNumber'];
 
 const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional', 'Especificaciones'];
-const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Especificaciones'];
+const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Perfil Profesional', 'Especificaciones'];
 
 export default function RegistroPublico() {
   const [searchParams] = useSearchParams();
