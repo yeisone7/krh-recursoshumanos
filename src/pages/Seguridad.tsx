@@ -58,28 +58,27 @@ export default function Seguridad() {
 
   return (
     <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto px-4 sm:px-6">
-      {/* Header Premium */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] bg-background border border-border/40 overflow-hidden shadow-lg shadow-primary/5"
+        className="relative p-8 rounded-[2.5rem] bg-background border border-border/40 overflow-hidden"
       >
-        
-        
-        
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
-            <div className="relative shrink-0 group">
-              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border/40 shadow-md overflow-hidden group-hover:scale-105 transition-all duration-300">
-                <ShieldCheck className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
-              </div>
+            <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-primary transition-all duration-300">
+              <Shield className="w-10 h-10 text-primary-foreground" />
             </div>
             <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest">
+                  Centro de Seguridad
+                </Badge>
+              </div>
               <h1 className="text-3xl font-black tracking-tight text-foreground uppercase sm:text-4xl">
                 Seguridad
               </h1>
               <p className="text-muted-foreground font-medium mt-1 tracking-wide">
-                Administra los niveles de acceso, auditoría y políticas de privacidad del sistema
+                Gestión avanzada de identidades y protocolos de acceso
               </p>
             </div>
           </div>
@@ -100,86 +99,71 @@ export default function Seguridad() {
       >
         <Tabs defaultValue="roles" className="space-y-8 min-w-0">
           <div className="flex justify-center">
-            <TabsList className="inline-flex h-16 p-2 rounded-[1.25rem] bg-background border border-border/50 shadow-inner">
-              <TabsTrigger value="roles" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
-                <ShieldCheck className="w-4 h-4" />
-                Roles y permisos
-              </TabsTrigger>
-              <TabsTrigger value="quick-permissions" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
-                <ShieldCheck className="w-4 h-4" />
-                Permisos rápidos
-              </TabsTrigger>
-              <TabsTrigger value="audit" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
-                <History className="w-4 h-4" />
-                Auditoría
-              </TabsTrigger>
-              <TabsTrigger value="ai-access" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
-                <Bot className="w-4 h-4" />
-                Acceso IA
-              </TabsTrigger>
-              <TabsTrigger value="info" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
-                <Info className="w-4 h-4" />
-                Información
-              </TabsTrigger>
+            <TabsList className="h-14 bg-background border border-border/50 p-1.5 rounded-[1.25rem]">
+              {[
+                { value: 'roles', label: 'Roles y permisos', icon: ShieldCheck },
+                { value: 'quick-permissions', label: 'Permisos rápidos', icon: ShieldCheck },
+                { value: 'audit', label: 'Auditoría', icon: History },
+                { value: 'ai-access', label: 'Acceso IA', icon: Bot },
+                { value: 'info', label: 'Información', icon: Info },
+              ].map((tab) => (
+                <TabsTrigger 
+                  key={tab.value}
+                  value={tab.value} 
+                  className="rounded-[1rem] px-6 py-2 font-black text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <tab.icon className="w-3.5 h-3.5 mr-2" />
+                  {tab.label}
+                </TabsTrigger>
+              ))}
             </TabsList>
           </div>
 
-          <TabsContent value="roles" className="space-y-4">
-            <RolesManager />
+          <TabsContent value="roles" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
+              <RolesManager />
+            </div>
           </TabsContent>
 
-          <TabsContent value="quick-permissions" className="space-y-4">
-            <QuickRolePermissions />
+          <TabsContent value="quick-permissions" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
+              <QuickRolePermissions />
+            </div>
           </TabsContent>
 
-          <TabsContent value="audit" className="space-y-4">
-            <AuditLogViewer />
+          <TabsContent value="audit" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
+              <AuditLogViewer />
+            </div>
           </TabsContent>
 
-          <TabsContent value="ai-access" className="space-y-4">
-            <AiAccessManager />
+          <TabsContent value="ai-access" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
+              <AiAccessManager />
+            </div>
           </TabsContent>
 
-          <TabsContent value="info" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Acerca del Sistema de Seguridad</CardTitle>
-                <CardDescription>
+          <TabsContent value="info" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Card className="rounded-[2.5rem] border border-border/40 overflow-hidden">
+              <CardHeader className="p-8 border-b border-border/50">
+                <CardTitle className="text-2xl font-black tracking-tight">Acerca del Sistema de Seguridad</CardTitle>
+                <CardDescription className="text-sm font-medium">
                   Información sobre el control de acceso basado en roles (RBAC)
                 </CardDescription>
               </CardHeader>
-              <CardContent className="prose prose-sm max-w-none">
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Segregación por Empresa</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Cada usuario puede estar asignado a una o más empresas. Los datos de cada empresa 
-                      están completamente aislados y un usuario solo puede ver la información de las 
-                      empresas a las que pertenece.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Restricción por Centro</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Opcionalmente, un usuario puede tener acceso restringido a centros de operación 
-                      específicos. Si no tiene centros asignados, puede ver todos los centros de sus 
-                      empresas.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Múltiples Roles</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Un usuario puede tener varios roles simultáneamente. Los permisos se combinan, 
-                      otorgando acceso a todas las funciones de cada rol asignado.
-                    </p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Auditoría</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Todas las acciones sobre datos sensibles quedan registradas con información del 
-                      usuario, fecha y tipo de operación para cumplimiento normativo.
-                    </p>
-                  </div>
+              <CardContent className="p-8 prose prose-sm max-w-none">
+                <div className="grid gap-8 md:grid-cols-2">
+                  {[
+                    { title: 'Segregación por Empresa', desc: 'Cada usuario puede estar asignado a una o más empresas. Los datos de cada empresa están completamente aislados y un usuario solo puede ver la información de las empresas a las que pertenece.' },
+                    { title: 'Restricción por Centro', desc: 'Opcionalmente, un usuario puede tener acceso restringido a centros de operación específicos. Si no tiene centros asignados, puede ver todos los centros de sus empresas.' },
+                    { title: 'Múltiples Roles', desc: 'Un usuario puede tener varios roles simultáneamente. Los permisos se combinan, otorgando acceso a todas las funciones de cada rol asignado.' },
+                    { title: 'Auditoría', desc: 'Todas las acciones sobre datos sensibles quedan registradas con información del usuario, fecha y tipo de operación para cumplimiento normativo.' },
+                  ].map((item) => (
+                    <div key={item.title} className="p-6 rounded-2xl bg-slate-50/50 border border-border/40">
+                      <h4 className="font-black text-xs uppercase tracking-widest text-primary mb-2">{item.title}</h4>
+                      <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

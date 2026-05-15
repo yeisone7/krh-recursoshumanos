@@ -213,7 +213,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
         </div>
       </div>
 
-      <Card>
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-none overflow-hidden">
         <CardContent className="p-0 overflow-x-auto">
           {/* Header row */}
           <div className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center border-b bg-background px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

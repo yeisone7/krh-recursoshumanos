@@ -225,20 +225,17 @@ export default function SuperAdmin() {
 
   return (
     <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto px-4 sm:px-6">
-      {/* Header Premium */}
+      {/* Header Premium Flat */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] border border-border overflow-hidden shadow-lg shadow-primary/5"
+        className="relative p-8 rounded-[2.5rem] bg-background border border-border/40 overflow-hidden"
       >
-        
-        
-        
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             <div className="relative shrink-0 group">
-              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border/40 shadow-md overflow-hidden group-hover:scale-105 transition-all duration-300">
-                <Shield className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
+              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-primary transition-all duration-300">
+                <Shield className="w-10 h-10 text-primary-foreground" />
               </div>
             </div>
             <div>
@@ -257,8 +254,8 @@ export default function SuperAdmin() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="px-4 py-2 rounded-2xl bg-background border border-slate-100 shadow-sm flex items-center gap-3">
-              <div className="h-8 w-8 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center">
+            <div className="px-4 py-2 rounded-2xl bg-background border border-slate-100 flex items-center gap-3">
+              <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Building2 className="w-4 h-4 text-primary" />
               </div>
               <div>
@@ -266,8 +263,8 @@ export default function SuperAdmin() {
                 <p className="text-sm font-black text-slate-900">{companies.length}</p>
               </div>
             </div>
-            <div className="px-4 py-2 rounded-2xl bg-background border border-slate-100 shadow-sm flex items-center gap-3">
-              <div className="h-8 w-8 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center">
+            <div className="px-4 py-2 rounded-2xl bg-background border border-slate-100 flex items-center gap-3">
+              <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Users className="w-4 h-4 text-primary" />
               </div>
               <div>
@@ -281,28 +278,21 @@ export default function SuperAdmin() {
 
       <Tabs defaultValue="companies" className="space-y-8">
         <div className="flex justify-center">
-          <TabsList className="inline-flex h-14 items-center justify-center rounded-[1.25rem] bg-background p-1.5 border border-slate-200/50 shadow-inner w-full max-w-2xl sm:grid sm:grid-cols-3">
-            <TabsTrigger 
-              value="companies" 
-              className="rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10 gap-2"
-            >
-              <Building2 className="w-4 h-4" />
-              Empresas
-            </TabsTrigger>
-            <TabsTrigger 
-              value="users" 
-              className="rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10 gap-2"
-            >
-              <Users className="w-4 h-4" />
-              Usuarios
-            </TabsTrigger>
-            <TabsTrigger 
-              value="roles" 
-              className="rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10 gap-2"
-            >
-              <Shield className="w-4 h-4" />
-              Roles
-            </TabsTrigger>
+          <TabsList className="h-14 bg-background border border-border/50 p-1.5 rounded-[1.25rem] max-w-2xl w-full sm:grid sm:grid-cols-3">
+            {[
+              { value: 'companies', label: 'Empresas', icon: Building2 },
+              { value: 'users', label: 'Usuarios', icon: Users },
+              { value: 'roles', label: 'Roles', icon: Shield },
+            ].map((tab) => (
+              <TabsTrigger 
+                key={tab.value}
+                value={tab.value} 
+                className="rounded-[1rem] px-6 py-2 font-black text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <tab.icon className="w-3.5 h-3.5 mr-2" />
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
 
@@ -322,7 +312,7 @@ export default function SuperAdmin() {
             </div>
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button className="h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]">
+                <Button className="h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]">
                   <Plus className="w-4 h-4 mr-2 stroke-[3]" />
                   REGISTRAR EMPRESA
                 </Button>
@@ -459,7 +449,7 @@ export default function SuperAdmin() {
                             
                             {editingCompany.logo_url && !logoFile && (
                               <div className="absolute top-1.5 right-1.5">
-                                <Badge className="bg-success hover:bg-success/90 text-[8px] h-3.5 px-1 border-none shadow-sm">Actual</Badge>
+                                <Badge className="bg-success hover:bg-success/90 text-[8px] h-3.5 px-1 border-none">Actual</Badge>
                               </div>
                             )}
 
@@ -492,7 +482,7 @@ export default function SuperAdmin() {
 
                             {editingCompany.horizontal_logo_url && !horizontalLogoFile && (
                               <div className="absolute top-1.5 right-1.5">
-                                <Badge className="bg-success hover:bg-success/90 text-[8px] h-3.5 px-1 border-none shadow-sm">Actual</Badge>
+                                <Badge className="bg-success hover:bg-success/90 text-[8px] h-3.5 px-1 border-none">Actual</Badge>
                               </div>
                             )}
 
@@ -585,7 +575,7 @@ export default function SuperAdmin() {
                 ),
               }))}
             />
-            <Card className="hidden md:block rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+            <Card className="hidden md:block rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
               <CardContent className="p-0 overflow-x-auto">
                 <Table className="min-w-[760px]">
                   <TableHeader className="bg-background">
@@ -605,7 +595,7 @@ export default function SuperAdmin() {
                           <div className="flex items-center gap-4">
                             <div className="relative h-12 w-12 shrink-0 group/avatar">
                               <div className="absolute -inset-0.5 bg-primary/20 rounded-2xl opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
-                              <div className="relative h-full w-full rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center overflow-hidden">
+                              <div className="relative h-full w-full rounded-2xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden">
                                 {company.logo_url ? (
                                   <img src={company.logo_url} alt={company.name} className="w-full h-full object-cover" />
                                 ) : (
@@ -683,7 +673,7 @@ export default function SuperAdmin() {
             </div>
             <Button 
               onClick={() => setInviteDialogOpen(true)} 
-              className="h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary-hover shadow-lg shadow-primary/20 font-black uppercase tracking-widest text-[10px]"
+              className="h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]"
             >
               <UserPlus className="w-4 h-4 mr-2 stroke-[3]" />
               INVITAR OPERADOR

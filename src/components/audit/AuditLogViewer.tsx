@@ -78,7 +78,7 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
 
       <TableCell className="px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="relative h-9 w-9 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="relative h-9 w-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
             <div className="absolute inset-0 " />
             <User className="relative w-4 h-4 text-primary" />
           </div>
@@ -145,7 +145,7 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100"
+          className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-white border border-transparent hover:border-slate-100"
           onClick={(e) => {
             e.stopPropagation();
             onClick();
@@ -209,21 +209,21 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
         <div className="flex flex-col gap-8 px-2">
           {/* Tabs Internas Estilo Premium */}
           <div className="flex justify-center">
-            <Tabs defaultValue="all" className="inline-flex h-14 p-1.5 rounded-2xl bg-background border border-slate-200 shadow-inner">
+            <Tabs defaultValue="all" className="inline-flex h-14 p-1.5 rounded-2xl bg-background border border-slate-200">
               <TabsList className="bg-transparent border-none p-0">
-                <TabsTrigger value="all" onClick={() => handleFiltersChange({})} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">
+                <TabsTrigger value="all" onClick={() => handleFiltersChange({})} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
                   <History className="w-3.5 h-3.5 mr-2" />
                   Todo el Registro
                 </TabsTrigger>
-                <TabsTrigger value="critical" onClick={() => handleFiltersChange({ severity: 'critical' })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-destructive transition-all">
+                <TabsTrigger value="critical" onClick={() => handleFiltersChange({ severity: 'critical' })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-destructive transition-all">
                   <AlertCircle className="w-3.5 h-3.5 mr-2" />
                   Eventos Críticos
                 </TabsTrigger>
-                <TabsTrigger value="user" onClick={() => handleFiltersChange({ user_email: user?.email })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">
+                <TabsTrigger value="user" onClick={() => handleFiltersChange({ user_email: user?.email })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
                   <User className="w-3.5 h-3.5 mr-2" />
                   Por Usuario
                 </TabsTrigger>
-                <TabsTrigger value="exports" onClick={() => handleFiltersChange({ action: 'export_excel' })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all">
+                <TabsTrigger value="exports" onClick={() => handleFiltersChange({ action: 'export_excel' })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
                   <FileSpreadsheet className="w-3.5 h-3.5 mr-2" />
                   Exportaciones
                 </TabsTrigger>
@@ -249,7 +249,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
                 </div>
                 <Input
                   placeholder="Buscar usuario, acción o módulo..."
-                  className="pl-11 h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-bold text-xs"
+                  className="pl-11 h-12 rounded-2xl bg-white border border-slate-200 focus-visible:ring-4 ring-primary/5 transition-all font-bold text-xs"
                   value={localSearch}
                   onChange={e => handleSearch(e.target.value)}
                 />
@@ -260,7 +260,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
                 onReset={() => { setFilters({}); setPage(0); }}
               />
               <Button
-                className="h-12 px-6 rounded-2xl bg-[#004a80] hover:bg-[#003a66] text-white shadow-lg shadow-blue-900/20 font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
+                className="h-12 px-6 rounded-2xl bg-[#004a80] hover:bg-[#003a66] text-white font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
                 onClick={() => { /* Implementar exportación */ }}
               >
                 <FileSpreadsheet className="w-4 h-4 mr-2" />
@@ -270,7 +270,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
           </div>
         </div>
 
-        <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.01] overflow-hidden">
+        <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
           <CardContent className="p-0">
             {isLoading ? (
               <div className="p-8 space-y-4">
@@ -280,7 +280,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
               </div>
             ) : logs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center gap-6 px-6">
-                <div className="relative h-24 w-24 flex items-center justify-center rounded-[2.5rem] bg-background border border-slate-100 shadow-inner group">
+                <div className="relative h-24 w-24 flex items-center justify-center rounded-[2.5rem] bg-background border border-slate-100 group">
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5rem]" />
                   <ShieldAlert className="relative w-10 h-10 text-slate-300" />
                 </div>
@@ -338,21 +338,21 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
                     
                     <div className="flex items-center gap-3">
                       <Button
-                        variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-200 shadow-sm transition-all active:scale-90"
+                        variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-200 transition-all active:scale-90"
                         disabled={page === 0}
                         onClick={() => setPage(p => p - 1)}
                       >
                         <ChevronLeft className="w-4 h-4" />
                       </Button>
                       
-                      <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-100 shadow-sm">
+                      <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-100">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">PÁGINA</span>
                         <span className="text-xs font-black text-primary tabular-nums">{page + 1}</span>
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">DE {totalPages}</span>
                       </div>
 
                       <Button
-                        variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-200 shadow-sm transition-all active:scale-90"
+                        variant="outline" size="icon" className="h-10 w-10 rounded-xl border-slate-200 transition-all active:scale-90"
                         disabled={page >= totalPages - 1}
                         onClick={() => setPage(p => p + 1)}
                       >
