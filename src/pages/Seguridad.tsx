@@ -7,6 +7,7 @@ import {
   Info,
   History,
   ShieldCheck,
+  Shield,
   Bot,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';

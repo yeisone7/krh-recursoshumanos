@@ -1,22 +1,43 @@
 
 import fs from 'fs';
 
-const content = fs.readFileSync('c:/Users/YEISON/Proyectos AI/krh-recursoshumanos/src/pages/Requisiciones.tsx', 'utf8');
+const files = [
+  'src/pages/Configuracion.tsx',
+  'src/pages/Auditoria.tsx',
+  'src/pages/Seguridad.tsx',
+  'src/pages/SuperAdmin.tsx'
+];
 
-let openDivs = 0;
-let closeDivs = 0;
-let openFragments = 0;
-let closeFragments = 0;
+function checkTags(file, tag) {
+  const content = fs.readFileSync(file, 'utf8');
+  const openRegex = new RegExp(`<${tag}(\\s|>|/)`, 'g');
+  const closeRegex = new RegExp(`</${tag}>`, 'g');
+  const selfCloseRegex = new RegExp(`<${tag}[^>]*/>`, 'g');
 
-const divOpenRegex = /<div\b/g;
-const divCloseRegex = /<\/div>/g;
-const fragmentOpenRegex = /<>/g;
-const fragmentCloseRegex = /<\/>/g;
+  const openMatches = content.match(openRegex) || [];
+  const closeMatches = content.match(closeRegex) || [];
+  const selfCloseMatches = content.match(selfCloseRegex) || [];
 
-openDivs = (content.match(divOpenRegex) || []).length;
-closeDivs = (content.match(divCloseRegex) || []).length;
-openFragments = (content.match(fragmentOpenRegex) || []).length;
-closeFragments = (content.match(fragmentCloseRegex) || []).length;
+  const totalOpen = openMatches.length;
+  const totalClose = closeMatches.length;
+  const totalSelfClose = selfCloseMatches.length;
 
-console.log(`Divs: Open ${openDivs}, Close ${closeDivs}`);
-console.log(`Fragments: Open ${openFragments}, Close ${closeFragments}`);
+  if (totalOpen - totalClose - totalSelfClose !== 0) {
+    console.log(`FILE: ${file} | Tag: ${tag}`);
+    console.log(`  Open: ${totalOpen}`);
+    console.log(`  Close: ${totalClose}`);
+    console.log(`  Self-close: ${totalSelfClose}`);
+    console.log(`  Balance: ${totalOpen - totalClose - totalSelfClose}`);
+  }
+}
+
+const tags = [
+  'div', 'Card', 'CardHeader', 'CardContent', 'CardTitle', 'CardDescription',
+  'Tabs', 'TabsContent', 'TabsList', 'TabsTrigger', 'Button', 'motion.div'
+];
+
+files.forEach(file => {
+  tags.forEach(tag => checkTags(file, tag));
+});
+
+console.log('Check finished.');

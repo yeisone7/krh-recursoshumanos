@@ -9,6 +9,7 @@
  * ---------------------------------------------------------------
  */
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   History, Shield, AlertTriangle, Trash2,
   Activity, Download, TrendingUp, Users2,
