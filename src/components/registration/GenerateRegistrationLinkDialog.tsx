@@ -35,8 +35,8 @@ const CANDIDATE_FIELDS = [
   { key: 'city', label: 'Ciudad', section: 'Contacto' },
   { key: 'department', label: 'Departamento', section: 'Contacto' },
   { key: 'address', label: 'Dirección', section: 'Contacto' },
-  { key: 'educationLevel', label: 'Nivel Educativo', section: 'Profesional' },
-  { key: 'profession', label: 'Profesión / Título', section: 'Profesional' },
+  { key: 'educationLevelId', label: 'Nivel Escolar', section: 'Profesional' },
+  { key: 'professionId', label: 'Profesión / Título', section: 'Profesional' },
   { key: 'experienceYears', label: 'Años de Experiencia', section: 'Profesional' },
   { key: 'currentCompany', label: 'Empresa Actual', section: 'Profesional' },
   { key: 'currentPosition', label: 'Cargo Actual', section: 'Profesional' },
@@ -93,6 +93,9 @@ const EMPLOYEE_FIELDS = [
   { key: 'bankName', label: 'Nombre del Banco', section: 'Información Bancaria' },
   { key: 'accountType', label: 'Tipo de Cuenta', section: 'Información Bancaria' },
   { key: 'accountNumber', label: 'Número de Cuenta', section: 'Información Bancaria' },
+  // Perfil Profesional
+  { key: 'educationLevelId', label: 'Nivel Escolar', section: 'Perfil Profesional' },
+  { key: 'professionId', label: 'Profesión / Título', section: 'Perfil Profesional' },
   // Especificaciones de la Persona
   { key: 'isFirstJob', label: 'Primer Empleo', section: 'Especificaciones' },
   { key: 'isHeadOfHousehold', label: 'Cabeza de Familia', section: 'Especificaciones' },
@@ -103,7 +106,7 @@ const EMPLOYEE_FIELDS = [
 ];
 
 const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional'];
-const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Especificaciones'];
+const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Perfil Profesional', 'Especificaciones'];
 
 export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType, vacancyId }: Props) {
   const fields = targetType === 'employee' ? EMPLOYEE_FIELDS : CANDIDATE_FIELDS;
