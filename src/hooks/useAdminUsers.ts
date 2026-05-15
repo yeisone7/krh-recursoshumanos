@@ -29,7 +29,7 @@ export interface AdminUser {
 }
 
 export function useAdminUsers() {
-  const { currentCompanyId, isSuperAdmin } = useAuth();
+  const { currentCompanyId, isAdmin, isSuperAdmin } = useAuth();
 
   return useQuery({
     queryKey: ['admin-users', currentCompanyId, isSuperAdmin],
@@ -254,7 +254,7 @@ export function useAdminUsers() {
 
       return Array.from(usersMap.values());
     },
-    enabled: !!currentCompanyId && isAdmin,
+    enabled: (!!currentCompanyId && isAdmin) || isSuperAdmin,
   });
 }
 
