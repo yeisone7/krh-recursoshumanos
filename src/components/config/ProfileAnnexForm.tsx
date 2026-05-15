@@ -145,7 +145,7 @@ export function ProfileAnnexForm({ open, onOpenChange, profileId, baseProfile, e
     const currentValue = values[section.key];
 
     return (
-      <Card key={section.key} className={`transition-colors ${isEnabled ? 'border-primary/30 bg-primary/5' : ''}`}>
+      <Card key={section.key} className={`transition-colors ${isEnabled ? 'border-primary/30 ' : ''}`}>
         <CardContent className="py-3 px-4 space-y-2">
           <div className="flex items-center gap-2">
             <Checkbox

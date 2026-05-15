@@ -26,7 +26,7 @@ export default function Organigrama() {
   return (
     <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-primary/10 shadow-sm">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-border shadow-sm">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-lg shadow-primary/20">
             <Briefcase className="h-8 w-8 text-primary-foreground" />
@@ -41,8 +41,8 @@ export default function Organigrama() {
           </div>
         </div>
         {/* Decorative elements */}
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl" />
+        
+        
       </div>
 
       <Card className="flex-1 min-h-0 rounded-[2.5rem] border-border/50 shadow-[0_20px_50px_rgba(0,0,0,0.02)] overflow-hidden">

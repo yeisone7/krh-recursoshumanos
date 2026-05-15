@@ -85,12 +85,12 @@ export function ProfessionFormDialog({ open, onOpenChange, profession }: Profess
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90dvh] p-0 overflow-hidden bg-white border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] focus:outline-none flex flex-col">
         <div className="relative flex-1 flex flex-col min-h-0">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
           
-          <DialogHeader className="relative px-8 pt-10 pb-8 border-b border-slate-100 bg-slate-50/50">
+          
+          <DialogHeader className="relative px-8 pt-10 pb-8 border-b border-slate-100 bg-background">
             <div className="flex items-center gap-6">
               <div className="relative h-20 w-20 flex items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-xl overflow-hidden group">
-                <div className="absolute inset-0 bg-slate-50 group-hover:bg-primary/5 transition-colors" />
+                <div className="absolute inset-0 bg-background group-hover:transition-colors" />
                 <Briefcase className="relative w-8 h-8 text-primary" />
               </div>
               <div className="space-y-1">

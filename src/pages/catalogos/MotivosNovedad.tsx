@@ -54,9 +54,9 @@ export default function MotivosNovedad() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/10 overflow-hidden"
+        className="relative p-8 rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-border overflow-hidden"
       >
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
+        
         
         <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-4">
@@ -125,7 +125,7 @@ export default function MotivosNovedad() {
                   {reasons.filter(r => !r.is_active).length}
                 </p>
               </div>
-              <div className="h-14 w-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:rotate-12 transition-transform">
+              <div className="h-14 w-14 rounded-2xl bg-background flex items-center justify-center text-slate-300 group-hover:rotate-12 transition-transform">
                 <XCircle className="w-7 h-7" />
               </div>
             </div>
@@ -134,7 +134,7 @@ export default function MotivosNovedad() {
       </div>
 
       {/* Listado */}
-      <Card className="rounded-[3rem] border-none shadow-2xl shadow-slate-200/60 overflow-hidden bg-white/70 backdrop-blur-xl">
+      <Card className="rounded-[3rem] border-none shadow-2xl shadow-slate-200/60 overflow-hidden bg-white/70 ">
         <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -155,12 +155,12 @@ export default function MotivosNovedad() {
           {isLoading ? (
             <div className="p-8 space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-20 w-full bg-slate-50 rounded-3xl animate-pulse" />
+                <div key={i} className="h-20 w-full bg-background rounded-3xl animate-pulse" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
-              <div className="h-24 w-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center text-slate-200">
+              <div className="h-24 w-24 rounded-[2.5rem] bg-background flex items-center justify-center text-slate-200">
                 <Search className="w-12 h-12" />
               </div>
               <div className="space-y-1">
@@ -171,7 +171,7 @@ export default function MotivosNovedad() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-slate-50/50">
+                <TableHeader className="bg-background">
                   <TableRow className="hover:bg-transparent border-none">
                     <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Información del Motivo</TableHead>
                     <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Descripción Detallada</TableHead>
@@ -187,7 +187,7 @@ export default function MotivosNovedad() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="group hover:bg-slate-50/50 border-slate-100 transition-colors"
+                        className="group hover:bg-background border-slate-100 transition-colors"
                       >
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center gap-4">
@@ -207,7 +207,7 @@ export default function MotivosNovedad() {
                         <TableCell className="px-8 py-6 text-center">
                           <Badge className={cn(
                             "h-7 px-3 rounded-lg border-none font-black text-[10px] uppercase tracking-widest",
-                            r.is_active ? "bg-emerald-50 text-emerald-600" : "bg-slate-50 text-slate-400"
+                            r.is_active ? "bg-emerald-50 text-emerald-600" : "bg-background text-slate-400"
                           )}>
                             {r.is_active ? 'Activo' : 'Inactivo'}
                           </Badge>

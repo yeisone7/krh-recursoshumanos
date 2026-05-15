@@ -56,7 +56,7 @@ export function OrgChartNode({
         }}
         whileHover={{ y: -4, scale: 1.02 }}
         className={cn(
-          "relative min-w-[240px] max-w-[300px] rounded-[2rem] border-2 bg-background/80 backdrop-blur-xl p-6 transition-all duration-300",
+          "relative min-w-[240px] max-w-[300px] rounded-[2rem] border-2 bg-background p-6 transition-all duration-300",
           "hover:border-primary/30 cursor-pointer overflow-hidden group",
           level === 0 && !highlighted && "border-primary/20 shadow-primary/5 bg-primary/[0.02]",
           highlighted && "border-primary ring-4 ring-primary/10"
@@ -93,7 +93,7 @@ export function OrgChartNode({
           <div className="flex items-start gap-3">
             <div className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-500 group-hover:rotate-6 shadow-inner",
-              highlighted || level === 0 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+              highlighted || level === 0 ? "bg-primary/10 text-primary" : "bg-background text-muted-foreground"
             )}>
               <Briefcase className="h-5 w-5" />
             </div>
@@ -114,7 +114,7 @@ export function OrgChartNode({
             <div className="relative">
               <Avatar className="h-12 w-12 shrink-0 border-2 border-background shadow-md">
                 <AvatarImage src={mainEmployee.avatar_url} className="object-cover" />
-                <AvatarFallback className="bg-primary/5 text-primary text-xs font-black uppercase tracking-tighter">
+                <AvatarFallback className="text-primary text-xs font-black uppercase tracking-tighter">
                   {getInitials(mainEmployee.first_name, mainEmployee.last_name)}
                 </AvatarFallback>
               </Avatar>
@@ -127,7 +127,7 @@ export function OrgChartNode({
                 {mainEmployee.first_name} {mainEmployee.last_name}
               </p>
               <div className="mt-1 flex items-center gap-2">
-                <div className="flex items-center justify-center h-4 w-4 rounded-full bg-muted text-muted-foreground">
+                <div className="flex items-center justify-center h-4 w-4 rounded-full bg-background text-muted-foreground">
                   <Users className="h-2.5 w-2.5" />
                 </div>
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -138,7 +138,7 @@ export function OrgChartNode({
           </div>
         ) : (
           <div className="flex items-center gap-4 border-t border-border/40 pt-4 text-muted-foreground relative z-10">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted/30 border-2 border-dashed border-border/40 transition-colors group-hover:border-primary/20">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-background border-2 border-dashed border-border/40 transition-colors group-hover:border-primary/20">
               <Users className="h-5 w-5 opacity-40 group-hover:text-primary transition-colors" />
             </div>
             <div className="flex flex-col">

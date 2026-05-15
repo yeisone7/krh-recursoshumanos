@@ -19,7 +19,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.R
   pendiente: { label: 'Pendiente', color: 'bg-warning-light text-warning', icon: <Loader2 className="w-3 h-3" /> },
   aprobado: { label: 'Aprobado', color: 'bg-success-light text-success', icon: <CheckCircle2 className="w-3 h-3" /> },
   rechazado: { label: 'Rechazado', color: 'bg-destructive/10 text-destructive', icon: <XCircle className="w-3 h-3" /> },
-  cancelado: { label: 'Cancelado', color: 'bg-muted text-muted-foreground', icon: <XCircle className="w-3 h-3" /> },
+  cancelado: { label: 'Cancelado', color: 'bg-background text-muted-foreground', icon: <XCircle className="w-3 h-3" /> },
   disfrutado: { label: 'Disfrutado', color: 'bg-primary-light text-primary', icon: <CheckCircle2 className="w-3 h-3" /> },
 };
 
@@ -115,7 +115,7 @@ export function Tab360TimeOff({ vacations, leaves, isLoadingVacations, isLoading
     >
       {/* Vacation Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-primary/5 border-primary/20">
+        <Card className="border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">

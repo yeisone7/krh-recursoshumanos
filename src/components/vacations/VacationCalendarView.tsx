@@ -205,7 +205,7 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
                     className={cn(
                       'p-1.5 border rounded-md transition-colors',
                       view === 'week' ? 'min-h-[180px]' : 'min-h-[90px]',
-                      isCurrentMonth ? 'bg-background' : 'bg-muted/30',
+                      isCurrentMonth ? 'bg-background' : 'bg-background',
                       isCurrentDay && 'ring-2 ring-primary'
                     )}
                   >

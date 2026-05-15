@@ -159,7 +159,7 @@ export function DistributionCharts({ byContractType, byGender, byCenter }: Distr
                       initial={{ width: 0 }}
                       animate={{ width: '100%' }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="h-1.5 bg-muted rounded-full overflow-hidden"
+                      className="h-1.5 bg-background rounded-full overflow-hidden"
                     >
                       <motion.div
                         initial={{ width: 0 }}

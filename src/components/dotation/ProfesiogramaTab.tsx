@@ -256,7 +256,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por centro, cargo o artículo..."
-              className="w-full h-9 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+              className="w-full h-9 pl-10 pr-4 rounded-lg bg-background border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
             />
           </div>
           <Select value={centerFilter} onValueChange={setCenterFilter}>
@@ -319,7 +319,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           {groupedByCenter.map((group) => (
             <div key={group.centerId} className="card-elevated">
               <div
-                className="px-4 py-2.5 border-b border-border bg-muted/30 flex items-center justify-between cursor-pointer select-none"
+                className="px-4 py-2.5 border-b border-border bg-background flex items-center justify-between cursor-pointer select-none"
                 onClick={() => {
                   setCollapsedCenters(prev => {
                     const next = new Set(prev);
@@ -365,7 +365,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                 </TableHeader>
                 <TableBody>
                   {group.items.map((prof) => (
-                    <TableRow key={prof.id} className={selectedIds.has(prof.id) ? 'bg-primary/5' : ''}>
+                    <TableRow key={prof.id} className={selectedIds.has(prof.id) ? '' : ''}>
                       <TableCell>
                         <Checkbox
                           checked={selectedIds.has(prof.id)}
@@ -425,7 +425,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
               </div>
               <div className="divide-y divide-border sm:hidden">
                 {group.items.map((prof) => (
-                  <div key={prof.id} className={selectedIds.has(prof.id) ? 'space-y-3 bg-primary/5 p-4' : 'space-y-3 p-4'}>
+                  <div key={prof.id} className={selectedIds.has(prof.id) ? 'space-y-3 p-4' : 'space-y-3 p-4'}>
                     <div className="flex items-start gap-3">
                       <Checkbox
                         checked={selectedIds.has(prof.id)}

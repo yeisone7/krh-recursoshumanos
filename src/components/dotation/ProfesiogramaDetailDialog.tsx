@@ -38,19 +38,19 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
     'EPP': 'bg-amber-500/10 text-amber-700 border-amber-200',
     'Uniforme': 'bg-blue-500/10 text-blue-700 border-blue-200',
     'Herramientas': 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
-    'Sin categoría': 'bg-muted text-muted-foreground border-border',
+    'Sin categoría': 'bg-background text-muted-foreground border-border',
   };
 
   const getCategoryStyle = (cat: string) => {
-    return categoryColors[cat] || 'bg-primary/5 text-primary border-primary/20';
+    return categoryColors[cat] || 'text-primary border-primary/20';
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           <div className="relative flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
               <ClipboardList className="w-7 h-7 text-primary-foreground" />
@@ -68,13 +68,13 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
 
         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 space-y-1">
+            <div className="bg-background p-4 rounded-2xl border border-border/50 space-y-1">
               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 <Building2 className="w-3.5 h-3.5 text-primary" /> Centro Operativo
               </div>
               <p className="font-bold text-sm leading-tight text-foreground">{cName}</p>
             </div>
-            <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 space-y-1">
+            <div className="bg-background p-4 rounded-2xl border border-border/50 space-y-1">
               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 <Briefcase className="w-3.5 h-3.5 text-primary" /> Cargo Asignado
               </div>
@@ -105,7 +105,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
 
           {data.items.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
-              <div className="p-4 rounded-full bg-muted/20">
+              <div className="p-4 rounded-full bg-background">
                 <Package className="w-10 h-10 text-muted-foreground/30" />
               </div>
               <div className="space-y-1">
@@ -120,7 +120,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
                   <div className="flex items-center gap-3">
                     <Badge variant="outline" className={cn(
                       "text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border-0 shadow-sm",
-                      getCategoryStyle(category).split(' ').find(c => c.startsWith('bg-')) || 'bg-muted',
+                      getCategoryStyle(category).split(' ').find(c => c.startsWith('bg-')) || 'bg-background ',
                       getCategoryStyle(category).split(' ').find(c => c.startsWith('text-')) || 'text-muted-foreground'
                     )}>
                       {category}
@@ -133,11 +133,11 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
                       return (
                         <div
                           key={item.id}
-                          className="group relative flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-border/50 bg-background/50 hover:bg-primary/[0.02] hover:border-primary/20 transition-all duration-300"
+                          className="group relative flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-border/50 bg-background hover:bg-primary/[0.02] hover:border-primary/20 transition-all duration-300"
                         >
                           <div className={cn(
                             "w-2 h-2 rounded-full shrink-0 shadow-[0_0_8px_rgba(0,0,0,0.1)]",
-                            isReq ? "bg-emerald-500 shadow-emerald-500/20" : "bg-muted-foreground/30"
+                            isReq ? "bg-emerald-500 shadow-emerald-500/20" : "bg-background -foreground/30"
                           )} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
@@ -145,7 +145,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
                                 {item.dotation_item_types?.name || '—'}
                               </span>
                               {item.dotation_item_types?.code && (
-                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 rounded bg-muted/50 border-0 font-mono text-muted-foreground">
+                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 rounded bg-background border-0 font-mono text-muted-foreground">
                                   {item.dotation_item_types.code}
                                 </Badge>
                               )}
@@ -155,7 +155,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
                             )}
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="flex h-7 w-12 items-center justify-center rounded-lg bg-muted/50 font-black text-xs tabular-nums text-primary">
+                            <span className="flex h-7 w-12 items-center justify-center rounded-lg bg-background font-black text-xs tabular-nums text-primary">
                               ×{item.quantity}
                             </span>
                             {!isReq && (
@@ -175,7 +175,7 @@ export function ProfesiogramaDetailDialog({ open, onOpenChange, data, centerName
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-border/50 bg-muted/10">
+        <div className="flex items-center justify-between p-6 border-t border-border/50 bg-background /10">
           <div className="flex flex-col gap-0.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Última actualización</span>
             <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">

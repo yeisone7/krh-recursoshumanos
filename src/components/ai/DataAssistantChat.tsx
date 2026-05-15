@@ -28,7 +28,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
       {/* Avatar */}
       <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center
-        ${isUser ? 'bg-primary text-primary-foreground' : 'bg-muted border'}`}>
+        ${isUser ? 'bg-primary text-primary-foreground' : 'bg-background border'}`}>
         {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4 text-primary" />}
       </div>
 

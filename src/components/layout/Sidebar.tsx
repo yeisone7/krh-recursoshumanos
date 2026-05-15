@@ -60,7 +60,8 @@ import {
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import sidebarLogo from '@/assets/empatiq-logo-new.jpg';
+import sidebarLogo from '@/assets/empatiq-icono-sidebar.png';
+import empatiqTextLogo from '@/assets/empatiq-texto.png';
 
 const APP_VERSION = import.meta.env.VITE_APP_VERSION || 'dev';
 const APP_VERSION_LABEL = APP_VERSION === 'dev' ? 'dev' : APP_VERSION.slice(0, 8);
@@ -136,7 +137,7 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
     >
       {logoUrl && !imageError && !showFallback ? (
         <>
-          {isLoading && <div className="absolute inset-0 animate-pulse bg-muted" aria-hidden="true" />}
+          {isLoading && <div className="absolute inset-0 animate-pulse bg-background " aria-hidden="true" />}
         <img
           src={logoUrl}
           alt={`Logo de ${companyName}`}
@@ -620,8 +621,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? 80 : 260) }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className={cn(
-          "h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-sm after:absolute after:right-0 after:top-0 after:h-full after:w-2.5 after:translate-x-full after:bg-gradient-to-r after:from-foreground/10 after:via-foreground/5 after:to-transparent after:blur-[1.5px] after:pointer-events-none after:transition-[width,opacity,filter] after:duration-300 after:ease-in-out",
-          isCollapsed ? "after:w-2 after:opacity-80 after:blur-[1px]" : "after:w-2.5 after:opacity-100 after:blur-[1.5px]",
+          "h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-[4px_0_12px_rgba(0,0,0,0.08)] z-10",
           isMobileDrawer && "h-full"
         )}>
 
@@ -648,10 +648,11 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               exit={{ opacity: 0 }}
               className="flex items-center gap-2">
 
-              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-primary/5 p-1.5 transition-colors group-hover:bg-primary/10">
+              <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center p-1 transition-colors group-hover:bg-primary/10">
                 <img src={sidebarLogo} alt="EmpatiQ Logo" className="w-full h-full object-contain" />
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col justify-center">
+                 <img src={empatiqTextLogo} alt="EmpatiQ" className="h-5 w-auto object-contain mb-0.5 object-left" />
                  <span className="text-[10px] font-bold text-sidebar-foreground/60 leading-tight whitespace-nowrap uppercase tracking-wider">Talento Humano</span>
               </div>
             </motion.div> :
@@ -661,7 +662,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}>
-              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center mx-auto bg-primary/5 p-1.5 hover:bg-primary/10 transition-colors">
+              <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center mx-auto p-1 hover:bg-primary/10 transition-colors">
                 <img src={sidebarLogo} alt="EmpatiQ Logo" className="w-full h-full object-contain" />
               </div>
             </motion.div>

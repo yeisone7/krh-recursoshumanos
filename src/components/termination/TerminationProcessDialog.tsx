@@ -448,7 +448,7 @@ export function TerminationProcessDialog({
                         key={doc.type}
                         className={cn(
                           'flex items-center justify-between p-4 rounded-lg border',
-                          doc.isGenerated ? 'bg-success-light border-success/20' : 'bg-muted/30 border-border'
+                          doc.isGenerated ? 'bg-success-light border-success/20' : 'bg-background border-border'
                         )}
                       >
                         <div className="flex items-start gap-3">

@@ -136,7 +136,7 @@ export default function Seleccion() {
             <Button
               size="sm"
               variant="ghost"
-              className="h-10 w-10 rounded-xl bg-primary/5 hover:bg-primary/20 text-primary"
+              className="h-10 w-10 rounded-xl hover:bg-primary/20 text-primary"
               onClick={(e) => {
                 e.stopPropagation();
                 setCandidateFormVacancyId(vacancy.id);
@@ -149,7 +149,7 @@ export default function Seleccion() {
             <Button
               size="sm"
               variant="ghost"
-              className="h-10 w-10 rounded-xl bg-muted/50 hover:bg-muted text-foreground"
+              className="h-10 w-10 rounded-xl bg-background hover:bg-background text-foreground"
               onClick={(e) => {
                 e.stopPropagation();
                 openVacancyDetail(vacancy.id);
@@ -177,11 +177,11 @@ export default function Seleccion() {
   ]), [stats]);
 
   return (
-    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Premium Header */}
-      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+      <div className="relative shrink-0 overflow-hidden px-6 py-8 sm:px-10 sm:py-10 border-b border-border ">
+        
+        
         
         <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <div className="space-y-4">
@@ -190,7 +190,7 @@ export default function Seleccion() {
                 <Users className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
                   Gestión de Talento
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Selección y Reclutamiento</h1>
@@ -203,7 +203,7 @@ export default function Seleccion() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
             {kpis.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-md hover:border-primary/10 transition-all duration-500">
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-border shadow-sm hover:shadow-md hover:border-border transition-all duration-500">
                 <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
                 </div>
@@ -219,13 +219,13 @@ export default function Seleccion() {
       </div>
 
       {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
           <div className="relative w-full sm:w-80 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
               placeholder="Buscar vacantes por cargo o área..."
-              className="pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+              className="pl-11 h-12 rounded-2xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -233,13 +233,13 @@ export default function Seleccion() {
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+              <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <Filter className="w-3.5 h-3.5 text-primary" />
                   <SelectValue placeholder="Estado" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-primary/10 shadow-md">
+              <SelectContent className="rounded-2xl border-border shadow-md">
                 <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los estados</SelectItem>
                 <SelectItem value="open" className="font-bold text-xs uppercase p-3 text-emerald-600">Abierta</SelectItem>
                 <SelectItem value="in_process" className="font-bold text-xs uppercase p-3 text-amber-600">En Proceso</SelectItem>
@@ -249,13 +249,13 @@ export default function Seleccion() {
             </Select>
 
             <Select value={centerFilter} onValueChange={setCenterFilter}>
-              <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+              <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-3.5 h-3.5 text-primary" />
                   <SelectValue placeholder="Centro" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-primary/10 shadow-md">
+              <SelectContent className="rounded-2xl border-border shadow-md">
                 <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los centros</SelectItem>
                 {operationCenters.map((center) => (
                   <SelectItem key={center.id} value={center.id} className="font-bold text-xs uppercase p-3">
@@ -282,7 +282,7 @@ export default function Seleccion() {
               ))}
             </div>
           ) : filteredVacancies.length === 0 ? (
-            <div className="text-center py-32 bg-background/50 rounded-[3rem] border-2 border-dashed border-primary/5">
+            <div className="text-center py-32 bg-background rounded-[3rem] border-2 border-dashed border-border ">
                <Briefcase className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
                <p className="text-xl font-black uppercase tracking-[0.2em] text-muted-foreground/40">Sin vacantes registradas</p>
             </div>
@@ -296,10 +296,10 @@ export default function Seleccion() {
               />
 
               {/* Desktop Table View */}
-              <div className="hidden md:block rounded-[2.5rem] border border-primary/5 shadow-md bg-background/40 backdrop-blur-xl">
+              <div className="hidden md:block rounded-[2.5rem] border border-border shadow-md bg-background ">
                 <Table className="w-full table-fixed">
                   <TableHeader>
-                    <TableRow className="bg-muted/30 border-b border-primary/5 hover:bg-muted/30">
+                    <TableRow className="bg-background border-b border-border hover:bg-background">
                       <TableHead className="px-4 h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[30%]">Vacante</TableHead>
                       <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[18%]">Ubicación</TableHead>
                       <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[15%]">Candidatos</TableHead>
@@ -318,12 +318,12 @@ export default function Seleccion() {
                       return (
                         <TableRow
                           key={vacancy.id}
-                          className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors cursor-pointer"
+                          className="group border-b border-border hover:bg-primary/[0.02] transition-colors cursor-pointer"
                           onClick={() => openVacancyDetail(vacancy.id)}
                         >
                           <TableCell className="px-4 py-5">
                             <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shrink-0">
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shrink-0">
                                 <Briefcase className="w-5 h-5" />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -359,7 +359,7 @@ export default function Seleccion() {
                           <TableCell>
                             <Badge
                               variant="outline"
-                              className={cn('h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-primary/10 shadow-sm', statusStyle.bg, statusStyle.text, statusStyle.border)}
+                              className={cn('h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-border shadow-sm', statusStyle.bg, statusStyle.text, statusStyle.border)}
                             >
                               {vacancyStatusLabels[status]}
                             </Badge>
@@ -369,7 +369,7 @@ export default function Seleccion() {
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-10 w-10 rounded-xl bg-primary/5 hover:bg-primary text-primary hover:text-primary-foreground shadow-sm transition-all"
+                                className="h-10 w-10 rounded-xl hover:bg-primary text-primary hover:text-primary-foreground shadow-sm transition-all"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setCandidateFormVacancyId(vacancy.id);
@@ -382,7 +382,7 @@ export default function Seleccion() {
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-10 w-10 rounded-xl bg-muted hover:bg-foreground hover:text-background transition-all"
+                                className="h-10 w-10 rounded-xl bg-background hover:bg-foreground hover:text-background transition-all"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   openVacancyDetail(vacancy.id);

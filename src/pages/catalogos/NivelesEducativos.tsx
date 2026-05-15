@@ -67,10 +67,10 @@ export default function CatalogosNivelesEducativos() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/50 overflow-hidden shadow-xl shadow-primary/5"
+        className="relative p-8 rounded-[2.5rem] bg-background border border-border/50 overflow-hidden shadow-xl shadow-primary/5"
       >
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        
+        
         
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
@@ -105,7 +105,7 @@ export default function CatalogosNivelesEducativos() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="group relative rounded-[2rem] bg-background/50 backdrop-blur-xl border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-primary/20"
+          className="group relative rounded-[2rem] bg-background border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-primary/20"
         >
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-2xl bg-primary/10 transition-transform group-hover:scale-110 duration-300">
@@ -122,7 +122,7 @@ export default function CatalogosNivelesEducativos() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="group relative rounded-[2rem] bg-background/50 backdrop-blur-xl border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-emerald-500/20"
+          className="group relative rounded-[2rem] bg-background border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-emerald-500/20"
         >
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-2xl bg-emerald-500/10 transition-transform group-hover:scale-110 duration-300">
@@ -139,7 +139,7 @@ export default function CatalogosNivelesEducativos() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="group relative rounded-[2rem] bg-background/50 backdrop-blur-xl border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-destructive/20"
+          className="group relative rounded-[2rem] bg-background border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-destructive/20"
         >
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-2xl bg-destructive/10 transition-transform group-hover:scale-110 duration-300">
@@ -153,13 +153,13 @@ export default function CatalogosNivelesEducativos() {
         </motion.div>
       </div>
 
-      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/50 shadow-xl overflow-hidden">
+      <Card className="rounded-[2.5rem] bg-background border border-border/50 shadow-xl overflow-hidden">
         <div className="p-8 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input 
               placeholder="Buscar por nivel..." 
-              className="pl-11 h-12 rounded-2xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+              className="pl-11 h-12 rounded-2xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -173,7 +173,7 @@ export default function CatalogosNivelesEducativos() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="py-32 text-center space-y-6">
-              <div className="h-20 w-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto text-slate-200">
+              <div className="h-20 w-20 bg-background rounded-[2rem] flex items-center justify-center mx-auto text-slate-200">
                 <GraduationCap className="w-10 h-10" />
               </div>
               <p className="text-slate-500 font-bold">No se encontraron niveles educativos</p>
@@ -181,7 +181,7 @@ export default function CatalogosNivelesEducativos() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-muted/30">
+                <TableHeader className="bg-background">
                   <TableRow className="hover:bg-transparent border-border/50">
                     <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Grado Académico</TableHead>
                     <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] text-center">Estado</TableHead>
@@ -196,7 +196,7 @@ export default function CatalogosNivelesEducativos() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="group hover:bg-primary/5 transition-colors border-border/50"
+                        className="group hover:transition-colors border-border/50"
                       >
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center gap-4">
@@ -211,9 +211,9 @@ export default function CatalogosNivelesEducativos() {
                             "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all shadow-sm",
                             level.is_active 
                               ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
-                              : "bg-muted/50 text-muted-foreground border-border"
+                              : "bg-background text-muted-foreground border-border"
                           )}>
-                            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", level.is_active ? "bg-emerald-500" : "bg-muted-foreground")} />
+                            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", level.is_active ? "bg-emerald-500" : "bg-background -foreground")} />
                             {level.is_active ? 'Activo' : 'Inactivo'}
                           </div>
                         </TableCell>
@@ -256,7 +256,7 @@ export default function CatalogosNivelesEducativos() {
               </AlertDialogDescription>
             </div>
           </div>
-          <AlertDialogFooter className="p-6 bg-slate-50 flex gap-3 sm:gap-0">
+          <AlertDialogFooter className="p-6 bg-background flex gap-3 sm:gap-0">
             <AlertDialogCancel className="flex-1 h-12 rounded-xl font-bold border-slate-200">CANCELAR</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDelete}

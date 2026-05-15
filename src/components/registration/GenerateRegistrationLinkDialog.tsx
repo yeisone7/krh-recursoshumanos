@@ -22,10 +22,10 @@ interface Props {
 }
 
 const CANDIDATE_FIELDS = [
+  { key: 'documentNumber', label: 'Número de Documento', section: 'Personal', required: true },
+  { key: 'documentType', label: 'Tipo de Documento', section: 'Personal', required: true },
   { key: 'firstName', label: 'Nombre', section: 'Personal', required: true },
   { key: 'lastName', label: 'Apellido', section: 'Personal', required: true },
-  { key: 'documentType', label: 'Tipo de Documento', section: 'Personal', required: true },
-  { key: 'documentNumber', label: 'Número de Documento', section: 'Personal', required: true },
   { key: 'birthDate', label: 'Fecha de Nacimiento', section: 'Personal' },
   { key: 'gender', label: 'Sexo Biológico', section: 'Personal' },
   { key: 'genderIdentity', label: 'Sexo de Identificación', section: 'Personal' },
@@ -46,12 +46,13 @@ const CANDIDATE_FIELDS = [
 
 const EMPLOYEE_FIELDS = [
   // Identidad
+  { key: 'documentNumber', label: 'Número de Documento', section: 'Identidad', required: true },
+  { key: 'documentType', label: 'Tipo de Documento', section: 'Identidad', required: true },
+  { key: 'avatarUrl', label: 'Foto del Empleado', section: 'Identidad' },
   { key: 'firstName', label: 'Primer Nombre', section: 'Identidad', required: true },
   { key: 'middleName', label: 'Segundo Nombre', section: 'Identidad' },
   { key: 'lastName', label: 'Primer Apellido', section: 'Identidad', required: true },
   { key: 'secondLastName', label: 'Segundo Apellido', section: 'Identidad' },
-  { key: 'documentType', label: 'Tipo de Documento', section: 'Identidad', required: true },
-  { key: 'documentNumber', label: 'Número de Documento', section: 'Identidad', required: true },
   { key: 'birthDate', label: 'Fecha de Nacimiento', section: 'Identidad' },
   { key: 'birthCity', label: 'Ciudad de Nacimiento', section: 'Identidad' },
   { key: 'birthDepartment', label: 'Departamento de Nacimiento', section: 'Identidad' },
@@ -78,6 +79,7 @@ const EMPLOYEE_FIELDS = [
   { key: 'spouseName', label: 'Nombre del Cónyuge', section: 'Familia' },
   { key: 'spouseBirthDate', label: 'Fecha Nacimiento Cónyuge', section: 'Familia' },
   { key: 'childrenCount', label: 'Número de Hijos', section: 'Familia' },
+  { key: 'familyMembers', label: 'Personas a Cargo (Núcleo Familiar)', section: 'Familia' },
   // Seguridad Social
   { key: 'eps', label: 'EPS', section: 'Seguridad Social' },
   { key: 'afp', label: 'Fondo de Pensiones (AFP)', section: 'Seguridad Social' },
@@ -86,6 +88,7 @@ const EMPLOYEE_FIELDS = [
   { key: 'afc', label: 'AFC', section: 'Seguridad Social' },
   { key: 'ips', label: 'IPS de Atención', section: 'Seguridad Social' },
   { key: 'riskLevel', label: 'Nivel de Riesgo ARL', section: 'Seguridad Social' },
+  { key: 'vaccines', label: 'Vacunas', section: 'Seguridad Social' },
   // Información Bancaria
   { key: 'bankName', label: 'Nombre del Banco', section: 'Información Bancaria' },
   { key: 'accountType', label: 'Tipo de Cuenta', section: 'Información Bancaria' },
@@ -110,6 +113,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
 
   const [selectedFields, setSelectedFields] = useState<string[]>([...requiredKeys, ...optionalKeys]);
   const [expirationDays, setExpirationDays] = useState('7');
+  const [reusable, setReusable] = useState(targetType === 'employee');
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -143,6 +147,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
         expires_at: expirationDays === '0' 
           ? addDays(new Date(), 365 * 10).toISOString() 
           : addDays(new Date(), parseInt(expirationDays)).toISOString(),
+        is_reusable: reusable,
       });
       const baseUrl = window.location.origin;
       setGeneratedLink(`${baseUrl}/registro?token=${(token as any).token}`);
@@ -174,7 +179,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
         <DialogHeader>
           <div className="flex items-center gap-4 mb-4">
             {currentCompany?.logo_url ? (
-              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border">
+              <div className="w-12 h-12 rounded-lg bg-background flex items-center justify-center shrink-0 overflow-hidden border">
                 <img src={currentCompany.logo_url} alt={currentCompany.name} className="w-full h-full object-contain" />
               </div>
             ) : (
@@ -213,7 +218,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
                       {sectionFields.map(field => (
                         <label
                           key={field.key}
-                          className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer text-sm"
+                          className="flex items-center gap-2 p-2 rounded-md hover:bg-background cursor-pointer text-sm"
                         >
                           <Checkbox
                             checked={selectedFields.includes(field.key)}
@@ -239,13 +244,33 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-background">
-                    <SelectItem value="0">Un solo uso (sin expiración)</SelectItem>
                     <SelectItem value="1">1 día</SelectItem>
                     <SelectItem value="3">3 días</SelectItem>
                     <SelectItem value="7">7 días</SelectItem>
+                    <SelectItem value="15">15 días</SelectItem>
                     <SelectItem value="30">30 días</SelectItem>
+                    <SelectItem value="0">Sin expiración (10 años)</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="flex items-center gap-2 p-2 rounded-md bg-primary/5 border border-primary/10">
+                <Checkbox
+                  id="reusable"
+                  checked={reusable}
+                  onCheckedChange={(checked) => setReusable(checked === true)}
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor="reusable"
+                    className="text-sm font-medium leading-none cursor-pointer"
+                  >
+                    Permitir múltiples usos
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    El enlace podrá ser usado por varios empleados hasta que expire.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -258,7 +283,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
           </>
         ) : (
           <div className="space-y-4">
-            <div className="p-4 bg-muted/50 rounded-lg border border-border space-y-3">
+            <div className="p-4 bg-background rounded-lg border border-border space-y-3">
               <p className="text-sm text-muted-foreground">Enlace generado exitosamente. Compártelo con el {targetType === 'candidate' ? 'candidato' : 'empleado'}:</p>
               <div className="flex gap-2">
                 <Input value={generatedLink} readOnly className="text-xs" />
@@ -267,7 +292,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Vigencia: {expirationDays === '0' ? 'Un solo uso (sin expiración)' : `${expirationDays} día${parseInt(expirationDays) > 1 ? 's' : ''}`} • Uso único
+                Vigencia: {expirationDays === '0' ? 'Sin expiración' : `${expirationDays} día${parseInt(expirationDays) > 1 ? 's' : ''}`} • {reusable ? 'Múltiples usos' : 'Uso único'}
               </p>
             </div>
             <DialogFooter>

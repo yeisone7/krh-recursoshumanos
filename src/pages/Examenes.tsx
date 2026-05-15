@@ -47,7 +47,7 @@ const resultLabels: Record<string, string> = {
 const examTypeBadgeStyles: Record<string, { bg: string; text: string; border: string }> = {
   ingreso: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/20' },
   periodico: { bg: 'bg-info/10', text: 'text-info', border: 'border-info/20' },
-  egreso: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },
+  egreso: { bg: 'bg-background ', text: 'text-muted-foreground', border: 'border-border' },
   reintegro: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/20' },
   post_incapacidad: { bg: 'bg-warning/10', text: 'text-warning-foreground', border: 'border-warning/20' },
   cambio_cargo: { bg: 'bg-secondary/10', text: 'text-secondary', border: 'border-secondary/20' },
@@ -179,8 +179,8 @@ export default function Examenes() {
   return (
     <div className="space-y-8 pb-12">
       {/* Header Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 rounded-[2.5rem] border border-primary/10 shadow-sm">
-        <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 rounded-[2.5rem] border border-border shadow-sm">
+        
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-5">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
@@ -190,7 +190,7 @@ export default function Examenes() {
               <h1 className="text-3xl font-black tracking-tighter sm:text-4xl text-foreground">Exámenes Médicos</h1>
               <p className="text-sm font-medium text-muted-foreground mt-1 flex items-center gap-2">
                 Gestión de exámenes ocupacionales, catálogo y profesiogramas
-                <Badge variant="outline" className="rounded-lg px-2 bg-primary/5 border-primary/20 text-primary font-bold text-[10px] uppercase tracking-widest">SST</Badge>
+                <Badge variant="outline" className="rounded-lg px-2 border-primary/20 text-primary font-bold text-[10px] uppercase tracking-widest">SST</Badge>
               </p>
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function Examenes() {
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
         <div className="flex justify-center sm:justify-start">
-          <TabsList className="h-14 bg-background/50 backdrop-blur-md border border-border/50 p-1.5 rounded-[1.25rem] shadow-sm">
+          <TabsList className="h-14 bg-background border border-border/50 p-1.5 rounded-[1.25rem] shadow-sm">
             {[
               { value: 'aplicaciones', label: 'Aplicaciones', icon: Stethoscope },
               { value: 'catalogo', label: 'Catálogo', icon: ClipboardList },
@@ -230,8 +230,8 @@ export default function Examenes() {
           {/* Stats + Alerts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-1">
-              <div className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background/40 backdrop-blur-xl border border-primary/5 shadow-sm hover:shadow-md transition-all duration-500 h-full flex flex-col justify-center">
-                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/10 transition-all duration-500" />
+              <div className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background border border-border shadow-sm hover:shadow-md transition-all duration-500 h-full flex flex-col justify-center">
+                
                 <div className="flex items-center justify-between mb-6">
                   <div className="p-4 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-500">
                     <Stethoscope className="w-8 h-8" />
@@ -240,7 +240,7 @@ export default function Examenes() {
                 </div>
                 <div>
                   <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground mb-1">Total Aplicaciones</p>
-                  <p className="text-xs font-bold text-primary flex items-center gap-1.5 bg-primary/5 px-2.5 py-1 rounded-lg w-fit">
+                  <p className="text-xs font-bold text-primary flex items-center gap-1.5 px-2.5 py-1 rounded-lg w-fit">
                     {stats.totalExams} exámenes realizados
                   </p>
                 </div>
@@ -258,7 +258,7 @@ export default function Examenes() {
           </div>
 
           {/* Main Table Container */}
-          <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
+          <div className="overflow-hidden rounded-[2.5rem] border border-border shadow-sm bg-background ">
             <div className="px-8 py-8 border-b border-border/50 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
               <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div>
@@ -273,11 +273,11 @@ export default function Examenes() {
                     <input
                       type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Buscar empleado o examen..."
-                      className="w-full sm:w-64 h-11 pl-10 pr-4 rounded-xl bg-background/50 border-border/50 focus:border-primary focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10 text-sm font-medium transition-all"
+                      className="w-full sm:w-64 h-11 pl-10 pr-4 rounded-xl bg-background border-border/50 focus:border-primary focus:bg-background focus:outline-none focus:ring-4 focus:ring-primary/10 text-sm font-medium transition-all"
                     />
                   </div>
                   <Select value={typeFilter} onValueChange={setTypeFilter}>
-                    <SelectTrigger className="h-11 w-full sm:w-48 rounded-xl border-border/50 bg-background/50 font-bold text-[10px] uppercase tracking-widest">
+                    <SelectTrigger className="h-11 w-full sm:w-48 rounded-xl border-border/50 bg-background font-bold text-[10px] uppercase tracking-widest">
                       <SelectValue placeholder="Tipo" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-border/50">
@@ -320,7 +320,7 @@ export default function Examenes() {
                         const itemsSummary = tx.items.length <= 2
                           ? tx.items.map(i => i.exam_name).join(', ')
                           : `${tx.items[0].exam_name}, ${tx.items[1].exam_name} +${tx.items.length - 2} más`;
-                        const badgeStyle = examTypeBadgeStyles[tx.exam_type] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
+                        const badgeStyle = examTypeBadgeStyles[tx.exam_type] || { bg: 'bg-background ', text: 'text-muted-foreground', border: 'border-border' };
 
                         return (
                           <TableRow key={tx.id} className="group border-border/40 hover:bg-primary/[0.02] transition-colors">
@@ -388,7 +388,7 @@ export default function Examenes() {
                     const itemsSummary = tx.items.length <= 2
                       ? tx.items.map(i => i.exam_name).join(', ')
                       : `${tx.items[0].exam_name}, ${tx.items[1].exam_name} +${tx.items.length - 2} más`;
-                    const badgeStyle = examTypeBadgeStyles[tx.exam_type] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' };
+                    const badgeStyle = examTypeBadgeStyles[tx.exam_type] || { bg: 'bg-background ', text: 'text-muted-foreground', border: 'border-border' };
 
                     return {
                       id: tx.id,
@@ -427,13 +427,13 @@ export default function Examenes() {
         </TabsContent>
 
         <TabsContent value="catalogo" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
+          <div className="overflow-hidden rounded-[2.5rem] border border-border shadow-sm bg-background ">
             <ExamCatalogTab />
           </div>
         </TabsContent>
 
         <TabsContent value="profesiograma" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
+          <div className="overflow-hidden rounded-[2.5rem] border border-border shadow-sm bg-background ">
             <ExamProfesiogramaTab
               centers={operationCenters.map(c => ({ id: c.id, name: c.name }))}
               positions={(positionsData as any[]).map((p: any) => ({ id: p.id, name: p.name }))}
@@ -447,7 +447,7 @@ export default function Examenes() {
       <ExamTransactionDetailDialog open={isDetailOpen} onOpenChange={setIsDetailOpen} transaction={selectedTransaction} />
 
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
-        <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md rounded-[2rem] border-0 shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden p-0">
+        <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md rounded-[2rem] border-0 shadow-2xl bg-background overflow-hidden p-0">
           <div className="px-8 py-8 bg-gradient-to-br from-destructive/10 via-background to-destructive/5 border-b border-destructive/10">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-destructive flex items-center justify-center shadow-lg shadow-destructive/20">
@@ -466,7 +466,7 @@ export default function Examenes() {
             </AlertDialogDescription>
             
             <div className="flex items-center justify-end gap-3 mt-8">
-              <AlertDialogCancel className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-0 bg-muted hover:bg-muted/80 transition-all">
+              <AlertDialogCancel className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-0 bg-background hover:bg-background /80 transition-all">
                 Cancelar
               </AlertDialogCancel>
               <AlertDialogAction

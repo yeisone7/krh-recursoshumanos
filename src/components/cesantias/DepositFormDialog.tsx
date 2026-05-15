@@ -242,8 +242,8 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
-        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10">
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background overflow-hidden">
+        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-border ">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
               <Landmark className="w-6 h-6 text-primary-foreground" />
@@ -280,7 +280,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                           placeholder="Seleccionar empleado"
                           searchPlaceholder="Buscar empleado..."
                           disabled={!!deposit}
-                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all"
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all"
                         />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
@@ -295,7 +295,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Año *</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="number" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -311,7 +311,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Inicio Cálculo *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="date" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -325,7 +325,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Fin Cálculo *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="date" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -348,7 +348,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Salario Base *</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="number" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -362,7 +362,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Días Trabajados *</FormLabel>
                       <FormControl>
-                        <Input type="number" max={360} {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="number" max={360} {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -376,7 +376,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Valor Cesantías *</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} className="h-11 rounded-xl border-primary/30 bg-primary/5 text-primary focus:bg-primary/10 transition-all font-black text-lg" />
+                        <Input type="number" {...field} className="h-11 rounded-xl border-primary/30 text-primary focus:bg-primary/10 transition-all font-black text-lg" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -398,7 +398,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                           onValueChange={field.onChange}
                           placeholder="Seleccionar fondo"
                           searchPlaceholder="Buscar fondo..."
-                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all"
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all"
                         />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
@@ -413,7 +413,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Número de Cuenta</FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-medium" />
+                        <Input {...field} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-medium" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -436,7 +436,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Límite *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="date" {...field} disabled={!!deposit} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -450,7 +450,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Depósito</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold text-primary" />
+                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold text-primary" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -470,7 +470,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                           onValueChange={field.onChange}
                           placeholder="Seleccionar estado"
                           searchPlaceholder="Buscar estado..."
-                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold"
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold"
                         />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
@@ -487,7 +487,7 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
                 <FormItem>
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observaciones</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={3} className="rounded-2xl border-border/50 bg-background/50 focus:bg-background transition-all resize-none" />
+                    <Textarea {...field} rows={3} className="rounded-2xl border-border/50 bg-background focus:bg-background transition-all resize-none" />
                   </FormControl>
                   <FormMessage className="text-[10px] font-bold" />
                 </FormItem>

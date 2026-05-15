@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Clock } from 'lucide-react';
-import { useEmployees } from '@/hooks/useEmployees';
+import { useEmployees, useEmployeesInfinite } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardAlerts } from '@/hooks/useDashboardAlerts';
@@ -69,9 +69,61 @@ export default function Empleados() {
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [showDashboardSummary, setShowDashboardSummary] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const pageSize = 12;
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const { currentCompanyId } = useAuth();
+  
+  // Use infinite hook for the list view
+  const { 
+    data: infiniteData, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage,
+    isLoading: isPagingLoading 
+  } = useEmployeesInfinite({
+    pageSize,
+    search: debouncedSearch,
+    status: statusFilter,
+    centerId: centerFilter,
+  });
+
+  // Infinite Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Keep the full query ONLY for stats and exports
   const { data: employees, isLoading } = useEmployees();
+
+  // Flatten the pages from infiniteData
+  const currentEmployees = useMemo(() => {
+    return infiniteData?.pages.flatMap(page => page.data) || [];
+  }, [infiniteData]);
+
+  const totalCount = infiniteData?.pages[0]?.totalCount || 0;
   const { data: allAlerts } = useDashboardAlerts();
   
   const certificationAlerts = allAlerts?.filter(alert => alert.type === 'certification') || [];
@@ -148,23 +200,20 @@ export default function Empleados() {
   };
 
   const handleExport = () => {
-    if (!filteredEmployees || filteredEmployees.length === 0) {
+    if (!filteredEmployeesForExport || filteredEmployeesForExport.length === 0) {
       toast.error('No hay datos para exportar');
       return;
     }
 
     try {
-      const dataToExport = filteredEmployees.map(emp => ({
-        'ID Empleado': emp.employee_id || '',
+      const dataToExport = filteredEmployeesForExport.map(emp => ({
         'Nombre Completo': getEmployeeFullName(emp),
         'Tipo Documento': emp.document_type || '',
         'Número Documento': emp.document_number || '',
-        'Cargo': emp.work_info?.position?.name || 'N/A',
-        'Centro de Operación': emp.work_info?.operation_center?.name || 'N/A',
+        'Cargo': emp.work_info?.position_name || 'N/A',
+        'Centro de Operación': emp.operation_centers?.name || 'N/A',
         'Estado': emp.is_active ? 'Activo' : 'Inactivo',
         'Fecha de Ingreso': emp.work_info?.hire_date || '',
-        'Correo': emp.email || '',
-        'Teléfono': emp.phone || '',
       }));
 
       const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -180,7 +229,9 @@ export default function Empleados() {
 
   const isFiltered = searchQuery !== '' || statusFilter !== 'all' || centerFilter !== 'all';
 
-  const filteredEmployees = useMemo(() => {
+  // We no longer need filteredEmployees for the list view as it's done server-side
+  // But we still need it for EXPORT (to export what's filtered)
+  const filteredEmployeesForExport = useMemo(() => {
     if (!employees) return [];
     return employees.filter((emp) => {
       const fullName = getEmployeeFullName(emp).toLowerCase();
@@ -301,7 +352,7 @@ export default function Empleados() {
         targetType="employee"
       />
 
-      {showTokensList && (
+      {showTokensList && !isLoading && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
@@ -327,7 +378,7 @@ export default function Empleados() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por nombre, cargo..."
-              className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+              className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
             />
           </div>
           <div className="flex gap-3">
@@ -367,21 +418,21 @@ export default function Empleados() {
             <Button 
               variant="outline" 
               size="icon" 
-              className="h-10 w-10 hover:bg-primary/5 hover:text-primary transition-colors"
+              className="h-10 w-10 hover:hover:text-primary transition-colors"
               onClick={handleExport}
               title="Exportar a Excel"
             >
               <Download className="w-4 h-4" />
             </Button>
             
-            <div className="flex items-center bg-muted/50 rounded-lg p-1 border border-border/50 ml-2 shadow-sm">
+            <div className="flex items-center bg-background rounded-lg p-1 border border-border/50 ml-2 shadow-sm">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('grid')}
                 className={cn(
                   "h-8 w-8 p-0 transition-all",
-                  viewMode === 'grid' ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-primary/5 hover:text-primary"
+                  viewMode === 'grid' ? "bg-primary text-primary-foreground shadow-sm" : "hover:hover:text-primary"
                 )}
                 title="Vista Cuadrícula"
               >
@@ -393,7 +444,7 @@ export default function Empleados() {
                 onClick={() => setViewMode('table')}
                 className={cn(
                   "h-8 w-8 p-0 transition-all",
-                  viewMode === 'table' ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-primary/5 hover:text-primary"
+                  viewMode === 'table' ? "bg-primary text-primary-foreground shadow-sm" : "hover:hover:text-primary"
                 )}
                 title="Vista Tabla"
               >
@@ -498,7 +549,7 @@ export default function Empleados() {
       </Collapsible>
 
       {/* Employee Grid */}
-      {filteredEmployees.length === 0 ? (
+      {currentEmployees.length === 0 ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-elevated p-12 text-center">
           <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">No hay empleados</h3>
@@ -515,14 +566,34 @@ export default function Empleados() {
           )}
         </motion.div>
       ) : (
-        viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredEmployees.map((employee, index) => (
-              <EmployeeCard
-                key={employee.id}
-                employee={employee}
-                index={index}
-                hasProfesiograma={hasProfesiograma(employee)}
+        <div className="space-y-6 relative">
+          {isPagingLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/20 backdrop-blur-[2px] rounded-xl">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          )}
+          {viewMode === 'grid' ? (
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${isPagingLoading ? 'opacity-50' : ''}`}>
+              {currentEmployees.map((employee, index) => (
+                <EmployeeCard
+                  key={employee.id}
+                  employee={employee}
+                  index={index}
+                  hasProfesiograma={hasProfesiograma(employee)}
+                  onOpenDetail={handleOpenDetail}
+                  onEdit={handleEdit}
+                  onViewContract={handleViewContract}
+                  onViewDocuments={handleViewDocuments}
+                  onRehire={handleRehire}
+                  onTransfer={handleTransfer}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={isPagingLoading ? 'opacity-50' : ''}>
+              <EmployeeTable 
+                employees={currentEmployees}
+                hasProfesiogramaFn={hasProfesiograma}
                 onOpenDetail={handleOpenDetail}
                 onEdit={handleEdit}
                 onViewContract={handleViewContract}
@@ -530,20 +601,27 @@ export default function Empleados() {
                 onRehire={handleRehire}
                 onTransfer={handleTransfer}
               />
-            ))}
+            </div>
+          )}
+
+          {/* Infinite Scroll Sentinel */}
+          <div ref={loadMoreRef} className="py-8 flex flex-col items-center justify-center gap-4">
+            {isFetchingNextPage ? (
+              <>
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground italic">Cargando más empleados...</p>
+              </>
+            ) : hasNextPage ? (
+              <p className="text-xs text-muted-foreground/50">Desliza para cargar más</p>
+            ) : currentEmployees.length > 0 ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-border" />
+                <p className="text-sm text-muted-foreground">Has llegado al final del listado</p>
+                <p className="text-xs text-muted-foreground/60">Mostrando {currentEmployees.length} de {totalCount} empleados</p>
+              </div>
+            ) : null}
           </div>
-        ) : (
-          <EmployeeTable 
-            employees={filteredEmployees}
-            hasProfesiogramaFn={hasProfesiograma}
-            onOpenDetail={handleOpenDetail}
-            onEdit={handleEdit}
-            onViewContract={handleViewContract}
-            onViewDocuments={handleViewDocuments}
-            onRehire={handleRehire}
-            onTransfer={handleTransfer}
-          />
-        )
+        </div>
       )}
 
       {transferEmployee && (

@@ -59,7 +59,7 @@ const columns: KanbanColumn[] = [
     title: 'Postulados',
     icon: Users,
     color: 'text-muted-foreground',
-    bgColor: 'bg-muted/50',
+    bgColor: 'bg-background',
     borderColor: 'border-muted-foreground/20',
   },
   {
@@ -338,7 +338,7 @@ function CandidateCard({
             </div>
             {totalSteps > 0 && (
               <div className="flex items-center gap-1.5">
-                <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className="w-12 h-1.5 bg-background rounded-full overflow-hidden">
                   <div
                     className="h-full bg-success transition-all"
                     style={{ width: `${(passedSteps / totalSteps) * 100}%` }}

@@ -155,7 +155,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
         
         {/* Premium Gradient Header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           
           <DialogHeader className="relative z-10">
             <div className="flex items-center gap-4 mb-2">
@@ -164,7 +164,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5">
+                  <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5">
                     SESIÓN
                   </Badge>
                   <Badge className={cn("font-black uppercase tracking-widest text-[9px] px-2 py-0.5", STATUS_COLORS[session.status as TrainingStatus])}>
@@ -184,7 +184,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
 
         <div className="px-8 py-6 space-y-6">
           {/* Course Info */}
-          <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-4">
+          <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-4">
             <div>
               <h3 className="font-black text-lg text-foreground tracking-tight">{course?.name}</h3>
               <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mt-1">{course?.code} • {course?.category}</p>
@@ -196,7 +196,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
             {/* Session Details */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-border/50">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-background/50 flex items-center justify-center shrink-0 shadow-sm">
+                <div className="w-8 h-8 rounded-xl bg-background flex items-center justify-center shrink-0 shadow-sm">
                   <Calendar className="h-4 w-4 text-primary" />
                 </div>
                 <div>
@@ -207,7 +207,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
               
               {session.start_time && (
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-background/50 flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-8 h-8 rounded-xl bg-background flex items-center justify-center shrink-0 shadow-sm">
                     <Clock className="h-4 w-4 text-primary" />
                   </div>
                   <div>
@@ -219,7 +219,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
               
               {session.location && (
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-background/50 flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-8 h-8 rounded-xl bg-background flex items-center justify-center shrink-0 shadow-sm">
                     <MapPin className="h-4 w-4 text-primary" />
                   </div>
                   <div>
@@ -253,7 +253,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
           </div>
 
           <Tabs defaultValue="attendance" className="w-full">
-            <TabsList className="bg-muted/30 p-1.5 rounded-[1.5rem] h-auto w-full flex justify-start overflow-x-auto">
+            <TabsList className="bg-background p-1.5 rounded-[1.5rem] h-auto w-full flex justify-start overflow-x-auto">
               <TabsTrigger 
                 value="attendance" 
                 className="rounded-2xl px-6 py-2.5 font-bold uppercase tracking-widest text-[10px] data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"
@@ -265,7 +265,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
 
             <TabsContent value="attendance" className="space-y-6 mt-6">
               {/* Enroll Employee */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4 bg-muted/20 border border-border/50 rounded-2xl">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4 bg-background border border-border/50 rounded-2xl">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                     <UserPlus className="h-5 w-5 text-primary" />
@@ -293,10 +293,10 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
               </div>
 
               {/* Attendance Table */}
-              <div className="overflow-hidden rounded-[2rem] border border-primary/5 shadow-lg bg-background/40 backdrop-blur-xl">
+              <div className="overflow-hidden rounded-[2rem] border border-border shadow-lg bg-background ">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/30 border-b border-primary/5 hover:bg-muted/30">
+                    <TableRow className="bg-background border-b border-border hover:bg-background">
                       <TableHead className="px-6 h-12 font-black text-[10px] uppercase tracking-[0.2em]">Empleado</TableHead>
                       <TableHead className="h-12 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
                       <TableHead className="h-12 font-black text-[10px] uppercase tracking-[0.2em]">Puntaje</TableHead>
@@ -317,7 +317,7 @@ export function SessionDetailDialog({ open, onOpenChange, session }: SessionDeta
                     </TableRow>
                   ) : (
                     attendance?.map((att) => (
-                      <TableRow key={att.id} className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors">
+                      <TableRow key={att.id} className="group border-b border-border hover:bg-primary/[0.02] transition-colors">
                         <TableCell className="px-6 py-4">
                           <div>
                             <p className="font-black text-sm tracking-tight text-foreground">

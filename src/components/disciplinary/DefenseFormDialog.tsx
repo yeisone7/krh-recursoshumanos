@@ -181,12 +181,12 @@ export function DefenseFormDialog({
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-border/50 bg-background/80 backdrop-blur-md p-6">
+            <div className="flex items-center justify-end gap-3 border-t border-border/50 bg-background p-6">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                className="h-12 px-6 rounded-xl font-bold text-muted-foreground hover:bg-muted/50 transition-all"
+                className="h-12 px-6 rounded-xl font-bold text-muted-foreground hover:bg-background transition-all"
               >
                 Cancelar
               </Button>

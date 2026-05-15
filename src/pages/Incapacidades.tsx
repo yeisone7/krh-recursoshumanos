@@ -110,8 +110,8 @@ export default function Incapacidades() {
   return (
     <div className="space-y-6">
       {/* Header Premium */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 rounded-[2rem] border border-primary/10 p-8 sm:p-10 shadow-sm">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 rounded-[2rem] border border-border p-8 sm:p-10 shadow-sm">
+        
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
           <div className="flex items-start sm:items-center gap-5">
             <div className="w-16 h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
@@ -132,7 +132,7 @@ export default function Incapacidades() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
-            <Button variant="outline" onClick={() => setShowExportDialog(true)} className="h-14 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs border-primary/20 hover:bg-primary/5 w-full sm:w-auto">
+            <Button variant="outline" onClick={() => setShowExportDialog(true)} className="h-14 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs border-primary/20 hover:w-full sm:w-auto">
               <Download className="h-4 w-4 mr-2" />
               Exportar
             </Button>
@@ -151,7 +151,7 @@ export default function Incapacidades() {
       
       {/* KPIs Premium */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-5 relative z-10 flex items-center justify-between">
             <div>
@@ -167,7 +167,7 @@ export default function Incapacidades() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-5 relative z-10 flex items-center justify-between">
             <div>
@@ -183,7 +183,7 @@ export default function Incapacidades() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-warning/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-5 relative z-10 flex items-center justify-between">
             <div>
@@ -201,7 +201,7 @@ export default function Incapacidades() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-1 sm:col-span-2 rounded-[1.5rem] border-none shadow-sm bg-muted/20 relative overflow-hidden group">
+        <Card className="col-span-1 sm:col-span-2 rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-5 relative z-10 flex items-center justify-between h-full">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 w-full">
@@ -346,7 +346,7 @@ export default function Incapacidades() {
                     {filteredIncapacities.map((inc) => (
                       <TableRow
                         key={inc.id}
-                        className="cursor-pointer hover:bg-muted/50"
+                        className="cursor-pointer hover:bg-background"
                         onClick={() => handleOpenDetail(inc.id)}
                       >
                         <TableCell>

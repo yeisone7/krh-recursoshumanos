@@ -171,7 +171,7 @@ export function EmployeeCard({
             isRetired
               ? isEnRetiro
                 ? 'bg-warning-light text-warning border-warning/20'
-                : 'bg-muted text-muted-foreground border-muted-foreground/20'
+                : 'bg-background text-muted-foreground border-muted-foreground/20'
               : employee.is_active 
                 ? 'bg-success-light text-success border-success/20'
                 : 'bg-rose-light text-rose border-rose/20'

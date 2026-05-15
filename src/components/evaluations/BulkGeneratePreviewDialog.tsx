@@ -77,11 +77,11 @@ export function BulkGeneratePreviewDialog({
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4 sm:px-6">
         {/* Summary */}
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="bg-muted/50 rounded-lg p-3">
+          <div className="bg-background rounded-lg p-3">
             <p className="text-xs text-muted-foreground">Ciclo</p>
             <p className="font-medium text-sm text-foreground">{cycleName}</p>
           </div>
-          <div className="bg-muted/50 rounded-lg p-3">
+          <div className="bg-background rounded-lg p-3">
             <p className="text-xs text-muted-foreground">Plantilla</p>
             <p className="font-medium text-sm text-foreground">{templateName}</p>
           </div>

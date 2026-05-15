@@ -99,7 +99,7 @@ export default function CentroNotificaciones() {
   return (
     <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-primary/10 shadow-sm">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-border shadow-sm">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-md shadow-primary/10">
@@ -125,8 +125,8 @@ export default function CentroNotificaciones() {
           </Button>
         </div>
         {/* Decorative elements */}
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl" />
+        
+        
       </div>
 
       {/* KPI Tiles */}
@@ -143,7 +143,7 @@ export default function CentroNotificaciones() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
             className={cn(
-              "relative overflow-hidden rounded-[2rem] border-2 bg-background/50 backdrop-blur-xl p-6 transition-all duration-300 hover:shadow-sm",
+              "relative overflow-hidden rounded-[2rem] border-2 bg-background p-6 transition-all duration-300 hover:shadow-sm",
               stat.border
             )}
           >
@@ -162,14 +162,14 @@ export default function CentroNotificaciones() {
         ))}
       </div>
 
-      <div className="rounded-[2.5rem] border-2 border-border/50 bg-background/50 backdrop-blur-xl p-8">
+      <div className="rounded-[2.5rem] border-2 border-border/50 bg-background p-8">
         <div className="mb-6">
           <h2 className="text-xl font-black tracking-tight text-foreground uppercase">Historial Operativo</h2>
           <p className="text-sm font-medium text-muted-foreground mt-1">Gestión detallada de comunicaciones y notificaciones de sistema.</p>
         </div>
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-        <div className="relative flex flex-col md:flex-row items-center gap-4 bg-background/60 backdrop-blur-xl p-3 rounded-[2rem] border border-border/50 shadow-sm">
+        <div className="relative flex flex-col md:flex-row items-center gap-4 bg-background p-3 rounded-[2rem] border border-border/50 shadow-sm">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/60" />
             <Input
@@ -183,10 +183,10 @@ export default function CentroNotificaciones() {
           <div className="flex w-full md:w-auto items-center gap-3 pr-2">
             <div className="h-10 w-px bg-border/40 hidden md:block mx-2" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-12 w-full md:w-[180px] rounded-2xl bg-muted/30 border-none shadow-none font-black uppercase tracking-widest text-[10px]">
+              <SelectTrigger className="h-12 w-full md:w-[180px] rounded-2xl bg-background border-none shadow-none font-black uppercase tracking-widest text-[10px]">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-border/50 backdrop-blur-xl bg-background/95">
+              <SelectContent className="rounded-2xl border-border/50 bg-background">
                 <SelectItem value="all">TODOS</SelectItem>
                 <SelectItem value="unread">SIN LEER</SelectItem>
                 <SelectItem value="read">LEÍDAS</SelectItem>
@@ -198,10 +198,10 @@ export default function CentroNotificaciones() {
             </Select>
 
             <Select value={channelFilter} onValueChange={setChannelFilter}>
-              <SelectTrigger className="h-12 w-full md:w-[180px] rounded-2xl bg-muted/30 border-none shadow-none font-black uppercase tracking-widest text-[10px]">
+              <SelectTrigger className="h-12 w-full md:w-[180px] rounded-2xl bg-background border-none shadow-none font-black uppercase tracking-widest text-[10px]">
                 <SelectValue placeholder="Canal" />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-border/50 backdrop-blur-xl bg-background/95">
+              <SelectContent className="rounded-2xl border-border/50 bg-background">
                 <SelectItem value="all">TODOS CANALES</SelectItem>
                 <SelectItem value="email">CORREO</SelectItem>
                 <SelectItem value="in_app">APP</SelectItem>
@@ -215,7 +215,7 @@ export default function CentroNotificaciones() {
 
       <Tabs defaultValue="alerts" className="w-full">
         <div className="flex items-center justify-between mb-6">
-          <TabsList className="flex h-auto w-fit gap-2 bg-muted/30 p-1.5 rounded-[1.5rem] border border-border/50">
+          <TabsList className="flex h-auto w-fit gap-2 bg-background p-1.5 rounded-[1.5rem] border border-border/50">
             {[
               { value: 'alerts', label: 'ALERTAS EN APP' },
               { value: 'deliveries', label: 'CORREOS Y ENVÍOS' },
@@ -288,7 +288,7 @@ export default function CentroNotificaciones() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline">{item.channel}</Badge>
-                      <Badge variant="outline" className={statusStyles[item.status] || 'bg-muted text-muted-foreground'}>{item.status}</Badge>
+                      <Badge variant="outline" className={statusStyles[item.status] || 'bg-background text-muted-foreground'}>{item.status}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">{formatDate(item.created_at)}</p>
                   </div>
@@ -305,7 +305,7 @@ export default function CentroNotificaciones() {
                       <TableCell>{item.recipient_email || '-'}</TableCell>
                       <TableCell><Badge variant="outline">{item.channel}</Badge></TableCell>
                       <TableCell><p className="font-medium">{item.subject || item.template_name || '-'}</p>{item.error_message && <p className="text-sm text-destructive line-clamp-1">{item.error_message}</p>}</TableCell>
-                      <TableCell><Badge variant="outline" className={statusStyles[item.status] || 'bg-muted text-muted-foreground'}>{item.status}</Badge></TableCell>
+                      <TableCell><Badge variant="outline" className={statusStyles[item.status] || 'bg-background text-muted-foreground'}>{item.status}</Badge></TableCell>
                       <TableCell>{formatDate(item.created_at)}</TableCell>
                     </TableRow>
                   ))}

@@ -161,7 +161,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background overflow-hidden">
         <DialogHeader className="px-8 py-8 bg-gradient-to-br from-violet/10 via-background to-violet/5 border-b border-violet/10">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-violet flex items-center justify-center shadow-lg shadow-violet/20">
@@ -199,7 +199,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
                           placeholder="Seleccionar empleado"
                           searchPlaceholder="Buscar empleado..."
                           disabled={!!interest}
-                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all"
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all"
                         />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
@@ -214,7 +214,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Año *</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="number" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -237,7 +237,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Saldo Cesantías *</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="number" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -251,7 +251,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tasa (%) *</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="number" step="0.01" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -265,7 +265,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Días *</FormLabel>
                       <FormControl>
-                        <Input type="number" max={360} {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="number" max={360} {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -302,7 +302,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Límite *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="date" {...field} disabled={!!interest} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -316,7 +316,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Pago</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold text-violet" />
+                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold text-violet" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -348,7 +348,7 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
                 <FormItem>
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observaciones</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={3} className="rounded-2xl border-border/50 bg-background/50 focus:bg-background transition-all resize-none" />
+                    <Textarea {...field} rows={3} className="rounded-2xl border-border/50 bg-background focus:bg-background transition-all resize-none" />
                   </FormControl>
                   <FormMessage className="text-[10px] font-bold" />
                 </FormItem>

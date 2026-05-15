@@ -146,7 +146,7 @@ function CenterCard({ center, index }: { center: CenterCompliance; index: number
       className="card-elevated"
     >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger className="w-full p-4 flex flex-col items-stretch gap-3 hover:bg-muted/30 transition-colors rounded-t-xl sm:flex-row sm:items-center sm:gap-4">
+        <CollapsibleTrigger className="w-full p-4 flex flex-col items-stretch gap-3 hover:bg-background transition-colors rounded-t-xl sm:flex-row sm:items-center sm:gap-4">
           {isOpen ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
 
           <div className="flex-1 text-left">

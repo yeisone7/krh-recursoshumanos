@@ -190,8 +190,8 @@ export function EmployeeTimeConfigDialog({
                         className={cn(
                           'flex items-center gap-3 p-3 sm:p-4 rounded-lg border cursor-pointer transition-all',
                           field.value === 'administrative'
-                            ? 'border-primary bg-primary/5'
-                            : 'border-input hover:border-primary/50'
+                            ? 'border-primary '
+                            : 'border-input hover:border-border 0'
                         )}
                       >
                         <RadioGroupItem value="administrative" className="sr-only" />
@@ -208,8 +208,8 @@ export function EmployeeTimeConfigDialog({
                         className={cn(
                           'flex items-center gap-3 p-3 sm:p-4 rounded-lg border cursor-pointer transition-all',
                           field.value === 'shift'
-                            ? 'border-primary bg-primary/5'
-                            : 'border-input hover:border-primary/50'
+                            ? 'border-primary '
+                            : 'border-input hover:border-border 0'
                         )}
                       >
                         <RadioGroupItem value="shift" className="sr-only" />

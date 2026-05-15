@@ -609,8 +609,8 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       <div className="border rounded-lg overflow-auto flex-1 min-h-[260px] sm:min-h-0 overscroll-contain">
         <div className="min-w-max">
           {/* Days Header */}
-          <div className="flex bg-muted sticky top-0 z-10">
-            <div className="w-36 sm:w-56 px-2 sm:px-3 py-2 sm:py-1.5 border-r font-medium text-xs flex items-center gap-1.5 shrink-0 sticky left-0 bg-muted z-20">
+          <div className="flex bg-background sticky top-0 z-10">
+            <div className="w-36 sm:w-56 px-2 sm:px-3 py-2 sm:py-1.5 border-r font-medium text-xs flex items-center gap-1.5 shrink-0 sticky left-0 bg-background z-20">
               <Users className="w-3.5 h-3.5 hidden sm:block" />
               Empleado
             </div>
@@ -653,10 +653,10 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                 <div key={group.centerId}>
                   {/* Center Header */}
                   <div 
-                    className="flex border-t bg-slate-100 cursor-pointer hover:bg-slate-200"
+                    className="flex border-t bg-background cursor-pointer hover:bg-slate-200"
                     onClick={() => toggleCenter(group.centerId)}
                   >
-                    <div className="w-36 sm:w-56 px-2 sm:px-3 py-2 sm:py-1.5 border-r font-semibold flex items-center gap-1.5 shrink-0 text-xs sticky left-0 bg-slate-100 z-10">
+                    <div className="w-36 sm:w-56 px-2 sm:px-3 py-2 sm:py-1.5 border-r font-semibold flex items-center gap-1.5 shrink-0 text-xs sticky left-0 bg-background z-10">
                       {isCenterExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
                       <Building2 className="w-3 h-3 text-primary" />
                       <span className="truncate">{group.centerName}</span>
@@ -678,10 +678,10 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                       <div key={area.areaId}>
                         {/* Area Header */}
                         <div 
-                          className="flex border-t bg-slate-50 cursor-pointer hover:bg-slate-100"
+                          className="flex border-t bg-background cursor-pointer hover:bg-background"
                           onClick={() => toggleArea(areaKey)}
                         >
-                          <div className="w-36 sm:w-56 px-2 sm:px-3 py-2 sm:py-1.5 pl-4 sm:pl-6 border-r font-medium flex items-center gap-1.5 shrink-0 text-xs sticky left-0 bg-slate-50 z-10">
+                          <div className="w-36 sm:w-56 px-2 sm:px-3 py-2 sm:py-1.5 pl-4 sm:pl-6 border-r font-medium flex items-center gap-1.5 shrink-0 text-xs sticky left-0 bg-background z-10">
                             {isAreaExpanded ? <ChevronDown className="w-2.5 h-2.5" /> : <ChevronUp className="w-2.5 h-2.5" />}
                             <span className="truncate">{area.areaName}</span>
                             <Badge variant="outline" className="ml-auto text-[10px] h-4 px-1">
@@ -700,7 +700,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                           const adminSchedule = isAdminMode ? empConfig?.workSchedule : undefined;
 
                           return (
-                          <div key={employee.id} className="flex border-y hover:bg-muted/30 -mt-px">
+                          <div key={employee.id} className="flex border-y hover:bg-background -mt-px">
                             <div className="w-36 sm:w-56 px-2 sm:px-3 py-1.5 sm:py-1 pl-5 sm:pl-9 border-r shrink-0 flex items-center gap-1.5 sticky left-0 bg-background z-10">
                               <span className="truncate text-xs">{getEmployeeFullName(employee)}</span>
                               {isAdminMode ? (
@@ -776,7 +776,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                                 <div
                                                   className={cn(
                                                     'h-6 rounded text-[10px] font-medium flex items-center justify-center',
-                                                    (!shift.color || shift.color === 'transparent') ? 'text-foreground bg-muted border border-border' : 'text-white',
+                                                    (!shift.color || shift.color === 'transparent') ? 'text-foreground bg-background border border-border' : 'text-white',
                                                     hasConflict && 'opacity-70'
                                                   )}
                                                   style={shift.color && shift.color !== 'transparent' ? { backgroundColor: shift.color } : undefined}

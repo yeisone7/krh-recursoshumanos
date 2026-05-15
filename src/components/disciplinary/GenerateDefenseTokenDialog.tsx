@@ -131,7 +131,7 @@ export function GenerateDefenseTokenDialog({
                 Comparta este código o enlace con el colaborador
               </p>
               <div className="bg-white p-6 rounded-[1.5rem] shadow-inner border border-border/50 relative group">
-                <div className="absolute inset-0 bg-primary/5 rounded-[1.5rem] scale-105 opacity-0 group-hover:opacity-100 transition-all -z-10" />
+                <div className="absolute inset-0 rounded-[1.5rem] scale-105 opacity-0 group-hover:opacity-100 transition-all -z-10" />
                 <QRCodeSVG
                   id="defense-qr-code"
                   value={generatedUrl}
@@ -142,7 +142,7 @@ export function GenerateDefenseTokenDialog({
               </div>
               
               <div className="w-full space-y-3">
-                <div className="bg-muted/50 p-3 rounded-xl border border-border/50 overflow-hidden">
+                <div className="bg-background p-3 rounded-xl border border-border/50 overflow-hidden">
                   <p className="text-[10px] text-muted-foreground break-all text-center font-mono">
                     {generatedUrl}
                   </p>
@@ -153,7 +153,7 @@ export function GenerateDefenseTokenDialog({
                     variant="outline" 
                     size="sm" 
                     onClick={handleCopy} 
-                    className="h-11 rounded-xl font-bold hover:bg-primary/5 hover:text-primary transition-all"
+                    className="h-11 rounded-xl font-bold hover:hover:text-primary transition-all"
                   >
                     <Copy className="h-4 w-4 mr-2" /> Copiar
                   </Button>
@@ -161,14 +161,14 @@ export function GenerateDefenseTokenDialog({
                     variant="outline" 
                     size="sm" 
                     onClick={handleDownloadQR} 
-                    className="h-11 rounded-xl font-bold hover:bg-primary/5 hover:text-primary transition-all"
+                    className="h-11 rounded-xl font-bold hover:hover:text-primary transition-all"
                   >
                     <Download className="h-4 w-4 mr-2" /> Descargar
                   </Button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-full border border-primary/10">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-border ">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 <p className="text-[10px] font-black uppercase tracking-widest text-primary">
                   Válido por 72h · Un solo uso

@@ -62,22 +62,20 @@ export default function Seguridad() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 overflow-hidden shadow-lg shadow-primary/5"
+        className="relative p-8 rounded-[2.5rem] bg-background border border-border/40 overflow-hidden shadow-lg shadow-primary/5"
       >
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        
+        
         
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             <div className="relative shrink-0 group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-foreground rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border/40 shadow-md overflow-hidden group-hover:scale-105 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <ShieldCheck className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
               </div>
             </div>
             <div>
-              <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent uppercase sm:text-4xl">
+              <h1 className="text-3xl font-black tracking-tight text-foreground uppercase sm:text-4xl">
                 Seguridad
               </h1>
               <p className="text-muted-foreground font-medium mt-1 tracking-wide">
@@ -87,7 +85,7 @@ export default function Seguridad() {
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="h-10 px-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center gap-2">
+            <div className="h-10 px-4 rounded-xl border border-border flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="text-[10px] font-black text-primary uppercase tracking-widest">Protocolo Activo</span>
             </div>
@@ -102,7 +100,7 @@ export default function Seguridad() {
       >
         <Tabs defaultValue="roles" className="space-y-8 min-w-0">
           <div className="flex justify-center">
-            <TabsList className="inline-flex h-16 p-2 rounded-[1.25rem] bg-muted/30 backdrop-blur-md border border-border/50 shadow-inner">
+            <TabsList className="inline-flex h-16 p-2 rounded-[1.25rem] bg-background border border-border/50 shadow-inner">
               <TabsTrigger value="roles" className="px-8 rounded-xl gap-2 data-[state=active]:bg-background data-[state=active]:shadow-lg data-[state=active]:text-primary transition-all font-black uppercase text-[10px] tracking-widest">
                 <ShieldCheck className="w-4 h-4" />
                 Roles y permisos

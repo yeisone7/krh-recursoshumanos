@@ -236,8 +236,8 @@ export function CycleGeneratorDialog({
         </DialogHeader>
 
         {/* Header Premium */}
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-primary/5">
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-border ">
+          
           
           <div className="flex items-start gap-4 sm:gap-5 relative">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center font-black text-xl sm:text-2xl shrink-0 shadow-inner">
@@ -277,7 +277,7 @@ export function CycleGeneratorDialog({
             <Form {...form}>
               <form id="generatorForm" onSubmit={form.handleSubmit(generatePreview)} className="p-6 sm:p-8 overflow-y-auto space-y-6">
                 
-                <div className="bg-primary/5 p-5 rounded-2xl border border-primary/10 mb-2">
+                <div className="p-5 rounded-2xl border border-border mb-2">
                   <div className="flex items-center gap-3 mb-2">
                     <Zap className="w-5 h-5 text-primary" />
                     <h3 className="font-black tracking-tight text-primary">Asignación Automática</h3>
@@ -296,11 +296,11 @@ export function CycleGeneratorDialog({
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Ciclo de Rotación *</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background">
+                            <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
                               <SelectValue placeholder="Seleccione un ciclo..." />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="rounded-2xl border-primary/10">
+                          <SelectContent className="rounded-2xl border-border ">
                             {activeCycles.map((cycle) => (
                               <SelectItem key={cycle.id} value={cycle.id} className="py-2">
                                 {cycle.name} <span className="text-muted-foreground ml-1">({cycle.total_days} días)</span>
@@ -314,7 +314,7 @@ export function CycleGeneratorDialog({
                   />
 
                   {selectedCycle?.cycle_days && (
-                    <div className="sm:col-span-2 p-4 bg-muted/10 border border-primary/5 rounded-2xl">
+                    <div className="sm:col-span-2 p-4 bg-background /10 border border-border rounded-2xl">
                       <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">Secuencia del ciclo</p>
                       <div className="flex flex-wrap gap-2">
                         {selectedCycle.cycle_days
@@ -346,7 +346,7 @@ export function CycleGeneratorDialog({
                               <Button
                                 variant="outline"
                                 className={cn(
-                                  'h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background w-full justify-start text-left font-normal',
+                                  'h-12 rounded-2xl bg-background border-border focus:bg-background w-full justify-start text-left font-normal',
                                   !field.value && 'text-muted-foreground'
                                 )}
                               >
@@ -382,7 +382,7 @@ export function CycleGeneratorDialog({
                               <Button
                                 variant="outline"
                                 className={cn(
-                                  'h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background w-full justify-start text-left font-normal',
+                                  'h-12 rounded-2xl bg-background border-border focus:bg-background w-full justify-start text-left font-normal',
                                   !field.value && 'text-muted-foreground'
                                 )}
                               >
@@ -435,7 +435,7 @@ export function CycleGeneratorDialog({
                           </div>
                         </div>
                         <FormControl>
-                          <div className="h-48 overflow-y-auto border border-primary/10 bg-muted/5 rounded-2xl p-2">
+                          <div className="h-48 overflow-y-auto border border-border bg-background /5 rounded-2xl p-2">
                             {shiftEmployees.length === 0 ? (
                               <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
                                 <Users className="w-8 h-8 opacity-20" />
@@ -444,7 +444,7 @@ export function CycleGeneratorDialog({
                             ) : (
                               <div className="space-y-1">
                                 {shiftEmployees.map((emp) => (
-                                  <label key={emp.id} className="flex items-center gap-3 cursor-pointer hover:bg-muted/50 p-2.5 rounded-xl transition-colors">
+                                  <label key={emp.id} className="flex items-center gap-3 cursor-pointer hover:bg-background p-2.5 rounded-xl transition-colors">
                                     <Checkbox
                                       checked={field.value.includes(emp.id)}
                                       onCheckedChange={(checked) => {
@@ -469,7 +469,7 @@ export function CycleGeneratorDialog({
                 </div>
 
                 {totalDays > 0 && selectedEmployeeIds.length > 0 && (
-                  <Alert className="bg-primary/5 border-primary/20 rounded-2xl">
+                  <Alert className="border-primary/20 rounded-2xl">
                     <Zap className="h-4 w-4 text-primary" />
                     <AlertDescription className="text-primary font-medium text-sm">
                       Se generarán aproximadamente <strong>{totalDays * selectedEmployeeIds.length}</strong> asignaciones en total.
@@ -488,7 +488,7 @@ export function CycleGeneratorDialog({
                 </AlertDescription>
               </Alert>
 
-              <div className="p-5 bg-muted/10 border border-primary/5 rounded-2xl text-sm space-y-3">
+              <div className="p-5 bg-background /10 border border-border rounded-2xl text-sm space-y-3">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="text-muted-foreground text-xs font-black uppercase tracking-widest block mb-1">Ciclo Seleccionado</span>
@@ -519,10 +519,10 @@ export function CycleGeneratorDialog({
           )}
         </div>
 
-        <div className="p-6 border-t border-border/50 bg-muted/10 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0">
+        <div className="p-6 border-t border-border/50 bg-background /10 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 shrink-0">
           {!previewMode ? (
             <>
-              <Button type="button" variant="outline" className="w-full sm:w-auto h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-primary/10" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" className="w-full sm:w-auto h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
               <Button type="submit" form="generatorForm" className="w-full sm:w-auto h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" disabled={activeCycles.length === 0 || selectedEmployeeIds.length === 0 || !startDate || !endDate}>
@@ -531,7 +531,7 @@ export function CycleGeneratorDialog({
             </>
           ) : (
             <>
-              <Button type="button" variant="outline" className="w-full sm:w-auto h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-primary/10" onClick={() => setPreviewMode(false)}>
+              <Button type="button" variant="outline" className="w-full sm:w-auto h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => setPreviewMode(false)}>
                 Volver
               </Button>
               <Button 

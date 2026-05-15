@@ -48,7 +48,7 @@ export function CandidateHistoryLink({ employeeId }: CandidateHistoryLinkProps) 
               return (
                 <div
                   key={c.id}
-                  className="flex items-center justify-between text-xs px-2 py-1.5 rounded-md bg-background/80 cursor-pointer hover:bg-muted/80 transition-colors"
+                  className="flex items-center justify-between text-xs px-2 py-1.5 rounded-md bg-background cursor-pointer hover:bg-background /80 transition-colors"
                   onClick={() => setSelectedCandidateId(c.id)}
                 >
                   <div className="flex items-center gap-2 min-w-0">

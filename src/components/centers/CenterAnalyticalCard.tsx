@@ -51,9 +51,9 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
     d ? format(new Date(d), 'dd MMM yyyy', { locale: es }) : '—';
 
   return (
-    <Card className="group relative overflow-hidden border border-primary/5 shadow-2xl hover:shadow-primary/10 transition-all duration-700 bg-background/40 backdrop-blur-xl rounded-[2.5rem]">
+    <Card className="group relative overflow-hidden border border-border shadow-2xl hover:shadow-primary/10 transition-all duration-700 bg-background rounded-[2.5rem]">
       {/* Decorative element */}
-      <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/5 rounded-full blur-[80px] group-hover:bg-primary/10 transition-colors duration-700 pointer-events-none" />
+      
       
       {/* Header Section */}
       <div className="relative p-8 pb-6">
@@ -70,11 +70,11 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
             
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                 <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-black uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                 <Badge variant="outline" className="text-primary border-border font-black uppercase tracking-[0.2em] text-[9px] px-2 py-0">
                     ID: {center.code || 'S/N'}
                  </Badge>
                  {center.is_active === false && (
-                    <Badge variant="secondary" className="bg-muted text-muted-foreground font-black uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                    <Badge variant="secondary" className="bg-background text-muted-foreground font-black uppercase tracking-[0.2em] text-[9px] px-2 py-0">
                        Inactivo
                     </Badge>
                  )}
@@ -90,7 +90,7 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
           </div>
 
           <div className="shrink-0 text-right">
-             <div className="bg-primary/5 p-4 rounded-3xl border border-primary/10 shadow-inner">
+             <div className="p-4 rounded-3xl border border-border shadow-inner">
                 <p className="text-4xl font-black text-primary tracking-tighter leading-none tabular-nums">
                    {isLoading ? '—' : totalEmployees}
                 </p>
@@ -100,7 +100,7 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
         </div>
       </div>
 
-      <Separator className="bg-primary/5" />
+      <Separator className="" />
 
       <CardContent className="p-0">
         <ScrollArea className="h-[450px]">
@@ -113,7 +113,7 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
                 { label: 'Contacto', value: center.phone, icon: Phone, color: 'text-emerald-500' },
                 { label: 'Ocupación', value: employeePercentage ? `${employeePercentage}%` : '—', icon: Layers, color: 'text-primary' },
               ].map((item, i) => (
-                <div key={i} className="group/item relative p-4 rounded-[1.5rem] bg-muted/20 border border-primary/5 hover:border-primary/20 hover:bg-background transition-all duration-300">
+                <div key={i} className="group/item relative p-4 rounded-[1.5rem] bg-background border border-border hover:border-primary/20 hover:bg-background transition-all duration-300">
                   <div className="flex items-center gap-2 mb-2">
                     <div className={cn("p-1.5 rounded-lg bg-background shadow-sm", item.color.replace('text', 'text-opacity-20 bg'))}>
                        <item.icon className={cn("w-3.5 h-3.5", item.color)} />
@@ -133,7 +133,7 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
                   Estado Contractual
                 </h4>
               </div>
-              <div className="relative p-6 rounded-[2rem] bg-gradient-to-br from-primary/5 via-background to-accent/5 border border-primary/10">
+              <div className="relative p-6 rounded-[2rem] bg-gradient-to-br from-primary/5 via-background to-accent/5 border border-border ">
                 <div className="flex justify-between items-end mb-4">
                   <div className="space-y-1">
                     <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Inicio</p>
@@ -149,7 +149,7 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
                       <ContractDaysBadge endDate={center.contract_commercial_date} />
                       <span className="text-[10px] font-bold text-muted-foreground uppercase">Progreso Contrato</span>
                    </div>
-                   <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden">
+                   <div className="h-2 w-full bg-background rounded-full overflow-hidden">
                       <div className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" style={{ width: '70%' }} />
                    </div>
                 </div>
@@ -169,13 +169,13 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
                    <Skeleton className="h-20 w-full rounded-2xl" />
                 </div>
               ) : positionCounts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 bg-muted/10 rounded-[2rem] border-2 border-dashed border-primary/5">
+                <div className="flex flex-col items-center justify-center py-12 bg-background /10 rounded-[2rem] border-2 border-dashed border-border ">
                   <Users className="w-10 h-10 text-muted-foreground/20 mb-3" />
                   <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">Sin personal vinculado</p>
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="h-[220px] w-full bg-background/40 rounded-[2rem] p-4 border border-primary/5">
+                  <div className="h-[220px] w-full bg-background rounded-[2rem] p-4 border border-border ">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={positionCounts} layout="vertical" margin={{ top: 0, right: 30, bottom: 0, left: 20 }}>
                         <XAxis type="number" hide />
@@ -202,7 +202,7 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {positionCounts.map((p, i) => (
-                      <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-background border border-primary/5 shadow-sm">
+                      <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-background border border-border shadow-sm">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
                         <span className="text-[10px] font-black uppercase tracking-tight text-foreground/80">{p.position_name}</span>
                         <span className="text-[10px] font-black text-primary">{p.count}</span>
@@ -221,13 +221,13 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
                   Horarios Activos
                 </h4>
                 {shifts.length === 0 ? (
-                  <div className="p-4 rounded-2xl bg-muted/10 border border-dashed text-center">
+                  <div className="p-4 rounded-2xl bg-background /10 border border-dashed text-center">
                      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Sin turnos</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {shifts.map((s, i) => (
-                      <div key={i} className="flex items-center justify-between bg-background p-3 rounded-2xl border border-primary/5 shadow-sm group/sh hover:border-primary/20 transition-all">
+                      <div key={i} className="flex items-center justify-between bg-background p-3 rounded-2xl border border-border shadow-sm group/sh hover:border-primary/20 transition-all">
                         <div className="flex items-center gap-3">
                           <div className="p-2 rounded-xl bg-primary/10 text-primary">
                             <Clock className="w-3.5 h-3.5" />
@@ -270,11 +270,11 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
                   )}
 
                   {areas.length > 0 && (
-                    <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                    <div className="p-4 rounded-2xl border border-border ">
                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-3">Distribución Áreas</p>
                        <div className="flex flex-wrap gap-1.5">
                           {areas.slice(0, 4).map(a => (
-                             <Badge key={a.id} variant="secondary" className="text-[9px] font-black bg-background border-primary/5 text-primary">
+                             <Badge key={a.id} variant="secondary" className="text-[9px] font-black bg-background border-border text-primary">
                                 {a.name}
                              </Badge>
                           ))}
@@ -292,7 +292,7 @@ export function CenterAnalyticalCard({ center, companyTotalEmployees = 0 }: Prop
       {/* Footer Branding */}
       <div className="p-6 bg-gradient-to-t from-muted/30 to-transparent flex items-center justify-between">
          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-primary/20 bg-background/50 text-[9px] font-black text-primary">V.1.2.0</Badge>
+            <Badge variant="outline" className="border-primary/20 bg-background text-[9px] font-black text-primary">V.1.2.0</Badge>
          </div>
          <Button variant="ghost" size="sm" className="h-8 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/10">
             Ver Detalle Completo

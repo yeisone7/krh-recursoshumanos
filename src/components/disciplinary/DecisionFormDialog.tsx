@@ -224,7 +224,7 @@ export function DecisionFormDialog({
               )}
 
               {needsSuspensionDates && sanctionStartDate && sanctionDays && (
-                <div className="text-sm bg-primary/5 border border-primary/10 p-4 rounded-2xl animate-in fade-in duration-500">
+                <div className="text-sm border border-border p-4 rounded-2xl animate-in fade-in duration-500">
                   <div className="flex items-center gap-2 mb-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                     <span className="text-xs font-black uppercase tracking-wider text-primary">Período Proyectado</span>
@@ -254,12 +254,12 @@ export function DecisionFormDialog({
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-border/50 bg-background/80 backdrop-blur-md p-6">
+            <div className="flex items-center justify-end gap-3 border-t border-border/50 bg-background p-6">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                className="h-12 px-6 rounded-xl font-bold text-muted-foreground hover:bg-muted/50 transition-all"
+                className="h-12 px-6 rounded-xl font-bold text-muted-foreground hover:bg-background transition-all"
               >
                 Cancelar
               </Button>

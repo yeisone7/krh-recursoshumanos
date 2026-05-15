@@ -135,10 +135,10 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           <div className="relative flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
               <Copy className="w-7 h-7 text-primary-foreground" />
@@ -156,7 +156,7 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
 
         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
           {/* Source info */}
-          <div className="group relative overflow-hidden rounded-2xl border border-border/50 bg-muted/20 p-5 transition-all">
+          <div className="group relative overflow-hidden rounded-2xl border border-border/50 bg-background p-5 transition-all">
             <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
               <Copy className="w-12 h-12 text-primary" />
             </div>
@@ -188,7 +188,7 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
               <div className="flex-1 space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cargo Destino</Label>
                 <Select value={quickPositionId} onValueChange={setQuickPositionId}>
-                  <SelectTrigger className="h-11 rounded-xl border-border/50 bg-background/80 font-bold text-sm">
+                  <SelectTrigger className="h-11 rounded-xl border-border/50 bg-background font-bold text-sm">
                     <SelectValue placeholder="Seleccionar cargo" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -201,7 +201,7 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
               <Button
                 variant="outline"
                 size="lg"
-                className="h-11 rounded-xl gap-2 font-black text-[10px] uppercase tracking-widest border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40 transition-all shadow-sm"
+                className="h-11 rounded-xl gap-2 font-black text-[10px] uppercase tracking-widest border-primary/20 text-primary hover:hover:border-primary/40 transition-all shadow-sm"
                 onClick={() => handleSelectAllCenters(quickPositionId)}
               >
                 Aplicar a {centers.length} Centros
@@ -224,8 +224,8 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
               {destinations.map((dest, idx) => {
                 const status = getDestinationStatus(dest);
                 return (
-                  <div key={idx} className="group relative rounded-2xl border border-border/50 bg-background/50 p-4 transition-all hover:border-primary/20">
-                    <div className="absolute -top-2 -left-2 flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-[10px] font-black border border-border/50 text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <div key={idx} className="group relative rounded-2xl border border-border/50 bg-background p-4 transition-all hover:border-primary/20">
+                    <div className="absolute -top-2 -left-2 flex h-6 w-6 items-center justify-center rounded-lg bg-background text-[10px] font-black border border-border/50 text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                       {idx + 1}
                     </div>
                     {destinations.length > 1 && (
@@ -243,7 +243,7 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
                       <div className="space-y-1.5">
                         <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Centro</Label>
                         <Select value={dest.centerId} onValueChange={(v) => updateDestination(idx, 'centerId', v)}>
-                          <SelectTrigger className="h-10 rounded-xl border-border/50 bg-background/80 font-bold text-xs">
+                          <SelectTrigger className="h-10 rounded-xl border-border/50 bg-background font-bold text-xs">
                             <SelectValue placeholder="Centro" />
                           </SelectTrigger>
                           <SelectContent className="rounded-xl">
@@ -256,7 +256,7 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
                       <div className="space-y-1.5">
                         <Label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cargo</Label>
                         <Select value={dest.positionId} onValueChange={(v) => updateDestination(idx, 'positionId', v)}>
-                          <SelectTrigger className="h-10 rounded-xl border-border/50 bg-background/80 font-bold text-xs">
+                          <SelectTrigger className="h-10 rounded-xl border-border/50 bg-background font-bold text-xs">
                             <SelectValue placeholder="Cargo" />
                           </SelectTrigger>
                           <SelectContent className="rounded-xl">
@@ -293,7 +293,7 @@ export function CloneProfesiogramaDialog({ open, onOpenChange, sourceData, cente
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-muted/10 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-background /10 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resumen de Destino</span>
             <p className="text-xs font-bold text-muted-foreground">

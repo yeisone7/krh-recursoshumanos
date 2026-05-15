@@ -102,7 +102,7 @@ export function LinkEmployeeDialog({ open, onOpenChange, userId, userEmail }: Li
 
         {existingLink ? (
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-            <div className="p-4 rounded-lg border bg-muted/50">
+            <div className="p-4 rounded-lg border bg-background">
               <p className="text-sm text-muted-foreground mb-2">Empleado vinculado actualmente:</p>
               <div className="flex min-w-0 items-center gap-3">
                 <Avatar>
@@ -162,7 +162,7 @@ export function LinkEmployeeDialog({ open, onOpenChange, userId, userEmail }: Li
                       className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
                         selectedEmployeeId === emp.id 
                           ? 'bg-primary/10 border-primary border' 
-                          : 'hover:bg-muted border border-transparent'
+                          : 'hover:bg-background border border-transparent'
                       }`}
                     >
                       <Avatar className="h-10 w-10">

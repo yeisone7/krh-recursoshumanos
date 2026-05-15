@@ -31,7 +31,7 @@ export function KPICard({ title, value, subtitle, icon, trend, variant = 'defaul
   };
 
   const iconBgColors = {
-    default: 'bg-muted',
+    default: 'bg-background ',
     primary: 'bg-primary/10',
     secondary: 'bg-secondary/10',
     tertiary: 'bg-tertiary/10',

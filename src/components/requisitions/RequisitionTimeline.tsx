@@ -186,7 +186,7 @@ function StatusIcon({ status }: { status: TimelineStepData['status'] }) {
       );
     default:
       return (
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-background text-muted-foreground">
           <Clock className="h-4 w-4" />
         </div>
       );
@@ -232,7 +232,7 @@ export function RequisitionTimeline({ requisition, vacancies = [] }: Requisition
                           step.status === 'approved' && 'bg-success/10 text-success border-success/20',
                           step.status === 'rejected' && 'bg-destructive/10 text-destructive border-destructive/20',
                           step.status === 'current' && 'bg-primary/10 text-primary border-primary/20',
-                          step.status === 'pending' && 'bg-muted text-muted-foreground'
+                          step.status === 'pending' && 'bg-background text-muted-foreground'
                         )}
                       >
                         {step.status === 'approved' && 'Aprobado'}
@@ -319,7 +319,7 @@ export function RequisitionTimeline({ requisition, vacancies = [] }: Requisition
                     {vacancies.map((vacancy) => (
                       <div
                         key={vacancy.id}
-                        className="flex items-center justify-between p-2 rounded-md bg-muted/50"
+                        className="flex items-center justify-between p-2 rounded-md bg-background"
                       >
                         <span className="font-medium">{vacancy.position_title}</span>
                         <div className="flex items-center gap-2">
@@ -330,7 +330,7 @@ export function RequisitionTimeline({ requisition, vacancies = [] }: Requisition
                             variant="outline"
                             className={cn(
                               vacancy.status === 'open' && 'bg-success/10 text-success',
-                              vacancy.status === 'closed' && 'bg-muted text-muted-foreground'
+                              vacancy.status === 'closed' && 'bg-background text-muted-foreground'
                             )}
                           >
                             {vacancy.status === 'open' ? 'Abierta' : vacancy.status}

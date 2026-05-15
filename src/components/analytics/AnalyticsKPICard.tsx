@@ -45,7 +45,7 @@ export function AnalyticsKPICard({
   };
 
   const iconBgColors = {
-    default: 'bg-muted',
+    default: 'bg-background ',
     primary: 'bg-primary/10',
     accent: 'bg-accent/10',
     warning: 'bg-warning/10',

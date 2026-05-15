@@ -114,10 +114,10 @@ export function DisciplinaryDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex h-[100dvh] w-screen max-w-4xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background/95 backdrop-blur-xl">
+        <DialogContent className="flex h-[100dvh] w-screen max-w-4xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background ">
           {/* Header con gradiente */}
           <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
-            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+            
             <div className="relative flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-md shadow-primary/20">
@@ -125,7 +125,7 @@ export function DisciplinaryDetailDialog({
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline" className="h-5 rounded-lg px-2 bg-background/50 border-border/50 font-bold text-[9px] uppercase tracking-widest text-muted-foreground">
+                    <Badge variant="outline" className="h-5 rounded-lg px-2 bg-background border-border/50 font-bold text-[9px] uppercase tracking-widest text-muted-foreground">
                       Expediente {process.case_number}
                     </Badge>
                     <Badge className={cn('h-5 rounded-lg px-2 text-[9px] font-bold uppercase tracking-widest border-0 shadow-sm', getFaultColor(process.fault_type))}>
@@ -148,7 +148,7 @@ export function DisciplinaryDetailDialog({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-10 rounded-xl gap-2 font-bold text-[10px] uppercase tracking-widest bg-background/50 border-border/50 hover:bg-background transition-all"
+                  className="h-10 rounded-xl gap-2 font-bold text-[10px] uppercase tracking-widest bg-background border-border/50 hover:bg-background transition-all"
                   onClick={handleExportPdf}
                   disabled={isExporting}
                 >
@@ -161,7 +161,7 @@ export function DisciplinaryDetailDialog({
 
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-6">
             <Tabs defaultValue="general" className="flex-1 min-h-0 overflow-hidden flex flex-col">
-              <TabsList className="grid h-14 w-full grid-cols-5 mb-6 bg-muted/50 p-1 rounded-2xl border border-border/50">
+              <TabsList className="grid h-14 w-full grid-cols-5 mb-6 bg-background p-1 rounded-2xl border border-border/50">
                 <TabsTrigger value="general" className="rounded-xl font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">General</TabsTrigger>
                 <TabsTrigger value="evidence" className="rounded-xl font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">Evidencias</TabsTrigger>
                 <TabsTrigger value="defenses" className="rounded-xl font-bold text-[10px] uppercase tracking-widest data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm">Descargos</TabsTrigger>
@@ -174,7 +174,7 @@ export function DisciplinaryDetailDialog({
                 <TabsContent value="general" className="space-y-6 mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   {/* Action Banner */}
                   {nextAction && process.status !== 'cerrado' && (
-                    <div className="relative overflow-hidden bg-primary/5 border border-primary/20 rounded-2xl p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="relative overflow-hidden border border-primary/20 rounded-2xl p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-4">
                         <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
                           <ChevronRight className="w-5 h-5" />
@@ -197,7 +197,7 @@ export function DisciplinaryDetailDialog({
                   )}
 
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 space-y-4">
+                    <div className="bg-background p-5 rounded-2xl border border-border/50 space-y-4">
                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                         <AlertTriangle className="w-3.5 h-3.5 text-primary" /> Información del Caso
                       </div>
@@ -217,7 +217,7 @@ export function DisciplinaryDetailDialog({
                       </div>
                     </div>
 
-                    <div className="bg-muted/30 p-5 rounded-2xl border border-border/50 space-y-4">
+                    <div className="bg-background p-5 rounded-2xl border border-border/50 space-y-4">
                       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                         <User className="w-3.5 h-3.5 text-primary" /> Responsables
                       </div>
@@ -240,7 +240,7 @@ export function DisciplinaryDetailDialog({
 
                   <div className="space-y-3">
                     <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Relato de los Hechos</Label>
-                    <div className="bg-muted/30 p-5 rounded-2xl border border-border/50">
+                    <div className="bg-background p-5 rounded-2xl border border-border/50">
                       <p className="text-sm font-medium text-foreground leading-relaxed whitespace-pre-wrap">{process.facts_description}</p>
                     </div>
                   </div>
@@ -293,10 +293,10 @@ export function DisciplinaryDetailDialog({
                   {process.evidence && process.evidence.length > 0 ? (
                     <div className="space-y-3">
                       {process.evidence.map((ev) => (
-                        <div key={ev.id} className="group relative overflow-hidden rounded-2xl border border-border/50 bg-background/50 p-4 transition-all duration-300 hover:bg-primary/[0.02] hover:border-primary/20">
+                        <div key={ev.id} className="group relative overflow-hidden rounded-2xl border border-border/50 bg-background p-4 transition-all duration-300 hover:bg-primary/[0.02] hover:border-primary/20">
                           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0 space-y-1">
-                              <Badge variant="outline" className="text-[9px] uppercase tracking-widest bg-muted/50 border-border/50 rounded-lg">
+                              <Badge variant="outline" className="text-[9px] uppercase tracking-widest bg-background border-border/50 rounded-lg">
                                 {ev.evidence_type}
                               </Badge>
                               <p className="text-sm font-medium text-foreground">{ev.description}</p>
@@ -305,7 +305,7 @@ export function DisciplinaryDetailDialog({
                               </p>
                             </div>
                             {ev.file_url && (
-                              <Button variant="outline" size="sm" className="h-9 rounded-xl font-bold text-[10px] uppercase tracking-widest border-border/50 bg-background/50" asChild>
+                              <Button variant="outline" size="sm" className="h-9 rounded-xl font-bold text-[10px] uppercase tracking-widest border-border/50 bg-background " asChild>
                                 <a href={ev.file_url} target="_blank" rel="noopener noreferrer">Ver Archivo</a>
                               </Button>
                             )}
@@ -314,7 +314,7 @@ export function DisciplinaryDetailDialog({
                       ))}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
+                    <div className="flex flex-col items-center justify-center py-20 bg-background border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
                       <div className="p-4 rounded-full bg-background shadow-sm">
                         <FileText className="w-10 h-10 text-muted-foreground/30" />
                       </div>
@@ -332,7 +332,7 @@ export function DisciplinaryDetailDialog({
                     </div>
                     {!isClosed && (
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setShowTokenDialog(true)} className="h-9 rounded-xl gap-2 font-bold text-xs border-border/50 bg-background/50">
+                        <Button variant="outline" size="sm" onClick={() => setShowTokenDialog(true)} className="h-9 rounded-xl gap-2 font-bold text-xs border-border/50 bg-background ">
                           <Link className="h-3.5 w-3.5" /> Enlace
                         </Button>
                         <Button size="sm" onClick={() => setShowDefenseForm(true)} className="h-9 rounded-xl gap-2 font-bold text-xs bg-primary text-primary-foreground">
@@ -345,10 +345,10 @@ export function DisciplinaryDetailDialog({
                   {process.defenses && process.defenses.length > 0 ? (
                     <div className="space-y-3">
                       {process.defenses.map((def) => (
-                        <div key={def.id} className="relative overflow-hidden rounded-2xl border border-border/50 bg-background/50 p-5 space-y-3">
+                        <div key={def.id} className="relative overflow-hidden rounded-2xl border border-border/50 bg-background p-5 space-y-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-[9px] uppercase tracking-widest bg-primary/5 text-primary border-primary/20 rounded-lg">
+                              <Badge variant="outline" className="text-[9px] uppercase tracking-widest text-primary border-primary/20 rounded-lg">
                                 {def.defense_type === 'escrito' ? 'Escrito' : 'Oral'}
                               </Badge>
                               {(def as any).submitted_via_token && (
@@ -369,7 +369,7 @@ export function DisciplinaryDetailDialog({
                       ))}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
+                    <div className="flex flex-col items-center justify-center py-20 bg-background border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
                       <div className="p-4 rounded-full bg-background shadow-sm">
                         <Scale className="w-10 h-10 text-muted-foreground/30" />
                       </div>
@@ -382,7 +382,7 @@ export function DisciplinaryDetailDialog({
                 <TabsContent value="decision" className="space-y-6 mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   {process.sanction_type ? (
                     <div className="space-y-6">
-                      <div className="bg-muted/30 p-6 rounded-2xl border border-border/50 space-y-6">
+                      <div className="bg-background p-6 rounded-2xl border border-border/50 space-y-6">
                         <div className="flex items-center gap-3">
                           <div className="p-2.5 rounded-xl bg-primary shadow-lg shadow-primary/20 text-primary-foreground">
                             <Gavel className="w-5 h-5" />
@@ -403,7 +403,7 @@ export function DisciplinaryDetailDialog({
                             <p className="text-sm font-bold">{process.decision_maker_name || '—'}</p>
                           </div>
                           {process.sanction_days && process.sanction_days > 0 && (
-                            <div className="col-span-2 grid grid-cols-2 gap-6 p-4 rounded-xl bg-background/50 border border-border/50">
+                            <div className="col-span-2 grid grid-cols-2 gap-6 p-4 rounded-xl bg-background border border-border/50">
                               <div className="space-y-1">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-primary">Suspensión</p>
                                 <p className="text-sm font-black">{process.sanction_days} Días</p>
@@ -418,12 +418,12 @@ export function DisciplinaryDetailDialog({
 
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resumen de la Decisión</Label>
-                          <p className="text-sm font-medium text-foreground leading-relaxed p-4 rounded-xl bg-background/50 border border-border/30 whitespace-pre-wrap">{process.decision_summary}</p>
+                          <p className="text-sm font-medium text-foreground leading-relaxed p-4 rounded-xl bg-background border border-border/30 whitespace-pre-wrap">{process.decision_summary}</p>
                         </div>
 
                         {/* Appeal if exists */}
                         {process.has_appeal && (
-                          <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-4">
+                          <div className="border border-primary/20 rounded-xl p-5 space-y-4">
                             <h5 className="font-black text-[10px] uppercase tracking-widest text-primary flex items-center gap-2">
                               <Scale className="w-4 h-4" /> Recurso de Apelación
                             </h5>
@@ -438,7 +438,7 @@ export function DisciplinaryDetailDialog({
                               </div>
                               <div className="col-span-2 space-y-1 mt-1">
                                 <p className="font-bold text-muted-foreground/60 uppercase">Resultado</p>
-                                <p className="font-medium bg-background/50 p-2.5 rounded-lg border border-primary/10">{process.appeal_resolution}</p>
+                                <p className="font-medium bg-background p-2.5 rounded-lg border border-border ">{process.appeal_resolution}</p>
                               </div>
                             </div>
                           </div>
@@ -455,7 +455,7 @@ export function DisciplinaryDetailDialog({
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
+                    <div className="flex flex-col items-center justify-center py-20 bg-background border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
                       <div className="p-4 rounded-full bg-background shadow-sm">
                         <Gavel className="w-10 h-10 text-muted-foreground/30" />
                       </div>
@@ -483,7 +483,7 @@ export function DisciplinaryDetailDialog({
                       {process.timeline.map((item) => (
                         <div key={item.id} className="relative pl-8">
                           <div className="absolute left-[-25px] top-1.5 w-4 h-4 rounded-full bg-background border-2 border-primary shadow-sm" />
-                          <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 space-y-2">
+                          <div className="bg-background p-4 rounded-2xl border border-border/50 space-y-2">
                             <div className="flex items-center justify-between gap-4">
                               <p className="font-bold text-sm text-foreground">{item.description}</p>
                               <span className="text-[10px] font-bold text-muted-foreground uppercase whitespace-nowrap">
@@ -505,7 +505,7 @@ export function DisciplinaryDetailDialog({
                       ))}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
+                    <div className="flex flex-col items-center justify-center py-20 bg-background border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
                       <div className="p-4 rounded-full bg-background shadow-sm">
                         <History className="w-10 h-10 text-muted-foreground/30" />
                       </div>
@@ -517,7 +517,7 @@ export function DisciplinaryDetailDialog({
             </Tabs>
           </div>
           
-          <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-muted/10 sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-background /10 sm:flex-row sm:items-center sm:justify-end">
             <Button 
               variant="ghost" 
               onClick={() => onOpenChange(false)}

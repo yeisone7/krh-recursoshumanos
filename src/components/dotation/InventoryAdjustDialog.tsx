@@ -49,7 +49,7 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col overflow-hidden rounded-none border-0 p-0 sm:max-w-md sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex flex-col overflow-hidden rounded-none border-0 p-0 sm:max-w-md sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
           <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-primary/10 blur-[60px] pointer-events-none" />
@@ -84,7 +84,7 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
                 "h-12 rounded-xl gap-2 font-bold text-xs uppercase tracking-widest transition-all duration-300",
                 adjustType === 'add' 
                   ? "bg-primary/10 border-primary/30 text-primary shadow-sm" 
-                  : "hover:bg-primary/5"
+                  : "hover:"
               )}
               onClick={() => setAdjustType('add')}
             >
@@ -113,9 +113,9 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
                 min={1}
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                className="h-12 rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20 pl-4 font-bold text-lg"
+                className="h-12 rounded-xl bg-background border-border/50 focus:ring-primary/20 pl-4 font-bold text-lg"
               />
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-background/50 border border-border/50 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg bg-background border border-border/50 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 Unds
               </div>
             </div>
@@ -124,10 +124,10 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
           <div className="space-y-2">
             <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Motivo del ajuste *</Label>
             <Select value={reason} onValueChange={setReason}>
-              <SelectTrigger className="h-12 rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20">
+              <SelectTrigger className="h-12 rounded-xl bg-background border-border/50 focus:ring-primary/20">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-background/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl">
+              <SelectContent className="bg-background border-border/50 rounded-2xl shadow-2xl">
                 <SelectItem value="entrada" className="rounded-xl">Entrada de mercancía</SelectItem>
                 <SelectItem value="ajuste" className="rounded-xl">Ajuste manual</SelectItem>
                 <SelectItem value="devolucion" className="rounded-xl">Devolución</SelectItem>
@@ -144,12 +144,12 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
               placeholder="Detalles adicionales sobre el ajuste..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="resize-none rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20 min-h-[80px] p-4 font-medium"
+              className="resize-none rounded-xl bg-background border-border/50 focus:ring-primary/20 min-h-[80px] p-4 font-medium"
               maxLength={500}
             />
           </div>
 
-          <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 flex items-center justify-between">
+          <div className="bg-background p-4 rounded-2xl border border-border/50 flex items-center justify-between">
             <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Stock después del ajuste</span>
             <span className={cn(
               "font-black text-lg",
@@ -161,7 +161,7 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-muted/10 sm:flex-row sm:justify-end">
+        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-background /10 sm:flex-row sm:justify-end">
           <Button 
             variant="ghost" 
             onClick={() => onOpenChange(false)}

@@ -77,8 +77,8 @@ export default function Cesantias() {
   return (
     <div className="space-y-8 max-w-[1600px] mx-auto pb-12">
       {/* Header Premium */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 rounded-[2.5rem] border border-primary/10 shadow-sm">
-        <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 rounded-[2.5rem] border border-border shadow-sm">
+        
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-5">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
@@ -88,11 +88,11 @@ export default function Cesantias() {
               <h1 className="text-3xl font-black tracking-tighter sm:text-4xl text-foreground">Cesantías</h1>
               <p className="text-sm font-medium text-muted-foreground mt-1 flex items-center gap-2">
                 Gestión y cumplimiento legal de cesantías e intereses
-                <Badge variant="outline" className="rounded-lg px-2 bg-primary/5 border-primary/20 text-primary font-bold text-[10px] uppercase tracking-widest">Año {selectedYear}</Badge>
+                <Badge variant="outline" className="rounded-lg px-2 border-primary/20 text-primary font-bold text-[10px] uppercase tracking-widest">Año {selectedYear}</Badge>
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 bg-background/50 p-2 rounded-2xl border border-border/50 backdrop-blur-sm">
+          <div className="flex items-center gap-3 bg-background p-2 rounded-2xl border border-border/50 ">
              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Seleccionar Periodo</span>
              <SearchableSelect
               options={yearOptions}
@@ -172,7 +172,7 @@ export default function Cesantias() {
             )
           }
         ].map((card, i) => (
-          <div key={i} className={`group relative overflow-hidden p-6 rounded-[2rem] bg-background/40 backdrop-blur-xl border border-primary/5 shadow-sm hover:shadow-md transition-all duration-500 ${card.isSpecial ? 'bg-primary/[0.02] border-primary/20' : ''}`}>
+          <div key={i} className={`group relative overflow-hidden p-6 rounded-[2rem] bg-background border border-border shadow-sm hover:shadow-md transition-all duration-500 ${card.isSpecial ? 'bg-primary/[0.02] border-primary/20' : ''}`}>
              <div className="flex items-center justify-between mb-4">
                 <div className={`p-3 rounded-2xl bg-${card.color}-light text-${card.color} group-hover:scale-110 transition-transform duration-500`}>
                   <card.icon className="w-6 h-6" />
@@ -190,7 +190,7 @@ export default function Cesantias() {
 
       {/* Tabs */}
       <Tabs defaultValue="deposits" className="space-y-6">
-        <div className="bg-background/40 backdrop-blur-xl p-2 rounded-[2rem] border border-primary/5 shadow-sm inline-flex items-center">
+        <div className="bg-background p-2 rounded-[2rem] border border-border shadow-sm inline-flex items-center">
           <TabsList className="bg-transparent gap-2 h-auto p-0">
             {[
               { value: 'deposits', label: 'Depósitos al Fondo', icon: Landmark },
@@ -211,7 +211,7 @@ export default function Cesantias() {
 
         {/* Deposits Tab */}
         <TabsContent value="deposits" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
+          <div className="overflow-hidden rounded-[2.5rem] border border-border shadow-sm bg-background ">
             <div className="px-8 py-8 border-b border-border/50 bg-gradient-to-br from-primary/5 via-transparent to-transparent flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-2xl font-black tracking-tighter flex items-center gap-3">
@@ -223,7 +223,7 @@ export default function Cesantias() {
                 <p className="text-sm font-medium text-muted-foreground mt-1 ml-11">Consignación al fondo antes del 14 de febrero del año siguiente</p>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => setShowImportDeposits(true)} className="h-11 px-6 rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] bg-background/50 border-border/50 hover:bg-background transition-all">
+                <Button variant="outline" onClick={() => setShowImportDeposits(true)} className="h-11 px-6 rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] bg-background border-border/50 hover:bg-background transition-all">
                   <Upload className="w-4 h-4" /> Importar
                 </Button>
                 <Button onClick={() => { setSelectedDeposit(null); setShowDepositForm(true); }} className="h-11 px-6 rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:shadow-xl transition-all">
@@ -278,7 +278,7 @@ export default function Cesantias() {
                             <span className="text-sm font-medium text-muted-foreground">{formatCurrency(deposit.base_salary)}</span>
                           </TableCell>
                           <TableCell className="px-6 py-4 text-center">
-                            <Badge variant="outline" className="rounded-lg font-bold bg-background/50 border-border/50">{deposit.days_worked}</Badge>
+                            <Badge variant="outline" className="rounded-lg font-bold bg-background border-border/50">{deposit.days_worked}</Badge>
                           </TableCell>
                           <TableCell className="px-6 py-4">
                             <span className="text-sm font-black text-foreground">{formatCurrency(deposit.cesantias_amount)}</span>
@@ -340,7 +340,7 @@ export default function Cesantias() {
 
         {/* Interests Tab */}
         <TabsContent value="interests" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-           <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
+           <div className="overflow-hidden rounded-[2.5rem] border border-border shadow-sm bg-background ">
             <div className="px-8 py-8 border-b border-border/50 bg-gradient-to-br from-violet/5 via-transparent to-transparent flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-2xl font-black tracking-tighter flex items-center gap-3">
@@ -352,7 +352,7 @@ export default function Cesantias() {
                 <p className="text-sm font-medium text-muted-foreground mt-1 ml-11">Pago del 12% anual directamente al empleado antes del 31 de enero</p>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => setShowImportInterests(true)} className="h-11 px-6 rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] bg-background/50 border-border/50 hover:bg-background transition-all">
+                <Button variant="outline" onClick={() => setShowImportInterests(true)} className="h-11 px-6 rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] bg-background border-border/50 hover:bg-background transition-all">
                   <Upload className="w-4 h-4" /> Importar
                 </Button>
                 <Button onClick={() => { setSelectedInterest(null); setShowInterestForm(true); }} className="h-11 px-6 rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-violet/20 hover:shadow-xl transition-all">
@@ -467,7 +467,7 @@ export default function Cesantias() {
 
         {/* Withdrawals Tab */}
         <TabsContent value="withdrawals" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="overflow-hidden rounded-[2.5rem] border border-primary/5 shadow-sm bg-background/40 backdrop-blur-xl">
+          <div className="overflow-hidden rounded-[2.5rem] border border-border shadow-sm bg-background ">
             <div className="px-8 py-8 border-b border-border/50 bg-gradient-to-br from-info/5 via-transparent to-transparent flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-2xl font-black tracking-tighter flex items-center gap-3">
@@ -529,7 +529,7 @@ export default function Cesantias() {
                            </div>
                         </TableCell>
                         <TableCell className="px-6 py-4">
-                          <Badge variant="outline" className="rounded-lg font-bold bg-background/50 border-border/50 text-[10px] uppercase tracking-wider">
+                          <Badge variant="outline" className="rounded-lg font-bold bg-background border-border/50 text-[10px] uppercase tracking-wider">
                             {withdrawalReasonLabels[withdrawal.withdrawal_reason]}
                           </Badge>
                         </TableCell>

@@ -51,7 +51,7 @@ function DataTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
     <div className="overflow-x-auto rounded-md border">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-muted/50">
+          <tr className="bg-background">
             {headers.map((h, i) => (
               <th key={i} className="text-left p-2 font-medium text-foreground">
                 {h}
@@ -77,7 +77,7 @@ function DataTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
 
 function FormulaBlock({ data }: { data: any }) {
   return (
-    <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+    <div className="rounded-lg border bg-background p-4 space-y-2">
       <p className="font-medium text-sm text-foreground">{data.name}</p>
       <code className="block bg-background rounded px-3 py-2 text-sm font-mono text-primary border">
         {data.formula}
@@ -105,7 +105,7 @@ function AlertBlock({ data }: { data: { variant: string; title: string; message:
       className={`flex gap-3 rounded-lg border p-3 ${
         isWarning
           ? 'border-destructive/30 bg-destructive/5'
-          : 'border-primary/30 bg-primary/5'
+          : 'border-primary/30 '
       }`}
     >
       {isWarning ? (

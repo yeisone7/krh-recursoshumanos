@@ -261,7 +261,7 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
                 )}
 
                 {watchExamType === 'egreso' && (
-                  <div className="p-4 bg-muted rounded-lg border border-border">
+                  <div className="p-4 bg-background rounded-lg border border-border">
                     <p className="text-sm text-muted-foreground">
                       Los exámenes de egreso no tienen fecha de vencimiento
                     </p>
@@ -385,7 +385,7 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
                   )}
                 />
 
-                <div className="p-4 bg-muted rounded-lg border border-border">
+                <div className="p-4 bg-background rounded-lg border border-border">
                   <p className="text-sm font-medium text-foreground mb-2">
                     Documento de Soporte
                   </p>

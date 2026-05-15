@@ -70,7 +70,7 @@ function DocumentItem({
     <div
       className={cn(
         'flex items-center gap-3 p-3 rounded-lg border bg-card',
-        isCurrent && 'border-primary/50 bg-accent/50'
+        isCurrent && 'border-border 0 bg-accent/50'
       )}
     >
       <div className="flex-shrink-0">

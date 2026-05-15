@@ -54,7 +54,7 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
             'absolute right-4 top-4 z-10 inline-flex sm:hidden',
             employee.is_active 
               ? 'bg-success-light text-success border-success/20'
-              : 'bg-muted text-muted-foreground'
+              : 'bg-background text-muted-foreground'
           )}
         >
           {employee.is_active ? 'Activo' : 'Inactivo'}
@@ -90,7 +90,7 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
                     'hidden sm:inline-flex',
                     employee.is_active 
                       ? 'bg-success-light text-success border-success/20'
-                      : 'bg-muted text-muted-foreground'
+                      : 'bg-background text-muted-foreground'
                   )}
                 >
                   {employee.is_active ? 'Activo' : 'Inactivo'}

@@ -118,11 +118,11 @@ export default function Novedades() {
   const noveltyTypeOptions = Object.entries(NOVELTY_TYPE_LABELS).map(([value, label]) => ({ value, label }));
 
   return (
-    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Premium Header */}
-      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+      <div className="relative shrink-0 overflow-hidden px-6 py-8 sm:px-10 sm:py-10 border-b border-border ">
+        
+        
         
         <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <div className="space-y-4">
@@ -131,7 +131,7 @@ export default function Novedades() {
                 <TrendingUp className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
                   Nómina / Recargos
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Novedades Laborales</h1>
@@ -144,7 +144,7 @@ export default function Novedades() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
             {stats.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
                 <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
                 </div>
@@ -160,14 +160,14 @@ export default function Novedades() {
       </div>
 
       {/* Surcharges Ribbon */}
-      <div className="bg-primary/5 border-b border-primary/5 px-6 py-2 overflow-hidden flex items-center gap-4">
+      <div className="border-b border-border px-6 py-2 overflow-hidden flex items-center gap-4">
          <div className="flex items-center gap-2 shrink-0">
             <Zap className="w-3.5 h-3.5 text-primary" />
             <span className="text-[10px] font-black text-primary uppercase tracking-widest">Recargos Activos</span>
          </div>
          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
             {surcharges.map(s => (
-               <Badge key={s.label} variant="outline" className="shrink-0 text-[10px] font-bold bg-background/50 border-primary/10 px-2 py-0.5 rounded-lg">
+               <Badge key={s.label} variant="outline" className="shrink-0 text-[10px] font-bold bg-background border-border px-2 py-0.5 rounded-lg">
                   {s.label}: <span className="text-primary ml-1">{s.pct}%</span>
                </Badge>
             ))}
@@ -175,13 +175,13 @@ export default function Novedades() {
       </div>
 
       {/* Grouped Filters & Actions */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
           <div className="relative w-full sm:w-80 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
               placeholder="Buscar por empleado o documento..."
-              className="pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+              className="pl-11 h-12 rounded-2xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
@@ -189,13 +189,13 @@ export default function Novedades() {
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="h-12 w-full sm:w-[200px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider">
+              <SelectTrigger className="h-12 w-full sm:w-[200px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <Filter className="w-3.5 h-3.5 text-primary" />
                   <SelectValue placeholder="Tipo Novedad" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-primary/10 shadow-2xl">
+              <SelectContent className="rounded-2xl border-border shadow-2xl">
                 <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos los tipos</SelectItem>
                 {noveltyTypeOptions.map(o => (
                   <SelectItem key={o.value} value={o.value} className="font-bold text-xs uppercase p-3">{o.label}</SelectItem>
@@ -203,7 +203,7 @@ export default function Novedades() {
               </SelectContent>
             </Select>
 
-            <div className="flex items-center gap-2 bg-muted/20 p-1 rounded-2xl border border-primary/5">
+            <div className="flex items-center gap-2 bg-background p-1 rounded-2xl border border-border ">
               <div className="relative group">
                 <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-10 pl-9 w-36 bg-background rounded-xl border-none text-[11px] font-bold shadow-sm" />
@@ -218,7 +218,7 @@ export default function Novedades() {
         </div>
 
         <div className="flex items-center gap-2 w-full xl:w-auto">
-          <Button variant="outline" className="h-12 flex-1 sm:flex-none px-6 rounded-2xl border-primary/10 bg-background/50 font-black uppercase tracking-widest text-[11px]" onClick={handleExport}>
+          <Button variant="outline" className="h-12 flex-1 sm:flex-none px-6 rounded-2xl border-border bg-background font-black uppercase tracking-widest text-[11px]" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2 text-emerald-600" />
             Excel
           </Button>
@@ -230,7 +230,7 @@ export default function Novedades() {
       </div>
 
       <ScrollArea className="flex-1 p-6 sm:p-10">
-        <div className="bg-background rounded-[2.5rem] border border-primary/5 shadow-xl overflow-hidden">
+        <div className="bg-background rounded-[2.5rem] border border-border shadow-xl overflow-hidden">
           {isMobile ? (
              <PullToRefresh onRefresh={async () => { await new Promise(r => setTimeout(r, 800)); }}>
                 <div className="p-4 space-y-4">
@@ -250,11 +250,11 @@ export default function Novedades() {
                         title: n.employees_v2 ? `${n.employees_v2.first_name} ${n.employees_v2.last_name}` : 'N/A',
                         subtitle: format(new Date(n.novelty_date), 'dd MMM yyyy', { locale: es }),
                         badge: (
-                          <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                          <Badge variant="outline" className="border-primary/20 text-primary text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
                             {NOVELTY_TYPE_LABELS[n.novelty_type]?.split(' ')[0] || n.novelty_type}
                           </Badge>
                         ),
-                        itemClassName: "relative overflow-hidden border-primary/5 bg-gradient-to-br from-background to-accent/5 rounded-[1.5rem]",
+                        itemClassName: "relative overflow-hidden border-border bg-background rounded-[1.5rem]",
                         fields: [
                           { label: 'Inicio', value: (n as any).start_time?.slice(0, 5) || '—' },
                           { label: 'Horas', value: `${n.hours}h`, className: "text-primary font-black" },
@@ -279,7 +279,7 @@ export default function Novedades() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/30 border-none">
+                <TableRow className="bg-background border-none">
                   <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] px-8 text-muted-foreground">Empleado</TableHead>
                   <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-center">Fecha</TableHead>
                   <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Tipo</TableHead>
@@ -297,7 +297,7 @@ export default function Novedades() {
                   <TableRow><TableCell colSpan={8} className="h-60 text-center"><div className="flex flex-col items-center gap-4 py-10 opacity-30"><FileText className="w-12 h-12" /><p className="font-black text-sm uppercase tracking-widest">Sin Novedades</p></div></TableCell></TableRow>
                 ) : (
                   filtered.map(n => (
-                    <TableRow key={n.id} className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors">
+                    <TableRow key={n.id} className="group border-b border-border hover:bg-primary/[0.02] transition-colors">
                       <TableCell className="px-8">
                          <div className="flex flex-col">
                             <span className="font-black text-foreground tracking-tight text-sm">
@@ -310,12 +310,12 @@ export default function Novedades() {
                          {format(new Date(n.novelty_date), 'dd MMM, yyyy', { locale: es })}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-primary/5 text-primary border-primary/10">
+                        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest text-primary border-border ">
                           {NOVELTY_TYPE_LABELS[n.novelty_type] || n.novelty_type}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-muted/40 border border-primary/5 text-[11px] font-black tracking-tighter">
+                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-background /40 border border-border text-[11px] font-black tracking-tighter">
                             {(n as any).start_time?.slice(0, 5) || '--:--'}
                             <span className="text-muted-foreground opacity-30">|</span>
                             {(n as any).end_time?.slice(0, 5) || '--:--'}
@@ -327,7 +327,7 @@ export default function Novedades() {
                          </span>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={cn("text-[9px] font-black uppercase tracking-widest", n.source !== 'manual' ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-muted/50 text-muted-foreground")}>
+                        <Badge variant="secondary" className={cn("text-[9px] font-black uppercase tracking-widest", n.source !== 'manual' ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-background text-muted-foreground")}>
                           {n.source === 'manual' ? 'Manual' : 'Automático'}
                         </Badge>
                       </TableCell>

@@ -65,7 +65,7 @@ const statusConfig: Record<ContractStatus, { label: string; class: string; icon:
   active: { label: 'Vigente', class: 'bg-success-light text-success border-success/20', icon: CheckCircle },
   expiring: { label: 'Por vencer', class: 'bg-warning-light text-warning-foreground border-warning/20', icon: Clock },
   expired: { label: 'Vencido', class: 'bg-destructive-light text-destructive border-destructive/20', icon: AlertTriangle },
-  terminated: { label: 'Terminado', class: 'bg-muted text-muted-foreground border-border', icon: FileText },
+  terminated: { label: 'Terminado', class: 'bg-background text-muted-foreground border-border', icon: FileText },
 };
 
 function getContractStatus(contract: { 
@@ -249,9 +249,9 @@ export default function Contratos() {
   return (
     <div className="space-y-6">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/10 via-background to-accent/5 border border-primary/10 p-6 sm:p-8">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/5 rounded-full -ml-24 -mb-24 blur-2xl" />
+      <div className="relative overflow-hidden rounded-3xl border border-border p-6 sm:p-8">
+        
+        
 
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
@@ -259,7 +259,7 @@ export default function Contratos() {
               <div className="h-1 w-10 bg-primary rounded-full" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Módulo de Talento</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               Contratos Laborales
             </h1>
             <p className="text-muted-foreground text-sm sm:text-base max-w-xl leading-relaxed">
@@ -285,7 +285,7 @@ export default function Contratos() {
           { label: 'Vencidos', value: stats.expired, desc: 'Requieren acción', icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10' },
           { label: 'Con Prórrogas', value: stats.withExtensions, desc: 'Historial de cambios', icon: RotateCw, color: 'text-blue-500', bg: 'bg-blue-500/10' },
         ].map((kpi, i) => (
-          <Card key={i} className="relative overflow-hidden border-none shadow-sm bg-background/60 backdrop-blur-sm hover:shadow-md transition-all duration-300 group">
+          <Card key={i} className="relative overflow-hidden border-none shadow-sm bg-background hover:shadow-md transition-all duration-300 group">
             <div className={`absolute top-0 left-0 w-1 h-full ${kpi.color.replace('text', 'bg')}`} />
             <CardContent className="p-3">
               <div className="flex items-center gap-3">
@@ -304,8 +304,8 @@ export default function Contratos() {
       </div>
 
       {/* Filters Glassmorphism Bar */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md pb-2">
-        <div className="flex flex-col lg:flex-row gap-2 p-3 rounded-2xl border border-primary/10 bg-muted/30 shadow-inner">
+      <div className="sticky top-0 z-10 bg-background pb-2">
+        <div className="flex flex-col lg:flex-row gap-2 p-3 rounded-2xl border border-border bg-background shadow-inner">
           <div className="relative flex-1 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
@@ -346,7 +346,7 @@ export default function Contratos() {
               </SelectContent>
             </Select>
 
-            <div className="flex items-center px-3 h-10 bg-primary/10 rounded-xl border border-primary/5 shrink-0">
+            <div className="flex items-center px-3 h-10 bg-primary/10 rounded-xl border border-border shrink-0">
               <span className="text-[11px] font-bold text-primary whitespace-nowrap">{filteredContracts.length}</span>
             </div>
           </div>
@@ -398,7 +398,7 @@ export default function Contratos() {
                       onClick={() => handleContractClick(contract.id)}
                       className="w-full overflow-hidden rounded-lg border border-border bg-card text-left shadow-sm transition-all active:scale-[0.99]"
                     >
-                      <div className={cn('h-1 w-full', status === 'expired' ? 'bg-destructive' : status === 'expiring' ? 'bg-warning' : status === 'terminated' ? 'bg-muted-foreground' : 'bg-success')} />
+                      <div className={cn('h-1 w-full', status === 'expired' ? 'bg-destructive' : status === 'expiring' ? 'bg-warning' : status === 'terminated' ? 'bg-background -foreground' : 'bg-success')} />
                       <div className="space-y-4 p-4">
                         <div className="flex items-start gap-3">
                           <div className={cn('flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border', getContractTypeTone(contract.contract_type))}>
@@ -454,7 +454,7 @@ export default function Contratos() {
                           </div>
                         </div>
 
-                        <div className="rounded-lg border border-border bg-muted/30 p-3">
+                        <div className="rounded-lg border border-border bg-background p-3">
                           <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                             <FileText className="h-4 w-4 text-primary" />
                             <span className="truncate">{getContractTypeLabel(contract.contract_type)}</span>
@@ -502,7 +502,7 @@ export default function Contratos() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-primary/5 bg-muted/20">
+                <tr className="border-b border-border bg-background">
                   <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden md:table-cell">Nº Contrato</th>
                   <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Empleado</th>
                   <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Tipo</th>
@@ -593,7 +593,7 @@ export default function Contratos() {
                         )}
                       </td>
                       <td className="p-4">
-                        <Badge variant="outline" className={cn("gap-1 text-[10px] font-bold uppercase py-0.5 px-2 border-primary/10 shadow-sm", statusConfig[status].class)}>
+                        <Badge variant="outline" className={cn("gap-1 text-[10px] font-bold uppercase py-0.5 px-2 border-border shadow-sm", statusConfig[status].class)}>
                           <StatusIcon className="w-3 h-3" />
                           {statusConfig[status].label}
                           {daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30 && (

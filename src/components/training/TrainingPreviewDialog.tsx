@@ -71,7 +71,7 @@ function MediaReadOnlyCard({ icon, title, description, items }: {
     <Card className="border">
       <CardContent className="pt-5 pb-4 space-y-3">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-muted">{icon}</div>
+          <div className="p-2 rounded-lg bg-background ">{icon}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm">{title}</span>
@@ -278,7 +278,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
       <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col gap-0 overflow-hidden bg-background border-border/50 shadow-2xl rounded-[2rem] p-0 sm:h-auto sm:max-h-[95vh]">
         {/* Premium Gradient Header */}
         <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex items-start gap-4">
@@ -287,10 +287,10 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
               </div>
               <div className="flex-1 min-w-0 space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5">
+                  <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5">
                     {categoryLabels[course.category] || course.category} {durationLabel}
                   </Badge>
-                  <Badge className={`font-black uppercase tracking-widest text-[9px] px-2 py-0.5 ${statusColors[course.status] || 'bg-muted text-muted-foreground'}`}>
+                  <Badge className={`font-black uppercase tracking-widest text-[9px] px-2 py-0.5 ${statusColors[course.status] || 'bg-background text-muted-foreground'}`}>
                     {course.status === 'borrador' ? 'Borrador' : course.status === 'publicado' ? 'Publicado' : 'Completado'}
                   </Badge>
                   {content && !content.isManual && (
@@ -329,8 +329,8 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="scrollbar-header-auto max-w-full shrink-0 touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain border-b border-border/50 px-8 py-3 bg-muted/10">
-            <TabsList className="h-auto w-fit justify-start gap-2 rounded-[1.5rem] bg-muted/30 p-1.5 flex flex-nowrap">
+          <div className="scrollbar-header-auto max-w-full shrink-0 touch-pan-x overflow-x-auto overflow-y-hidden overscroll-x-contain border-b border-border/50 px-8 py-3 bg-background /10">
+            <TabsList className="h-auto w-fit justify-start gap-2 rounded-[1.5rem] bg-background p-1.5 flex flex-nowrap">
               {[
                 { value: 'general', icon: BookOpen, label: 'General' },
                 { value: 'contenido', icon: FileText, label: 'Contenido' },
@@ -361,7 +361,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
               <TabsContent value="general" className="mt-0 space-y-6">
                 {content?.introduccion && (
                   <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
-                    <CardContent className="p-8 bg-muted/10">
+                    <CardContent className="p-8 bg-background /10">
                       <h3 className="font-black text-lg text-foreground tracking-tight mb-3 flex items-center gap-2">
                         <BookOpen className="h-5 w-5 text-primary" /> Introducción
                       </h3>
@@ -372,7 +372,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
 
                 {course.objective && !content?.introduccion && (
                   <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
-                    <CardContent className="p-8 bg-muted/10">
+                    <CardContent className="p-8 bg-background /10">
                       <h3 className="font-black text-lg text-foreground tracking-tight mb-3 flex items-center gap-2">
                         <Target className="h-5 w-5 text-primary" /> Objetivo
                       </h3>
@@ -389,7 +389,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                       </h3>
                       <ul className="space-y-3">
                         {content.objetivos.map((obj, i) => (
-                          <li key={i} className="flex items-start gap-3 p-3 rounded-2xl bg-muted/20 border border-border/50">
+                          <li key={i} className="flex items-start gap-3 p-3 rounded-2xl bg-background border border-border/50">
                             <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                               <ChevronRight className="h-3 w-3 text-primary" />
                             </div>
@@ -414,7 +414,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                   </Card>
                   <Card className="rounded-[2rem] border-border/50 shadow-sm">
                     <CardContent className="p-6 flex flex-col items-center text-center gap-2">
-                      <div className="w-10 h-10 rounded-xl bg-background/50 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center">
                         {riskIcons[course.risk_level] || <Shield className="h-5 w-5 text-muted-foreground" />}
                       </div>
                       <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Riesgo</span>
@@ -507,7 +507,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                       </div>
                       <div className="space-y-4">
                         {content.evaluacion.map((q, i) => (
-                          <div key={i} className="space-y-4 rounded-2xl border border-border/50 bg-muted/10 p-6">
+                          <div key={i} className="space-y-4 rounded-2xl border border-border/50 bg-background /10 p-6">
                             <div className="flex items-start gap-4">
                               <span className="w-8 h-8 rounded-xl bg-background border border-border flex items-center justify-center font-black text-xs text-muted-foreground flex-shrink-0 shadow-sm">
                                 P{i + 1}
@@ -555,7 +555,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                 <Separator />
 
                 {isMediaLoading ? (
-                  <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+                  <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border bg-background p-6 text-center text-sm text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     <span>Cargando contenido multimedia...</span>
                   </div>
@@ -690,14 +690,14 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         <Card className="border mt-4">
                           <CardContent className="pt-5 pb-4 space-y-3">
                             <div className="flex items-start gap-3">
-                              <div className="p-2 rounded-lg bg-muted"><Video className="h-5 w-5 text-primary" /></div>
+                              <div className="p-2 rounded-lg bg-background "><Video className="h-5 w-5 text-primary" /></div>
                               <div>
                                 <span className="font-semibold text-sm">Avatar Presentador</span>
                                 <p className="text-xs text-muted-foreground mt-0.5">Video generado con avatar IA de HeyGen</p>
                               </div>
                             </div>
                             {avatarMedia.map((item) => (
-                              <div key={item.id} className="overflow-hidden rounded-lg border bg-muted">
+                              <div key={item.id} className="overflow-hidden rounded-lg border bg-background ">
                                 <video controls className="aspect-video max-h-72 w-full object-contain" src={item.file_url} preload="metadata" />
                               </div>
                             ))}
@@ -736,7 +736,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
         </Tabs>
 
         {/* Footer */}
-        <div className="shrink-0 border-t border-border/50 bg-muted/10 px-8 py-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="shrink-0 border-t border-border/50 bg-background /10 px-8 py-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4 flex-wrap text-xs text-muted-foreground">
             {media.length > 0 && (
               <span className="flex items-center gap-2 bg-background border border-border/50 rounded-xl px-3 py-1.5 shadow-sm">

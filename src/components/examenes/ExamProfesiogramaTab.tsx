@@ -158,7 +158,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
           <Button 
             variant="outline" 
             onClick={() => setIsImportOpen(true)} 
-            className="h-11 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] bg-background/50 border-border/50 hover:bg-background transition-all"
+            className="h-11 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] bg-background border-border/50 hover:bg-background transition-all"
           >
             <Download className="w-4 h-4" /> Importar Dotaciones
           </Button>
@@ -179,11 +179,11 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por centro, cargo o examen..."
-            className="w-full h-11 pl-10 pr-4 rounded-xl bg-background/50 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:outline-none text-sm font-medium transition-all"
+            className="w-full h-11 pl-10 pr-4 rounded-xl bg-background border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:outline-none text-sm font-medium transition-all"
           />
         </div>
         <Select value={centerFilter} onValueChange={setCenterFilter}>
-          <SelectTrigger className="h-11 w-full sm:w-64 rounded-xl bg-background/50 border-border/50 font-black uppercase tracking-widest text-[10px]">
+          <SelectTrigger className="h-11 w-full sm:w-64 rounded-xl bg-background border-border/50 font-black uppercase tracking-widest text-[10px]">
             <SelectValue placeholder="Filtrar por Centro" />
           </SelectTrigger>
           <SelectContent className="rounded-2xl border-border/50">
@@ -196,7 +196,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
       </div>
 
       {(!profesiogramas || profesiogramas.length === 0) ? (
-        <div className="text-center py-32 rounded-[2.5rem] border border-dashed border-border/50 bg-background/20">
+        <div className="text-center py-32 rounded-[2.5rem] border border-dashed border-border/50 bg-background">
           <ClipboardList className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
           <p className="text-lg font-black tracking-tighter text-muted-foreground">No hay profesiogramas configurados</p>
           <Button onClick={handleNew} variant="ghost" className="mt-4 font-bold text-xs uppercase tracking-widest text-primary">Configurar primer requerimiento</Button>
@@ -209,9 +209,9 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
       ) : (
         <div className="space-y-6">
           {groupedByCenter.map((group) => (
-            <div key={group.centerId} className="group overflow-hidden rounded-[2.5rem] border border-border/50 bg-background/40 backdrop-blur-xl transition-all hover:shadow-2xl hover:shadow-primary/5">
+            <div key={group.centerId} className="group overflow-hidden rounded-[2.5rem] border border-border/50 bg-background transition-all hover:shadow-2xl hover:shadow-primary/5">
               <div
-                className="px-8 py-5 border-b border-border/50 bg-muted/30 flex items-center justify-between cursor-pointer select-none group-hover:bg-muted/50 transition-colors"
+                className="px-8 py-5 border-b border-border/50 bg-background flex items-center justify-between cursor-pointer select-none group-hover:bg-background transition-colors"
                 onClick={() => {
                   setCollapsedCenters(prev => {
                     const next = new Set(prev);
@@ -222,7 +222,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                 }}
               >
                 <div className="flex items-center gap-4">
-                  <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center bg-background/50 transition-transform", !collapsedCenters.has(group.centerId) && "rotate-0", collapsedCenters.has(group.centerId) && "-rotate-90")}>
+                  <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center bg-background transition-transform", !collapsedCenters.has(group.centerId) && "rotate-0", collapsedCenters.has(group.centerId) && "-rotate-90")}>
                     <ChevronDown className="w-4 h-4 text-primary" />
                   </div>
                   <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -233,7 +233,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{group.items.length} Cargos configurados</p>
                   </div>
                 </div>
-                <Badge variant="outline" className="h-7 px-3 rounded-xl bg-background/50 border-primary/20 text-primary font-black uppercase tracking-widest text-[9px]">
+                <Badge variant="outline" className="h-7 px-3 rounded-xl bg-background border-primary/20 text-primary font-black uppercase tracking-widest text-[9px]">
                   Vista Expandida
                 </Badge>
               </div>
@@ -243,7 +243,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                   <div className="hidden overflow-x-auto sm:block">
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-transparent border-border/40 bg-background/20">
+                        <TableRow className="hover:bg-transparent border-border/40 bg-background">
                           <TableHead className="w-16 px-8">
                             <Checkbox
                               checked={group.items.every(p => selectedIds.has(p.id))}
@@ -282,7 +282,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                                     variant="outline"
                                     className={cn(
                                       "h-6 px-2 rounded-lg text-[9px] font-black uppercase tracking-widest border-0",
-                                      item.is_required ? "bg-violet/10 text-violet" : "bg-muted text-muted-foreground border-dashed border border-border"
+                                      item.is_required ? "bg-violet/10 text-violet" : "bg-background text-muted-foreground border-dashed border border-border"
                                     )}
                                   >
                                     {item.exam_catalog?.name || 'Examen'}
@@ -290,7 +290,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                                   </Badge>
                                 ))}
                                 {prof.items.length > 4 && (
-                                  <Badge variant="outline" className="h-6 px-2 rounded-lg text-[9px] font-black uppercase tracking-widest bg-primary/5 text-primary">
+                                  <Badge variant="outline" className="h-6 px-2 rounded-lg text-[9px] font-black uppercase tracking-widest text-primary">
                                     +{prof.items.length - 4} Adicionales
                                   </Badge>
                                 )}
@@ -317,14 +317,14 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                   
                   <div className="p-4 space-y-4 sm:hidden">
                     {group.items.map((prof) => (
-                      <div key={prof.id} className={cn("rounded-[2rem] border border-border/50 p-6 space-y-4 transition-all", selectedIds.has(prof.id) ? "bg-primary/[0.04] border-primary/20" : "bg-background/40")}>
+                      <div key={prof.id} className={cn("rounded-[2rem] border border-border/50 p-6 space-y-4 transition-all", selectedIds.has(prof.id) ? "bg-primary/[0.04] border-primary/20" : "bg-background")}>
                         <div className="flex items-start gap-4">
                           <Checkbox checked={selectedIds.has(prof.id)} onCheckedChange={() => toggleSelect(prof.id)} className="rounded-md mt-1" />
                           <div className="flex-1 min-w-0">
                             <p className="text-lg font-black tracking-tight text-foreground">{prof.positions?.name || getPositionName(prof.position_id)}</p>
                             <div className="mt-3 flex flex-wrap gap-1.5">
                               {prof.items.map((item, i) => (
-                                <Badge key={i} variant="outline" className={cn("text-[8px] font-black uppercase tracking-widest", item.is_required ? "bg-violet/10 text-violet" : "bg-muted text-muted-foreground")}>
+                                <Badge key={i} variant="outline" className={cn("text-[8px] font-black uppercase tracking-widest", item.is_required ? "bg-violet/10 text-violet" : "bg-background text-muted-foreground")}>
                                   {item.exam_catalog?.name || 'Examen'}
                                 </Badge>
                               ))}
@@ -359,7 +359,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="rounded-[2.5rem] border-0 shadow-2xl bg-background/95 backdrop-blur-xl p-0 overflow-hidden max-w-md">
+        <AlertDialogContent className="rounded-[2.5rem] border-0 shadow-2xl bg-background p-0 overflow-hidden max-w-md">
           <div className="px-8 py-8 bg-gradient-to-br from-destructive/10 via-background to-destructive/5 border-b border-destructive/10">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-destructive flex items-center justify-center shadow-lg shadow-destructive/20">
@@ -376,7 +376,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
               ¿Estás seguro de que deseas eliminar este profesiograma? Se borrará la configuración de exámenes médicos para este cargo en este centro de operación.
             </AlertDialogDescription>
             <div className="flex justify-end gap-3 mt-8">
-              <AlertDialogCancel className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-0 bg-muted hover:bg-muted/80">
+              <AlertDialogCancel className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-0 bg-background hover:bg-background /80">
                 Cancelar
               </AlertDialogCancel>
               <AlertDialogAction className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-destructive/20" onClick={handleDelete}>
@@ -389,7 +389,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
 
       {/* Bulk Delete Confirmation */}
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
-        <AlertDialogContent className="rounded-[2.5rem] border-0 shadow-2xl bg-background/95 backdrop-blur-xl p-0 overflow-hidden max-w-md">
+        <AlertDialogContent className="rounded-[2.5rem] border-0 shadow-2xl bg-background p-0 overflow-hidden max-w-md">
           <div className="px-8 py-8 bg-gradient-to-br from-destructive/10 via-background to-destructive/5 border-b border-destructive/10">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-destructive flex items-center justify-center shadow-lg shadow-destructive/20">
@@ -406,7 +406,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
               Has seleccionado múltiples profesiogramas para eliminar. ¿Confirmas que deseas proceder con la eliminación masiva?
             </AlertDialogDescription>
             <div className="flex justify-end gap-3 mt-8">
-              <AlertDialogCancel className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-0 bg-muted hover:bg-muted/80">
+              <AlertDialogCancel className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-0 bg-background hover:bg-background /80">
                 Cancelar
               </AlertDialogCancel>
               <AlertDialogAction className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-destructive/20" onClick={handleBulkDelete} disabled={isBulkDeleting}>

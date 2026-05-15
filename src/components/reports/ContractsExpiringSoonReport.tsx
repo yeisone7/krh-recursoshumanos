@@ -72,7 +72,7 @@ export function ContractsExpiringSoonReport() {
                 'h-7 px-2.5 text-xs font-medium transition-all',
                 selectedRange === days 
                   ? 'bg-primary text-primary-foreground shadow-sm' 
-                  : 'hover:bg-muted'
+                  : 'hover:bg-background '
               )}
             >
               {days}d

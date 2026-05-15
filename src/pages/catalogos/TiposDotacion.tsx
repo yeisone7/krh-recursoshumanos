@@ -206,7 +206,7 @@ export default function CatalogosTiposDotacion() {
   return (
     <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-primary/10 shadow-sm">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-border shadow-sm">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-md shadow-primary/10">
@@ -250,8 +250,8 @@ export default function CatalogosTiposDotacion() {
           </div>
         </div>
         {/* Decorative elements */}
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl" />
+        
+        
       </div>
 
       {/* Stats Summary */}
@@ -268,7 +268,7 @@ export default function CatalogosTiposDotacion() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
             className={cn(
-              "relative overflow-hidden rounded-[2rem] border-2 bg-background/50 backdrop-blur-xl p-6 transition-all duration-300 hover:shadow-sm",
+              "relative overflow-hidden rounded-[2rem] border-2 bg-background p-6 transition-all duration-300 hover:shadow-sm",
               stat.border
             )}
           >
@@ -290,16 +290,16 @@ export default function CatalogosTiposDotacion() {
       {/* Filters Bar */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 px-4 h-12 rounded-2xl bg-muted/30 border-2 border-border/50 backdrop-blur-md">
+          <div className="flex items-center gap-2 px-4 h-12 rounded-2xl bg-background border-2 border-border/50 ">
             <Filter className="w-4 h-4 text-muted-foreground" />
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Filtros</span>
           </div>
 
           <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="h-12 w-full lg:w-[220px] rounded-2xl bg-background/50 backdrop-blur-xl border-2 border-border/50">
+            <SelectTrigger className="h-12 w-full lg:w-[220px] rounded-2xl bg-background border-2 border-border/50">
               <SelectValue placeholder="Categoría" />
             </SelectTrigger>
-            <SelectContent className="rounded-2xl border-primary/10 backdrop-blur-xl bg-background/95">
+            <SelectContent className="rounded-2xl border-border bg-background">
               <SelectItem value="all" className="font-bold">Todas las categorías</SelectItem>
               {DOTATION_CATEGORIES.map((cat) => (
                 <SelectItem key={cat.value} value={cat.value} className="font-bold">{cat.label}</SelectItem>
@@ -308,10 +308,10 @@ export default function CatalogosTiposDotacion() {
           </Select>
 
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="h-12 w-full lg:w-[160px] rounded-2xl bg-background/50 backdrop-blur-xl border-2 border-border/50">
+            <SelectTrigger className="h-12 w-full lg:w-[160px] rounded-2xl bg-background border-2 border-border/50">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
-            <SelectContent className="rounded-2xl border-primary/10 backdrop-blur-xl bg-background/95">
+            <SelectContent className="rounded-2xl border-border bg-background">
               <SelectItem value="all" className="font-bold">Todos</SelectItem>
               <SelectItem value="active" className="font-bold">Activos</SelectItem>
               <SelectItem value="inactive" className="font-bold">Inactivos</SelectItem>
@@ -336,7 +336,7 @@ export default function CatalogosTiposDotacion() {
         </div>
       </div>
 
-      <div className="rounded-[2.5rem] border-2 border-border/50 bg-background/50 backdrop-blur-xl p-8">
+      <div className="rounded-[2.5rem] border-2 border-border/50 bg-background p-8">
         <div className="mb-6">
           <h2 className="text-xl font-black tracking-tight text-foreground uppercase">Listado de Artículos</h2>
           <p className="text-sm font-medium text-muted-foreground mt-1">Gestión detallada de tipos de dotación, suministros e imagen corporativa.</p>
@@ -362,7 +362,7 @@ export default function CatalogosTiposDotacion() {
                 badge: (
                   <Badge 
                     variant="outline" 
-                    className={cn("rounded-lg border-2", item.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-muted border-muted-foreground/10')}
+                    className={cn("rounded-lg border-2", item.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-background border-muted-foreground/10')}
                   >
                     {item.is_active ? 'Activo' : 'Inactivo'}
                   </Badge>
@@ -419,7 +419,7 @@ export default function CatalogosTiposDotacion() {
                             </div>
                           </div>
                         ) : (
-                          <div className="w-12 h-12 rounded-xl bg-muted/50 border-2 border-dashed flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-xl bg-background border-2 border-dashed flex items-center justify-center">
                             <Shirt className="w-5 h-5 text-muted-foreground/50" />
                           </div>
                         )}
@@ -427,7 +427,7 @@ export default function CatalogosTiposDotacion() {
                       <TableCell className="font-bold text-foreground">
                         {editingCell?.id === item.id && editingCell.field === 'name' ? (
                           <div className="flex items-center gap-1">
-                            <Input value={editingValue} onChange={(e) => setEditingValue(e.target.value)} onKeyDown={handleInlineKeyDown} className="h-9 rounded-xl bg-muted/30 border-none font-bold" autoFocus />
+                            <Input value={editingValue} onChange={(e) => setEditingValue(e.target.value)} onKeyDown={handleInlineKeyDown} className="h-9 rounded-xl bg-background border-none font-bold" autoFocus />
                             <Button size="icon" variant="ghost" className="h-8 w-8 text-success hover:bg-success/10" onClick={saveInlineEdit}><Check className="w-4 h-4" /></Button>
                             <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={cancelInlineEdit}><X className="w-4 h-4" /></Button>
                           </div>
@@ -444,7 +444,7 @@ export default function CatalogosTiposDotacion() {
                       <TableCell className="text-sm font-medium text-muted-foreground">
                         {editingCell?.id === item.id && editingCell.field === 'code' ? (
                           <div className="flex items-center gap-1">
-                            <Input value={editingValue} onChange={(e) => setEditingValue(e.target.value)} onKeyDown={handleInlineKeyDown} className="h-9 w-24 rounded-xl bg-muted/30 border-none font-bold" autoFocus />
+                            <Input value={editingValue} onChange={(e) => setEditingValue(e.target.value)} onKeyDown={handleInlineKeyDown} className="h-9 w-24 rounded-xl bg-background border-none font-bold" autoFocus />
                             <Button size="icon" variant="ghost" className="h-8 w-8 text-success hover:bg-success/10" onClick={saveInlineEdit}><Check className="w-4 h-4" /></Button>
                             <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={cancelInlineEdit}><X className="w-4 h-4" /></Button>
                           </div>
@@ -462,7 +462,7 @@ export default function CatalogosTiposDotacion() {
                         {getCategoryLabel(item.category)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={cn("rounded-lg border-2 font-bold", item.requires_size ? 'bg-primary/10 text-primary border-primary/20' : 'bg-muted text-muted-foreground border-transparent')}>
+                        <Badge variant="outline" className={cn("rounded-lg border-2 font-bold", item.requires_size ? 'bg-primary/10 text-primary border-primary/20' : 'bg-background text-muted-foreground border-transparent')}>
                           {item.requires_size ? 'Sí' : 'No'}
                         </Badge>
                       </TableCell>
@@ -512,11 +512,11 @@ export default function CatalogosTiposDotacion() {
       {/* Image zoom dialog */}
       <Dialog open={!!zoomImage} onOpenChange={(open) => !open && setZoomImage(null)}>
         <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-lg flex-col overflow-hidden p-0 border-none bg-transparent shadow-none">
-          <div className="rounded-[2.5rem] border-2 border-primary/20 bg-background/95 backdrop-blur-2xl p-6 shadow-2xl">
+          <div className="rounded-[2.5rem] border-2 border-primary/20 bg-background -2xl p-6 shadow-2xl">
             <DialogTitle className="sr-only">{zoomImage?.name}</DialogTitle>
             {zoomImage && (
               <div className="flex flex-col items-center gap-6">
-                <div className="relative w-full aspect-square rounded-[2rem] overflow-hidden border-2 border-primary/10 bg-muted/30">
+                <div className="relative w-full aspect-square rounded-[2rem] overflow-hidden border-2 border-border bg-background">
                   <img
                     src={zoomImage.url}
                     alt={zoomImage.name}
@@ -536,7 +536,7 @@ export default function CatalogosTiposDotacion() {
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!deleteItem} onOpenChange={(open) => !open && setDeleteItem(null)}>
-        <AlertDialogContent className="rounded-[2.5rem] border-2 border-destructive/20 bg-background/95 backdrop-blur-2xl p-8 shadow-2xl">
+        <AlertDialogContent className="rounded-[2.5rem] border-2 border-destructive/20 bg-background -2xl p-8 shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-2xl font-black uppercase tracking-tight text-foreground">¿Eliminar artículo?</AlertDialogTitle>
             <AlertDialogDescription className="text-base font-medium text-muted-foreground mt-4 leading-relaxed">

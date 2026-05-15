@@ -79,7 +79,7 @@ export function AvatarVideoPlayer({ videoUrl, videoId, courseId, companyId, onVi
 
   if (status === 'processing') {
     return (
-      <div className="rounded-lg border bg-muted/30 p-6 text-center space-y-4">
+      <div className="rounded-lg border bg-background p-6 text-center space-y-4">
         <div className="flex items-center justify-center gap-2">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
           <span className="font-medium text-sm">Generando video con avatar...</span>

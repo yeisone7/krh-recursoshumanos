@@ -342,13 +342,13 @@ export default function CrearCapacitacion() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        
         <div className="relative z-10 flex items-center gap-5">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/capacitaciones')} className="h-12 w-12 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 hover:bg-background/80 shrink-0">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/capacitaciones')} className="h-12 w-12 rounded-full bg-background border border-border/50 hover:bg-background shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+            <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
               {editId ? 'EDICIÓN CON IA' : 'CREACIÓN CON IA'}
             </Badge>
             <h1 className="text-3xl font-black tracking-tight text-foreground">{editId ? 'Editar' : 'Crear'} Capacitación con IA</h1>
@@ -453,7 +453,7 @@ export default function CrearCapacitacion() {
               </div>
               <div className="space-y-1.5 pt-4">
                 <Label className="flex items-center gap-1.5"><AlignLeft className="h-4 w-4" /> Descripción o Contexto Adicional</Label>
-                <Textarea className="resize-none rounded-xl bg-muted/30" value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Proporciona información adicional que ayude a la IA a generar contenido más preciso..." rows={4} />
+                <Textarea className="resize-none rounded-xl bg-background" value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Proporciona información adicional que ayude a la IA a generar contenido más preciso..." rows={4} />
               </div>
               <div className="flex justify-end pt-6 border-t border-border/50">
                 <Button onClick={() => setStep(1)} disabled={!title} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
@@ -482,7 +482,7 @@ export default function CrearCapacitacion() {
               </div>
             </CardHeader>
             <CardContent className="px-8 pb-8 space-y-6">
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center bg-muted/30">
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center bg-background">
                 {pdfName ? (
                   <div className="flex items-center justify-center gap-2">
                     <FileText className="h-5 w-5 text-primary" />
@@ -506,7 +506,7 @@ export default function CrearCapacitacion() {
               </div>
               <div className="space-y-1.5 pt-2">
                 <Label>Contenido adicional para la IA</Label>
-                <Textarea className="resize-none rounded-xl bg-muted/30" value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Puedes pegar aquí texto adicional de procedimientos, normativas, o información que la IA deba considerar..." rows={5} />
+                <Textarea className="resize-none rounded-xl bg-background" value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Puedes pegar aquí texto adicional de procedimientos, normativas, o información que la IA deba considerar..." rows={5} />
               </div>
               <div className="flex justify-between pt-6 border-t border-border/50">
                 <Button variant="outline" onClick={() => setStep(0)} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs">
@@ -614,7 +614,7 @@ export default function CrearCapacitacion() {
                             <span className={`flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${
                               oi === 0
                                 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
-                                : 'bg-muted text-muted-foreground'
+                                : 'bg-background text-muted-foreground'
                             }`}>
                               {String.fromCharCode(65 + oi)}
                             </span>
@@ -639,7 +639,7 @@ export default function CrearCapacitacion() {
               </div>
 
               {/* Summary bar */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-muted/30 rounded-3xl border border-border/50">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-background rounded-3xl border border-border/50">
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tipo</p>
                   <p className="font-semibold text-sm">{tipo === 'Otro' ? tipoOtro : tipo || '-'}</p>
@@ -739,7 +739,7 @@ export default function CrearCapacitacion() {
                   <Card className="border">
                     <CardContent className="pt-5 pb-4 space-y-3">
                       <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-lg bg-muted">
+                        <div className="p-2 rounded-lg bg-background ">
                           <Video className="h-5 w-5 text-primary" />
                         </div>
                         <div>

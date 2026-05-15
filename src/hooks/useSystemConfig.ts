@@ -385,22 +385,23 @@ export function useDeleteDotationItemType() {
 // IDENTIFICATION TYPES
 // =============================================
 
-export function useIdentificationTypes() {
+export function useIdentificationTypes(companyId?: string) {
   const { currentCompanyId } = useAuth();
+  const targetId = companyId || currentCompanyId;
 
   return useQuery({
-    queryKey: ['identification_types', currentCompanyId],
+    queryKey: ['identification_types', targetId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('identification_types')
         .select('*')
-        .eq('company_id', currentCompanyId!)
+        .eq('company_id', targetId!)
         .order('name');
 
       if (error) throw error;
       return data;
     },
-    enabled: !!currentCompanyId,
+    enabled: !!targetId,
   });
 }
 

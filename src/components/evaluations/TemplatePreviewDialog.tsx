@@ -47,7 +47,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="flex h-[100dvh] w-screen max-w-3xl flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border [&>button.absolute]:fixed [&>button.absolute]:right-2.5 [&>button.absolute]:top-[max(0.5rem,env(safe-area-inset-top))] [&>button.absolute]:z-[60] [&>button.absolute]:flex [&>button.absolute]:h-10 [&>button.absolute]:w-10 [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:rounded-full [&>button.absolute]:border-0 [&>button.absolute]:bg-accent [&>button.absolute]:text-accent-foreground [&>button.absolute]:opacity-100 [&>button.absolute]:shadow-md [&>button.absolute]:ring-0 [&>button.absolute]:ring-offset-0 [&>button.absolute]:backdrop-blur [&>button.absolute]:hover:bg-accent/90 [&>button.absolute]:focus:ring-2 [&>button.absolute]:focus:ring-ring [&>button.absolute]:focus:ring-offset-2 [&>button.absolute_svg]:h-4 [&>button.absolute_svg]:w-4 sm:[&>button.absolute]:right-4 sm:[&>button.absolute]:top-4"
+        className="flex h-[100dvh] w-screen max-w-3xl flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border [&>button.absolute]:fixed [&>button.absolute]:right-2.5 [&>button.absolute]:top-[max(0.5rem,env(safe-area-inset-top))] [&>button.absolute]:z-[60] [&>button.absolute]:flex [&>button.absolute]:h-10 [&>button.absolute]:w-10 [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:rounded-full [&>button.absolute]:border-0 [&>button.absolute]:bg-accent [&>button.absolute]:text-accent-foreground [&>button.absolute]:opacity-100 [&>button.absolute]:shadow-md [&>button.absolute]:ring-0 [&>button.absolute]:ring-offset-0 [&>button.absolute]:[&>button.absolute]:hover:bg-accent/90 [&>button.absolute]:focus:ring-2 [&>button.absolute]:focus:ring-ring [&>button.absolute]:focus:ring-offset-2 [&>button.absolute_svg]:h-4 [&>button.absolute_svg]:w-4 sm:[&>button.absolute]:right-4 sm:[&>button.absolute]:top-4"
       >
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-themed">
         {/* Hero header */}
@@ -55,10 +55,10 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
           <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:radial-gradient(hsl(var(--primary)/0.28)_1px,transparent_1px)] [background-size:18px_18px]" />
           <div className="pointer-events-none absolute -right-14 -top-16 h-44 w-44 rounded-full border border-primary/25" />
           <div className="pointer-events-none absolute -right-2 top-3 h-24 w-24 rounded-full border border-primary/20" />
-          <div className="pointer-events-none absolute left-6 top-5 h-16 w-16 rounded-full border border-primary/15 bg-primary/5" />
+          <div className="pointer-events-none absolute left-6 top-5 h-16 w-16 rounded-full border border-primary/15 " />
           <DialogHeader className="relative z-10">
             <div className="flex items-start gap-3 pr-12 sm:pr-0">
-              <div className="shrink-0 rounded-xl border border-primary/15 bg-primary/10 p-2.5 backdrop-blur-sm">
+              <div className="shrink-0 rounded-xl border border-primary/15 bg-primary/10 p-2.5 ">
                 <FileText className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
               </div>
               <div className="flex-1 min-w-0">
@@ -88,7 +88,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
             <div className="relative z-10 flex max-h-16 items-center gap-2 mt-3 flex-wrap overflow-y-auto pr-1 sm:mt-4 sm:max-h-none sm:overflow-visible">
               <Briefcase className="h-4 w-4 text-warning" />
               {template.positions.map(p => (
-                <Badge key={p.id} variant="outline" className="border-warning/35 bg-warning-light text-xs text-warning-foreground backdrop-blur-sm">
+                <Badge key={p.id} variant="outline" className="border-warning/35 bg-warning-light text-xs text-warning-foreground ">
                   {p.name}
                 </Badge>
               ))}
@@ -179,7 +179,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                     </div>
 
                     {hasRubric && (
-                      <div className="border-t bg-muted/30 px-4 py-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="border-t bg-background px-4 py-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {levelLabels.map(({ level, label, color }) => {
                           const desc = c[`level_${level}_description` as keyof typeof c] as string | null;
                           if (!desc) return null;
@@ -240,7 +240,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
               </h3>
               <div className="w-full overflow-x-auto rounded-lg border">
                 <table className="min-w-[640px] w-full table-fixed text-sm sm:table-auto">
-                  <thead className="bg-muted/50">
+                  <thead className="bg-background">
                     <tr>
                       <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Nivel</th>
                       <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">Rango %</th>
@@ -265,7 +265,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                         <tr key={idx} className={`border-t ${rowColors[idx] || ''}`}>
                           <td className="px-4 py-2.5 w-[190px]">
                             <div className="flex items-center gap-2">
-                              <span className={`h-2.5 w-2.5 rounded-full ${dotColors[idx] || 'bg-muted'}`} />
+                              <span className={`h-2.5 w-2.5 rounded-full ${dotColors[idx] || 'bg-background '}`} />
                               <span className="font-medium text-foreground truncate">{item.label}</span>
                             </div>
                           </td>

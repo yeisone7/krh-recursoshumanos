@@ -64,7 +64,7 @@ const statusConfig = {
   active: { label: 'Vigente', class: 'bg-success-light text-success border-success/20', icon: CheckCircle },
   expiring: { label: 'Por vencer', class: 'bg-warning-light text-warning-foreground border-warning/20', icon: Clock },
   expired: { label: 'Vencido', class: 'bg-destructive-light text-destructive border-destructive/20', icon: AlertTriangle },
-  terminated: { label: 'Terminado', class: 'bg-muted text-muted-foreground border-border', icon: FileText },
+  terminated: { label: 'Terminado', class: 'bg-background text-muted-foreground border-border', icon: FileText },
 };
 
 export function ContractDetailDialog({ open, onOpenChange, contract }: ContractDetailDialogProps) {
@@ -304,7 +304,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                 </div>
 
                 {contract.extensions.length === 0 ? (
-                  <div className="text-center py-8 bg-muted/30 rounded-lg">
+                  <div className="text-center py-8 bg-background rounded-lg">
                     <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
                     <p className="text-muted-foreground">No hay prórrogas registradas</p>
                     {canAddExtension && (
@@ -328,7 +328,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                         <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0 z-10">
                           <FileText className="w-4 h-4 text-primary" />
                         </div>
-                        <div className="flex-1 bg-muted/30 rounded-lg p-3">
+                        <div className="flex-1 bg-background rounded-lg p-3">
                           <div className="flex items-center justify-between mb-1">
                             <p className="font-medium text-sm">Contrato Original</p>
                             <span className="text-xs text-muted-foreground">
@@ -401,7 +401,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
               {contract.contractType !== 'indefinite' && (
                 <>
                   <Separator />
-                  <div className="bg-muted/30 rounded-lg p-4">
+                  <div className="bg-background rounded-lg p-4">
                     <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-primary" />
                       Cálculo de Vigencia
@@ -453,7 +453,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
             </div>
           </ScrollArea>
 
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-3 flex-shrink-0">
+          <div className="px-6 py-4 border-t border-border bg-background flex flex-col gap-3 flex-shrink-0">
             {/* Primary actions row */}
             <div className="flex flex-wrap gap-2 justify-end">
               <Button variant="outline" onClick={() => onOpenChange(false)}>

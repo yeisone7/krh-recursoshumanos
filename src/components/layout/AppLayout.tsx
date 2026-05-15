@@ -232,7 +232,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     </span>
                   </>
                 ) : (
-                  <span className="mx-auto h-1.5 w-16 rounded-full bg-muted-foreground/30" />
+                  <span className="mx-auto h-1.5 w-16 rounded-full bg-background -foreground/30" />
                 )}
               </div>
               <div className="flex shrink-0 items-center gap-1">

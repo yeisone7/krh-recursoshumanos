@@ -32,7 +32,7 @@ const resultStyles: Record<string, { bg: string; text: string }> = {
   apto: { bg: 'bg-success-light', text: 'text-success' },
   apto_restricciones: { bg: 'bg-warning-light', text: 'text-warning-foreground' },
   no_apto: { bg: 'bg-destructive-light', text: 'text-destructive' },
-  pendiente: { bg: 'bg-muted', text: 'text-muted-foreground' },
+  pendiente: { bg: 'bg-background ', text: 'text-muted-foreground' },
 };
 
 interface Props {
@@ -172,9 +172,9 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
-        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background overflow-hidden">
+        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-border relative overflow-hidden">
+          
           <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
@@ -206,7 +206,7 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
             <Button 
               variant="outline" 
               onClick={handleExportPdf}
-              className="h-10 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background/50 border-border/50 hover:bg-background transition-all shadow-sm"
+              className="h-10 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background border-border/50 hover:bg-background transition-all shadow-sm"
             >
               <FileDown className="w-4 h-4" /> Exportar Orden
             </Button>
@@ -224,9 +224,9 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
               {transaction.items.map((item) => {
                 const rs = resultStyles[item.result] || resultStyles.pendiente;
                 return (
-                  <div key={item.id} className="group relative overflow-hidden flex flex-col gap-4 rounded-2xl border border-border/50 bg-background/50 p-5 transition-all hover:bg-background hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+                  <div key={item.id} className="group relative overflow-hidden flex flex-col gap-4 rounded-2xl border border-border/50 bg-background p-5 transition-all hover:bg-background hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                         <Stethoscope className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
@@ -255,7 +255,7 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
                 <FileText className="w-4 h-4 text-primary/40" />
                 <h4 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Información General</h4>
               </div>
-              <div className="bg-primary/[0.02] border border-primary/10 rounded-[2rem] p-6 space-y-6">
+              <div className="bg-primary/[0.02] border border-border rounded-[2rem] p-6 space-y-6">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Centro de Operación</p>
                   <p className="font-black tracking-tight text-foreground flex items-center gap-2">
@@ -284,7 +284,7 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
                 <Paperclip className="w-4 h-4 text-primary/40" />
                 <h4 className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Soportes y Notas</h4>
               </div>
-              <div className="bg-background/50 border border-border/50 rounded-[2rem] p-6 space-y-6">
+              <div className="bg-background border border-border/50 rounded-[2rem] p-6 space-y-6">
                 {transaction.observations ? (
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Observaciones</p>
@@ -316,7 +316,7 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
             <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleUploadPdf} />
 
             {documentUrl ? (
-              <div className="relative overflow-hidden group bg-background/50 border border-border/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 transition-all hover:bg-background hover:shadow-md">
+              <div className="relative overflow-hidden group bg-background border border-border/50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 transition-all hover:bg-background hover:shadow-md">
                 <div className="h-12 w-12 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <FileText className="w-6 h-6" />
                 </div>
@@ -325,12 +325,12 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Documento PDF Oficial</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background/50" asChild>
+                  <Button variant="outline" size="sm" className="h-9 px-4 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background " asChild>
                     <a href={documentUrl} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="w-3.5 h-3.5" /> Ver PDF
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPdf} className="h-9 w-9 rounded-xl p-0 bg-background/50">
+                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPdf} className="h-9 w-9 rounded-xl p-0 bg-background ">
                     <Upload className="w-3.5 h-3.5" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={handleRemoveDocument} className="h-9 w-9 rounded-xl p-0 text-destructive hover:bg-destructive/10">
@@ -341,11 +341,11 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
             ) : (
               <Button 
                 variant="outline" 
-                className="w-full h-16 rounded-2xl border-dashed border-2 gap-3 hover:bg-primary/5 hover:border-primary/30 transition-all group" 
+                className="w-full h-16 rounded-2xl border-dashed border-2 gap-3 hover:hover:border-primary/30 transition-all group" 
                 onClick={() => fileInputRef.current?.click()} 
                 disabled={isUploadingPdf}
               >
-                <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                <div className="h-10 w-10 rounded-xl bg-background flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                   <Upload className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div className="text-left">
@@ -370,16 +370,16 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
               )}
             </div>
 
-            <div className="bg-background/50 border border-border/50 rounded-[2rem] p-8">
+            <div className="bg-background border border-border/50 rounded-[2rem] p-8">
               {signatureDataUrl && !showSignature ? (
                 <div className="flex flex-col items-center gap-6">
-                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-border/50 w-full flex items-center justify-center min-h-[150px] shadow-inner">
+                  <div className="bg-white/80 rounded-2xl p-6 border border-border/50 w-full flex items-center justify-center min-h-[150px] shadow-inner">
                     <img src={signatureDataUrl} alt="Firma" className="max-h-[100px] object-contain filter drop-shadow-sm" />
                   </div>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-10 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background/50" 
+                    className="h-10 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background " 
                     onClick={() => { setSignatureDataUrl(null); setShowSignature(true); }}
                   >
                     Actualizar Firma

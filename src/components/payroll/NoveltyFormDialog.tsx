@@ -125,8 +125,8 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
         </DialogHeader>
 
         {/* Header Premium */}
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-primary/5">
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-border ">
+          
           
           <div className="flex items-start gap-4 sm:gap-5 relative">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center font-black text-xl sm:text-2xl shrink-0 shadow-inner">
@@ -160,7 +160,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col min-h-0">
-          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-muted/20">
+          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-background">
             <TabsList className="bg-transparent h-auto p-0 gap-6 w-full justify-start overflow-x-auto no-scrollbar">
               <TabsTrigger value="detalles" className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
                 <div className="flex items-center gap-2">
@@ -217,17 +217,17 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
                      type="date"
                      value={form.novelty_date}
                      onChange={e => setForm(f => ({ ...f, novelty_date: e.target.value }))}
-                     className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background"
+                     className="h-12 rounded-2xl bg-background border-border focus:bg-background"
                    />
                  </div>
 
                  <div className="space-y-2">
                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tipo de Novedad</Label>
                    <Select value={form.novelty_type} onValueChange={v => setForm(f => ({ ...f, novelty_type: v as NoveltyType }))}>
-                     <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background">
+                     <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
                        <SelectValue />
                      </SelectTrigger>
-                     <SelectContent className="rounded-2xl border-primary/10">
+                     <SelectContent className="rounded-2xl border-border ">
                        {noveltyTypeOptions.map(o => (
                          <SelectItem key={o.value} value={o.value} className="font-medium text-sm p-3">
                            {o.label}
@@ -241,10 +241,10 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
                <div className="space-y-2">
                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Motivo Específico</Label>
                  <Select value={form.reason_id} onValueChange={v => setForm(f => ({ ...f, reason_id: v }))}>
-                   <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background">
+                   <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
                      <SelectValue placeholder="Seleccionar motivo..." />
                    </SelectTrigger>
-                   <SelectContent className="rounded-2xl border-primary/10">
+                   <SelectContent className="rounded-2xl border-border ">
                      {reasons.map(r => (
                        <SelectItem key={r.id} value={r.id} className="font-medium text-sm p-3">
                          {r.item_number}. {r.name}
@@ -256,7 +256,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
              </TabsContent>
 
              <TabsContent value="horario" className="m-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-               <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 mb-6">
+               <div className="p-6 rounded-2xl border border-border mb-6">
                  <div className="flex items-center gap-3 mb-2">
                    <Clock className="w-5 h-5 text-primary" />
                    <h3 className="font-black tracking-tight text-primary">Configuración de Tiempos</h3>
@@ -273,7 +273,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
                      type="time"
                      value={form.start_time}
                      onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))}
-                     className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background"
+                     className="h-12 rounded-2xl bg-background border-border focus:bg-background"
                    />
                  </div>
                  <div className="space-y-2">
@@ -284,7 +284,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
                      min="0"
                      value={form.hours || ''}
                      onChange={e => setForm(f => ({ ...f, hours: Number(e.target.value) }))}
-                     className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background"
+                     className="h-12 rounded-2xl bg-background border-border focus:bg-background"
                    />
                  </div>
                  <div className="space-y-2">
@@ -293,7 +293,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
                      type="time"
                      value={form.end_time}
                      readOnly
-                     className="h-12 rounded-2xl bg-muted/50 border-transparent text-muted-foreground pointer-events-none"
+                     className="h-12 rounded-2xl bg-background border-transparent text-muted-foreground pointer-events-none"
                    />
                  </div>
                </div>
@@ -307,15 +307,15 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
                    onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                    rows={6}
                    placeholder="Añada cualquier detalle adicional relevante para esta novedad..."
-                   className="rounded-2xl bg-muted/20 border-primary/5 focus:bg-background p-4 resize-none"
+                   className="rounded-2xl bg-background border-border focus:bg-background p-4 resize-none"
                  />
                </div>
              </TabsContent>
           </div>
         </Tabs>
 
-        <div className="p-6 border-t border-border/50 bg-muted/10 flex items-center justify-end gap-3 shrink-0">
-          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-primary/10" onClick={() => onOpenChange(false)}>
+        <div className="p-6 border-t border-border/50 bg-background /10 flex items-center justify-end gap-3 shrink-0">
+          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" onClick={handleSave} disabled={create.isPending || update.isPending}>

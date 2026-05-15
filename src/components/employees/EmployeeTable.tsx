@@ -56,7 +56,7 @@ export function EmployeeTable({
     <div className="card-elevated overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/30 hover:bg-muted/30">
+          <TableRow className="bg-background hover:bg-background">
             <TableHead className="w-[300px]">Empleado</TableHead>
             <TableHead>Cargo y Área</TableHead>
             <TableHead>Centro de Operación</TableHead>
@@ -75,7 +75,7 @@ export function EmployeeTable({
             return (
               <TableRow 
                 key={employee.id} 
-                className="group cursor-pointer hover:bg-muted/20"
+                className="group cursor-pointer hover:bg-background"
                 onClick={() => onOpenDetail(employee.id)}
               >
                 <TableCell>
@@ -125,7 +125,7 @@ export function EmployeeTable({
                       isRetired
                         ? isEnRetiro
                           ? 'bg-warning-light text-warning border-warning/20'
-                          : 'bg-muted text-muted-foreground border-muted-foreground/20'
+                          : 'bg-background text-muted-foreground border-muted-foreground/20'
                         : employee.is_active 
                           ? 'bg-success-light text-success border-success/20'
                           : 'bg-rose-light text-rose border-rose/20'

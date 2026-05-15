@@ -101,7 +101,7 @@ export function PositionOnboardingTemplates({ positionId, positionName }: Props)
       </p>
 
       {showForm && (
-        <div className="p-3 rounded-lg border border-dashed border-primary/30 bg-primary/5 space-y-2">
+        <div className="p-3 rounded-lg border border-dashed border-primary/30 space-y-2">
           <Input
             placeholder="Nombre de la tarea *"
             value={label}
@@ -131,7 +131,7 @@ export function PositionOnboardingTemplates({ positionId, positionName }: Props)
           {templates.map((tpl) => (
             <div
               key={tpl.id}
-              className="group flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+              className="group flex items-start gap-3 p-3 rounded-lg hover:bg-background transition-colors"
             >
               <CheckCircle2 className="w-5 h-5 text-muted-foreground/40 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">

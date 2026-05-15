@@ -270,7 +270,7 @@ export function StoryboardViewer({
           onClick={() => setActiveSceneIdx(idx)}
         >
           {imageUrls[idx] && (
-            <div className="bg-muted/30 flex items-center justify-center relative group">
+            <div className="bg-background flex items-center justify-center relative group">
               <img
                 src={imageUrls[idx]}
                 alt={`Escena ${idx + 1}: ${scene.title}`}

@@ -196,7 +196,7 @@ export function LoanRefinanceDialog({ loan, open, onClose }: Props) {
 
         <div className="space-y-4">
           {/* Current loan info */}
-          <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+          <div className="p-3 rounded-lg bg-background space-y-2">
             <p className="text-sm font-medium">Préstamo Actual</p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
@@ -248,7 +248,7 @@ export function LoanRefinanceDialog({ loan, open, onClose }: Props) {
           <Separator />
 
           {/* Preview */}
-          <div className="p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-2">
+          <div className="p-3 rounded-lg border border-primary/30 space-y-2">
             <p className="text-sm font-medium text-primary">Resultado del Refinanciamiento</p>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>

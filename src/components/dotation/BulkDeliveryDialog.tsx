@@ -199,10 +199,10 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-4xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-4xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           <div className="relative flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
               <Users className="w-7 h-7 text-primary-foreground" />
@@ -228,7 +228,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
                   value={centerId}
                   onValueChange={setCenterId}
                   placeholder="Seleccionar centro de trabajo"
-                  triggerClassName="h-12 rounded-xl bg-muted/50 border-border/50"
+                  triggerClassName="h-12 rounded-xl bg-background border-border/50"
                 />
               </div>
 
@@ -237,7 +237,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
                   <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha de Entrega *</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn('h-12 w-full justify-start text-left font-semibold rounded-xl bg-muted/50 border-border/50', !deliveryDate && 'text-muted-foreground')}>
+                      <Button variant="outline" className={cn('h-12 w-full justify-start text-left font-semibold rounded-xl bg-background border-border/50', !deliveryDate && 'text-muted-foreground')}>
                         <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
                         {deliveryDate ? format(deliveryDate, 'dd/MM/yyyy') : 'Seleccionar'}
                       </Button>
@@ -251,7 +251,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
                   <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha de Vencimiento *</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn('h-12 w-full justify-start text-left font-semibold rounded-xl bg-muted/50 border-border/50', !expirationDate && 'text-muted-foreground')}>
+                      <Button variant="outline" className={cn('h-12 w-full justify-start text-left font-semibold rounded-xl bg-background border-border/50', !expirationDate && 'text-muted-foreground')}>
                         <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
                         {expirationDate ? format(expirationDate, 'dd/MM/yyyy') : 'Seleccionar'}
                       </Button>
@@ -269,11 +269,11 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
                   value={deliveredBy} 
                   onChange={(e) => setDeliveredBy(e.target.value)} 
                   placeholder="Nombre de quien autoriza la entrega" 
-                  className="h-12 rounded-xl bg-muted/50 border-border/50 focus:ring-primary/20 font-medium"
+                  className="h-12 rounded-xl bg-background border-border/50 focus:ring-primary/20 font-medium"
                 />
               </div>
 
-              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 flex items-start gap-4">
+              <div className="border border-primary/20 rounded-2xl p-5 flex items-start gap-4">
                 <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
                   <AlertTriangle className="w-5 h-5" />
                 </div>
@@ -297,11 +297,11 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
             <div className="flex-1 overflow-hidden flex flex-col space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
               {/* Summary badges */}
               <div className="flex flex-wrap gap-2 px-1">
-                <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-muted/30 border-border/50 font-bold text-[10px] uppercase tracking-widest">
+                <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-background border-border/50 font-bold text-[10px] uppercase tracking-widest">
                   <Building2 className="w-3.5 h-3.5 text-primary" />
                   {operationCenters.find((c: any) => c.id === centerId)?.name}
                 </Badge>
-                <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-primary/5 text-primary border-primary/20 font-bold text-[10px] uppercase tracking-widest">
+                <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 text-primary border-primary/20 font-bold text-[10px] uppercase tracking-widest">
                   <Users className="w-3.5 h-3.5" />
                   {rows.length} Empleados
                 </Badge>
@@ -322,9 +322,9 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
               </div>
 
               {/* Table */}
-              <div className="hidden flex-1 min-h-0 overflow-auto rounded-[1.5rem] border border-border/50 bg-background/40 overscroll-x-contain sm:block custom-scrollbar">
+              <div className="hidden flex-1 min-h-0 overflow-auto rounded-[1.5rem] border border-border/50 bg-background overscroll-x-contain sm:block custom-scrollbar">
                 <Table className="min-w-[760px]">
-                  <TableHeader className="bg-muted/50 sticky top-0 z-10">
+                  <TableHeader className="bg-background sticky top-0 z-10">
                     <TableRow className="hover:bg-transparent border-border/50">
                       <TableHead className="w-14 py-4 px-6">
                         <Checkbox
@@ -371,7 +371,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
                           )}
                         </TableCell>
                         <TableCell className="text-center py-4">
-                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-muted font-black text-xs">
+                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-background font-black text-xs">
                             {row.items.reduce((a, b) => a + b.quantity, 0) || 0}
                           </span>
                         </TableCell>
@@ -382,7 +382,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
               </div>
 
               {/* Mobile version */}
-              <div className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-border/50 sm:hidden bg-background/40">
+              <div className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-border/50 sm:hidden bg-background">
                 <div className="divide-y divide-border/50">
                   {rows.map((row, idx) => (
                     <div key={row.employeeId} className={cn('space-y-4 p-5 transition-all', !row.selected && 'opacity-40 grayscale')}>
@@ -398,7 +398,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
                           <p className="mt-1.5 text-[10px] text-muted-foreground font-medium uppercase tracking-tight">{row.documentNumber}</p>
                           <p className="mt-2 text-xs font-semibold text-primary">{row.positionName || '—'}</p>
                         </div>
-                        <Badge variant="outline" className="shrink-0 h-7 w-7 p-0 flex items-center justify-center rounded-lg font-black text-xs bg-muted">
+                        <Badge variant="outline" className="shrink-0 h-7 w-7 p-0 flex items-center justify-center rounded-lg font-black text-xs bg-background ">
                           {row.items.reduce((a, b) => a + b.quantity, 0) || 0}
                         </Badge>
                       </div>
@@ -421,7 +421,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
                 <Button 
                   variant="ghost" 
                   onClick={() => setStep('config')}
-                  className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-muted/50"
+                  className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-background"
                 >
                   ← Configuración
                 </Button>

@@ -126,9 +126,9 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-lg overflow-hidden p-0 sm:w-full rounded-[2.5rem] border-0 shadow-2xl bg-background/95 backdrop-blur-xl">
-        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-lg overflow-hidden p-0 sm:w-full rounded-[2.5rem] border-0 shadow-2xl bg-background ">
+        <DialogHeader className="px-8 py-8 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-border relative overflow-hidden">
+          
           <div className="relative flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
               <Download className="w-6 h-6 text-primary-foreground" />
@@ -148,20 +148,20 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
           {loadingDot ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4">
               <div className="relative">
-                <div className="h-16 w-16 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
+                <div className="h-16 w-16 rounded-full border-4 border-border border-t-primary animate-spin" />
                 <Download className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-primary" />
               </div>
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground animate-pulse">Sincronizando con Dotaciones...</p>
             </div>
           ) : availableProfs.length === 0 ? (
-            <div className="text-center py-16 rounded-[2rem] border border-dashed border-border/50 bg-muted/20">
+            <div className="text-center py-16 rounded-[2rem] border border-dashed border-border/50 bg-background">
               <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
               <p className="text-sm font-medium text-muted-foreground leading-relaxed px-8">No se encontraron profesiogramas en el módulo de Dotación para importar.</p>
             </div>
           ) : (
             <>
               {/* Filters Section */}
-              <div className="space-y-4 bg-muted/30 p-4 rounded-2xl border border-border/40">
+              <div className="space-y-4 bg-background p-4 rounded-2xl border border-border/40">
                 <div className="relative group">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <input
@@ -169,12 +169,12 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Filtrar por centro o cargo..."
-                    className="w-full h-10 pl-10 pr-4 rounded-xl bg-background/50 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:outline-none text-xs font-medium transition-all"
+                    className="w-full h-10 pl-10 pr-4 rounded-xl bg-background border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:outline-none text-xs font-medium transition-all"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Select value={centerFilter} onValueChange={setCenterFilter}>
-                    <SelectTrigger className="h-9 rounded-xl bg-background/50 border-border/50 text-[10px] font-black uppercase tracking-widest">
+                    <SelectTrigger className="h-9 rounded-xl bg-background border-border/50 text-[10px] font-black uppercase tracking-widest">
                       <SelectValue placeholder="Centro" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
@@ -185,7 +185,7 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
                     </SelectContent>
                   </Select>
                   <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-                    <SelectTrigger className="h-9 rounded-xl bg-background/50 border-border/50 text-[10px] font-black uppercase tracking-widest">
+                    <SelectTrigger className="h-9 rounded-xl bg-background border-border/50 text-[10px] font-black uppercase tracking-widest">
                       <SelectValue placeholder="Estado" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
@@ -210,7 +210,7 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
                       Seleccionar todos ({selectableFiltered.length})
                     </span>
                   </label>
-                  <Badge variant="outline" className="h-6 px-3 rounded-xl bg-primary/5 text-primary border-primary/20 font-black text-[9px] uppercase tracking-widest">
+                  <Badge variant="outline" className="h-6 px-3 rounded-xl text-primary border-primary/20 font-black text-[9px] uppercase tracking-widest">
                     {selectedIds.size} Marcados
                   </Badge>
                 </div>
@@ -236,10 +236,10 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
                         className={cn(
                           "group relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-300",
                           disabled 
-                            ? "opacity-40 grayscale bg-muted/20 border-border/40" 
+                            ? "opacity-40 grayscale bg-background border-border/40" 
                             : isSelected
                               ? "bg-primary/[0.04] border-primary/30 shadow-md shadow-primary/5"
-                              : "bg-background/40 border-border/50 hover:border-primary/20 hover:bg-background/60"
+                              : "bg-background border-border/50 hover:border-primary/20 hover:bg-background"
                         )}
                       >
                         {!disabled && (
@@ -263,7 +263,7 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
                         </div>
 
                         {disabled ? (
-                          <Badge variant="outline" className="h-6 px-2 rounded-lg text-[8px] font-black uppercase tracking-tighter bg-primary/5 text-primary border-primary/20">
+                          <Badge variant="outline" className="h-6 px-2 rounded-lg text-[8px] font-black uppercase tracking-tighter text-primary border-primary/20">
                             Sincronizado
                           </Badge>
                         ) : (
@@ -280,7 +280,7 @@ export function ImportFromDotacionDialog({ open, onOpenChange, centers, position
           )}
         </div>
 
-        <div className="p-8 bg-muted/20 border-t border-border/50">
+        <div className="p-8 bg-background border-t border-border/50">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex flex-col">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary">Información Importante</p>

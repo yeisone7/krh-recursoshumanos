@@ -23,17 +23,17 @@ const movementConfig: Record<string, { label: string; icon: typeof ArrowUpCircle
   devolucion: { label: 'Devolución', icon: Undo2, color: 'text-violet-600', badgeClass: 'bg-violet-500/10 text-violet-700 border-violet-200' },
 };
 
-const defaultConfig = { label: 'Otro', icon: RefreshCw, color: 'text-muted-foreground', badgeClass: 'bg-muted text-muted-foreground border-border' };
+const defaultConfig = { label: 'Otro', icon: RefreshCw, color: 'text-muted-foreground', badgeClass: 'bg-background text-muted-foreground border-border' };
 
 export function InventoryHistoryDialog({ open, onOpenChange, item }: InventoryHistoryDialogProps) {
   const { data: movements = [], isLoading } = useInventoryMovements(item?.id);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[85vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-lg flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[85vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           <div className="relative flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
               <History className="w-7 h-7 text-primary-foreground" />
@@ -56,7 +56,7 @@ export function InventoryHistoryDialog({ open, onOpenChange, item }: InventoryHi
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Consultando movimientos...</p>
             </div>
           ) : movements.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
+            <div className="flex flex-col items-center justify-center py-20 bg-background border-2 border-dashed border-border/50 rounded-[2.5rem] text-center space-y-4">
               <div className="p-4 rounded-full bg-background shadow-sm">
                 <History className="w-10 h-10 text-muted-foreground/30" />
               </div>
@@ -75,7 +75,7 @@ export function InventoryHistoryDialog({ open, onOpenChange, item }: InventoryHi
                 return (
                   <div
                     key={mov.id}
-                    className="group relative flex items-start gap-4 p-4 rounded-2xl border border-border/50 bg-background/50 hover:bg-muted/30 hover:border-primary/20 transition-all duration-300"
+                    className="group relative flex items-start gap-4 p-4 rounded-2xl border border-border/50 bg-background hover:bg-background hover:border-primary/20 transition-all duration-300"
                   >
                     <div className={cn(
                       "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm transition-transform group-hover:scale-110",
@@ -107,7 +107,7 @@ export function InventoryHistoryDialog({ open, onOpenChange, item }: InventoryHi
                         <p className="text-xs font-bold text-foreground/80 truncate">
                           {mov.reason && mov.reason !== mov.movement_type ? mov.reason : 'Movimiento de inventario'}
                         </p>
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-muted/50 border border-border/50">
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-background border border-border/50">
                            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-tight">Stock:</span>
                            <span className="text-[9px] font-black text-foreground">{mov.previous_stock} → {mov.new_stock}</span>
                         </div>

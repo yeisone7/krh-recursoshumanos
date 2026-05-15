@@ -142,7 +142,7 @@ export function OnboardingChecklist({ employeeId }: OnboardingChecklistProps) {
           <div
             key={task.id}
             className={cn(
-              "group w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors hover:bg-muted/50",
+              "group w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors hover:bg-background",
               task.is_completed && "opacity-60"
             )}
           >

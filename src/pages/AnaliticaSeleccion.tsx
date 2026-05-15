@@ -242,7 +242,7 @@ function MetricInfo({ info }: { info: MetricInfoData }) {
             <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Ejemplo</p>
             <p className="text-xs text-muted-foreground leading-relaxed">{info.ejemplo}</p>
           </div>
-          <div className="bg-primary/5 p-3 space-y-0.5">
+          <div className="p-3 space-y-0.5">
             <p className="text-[11px] font-bold uppercase tracking-widest text-primary">Interpretación</p>
             <p className="text-xs text-primary/80 leading-relaxed italic">{info.note}</p>
           </div>
@@ -1259,7 +1259,7 @@ export default function AnaliticaSeleccion() {
                     ['Oferta', source.oferta, source.ofertaPct],
                     ['Contratado', source.contratado, source.contratadoPct],
                   ].map(([label, value, pct]) => (
-                    <div key={label as string} className="rounded-md bg-muted/50 p-2">
+                    <div key={label as string} className="rounded-md bg-background p-2">
                       <div className="flex items-center justify-between gap-2 text-xs">
                         <span className="text-muted-foreground">{label}</span>
                         <span className="font-medium text-foreground">{value}</span>
@@ -1380,7 +1380,7 @@ export default function AnaliticaSeleccion() {
                     note: 'Alerta sobre vacantes que llevan mucho tiempo sin cubrirse.',
                   },
                 ].map((m) => (
-                  <div key={m.name} className="rounded-xl border bg-muted/20 p-4 space-y-2">
+                  <div key={m.name} className="rounded-xl border bg-background p-4 space-y-2">
                     <p className="font-semibold text-foreground text-sm">{m.name}</p>
                     <p className="text-sm text-foreground/80"><span className="font-semibold">¿Cómo se calcula?</span> {m.calc}</p>
                     <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground/70">Ejemplo:</span> {m.ejemplo}</p>
@@ -1440,7 +1440,7 @@ export default function AnaliticaSeleccion() {
                     note: 'Cuando llega al 100%, los botones de selección se bloquean automáticamente.',
                   },
                 ].map((m) => (
-                  <div key={m.name} className="rounded-xl border bg-muted/20 p-4 space-y-2">
+                  <div key={m.name} className="rounded-xl border bg-background p-4 space-y-2">
                     <p className="font-semibold text-foreground text-sm">{m.name}</p>
                     <p className="text-sm text-foreground/80"><span className="font-semibold">¿Cómo se calcula?</span> {m.calc}</p>
                     <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground/70">Ejemplo:</span> {m.ejemplo}</p>
@@ -1464,7 +1464,7 @@ export default function AnaliticaSeleccion() {
                   { name: 'Motivos personales', calc: 'El candidato se retiró por razones personales que no están relacionadas con la empresa.', note: 'Puede incluir cambio de ciudad, situación familiar u otras circunstancias.' },
                   { name: 'Salario', calc: 'El candidato desistió porque el salario ofrecido no cumplía sus expectativas.', note: 'Una frecuencia alta de este motivo es una señal para revisar la propuesta de valor salarial.' },
                 ].map((m) => (
-                  <div key={m.name} className="rounded-xl border bg-muted/20 p-4 space-y-2">
+                  <div key={m.name} className="rounded-xl border bg-background p-4 space-y-2">
                     <p className="font-semibold text-foreground text-sm">{m.name}</p>
                     <p className="text-sm text-foreground/80"><span className="font-semibold">¿Qué significa?</span> {m.calc}</p>
                     <p className="text-xs text-primary/80 italic border-l-2 border-primary/30 pl-2">{m.note}</p>
@@ -1499,7 +1499,7 @@ export default function AnaliticaSeleccion() {
                     note: 'Evita asignar más candidatos de los que la empresa puede contratar para esa posición.',
                   },
                 ].map((m) => (
-                  <div key={m.name} className="rounded-xl border bg-muted/20 p-4 space-y-2">
+                  <div key={m.name} className="rounded-xl border bg-background p-4 space-y-2">
                     <p className="font-semibold text-foreground text-sm">{m.name}</p>
                     <p className="text-sm text-foreground/80"><span className="font-semibold">¿Qué significa?</span> {m.calc}</p>
                     <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground/70">Ejemplo:</span> {m.ejemplo}</p>
@@ -1523,7 +1523,7 @@ export default function AnaliticaSeleccion() {
                   { name: 'Velocidad', calc: 'Qué tan rápido se están llenando las vacantes. Entre menos días lleven abiertas, mayor es este índice.', note: 'Una vacante de más de 50 días sin cerrarse reduce significativamente este indicador.' },
                   { name: 'Pipeline', calc: 'Qué tan surtida está la base de candidatos. Con 5 o más candidatos por vacante se llega al máximo (100%).', note: 'Un pipeline sano permite elegir al mejor candidato, no simplemente al único disponible.' },
                 ].map((m) => (
-                  <div key={m.name} className="rounded-xl border bg-muted/20 p-4 space-y-2">
+                  <div key={m.name} className="rounded-xl border bg-background p-4 space-y-2">
                     <p className="font-semibold text-foreground text-sm">{m.name}</p>
                     <p className="text-sm text-foreground/80"><span className="font-semibold">¿Qué mide?</span> {m.calc}</p>
                     <p className="text-xs text-primary/80 italic border-l-2 border-primary/30 pl-2">{m.note}</p>

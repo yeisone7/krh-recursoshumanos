@@ -39,7 +39,7 @@ export function TrainingMediaGallery({ media, onDelete }: TrainingMediaGalleryPr
         <Card key={item.id} className="overflow-hidden group">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <div className={`p-2 rounded-lg ${typeColors[item.type] || 'bg-muted'}`}>
+              <div className={`p-2 rounded-lg ${typeColors[item.type] || 'bg-background '}`}>
                 {typeIcons[item.type] || <FileText className="h-8 w-8" />}
               </div>
               <div className="flex-1 min-w-0">
@@ -59,7 +59,7 @@ export function TrainingMediaGallery({ media, onDelete }: TrainingMediaGalleryPr
             </div>
 
             {item.type === 'imagen' && (
-              <div className="mt-3 rounded-lg overflow-hidden bg-muted">
+              <div className="mt-3 rounded-lg overflow-hidden bg-background ">
                 <img
                   src={item.file_url}
                   alt={item.title}

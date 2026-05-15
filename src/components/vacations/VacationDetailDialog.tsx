@@ -204,7 +204,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                 <p className="text-sm text-muted-foreground">Días hábiles</p>
                 <p className="text-2xl font-bold text-primary">{request.business_days}</p>
               </div>
-              <div className="rounded-lg bg-muted p-4">
+              <div className="rounded-lg bg-background p-4">
                 <p className="text-sm text-muted-foreground">Días calendario</p>
                 <p className="text-2xl font-bold">{request.calendar_days ?? '-'}</p>
               </div>
@@ -375,7 +375,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                 </div>
 
                 {interruptionDate && (
-                  <div className="rounded-lg bg-muted p-3">
+                  <div className="rounded-lg bg-background p-3">
                     <p className="text-sm">
                       Días restantes a reprogramar: {' '}
                       <span className="font-bold text-primary">
@@ -462,7 +462,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
             </div>
 
             {/* Audit info */}
-            <div className="rounded-lg bg-muted p-4 text-sm">
+            <div className="rounded-lg bg-background p-4 text-sm">
               <p className="text-muted-foreground">
                 Creado: {format(new Date(request.created_at), "dd/MM/yyyy HH:mm", { locale: es })}
               </p>

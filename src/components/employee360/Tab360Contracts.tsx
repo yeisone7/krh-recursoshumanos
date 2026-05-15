@@ -80,14 +80,14 @@ export function Tab360Contracts({ contracts, isLoading }: Tab360ContractsProps) 
             transition={{ delay: index * 0.1 }}
           >
             <Card className={cn(
-              index === 0 && isActive && 'border-primary/50 bg-primary/5'
+              index === 0 && isActive && 'border-border 0 '
             )}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       'w-10 h-10 rounded-lg flex items-center justify-center',
-                      isActive ? 'bg-success-light' : 'bg-muted'
+                      isActive ? 'bg-success-light' : 'bg-background '
                     )}>
                       <FileText className={cn(
                         'w-5 h-5',
@@ -174,7 +174,7 @@ export function Tab360Contracts({ contracts, isLoading }: Tab360ContractsProps) 
                         return (
                           <div 
                             key={ext.id}
-                            className="text-sm flex items-center justify-between p-2 rounded bg-muted/50"
+                            className="text-sm flex items-center justify-between p-2 rounded bg-background"
                           >
                             <span>
                               Prórroga #{ext.extension_number} ({extensionTypeLabel}): {format(new Date(ext.start_date), "d MMM yyyy", { locale: es })} 

@@ -120,10 +120,10 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           <div className="relative flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
               <ClipboardList className="w-7 h-7 text-primary-foreground" />
@@ -152,7 +152,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                 searchPlaceholder="Buscar centro..."
                 emptyMessage="No se encontraron centros."
                 disabled={isEditing}
-                className="h-12 rounded-xl border-border/50 bg-background/50"
+                className="h-12 rounded-xl border-border/50 bg-background "
               />
             </div>
             <div className="space-y-2.5">
@@ -165,7 +165,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                 searchPlaceholder="Buscar cargo..."
                 emptyMessage="No se encontraron cargos."
                 disabled={isEditing}
-                className="h-12 rounded-xl border-border/50 bg-background/50"
+                className="h-12 rounded-xl border-border/50 bg-background "
               />
             </div>
           </div>
@@ -187,15 +187,15 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                 size="sm" 
                 onClick={addItem} 
                 disabled={availableTypes.length === 0} 
-                className="h-9 rounded-xl gap-2 font-black text-[10px] uppercase tracking-widest border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/40 transition-all"
+                className="h-9 rounded-xl gap-2 font-black text-[10px] uppercase tracking-widest border-primary/20 text-primary hover:hover:border-primary/40 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" /> Agregar Artículo
               </Button>
             </div>
 
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 rounded-[2rem] border border-dashed border-border/50 bg-muted/5">
-                <div className="p-4 rounded-full bg-muted/20">
+              <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 rounded-[2rem] border border-dashed border-border/50 bg-background /5">
+                <div className="p-4 rounded-full bg-background">
                   <ClipboardList className="w-10 h-10 text-muted-foreground/30" />
                 </div>
                 <div className="space-y-1">
@@ -204,9 +204,9 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                 </div>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-border/50 bg-background/50">
+              <div className="overflow-hidden rounded-2xl border border-border/50 bg-background ">
                 <Table>
-                  <TableHeader className="bg-muted/30">
+                  <TableHeader className="bg-background">
                     <TableRow className="hover:bg-transparent border-border/50">
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground h-10 px-4">Artículo</TableHead>
                       <TableHead className="text-[10px] font-black uppercase tracking-widest text-muted-foreground h-10 w-24 px-4">Cant.</TableHead>
@@ -222,7 +222,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                             value={item.dotation_item_type_id}
                             onValueChange={(v) => updateItem(idx, 'dotation_item_type_id', v)}
                           >
-                            <SelectTrigger className="h-10 rounded-xl border-border/50 bg-background/80 font-bold text-sm">
+                            <SelectTrigger className="h-10 rounded-xl border-border/50 bg-background font-bold text-sm">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
@@ -245,7 +245,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                             min={1}
                             value={item.quantity}
                             onChange={(e) => updateItem(idx, 'quantity', parseInt(e.target.value) || 1)}
-                            className="h-10 rounded-xl border-border/50 bg-background/80 font-black text-center text-xs tabular-nums"
+                            className="h-10 rounded-xl border-border/50 bg-background font-black text-center text-xs tabular-nums"
                           />
                         </TableCell>
                         <TableCell className="px-4 py-3">
@@ -283,7 +283,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-border/50 bg-muted/10">
+        <div className="flex items-center justify-end gap-3 p-6 border-t border-border/50 bg-background /10">
           <Button 
             variant="ghost" 
             onClick={() => onOpenChange(false)}

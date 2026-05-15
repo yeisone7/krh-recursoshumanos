@@ -179,7 +179,7 @@ export default function AnaliticasEvaluaciones() {
     <div className="space-y-6 sm:space-y-8 max-w-[1600px] mx-auto pb-12">
       {/* Header */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <h1 className="text-3xl font-black tracking-tight text-foreground">Analíticas de Evaluaciones</h1>
@@ -216,7 +216,7 @@ export default function AnaliticasEvaluaciones() {
       {/* Trend + Status */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 rounded-[2rem] border-border/50 shadow-sm overflow-hidden flex flex-col">
-          <CardHeader className="bg-muted/10 border-b border-border/50 p-6">
+          <CardHeader className="bg-background /10 border-b border-border/50 p-6">
             <CardTitle className="text-xl font-bold">Tendencia Mensual</CardTitle>
             <CardDescription className="font-medium">Evaluaciones completadas y pendientes (últimos 12 meses)</CardDescription>
           </CardHeader>
@@ -238,7 +238,7 @@ export default function AnaliticasEvaluaciones() {
         </Card>
 
         <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden flex flex-col">
-          <CardHeader className="bg-muted/10 border-b border-border/50 p-6"><CardTitle className="text-xl font-bold">Distribución por Estado</CardTitle></CardHeader>
+          <CardHeader className="bg-background /10 border-b border-border/50 p-6"><CardTitle className="text-xl font-bold">Distribución por Estado</CardTitle></CardHeader>
           <CardContent className="p-6 flex-1 flex flex-col justify-center items-center">
             <ResponsiveContainer width="100%" height={isMobile ? 240 : 300}>
               <PieChart>
@@ -255,7 +255,7 @@ export default function AnaliticasEvaluaciones() {
       {/* By Cycle + Score Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden flex flex-col">
-          <CardHeader className="bg-muted/10 border-b border-border/50 p-6">
+          <CardHeader className="bg-background /10 border-b border-border/50 p-6">
             <CardTitle className="text-xl font-bold">Comparativo por Ciclo</CardTitle>
             <CardDescription className="font-medium">Total vs completadas por ciclo de evaluación</CardDescription>
           </CardHeader>
@@ -279,7 +279,7 @@ export default function AnaliticasEvaluaciones() {
         </Card>
 
         <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden flex flex-col">
-          <CardHeader className="bg-muted/10 border-b border-border/50 p-6">
+          <CardHeader className="bg-background /10 border-b border-border/50 p-6">
             <CardTitle className="text-xl font-bold">Distribución de Puntajes</CardTitle>
             <CardDescription className="font-medium">Rangos de calificación según escala</CardDescription>
           </CardHeader>
@@ -304,7 +304,7 @@ export default function AnaliticasEvaluaciones() {
       {/* Template usage + Top/Bottom */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden flex flex-col">
-          <CardHeader className="bg-muted/10 border-b border-border/50 p-6">
+          <CardHeader className="bg-background /10 border-b border-border/50 p-6">
             <CardTitle className="text-xl font-bold">Uso de Plantillas</CardTitle>
             <CardDescription className="font-medium">Evaluaciones por plantilla</CardDescription>
           </CardHeader>
@@ -397,7 +397,7 @@ export default function AnaliticasEvaluaciones() {
       {/* Active Cycles */}
       {activeCycles.length > 0 && (
         <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
-          <CardHeader className="bg-muted/10 border-b border-border/50 p-6">
+          <CardHeader className="bg-background /10 border-b border-border/50 p-6">
             <CardTitle className="text-xl font-bold">Ciclos Activos</CardTitle>
             <CardDescription className="font-medium">Progreso de los ciclos de evaluación en curso</CardDescription>
           </CardHeader>
@@ -415,9 +415,9 @@ export default function AnaliticasEvaluaciones() {
                     </div>
                     <Progress value={progress} className="h-2.5" />
                     <div className="flex justify-between text-xs font-semibold text-muted-foreground">
-                      <span className="bg-muted/50 px-2 py-1 rounded-md">{format(parseISO(cycle.start_date), 'dd MMM yy', { locale: es })}</span>
+                      <span className="bg-background px-2 py-1 rounded-md">{format(parseISO(cycle.start_date), 'dd MMM yy', { locale: es })}</span>
                       <span className="text-primary px-2 py-1">{progress}%</span>
-                      <span className="bg-muted/50 px-2 py-1 rounded-md">{format(parseISO(cycle.end_date), 'dd MMM yy', { locale: es })}</span>
+                      <span className="bg-background px-2 py-1 rounded-md">{format(parseISO(cycle.end_date), 'dd MMM yy', { locale: es })}</span>
                     </div>
                   </div>
                 );
@@ -428,8 +428,8 @@ export default function AnaliticasEvaluaciones() {
       )}
 
       {/* Comparativo */}
-      <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden bg-muted/20">
-        <CardHeader className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 border-b border-border/50 bg-background/50">
+      <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden bg-background">
+        <CardHeader className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 border-b border-border/50 bg-background ">
           <div className="min-w-0">
             <CardTitle className="text-xl font-bold">Resumen Comparativo</CardTitle>
             <CardDescription className="mt-1 font-medium">
@@ -457,13 +457,13 @@ export default function AnaliticasEvaluaciones() {
         </CardHeader>
         <CardContent className="p-6">
           {!compareCycleId ? (
-            <div className="text-center py-12 border-2 border-dashed border-border/50 rounded-2xl bg-background/50">
+            <div className="text-center py-12 border-2 border-dashed border-border/50 rounded-2xl bg-background ">
               <p className="text-muted-foreground font-semibold">
                 Selecciona un ciclo para ver el comparativo
               </p>
             </div>
           ) : compareEvaluations.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed border-border/50 rounded-2xl bg-background/50">
+            <div className="text-center py-12 border-2 border-dashed border-border/50 rounded-2xl bg-background ">
               <p className="text-muted-foreground font-semibold">
                 No hay evaluaciones con puntaje en este ciclo
               </p>
@@ -489,7 +489,7 @@ export default function AnaliticasEvaluaciones() {
 
               <div className="w-full overflow-x-auto rounded-xl border border-border/50 shadow-sm bg-background">
               <Table className="min-w-[680px] table-fixed sm:table-auto">
-                <TableHeader className="bg-muted/30">
+                <TableHeader className="bg-background">
                   <TableRow>
                     <TableHead className="w-16 font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">#</TableHead>
                     <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Empleado</TableHead>
@@ -500,7 +500,7 @@ export default function AnaliticasEvaluaciones() {
                 </TableHeader>
                 <TableBody>
                   {compareEvaluations.map((ev, idx) => (
-                    <TableRow key={ev.id} className="hover:bg-muted/10 transition-colors">
+                    <TableRow key={ev.id} className="hover:bg-background /10 transition-colors">
                       <TableCell className="font-bold text-muted-foreground">{idx + 1}</TableCell>
                       <TableCell className="font-bold">
                         {ev.employee?.first_name} {ev.employee?.last_name}

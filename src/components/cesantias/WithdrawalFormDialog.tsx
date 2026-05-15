@@ -154,7 +154,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden">
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 sm:w-full rounded-[2rem] border shadow-2xl bg-background overflow-hidden">
         <DialogHeader className="px-8 py-8 bg-gradient-to-br from-info/10 via-background to-info/5 border-b border-info/10">
           <div className="flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-info flex items-center justify-center shadow-lg shadow-info/20">
@@ -192,7 +192,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                           placeholder="Seleccionar empleado"
                           searchPlaceholder="Buscar empleado..."
                           disabled={!!withdrawal}
-                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all"
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all"
                         />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
@@ -207,7 +207,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Solicitud *</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} disabled={!!withdrawal} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="date" {...field} disabled={!!withdrawal} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -230,7 +230,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                           placeholder="Seleccionar motivo"
                           searchPlaceholder="Buscar motivo..."
                           disabled={!!withdrawal}
-                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold"
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold"
                         />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
@@ -252,7 +252,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                           placeholder="Seleccionar fondo"
                           searchPlaceholder="Buscar fondo..."
                           disabled={!!withdrawal}
-                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold text-info"
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold text-info"
                         />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
@@ -276,7 +276,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Monto Solicitado *</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} disabled={!!withdrawal} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="number" {...field} disabled={!!withdrawal} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -305,7 +305,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                   <FormItem>
                     <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Descripción del Destino</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Ej: Compra de vivienda, pago de matrícula universitaria..." rows={3} className="rounded-2xl border-border/50 bg-background/50 focus:bg-background transition-all resize-none" />
+                      <Textarea {...field} placeholder="Ej: Compra de vivienda, pago de matrícula universitaria..." rows={3} className="rounded-2xl border-border/50 bg-background focus:bg-background transition-all resize-none" />
                     </FormControl>
                     <FormMessage className="text-[10px] font-bold" />
                   </FormItem>
@@ -327,7 +327,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Nombre</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Nombre completo" className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all" />
+                        <Input {...field} placeholder="Nombre completo" className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -341,7 +341,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Documento</FormLabel>
                       <FormControl>
-                        <Input {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-mono" />
+                        <Input {...field} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-mono" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -370,7 +370,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                           onValueChange={field.onChange}
                           placeholder="Seleccionar estado"
                           searchPlaceholder="Buscar estado..."
-                          triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-black text-xs"
+                          triggerClassName="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-black text-xs"
                         />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
@@ -385,7 +385,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Autorización</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -399,7 +399,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                     <FormItem>
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha Desembolso</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all font-bold" />
+                        <Input type="date" {...field} className="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all font-bold" />
                       </FormControl>
                       <FormMessage className="text-[10px] font-bold" />
                     </FormItem>
@@ -431,7 +431,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
                 <FormItem>
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observaciones</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={3} className="rounded-2xl border-border/50 bg-background/50 focus:bg-background transition-all resize-none" />
+                    <Textarea {...field} rows={3} className="rounded-2xl border-border/50 bg-background focus:bg-background transition-all resize-none" />
                   </FormControl>
                   <FormMessage className="text-[10px] font-bold" />
                 </FormItem>

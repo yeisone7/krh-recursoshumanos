@@ -94,7 +94,7 @@ export function IncapacityAlertsPanel({
   
   return (
     <Card className="rounded-[2rem] border-border/50 shadow-lg overflow-hidden">
-      <CardHeader className={compact ? 'pb-2 bg-muted/20' : 'bg-muted/20 border-b border-border/50 pb-4'}>
+      <CardHeader className={compact ? 'pb-2 bg-background' : 'bg-background border-b border-border/50 pb-4'}>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-base flex items-center gap-2">
@@ -126,7 +126,7 @@ export function IncapacityAlertsPanel({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 flex-1">
-                    <div className="w-8 h-8 rounded-xl bg-background/50 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+                    <div className="w-8 h-8 rounded-xl bg-background flex items-center justify-center shrink-0 shadow-sm mt-0.5">
                       {getAlertIcon(alert.type)}
                     </div>
                     <div className="flex-1 min-w-0 pt-1">
@@ -147,7 +147,7 @@ export function IncapacityAlertsPanel({
         </ScrollArea>
         
         {totalAlerts > maxItems && (
-          <div className="p-4 border-t border-border/50 bg-muted/10">
+          <div className="p-4 border-t border-border/50 bg-background /10">
             <Button variant="outline" size="sm" className="w-full rounded-xl h-10 font-bold uppercase tracking-widest text-[10px]" onClick={() => onIncapacityClick?.('')}>
               Ver todas ({totalAlerts - maxItems} más)
             </Button>

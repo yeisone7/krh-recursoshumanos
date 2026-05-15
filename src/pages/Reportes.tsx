@@ -34,7 +34,7 @@ export default function Reportes() {
   return (
     <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-primary/10 shadow-sm">
+      <div className="relative overflow-hidden rounded-[2.5rem] p-8 sm:p-10 border border-border shadow-sm">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-lg shadow-primary/20">
             <FileBarChart className="h-8 w-8 text-primary-foreground" />
@@ -49,14 +49,14 @@ export default function Reportes() {
           </div>
         </div>
         {/* Decorative elements */}
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-2xl" />
+        
+        
       </div>
 
       {/* Categorized Tabs */}
       <Tabs defaultValue="personal" className="w-full">
-        <div className="sticky top-0 z-20 -mx-4 px-4 py-2 bg-background/50 backdrop-blur-md">
-          <TabsList className="flex h-auto w-fit gap-2 bg-muted/30 p-1.5 rounded-[1.5rem] border border-border/50 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="sticky top-0 z-20 -mx-4 px-4 py-2 bg-background ">
+          <TabsList className="flex h-auto w-fit gap-2 bg-background p-1.5 rounded-[1.5rem] border border-border/50 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {TABS.map(({ value, label, icon: Icon }) => (
               <TabsTrigger
                 key={value}

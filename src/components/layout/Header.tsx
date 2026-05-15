@@ -77,7 +77,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         <div className="flex-1 max-w-md hidden sm:block">
           <button
             onClick={() => setCommandOpen(true)}
-            className="w-full h-10 pl-10 pr-4 rounded-lg bg-muted/50 border border-transparent hover:border-border text-sm text-muted-foreground text-left transition-all relative"
+            className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-transparent hover:border-border text-sm text-muted-foreground text-left transition-all relative"
           >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <span>Buscar empleados, módulos... </span>

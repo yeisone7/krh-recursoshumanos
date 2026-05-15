@@ -95,7 +95,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import * as XLSX from 'xlsx';
 import type { EvaluationScore } from '@/types/evaluation';
 const statusColors: Record<string, string> = {
-  draft: 'bg-muted text-muted-foreground',
+  draft: 'bg-background text-muted-foreground',
   active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
   completed: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   cancelled: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
@@ -353,7 +353,7 @@ export default function Evaluaciones() {
     <div className="space-y-6 max-w-[1600px] mx-auto pb-12">
       {/* Header */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <h1 className="text-3xl font-black tracking-tight text-foreground">Evaluación de Desempeño</h1>
@@ -365,9 +365,9 @@ export default function Evaluaciones() {
       </div>
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="sticky top-0 z-30 -mx-4 border-b border-border/50 bg-background/95 px-4 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none mb-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-muted/20 border border-border/50 rounded-[2rem] p-3 shadow-sm">
-            <TabsList className="grid h-14 w-full grid-cols-3 sm:w-auto bg-background/50 rounded-xl p-1 border border-border/50">
+        <div className="sticky top-0 z-30 -mx-4 border-b border-border/50 bg-background px-4 py-4 supports-[backdrop-filter]:bg-background sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:mb-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-background border border-border/50 rounded-[2rem] p-3 shadow-sm">
+            <TabsList className="grid h-14 w-full grid-cols-3 sm:w-auto bg-background rounded-xl p-1 border border-border/50">
               <TabsTrigger value="cycles" className="gap-2 px-2 sm:px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <Calendar className="h-4 w-4" />
                 <span className="font-semibold">Ciclos</span>
@@ -394,7 +394,7 @@ export default function Evaluaciones() {
         {/* Cycles Tab */}
         <TabsContent value="cycles" className="focus-visible:outline-none focus-visible:ring-0">
           <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
-            <CardHeader className="bg-muted/10 border-b border-border/50 p-6">
+            <CardHeader className="bg-background /10 border-b border-border/50 p-6">
               <CardTitle className="text-xl font-bold">Ciclos de Evaluación</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -407,7 +407,7 @@ export default function Evaluaciones() {
               ) : (
                 <div className="w-full overflow-x-auto">
                 <Table className="min-w-[720px] table-fixed sm:table-auto">
-                  <TableHeader className="bg-muted/30">
+                  <TableHeader className="bg-background">
                     <TableRow>
                       <TableHead className="w-[220px] font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Nombre</TableHead>
                       <TableHead className="hidden sm:table-cell font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Plantilla</TableHead>
@@ -422,7 +422,7 @@ export default function Evaluaciones() {
                       const stats = getCycleStats(cycle.id);
                       const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
                       return (
-                      <TableRow key={cycle.id} className="hover:bg-muted/10 transition-colors">
+                      <TableRow key={cycle.id} className="hover:bg-background /10 transition-colors">
                         <TableCell className="font-bold text-sm">
                           <span className="block max-w-[210px] truncate">{cycle.name}</span>
                         </TableCell>
@@ -500,8 +500,8 @@ export default function Evaluaciones() {
 
         {/* Evaluations Tab */}
         <TabsContent value="evaluations" className="focus-visible:outline-none focus-visible:ring-0">
-          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden bg-muted/20">
-            <CardHeader className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 border-b border-border/50 bg-background/50">
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden bg-background">
+            <CardHeader className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 border-b border-border/50 bg-background ">
               <CardTitle className="text-xl font-bold">Evaluaciones de Desempeño</CardTitle>
               <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto lg:items-center">
                 <Select value={evaluationCycleFilter} onValueChange={setEvaluationCycleFilter}>
@@ -600,7 +600,7 @@ export default function Evaluaciones() {
         {/* Templates Tab */}
         <TabsContent value="templates" className="focus-visible:outline-none focus-visible:ring-0">
             <div>
-            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between bg-muted/20 border border-border/50 rounded-[2rem] p-4 shadow-sm">
+            <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between bg-background border border-border/50 rounded-[2rem] p-4 shadow-sm">
               <h3 className="text-xl font-bold ml-2">Plantillas de Evaluación</h3>
               {(() => {
                 const allPositions = Array.from(
@@ -700,7 +700,7 @@ export default function Evaluaciones() {
                             </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-xl hover:bg-muted/50" onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0 rounded-xl hover:bg-background" onClick={(e) => e.stopPropagation()}>
                                   <MoreHorizontal className="h-5 w-5" />
                                 </Button>
                               </DropdownMenuTrigger>

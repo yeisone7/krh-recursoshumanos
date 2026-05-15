@@ -41,7 +41,7 @@ export function TrainingStepIndicator({ steps, currentStep }: TrainingStepIndica
             <div
               className={cn(
                 'flex-1 h-0.5 mx-2 mt-[-16px]',
-                index < currentStep ? 'bg-primary' : 'bg-muted-foreground/20',
+                index < currentStep ? 'bg-primary' : 'bg-background -foreground/20',
               )}
             />
           )}

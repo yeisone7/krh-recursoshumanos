@@ -29,7 +29,7 @@ const examResultLabels: Record<string, { label: string; color: string }> = {
   apto_con_restricciones: { label: 'Apto con Restricciones', color: 'bg-warning-light text-warning' },
   apto_restricciones: { label: 'Apto con Restricciones', color: 'bg-warning-light text-warning' },
   no_apto: { label: 'No Apto', color: 'bg-destructive/10 text-destructive' },
-  pendiente: { label: 'Pendiente', color: 'bg-muted text-muted-foreground' },
+  pendiente: { label: 'Pendiente', color: 'bg-background text-muted-foreground' },
 };
 
 export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) {
@@ -106,7 +106,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="space-y-3">
-                        {exam.observations && <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">{exam.observations}</p>}
+                        {exam.observations && <p className="rounded-md bg-background p-3 text-sm text-muted-foreground">{exam.observations}</p>}
                         {items.map((item: any) => {
                           const result = examResultLabels[item.result] || examResultLabels.pendiente;
                           const hasExpiration = item.expiration_date && !isNaN(new Date(item.expiration_date).getTime());

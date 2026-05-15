@@ -229,17 +229,15 @@ export default function SuperAdmin() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 overflow-hidden shadow-lg shadow-primary/5"
+        className="relative p-8 rounded-[2.5rem] border border-border overflow-hidden shadow-lg shadow-primary/5"
       >
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse" />
+        
+        
         
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             <div className="relative shrink-0 group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-foreground rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
               <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border/40 shadow-md overflow-hidden group-hover:scale-105 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <Shield className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
               </div>
             </div>
@@ -251,7 +249,7 @@ export default function SuperAdmin() {
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Protocolo de Alta Seguridad</span>
               </div>
-              <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent uppercase sm:text-4xl">
+              <h1 className="text-3xl font-black tracking-tight text-foreground uppercase sm:text-4xl">
                 Super Administrador
               </h1>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Gestión global de infraestructura multisectorial</p>
@@ -259,7 +257,7 @@ export default function SuperAdmin() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div className="px-4 py-2 rounded-2xl bg-background border border-slate-100 shadow-sm flex items-center gap-3">
               <div className="h-8 w-8 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center">
                 <Building2 className="w-4 h-4 text-primary" />
               </div>
@@ -268,7 +266,7 @@ export default function SuperAdmin() {
                 <p className="text-sm font-black text-slate-900">{companies.length}</p>
               </div>
             </div>
-            <div className="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm flex items-center gap-3">
+            <div className="px-4 py-2 rounded-2xl bg-background border border-slate-100 shadow-sm flex items-center gap-3">
               <div className="h-8 w-8 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center">
                 <Users className="w-4 h-4 text-primary" />
               </div>
@@ -283,7 +281,7 @@ export default function SuperAdmin() {
 
       <Tabs defaultValue="companies" className="space-y-8">
         <div className="flex justify-center">
-          <TabsList className="inline-flex h-14 items-center justify-center rounded-[1.25rem] bg-slate-100/50 p-1.5 backdrop-blur-md border border-slate-200/50 shadow-inner w-full max-w-2xl sm:grid sm:grid-cols-3">
+          <TabsList className="inline-flex h-14 items-center justify-center rounded-[1.25rem] bg-background p-1.5 border border-slate-200/50 shadow-inner w-full max-w-2xl sm:grid sm:grid-cols-3">
             <TabsTrigger 
               value="companies" 
               className="rounded-xl px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:shadow-primary/10 gap-2"
@@ -349,7 +347,7 @@ export default function SuperAdmin() {
                         <Label className="text-[10px] text-muted-foreground">Avatar (Cuadrado)</Label>
                         <div 
                           onClick={() => document.getElementById('new-logo-avatar')?.click()}
-                          className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all hover:border-primary/50 hover:bg-primary/5 group"
+                          className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-background transition-all hover:border-border 0 hover:group"
                         >
                           {logoFile ? (
                             <img src={URL.createObjectURL(logoFile)} alt="Preview" className="h-full w-full object-contain p-2" />
@@ -371,7 +369,7 @@ export default function SuperAdmin() {
                         <Label className="text-[10px] text-muted-foreground">Branding (Reportes/Contratos)</Label>
                         <div 
                           onClick={() => document.getElementById('new-logo-horizontal')?.click()}
-                          className="relative h-24 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-all hover:border-primary/50 hover:bg-primary/5 group"
+                          className="relative h-24 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-background transition-all hover:border-border 0 hover:group"
                         >
                           {horizontalLogoFile ? (
                             <img src={URL.createObjectURL(horizontalLogoFile)} alt="Preview" className="h-full w-full object-contain p-3" />
@@ -444,7 +442,7 @@ export default function SuperAdmin() {
                           <Label className="text-[10px] text-muted-foreground">Avatar (Cuadrado)</Label>
                           <div 
                             onClick={() => document.getElementById('edit-logo-avatar')?.click()}
-                            className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-100/50 transition-all hover:border-primary/50 hover:bg-primary/5 group"
+                            className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-background transition-all hover:border-border 0 hover:group"
                           >
                             {(logoFile || editingCompany.logo_url) ? (
                               <img 
@@ -477,7 +475,7 @@ export default function SuperAdmin() {
                           <Label className="text-[10px] text-muted-foreground">Branding (Reportes/Contratos)</Label>
                           <div 
                             onClick={() => document.getElementById('edit-logo-horizontal')?.click()}
-                            className="relative h-24 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-100/50 transition-all hover:border-primary/50 hover:bg-primary/5 group"
+                            className="relative h-24 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-background transition-all hover:border-border 0 hover:group"
                           >
                             {(horizontalLogoFile || editingCompany.horizontal_logo_url) ? (
                               <img 
@@ -587,10 +585,10 @@ export default function SuperAdmin() {
                 ),
               }))}
             />
-            <Card className="hidden md:block rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+            <Card className="hidden md:block rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
               <CardContent className="p-0 overflow-x-auto">
                 <Table className="min-w-[760px]">
-                  <TableHeader className="bg-slate-50/50">
+                  <TableHeader className="bg-background">
                     <TableRow className="hover:bg-transparent border-slate-100">
                       <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Entidad Corporativa</TableHead>
                       <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Identificación</TableHead>
@@ -606,7 +604,7 @@ export default function SuperAdmin() {
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center gap-4">
                             <div className="relative h-12 w-12 shrink-0 group/avatar">
-                              <div className="absolute -inset-0.5 bg-gradient-to-br from-primary/20 to-transparent rounded-2xl opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
+                              <div className="absolute -inset-0.5 bg-primary/20 rounded-2xl opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
                               <div className="relative h-full w-full rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center overflow-hidden">
                                 {company.logo_url ? (
                                   <img src={company.logo_url} alt={company.name} className="w-full h-full object-cover" />
@@ -622,7 +620,7 @@ export default function SuperAdmin() {
                           </div>
                         </TableCell>
                         <TableCell className="px-8 py-6">
-                          <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-600 font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">
+                          <Badge variant="outline" className="bg-background border-slate-200 text-slate-600 font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">
                             NIT {company.nit}
                           </Badge>
                         </TableCell>
@@ -633,7 +631,7 @@ export default function SuperAdmin() {
                           </div>
                         </TableCell>
                         <TableCell className="px-8 py-6 text-center">
-                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/5 border border-primary/10 text-[10px] font-black text-primary tracking-widest">
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border text-[10px] font-black text-primary tracking-widest">
                             <Users className="w-3.5 h-3.5" />
                             {userCountMap[company.id] || 0} ACTIVOS
                           </div>

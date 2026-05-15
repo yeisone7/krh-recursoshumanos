@@ -112,7 +112,7 @@ export function UserCompanyDialog({ user, open, onOpenChange }: UserCompanyDialo
                 {allCompanies.map(company => (
                   <div
                     key={company.id}
-                    className="flex min-w-0 items-start space-x-3 rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
+                    className="flex min-w-0 items-start space-x-3 rounded-lg border border-border p-3 transition-colors hover:bg-background"
                   >
                     <Checkbox
                       id={`company-${company.id}`}

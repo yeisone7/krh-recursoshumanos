@@ -131,7 +131,7 @@ export function SecurityTab({
     <div className="space-y-6">
       {/* Global Sign Out */}
       {/* Global Sign Out */}
-      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
         <CardHeader className="bg-red-50/50 border-b border-red-100 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
@@ -185,8 +185,8 @@ export function SecurityTab({
       </Card>
 
       {/* Inactivity Timeout */}
-      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+        <CardHeader className="bg-background border-b border-slate-100 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
@@ -215,7 +215,7 @@ export function SecurityTab({
         </CardHeader>
         <CardContent className="p-8">
           {inactivityEnabled && (
-            <div className="p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 space-y-6">
+            <div className="p-6 rounded-[2rem] bg-background border border-slate-100 space-y-6">
               <div className="flex flex-col md:flex-row md:items-center gap-8">
                 <div className="space-y-2 flex-1">
                   <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Tiempo de Espera (Minutos)</Label>
@@ -250,8 +250,8 @@ export function SecurityTab({
       </Card>
 
       {/* Account Lockout */}
-      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+        <CardHeader className="bg-background border-b border-slate-100 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
@@ -281,7 +281,7 @@ export function SecurityTab({
         <CardContent className="p-8">
           {lockoutEnabled && (
             <div className="grid gap-8 md:grid-cols-2">
-              <div className="p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 space-y-4 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
+              <div className="p-6 rounded-[2rem] bg-background border border-slate-100 space-y-4 transition-all hover:bg-white hover:shadow-xl hover:shadow-black/5">
                 <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Umbral de Intentos</Label>
                 <div className="flex items-center gap-4">
                   <Input
@@ -320,8 +320,8 @@ export function SecurityTab({
       </Card>
 
       {/* App Update Check */}
-      <Card className="rounded-[2.5rem] bg-background/50 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-8">
+      <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-lg shadow-black/[0.02] overflow-hidden">
+        <CardHeader className="bg-background border-b border-slate-100 p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center">
@@ -350,7 +350,7 @@ export function SecurityTab({
         </CardHeader>
         <CardContent className="p-8">
           {updateCheckEnabled && (
-            <div className="p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 flex flex-col md:flex-row items-center gap-8">
+            <div className="p-6 rounded-[2rem] bg-background border border-slate-100 flex flex-col md:flex-row items-center gap-8">
               <div className="space-y-2 flex-1">
                 <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Frecuencia de Chequeo (Minutos)</Label>
                 <div className="flex items-center gap-4">

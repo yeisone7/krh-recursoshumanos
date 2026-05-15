@@ -173,9 +173,9 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
   const activeExams = catalog.filter(c => c.is_active);
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
-      <DialogContent className="max-h-[95vh] w-[calc(100vw-2rem)] max-w-3xl overflow-hidden p-0 sm:w-full rounded-[2.5rem] border-0 shadow-2xl bg-background/95 backdrop-blur-xl flex flex-col">
-        <DialogHeader className="px-10 py-10 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-primary/10 relative overflow-hidden shrink-0">
-          <div className="absolute top-0 right-0 -mr-24 -mt-24 w-96 h-96 rounded-full bg-primary/10 blur-[100px] pointer-events-none" />
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-2rem)] max-w-3xl overflow-hidden p-0 sm:w-full rounded-[2.5rem] border-0 shadow-2xl bg-background flex flex-col">
+        <DialogHeader className="px-10 py-10 bg-gradient-to-br from-primary/10 via-background to-primary/5 border-b border-border relative overflow-hidden shrink-0">
+          
           <div className="relative flex items-center gap-6">
             <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
               <Stethoscope className="w-8 h-8 text-primary-foreground" />
@@ -193,7 +193,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
 
         <Tabs defaultValue="employee" className="flex-1 overflow-hidden flex flex-col">
           <div className="px-10 pt-8 shrink-0">
-            <TabsList className="h-14 bg-muted/40 backdrop-blur-md p-1.5 rounded-[1.25rem] w-full grid grid-cols-3 border border-border/50 shadow-sm">
+            <TabsList className="h-14 bg-background /40 p-1.5 rounded-[1.25rem] w-full grid grid-cols-3 border border-border/50 shadow-sm">
               <TabsTrigger value="employee" className="rounded-[1rem] gap-2 font-black text-[10px] uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/20 transition-all">
                 <User className="w-4 h-4" /> Empleado
               </TabsTrigger>
@@ -222,13 +222,13 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                   onValueChange={setEmployeeId}
                   placeholder="Seleccionar empleado"
                   searchPlaceholder="Buscar por nombre o documento..."
-                  triggerClassName="h-11 rounded-xl border-border/50 bg-background/50 focus:bg-background transition-all"
+                  triggerClassName="h-11 rounded-xl border-border/50 bg-background focus:bg-background transition-all"
                 />
               </div>
 
               {selectedEmployee ? (
-                <div className="relative overflow-hidden bg-primary/[0.03] rounded-3xl p-8 border border-primary/10 group transition-all hover:bg-primary/[0.05]">
-                  <div className="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none group-hover:bg-primary/20 transition-all duration-500" />
+                <div className="relative overflow-hidden bg-primary/[0.03] rounded-3xl p-8 border border-border group transition-all hover:bg-primary/[0.05]">
+                  
                   <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Documento de Identidad</p>
@@ -236,7 +236,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                     </div>
                     <div className="space-y-1.5">
                       <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Centro de Operación</p>
-                      <p className="text-sm font-bold text-foreground bg-background/50 px-3 py-1 rounded-lg border border-border/50 w-fit">{selectedEmployee.operation_centers?.name || 'No asignado'}</p>
+                      <p className="text-sm font-bold text-foreground bg-background px-3 py-1 rounded-lg border border-border/50 w-fit">{selectedEmployee.operation_centers?.name || 'No asignado'}</p>
                     </div>
                     <div className="space-y-1.5 sm:col-span-2">
                       <p className="text-[10px] font-black uppercase tracking-widest text-primary/60">Cargo Ocupacional</p>
@@ -245,8 +245,8 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-20 border-2 border-dashed border-primary/10 rounded-[2rem] bg-primary/[0.01]">
-                  <div className="h-20 w-20 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-6">
+                <div className="text-center py-20 border-2 border-dashed border-border rounded-[2rem] bg-primary/[0.01]">
+                  <div className="h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <User className="w-10 h-10 text-primary/20" />
                   </div>
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Esperando Selección de Empleado</p>
@@ -261,7 +261,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
               )}
 
               {employeeId && !loadingProf && profesiograma && profesiograma.items.length > 0 && (
-                <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 flex items-start gap-5 animate-in zoom-in-95 duration-500">
+                <div className="border border-border rounded-3xl p-6 flex items-start gap-5 animate-in zoom-in-95 duration-500">
                   <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
                     <Sparkles className="w-6 h-6" />
                   </div>
@@ -281,13 +281,13 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                   <h4 className="text-sm font-black tracking-tight">Listado de Exámenes</h4>
                   <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Selecciona los procedimientos realizados</p>
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={addManualItem} className="h-9 px-4 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background/50 border-border/50 hover:bg-background transition-all">
+                <Button type="button" variant="outline" size="sm" onClick={addManualItem} className="h-9 px-4 rounded-xl gap-2 font-black uppercase tracking-widest text-[9px] bg-background border-border/50 hover:bg-background transition-all">
                   <Plus className="w-3 h-3" /> Agregar Examen
                 </Button>
               </div>
 
               {items.length === 0 ? (
-                <div className="text-center py-20 border border-dashed border-border/50 rounded-2xl bg-muted/20">
+                <div className="text-center py-20 border border-dashed border-border/50 rounded-2xl bg-background">
                   <Stethoscope className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                     {employeeId ? 'No hay exámenes sugeridos' : 'Selecciona un empleado para continuar'}
@@ -302,15 +302,11 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                         'group relative overflow-hidden border rounded-[2rem] p-6 transition-all duration-500 cursor-pointer',
                         item.selected 
                           ? 'border-primary/40 bg-gradient-to-br from-primary/[0.08] via-background to-primary/[0.02] shadow-xl shadow-primary/10 ring-1 ring-primary/20' 
-                          : 'border-border/50 bg-muted/20 opacity-70 hover:opacity-100 hover:border-primary/20 transition-opacity'
+                          : 'border-border/50 bg-background opacity-70 hover:opacity-100 hover:border-primary/20 transition-opacity'
                       )}
                       onClick={() => updateItem(idx, 'selected', !item.selected)}
                     >
-                      {/* Selection Glow */}
-                      {item.selected && (
-                        <div className="absolute top-0 right-0 -mr-12 -mt-12 w-32 h-32 rounded-full bg-primary/20 blur-3xl pointer-events-none animate-pulse" />
-                      )}
-
+                      {/* Selection Glow removed */}
                       <div className="relative flex items-start gap-6">
                         <div className="flex flex-col items-center gap-3 shrink-0 mt-1">
                           <Checkbox
@@ -331,11 +327,11 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                                 <Sparkles className="w-3 h-3 mr-1.5 animate-pulse" /> Sugerido
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="h-6 px-3 rounded-xl text-[8px] font-black uppercase tracking-widest bg-background/50 border-border/50 text-muted-foreground">
+                              <Badge variant="outline" className="h-6 px-3 rounded-xl text-[8px] font-black uppercase tracking-widest bg-background border-border/50 text-muted-foreground">
                                 Adicional
                               </Badge>
                             )}
-                            <Badge variant="outline" className="h-6 px-3 rounded-xl text-[8px] font-black uppercase tracking-widest border-primary/20 text-primary bg-primary/5">
+                            <Badge variant="outline" className="h-6 px-3 rounded-xl text-[8px] font-black uppercase tracking-widest border-primary/20 text-primary ">
                               {item.result === 'pendiente' ? 'Pendiente' : item.result}
                             </Badge>
                           </div>
@@ -366,7 +362,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                             <motion.div 
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: 'auto', opacity: 1 }}
-                              className="mt-6 pt-6 border-t border-primary/10 flex flex-col sm:flex-row sm:items-center gap-4"
+                              className="mt-6 pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center gap-4"
                             >
                               <div className="flex items-center gap-3 shrink-0">
                                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -379,7 +375,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                                 value={item.expiration_date}
                                 onChange={(e) => updateItem(idx, 'expiration_date', e.target.value)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="h-10 text-xs font-black rounded-xl border-border/50 bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/10 transition-all sm:max-w-[200px]"
+                                className="h-10 text-xs font-black rounded-xl border-border/50 bg-background focus:bg-background focus:ring-2 focus:ring-primary/10 transition-all sm:max-w-[200px]"
                               />
                             </motion.div>
                           )}
@@ -407,7 +403,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Tipo de Aplicación *</Label>
                   <Select value={examType} onValueChange={(v) => setExamType(v as ExamType)}>
-                    <SelectTrigger className="h-14 rounded-2xl border-border/50 bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/10 transition-all font-black text-xs uppercase tracking-widest">
+                    <SelectTrigger className="h-14 rounded-2xl border-border/50 bg-background focus:bg-background focus:ring-2 focus:ring-primary/10 transition-all font-black text-xs uppercase tracking-widest">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl border-border/50">
@@ -424,12 +420,12 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                   <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Fecha del Examen *</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className={cn('h-14 w-full justify-start text-left font-black text-xs uppercase tracking-widest rounded-2xl border-border/50 bg-background/50 focus:bg-background focus:ring-2 focus:ring-primary/10 transition-all')}>
+                      <Button variant="outline" className={cn('h-14 w-full justify-start text-left font-black text-xs uppercase tracking-widest rounded-2xl border-border/50 bg-background focus:bg-background focus:ring-2 focus:ring-primary/10 transition-all')}>
                         <CalendarIcon className="mr-3 h-5 w-5 text-primary/40" />
                         {format(examDate, 'PPP', { locale: es })}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 rounded-[2rem] border-0 shadow-2xl bg-background/95 backdrop-blur-xl" align="start">
+                    <PopoverContent className="w-auto p-0 rounded-[2rem] border-0 shadow-2xl bg-background " align="start">
                       <Calendar
                         mode="single"
                         selected={examDate}
@@ -456,7 +452,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
                   value={notes} 
                   onChange={(e) => setNotes(e.target.value)} 
                   placeholder="Detalles adicionales sobre la aplicación..." 
-                  className="rounded-2xl border-border/50 bg-background/50 focus:bg-background transition-all resize-none p-4" 
+                  className="rounded-2xl border-border/50 bg-background focus:bg-background transition-all resize-none p-4" 
                   rows={4}
                 />
               </div>
@@ -464,7 +460,7 @@ export function ExamTransactionFormDialog({ open, onOpenChange, onSuccess }: Pro
           </div>
         </Tabs>
 
-        <div className="p-10 border-t border-border/50 bg-muted/20 shrink-0">
+        <div className="p-10 border-t border-border/50 bg-background shrink-0">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex flex-col">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary">Resumen de Aplicación</p>

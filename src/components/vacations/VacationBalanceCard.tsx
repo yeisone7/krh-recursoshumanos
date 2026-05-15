@@ -63,7 +63,7 @@ export function VacationBalanceCard({ balance, alertThreshold = 30, onClick }: V
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-lg bg-muted p-2">
+            <div className="rounded-lg bg-background p-2">
               <p className="text-xs text-muted-foreground">Causados</p>
               <p className="text-lg font-bold">{balance.days_accrued}</p>
             </div>

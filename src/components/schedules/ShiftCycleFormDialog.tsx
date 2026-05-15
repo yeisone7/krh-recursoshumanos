@@ -196,8 +196,8 @@ export function ShiftCycleFormDialog({
         </DialogHeader>
 
         {/* Header Premium */}
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-primary/5">
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-border ">
+          
           
           <div className="flex items-start gap-4 sm:gap-5 relative">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center font-black text-xl sm:text-2xl shrink-0 shadow-inner">
@@ -231,7 +231,7 @@ export function ShiftCycleFormDialog({
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col min-h-0">
-          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-muted/20">
+          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-background">
             <TabsList className="bg-transparent h-auto p-0 gap-6 w-full justify-start overflow-x-auto no-scrollbar">
               <TabsTrigger value="detalles" className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
                 <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export function ShiftCycleFormDialog({
                       <FormItem className="sm:col-span-2 space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Nombre del Ciclo *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ej: Ciclo 4x2" {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                          <Input placeholder="Ej: Ciclo 4x2" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -283,7 +283,7 @@ export function ShiftCycleFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Código</FormLabel>
                         <FormControl>
-                          <Input placeholder="4x2" maxLength={10} {...field} className="h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background" />
+                          <Input placeholder="4x2" maxLength={10} {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -300,7 +300,7 @@ export function ShiftCycleFormDialog({
                       <FormControl>
                         <Textarea 
                           placeholder="Descripción del ciclo..."
-                          className="min-h-[100px] rounded-2xl bg-muted/20 border-primary/5 focus:bg-background p-4 resize-none"
+                          className="min-h-[100px] rounded-2xl bg-background border-border focus:bg-background p-4 resize-none"
                           {...field} 
                         />
                       </FormControl>
@@ -313,7 +313,7 @@ export function ShiftCycleFormDialog({
                   control={form.control}
                   name="is_active"
                   render={({ field }) => (
-                    <FormItem className="flex items-start sm:items-center justify-between gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-4">
+                    <FormItem className="flex items-start sm:items-center justify-between gap-3 rounded-2xl border border-border p-4">
                       <div className="min-w-0 space-y-1">
                         <FormLabel className="text-sm font-black text-foreground">Estado Activo</FormLabel>
                         <FormDescription className="text-xs">
@@ -352,17 +352,17 @@ export function ShiftCycleFormDialog({
                   </div>
 
                   {activeShifts.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground border border-dashed rounded-2xl bg-muted/10">
+                    <div className="text-center py-10 text-muted-foreground border border-dashed rounded-2xl bg-background /10">
                       <p className="font-medium text-foreground">No hay turnos activos disponibles.</p>
                       <p className="text-sm mt-1">Debe crear turnos operativos primero antes de configurar un ciclo.</p>
                     </div>
                   ) : cycleDays.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground border border-dashed rounded-2xl bg-muted/10">
+                    <div className="text-center py-10 text-muted-foreground border border-dashed rounded-2xl bg-background /10">
                       <p className="font-medium text-foreground">No hay días configurados.</p>
                       <p className="text-sm mt-1">Agregue días para comenzar a definir el ciclo de rotación.</p>
                     </div>
                   ) : (
-                    <div className="border rounded-2xl overflow-y-auto max-h-[50vh] bg-muted/5 border-primary/10">
+                    <div className="border rounded-2xl overflow-y-auto max-h-[50vh] bg-background /5 border-border ">
                       <div className="p-3 space-y-3">
                         {cycleDays.map((day, index) => {
                           const shift = getShiftById(day.shift_id);
@@ -372,17 +372,17 @@ export function ShiftCycleFormDialog({
                               className="grid grid-cols-[auto_1fr_auto] sm:flex sm:items-center gap-3 p-3 bg-background rounded-xl border border-border/50 shadow-sm transition-all hover:border-primary/20 hover:shadow-md"
                             >
                               <GripVertical className="w-5 h-5 text-muted-foreground/50 cursor-grab active:cursor-grabbing" />
-                              <Badge variant="outline" className="w-16 sm:w-20 justify-center h-8 rounded-lg bg-muted/20 border-primary/10 text-primary font-bold">
+                              <Badge variant="outline" className="w-16 sm:w-20 justify-center h-8 rounded-lg bg-background border-border text-primary font-bold">
                                 Día {day.day_number}
                               </Badge>
                               <Select
                                 value={day.shift_id}
                                 onValueChange={(value) => updateDay(index, value)}
                               >
-                                <SelectTrigger className="min-w-0 sm:flex-1 h-10 rounded-xl bg-muted/10 border-transparent hover:bg-muted/20 focus:bg-background">
+                                <SelectTrigger className="min-w-0 sm:flex-1 h-10 rounded-xl bg-background /10 border-transparent hover:bg-background focus:bg-background">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-xl border-primary/10">
+                                <SelectContent className="rounded-xl border-border ">
                                   {activeShifts.map((s) => (
                                     <SelectItem key={s.id} value={s.id} className="py-2">
                                       <div className="flex items-center gap-2">
@@ -402,7 +402,7 @@ export function ShiftCycleFormDialog({
                                 </SelectContent>
                               </Select>
                               {shift && (
-                                <span className="hidden sm:inline text-xs font-bold text-muted-foreground/70 w-32 text-center bg-muted/20 rounded-md py-1">
+                                <span className="hidden sm:inline text-xs font-bold text-muted-foreground/70 w-32 text-center bg-background rounded-md py-1">
                                   {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
                                 </span>
                               )}
@@ -427,8 +427,8 @@ export function ShiftCycleFormDialog({
           </Form>
         </Tabs>
 
-        <div className="p-6 border-t border-border/50 bg-muted/10 flex items-center justify-end gap-3 shrink-0">
-          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-primary/10" onClick={() => onOpenChange(false)}>
+        <div className="p-6 border-t border-border/50 bg-background /10 flex items-center justify-end gap-3 shrink-0">
+          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button type="submit" form="cycleForm" className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" disabled={isPending}>

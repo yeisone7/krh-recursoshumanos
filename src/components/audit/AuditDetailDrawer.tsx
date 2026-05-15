@@ -61,7 +61,7 @@ function MetaRow({ icon: Icon, label, value }: {
 export function AuditDetailDrawer({ log, open, onOpenChange }: AuditDetailDrawerProps) {
   if (!log) return null;
 
-  const actionCfg = actionConfig[log.action] ?? { class: 'bg-muted text-muted-foreground' };
+  const actionCfg = actionConfig[log.action] ?? { class: 'bg-background text-muted-foreground' };
   const severityCfg = log.severity ? severityConfig[log.severity] : severityConfig.info;
 
   const browserInfo = (() => {
@@ -117,7 +117,7 @@ export function AuditDetailDrawer({ log, open, onOpenChange }: AuditDetailDrawer
 
             {/* Descripción */}
             {log.description && (
-              <div className="rounded-lg bg-muted/50 border px-4 py-3">
+              <div className="rounded-lg bg-background border px-4 py-3">
                 <p className="text-sm text-foreground">{log.description}</p>
               </div>
             )}
@@ -185,7 +185,7 @@ export function AuditDetailDrawer({ log, open, onOpenChange }: AuditDetailDrawer
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <Info className="w-3.5 h-3.5" /> Metadatos Adicionales
                   </h3>
-                  <pre className="text-xs bg-muted/50 border rounded-lg p-3 overflow-auto max-h-40 font-mono">
+                  <pre className="text-xs bg-background border rounded-lg p-3 overflow-auto max-h-40 font-mono">
                     {JSON.stringify(log.metadata, null, 2)}
                   </pre>
                 </section>

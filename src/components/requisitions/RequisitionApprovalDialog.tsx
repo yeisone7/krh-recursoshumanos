@@ -509,7 +509,7 @@ export function RequisitionApprovalDialog({
           </div>
 
           {/* Approval toggle */}
-          <div className="flex items-center justify-between gap-4 rounded-lg border p-4 bg-muted/50">
+          <div className="flex items-center justify-between gap-4 rounded-lg border p-4 bg-background">
             <div className="space-y-0.5">
               <Label className="text-base font-semibold">
                 {approved ? '✓ Aprobar' : '✗ Rechazar'}

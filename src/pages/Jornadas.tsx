@@ -136,7 +136,7 @@ export default function Jornadas() {
   if (!currentCompanyId) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center animate-in fade-in zoom-in duration-500">
-        <div className="w-24 h-24 rounded-full bg-muted/20 flex items-center justify-center mb-6">
+        <div className="w-24 h-24 rounded-full bg-background flex items-center justify-center mb-6">
           <Clock className="w-12 h-12 text-muted-foreground/40" />
         </div>
         <h2 className="text-2xl font-black text-foreground tracking-tight">Compañía No Vinculada</h2>
@@ -160,7 +160,7 @@ export default function Jornadas() {
             Restaurar
           </Button>
         </div>
-        <div className="flex-1 bg-muted/10 rounded-2xl border border-primary/5 p-4 overflow-hidden">
+        <div className="flex-1 bg-background /10 rounded-2xl border border-border p-4 overflow-hidden">
           <ShiftCalendar />
         </div>
       </div>
@@ -168,11 +168,11 @@ export default function Jornadas() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Premium Header */}
-      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-border ">
+        
+        
         
         <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <div className="space-y-4">
@@ -181,7 +181,7 @@ export default function Jornadas() {
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
                   Operaciones / RRHH
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Jornadas & Turnos</h1>
@@ -199,7 +199,7 @@ export default function Jornadas() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 key={stat.label}
-                className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500"
+                className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500"
               >
                 <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
@@ -215,9 +215,9 @@ export default function Jornadas() {
       </div>
 
       {/* Navigation & Controls */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full md:w-auto">
-          <TabsList className="h-12 bg-muted/40 p-1 rounded-2xl border border-primary/5 w-full sm:w-auto overflow-x-auto overflow-y-hidden scrollbar-hide">
+          <TabsList className="h-12 bg-background /40 p-1 rounded-2xl border border-border w-full sm:w-auto overflow-x-auto overflow-y-hidden scrollbar-hide">
             <TabsTrigger value="calendar" className="flex-1 sm:flex-none gap-2 rounded-xl font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all">
               <Calendar className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Calendario</span>
@@ -243,7 +243,7 @@ export default function Jornadas() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 placeholder="Filtrar registros..."
-                className="pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+                className="pl-11 h-12 rounded-2xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -269,11 +269,11 @@ export default function Jornadas() {
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-12 w-12 rounded-2xl border-primary/10 bg-background/50 p-0">
+                <Button variant="outline" size="sm" className="h-12 w-12 rounded-2xl border-border bg-background p-0">
                   <Maximize2 className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur-xl rounded-2xl border-primary/10 shadow-2xl">
+              <DropdownMenuContent align="end" className="w-56 bg-background rounded-2xl border-border shadow-2xl">
                  <DropdownMenuItem className="p-3 rounded-xl m-1 font-bold" onClick={() => setShowBulkGeneratorDialog(true)}>
                     <Users className="w-4 h-4 mr-3 text-primary" /> Generar Masivo
                  </DropdownMenuItem>
@@ -305,7 +305,7 @@ export default function Jornadas() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         key={schedule.id}
-                        className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background border border-primary/5 hover:border-primary/20 hover:shadow-2xl transition-all duration-500"
+                        className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background border border-border hover:border-primary/20 hover:shadow-2xl transition-all duration-500"
                       >
                          <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                             <Briefcase className="w-24 h-24" />
@@ -321,7 +321,7 @@ export default function Jornadas() {
                                </Badge>
                             </div>
 
-                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-muted/30 border border-primary/5">
+                            <div className="flex items-center gap-3 p-4 rounded-2xl bg-background border border-border ">
                                <div className="p-2 rounded-xl bg-background text-primary shadow-sm">
                                   <Clock className="w-4 h-4" />
                                 </div>
@@ -335,13 +335,13 @@ export default function Jornadas() {
 
                             <div className="flex flex-wrap gap-1.5">
                                {schedule.days_of_week.map(d => (
-                                  <Badge key={d} variant="outline" className="text-[9px] font-black tracking-tighter px-2 h-5 border-primary/10 group-hover:border-primary/30 transition-colors">
+                                  <Badge key={d} variant="outline" className="text-[9px] font-black tracking-tighter px-2 h-5 border-border group-hover:border-primary/30 transition-colors">
                                      {DAY_NAMES_SHORT[d]}
                                   </Badge>
                                ))}
                             </div>
 
-                            <div className="pt-4 mt-auto border-t border-primary/5 flex items-center justify-between">
+                            <div className="pt-4 mt-auto border-t border-border flex items-center justify-between">
                                <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                   <RotateCcw className="w-3.5 h-3.5" />
                                   Receso: {schedule.break_minutes} min
@@ -375,7 +375,7 @@ export default function Jornadas() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         key={shift.id}
-                        className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background border border-primary/5 hover:border-primary/20 hover:shadow-2xl transition-all duration-500"
+                        className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background border border-border hover:border-primary/20 hover:shadow-2xl transition-all duration-500"
                       >
                          <div className="absolute top-0 right-0 p-8 opacity-[0.05]" style={{ color: shift.color }}>
                             <Clock className="w-24 h-24" />
@@ -397,11 +397,11 @@ export default function Jornadas() {
                             </div>
 
                             <div className="flex items-center gap-4">
-                               <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-primary/5 text-center group-hover:bg-background transition-colors">
+                               <div className="flex-1 p-4 rounded-2xl bg-background border border-border text-center group-hover:bg-background transition-colors">
                                   <p className="text-[10px] font-black text-muted-foreground/60 uppercase mb-1">INICIO</p>
                                   <p className="text-lg font-black text-foreground tracking-tighter">{formatTime(shift.start_time)}</p>
                                </div>
-                               <div className="flex-1 p-4 rounded-2xl bg-muted/30 border border-primary/5 text-center group-hover:bg-background transition-colors">
+                               <div className="flex-1 p-4 rounded-2xl bg-background border border-border text-center group-hover:bg-background transition-colors">
                                   <p className="text-[10px] font-black text-muted-foreground/60 uppercase mb-1">FIN</p>
                                   <p className="text-lg font-black text-foreground tracking-tighter">{formatTime(shift.end_time)}</p>
                                </div>
@@ -411,7 +411,7 @@ export default function Jornadas() {
                                {shift.description || 'Sin descripción adicional para este turno operativo.'}
                             </div>
 
-                            <div className="pt-4 mt-auto border-t border-primary/5 flex items-center justify-between">
+                            <div className="pt-4 mt-auto border-t border-border flex items-center justify-between">
                                <div className="flex items-center gap-4">
                                   <div className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                                      <RotateCcw className="w-3.5 h-3.5" />
@@ -450,7 +450,7 @@ export default function Jornadas() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         key={cycle.id}
-                        className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background border border-primary/5 hover:border-primary/20 hover:shadow-2xl transition-all duration-500"
+                        className="group relative overflow-hidden p-8 rounded-[2.5rem] bg-background border border-border hover:border-primary/20 hover:shadow-2xl transition-all duration-500"
                       >
                          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity">
                             <RotateCcw className="w-24 h-24" />
@@ -468,7 +468,7 @@ export default function Jornadas() {
                                   <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Duración Total</p>
                                   <p className="text-2xl font-black text-primary tracking-tighter">{cycle.total_days} <span className="text-sm">días</span></p>
                                </div>
-                               <div className="w-16 h-16 rounded-2xl bg-primary/5 border border-primary/10 flex flex-col items-center justify-center">
+                               <div className="w-16 h-16 rounded-2xl border border-border flex flex-col items-center justify-center">
                                   <p className="text-xs font-black text-primary">{cycle.cycle_days?.length || 0}</p>
                                   <p className="text-[8px] font-bold text-muted-foreground uppercase">Hitos</p>
                                </div>
@@ -478,7 +478,7 @@ export default function Jornadas() {
                                {cycle.description || 'Configuración de rotación secuencial para personal de planta y operaciones externas.'}
                             </p>
 
-                            <div className="pt-4 mt-auto border-t border-primary/5 flex items-center justify-between">
+                            <div className="pt-4 mt-auto border-t border-border flex items-center justify-between">
                                <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                                   Cód: {cycle.code || 'UNSET'}
                                </div>
@@ -500,7 +500,7 @@ export default function Jornadas() {
 
           {/* Calendar Content */}
           <TabsContent value="calendar" className="m-0 focus-visible:ring-0">
-             <div className="bg-background rounded-[2.5rem] border border-primary/10 p-6 sm:p-10 shadow-xl overflow-hidden min-h-[600px] flex flex-col">
+             <div className="bg-background rounded-[2.5rem] border border-border p-6 sm:p-10 shadow-xl overflow-hidden min-h-[600px] flex flex-col">
                 <ShiftCalendar />
              </div>
           </TabsContent>
@@ -517,7 +517,7 @@ export default function Jornadas() {
 
       {/* Delete Confirm */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <AlertDialogContent className="bg-background/95 backdrop-blur-xl border-none shadow-2xl rounded-3xl">
+        <AlertDialogContent className="bg-background border-none shadow-2xl rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-2xl font-black tracking-tight">¿Confirmar Eliminación?</AlertDialogTitle>
             <AlertDialogDescription className="font-medium text-muted-foreground">

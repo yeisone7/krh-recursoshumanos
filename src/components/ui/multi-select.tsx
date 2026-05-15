@@ -90,7 +90,7 @@ export function MultiSelect({
                 {selectedOptions.length > maxCount && (
                   <Badge
                     variant="secondary"
-                    className="rounded-md px-2 py-0.5 font-medium bg-muted text-muted-foreground border-none shadow-sm"
+                    className="rounded-md px-2 py-0.5 font-medium bg-background text-muted-foreground border-none shadow-sm"
                   >
                     + {selectedOptions.length - maxCount} más
                   </Badge>

@@ -214,7 +214,7 @@ export default function Evidencias() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-black tracking-tight text-foreground">Evidencias</h1>
@@ -227,7 +227,7 @@ export default function Evidencias() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/20 border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-background border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
         <div className="relative flex-1 w-full sm:max-w-md">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input placeholder="Buscar por nombre o cédula..." className="pl-12 h-12 rounded-xl border-border/50 bg-background shadow-inner text-sm" value={search} onChange={e => setSearch(e.target.value)} />
@@ -255,7 +255,7 @@ export default function Evidencias() {
         <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-muted/30">
+              <TableHeader className="bg-background">
                 <TableRow>
                   <TableHead className="w-10 h-12"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></TableHead>
                   <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Nombre</TableHead>
@@ -269,12 +269,12 @@ export default function Evidencias() {
                 {filtered.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-16 h-32">No hay evidencias registradas</TableCell></TableRow>
                 ) : filtered.map(c => (
-                  <TableRow key={c.id} className="hover:bg-muted/10 transition-colors">
+                  <TableRow key={c.id} className="hover:bg-background /10 transition-colors">
                     <TableCell><Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} /></TableCell>
                     <TableCell className="font-bold text-sm">{c.operator_name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground font-medium">{c.operator_cedula || '-'}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">{c.course?.name || '-'}</Badge>
+                      <Badge variant="outline" className="text-primary border-primary/20">{c.course?.name || '-'}</Badge>
                     </TableCell>
                     <TableCell className="text-sm font-medium">{format(parseISO(c.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
                     <TableCell className="text-right">

@@ -47,7 +47,7 @@ function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
 
         {/* Completed */}
         <Collapsible open={showCompleted} onOpenChange={setShowCompleted}>
-          <CollapsibleTrigger className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-medium text-emerald-700 outline-none transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-emerald-400 sm:min-h-8 sm:w-auto sm:px-0 sm:hover:bg-transparent sm:hover:underline">
+          <CollapsibleTrigger className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-medium text-emerald-700 outline-none transition-colors hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-emerald-400 sm:min-h-8 sm:w-auto sm:px-0 sm:hover:bg-transparent sm:hover:underline">
             {showCompleted ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
             <UserCheck className="h-4 w-4 shrink-0" />
             Completaron ({course.completedCount})
@@ -67,7 +67,7 @@ function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
 
         {/* Pending */}
         <Collapsible open={showPending} onOpenChange={setShowPending}>
-          <CollapsibleTrigger className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-medium text-red-700 outline-none transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-red-400 sm:min-h-8 sm:w-auto sm:px-0 sm:hover:bg-transparent sm:hover:underline">
+          <CollapsibleTrigger className="flex min-h-11 w-full items-center gap-2 rounded-md px-2 text-left text-sm font-medium text-red-700 outline-none transition-colors hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:text-red-400 sm:min-h-8 sm:w-auto sm:px-0 sm:hover:bg-transparent sm:hover:underline">
             {showPending ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
             <UserX className="h-4 w-4 shrink-0" />
             Pendientes ({course.pending.length})
@@ -102,7 +102,7 @@ function CenterComplianceSection({ center, courseFilter }: { center: CenterCompl
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
-        <Card className="rounded-2xl border-border/50 shadow-sm overflow-hidden cursor-pointer transition-colors hover:bg-muted/30 hover:border-primary/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
+        <Card className="rounded-2xl border-border/50 shadow-sm overflow-hidden cursor-pointer transition-colors hover:bg-background hover:border-primary/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
           <CardContent className="flex min-h-20 flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between px-6">
             <div className="flex min-w-0 items-center gap-4">
               {isOpen ? <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />}
@@ -186,7 +186,7 @@ export default function Cumplimiento() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight text-foreground">
@@ -247,7 +247,7 @@ export default function Cumplimiento() {
         </Card>
       </Collapsible>
 
-      <Card className="hidden sm:block rounded-[2rem] border-border/50 shadow-sm overflow-hidden bg-muted/20">
+      <Card className="hidden sm:block rounded-[2rem] border-border/50 shadow-sm overflow-hidden bg-background">
         <CardContent className="pt-4 pb-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
             <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px] lg:max-w-sm">

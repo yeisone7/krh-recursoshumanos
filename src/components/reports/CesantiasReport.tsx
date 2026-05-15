@@ -84,7 +84,7 @@ export function CesantiasReport() {
       </div>
       
       {/* Summary */}
-      <div className="grid grid-cols-2 gap-3 rounded-lg bg-muted/50 p-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 rounded-lg bg-background p-3 sm:grid-cols-4">
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Total</p>
           <p className="break-words text-sm font-semibold">

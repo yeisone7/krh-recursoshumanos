@@ -153,9 +153,9 @@ export function DocumentUpload({
         className={cn(
           'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors',
           dragOver
-            ? 'border-primary bg-primary/5'
-            : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50',
-          file && 'border-primary bg-primary/5'
+            ? 'border-primary '
+            : 'border-muted-foreground/25 hover:border-border 0 hover:bg-background',
+          file && 'border-primary '
         )}
       >
         <input

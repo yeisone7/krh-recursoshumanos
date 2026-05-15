@@ -154,7 +154,7 @@ function SectionCard({ title, icon: Icon, children, action }: { title: string; i
 }
 
 function computeSeniority(hireDate: string): string {
-  const hire = new Date(hireDate);
+  const hire = new Date(hireDate + 'T12:00:00');
   const now = new Date();
   const years = differenceInYears(now, hire);
   const months = differenceInMonths(now, hire) % 12;
@@ -169,7 +169,7 @@ function computeSeniority(hireDate: string): string {
 }
 
 function computeAge(birthDate: string): string {
-  return `${differenceInYears(new Date(), new Date(birthDate))} años`;
+  return `${differenceInYears(new Date(), new Date(birthDate + 'T12:00:00'))} años`;
 }
 
 // ── Expiring Items Alert ──
@@ -229,7 +229,7 @@ function ExpiringItemsAlert({ employee }: { employee: any }) {
         </div>
         <div className="space-y-1.5">
           {alerts.map((a, i) => (
-            <div key={i} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-md bg-background/80">
+            <div key={i} className="flex items-center justify-between text-xs px-2 py-1.5 rounded-md bg-background">
               <span className="text-muted-foreground">
                 <span className="font-medium text-foreground">{a.label}:</span> {a.name}
               </span>
@@ -277,7 +277,7 @@ function ContractSummaryCard({ employeeId, employeeName, onCreateContract }: { e
           activeContracts.map((c: any) => {
             const daysToEnd = c.end_date ? differenceInCalendarDays(new Date(c.end_date), new Date()) : null;
             return (
-              <div key={c.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
+              <div key={c.id} className="flex items-center justify-between p-2.5 rounded-lg bg-background">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">{c.contract_type}</span>
@@ -330,11 +330,11 @@ function WorkInfoHistoryCard({ employeeId }: { employeeId: string }) {
     <SectionCard title="Historial de Cambios" icon={History}>
       <div className="space-y-2">
         {pastRecords.map((record: any, i: number) => (
-          <div key={record.id} className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50 relative">
+          <div key={record.id} className="flex items-start gap-3 p-2.5 rounded-lg bg-background relative">
             {i < pastRecords.length - 1 && (
               <div className="absolute left-[21px] top-[36px] bottom-[-8px] w-px bg-border" />
             )}
-            <div className="p-1.5 rounded-full bg-muted shrink-0 z-10">
+            <div className="p-1.5 rounded-full bg-background shrink-0 z-10">
               <Briefcase className="w-3 h-3 text-muted-foreground" />
             </div>
             <div className="flex-1 min-w-0">
@@ -500,8 +500,8 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
             {/* ── HEADER ── */}
             <div className="relative overflow-hidden rounded-t-xl bg-sidebar px-4 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
               <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:26px_26px] opacity-10" />
-              <div className="absolute -top-20 -right-16 h-56 w-56 rounded-full border border-primary/30 bg-primary/5" />
-              <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full border border-primary/20 bg-primary/5" />
+              <div className="absolute -top-20 -right-16 h-56 w-56 rounded-full border border-primary/30 " />
+              <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full border border-primary/20 " />
               <div className="absolute top-8 right-28 h-28 w-28 rounded-full border border-primary/25" />
               <div className="relative z-10 flex items-start gap-3 pr-8 sm:gap-4 sm:pr-10">
                 {/* Avatar with upload overlay */}
@@ -548,7 +548,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       </Badge>
                     )}
                     {transferAsSource && (
-                      <Badge variant="outline" className="text-[11px] bg-primary/80 text-primary-foreground border-primary/50 gap-1">
+                      <Badge variant="outline" className="text-[11px] bg-primary/80 text-primary-foreground border-border 0 gap-1">
                         <ArrowRightLeft className="w-3 h-3" />
                         Trasladado
                       </Badge>
@@ -646,7 +646,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
             {/* ── TABS ── */}
             <div className="px-4 pb-5 pt-4 sm:px-6 sm:pb-6">
               <Tabs defaultValue="identity" className="w-full">
-                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-lg bg-muted/50 p-1 sm:flex-wrap sm:overflow-visible [&>button]:shrink-0">
+                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-lg bg-background p-1 sm:flex-wrap sm:overflow-visible [&>button]:shrink-0">
                   <TabsTrigger value="identity" className="text-xs rounded-md px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                     Identidad
                   </TabsTrigger>
@@ -682,7 +682,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                         <InfoItem label="Número" value={employee.document_number} />
                         <InfoItem label="Expedido en" value={employee.document_issue_city} />
                         {employee.document_issue_date && (
-                          <InfoItem label="Fecha de Expedición" value={format(new Date(employee.document_issue_date), 'PPP', { locale: es })} />
+                          <InfoItem label="Fecha de Expedición" value={format(new Date(employee.document_issue_date + 'T12:00:00'), 'PPP', { locale: es })} />
                         )}
                       </div>
                     </SectionCard>
@@ -690,7 +690,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     <SectionCard title="Información Personal" icon={User}>
                       <div className="divide-y divide-border">
                         {employee.birth_date && (
-                          <InfoItem label="Fecha de Nacimiento" value={`${format(new Date(employee.birth_date), 'PPP', { locale: es })} (${computeAge(employee.birth_date)})`} />
+                          <InfoItem label="Fecha de Nacimiento" value={`${format(new Date(employee.birth_date + 'T12:00:00'), 'PPP', { locale: es })} (${computeAge(employee.birth_date)})`} />
                         )}
                         <InfoItem label="Lugar de Nacimiento" value={
                           [employee.birth_city, employee.birth_department, employee.birth_country !== 'Colombia' ? employee.birth_country : null].filter(Boolean).join(', ') || null
@@ -797,7 +797,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                             <InfoItem label="Cargo" value={employee.work_info.position_name} />
                             <InfoItem label="Área" value={employee.areas?.name} />
                             <InfoItem label="Tipo de Vinculación" value={linkTypeLabels[employee.work_info.link_type]} />
-                            <InfoItem label="Fecha de Ingreso" value={format(new Date(employee.work_info.hire_date), 'PPP', { locale: es })} />
+                            <InfoItem label="Fecha de Ingreso" value={format(new Date(employee.work_info.hire_date + 'T12:00:00'), 'PPP', { locale: es })} />
                             <InfoItem label="Antigüedad" value={computeSeniority(employee.work_info.hire_date)} />
                             <InfoItem label="Ciudad de Trabajo" value={employee.work_info.work_city} />
                             <InfoItem label="Centro de Costos" value={employee.work_info.cost_center} />
@@ -961,7 +961,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       )}
 
                       <SectionCard title="Vigencia" icon={Calendar}>
-                        <InfoItem label="Vigente desde" value={format(new Date(employee.time_config.start_date), 'PPP', { locale: es })} />
+                        <InfoItem label="Vigente desde" value={format(new Date(employee.time_config.start_date + 'T12:00:00'), 'PPP', { locale: es })} />
                         {employee.time_config.notes && (
                           <InfoItem label="Notas" value={employee.time_config.notes} />
                         )}
@@ -989,7 +989,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     {employee.certifications && employee.certifications.length > 0 ? (
                       <div className="space-y-2">
                         {employee.certifications.map((cert) => (
-                          <div key={cert.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 group hover:bg-muted/80 transition-colors">
+                          <div key={cert.id} className="flex items-center justify-between p-2.5 rounded-lg bg-background group hover:bg-background /80 transition-colors">
                             <div>
                               <span className="font-medium text-sm">
                                 {certificationTypeLabels[cert.certification_type]}
@@ -997,14 +997,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                               </span>
                               {cert.issue_date && (
                                 <span className="text-xs text-muted-foreground block">
-                                  Emitido: {format(new Date(cert.issue_date), 'PP', { locale: es })}
+                                  Emitido: {format(new Date(cert.issue_date + 'T12:00:00'), 'PP', { locale: es })}
                                 </span>
                               )}
                             </div>
                             <div className="flex items-center gap-2">
                               {cert.expiry_date && (
                                 <Badge variant={new Date(cert.expiry_date) < new Date() ? 'destructive' : 'outline'} className="text-[11px]">
-                                  Vence: {format(new Date(cert.expiry_date), 'PP', { locale: es })}
+                                  Vence: {format(new Date(cert.expiry_date + 'T12:00:00'), 'PP', { locale: es })}
                                 </Badge>
                               )}
                               <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteCertification(cert.id)}>
@@ -1031,20 +1031,20 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     {employee.vaccinations && employee.vaccinations.length > 0 ? (
                       <div className="space-y-2">
                         {employee.vaccinations.map((vac) => (
-                          <div key={vac.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 group hover:bg-muted/80 transition-colors">
+                          <div key={vac.id} className="flex items-center justify-between p-2.5 rounded-lg bg-background group hover:bg-background /80 transition-colors">
                             <div>
                               <span className="font-medium text-sm">
                                 {vaccineTypeLabels[vac.vaccine_type]} - Dosis {vac.dose_number}
                               </span>
                               <span className="text-xs text-muted-foreground block">
-                                Aplicada: {format(new Date(vac.application_date), 'PP', { locale: es })}
+                                Aplicada: {format(new Date(vac.application_date + 'T12:00:00'), 'PP', { locale: es })}
                                 {vac.provider && ` • ${vac.provider}`}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
                               {vac.next_dose_date && (
                                 <Badge variant="outline" className="text-[11px]">
-                                  Próxima: {format(new Date(vac.next_dose_date), 'PP', { locale: es })}
+                                  Próxima: {format(new Date(vac.next_dose_date + 'T12:00:00'), 'PP', { locale: es })}
                                 </Badge>
                               )}
                               <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteVaccination(vac.id)}>
@@ -1080,7 +1080,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                           <div key={folder} className="relative">
                             <button
                               type="button"
-                              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted/60"
+                              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-background /60"
                               onClick={() => setOpenDocumentFolders((current) => ({ ...current, [folder]: !isOpen }))}
                             >
                               {isOpen ? <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />}
@@ -1093,7 +1093,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                               <div className="ml-5 border-l border-border pl-3">
                                 {docs.length > 0 ? docs.map((doc) => (
                                   <div key={doc.id} className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border">
-                                    <div className="flex flex-col gap-2 rounded-lg bg-muted/50 p-2.5 transition-colors hover:bg-muted/80 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex flex-col gap-2 rounded-lg bg-background p-2.5 transition-colors hover:bg-background /80 sm:flex-row sm:items-center sm:justify-between">
                                       <div className="min-w-0 flex-1">
                                         <span className="block truncate text-sm font-medium">
                                           {doc.document_name || employeeDocumentTypeLabels[doc.document_type]}

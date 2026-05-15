@@ -52,6 +52,7 @@ export function useCreateRegistrationToken() {
       vacancy_id?: string;
       enabled_fields: string[];
       expires_at: string;
+      is_reusable?: boolean;
     }) => {
       if (!currentCompanyId) throw new Error('No company');
       const { data, error } = await supabase
@@ -62,6 +63,7 @@ export function useCreateRegistrationToken() {
           vacancy_id: input.vacancy_id || null,
           enabled_fields: input.enabled_fields as any,
           expires_at: input.expires_at,
+          is_reusable: input.is_reusable || false,
           created_by: user?.id,
         } as any)
         .select()

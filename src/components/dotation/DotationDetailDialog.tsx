@@ -232,17 +232,17 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background/95 backdrop-blur-xl">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           <div className="relative flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-md shadow-primary/20">
               <Package className="w-7 h-7 text-primary-foreground" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <Badge variant="outline" className="h-5 rounded-lg px-2 bg-background/50 border-border/50 font-bold text-[9px] uppercase tracking-widest text-muted-foreground">
+                <Badge variant="outline" className="h-5 rounded-lg px-2 bg-background border-border/50 font-bold text-[9px] uppercase tracking-widest text-muted-foreground">
                   {transaction.items.length} Artículos
                 </Badge>
                 <Badge className={cn('h-5 rounded-lg px-2 gap-1 text-[9px] font-bold uppercase tracking-widest border-0 shadow-sm', sc.bg, sc.text)}>
@@ -280,9 +280,9 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
               const daysRem = hasExpDate ? getDaysRemaining(item.expiration_date) : 0;
 
               return (
-                <div key={item.id} className="group relative flex flex-col gap-4 rounded-2xl border border-border/50 bg-background/50 p-4 transition-all duration-300 hover:bg-primary/[0.02] hover:border-primary/20 sm:flex-row sm:items-center sm:justify-between">
+                <div key={item.id} className="group relative flex flex-col gap-4 rounded-2xl border border-border/50 bg-background p-4 transition-all duration-300 hover:bg-primary/[0.02] hover:border-primary/20 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-4 min-w-0">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/50 group-hover:bg-primary/10 transition-colors">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background group-hover:bg-primary/10 transition-colors">
                       <Package className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                     <div className="min-w-0">
@@ -315,13 +315,13 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
 
           {/* Metrics */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 space-y-1">
+            <div className="bg-background p-4 rounded-2xl border border-border/50 space-y-1">
               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 <MapPin className="w-3.5 h-3.5 text-primary" /> Centro Operativo
               </div>
               <p className="font-bold text-sm leading-tight text-foreground truncate">{transaction.employees?.operation_centers?.name || 'Sin asignar'}</p>
             </div>
-            <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 space-y-1">
+            <div className="bg-background p-4 rounded-2xl border border-border/50 space-y-1">
               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 <User className="w-3.5 h-3.5 text-primary" /> Entregado por
               </div>
@@ -332,7 +332,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
           {transaction.observations && (
             <div className="space-y-2">
               <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Observaciones</Label>
-              <div className="bg-muted/30 p-4 rounded-2xl border border-border/50">
+              <div className="bg-background p-4 rounded-2xl border border-border/50">
                 <p className="text-sm font-medium text-foreground leading-relaxed">{transaction.observations}</p>
               </div>
             </div>
@@ -356,7 +356,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
               onChange={handleUploadPdf}
             />
             {documentUrl ? (
-              <div className="group flex flex-col gap-3 rounded-2xl border border-border/50 p-4 bg-background/50 hover:bg-primary/[0.01] transition-all sm:flex-row sm:items-center">
+              <div className="group flex flex-col gap-3 rounded-2xl border border-border/50 p-4 bg-background hover:bg-primary/[0.01] transition-all sm:flex-row sm:items-center">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive/10">
                   <FileText className="w-5 h-5 text-destructive" />
                 </div>
@@ -381,7 +381,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
             ) : (
               <Button
                 variant="outline"
-                className="h-16 w-full gap-3 border-dashed rounded-2xl bg-muted/10 border-border font-bold text-xs uppercase tracking-widest text-muted-foreground hover:bg-primary/5 hover:border-primary/30 hover:text-primary transition-all"
+                className="h-16 w-full gap-3 border-dashed rounded-2xl bg-background /10 border-border font-bold text-xs uppercase tracking-widest text-muted-foreground hover:hover:border-primary/30 hover:text-primary transition-all"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploadingPdf}
               >
@@ -394,10 +394,10 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
           {/* Signature Section */}
           <div className="space-y-3">
             <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Firma del Colaborador</Label>
-            <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-muted/10">
+            <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-background /10">
               {signatureDataUrl && !showSignature ? (
                 <div className="p-6 space-y-4">
-                  <div className="bg-background/80 backdrop-blur-sm rounded-2xl p-6 border border-border/30 flex items-center justify-center">
+                  <div className="bg-background rounded-2xl p-6 border border-border/30 flex items-center justify-center">
                     <img src={signatureDataUrl} alt="Firma" className="max-h-[120px] object-contain drop-shadow-sm" />
                   </div>
                   <div className="flex justify-center">
@@ -407,7 +407,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
                   </div>
                 </div>
               ) : (
-                <div className="p-6 bg-background/50">
+                <div className="p-6 bg-background ">
                   <div className="bg-white/80 rounded-2xl p-4 border border-primary/20 shadow-inner">
                     <SignatureCanvas
                       onSave={handleSaveSignature}
@@ -429,7 +429,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-muted/10 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-background /10 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col">
              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estado de Registro</span>
              <p className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">

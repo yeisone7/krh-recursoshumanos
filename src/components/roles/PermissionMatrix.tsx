@@ -216,7 +216,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
       <Card>
         <CardContent className="p-0 overflow-x-auto">
           {/* Header row */}
-          <div className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center border-b bg-muted/30 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center border-b bg-background px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <span>Módulo</span>
             <span className="text-center">Todos</span>
             {ACTION_ORDER.map(a => (
@@ -249,7 +249,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
               return (
                 <div key={mod.id}>
                   {/* Module row */}
-                  <div className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center px-4 py-2.5 hover:bg-muted/20 transition-colors">
+                  <div className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center px-4 py-2.5 hover:bg-background transition-colors">
                     <div className="flex items-center gap-2">
                       {hasChildren ? (
                         <button onClick={() => toggleExpanded(mod.id)} className="p-0.5">
@@ -294,7 +294,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
                     return (
                       <div
                         key={child.id}
-                        className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center px-4 py-2 pl-12 bg-muted/10 hover:bg-muted/20 transition-colors"
+                        className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center px-4 py-2 pl-12 bg-background /10 hover:bg-background transition-colors"
                       >
                         <span className="text-sm text-muted-foreground">{child.name}</span>
                         <div className="flex justify-center">

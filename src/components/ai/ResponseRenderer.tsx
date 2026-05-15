@@ -53,7 +53,7 @@ function DataTable({ data }: { data: Record<string, unknown>[] }) {
   return (
     <div className="overflow-x-auto rounded-lg border mt-2">
       <table className="min-w-full text-xs">
-        <thead className="bg-muted/60 sticky top-0">
+        <thead className="bg-background /60 sticky top-0">
           <tr>
             {cols.map(c => (
               <th key={c} className="px-3 py-2 text-left font-semibold text-muted-foreground capitalize whitespace-nowrap">
@@ -64,7 +64,7 @@ function DataTable({ data }: { data: Record<string, unknown>[] }) {
         </thead>
         <tbody>
           {visible.map((row, i) => (
-            <tr key={i} className="border-t hover:bg-muted/30 transition-colors">
+            <tr key={i} className="border-t hover:bg-background transition-colors">
               {cols.map(c => (
                 <td key={c} className="px-3 py-2 whitespace-nowrap max-w-[180px] truncate">
                   {row[c] == null ? '—' : String(row[c])}

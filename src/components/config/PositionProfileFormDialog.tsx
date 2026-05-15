@@ -157,7 +157,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
   const TitleIcon = titleIcon;
 
   const SectionHeader = ({ icon: Icon, num, label, count }: { icon: any; num: number; label: string; count?: number }) => (
-    <CollapsibleTrigger className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border/50 bg-background/50 px-5 py-4 text-sm font-black uppercase tracking-widest text-foreground transition-all hover:border-primary/30 hover:bg-muted/30">
+    <CollapsibleTrigger className="group flex w-full items-center gap-4 rounded-2xl border-2 border-border/50 bg-background px-5 py-4 text-sm font-black uppercase tracking-widest text-foreground transition-all hover:border-primary/30 hover:bg-background">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20 text-primary-foreground group-hover:scale-110 transition-transform">
         <Icon className="h-5 w-5" />
       </div>
@@ -178,10 +178,10 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 border-none bg-transparent shadow-none">
-        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-primary/10 bg-background/95 backdrop-blur-2xl shadow-2xl">
+        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-border bg-background -2xl shadow-2xl">
           
           {/* Premium Header */}
-          <DialogHeader className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-primary/10 shrink-0">
+          <DialogHeader className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-border shrink-0">
             <div className="relative z-10 flex items-center gap-5">
               <div className={cn(
                 "flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg transition-all",
@@ -199,7 +199,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
               </div>
             </div>
             {/* Decorative blurs */}
-            <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+            
           </DialogHeader>
 
           {/* Scrollable Content */}
@@ -213,7 +213,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                   <div>
                     <FieldLabel required>Objetivo del Cargo</FieldLabel>
                     <Textarea
-                      className="mt-2 min-h-[100px] rounded-2xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold resize-none"
+                      className="mt-2 min-h-[100px] rounded-2xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold resize-none"
                       placeholder="Describa el objetivo principal del cargo..."
                       value={form.purpose}
                       onChange={e => updateField('purpose', e.target.value)}
@@ -223,7 +223,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <div>
                       <FieldLabel>Reporta a</FieldLabel>
                       <Input 
-                        className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                        className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                         placeholder="Cargo del jefe inmediato" 
                         value={form.reports_to} 
                         onChange={e => updateField('reports_to', e.target.value)} 
@@ -232,7 +232,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <div>
                       <FieldLabel>Supervisa a</FieldLabel>
                       <Input 
-                        className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                        className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                         placeholder="Cargos bajo supervisión" 
                         value={form.supervises} 
                         onChange={e => updateField('supervises', e.target.value)} 
@@ -243,7 +243,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <div>
                       <FieldLabel>N° de Cargos</FieldLabel>
                       <Input 
-                        className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                        className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                         type="number" 
                         min={1} 
                         value={form.num_positions} 
@@ -253,7 +253,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <div>
                       <FieldLabel>Fecha vigencia</FieldLabel>
                       <Input 
-                        className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                        className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                         type="date" 
                         value={form.effective_date} 
                         onChange={e => updateField('effective_date', e.target.value)} 
@@ -271,10 +271,10 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <div>
                       <FieldLabel>Nivel de Educación</FieldLabel>
                       <Select value={form.education_level} onValueChange={v => updateField('education_level', v)}>
-                        <SelectTrigger className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
+                        <SelectTrigger className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold">
                           <SelectValue placeholder="Seleccionar" />
                         </SelectTrigger>
-                        <SelectContent className="rounded-2xl border-primary/10 backdrop-blur-xl bg-background/95">
+                        <SelectContent className="rounded-2xl border-border bg-background">
                           {educationLevels.map(l => (
                             <SelectItem key={l.id} value={l.name} className="font-bold">{l.name}</SelectItem>
                           ))}
@@ -284,7 +284,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <div>
                       <FieldLabel>Detalle Formación</FieldLabel>
                       <Input 
-                        className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                        className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                         placeholder="Ej: Ingeniería Industrial" 
                         value={form.education_detail} 
                         onChange={e => updateField('education_detail', e.target.value)} 
@@ -294,7 +294,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                   <div>
                     <FieldLabel>Experiencia</FieldLabel>
                     <Input 
-                      className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                      className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                       placeholder="Ej: 2 años en cargos similares" 
                       value={form.experience} 
                       onChange={e => updateField('experience', e.target.value)} 
@@ -302,7 +302,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                   </div>
 
                   {/* Conocimientos */}
-                  <div className="rounded-[2rem] border-2 border-border/50 p-6 bg-muted/20">
+                  <div className="rounded-[2rem] border-2 border-border/50 p-6 bg-background">
                     <div className="mb-4 flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground ml-1">Conocimientos Específicos</span>
                       <Button size="sm" variant="outline" className="h-8 rounded-xl font-black uppercase tracking-widest text-[9px] gap-2 border-2" onClick={addKnowledge}>
@@ -316,13 +316,13 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                       {form.specific_knowledge.map((k, i) => (
                         <div key={i} className="flex flex-col gap-3 sm:flex-row sm:items-center">
                           <Input 
-                            className="flex-1 h-11 rounded-xl bg-background/50 border-none shadow-none focus-visible:ring-2 ring-primary/20 font-bold" 
+                            className="flex-1 h-11 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 font-bold" 
                             placeholder="Tema" 
                             value={k.topic} 
                             onChange={e => updateKnowledge(i, 'topic', e.target.value)} 
                           />
                           <Select value={k.level} onValueChange={v => updateKnowledge(i, 'level', v)}>
-                            <SelectTrigger className="w-full sm:w-[140px] h-11 rounded-xl bg-background/50 border-none shadow-none focus-visible:ring-2 ring-primary/20 font-bold">
+                            <SelectTrigger className="w-full sm:w-[140px] h-11 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 font-bold">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl font-bold">
@@ -340,7 +340,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                   </div>
 
                   {/* Competencias */}
-                  <div className="rounded-[2rem] border-2 border-border/50 p-6 bg-muted/20">
+                  <div className="rounded-[2rem] border-2 border-border/50 p-6 bg-background">
                     <div className="mb-4 flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground ml-1">Competencias / Habilidades</span>
                       <Button size="sm" variant="outline" className="h-8 rounded-xl font-black uppercase tracking-widest text-[9px] gap-2 border-2" onClick={addSkill}>
@@ -354,13 +354,13 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                       {form.skills.map((s, i) => (
                         <div key={i} className="flex flex-col gap-3 sm:flex-row sm:items-center">
                           <Input 
-                            className="flex-1 h-11 rounded-xl bg-background/50 border-none shadow-none focus-visible:ring-2 ring-primary/20 font-bold" 
+                            className="flex-1 h-11 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 font-bold" 
                             placeholder="Competencia" 
                             value={s.name} 
                             onChange={e => updateSkill(i, 'name', e.target.value)} 
                           />
                           <Select value={s.level} onValueChange={v => updateSkill(i, 'level', v)}>
-                            <SelectTrigger className="w-full sm:w-[140px] h-11 rounded-xl bg-background/50 border-none shadow-none focus-visible:ring-2 ring-primary/20 font-bold">
+                            <SelectTrigger className="w-full sm:w-[140px] h-11 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 font-bold">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl font-bold">
@@ -390,7 +390,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                           {i + 1}
                         </div>
                         <Input 
-                          className="flex-1 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                          className="flex-1 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                           value={f} 
                           onChange={e => updateFunction(i, e.target.value)} 
                           placeholder="Descripción de la función" 
@@ -430,7 +430,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                       <div key={key}>
                         <FieldLabel>{label}</FieldLabel>
                         <Input 
-                          className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                          className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                           value={(form.responsibilities as any)[key] || ''} 
                           onChange={e => updateResponsibility(key, e.target.value)} 
                         />
@@ -454,7 +454,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                       <div key={key}>
                         <FieldLabel>{label}</FieldLabel>
                         <Input 
-                          className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                          className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                           value={(form.working_conditions as any)[key] || ''} 
                           onChange={e => updateCondition(key, e.target.value)} 
                         />
@@ -472,7 +472,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <div>
                       <FieldLabel>Elaborado por</FieldLabel>
                       <Input 
-                        className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                        className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                         value={form.elaborated_by} 
                         onChange={e => updateField('elaborated_by', e.target.value)} 
                       />
@@ -480,7 +480,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <div>
                       <FieldLabel>Revisado por</FieldLabel>
                       <Input 
-                        className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                        className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                         value={form.reviewed_by} 
                         onChange={e => updateField('reviewed_by', e.target.value)} 
                       />
@@ -488,7 +488,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
                     <div>
                       <FieldLabel>Aprobado por</FieldLabel>
                       <Input 
-                        className="mt-2 h-12 rounded-xl bg-muted/30 border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
+                        className="mt-2 h-12 rounded-xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold" 
                         value={form.approved_by} 
                         onChange={e => updateField('approved_by', e.target.value)} 
                       />
@@ -500,11 +500,11 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
           </div>
 
           {/* Footer Actions */}
-          <DialogFooter className="shrink-0 flex-col-reverse gap-3 border-t border-primary/10 bg-muted/30 p-8 sm:flex-row sm:gap-4">
+          <DialogFooter className="shrink-0 flex-col-reverse gap-3 border-t border-border bg-background p-8 sm:flex-row sm:gap-4">
             <Button 
               variant="ghost" 
               onClick={() => onOpenChange(false)} 
-              className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-muted"
+              className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-background "
             >
               Cancelar
             </Button>

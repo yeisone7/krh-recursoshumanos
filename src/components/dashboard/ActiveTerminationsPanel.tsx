@@ -88,7 +88,7 @@ export function ActiveTerminationsPanel() {
 
       {activeCount === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+          <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center mb-3">
             <FileCheck className="w-6 h-6 text-muted-foreground" />
           </div>
           <p className="text-muted-foreground">No hay procesos de retiro activos</p>
@@ -130,7 +130,7 @@ export function ActiveTerminationsPanel() {
                           "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
                           urgency === 'critical' ? 'bg-destructive/10 text-destructive' :
                           urgency === 'warning' ? 'bg-warning/10 text-warning-foreground' :
-                          'bg-muted text-muted-foreground'
+                          'bg-background text-muted-foreground'
                         )}>
                           <Clock className="w-3 h-3" />
                           {termination.daysUntilEffective <= 0 

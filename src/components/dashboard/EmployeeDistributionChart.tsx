@@ -171,7 +171,7 @@ export function EmployeeDistributionChart({ kpis, isLoading }: EmployeeDistribut
               return (
                 <div key={area.name} className="flex items-center gap-3">
                   <span className="text-sm text-foreground w-32 truncate">{area.name}</span>
-                  <div className="flex-1 bg-muted rounded-full h-2 overflow-hidden">
+                  <div className="flex-1 bg-background rounded-full h-2 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${percentage}%` }}

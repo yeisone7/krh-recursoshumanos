@@ -334,7 +334,7 @@ export function GenerateContractDialog({
 
         <div className="space-y-4 py-4">
           {/* Contract Summary */}
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+          <div className="bg-background rounded-lg p-4 space-y-2">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
                 <span className="text-muted-foreground">Empleado:</span>

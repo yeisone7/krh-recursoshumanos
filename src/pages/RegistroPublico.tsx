@@ -12,7 +12,12 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useEducationLevels } from '@/hooks/useEducationLevels';
 import { useProfessions } from '@/hooks/useProfessions';
+import { useIdentificationTypes } from '@/hooks/useSystemConfig';
 import { motion } from 'framer-motion';
+import { AvatarUpload } from '@/components/employees/AvatarUpload';
+import { Plus, Trash2 } from 'lucide-react';
+import { CitySelect, CityDepartmentSelect } from '@/components/ui/city-department-select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 
 type Step = 'loading' | 'error' | 'form' | 'done';
 
@@ -29,10 +34,10 @@ interface TokenData {
 
 // Candidate fields config
 const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string; placeholder?: string }> = {
+  documentNumber: { label: 'Número de Documento', type: 'text', section: 'Personal' },
+  documentType: { label: 'Tipo de Documento', type: 'select-doc-type', section: 'Personal' },
   firstName: { label: 'Nombre', type: 'text', section: 'Personal' },
   lastName: { label: 'Apellido', type: 'text', section: 'Personal' },
-  documentType: { label: 'Tipo de Documento', type: 'select-doc-type', section: 'Personal' },
-  documentNumber: { label: 'Número de Documento', type: 'text', section: 'Personal' },
   documentIssueDate: { label: 'Fecha de Expedición', type: 'date', section: 'Personal' },
   documentIssueCity: { label: 'Lugar de Expedición', type: 'text', section: 'Personal' },
   birthDate: { label: 'Fecha de Nacimiento', type: 'date', section: 'Personal' },
@@ -67,30 +72,31 @@ const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; sect
 
 // Employee fields config
 const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string; placeholder?: string }> = {
+  documentNumber: { label: 'Número de Documento', type: 'text', section: 'Identidad' },
+  documentType: { label: 'Tipo de Documento', type: 'select-doc-type', section: 'Identidad' },
+  avatarUrl: { label: 'Foto del Empleado', type: 'avatar', section: 'Identidad' },
   firstName: { label: 'Primer Nombre', type: 'text', section: 'Identidad' },
   middleName: { label: 'Segundo Nombre', type: 'text', section: 'Identidad' },
   lastName: { label: 'Primer Apellido', type: 'text', section: 'Identidad' },
   secondLastName: { label: 'Segundo Apellido', type: 'text', section: 'Identidad' },
-  documentType: { label: 'Tipo de Documento', type: 'select-doc-type', section: 'Identidad' },
-  documentNumber: { label: 'Número de Documento', type: 'text', section: 'Identidad' },
   birthDate: { label: 'Fecha de Nacimiento', type: 'date', section: 'Identidad' },
-  birthCity: { label: 'Ciudad de Nacimiento', type: 'text', section: 'Identidad' },
-  birthDepartment: { label: 'Departamento de Nacimiento', type: 'text', section: 'Identidad' },
-  birthCountry: { label: 'País de Nacimiento', type: 'text', section: 'Identidad' },
+  birthCity: { label: 'Ciudad de Nacimiento', type: 'city-birth', section: 'Identidad' },
+  birthDepartment: { label: 'Departamento de Nacimiento', type: 'hidden-dept', section: 'Identidad' },
+  birthCountry: { label: 'País de Nacimiento', type: 'select-country', section: 'Identidad' },
   gender: { label: 'Sexo Biológico', type: 'select-gender', section: 'Identidad' },
   genderIdentity: { label: 'Sexo de Identificación', type: 'select-gender-identity', section: 'Identidad' },
   maritalStatus: { label: 'Estado Civil', type: 'select-marital', section: 'Identidad' },
   bloodType: { label: 'Tipo de Sangre', type: 'select-blood', section: 'Identidad' },
   documentIssueDate: { label: 'Fecha de Expedición', type: 'date', section: 'Identidad' },
-  documentIssueCity: { label: 'Ciudad de Expedición', type: 'text', section: 'Identidad' },
+  documentIssueCity: { label: 'Ciudad de Expedición', type: 'city-single', section: 'Identidad' },
   // Contacto
   email: { label: 'Email Corporativo', type: 'email', section: 'Contacto' },
   personalEmail: { label: 'Email Personal', type: 'email', section: 'Contacto' },
   mobile: { label: 'Celular', type: 'tel', section: 'Contacto' },
   phone: { label: 'Teléfono Fijo', type: 'tel', section: 'Contacto' },
   residenceAddress: { label: 'Dirección de Residencia', type: 'text', section: 'Contacto' },
-  residenceCity: { label: 'Ciudad de Residencia', type: 'text', section: 'Contacto' },
-  residenceDepartment: { label: 'Departamento de Residencia', type: 'text', section: 'Contacto' },
+  residenceCity: { label: 'Ciudad de Residencia', type: 'city-residence', section: 'Contacto' },
+  residenceDepartment: { label: 'Departamento de Residencia', type: 'hidden-dept', section: 'Contacto' },
   residenceNeighborhood: { label: 'Barrio, Vereda u otro.', type: 'text', section: 'Contacto', placeholder: 'Nombre del barrio, vereda, otro...' },
   emergencyContactName: { label: 'Nombre Contacto de Emergencia', type: 'text', section: 'Contacto' },
   emergencyContactPhone: { label: 'Teléfono Contacto de Emergencia', type: 'tel', section: 'Contacto' },
@@ -99,16 +105,18 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   spouseName: { label: 'Nombre del Cónyuge', type: 'text', section: 'Familia' },
   spouseBirthDate: { label: 'Fecha Nacimiento Cónyuge', type: 'date', section: 'Familia' },
   childrenCount: { label: 'Número de Hijos', type: 'number', section: 'Familia' },
+  familyMembers: { label: 'Personas a Cargo (Núcleo Familiar)', type: 'array', section: 'Familia' },
   // Seguridad Social
-  eps: { label: 'EPS', type: 'text', section: 'Seguridad Social' },
-  afp: { label: 'Fondo de Pensiones (AFP)', type: 'text', section: 'Seguridad Social' },
-  arl: { label: 'ARL', type: 'text', section: 'Seguridad Social' },
-  ccf: { label: 'Caja de Compensación', type: 'text', section: 'Seguridad Social' },
-  afc: { label: 'AFC', type: 'text', section: 'Seguridad Social' },
-  ips: { label: 'IPS de Atención', type: 'text', section: 'Seguridad Social' },
+  eps: { label: 'EPS', type: 'select-catalog-eps', section: 'Seguridad Social' },
+  afp: { label: 'Fondo de Pensiones (AFP)', type: 'select-catalog-afp', section: 'Seguridad Social' },
+  arl: { label: 'ARL', type: 'select-catalog-arl', section: 'Seguridad Social' },
+  ccf: { label: 'Caja de Compensación', type: 'select-catalog-ccf', section: 'Seguridad Social' },
+  afc: { label: 'AFC', type: 'select-catalog-afc', section: 'Seguridad Social' },
+  ips: { label: 'IPS de Atención', type: 'select-catalog-ips', section: 'Seguridad Social' },
   riskLevel: { label: 'Nivel de Riesgo ARL', type: 'select-risk-level', section: 'Seguridad Social' },
+  vaccines: { label: 'Vacunas', type: 'array', section: 'Seguridad Social' },
   // Información Bancaria
-  bankName: { label: 'Nombre del Banco', type: 'text', section: 'Información Bancaria' },
+  bankName: { label: 'Nombre del Banco', type: 'select-catalog-banks', section: 'Información Bancaria' },
   accountType: { label: 'Tipo de Cuenta', type: 'select-account-type', section: 'Información Bancaria' },
   accountNumber: { label: 'Número de Cuenta', type: 'text', section: 'Información Bancaria' },
   // Especificaciones
@@ -135,16 +143,51 @@ export default function RegistroPublico() {
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const [vacancyTitle, setVacancyTitle] = useState('');
   const [companyName, setCompanyName] = useState('');
-  const [identificationTypes, setIdentificationTypes] = useState<any[]>([]);
-  const [formData, setFormData] = useState<Record<string, string>>({ documentType: 'CC', identificationTypeId: '' });
+  const [formData, setFormData] = useState<Record<string, any>>({ documentType: 'CC', identificationTypeId: '' });
   const [submitting, setSubmitting] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  // Catalog data for dropdowns
+  const [catalogData, setCatalogData] = useState<Record<string, any[]>>({
+    eps: [], afp: [], arl: [], ccf: [], afc: [], ips: [], banks: []
+  });
   
   // Use company_id from token for catalogs if not authenticated
   const targetCompanyId = tokenData?.company_id;
+  const { data: identificationTypes = [] } = useIdentificationTypes(targetCompanyId);
   const { data: educationLevels = [] } = useEducationLevels(targetCompanyId);
   const { data: professions = [] } = useProfessions(targetCompanyId);
+
+  // Fetch catalog data when token is validated
+  useEffect(() => {
+    if (!targetCompanyId) return;
+    const catalogTables = ['catalog_eps', 'catalog_afp', 'catalog_arl', 'catalog_ccf', 'catalog_afc', 'catalog_ips', 'catalog_banks'];
+    const shortNames = ['eps', 'afp', 'arl', 'ccf', 'afc', 'ips', 'banks'];
+    Promise.all(
+      catalogTables.map(table =>
+        supabase.from(table).select('*').eq('company_id', targetCompanyId).eq('is_active', true).order('name')
+      )
+    ).then(results => {
+      const newCatalogData: Record<string, any[]> = {};
+      results.forEach((res, i) => {
+        newCatalogData[shortNames[i]] = res.data || [];
+      });
+      setCatalogData(newCatalogData);
+    });
+  }, [targetCompanyId]);
+
+  // Set default identification type when loaded
+  useEffect(() => {
+    if (identificationTypes.length > 0 && !formData.identificationTypeId) {
+      const ccType = identificationTypes.find(t => t.code === 'CC' || t.name?.includes('Cédula'));
+      const defaultType = ccType || identificationTypes[0];
+      setFormData(prev => ({ 
+        ...prev, 
+        identificationTypeId: defaultType.id,
+        documentType: defaultType.code || 'CC'
+      }));
+    }
+  }, [identificationTypes]);
 
   useEffect(() => {
     if (!tokenParam) {
@@ -171,7 +214,7 @@ export default function RegistroPublico() {
 
       const token = data as unknown as TokenData;
 
-      if (token.is_used) {
+      if (token.is_used && !token.is_reusable) {
         setErrorMsg('Este enlace ya fue utilizado.');
         setStep('error');
         return;
@@ -204,28 +247,9 @@ export default function RegistroPublico() {
         setCompanyLogo(company.logo_url);
       }
 
-      // Fetch identification types for this company
-      const { data: idTypes } = await supabase
-        .from('identification_types')
-        .select('*')
-        .eq('company_id', token.company_id)
-        .order('name');
-      
-      if (idTypes) {
-        setIdentificationTypes(idTypes);
-        // If we have id types, set the first one or one that matches CC if possible
-        if (idTypes.length > 0) {
-          const ccType = idTypes.find(t => t.code === 'CC' || t.name.includes('Cédula'));
-          setFormData(prev => ({ 
-            ...prev, 
-            identificationTypeId: ccType?.id || idTypes[0].id,
-            documentType: ccType?.code || idTypes[0].code || 'CC'
-          }));
-        }
-      }
-
       setStep('form');
-    } catch {
+    } catch (err) {
+      console.error('Error validating token:', err);
       setErrorMsg('Error al validar el enlace.');
       setStep('error');
     }
@@ -262,63 +286,144 @@ export default function RegistroPublico() {
       let result: any;
 
       if (isEmployee) {
-        const { data } = await supabase.rpc('submit_employee_registration', {
-          p_token: tokenParam!,
-          p_first_name: formData.firstName || '',
-          p_last_name: formData.lastName || '',
-          p_middle_name: formData.middleName || null,
-          p_second_last_name: formData.secondLastName || null,
-          p_document_type: formData.documentType || 'CC',
-          p_document_number: formData.documentNumber || '',
-          p_birth_date: formData.birthDate || null,
-          p_birth_city: formData.birthCity || null,
-          p_birth_department: formData.birthDepartment || null,
-          p_birth_country: formData.birthCountry || null,
-          p_gender: mapGender(formData.gender),
-          p_gender_identity: formData.genderIdentity || null,
-          p_gender_identity_other: formData.genderIdentityOther || null,
-          p_marital_status: formData.maritalStatus || null,
-          p_blood_type: formData.bloodType || null,
-          p_document_issue_date: formData.documentIssueDate || null,
-          p_document_issue_city: formData.documentIssueCity || null,
-          p_email: formData.email || null,
-          p_personal_email: formData.personalEmail || null,
-          p_mobile: formData.mobile || null,
-          p_phone: formData.phone || null,
-          p_residence_address: formData.residenceAddress || null,
-          p_residence_city: formData.residenceCity || null,
-          p_residence_department: formData.residenceDepartment || null,
-          p_residence_neighborhood: formData.residenceNeighborhood || null,
-          p_emergency_contact_name: formData.emergencyContactName || null,
-          p_emergency_contact_phone: formData.emergencyContactPhone || null,
-          p_emergency_contact_relationship: formData.emergencyContactRelationship || null,
-          p_spouse_name: formData.spouseName || null,
-          p_spouse_birth_date: formData.spouseBirthDate || null,
-          p_children_count: formData.childrenCount ? parseInt(formData.childrenCount) : null,
-          // Social Security
-          p_eps: formData.eps || null,
-          p_afp: formData.afp || null,
-          p_arl: formData.arl || null,
-          p_ccf: formData.ccf || null,
-          p_afc: formData.afc || null,
-          p_ips: formData.ips || null,
-          p_risk_level: formData.riskLevel || null,
-          // Bank Info
-          p_bank_name: formData.bankName || null,
-          p_account_type: formData.accountType || null,
-          p_account_number: formData.accountNumber || null,
-          // Specifications
-          p_is_first_job: formData.isFirstJob === 'true' ? true : formData.isFirstJob === 'false' ? false : null,
-          p_is_head_of_household: formData.isHeadOfHousehold === 'true' ? true : formData.isHeadOfHousehold === 'false' ? false : null,
-          p_disability_type: formData.disabilityType || null,
-          p_ethnic_group: formData.ethnicGroup || null,
-          p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
-          p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
-          p_identification_type_id: formData.identificationTypeId || null,
-          p_education_level_id: formData.educationLevelId || null,
-          p_profession_id: formData.professionId || null,
-        });
-        result = data;
+        let employeeId = formData.employeeId;
+
+        if (!employeeId) {
+          const { data } = await supabase.rpc('submit_employee_registration', {
+            p_token: tokenParam!,
+            p_first_name: formData.firstName || '',
+            p_last_name: formData.lastName || '',
+            p_middle_name: formData.middleName || null,
+            p_second_last_name: formData.secondLastName || null,
+            p_document_type: formData.documentType || 'CC',
+            p_document_number: formData.documentNumber || '',
+            p_birth_date: formData.birthDate || null,
+            p_birth_city: formData.birthCity || null,
+            p_birth_department: formData.birthDepartment || null,
+            p_birth_country: formData.birthCountry || null,
+            p_gender: mapGender(formData.gender),
+            p_gender_identity: formData.genderIdentity || null,
+            p_gender_identity_other: formData.genderIdentityOther || null,
+            p_marital_status: formData.maritalStatus || null,
+            p_blood_type: formData.bloodType || null,
+            p_document_issue_date: formData.documentIssueDate || null,
+            p_document_issue_city: formData.documentIssueCity || null,
+            p_email: formData.email || null,
+            p_personal_email: formData.personalEmail || null,
+            p_mobile: formData.mobile || null,
+            p_phone: formData.phone || null,
+            p_residence_address: formData.residenceAddress || null,
+            p_residence_city: formData.residenceCity || null,
+            p_residence_department: formData.residenceDepartment || null,
+            p_residence_neighborhood: formData.residenceNeighborhood || null,
+            p_emergency_contact_name: formData.emergencyContactName || null,
+            p_emergency_contact_phone: formData.emergencyContactPhone || null,
+            p_emergency_contact_relationship: formData.emergencyContactRelationship || null,
+            p_spouse_name: formData.spouseName || null,
+            p_spouse_birth_date: formData.spouseBirthDate || null,
+            p_children_count: formData.childrenCount ? parseInt(formData.childrenCount) : null,
+            // Social Security
+            p_eps: formData.eps || null,
+            p_afp: formData.afp || null,
+            p_arl: formData.arl || null,
+            p_ccf: formData.ccf || null,
+            p_afc: formData.afc || null,
+            p_ips: formData.ips || null,
+            p_risk_level: formData.riskLevel || null,
+            // Bank Info
+            p_bank_name: formData.bankName || null,
+            p_account_type: formData.accountType || null,
+            p_account_number: formData.accountNumber || null,
+            // Specifications
+            p_is_first_job: formData.isFirstJob === 'true' ? true : formData.isFirstJob === 'false' ? false : null,
+            p_is_head_of_household: formData.isHeadOfHousehold === 'true' ? true : formData.isHeadOfHousehold === 'false' ? false : null,
+            p_disability_type: formData.disabilityType || null,
+            p_ethnic_group: formData.ethnicGroup || null,
+            p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
+            p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
+            p_identification_type_id: formData.identificationTypeId || null,
+            p_education_level_id: formData.educationLevelId || null,
+            p_profession_id: formData.professionId || null,
+          });
+          result = data;
+          
+          if ((result as any)?.success && (result as any)?.employee_id) {
+            employeeId = (result as any).employee_id;
+          }
+        }
+        
+        if (employeeId && ((result as any)?.success !== false || formData.employeeId)) {
+          // If we have an employeeId (either existing or just created), update with full info
+          const { data } = await supabase.rpc('update_employee_from_registration', {
+            p_token: tokenParam!,
+            p_employee_id: employeeId,
+            p_first_name: formData.firstName || '',
+            p_last_name: formData.lastName || '',
+            p_middle_name: formData.middleName || null,
+            p_second_last_name: formData.secondLastName || null,
+            p_document_type: formData.documentType || 'CC',
+            p_document_number: formData.documentNumber || '',
+            p_birth_date: formData.birthDate || null,
+            p_birth_city: formData.birthCity || null,
+            p_birth_department: formData.birthDepartment || null,
+            p_birth_country: formData.birthCountry || null,
+            p_gender: mapGender(formData.gender),
+            p_gender_identity: formData.genderIdentity || null,
+            p_gender_identity_other: formData.genderIdentityOther || null,
+            p_marital_status: formData.maritalStatus || null,
+            p_blood_type: formData.bloodType || null,
+            p_document_issue_date: formData.documentIssueDate || null,
+            p_document_issue_city: formData.documentIssueCity || null,
+            p_email: formData.email || null,
+            p_personal_email: formData.personalEmail || null,
+            p_mobile: formData.mobile || null,
+            p_phone: formData.phone || null,
+            p_residence_address: formData.residenceAddress || null,
+            p_residence_city: formData.residenceCity || null,
+            p_residence_department: formData.residenceDepartment || null,
+            p_residence_neighborhood: formData.residenceNeighborhood || null,
+            p_emergency_contact_name: formData.emergencyContactName || null,
+            p_emergency_contact_phone: formData.emergencyContactPhone || null,
+            p_emergency_contact_relationship: formData.emergencyContactRelationship || null,
+            p_spouse_name: formData.spouseName || null,
+            p_spouse_birth_date: formData.spouseBirthDate || null,
+            p_children_count: (formData.childrenCount !== undefined && formData.childrenCount !== '') ? parseInt(formData.childrenCount) : null,
+            // Social Security
+            p_eps: formData.eps || null,
+            p_afp: formData.afp || null,
+            p_arl: formData.arl || null,
+            p_ccf: formData.ccf || null,
+            p_afc: formData.afc || null,
+            p_ips: formData.ips || null,
+            p_risk_level: formData.riskLevel || null,
+            // Bank Info
+            p_bank_name: formData.bankName || null,
+            p_account_type: formData.accountType || null,
+            p_account_number: formData.accountNumber || null,
+            // Specifications
+            p_is_first_job: formData.isFirstJob === 'true' ? true : formData.isFirstJob === 'false' ? false : null,
+            p_is_head_of_household: formData.isHeadOfHousehold === 'true' ? true : formData.isHeadOfHousehold === 'false' ? false : null,
+            p_disability_type: formData.disabilityType || null,
+            p_ethnic_group: formData.ethnicGroup || null,
+            p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
+            p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
+            p_identification_type_id: formData.identificationTypeId || null,
+            p_education_level_id: formData.educationLevelId || null,
+            p_profession_id: formData.professionId || null,
+            p_avatar_url: formData.avatarUrl || null,
+            p_gender: formData.gender === 'masculino' ? 'M' : formData.gender === 'femenino' ? 'F' : (formData.gender ? 'O' : null),
+            p_vaccines: Array.isArray(formData.vaccines) ? formData.vaccines.map(v => ({
+              ...v,
+              vaccine_type: v.vaccine_type === 'covid19' ? 'COVID' : v.vaccine_type
+            })) : [],
+            p_family_members: Array.isArray(formData.familyMembers) ? formData.familyMembers.map(m => ({
+              ...m,
+              document_type: m.document_type || 'CC',
+              document_number: m.document_number || ''
+            })) : []
+          } as any);
+          result = data;
+        }
       } else {
         const parsedSalary = formData.salaryExpectation 
           ? parseFloat(formData.salaryExpectation.replace(/[^0-9.-]+/g, '')) 
@@ -386,8 +491,9 @@ export default function RegistroPublico() {
       return (
         <div key={key} className="space-y-1.5">
           <Label>{config.label}{isRequired && <span className="text-destructive ml-1">*</span>}</Label>
-          <Select 
-            value={formData.identificationTypeId || ''} 
+          <SearchableSelect
+            options={identificationTypes.map(t => ({ value: t.id, label: t.name }))}
+            value={formData.identificationTypeId || ''}
             onValueChange={v => {
               const selected = identificationTypes.find(t => t.id === v);
               setFormData(prev => ({ 
@@ -396,27 +502,8 @@ export default function RegistroPublico() {
                 documentType: selected?.code || prev.documentType 
               }));
             }}
-          >
-            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-            <SelectContent className="bg-background">
-              {identificationTypes.length > 0 ? (
-                identificationTypes.map(type => (
-                  <SelectItem key={type.id} value={type.id}>
-                    {type.name}
-                  </SelectItem>
-                ))
-              ) : (
-                <>
-                  <SelectItem value="CC">Cédula de Ciudadanía</SelectItem>
-                  <SelectItem value="CE">Cédula de Extranjería</SelectItem>
-                  <SelectItem value="PA">Pasaporte</SelectItem>
-                  <SelectItem value="TI">Tarjeta de Identidad</SelectItem>
-                  <SelectItem value="PEP">PEP</SelectItem>
-                  <SelectItem value="PPT">PPT</SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
+            placeholder="Seleccionar tipo de documento"
+          />
         </div>
       );
     }
@@ -460,16 +547,12 @@ export default function RegistroPublico() {
       return (
         <div key={key} className="space-y-1.5">
           <Label>{config.label}</Label>
-          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-            <SelectContent className="bg-background">
-              {educationLevels.map(level => (
-                <SelectItem key={level.id} value={level.id}>
-                  {level.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={educationLevels.map(level => ({ value: level.id, label: level.name }))}
+            value={formData[key] || ''}
+            onValueChange={v => handleChange(key, v)}
+            placeholder="Seleccionar nivel de estudios"
+          />
         </div>
       );
     }
@@ -478,16 +561,12 @@ export default function RegistroPublico() {
       return (
         <div key={key} className="space-y-1.5">
           <Label>{config.label}</Label>
-          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-            <SelectContent className="bg-background">
-              {professions.map(prof => (
-                <SelectItem key={prof.id} value={prof.id}>
-                  {prof.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={professions.map(prof => ({ value: prof.id, label: prof.name }))}
+            value={formData[key] || ''}
+            onValueChange={v => handleChange(key, v)}
+            placeholder="Seleccionar profesión"
+          />
         </div>
       );
     }
@@ -535,16 +614,18 @@ export default function RegistroPublico() {
       return (
         <div key={key} className="space-y-1.5">
           <Label>{config.label}</Label>
-          <Select value={formData[key] || ''} onValueChange={v => handleChange(key, v)}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-            <SelectContent className="bg-background">
-              <SelectItem value="I">Nivel I - Mínimo</SelectItem>
-              <SelectItem value="II">Nivel II - Bajo</SelectItem>
-              <SelectItem value="III">Nivel III - Medio</SelectItem>
-              <SelectItem value="IV">Nivel IV - Alto</SelectItem>
-              <SelectItem value="V">Nivel V - Máximo</SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={[
+              { value: 'I', label: 'Nivel I - Mínimo' },
+              { value: 'II', label: 'Nivel II - Bajo' },
+              { value: 'III', label: 'Nivel III - Medio' },
+              { value: 'IV', label: 'Nivel IV - Alto' },
+              { value: 'V', label: 'Nivel V - Máximo' },
+            ]}
+            value={formData[key] || ''}
+            onValueChange={v => handleChange(key, v)}
+            placeholder="Seleccionar nivel de riesgo"
+          />
         </div>
       );
     }
@@ -622,13 +703,118 @@ export default function RegistroPublico() {
     return null;
   };
 
+  const renderCatalogSelect = (key: string, catalogKey: string, label: string) => {
+    const options = (catalogData[catalogKey] || []).map((opt: any) => ({
+      value: opt.name,
+      label: opt.name
+    }));
+    return (
+      <div key={key} className="space-y-1.5">
+        <Label>{label}</Label>
+        <SearchableSelect
+          options={options}
+          value={formData[key] || ''}
+          onValueChange={v => handleChange(key, v)}
+          placeholder={`Seleccionar ${label}`}
+          searchPlaceholder={`Buscar ${label.toLowerCase()}...`}
+        />
+      </div>
+    );
+  };
+
   const renderField = (key: string) => {
     const config = fieldConfig[key];
     if (!config) return null;
     const isRequired = requiredFields.includes(key);
 
+    // Hidden department fields (auto-set by city selectors)
+    if (config.type === 'hidden-dept') return null;
+
     if (config.type.startsWith('select')) {
+      // Catalog selects
+      if (config.type === 'select-catalog-eps') return renderCatalogSelect(key, 'eps', config.label);
+      if (config.type === 'select-catalog-afp') return renderCatalogSelect(key, 'afp', config.label);
+      if (config.type === 'select-catalog-arl') return renderCatalogSelect(key, 'arl', config.label);
+      if (config.type === 'select-catalog-ccf') return renderCatalogSelect(key, 'ccf', config.label);
+      if (config.type === 'select-catalog-afc') return renderCatalogSelect(key, 'afc', config.label);
+      if (config.type === 'select-catalog-ips') return renderCatalogSelect(key, 'ips', config.label);
+      if (config.type === 'select-catalog-banks') return renderCatalogSelect(key, 'banks', config.label);
+      if (config.type === 'select-country') {
+        return (
+          <div key={key} className="space-y-1.5">
+            <Label>{config.label}</Label>
+            <SearchableSelect
+              options={[
+                { value: 'Colombia', label: 'Colombia' },
+                { value: 'Venezuela', label: 'Venezuela' },
+                { value: 'Ecuador', label: 'Ecuador' },
+                { value: 'Perú', label: 'Perú' },
+                { value: 'Brasil', label: 'Brasil' },
+                { value: 'Chile', label: 'Chile' },
+                { value: 'Argentina', label: 'Argentina' },
+                { value: 'México', label: 'México' },
+                { value: 'Estados Unidos', label: 'Estados Unidos' },
+                { value: 'España', label: 'España' },
+                { value: 'Otro', label: 'Otro' },
+              ]}
+              value={formData[key] || 'Colombia'}
+              onValueChange={v => handleChange(key, v)}
+              placeholder="Seleccionar país"
+            />
+          </div>
+        );
+      }
       return renderSelectField(key, config.type, isRequired);
+    }
+
+    // City with department auto-fill (birth)
+    if (config.type === 'city-birth') {
+      return (
+        <div key={key} className="space-y-1.5 col-span-full">
+          <CityDepartmentSelect
+            departmentValue={formData.birthDepartment || ''}
+            cityValue={formData.birthCity || ''}
+            onDepartmentChange={(dept) => {
+              setFormData(prev => ({ ...prev, birthDepartment: dept }));
+            }}
+            onCityChange={(city) => setFormData(prev => ({ ...prev, birthCity: city }))}
+            departmentLabel="Departamento de Nacimiento"
+            cityLabel="Ciudad de Nacimiento"
+          />
+        </div>
+      );
+    }
+
+    // City with department auto-fill (residence)
+    if (config.type === 'city-residence') {
+      return (
+        <div key={key} className="space-y-1.5 col-span-full">
+          <CityDepartmentSelect
+            departmentValue={formData.residenceDepartment || ''}
+            cityValue={formData.residenceCity || ''}
+            onDepartmentChange={(dept) => {
+              setFormData(prev => ({ ...prev, residenceDepartment: dept }));
+            }}
+            onCityChange={(city) => setFormData(prev => ({ ...prev, residenceCity: city }))}
+            departmentLabel="Departamento de Residencia"
+            cityLabel="Ciudad de Residencia"
+          />
+        </div>
+      );
+    }
+
+    // Single city select (expedición)
+    if (config.type === 'city-single') {
+      return (
+        <div key={key} className="space-y-1.5">
+          <Label>{config.label}</Label>
+          <CitySelect
+            value={formData[key] || ''}
+            onValueChange={(city) => handleChange(key, city)}
+            placeholder="Buscar ciudad..."
+          />
+        </div>
+      );
     }
 
     if (config.type === 'textarea') {
@@ -640,32 +826,232 @@ export default function RegistroPublico() {
       );
     }
 
-    const handleDocumentBlur = key === 'documentNumber' && !isEmployee ? async () => {
+    if (key === 'avatarUrl') {
+      return (
+        <div key={key} className="space-y-1.5 col-span-full mb-4">
+          <Label>{config.label}</Label>
+          <div className="bg-card border rounded-lg p-6 flex justify-center items-center">
+            <AvatarUpload
+              currentAvatarUrl={formData[key]}
+              onAvatarChange={(url) => handleChange(key, url || '')}
+              employeeName={formData.firstName ? `${formData.firstName} ${formData.lastName || ''}` : 'Empleado'}
+              employeeId={formData.employeeId}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    if (key === 'vaccines' || key === 'familyMembers') {
+      const items = Array.isArray(formData[key]) ? formData[key] : [];
+      const isVaccine = key === 'vaccines';
+
+      return (
+        <div key={key} className="col-span-full space-y-3 mt-2 border border-border/50 bg-muted/20 rounded-lg p-4">
+          <div className="flex justify-between items-center mb-2">
+            <Label className="text-base font-semibold">{config.label}</Label>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              className="h-8"
+              onClick={() => {
+                const newItem = isVaccine 
+                  ? { vaccine_name: '', dose_number: 1, vaccine_type: 'COVID' } 
+                  : { full_name: '', relationship: '', document_type: 'CC', document_number: '' };
+                handleChange(key, [...items, newItem]);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-1" /> Agregar
+            </Button>
+          </div>
+          
+          <div className="space-y-3">
+            {items.map((item: any, idx: number) => (
+              <div key={idx} className="flex flex-col sm:flex-row gap-3 sm:items-end bg-background p-3 rounded-md border shadow-sm">
+                {isVaccine ? (
+                  <>
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Nombre de Vacuna</Label>
+                      <Input value={item.vaccine_name || ''} onChange={e => {
+                        const newItems = [...items];
+                        newItems[idx] = { ...newItems[idx], vaccine_name: e.target.value };
+                        handleChange(key, newItems);
+                      }} placeholder="Ej: COVID-19" />
+                    </div>
+                    <div className="w-full sm:w-24 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Dosis</Label>
+                      <Input type="number" min={1} value={item.dose_number || 1} onChange={e => {
+                        const newItems = [...items];
+                        newItems[idx] = { ...newItems[idx], dose_number: parseInt(e.target.value) || 1 };
+                        handleChange(key, newItems);
+                      }} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Nombre Completo</Label>
+                      <Input value={item.full_name || ''} onChange={e => {
+                        const newItems = [...items];
+                        newItems[idx] = { ...newItems[idx], full_name: e.target.value };
+                        handleChange(key, newItems);
+                      }} placeholder="Nombre del familiar" />
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Parentesco</Label>
+                      <Input value={item.relationship || ''} onChange={e => {
+                        const newItems = [...items];
+                        newItems[idx] = { ...newItems[idx], relationship: e.target.value };
+                        handleChange(key, newItems);
+                      }} placeholder="Hijo, Esposo(a)..." />
+                    </div>
+                    <div className="w-full sm:w-32 space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">N° Documento</Label>
+                      <Input value={item.document_number || ''} onChange={e => {
+                        const newItems = [...items];
+                        newItems[idx] = { ...newItems[idx], document_number: e.target.value };
+                        handleChange(key, newItems);
+                      }} placeholder="Cédula" />
+                    </div>
+                  </>
+                )}
+                <Button type="button" variant="ghost" size="icon" className="shrink-0 self-end sm:self-auto" onClick={() => {
+                  const newItems = items.filter((_, i) => i !== idx);
+                  handleChange(key, newItems);
+                }}>
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+            {items.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4 bg-background border rounded-md">
+                No hay registros agregados.
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const handleDocumentBlur = key === 'documentNumber' ? async () => {
       const docNum = formData[key]?.trim();
       if (docNum && docNum.length >= 4 && tokenData?.company_id && !prefilled) {
         try {
-          const { data } = await supabase.rpc('check_candidate_background', {
-            p_document_number: docNum,
-            p_company_id: tokenData.company_id,
-          } as any);
-          const result = data as any;
-          if (result?.previous_candidacies?.length > 0) {
-            const latest = result.previous_candidacies[0];
-            const updates: Record<string, string> = {};
-            if (!formData.firstName && latest.first_name) updates.firstName = latest.first_name;
-            if (!formData.lastName && latest.last_name) updates.lastName = latest.last_name;
-            if (!formData.email && latest.email) updates.email = latest.email;
-            if (!formData.mobile && latest.mobile) updates.mobile = latest.mobile;
-            if (!formData.phone && latest.phone) updates.phone = latest.phone;
-            if (!formData.address && latest.address) updates.address = latest.address;
-            if (!formData.city && latest.city) updates.city = latest.city;
-            if (!formData.department && latest.department) updates.department = latest.department;
-            if (!formData.neighborhood && latest.neighborhood) updates.neighborhood = latest.neighborhood;
-            if (!formData.gender && latest.gender) updates.gender = latest.gender;
-            if (Object.keys(updates).length > 0) {
+          if (isEmployee) {
+            const { data } = await supabase.rpc('get_employee_by_token_and_document', {
+              p_token: tokenParam!,
+              p_document_number: docNum
+            });
+            const result = data as any;
+            if (result?.success && result?.found) {
+              const emp = result.employee;
+              const contact = result.contact;
+              const family = result.family;
+              const social = result.social;
+              const bank = result.bank;
+              const updates: Record<string, any> = {
+                employeeId: emp.id,
+                firstName: emp.first_name,
+                middleName: emp.middle_name,
+                lastName: emp.last_name,
+                secondLastName: emp.second_last_name,
+                birthDate: emp.birth_date,
+                birthCity: emp.birth_city,
+                birthDepartment: emp.birth_department,
+                birthCountry: emp.birth_country,
+                gender: emp.gender === 'M' ? 'masculino' : emp.gender === 'F' ? 'femenino' : (emp.gender ? 'otro' : ''),
+                genderIdentity: emp.gender_identity,
+                maritalStatus: emp.marital_status,
+                bloodType: emp.blood_type,
+                documentIssueDate: emp.document_issue_date,
+                documentIssueCity: emp.document_issue_city,
+                isFirstJob: emp.is_first_job ? 'true' : 'false',
+                isHeadOfHousehold: emp.is_head_of_household ? 'true' : 'false',
+                disabilityType: emp.disability_type,
+                ethnicGroup: emp.ethnic_group,
+                isConflictVictim: emp.is_conflict_victim ? 'true' : 'false',
+                isDemobilized: emp.is_demobilized ? 'true' : 'false',
+                identificationTypeId: emp.identification_type_id,
+                documentType: emp.document_type,
+                educationLevelId: emp.education_level_id,
+                professionId: emp.profession_id,
+                avatarUrl: emp.avatar_url,
+              };
+
+              if (contact) {
+                updates.email = contact.email;
+                updates.personalEmail = contact.personal_email;
+                updates.mobile = contact.mobile;
+                updates.phone = contact.phone;
+                updates.residenceAddress = contact.residence_address;
+                updates.residenceCity = contact.residence_city;
+                updates.residenceDepartment = contact.residence_department;
+                updates.residenceNeighborhood = contact.residence_neighborhood;
+                updates.emergencyContactName = contact.emergency_contact_name;
+                updates.emergencyContactPhone = contact.emergency_contact_phone;
+                updates.emergencyContactRelationship = contact.emergency_contact_relationship;
+              }
+
+              if (family) {
+                updates.spouseName = family.spouse_name;
+                updates.spouseBirthDate = family.spouse_birth_date;
+                updates.childrenCount = family.children_count?.toString();
+              }
+
+              if (social) {
+                updates.eps = social.eps;
+                updates.afp = social.afp;
+                updates.arl = social.arl;
+                updates.ccf = social.ccf;
+                updates.afc = social.afc;
+                updates.ips = social.ips;
+                updates.riskLevel = social.risk_level;
+              }
+
+              if (bank) {
+                updates.bankName = bank.bank_name;
+                updates.accountType = bank.account_type;
+                updates.accountNumber = bank.account_number;
+              }
+              
+              if (result.vaccinations) {
+                updates.vaccines = result.vaccinations;
+              }
+
+              // Remove nulls so we don't overwrite user input if they typed something while it was fetching
+              Object.keys(updates).forEach(k => {
+                if (updates[k] === null || updates[k] === undefined) delete updates[k];
+              });
+
               setFormData(prev => ({ ...prev, ...updates }));
               setPrefilled(true);
-              toast.info('Se encontró información previa asociada a este documento. Los campos han sido pre-llenados.');
+              toast.info('Se encontró información de tu perfil. Los campos han sido pre-llenados.');
+            }
+          } else {
+            const { data } = await supabase.rpc('check_candidate_background', {
+              p_document_number: docNum,
+              p_company_id: tokenData.company_id,
+            } as any);
+            const result = data as any;
+            if (result?.previous_candidacies?.length > 0) {
+              const latest = result.previous_candidacies[0];
+              const updates: Record<string, string> = {};
+              if (!formData.firstName && latest.first_name) updates.firstName = latest.first_name;
+              if (!formData.lastName && latest.last_name) updates.lastName = latest.last_name;
+              if (!formData.email && latest.email) updates.email = latest.email;
+              if (!formData.mobile && latest.mobile) updates.mobile = latest.mobile;
+              if (!formData.phone && latest.phone) updates.phone = latest.phone;
+              if (!formData.address && latest.address) updates.address = latest.address;
+              if (!formData.city && latest.city) updates.city = latest.city;
+              if (!formData.department && latest.department) updates.department = latest.department;
+              if (!formData.neighborhood && latest.neighborhood) updates.neighborhood = latest.neighborhood;
+              if (!formData.gender && latest.gender) updates.gender = latest.gender;
+              if (Object.keys(updates).length > 0) {
+                setFormData(prev => ({ ...prev, ...updates }));
+                setPrefilled(true);
+                toast.info('Se encontró información previa asociada a este documento. Los campos han sido pre-llenados.');
+              }
             }
           }
         } catch { /* silent */ }
@@ -689,7 +1075,7 @@ export default function RegistroPublico() {
   const HeaderIcon = isEmployee ? Building : User;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl shadow-xl border-border/50 overflow-hidden">
         {/* Header with Logo */}
         <div className="w-full flex flex-col items-center pt-8 pb-4 bg-background">
@@ -699,7 +1085,7 @@ export default function RegistroPublico() {
               animate={{ opacity: 1, y: 0 }}
               src={companyLogo}
               alt={companyName}
-              className="max-h-24 max-w-[280px] object-contain mb-4"
+              className="max-h-24 max-w-[280px] object-contain mb-4 rounded-xl"
             />
           ) : (
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
@@ -719,7 +1105,7 @@ export default function RegistroPublico() {
             />
           </div>
         )}
-        <CardHeader className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-6">
+        <CardHeader className="bg-primary text-primary-foreground p-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
               <HeaderIcon className="w-6 h-6" />
@@ -763,8 +1149,8 @@ export default function RegistroPublico() {
                 </Alert>
               )}
               {sections.map(section => {
-                const sectionFields = enabledFields.filter(
-                  key => fieldConfig[key]?.section === section
+                const sectionFields = Object.keys(fieldConfig).filter(
+                  key => fieldConfig[key]?.section === section && enabledFields.includes(key)
                 );
                 if (sectionFields.length === 0) return null;
 

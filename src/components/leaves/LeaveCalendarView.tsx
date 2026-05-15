@@ -149,7 +149,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
         <div className="hidden grid-cols-7 gap-1 sm:grid">
           {/* Empty cells for days before month start */}
           {emptyDays.map((_, index) => (
-            <div key={`empty-${index}`} className="h-16 rounded-md bg-muted/30 sm:h-24" />
+            <div key={`empty-${index}`} className="h-16 rounded-md bg-background sm:h-24" />
           ))}
 
           {/* Days of the month */}
@@ -163,7 +163,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
                 className={cn(
                   'h-16 overflow-hidden rounded-md border p-1 sm:h-24',
                   isToday && 'ring-2 ring-primary',
-                  !isSameMonth(day, currentDate) && 'bg-muted/50'
+                  !isSameMonth(day, currentDate) && 'bg-background'
                 )}
               >
                 <div className={cn(

@@ -62,8 +62,9 @@ export function CityDepartmentSelect({
   }, [departmentValue, searchQuery]);
 
   const handleCitySelect = (city: string, department: string) => {
-    onCityChange(formatCityName(city));
+    // Call department change first so it doesn't clear the city if it has a reset logic
     onDepartmentChange(department);
+    onCityChange(formatCityName(city));
     setCityOpen(false);
     setSearchQuery('');
   };

@@ -164,7 +164,7 @@ export function Tab360Dotation({ dotation, isLoading }: Tab360DotationProps) {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="space-y-3">
-                  {delivery.observations && <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">{delivery.observations}</p>}
+                  {delivery.observations && <p className="rounded-md bg-background p-3 text-sm text-muted-foreground">{delivery.observations}</p>}
                   {items.map((item: any) => {
                     const daysToExpire = differenceInDays(new Date(item.expiration_date), new Date());
                     const isExpired = daysToExpire < 0;

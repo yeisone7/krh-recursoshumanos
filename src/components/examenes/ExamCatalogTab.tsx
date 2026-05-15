@@ -91,7 +91,7 @@ export function ExamCatalogTab() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar examen..."
-              className="h-11 w-full sm:w-64 pl-10 rounded-xl bg-background/50 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all font-medium text-sm"
+              className="h-11 w-full sm:w-64 pl-10 rounded-xl bg-background border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all font-medium text-sm"
             />
           </div>
           <Button onClick={handleNew} className="h-11 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:shadow-xl transition-all">
@@ -101,17 +101,17 @@ export function ExamCatalogTab() {
       </div>
 
       {catalog.length === 0 ? (
-        <div className="text-center py-32 rounded-[2.5rem] border border-dashed border-border/50 bg-background/20">
+        <div className="text-center py-32 rounded-[2.5rem] border border-dashed border-border/50 bg-background">
           <Stethoscope className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
           <p className="text-lg font-black tracking-tighter text-muted-foreground">No hay tipos de exámenes configurados</p>
           <Button onClick={handleNew} variant="ghost" className="mt-4 font-bold text-xs uppercase tracking-widest text-primary">Crear el primer examen</Button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[2rem] border border-border/50 bg-background/40 backdrop-blur-xl">
+        <div className="overflow-hidden rounded-[2rem] border border-border/50 bg-background ">
           <div className="hidden overflow-x-auto sm:block">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-border/50 bg-muted/30">
+                <TableRow className="hover:bg-transparent border-border/50 bg-background">
                   <TableHead className="text-[10px] font-black uppercase tracking-widest px-6 py-4">Nombre Procedimiento</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-widest px-6 py-4">Identificador</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-widest px-6 py-4">Descripción</TableHead>
@@ -125,7 +125,7 @@ export function ExamCatalogTab() {
                     <TableCell className="px-6 py-4 font-black tracking-tight text-foreground">{item.name}</TableCell>
                     <TableCell className="px-6 py-4">
                       {item.code ? (
-                        <Badge variant="outline" className="h-6 px-2 rounded-lg text-[9px] font-black uppercase tracking-widest bg-primary/5 text-primary border-primary/20">{item.code}</Badge>
+                        <Badge variant="outline" className="h-6 px-2 rounded-lg text-[9px] font-black uppercase tracking-widest text-primary border-primary/20">{item.code}</Badge>
                       ) : (
                         <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest italic">N/A</span>
                       )}
@@ -196,7 +196,7 @@ export function ExamCatalogTab() {
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md rounded-[2rem] border-0 shadow-2xl bg-background/95 backdrop-blur-xl overflow-hidden p-0">
+        <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md rounded-[2rem] border-0 shadow-2xl bg-background overflow-hidden p-0">
           <div className="px-8 py-8 bg-gradient-to-br from-destructive/10 via-background to-destructive/5 border-b border-destructive/10">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-destructive flex items-center justify-center shadow-lg shadow-destructive/20">
@@ -215,7 +215,7 @@ export function ExamCatalogTab() {
             </AlertDialogDescription>
             
             <div className="flex items-center justify-end gap-3 mt-8">
-              <AlertDialogCancel className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-0 bg-muted hover:bg-muted/80 transition-all">
+              <AlertDialogCancel className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-0 bg-background hover:bg-background /80 transition-all">
                 Cancelar
               </AlertDialogCancel>
               <AlertDialogAction

@@ -117,7 +117,7 @@ function DocumentCard({ doc, index }: { doc: any; index: number }) {
       <Card className="h-full">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center shrink-0">
               {getFileIcon(doc.mime_type)}
             </div>
 

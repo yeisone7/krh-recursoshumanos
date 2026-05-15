@@ -118,17 +118,17 @@ export default function Requisiciones() {
 
   const kpis = useMemo(() => ([
     { label: 'TOTAL REQUISICIONES', value: stats.total, desc: 'Historial completo', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-500/10' },
-    { label: 'EN BORRADOR', value: stats.borrador, desc: 'Pendientes de envío', icon: Clock, color: 'text-muted-foreground', bg: 'bg-muted' },
+    { label: 'EN BORRADOR', value: stats.borrador, desc: 'Pendientes de envío', icon: Clock, color: 'text-muted-foreground', bg: 'bg-background ' },
     { label: 'EN PROCESO', value: stats.enProceso, desc: 'Flujo de aprobación', icon: Send, color: 'text-amber-600', bg: 'bg-amber-500/10' },
     { label: 'APROBADAS', value: stats.aprobadas, desc: 'Listas para selección', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
   ]), [stats]);
 
   return (
-    <div className="flex flex-col h-full bg-background/50 overflow-hidden">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Premium Header */}
-      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-primary/5">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-accent/5 blur-[80px] pointer-events-none" />
+      <div className="relative shrink-0 overflow-hidden px-6 py-8 sm:px-10 sm:py-10 border-b border-border ">
+        
+        
         
         <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <div className="space-y-4">
@@ -137,7 +137,7 @@ export default function Requisiciones() {
                 <FileText className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/10 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
                   Módulo de Selección
                 </Badge>
                 <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Requisiciones de Personal</h1>
@@ -150,7 +150,7 @@ export default function Requisiciones() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
             {kpis.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-primary/5 shadow-sm hover:shadow-md hover:border-primary/10 transition-all duration-500">
+              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-border shadow-sm hover:shadow-md hover:border-border transition-all duration-500">
                 <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
                 </div>
@@ -166,13 +166,13 @@ export default function Requisiciones() {
       </div>
 
       {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background/60 backdrop-blur-xl border-b border-primary/5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
           <div className="relative w-full sm:w-80 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input
               placeholder="Buscar por cargo, solicitante..."
-              className="w-full pl-11 h-12 rounded-2xl bg-muted/20 border-primary/5 focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal outline-none"
+              className="w-full pl-11 h-12 rounded-2xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal outline-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -185,9 +185,9 @@ export default function Requisiciones() {
               onValueChange={setStatusFilter}
               placeholder="Filtrar por estado"
               searchPlaceholder="Buscar estado..."
-              triggerClassName="h-12 w-full sm:w-[220px] rounded-2xl bg-muted/20 border-primary/5 font-bold text-xs uppercase tracking-wider"
+              triggerClassName="h-12 w-full sm:w-[220px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider"
             />
-            <div className="flex items-center px-4 h-12 bg-primary/10 rounded-2xl border border-primary/5 shrink-0">
+            <div className="flex items-center px-4 h-12 bg-primary/10 rounded-2xl border border-border shrink-0">
               <span className="text-sm font-black text-primary">{filtered.length}</span>
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function Requisiciones() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-32 bg-background/50 rounded-[3rem] border-2 border-dashed border-primary/5">
+            <div className="text-center py-32 bg-background rounded-[3rem] border-2 border-dashed border-border ">
                <FileText className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
                <p className="text-xl font-black uppercase tracking-[0.2em] text-muted-foreground/40">Sin requisiciones registradas</p>
             </div>
@@ -221,7 +221,7 @@ export default function Requisiciones() {
                   const cfg = requisitionStatusConfig[status];
                   const progress = getApprovalProgress(req);
                   return (
-                    <Card key={req.id} className="group relative overflow-hidden rounded-[2rem] border border-primary/5 shadow-md bg-background/50 backdrop-blur-sm" onClick={() => openDetail(req.id)}>
+                    <Card key={req.id} className="group relative overflow-hidden rounded-[2rem] border border-border shadow-md bg-background " onClick={() => openDetail(req.id)}>
                       <div className={cn("absolute left-0 top-0 h-full w-1.5", cfg.bg)} />
                       <CardContent className="p-6 space-y-4">
                         <div className="flex justify-between items-start gap-4">
@@ -234,12 +234,12 @@ export default function Requisiciones() {
                               <span className="truncate">{req.solicitante_nombre}</span>
                             </div>
                           </div>
-                          <Badge variant="outline" className={cn('shrink-0 text-[9px] font-black uppercase tracking-widest px-3 py-1 border-primary/10 shadow-sm rounded-full', cfg.bg, cfg.text, cfg.border)}>
+                          <Badge variant="outline" className={cn('shrink-0 text-[9px] font-black uppercase tracking-widest px-3 py-1 border-border shadow-sm rounded-full', cfg.bg, cfg.text, cfg.border)}>
                             {requisitionStatusLabels[status]}
                           </Badge>
                         </div>
 
-                        <div className="flex flex-col gap-3 p-4 rounded-2xl bg-muted/30 border border-primary/5">
+                        <div className="flex flex-col gap-3 p-4 rounded-2xl bg-background border border-border ">
                           <div className="flex items-center gap-3">
                             <div className="p-1.5 rounded-lg bg-background shadow-sm">
                               <Building2 className="w-3.5 h-3.5 text-primary" />
@@ -254,14 +254,14 @@ export default function Requisiciones() {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between gap-4 pt-2 border-t border-primary/5">
+                        <div className="flex items-center justify-between gap-4 pt-2 border-t border-border ">
                           <div className="flex -space-x-2">
                             {progress.map((s, idx) => (
                               <div
                                 key={s.key}
                                 className={cn(
                                   'w-8 h-8 rounded-full flex items-center justify-center border-4 border-background text-[9px] font-black z-[1] shadow-sm',
-                                  s.approved === true ? 'bg-emerald-500 text-white' : s.approved === false ? 'bg-red-500 text-white' : 'bg-muted text-muted-foreground'
+                                  s.approved === true ? 'bg-emerald-500 text-white' : s.approved === false ? 'bg-red-500 text-white' : 'bg-background text-muted-foreground'
                                 )}
                               >
                                 {s.approved === true ? <CheckCircle className="w-4 h-4" /> : s.approved === false ? <XCircle className="w-4 h-4" /> : s.label}
@@ -269,10 +269,10 @@ export default function Requisiciones() {
                             ))}
                           </div>
                           <div className="flex gap-2">
-                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-primary/5 text-primary hover:bg-primary hover:text-white transition-all" onClick={(e) => handleExportPDF(req, e)}>
+                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-primary hover:bg-primary hover:text-white transition-all" onClick={(e) => handleExportPDF(req, e)}>
                               {exportingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-muted hover:bg-foreground hover:text-background transition-all" onClick={() => openDetail(req.id)}>
+                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-background hover:bg-foreground hover:text-background transition-all" onClick={() => openDetail(req.id)}>
                               <ChevronRight className="w-5 h-5" />
                             </Button>
                           </div>
@@ -283,10 +283,10 @@ export default function Requisiciones() {
                 })}
               </div>
 
-              <div className="hidden xl:block rounded-[2.5rem] border border-primary/5 shadow-md bg-background/40 backdrop-blur-xl">
+              <div className="hidden xl:block rounded-[2.5rem] border border-border shadow-md bg-background ">
                 <Table className="w-full table-fixed">
                   <TableHeader>
-                    <TableRow className="bg-muted/30 border-b border-primary/5 hover:bg-muted/30">
+                    <TableRow className="bg-background border-b border-border hover:bg-background">
                       <TableHead className="px-4 h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[25%]">Cargo / Solicitante</TableHead>
                       <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[18%]">Ubicación / Motivo</TableHead>
                       <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[10%]">Fecha</TableHead>
@@ -302,10 +302,10 @@ export default function Requisiciones() {
                       const step = getCurrentApprovalStep(req);
                       const progress = getApprovalProgress(req);
                       return (
-                        <TableRow key={req.id} className="group border-b border-primary/5 hover:bg-primary/[0.02] transition-colors cursor-pointer" onClick={() => openDetail(req.id)}>
+                        <TableRow key={req.id} className="group border-b border-border hover:bg-primary/[0.02] transition-colors cursor-pointer" onClick={() => openDetail(req.id)}>
                           <TableCell className="px-4 py-5">
                             <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shrink-0">
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shrink-0">
                                 <FileText className="w-5 h-5" />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -325,7 +325,7 @@ export default function Requisiciones() {
                                 <Building2 className="w-3.5 h-3.5 text-primary/60" />
                                 <span className="text-[11px] font-black tracking-tight text-foreground/80 truncate">{req.operation_centers?.name || '-'}</span>
                               </div>
-                              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-muted/50 border-primary/5 px-2 py-0">
+                              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-background border-border px-2 py-0">
                                 {requisitionReasonLabels[req.motivo_solicitud as RequisitionReason]}
                               </Badge>
                             </div>
@@ -351,14 +351,14 @@ export default function Requisiciones() {
                                             'w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black transition-all duration-300 border-2',
                                             s.approved === true && 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/10',
                                             s.approved === false && 'bg-red-500 text-white border-red-400 shadow-md shadow-red-500/10',
-                                            s.approved === null && 'bg-muted text-muted-foreground border-border hover:border-primary/30'
+                                            s.approved === null && 'bg-background text-muted-foreground border-border hover:border-primary/30'
                                           )}
                                           onClick={e => e.stopPropagation()}
                                         >
                                           {s.approved === true ? <CheckCircle className="w-4 h-4" /> : s.approved === false ? <XCircle className="w-4 h-4" /> : s.label}
                                         </button>
                                       </TooltipTrigger>
-                                      <TooltipContent side="top" className="text-xs bg-popover/90 backdrop-blur-sm border-primary/20 p-3 rounded-xl shadow-lg">
+                                      <TooltipContent side="top" className="text-xs bg-popover/90 border-primary/20 p-3 rounded-xl shadow-lg">
                                         <p className="font-black uppercase tracking-widest text-[10px] mb-1">{s.key === 'operaciones' ? 'Operaciones' : s.key === 'rrhh' ? 'RH' : s.key === 'juridico' ? 'Jurídico' : s.key === 'gerencia' ? 'Gerencia' : 'Selección'}</p>
                                         <p className={cn('font-bold', s.approved === true ? 'text-emerald-500' : s.approved === false ? 'text-red-500' : 'text-muted-foreground')}>
                                           {s.approved === true ? '✓ APROBADO' : s.approved === false ? '✗ RECHAZADO' : '○ PENDIENTE'}
@@ -366,7 +366,7 @@ export default function Requisiciones() {
                                       </TooltipContent>
                                     </Tooltip>
                                       {idx < progress.length - 1 && (
-                                        <div className={cn('w-2 h-0.5 mx-0.5 rounded-full', s.approved === true ? 'bg-emerald-500' : 'bg-muted')} />
+                                        <div className={cn('w-2 h-0.5 mx-0.5 rounded-full', s.approved === true ? 'bg-emerald-500' : 'bg-background ')} />
                                       )}
                                   </div>
                                 ))}
@@ -374,7 +374,7 @@ export default function Requisiciones() {
                             </TooltipProvider>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className={cn('h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-primary/10 shadow-sm', cfg.bg, cfg.text, cfg.border)}>
+                            <Badge variant="outline" className={cn('h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
                               {requisitionStatusLabels[status]}
                             </Badge>
                           </TableCell>
@@ -383,7 +383,7 @@ export default function Requisiciones() {
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-primary/5 hover:bg-primary text-primary hover:text-white shadow-sm transition-all" onClick={(e) => handleExportPDF(req, e)} disabled={exportingId === req.id}>
+                                    <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl hover:bg-primary text-primary hover:text-white shadow-sm transition-all" onClick={(e) => handleExportPDF(req, e)} disabled={exportingId === req.id}>
                                       {exportingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
                                     </Button>
                                   </TooltipTrigger>
@@ -391,7 +391,7 @@ export default function Requisiciones() {
                                 </Tooltip>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-muted hover:bg-foreground hover:text-background transition-all" onClick={() => openDetail(req.id)}>
+                                    <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-background hover:bg-foreground hover:text-background transition-all" onClick={() => openDetail(req.id)}>
                                       <Eye className="w-5 h-5" />
                                     </Button>
                                   </TooltipTrigger>

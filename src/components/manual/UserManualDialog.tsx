@@ -246,7 +246,7 @@ export function UserManualDialog({ open, onOpenChange }: Props) {
                         'w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-sm transition-colors text-left',
                         isActive || childActive
                           ? 'bg-primary/10 text-primary font-medium'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                          : 'text-muted-foreground hover:bg-background hover:text-foreground',
                       )}
                     >
                       <Icon className="w-4 h-4 shrink-0" />

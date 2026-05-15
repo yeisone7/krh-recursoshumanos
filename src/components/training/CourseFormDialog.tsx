@@ -140,7 +140,7 @@ export function CourseFormDialog({ open, onOpenChange, course }: CourseFormDialo
         
         {/* Premium Gradient Header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+          
           
           <DialogHeader className="relative z-10">
             <div className="flex items-center gap-4 mb-2">
@@ -148,7 +148,7 @@ export function CourseFormDialog({ open, onOpenChange, course }: CourseFormDialo
                 <BookOpenCheck className="w-6 h-6" />
               </div>
               <div>
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
+                <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
                   {course ? 'EDICIÓN' : 'NUEVO REGISTRO'}
                 </Badge>
                 <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
@@ -165,7 +165,7 @@ export function CourseFormDialog({ open, onOpenChange, course }: CourseFormDialo
         <div className="px-8 py-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="p-6 rounded-3xl bg-muted/20 border border-border/50 space-y-6">
+              <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -360,7 +360,7 @@ export function CourseFormDialog({ open, onOpenChange, course }: CourseFormDialo
 
               </div>
 
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-6 border-t border-border/50 bg-muted/10 -mx-8 -mb-6 px-8 py-6">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-6 border-t border-border/50 bg-background /10 -mx-8 -mb-6 px-8 py-6">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
                   Cancelar
                 </Button>

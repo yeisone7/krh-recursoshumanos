@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -86,8 +86,156 @@ export function useEmployees() {
 }
 
 // =====================================================
-// GET SINGLE EMPLOYEE (FULL DETAIL)
+// LIST EMPLOYEES PAGINATED (OPTIMIZED FOR LIST VIEW)
 // =====================================================
+
+export function useEmployeesPaginated(options: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: string;
+  centerId?: string;
+}) {
+  const { currentCompanyId } = useAuth();
+  const { page = 1, pageSize = 12, search, status, centerId } = options;
+
+  return useQuery({
+    queryKey: ['employees_v2_paginated', currentCompanyId, page, pageSize, search, status, centerId],
+    queryFn: async () => {
+      if (!currentCompanyId) return { data: [], count: 0 };
+
+      // Base query with essential fields only for better performance
+      let query = supabase
+        .from('employees_v2')
+        .select(`
+          *,
+          identification_types(id, name, code),
+          employee_work_info!inner(
+            id, operation_center_id, position_id, position_name, hire_date, link_type, area_id, is_current,
+            operation_centers(id, name, city)
+          )
+        `, { count: 'exact' })
+        .eq('company_id', currentCompanyId)
+        .eq('employee_work_info.is_current', true);
+
+      // 1. Server-side search (Name or Document)
+      if (search && search.trim() !== '') {
+        const searchPattern = `%${search.trim()}%`;
+        query = query.or(`first_name.ilike.${searchPattern},last_name.ilike.${searchPattern},document_number.ilike.${searchPattern}`);
+      }
+
+      // 2. Server-side filtering
+      if (centerId && centerId !== 'all') {
+        query = query.eq('employee_work_info.operation_center_id', centerId);
+      }
+
+      // Status filtering is complex because it's derived from is_active and termination_date
+      // For now, let's at least filter by is_active if requested
+      if (status === 'active') {
+        query = query.eq('is_active', true);
+      } else if (status === 'inactive') {
+        query = query.eq('is_active', false);
+      }
+
+      // 3. Pagination range
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, error, count } = await query
+        .order('last_name', { ascending: true })
+        .range(from, to);
+
+      if (error) throw error;
+
+      // Transform data
+      const transformed = (data || []).map((emp: any) => ({
+        ...emp,
+        work_info: emp.employee_work_info?.[0] || null,
+        operation_centers: emp.employee_work_info?.[0]?.operation_centers || null,
+      })) as EmployeeV2WithRelations[];
+
+      return { data: transformed, count: count || 0 };
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+// =====================================================
+// LIST EMPLOYEES INFINITE (OPTIMIZED FOR SCROLLING)
+// =====================================================
+
+export function useEmployeesInfinite(options: {
+  pageSize?: number;
+  search?: string;
+  status?: string;
+  centerId?: string;
+}) {
+  const { currentCompanyId } = useAuth();
+  const { pageSize = 12, search, status, centerId } = options;
+
+  return useInfiniteQuery({
+    queryKey: ['employees_v2_infinite', currentCompanyId, pageSize, search, status, centerId],
+    queryFn: async ({ pageParam = 0 }) => {
+      if (!currentCompanyId) return { data: [], nextCursor: null, totalCount: 0 };
+
+      // Base query
+      let query = supabase
+        .from('employees_v2')
+        .select(`
+          *,
+          identification_types(id, name, code),
+          employee_work_info!inner(
+            id, operation_center_id, position_id, position_name, hire_date, link_type, area_id, is_current,
+            operation_centers(id, name, city)
+          )
+        `, { count: 'exact' })
+        .eq('company_id', currentCompanyId)
+        .eq('employee_work_info.is_current', true);
+
+      // 1. Search
+      if (search && search.trim() !== '') {
+        const searchPattern = `%${search.trim()}%`;
+        query = query.or(`first_name.ilike.${searchPattern},last_name.ilike.${searchPattern},document_number.ilike.${searchPattern}`);
+      }
+
+      // 2. Filters
+      if (centerId && centerId !== 'all') {
+        query = query.eq('employee_work_info.operation_center_id', centerId);
+      }
+      if (status === 'active') {
+        query = query.eq('is_active', true);
+      } else if (status === 'inactive') {
+        query = query.eq('is_active', false);
+      }
+
+      // 3. Pagination
+      const from = pageParam * pageSize;
+      const to = from + pageSize - 1;
+
+      const { data, error, count } = await query
+        .order('last_name', { ascending: true })
+        .range(from, to);
+
+      if (error) throw error;
+
+      // Transform
+      const transformed = (data || []).map((emp: any) => ({
+        ...emp,
+        work_info: emp.employee_work_info?.[0] || null,
+        operation_centers: emp.employee_work_info?.[0]?.operation_centers || null,
+      })) as EmployeeV2WithRelations[];
+
+      return {
+        data: transformed,
+        nextCursor: transformed.length === pageSize ? pageParam + 1 : null,
+        totalCount: count || 0
+      };
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    enabled: !!currentCompanyId,
+  });
+}
 
 export function useEmployee(id: string | undefined) {
   return useQuery({

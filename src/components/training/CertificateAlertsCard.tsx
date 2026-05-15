@@ -58,7 +58,7 @@ export function CertificateAlertsCard() {
             return (
               <div
                 key={cert.id}
-                className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-background rounded-lg"
               >
                 <div>
                   <p className="font-medium">

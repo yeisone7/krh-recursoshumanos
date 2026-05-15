@@ -45,7 +45,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string; badge: string 
   'Emergencias': { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', badge: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800' },
   'Auditoría': { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-600 dark:text-indigo-400', badge: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800' },
   'Inducción': { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800' },
-  'Otro': { bg: 'bg-slate-100 dark:bg-slate-900/30', text: 'text-slate-600 dark:text-slate-400', badge: 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800' },
+  'Otro': { bg: 'bg-background dark:bg-slate-900/30', text: 'text-slate-600 dark:text-slate-400', badge: 'bg-background text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800' },
 };
 
 const MODALITY_LABELS: Record<string, string> = {
@@ -102,9 +102,9 @@ export default function Biblioteca() {
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Header */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+        
         <div className="relative z-10">
-          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-2">
+          <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-2">
             REPOSITORIO GENERAL
           </Badge>
           <h1 className="text-3xl font-black tracking-tight text-foreground">Biblioteca de Capacitaciones</h1>
@@ -113,7 +113,7 @@ export default function Biblioteca() {
       </div>
 
       {/* Search + Filters + View Mode */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-muted/20 border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-background border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -389,7 +389,7 @@ export default function Biblioteca() {
                                               {courses.map(course => {
                                                 const statusCfg = STATUS_CONFIG[course.status] || STATUS_CONFIG.borrador;
                                                 return (
-                                                  <div key={course.id} className="flex items-center justify-between p-2 rounded hover:bg-muted/50 cursor-pointer" onClick={() => setPreviewCourse(course)}>
+                                                  <div key={course.id} className="flex items-center justify-between p-2 rounded hover:bg-background cursor-pointer" onClick={() => setPreviewCourse(course)}>
                                                     <span className="text-sm">{course.name}</span>
                                                     <Badge variant="outline" className={`text-[11px] ${statusCfg.className}`}>{statusCfg.label}</Badge>
                                                   </div>

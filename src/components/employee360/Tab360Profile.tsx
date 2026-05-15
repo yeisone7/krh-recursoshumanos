@@ -182,7 +182,7 @@ export function Tab360Profile({ employee }: Tab360ProfileProps) {
         <CardContent className="space-y-3">
           {employee.family_members && employee.family_members.length > 0 ? (
             employee.family_members.map((member) => (
-              <div key={member.id} className="border rounded-lg p-3 space-y-1 bg-muted/30">
+              <div key={member.id} className="border rounded-lg p-3 space-y-1 bg-background">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     {familyRelationshipLabels[member.relationship] || member.relationship}
