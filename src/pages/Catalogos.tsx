@@ -138,49 +138,40 @@ export default function Catalogos() {
 
   return (
     <div className="space-y-6">
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-4"
-      >
-        <div className="p-3 bg-primary/10 rounded-2xl">
-          <FolderOpen className="w-8 h-8 text-primary" />
+      <div className="flex items-center gap-4 bg-white p-6 border rounded-xl">
+        <div className="p-3 bg-blue-50 rounded-lg">
+          <FolderOpen className="w-8 h-8 text-blue-600" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Catálogos del Sistema</h1>
-          <p className="text-muted-foreground">Configura los parámetros globales de la plataforma</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Catálogos del Sistema</h1>
+          <p className="text-muted-foreground text-sm">Configura los parámetros globales de la plataforma</p>
         </div>
-      </motion.div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {catalogos.map((catalogo, index) => (
-          <motion.div
+        {catalogos.map((catalogo) => (
+          <div
             key={catalogo.href}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.05 }}
+            className="group"
           >
             <Card 
-              className="group cursor-pointer hover:shadow-lg transition-all duration-300 border-sidebar-border/50 hover:border-primary/20 overflow-hidden relative"
+              className="cursor-pointer hover:bg-slate-50 transition-colors border shadow-none rounded-xl overflow-hidden"
               onClick={() => navigate(catalogo.href)}
             >
-              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                {catalogo.icon}
-              </div>
-              <CardHeader className="pb-2">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-2 transition-transform group-hover:scale-110 duration-300 ${catalogo.color}`}>
+              <CardHeader className="pb-3">
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-3 transition-colors ${catalogo.color.replace('/10', '')} bg-slate-50 border border-slate-100`}>
                   {catalogo.icon}
                 </div>
-                <CardTitle className="text-lg group-hover:text-primary transition-colors">{catalogo.title}</CardTitle>
-                <CardDescription className="line-clamp-2">{catalogo.description}</CardDescription>
+                <CardTitle className="text-base font-bold text-foreground group-hover:text-blue-600 transition-colors">{catalogo.title}</CardTitle>
+                <CardDescription className="line-clamp-2 text-xs font-medium">{catalogo.description}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="flex items-center text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity translate-x-[-10px] group-hover:translate-x-0 duration-300">
-                  Gestionar catálogo →
+              <CardContent className="pt-0">
+                <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-blue-600 opacity-70 group-hover:opacity-100 transition-opacity">
+                  GESTIONAR →
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
