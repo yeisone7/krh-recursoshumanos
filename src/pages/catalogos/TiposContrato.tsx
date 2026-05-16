@@ -33,6 +33,7 @@ import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
+import { LegalSignatureDialog } from '@/components/config/LegalSignatureDialog';
 import { ContractPlaceholdersInfo } from '@/components/contracts/ContractPlaceholdersInfo';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,6 +64,7 @@ export default function TiposContrato() {
   const { data, isLoading, create, update, delete: deleteItem, uploadTemplate, downloadTemplate, isCreating, isUpdating } = useContractTypes();
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSignatureOpen, setIsSignatureOpen] = useState(false);
   const [editItem, setEditItem] = useState<ContractTypeConfig | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<ContractTypeConfig | null>(null);
@@ -275,7 +277,7 @@ export default function TiposContrato() {
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-background border border-border/50 p-6 sm:p-8 shadow-xl shadow-primary/5">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-card border border-border/50 p-6 sm:p-8 shadow-xl shadow-primary/5">
         
         
         
@@ -283,7 +285,7 @@ export default function TiposContrato() {
           <div className="flex items-center gap-6">
             <div className="relative shrink-0 group">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-foreground rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border/50 shadow-lg overflow-hidden group-hover:scale-105 transition-all duration-300">
+              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-card border border-border/50 shadow-lg overflow-hidden group-hover:scale-105 transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <FileText className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
               </div>
@@ -299,6 +301,13 @@ export default function TiposContrato() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <ContractPlaceholdersInfo />
+            <Button 
+              variant="outline"
+              onClick={() => setIsSignatureOpen(true)} 
+              className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-xs border-primary/20 text-primary hover:bg-primary/5 transition-all shadow-sm"
+            >
+              Firma Legal
+            </Button>
             <Button 
               onClick={handleNewClick} 
               className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-md shadow-primary/10 hover:scale-105 transition-all active:scale-95"
@@ -322,7 +331,7 @@ export default function TiposContrato() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="group relative rounded-[2rem] bg-background border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-primary/20"
+            className="group relative rounded-[2rem] bg-card border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-primary/20"
           >
             <div className="flex items-center gap-4">
               <div className={cn("p-4 rounded-2xl transition-transform group-hover:scale-110 duration-300", stat.bg)}>
@@ -337,7 +346,7 @@ export default function TiposContrato() {
         ))}
       </div>
 
-      <Card className="rounded-[2.5rem] bg-background border border-border/50 shadow-xl overflow-hidden">
+      <Card className="rounded-[2.5rem] bg-card border border-border/50 shadow-xl overflow-hidden">
         <CardHeader className="p-8 border-b border-border/50">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
@@ -355,7 +364,7 @@ export default function TiposContrato() {
                 placeholder="Buscar por nombre o código..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-12 pl-11 pr-4 rounded-2xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+                className="h-12 pl-11 pr-4 rounded-2xl bg-card border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
               />
             </div>
           </div>
@@ -371,7 +380,7 @@ export default function TiposContrato() {
             </div>
           ) : filteredData.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center px-6">
-              <div className="w-20 h-20 rounded-[2rem] bg-background flex items-center justify-center mb-6 border border-border/50">
+              <div className="w-20 h-20 rounded-[2rem] bg-card flex items-center justify-center mb-6 border border-border/50">
                 <FileText className="w-10 h-10 text-muted-foreground/30" />
               </div>
               <h3 className="text-xl font-black uppercase tracking-widest mb-2">No se encontraron resultados</h3>
@@ -393,9 +402,9 @@ export default function TiposContrato() {
                       "flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all shadow-sm",
                       item.is_active 
                         ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
-                        : "bg-background text-muted-foreground border-border"
+                        : "bg-card text-muted-foreground border-border"
                     )}>
-                      <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", item.is_active ? "bg-emerald-500" : "bg-background -foreground")} />
+                      <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", item.is_active ? "bg-emerald-500" : "bg-card -foreground")} />
                       {item.is_active ? 'Activo' : 'Inactivo'}
                     </div>
                   ),
@@ -424,7 +433,7 @@ export default function TiposContrato() {
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-background border border-border/50 shadow-2xl rounded-2xl p-2 min-w-[200px]">
+                        <DropdownMenuContent align="end" className="bg-card border border-border/50 shadow-2xl rounded-2xl p-2 min-w-[200px]">
                           {item.template_url && (
                             <>
                               <DropdownMenuItem onClick={() => handlePreview(item)} className="rounded-xl h-10 font-bold gap-3">
@@ -450,7 +459,7 @@ export default function TiposContrato() {
               <div className="hidden md:block">
                 <div className="overflow-hidden border-t border-border/50">
                   <Table>
-                    <TableHeader className="bg-background">
+                    <TableHeader className="bg-card">
                       <TableRow className="hover:bg-transparent border-border/50">
                         <TableHead className="h-14 font-black uppercase tracking-[0.2em] text-[10px] text-muted-foreground pl-8">Tipo de Contrato</TableHead>
                         <TableHead className="h-14 font-black uppercase tracking-[0.2em] text-[10px] text-muted-foreground">Código Sistema</TableHead>
@@ -505,9 +514,9 @@ export default function TiposContrato() {
                               "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm transition-all",
                               item.is_active 
                                 ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
-                                : "bg-background text-muted-foreground border-border"
+                                : "bg-card text-muted-foreground border-border"
                             )}>
-                              <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", item.is_active ? "bg-emerald-500" : "bg-background -foreground")} />
+                              <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", item.is_active ? "bg-emerald-500" : "bg-card -foreground")} />
                               {item.is_active ? 'Activo' : 'Inactivo'}
                             </div>
                           </TableCell>
@@ -535,7 +544,7 @@ export default function TiposContrato() {
                                     <MoreHorizontal className="w-4 h-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="bg-background border border-border/50 shadow-2xl rounded-2xl p-2 min-w-[200px]">
+                                <DropdownMenuContent align="end" className="bg-card border border-border/50 shadow-2xl rounded-2xl p-2 min-w-[200px]">
                                   {item.template_url && (
                                     <>
                                       <DropdownMenuItem onClick={() => handlePreview(item)} className="rounded-xl h-10 font-bold gap-3">
@@ -582,8 +591,13 @@ export default function TiposContrato() {
         editItem={editItem}
       />
 
+      <LegalSignatureDialog 
+        open={isSignatureOpen} 
+        onOpenChange={setIsSignatureOpen} 
+      />
+
       <Dialog open={!!previewItem} onOpenChange={(open) => { if (!open) closePreview(); }}>
-        <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] max-w-5xl flex-col overflow-hidden p-0 rounded-[2.5rem] bg-background -3xl border border-border/50 shadow-xl shadow-primary/5">
+        <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] max-w-5xl flex-col overflow-hidden p-0 rounded-[2.5rem] bg-card -3xl border border-border/50 shadow-xl shadow-primary/5">
           <DialogHeader className="shrink-0 px-8 pt-8 pb-6 border-b border-border/50 bg-gradient-to-br from-primary/10 via-transparent to-transparent">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
@@ -611,7 +625,7 @@ export default function TiposContrato() {
                         <div key={tab.id} className="relative group">
                           <TabsTrigger 
                             value={tab.id} 
-                            className="h-10 px-4 rounded-xl font-bold gap-2 bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                            className="h-10 px-4 rounded-xl font-bold gap-2 bg-card data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
                           >
                             <span className="truncate max-w-[120px]">{tab.display_name}</span>
                           </TabsTrigger>
@@ -635,11 +649,11 @@ export default function TiposContrato() {
             </div>
           </DialogHeader>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-8 py-8 bg-background scrollbar-thin scrollbar-thumb-primary/10 hover:scrollbar-thumb-primary/20 transition-colors">
+          <div className="min-h-0 flex-1 overflow-y-auto px-8 py-8 bg-card scrollbar-thin scrollbar-thumb-primary/10 hover:scrollbar-thumb-primary/20 transition-colors">
             {previewKind === 'docx' ? (
-              <div className="relative min-h-[500px] rounded-3xl border-2 border-dashed border-border bg-background p-6 sm:p-10 shadow-inner">
+              <div className="relative min-h-[500px] rounded-3xl border-2 border-dashed border-border bg-card p-6 sm:p-10 shadow-inner">
                 {(previewLoading || docxRendering) && (
-                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-background rounded-3xl">
+                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-card rounded-3xl">
                     <div className="flex flex-col items-center gap-4">
                       <div className="relative">
                         <Loader2 className="h-10 w-10 text-primary animate-spin" />
@@ -666,17 +680,17 @@ export default function TiposContrato() {
               </div>
             ) : previewKind === 'pdf' && previewUrl ? (
               <div className="relative h-[65vh] rounded-3xl overflow-hidden border border-border shadow-2xl">
-                <iframe title="Vista previa de plantilla" src={previewUrl} className="h-full w-full bg-background" />
+                <iframe title="Vista previa de plantilla" src={previewUrl} className="h-full w-full bg-card" />
               </div>
             ) : null}
           </div>
 
-          <DialogFooter className="shrink-0 flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/50 bg-background px-8 py-6 rounded-b-[2.5rem]">
+          <DialogFooter className="shrink-0 flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/50 bg-card px-8 py-6 rounded-b-[2.5rem]">
             <p className="text-xs font-bold text-muted-foreground tracking-wide italic">
               * La vista previa es una representación visual aproximada.
             </p>
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Button variant="outline" onClick={closePreview} className="flex-1 sm:flex-none h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] bg-background border-border">
+              <Button variant="outline" onClick={closePreview} className="flex-1 sm:flex-none h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] bg-card border-border">
                 Finalizar Vista
               </Button>
               {previewItem?.template_url && (
@@ -694,7 +708,7 @@ export default function TiposContrato() {
       </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="rounded-[2.5rem] bg-background border border-border/50 shadow-xl p-8 max-w-md">
+        <AlertDialogContent className="rounded-[2.5rem] bg-card border border-border/50 shadow-xl p-8 max-w-md">
           <AlertDialogHeader>
             <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mb-6">
               <Trash2 className="w-8 h-8 text-destructive" />
@@ -707,7 +721,7 @@ export default function TiposContrato() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-8 gap-3 sm:gap-0">
-            <AlertDialogCancel className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-border hover:bg-background transition-all">
+            <AlertDialogCancel className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-border hover:bg-card transition-all">
               Cancelar Operación
             </AlertDialogCancel>
             <AlertDialogAction 

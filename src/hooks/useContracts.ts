@@ -69,69 +69,62 @@ export function useContracts() {
   return useQuery({
     queryKey: ['contracts', currentCompanyId],
     queryFn: async () => {
-      // Get contracts
-      const { data: contracts, error } = await supabase
+      if (!currentCompanyId) return [];
+
+      // Fetch contracts with related employee and work info in a single query
+      // Using !inner on employees_v2 to ensure we only get contracts for the current company's employees
+      // and checking the contract's own company_id as well
+      const { data, error } = await supabase
         .from('contracts')
         .select(`
           *,
-          contract_extensions(*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      if (!contracts) return [];
-
-      // Get unique employee IDs
-      const employeeIds = [...new Set(contracts.map(c => c.employee_id))];
-      
-      // Fetch employees from employees_v2 with work info
-      const { data: employees } = await supabase
-        .from('employees_v2')
-        .select(`
-          id, 
-          first_name, 
-          middle_name,
-          last_name, 
-          second_last_name,
-          document_number,
-          company_id,
-          employee_work_info(
-            id,
-            position_name,
-            operation_center_id,
-            is_current,
-            operation_centers(id, name)
+          contract_extensions(*),
+          employees:employees_v2!contracts_employee_id_fkey(
+            id, 
+            first_name, 
+            middle_name,
+            last_name, 
+            second_last_name,
+            document_number,
+            company_id,
+            employee_work_info(
+              id,
+              position_name,
+              operation_center_id,
+              is_current,
+              operation_centers(id, name)
+            )
           )
         `)
-        .in('id', employeeIds)
-        .eq('company_id', currentCompanyId!);
+        .eq('company_id', currentCompanyId)
+        .order('created_at', { ascending: false });
 
-      // Create a map for quick lookup
-      const employeeMap = new Map(employees?.map(e => [e.id, e]) || []);
+      if (error) {
+        console.error('Error fetching contracts:', error);
+        throw error;
+      }
 
-      // Combine contracts with employee data
-      return contracts
-        .map(contract => {
-          const employee = employeeMap.get(contract.employee_id);
-          if (!employee) return null; // Filter out contracts without matching employee in company
-          
-          const currentWorkInfo = employee.employee_work_info?.find((w: any) => w.is_current);
-          
-          return {
-            ...contract,
-            employees: {
-              id: employee.id,
-              first_name: employee.first_name,
-              middle_name: employee.middle_name,
-              last_name: employee.last_name,
-              second_last_name: employee.second_last_name,
-              document_number: employee.document_number,
-              company_id: employee.company_id,
-              operation_centers: currentWorkInfo?.operation_centers || null
-            }
-          };
-        })
-        .filter(Boolean);
+      if (!data) return [];
+
+      // Post-process to structure the data as expected by the UI
+      return data.map((contract: any) => {
+        const employee = contract.employees;
+        const currentWorkInfo = employee?.employee_work_info?.find((w: any) => w.is_current);
+        
+        return {
+          ...contract,
+          employees: employee ? {
+            id: employee.id,
+            first_name: employee.first_name,
+            middle_name: employee.middle_name,
+            last_name: employee.last_name,
+            second_last_name: employee.second_last_name,
+            document_number: employee.document_number,
+            company_id: employee.company_id,
+            operation_centers: currentWorkInfo?.operation_centers || null
+          } : null
+        };
+      }).filter(c => c.employees !== null);
     },
     enabled: !!currentCompanyId,
   });

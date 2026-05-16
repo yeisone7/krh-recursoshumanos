@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { useRequisitionWithVacancies, useSubmitRequisition, useUpdateRequisition } from '@/hooks/useRequisitions';
 import { useAuth } from '@/contexts/AuthContext';
 import { RequisitionTimeline } from './RequisitionTimeline';
+import { RequisitionApprovalDialog } from './RequisitionApprovalDialog';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -73,6 +74,8 @@ export function RequisitionDetailDialog({
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [liderProceso, setLiderProceso] = useState('');
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const [approvalStep, setApprovalStep] = useState<'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia' | null>(null);
 
   useEffect(() => {
     if (requisition?.lider_proceso) {
@@ -144,6 +147,43 @@ export function RequisitionDetailDialog({
   const canEdit = status === 'borrador';
   const canSubmit = status === 'borrador';
   const canCreateVacancy = status === 'aprobada' || status === 'en_seleccion';
+
+  const { hasPermission } = useAuth();
+  
+  const getApprovalAction = () => {
+    if (!requisition) return null;
+    
+    switch (status) {
+      case 'en_rrhh':
+        if (hasPermission('req_approve_rh', 'approve')) {
+          return { step: 'rrhh' as const, label: 'Aprobar RRHH' };
+        }
+        break;
+      case 'en_juridico':
+        if (hasPermission('req_approve_juridica', 'approve')) {
+          return { step: 'juridico' as const, label: 'Aprobar Jurídico' };
+        }
+        break;
+      case 'en_operaciones':
+        if (hasPermission('req_approve_ger_op', 'approve')) {
+          return { step: 'operaciones' as const, label: 'Aprobar Operaciones' };
+        }
+        break;
+      case 'en_gerencia':
+        if (hasPermission('req_approve_ger_adm', 'approve')) {
+          return { step: 'gerencia' as const, label: 'Aprobar Gerencia' };
+        }
+        break;
+      case 'en_seleccion':
+        if (hasPermission('req_approve_seleccion', 'approve')) {
+          return { step: 'seleccion' as const, label: 'Aprobar Selección' };
+        }
+        break;
+    }
+    return null;
+  };
+
+  const approvalAction = getApprovalAction();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -421,9 +461,28 @@ export function RequisitionDetailDialog({
                   Crear Vacante
                 </Button>
               )}
+              {approvalAction && (
+                <Button 
+                  onClick={() => {
+                    setApprovalStep(approvalAction.step);
+                    setShowApprovalDialog(true);
+                  }}
+                  className="gradient-primary"
+                >
+                  <ShieldCheck className="w-4 h-4 mr-2" />
+                  {approvalAction.label}
+                </Button>
+              )}
             </div>
           </div>
         )}
+
+        <RequisitionApprovalDialog
+          open={showApprovalDialog}
+          onOpenChange={setShowApprovalDialog}
+          requisition={requisition || null}
+          step={approvalStep || 'rrhh'}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -89,7 +89,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
           is_terminated,
           contract_extensions(id, end_date, extension_number)
         `)
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId!)
         .eq('is_terminated', false)
         .neq('contract_type', 'indefinido')
         .not('end_date', 'is', null)
@@ -156,7 +156,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
       const { data: exams } = await supabase
         .from('medical_exams')
         .select('id, employee_id, exam_type, expiration_date')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId!)
         .not('expiration_date', 'is', null)
         .gte('expiration_date', todayStr)
         .lte('expiration_date', in30Days)
@@ -193,7 +193,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
       const { data: dotations } = await supabase
         .from('dotation_deliveries')
         .select('id, employee_id, item_name, expiration_date')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId!)
         .not('expiration_date', 'is', null)
         .gte('expiration_date', todayStr)
         .lte('expiration_date', in30Days);
@@ -223,7 +223,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
       const { data: certifications } = await supabase
         .from('employee_certifications')
         .select('id, employee_id, certification_type, certification_name, license_category, expiry_date')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId!)
         .eq('is_valid', true)
         .not('expiry_date', 'is', null)
         .lte('expiry_date', in30Days);
@@ -392,7 +392,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
           const { data: profItems } = await supabase
             .from('dotation_profesiograma_items' as any)
             .select('profesiograma_id, dotation_item_type_id, quantity, is_required, dotation_item_types(name)')
-            .in('profesiograma_id', profIds)
+            .eq('company_id', currentCompanyId!)
             .eq('is_required', true);
 
           if (profItems && (profItems as any[]).length > 0) {
@@ -425,7 +425,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
                 const { data: empDeliveries } = await supabase
                   .from('dotation_deliveries')
                   .select('employee_id, item_name')
-                  .in('employee_id', relEmpIds);
+                  .eq('company_id', currentCompanyId!);
 
                 // Build reverse map: item name -> typeIds
                 const nameToTypeId = new Map<string, string>();

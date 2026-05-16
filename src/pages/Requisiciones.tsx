@@ -87,12 +87,18 @@ export default function Requisiciones() {
 
   const openDetail = (id: string) => { setSelectedId(id); setShowDetail(true); };
 
+  const { hasPermission } = useAuth();
+
   const getCurrentApprovalStep = (req: PersonnelRequisition) => {
-    const statusMap: Record<string, 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia'> = {
-      en_operaciones: 'operaciones', en_rrhh: 'rrhh', en_juridico: 'juridico',
-      en_gerencia: 'gerencia', en_seleccion: 'seleccion',
-    };
-    return statusMap[req.estado_requisicion] || null;
+    const status = req.estado_requisicion;
+    
+    if (status === 'en_rrhh' && hasPermission('req_approve_rh', 'approve')) return 'rrhh';
+    if (status === 'en_juridico' && hasPermission('req_approve_juridica', 'approve')) return 'juridico';
+    if (status === 'en_operaciones' && hasPermission('req_approve_ger_op', 'approve')) return 'operaciones';
+    if (status === 'en_gerencia' && hasPermission('req_approve_ger_adm', 'approve')) return 'gerencia';
+    if (status === 'en_seleccion' && hasPermission('req_approve_seleccion', 'approve')) return 'seleccion';
+    
+    return null;
   };
 
   const getApprovalProgress = (req: PersonnelRequisition) => {

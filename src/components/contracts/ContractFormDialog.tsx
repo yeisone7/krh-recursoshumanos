@@ -25,6 +25,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Select,
@@ -53,6 +54,7 @@ import { getEmployeeFullName } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateContract, useUpdateContract, useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 import { Badge } from '@/components/ui/badge';
 import { CitySelect } from '@/components/ui/city-department-select';
@@ -94,7 +96,11 @@ export function ContractFormDialog({
   const { data: contractTypes = [] } = useContractTypes();
   const { data: allContracts = [] } = useContracts();
   const createContract = useCreateContract();
+  const { currentCompanyId, canView, canUpdate } = useAuth();
   const updateContract = useUpdateContract();
+
+  const canViewSalaries = canView('salarios');
+  const canManageSalaries = canUpdate('salarios');
 
   const isEditMode = !!contractToEdit;
 
@@ -232,7 +238,7 @@ export function ContractFormDialog({
 
   const tabItems = [
     { value: 'general', label: 'General', icon: FileText },
-    { value: 'salary', label: 'Salario', icon: DollarSign },
+    ...(canViewSalaries ? [{ value: 'salary', label: 'Salario', icon: DollarSign }] : []),
     { value: 'workplace', label: 'Lugar de Trabajo', icon: Building },
     { value: 'clauses', label: 'Cláusulas', icon: Briefcase },
   ];
@@ -298,7 +304,7 @@ export function ContractFormDialog({
                   </div>
                   {format(new Date(), "MMMM yyyy", { locale: es })}
                 </div>
-                {form.watch('salary') && (
+                {form.watch('salary') && canViewSalaries && (
                   <div className="flex items-center gap-2 group cursor-default">
                     <div className="p-1 rounded-md bg-emerald-500/10 group-hover:bg-emerald-500 transition-colors">
                       <DollarSign className="w-4 h-4 group-hover:text-white" />
@@ -495,12 +501,11 @@ export function ContractFormDialog({
                               </FormControl>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0 bg-background rounded-2xl shadow-2xl border-border " align="start">
-                              <Calendar
-                                mode="single"
+                              <DatePickerWithDropdowns
                                 selected={field.value}
                                 onSelect={field.onChange}
                                 initialFocus
-                                className="pointer-events-auto"
+                                fromYear={1940}
                               />
                             </PopoverContent>
                           </Popover>
@@ -539,12 +544,11 @@ export function ContractFormDialog({
                                 </FormControl>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0 bg-background rounded-2xl shadow-2xl border-border " align="start">
-                                <Calendar
-                                  mode="single"
+                                <DatePickerWithDropdowns
                                   selected={field.value}
                                   onSelect={field.onChange}
                                   initialFocus
-                                  className="pointer-events-auto"
+                                  fromYear={1940}
                                 />
                               </PopoverContent>
                             </Popover>
@@ -597,7 +601,12 @@ export function ContractFormDialog({
                           <FormControl>
                             <div className="relative group">
                               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-black text-lg">$</span>
-                              <Input placeholder="3.500.000" className="h-14 pl-10 rounded-2xl bg-background border-border focus:bg-background transition-all font-black text-xl tracking-tight" {...field} />
+                              <Input 
+                                placeholder="3.500.000" 
+                                className="h-14 pl-10 rounded-2xl bg-background border-border focus:bg-background transition-all font-black text-xl tracking-tight" 
+                                {...field} 
+                                disabled={!canManageSalaries}
+                              />
                               <div className="absolute bottom-0 left-6 right-6 h-1 bg-emerald-500 scale-x-0 group-focus-within:scale-x-100 transition-transform origin-left rounded-full" />
                             </div>
                           </FormControl>
@@ -617,7 +626,7 @@ export function ContractFormDialog({
                           </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-14 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold">
+                              <SelectTrigger className="h-14 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold" disabled={!canManageSalaries}>
                                 <SelectValue placeholder="Seleccionar" />
                               </SelectTrigger>
                             </FormControl>
@@ -646,6 +655,7 @@ export function ContractFormDialog({
                               checked={field.value}
                               onCheckedChange={field.onChange}
                               className="w-8 h-8 rounded-xl border-emerald-500/50 data-[state=checked]:bg-emerald-500 shadow-lg shadow-emerald-500/20"
+                              disabled={!canManageSalaries}
                             />
                           </FormControl>
                           <div className="space-y-1.5">

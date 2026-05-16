@@ -185,7 +185,7 @@ export default function PlataformasPublicacion() {
             <div className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse">Cargando Plataformas...</div>
           ) : filtered.length === 0 ? (
             <div className="py-32 text-center space-y-6">
-              <div className="h-20 w-20 bg-background rounded-[2rem] flex items-center justify-center mx-auto text-slate-200">
+              <div className="h-20 w-20 bg-card rounded-[2rem] flex items-center justify-center mx-auto text-slate-200">
                 <Globe className="w-10 h-10" />
               </div>
               <p className="text-slate-500 font-bold">No se encontraron plataformas registradas</p>
@@ -193,7 +193,7 @@ export default function PlataformasPublicacion() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-background">
+                <TableHeader className="bg-card">
                   <TableRow className="hover:bg-transparent border-none">
                     <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Plataforma</TableHead>
                     <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Enlace de Acceso</TableHead>
@@ -209,7 +209,7 @@ export default function PlataformasPublicacion() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="group hover:bg-background transition-colors"
+                        className="group hover:bg-card transition-colors"
                       >
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center gap-4">
@@ -242,7 +242,7 @@ export default function PlataformasPublicacion() {
                         <TableCell className="px-8 py-6 text-center">
                           <Badge className={cn(
                             "h-7 px-3 rounded-lg border-none font-black text-[10px] uppercase tracking-widest",
-                            item.is_active ? "bg-emerald-50 text-emerald-600" : "bg-background text-slate-400"
+                            item.is_active ? "bg-emerald-50 text-emerald-600" : "bg-card text-slate-400"
                           )}>
                             {item.is_active ? 'Activa' : 'Inactiva'}
                           </Badge>
@@ -273,7 +273,7 @@ export default function PlataformasPublicacion() {
           <div className="relative flex-1 flex flex-col min-h-0">
             
             
-            <DialogHeader className="relative px-8 pt-10 pb-8 border-b border-slate-100 bg-background">
+            <DialogHeader className="relative px-8 pt-10 pb-8 border-b border-slate-100 bg-card">
               <div className="flex items-center gap-6">
                 <div className="relative h-20 w-20 flex items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-xl">
                   <Globe className="w-8 h-8 text-indigo-600" />
@@ -386,7 +386,7 @@ export default function PlataformasPublicacion() {
               </AlertDialogDescription>
             </div>
           </div>
-          <AlertDialogFooter className="p-6 bg-background flex gap-3 sm:gap-0">
+          <AlertDialogFooter className="p-6 bg-card flex gap-3 sm:gap-0">
             <AlertDialogCancel className="flex-1 h-12 rounded-xl font-bold border-slate-200">CANCELAR</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => { if (deleteId) { deleteItem(deleteId); setDeleteId(null); } }}

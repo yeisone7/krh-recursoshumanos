@@ -108,7 +108,7 @@ const catalogos = [
     description: 'Causas para cambios en nómina',
     icon: <ClipboardList className="w-6 h-6" />,
     href: '/catalogos/motivos-novedad',
-    color: 'bg-background/10 text-slate-500',
+    color: 'bg-slate-50 text-slate-500',
   },
   {
     title: 'Plataformas Publicación',

@@ -492,15 +492,10 @@ export function useUnifiedAlerts() {
 
       if (profs && (profs as any[]).length > 0) {
         const profIds = (profs as any[]).map((p: any) => p.id);
-        const { batchQuery } = await import('@/utils/supabaseBatch');
-        const { data: profItems } = await batchQuery(
-          profIds,
-          100,
-          (chunk) => supabase
-            .from('dotation_profesiograma_items' as any)
-            .select('profesiograma_id, dotation_item_type_id, is_required, dotation_item_types(id, name)')
-            .in('profesiograma_id', chunk)
-        );
+        const { data: profItems } = await supabase
+          .from('dotation_profesiograma_items' as any)
+          .select('profesiograma_id, dotation_item_type_id, is_required, dotation_item_types(id, name)')
+          .eq('company_id', currentCompanyId!);
 
         // Build profMap: centerId|positionId -> required item names
         const profMap = new Map<string, { itemTypeId: string; itemName: string }[]>();

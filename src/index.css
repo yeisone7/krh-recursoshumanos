@@ -13,11 +13,11 @@
        Reference palette: Sky blue accents with clean white surfaces */
 
     /* Core backgrounds */
-    --background: 0 0% 100%;
+    --background: 210 40% 98%; /* #f8fafc - Light gray for the app background */
     --foreground: 222 47% 11%;
 
     /* Cards and surfaces */
-    --card: 0 0% 100%;
+    --card: 0 0% 100%; /* Pure white for cards and containers */
     --card-foreground: 222 47% 11%;
 
     /* Popovers */
@@ -113,13 +113,13 @@
     --brand-secondary: hsl(var(--secondary));
     --brand-accent: hsl(var(--accent));
 
-    /* Shadows - Clean blue-grey tints */
-    --shadow-sm: 0 1px 2px 0 hsl(215 20% 10% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(215 20% 10% / 0.07), 0 2px 4px -2px hsl(215 20% 10% / 0.05);
-    --shadow-lg: 0 10px 15px -3px hsl(215 20% 10% / 0.08), 0 4px 6px -4px hsl(215 20% 10% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(215 20% 10% / 0.1), 0 8px 10px -6px hsl(215 20% 10% / 0.05);
-    --shadow-card: 0 1px 3px 0 hsl(215 20% 10% / 0.05), 0 1px 2px -1px hsl(215 20% 10% / 0.05);
-    --shadow-card-hover: 0 10px 20px -5px hsl(215 20% 10% / 0.1), 0 4px 6px -2px hsl(215 20% 10% / 0.05);
+    /* Shadows - Flat Design (Removed or minimized) */
+    --shadow-sm: 0 1px 2px 0 hsl(215 20% 10% / 0.02);
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-xl: none;
+    --shadow-card: none;
+    --shadow-card-hover: none;
   }
 
   .dark {
@@ -213,6 +213,28 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Global Table Header Override - Ensure headers are white as requested */
+  thead tr {
+    @apply bg-[#f8fafc] border-b border-slate-100;
+  }
+  
+  th {
+    @apply bg-[#f8fafc] text-slate-500 font-bold text-[10px] uppercase tracking-wider;
+  }
+
+  /* Premium Grid Container Override */
+  .grid-container, 
+  .card-table-wrapper {
+    @apply rounded-[2.5rem] bg-white border border-slate-100 overflow-hidden;
+  }
+
+  /* Global Input Background Contrast */
+  input:not([type="checkbox"]):not([type="radio"]), 
+  textarea, 
+  select {
+    @apply bg-white !important;
   }
 }
 

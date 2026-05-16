@@ -166,7 +166,7 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
 // Reorganized: Grouped by workflow logic
 const coreNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
-  { label: 'Analítica RRHH', icon: <BarChart3 className="w-5 h-5" />, href: '/analitica', moduleCode: 'analitica' },
+  { label: 'Analítica Global', icon: <BarChart3 className="w-5 h-5" />, href: '/analitica', moduleCode: 'analitica' },
 ];
 
 const personnelNavItems: NavItem[] = [
@@ -177,7 +177,7 @@ const personnelNavItems: NavItem[] = [
 const seleccionNavItems: NavItem[] = [
   { label: 'Requisiciones', icon: <ClipboardList className="w-5 h-5" />, href: '/requisiciones', moduleCode: 'requisiciones' },
   { label: 'Selección y Vacantes', icon: <UserSearch className="w-5 h-5" />, href: '/seleccion', moduleCode: 'seleccion' },
-  { label: 'Analítica Selección', icon: <BarChart3 className="w-5 h-5" />, href: '/seleccion/analitica', moduleCode: 'seleccion' },
+  { label: 'Analítica de Selección', icon: <BarChart3 className="w-5 h-5" />, href: '/seleccion/analitica', moduleCode: 'analitica_seleccion' },
 ];
 
 const timeManagementNavItems: NavItem[] = [
@@ -199,7 +199,7 @@ const capacitacionesItem: NavItem = {
     { label: 'Enlaces', icon: <Link2 className="w-4 h-4" />, href: '/capacitaciones/acceso/generar' },
     { label: 'Cumplimiento', icon: <ClipboardCheck className="w-4 h-4" />, href: '/capacitaciones/cumplimiento' },
     { label: 'Evidencias', icon: <FileSignature className="w-4 h-4" />, href: '/capacitaciones/evidencias' },
-    { label: 'Analíticas', icon: <BarChart3 className="w-4 h-4" />, href: '/capacitaciones/analiticas' },
+    { label: 'Analíticas', icon: <BarChart3 className="w-4 h-4" />, href: '/capacitaciones/analiticas', moduleCode: 'analitica_capacitaciones' },
   ],
 };
 
@@ -210,7 +210,7 @@ const evaluacionesItem: NavItem = {
   moduleCode: 'evaluaciones',
   children: [
     { label: 'Evaluaciones', icon: <Target className="w-4 h-4" />, href: '/evaluaciones' },
-    { label: 'Analíticas', icon: <BarChart3 className="w-4 h-4" />, href: '/evaluaciones/analiticas' },
+    { label: 'Analíticas', icon: <BarChart3 className="w-4 h-4" />, href: '/evaluaciones/analiticas', moduleCode: 'analitica_evaluaciones' },
   ],
 };
 
@@ -225,8 +225,8 @@ const benefitsNavItems: NavItem[] = [
 ];
 
 const sucursalesNavItems: NavItem[] = [
-  { label: 'Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros', moduleCode: 'catalogos' },
-  { label: 'Fichas Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros/fichas', moduleCode: 'catalogos' },
+  { label: 'Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros', moduleCode: 'centros' },
+  { label: 'Fichas Centros', icon: <Building2 className="w-5 h-5" />, href: '/centros/fichas', moduleCode: 'centros' },
 ];
 
 const catalogosItem: NavItem = {
@@ -264,7 +264,7 @@ const toolsNavItemsBase: NavItem[] = [
 const payrollNavItems: NavItem[] = [
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas', moduleCode: 'jornadas' },
   { label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades', moduleCode: 'novedades' },
-  { label: 'Analítica Nómina', icon: <BarChart3 className="w-5 h-5" />, href: '/nomina/analitica', moduleCode: 'novedades' },
+  { label: 'Analítica Nómina', icon: <BarChart3 className="w-5 h-5" />, href: '/nomina/analitica', moduleCode: 'analitica_nomina' },
   { label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion', moduleCode: 'pre_liquidacion' },
   { label: 'Préstamos', icon: <BanknoteIcon className="w-5 h-5" />, href: '/prestamos', moduleCode: 'prestamos' },
   { label: 'Descuentos', icon: <ClipboardList className="w-5 h-5" />, href: '/descuentos', moduleCode: 'descuentos' },
@@ -273,7 +273,7 @@ const payrollNavItems: NavItem[] = [
 
 const adminNavItems: NavItem[] = [
   { label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad', moduleCode: 'seguridad' },
-  { label: 'Auditoría', icon: <History className="w-5 h-5" />, href: '/auditoria', moduleCode: 'seguridad' },
+  { label: 'Auditoría', icon: <History className="w-5 h-5" />, href: '/auditoria', moduleCode: 'auditoria' },
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion', moduleCode: 'configuracion' },
 ];
 
@@ -295,9 +295,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const filterItems = useCallback((items: NavItem[]): NavItem[] => {
     if (isAdmin || !permissionsLoaded) return items;
     return items.filter(item => {
-      if (!item.moduleCode) return true;
-      return canView(item.moduleCode);
-    });
+      if (!canViewItem(item)) return false;
+      return true;
+    }).map(item => ({
+      ...item,
+      children: item.children ? filterItems(item.children) : undefined
+    }));
   }, [canView, isAdmin, permissionsLoaded]);
 
   const canViewItem = useCallback((item: NavItem): boolean => {
@@ -340,9 +343,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     { label: 'Alertas', icon: <Bell className="size-6 shrink-0" strokeWidth={2} />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
   ].filter(canViewQuickAccessItem), [alertCount, canViewQuickAccessItem]);
 
-  const showCapacitaciones = canViewItem(capacitacionesItem);
-  const showEvaluaciones = canViewItem(evaluacionesItem);
-  const showCatalogos = canViewItem(catalogosItem);
+  const filteredCapacitacionesItem = useMemo(() => filterItems([capacitacionesItem])[0], [filterItems]);
+  const filteredEvaluacionesItem = useMemo(() => filterItems([evaluacionesItem])[0], [filterItems]);
+  const filteredCatalogosItem = useMemo(() => filterItems([catalogosItem])[0], [filterItems]);
+
+  const showCapacitaciones = !!filteredCapacitacionesItem;
+  const showEvaluaciones = !!filteredEvaluacionesItem;
+  const showCatalogos = !!filteredCatalogosItem;
 
   // Auto-open menus based on route (in useEffect to avoid setState during render)
   const pathname = location.pathname;
@@ -610,7 +617,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   const CatalogosMenu = () => (
     <ExpandableMenu
-      item={catalogosItem}
+      item={filteredCatalogosItem}
       isOpen={catalogosOpen}
       setIsOpen={setCatalogosOpen}
     />
@@ -756,14 +763,14 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             <div className="space-y-0.5">
               {showCapacitaciones && (
                 <ExpandableMenu
-                  item={capacitacionesItem}
+                  item={filteredCapacitacionesItem}
                   isOpen={capacitacionesOpen}
                   setIsOpen={setCapacitacionesOpen}
                 />
               )}
               {showEvaluaciones && (
                 <ExpandableMenu
-                  item={evaluacionesItem}
+                  item={filteredEvaluacionesItem}
                   isOpen={evaluacionesOpen}
                   setIsOpen={setEvaluacionesOpen}
                 />

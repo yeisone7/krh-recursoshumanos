@@ -25,7 +25,7 @@ const quickActions = [
     description: 'Crear contrato',
     icon: FileText,
     path: '/contratos',
-    iconBg: 'bg-secondary/10',
+    iconBg: 'bg-slate-50',
     iconColor: 'text-secondary',
   },
   {
@@ -88,7 +88,7 @@ export function QuickActionsPanel() {
               "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 group",
               action.isPrimary 
                 ? 'bg-primary border-primary hover:bg-primary-hover' 
-                : 'border-border bg-card hover:bg-background hover:border-primary/30'
+                : 'border-border bg-card hover:bg-primary/5 hover:border-primary/30'
             )}
           >
             <div className={cn(

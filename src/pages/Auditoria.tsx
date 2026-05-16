@@ -122,7 +122,7 @@ export default function Auditoria() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] bg-background border border-border/40 overflow-hidden"
+        className="relative p-8 rounded-[2.5rem] bg-white border border-slate-100"
       >
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
@@ -163,7 +163,7 @@ export default function Auditoria() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="group relative overflow-hidden p-6 rounded-[2rem] bg-background border border-border/40 transition-all duration-300"
+            className="group relative p-6 rounded-[2rem] bg-white border border-slate-100"
           >
             <div className="flex items-center justify-between mb-4">
               <div className={`p-3 rounded-xl bg-${kpi.color}/10 text-${kpi.color}`}>
@@ -182,63 +182,9 @@ export default function Auditoria() {
         ))}
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <div className="flex justify-center">
-          <TabsList className="h-14 bg-background border border-border/50 p-1.5 rounded-[1.25rem]">
-            {[
-              { value: 'all', label: 'Todo el Registro', icon: History },
-              { value: 'critical', label: 'Eventos Críticos', icon: AlertTriangle },
-              { value: 'users', label: 'Por Usuario', icon: Users2 },
-              { value: 'exports', label: 'Exportaciones', icon: Download },
-            ].map((tab) => (
-              <TabsTrigger 
-                key={tab.value}
-                value={tab.value} 
-                className="rounded-[1rem] px-6 py-2 font-black text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                <tab.icon className="w-3.5 h-3.5 mr-2" />
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
-
-        <TabsContent value="all" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
-            <AuditLogViewer />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="critical" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="space-y-6">
-            <div className="flex items-center gap-4 p-6 rounded-[2rem] bg-destructive/5 border border-destructive/10">
-              <div className="h-12 w-12 rounded-xl bg-destructive/10 flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-destructive" />
-              </div>
-              <div>
-                <p className="text-sm font-black text-destructive uppercase tracking-tight">Atención Requerida</p>
-                <p className="text-xs font-medium text-destructive/70">Visualizando únicamente eventos marcados como críticos por el sistema.</p>
-              </div>
-            </div>
-            <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
-              <AuditLogViewer filter={{ severity: 'critical' }} />
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="users" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
-            <AuditLogViewer />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="exports" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
-            <AuditLogViewer filter={{ action: 'export' }} />
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 p-2">
+        <AuditLogViewer />
+      </div>
     </div>
   );
 }

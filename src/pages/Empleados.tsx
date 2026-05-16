@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -28,6 +28,7 @@ import { EmployeeFormDialog } from '@/components/employees/EmployeeFormDialog';
 import { EmployeeDetailDialog } from '@/components/employees/EmployeeDetailDialog';
 import { CertificationAlertsPanel } from '@/components/employees/CertificationAlertsPanel';
 import { EmployeeCard } from '@/components/employees/EmployeeCard';
+import { IssueCertificateDialog } from '@/components/employees/IssueCertificateDialog';
 import { RehireEmployeeDialog } from '@/components/employees/RehireEmployeeDialog';
 import { TransferEmployeeDialog } from '@/components/employees/TransferEmployeeDialog';
 import { GenerateRegistrationLinkDialog } from '@/components/registration/GenerateRegistrationLinkDialog';
@@ -67,6 +68,8 @@ export default function Empleados() {
   const [showTokensList, setShowTokensList] = useState(false);
   const [transferEmployee, setTransferEmployee] = useState<any>(null);
   const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [certEmployee, setCertEmployee] = useState<any>(null);
+  const [isCertOpen, setIsCertOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [showDashboardSummary, setShowDashboardSummary] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -97,31 +100,40 @@ export default function Empleados() {
     centerId: centerFilter,
   });
 
-  // Infinite Scroll Observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  // Keep the full query ONLY for stats and exports
-  const { data: employees, isLoading } = useEmployees();
-
   // Flatten the pages from infiniteData
   const currentEmployees = useMemo(() => {
     return infiniteData?.pages.flatMap(page => page.data) || [];
   }, [infiniteData]);
+
+  // Infinite Scroll Observer using a more robust pattern
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (isPagingLoading || isFetchingNextPage) return;
+    
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+    
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      },
+      { 
+        root: null, 
+        threshold: 0.1,
+        rootMargin: '200px' // Fetch slightly earlier for smoother experience
+      }
+    );
+    
+    if (node) {
+      observerRef.current.observe(node);
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, isPagingLoading]);
+
+  // Keep the full query ONLY for stats and exports
+  const { data: employees, isLoading } = useEmployees();
 
   const totalCount = infiniteData?.pages[0]?.totalCount || 0;
   const { data: allAlerts } = useDashboardAlerts();
@@ -190,6 +202,11 @@ export default function Empleados() {
   const handleTransfer = (employee: any) => {
     setTransferEmployee(employee);
     setIsTransferOpen(true);
+  };
+
+  const handleIssueCertificate = (employee: any) => {
+    setCertEmployee(employee);
+    setIsCertOpen(true);
   };
 
   const handleResetFilters = () => {
@@ -274,7 +291,9 @@ export default function Empleados() {
     );
   }
 
-  if (isLoading) {
+  // Show main loader only on first mount or when switching companies
+  // If we already have some employees from useEmployees, we don't need to block everything
+  if (isLoading && !employees) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -368,7 +387,7 @@ export default function Empleados() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
-        className="card-elevated p-4"
+        className="bg-card rounded-xl shadow-sm p-4"
       >
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
@@ -378,7 +397,7 @@ export default function Empleados() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por nombre, cargo..."
-              className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-transparent focus:border-primary focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+              className="w-full h-10 pl-10 pr-4 rounded-lg bg-card border border-transparent focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all shadow-sm"
             />
           </div>
           <div className="flex gap-3">
@@ -425,7 +444,7 @@ export default function Empleados() {
               <Download className="w-4 h-4" />
             </Button>
             
-            <div className="flex items-center bg-background rounded-lg p-1 border border-border/50 ml-2 shadow-sm">
+            <div className="flex items-center bg-card rounded-lg p-1 border border-border/50 ml-2 shadow-sm">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
@@ -549,7 +568,14 @@ export default function Empleados() {
       </Collapsible>
 
       {/* Employee Grid */}
-      {currentEmployees.length === 0 ? (
+      {isPagingLoading && currentEmployees.length === 0 ? (
+        <div className="flex items-center justify-center h-[40vh]">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground animate-pulse">Cargando empleados...</p>
+          </div>
+        </div>
+      ) : currentEmployees.length === 0 ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-elevated p-12 text-center">
           <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">No hay empleados</h3>
@@ -567,8 +593,8 @@ export default function Empleados() {
         </motion.div>
       ) : (
         <div className="space-y-6 relative">
-          {isPagingLoading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/20 backdrop-blur-[2px] rounded-xl">
+          {isFetchingNextPage && viewMode === 'table' && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/40 backdrop-blur-[2px] rounded-xl">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           )}
@@ -586,6 +612,7 @@ export default function Empleados() {
                   onViewDocuments={handleViewDocuments}
                   onRehire={handleRehire}
                   onTransfer={handleTransfer}
+                  onIssueCertificate={handleIssueCertificate}
                 />
               ))}
             </div>
@@ -600,19 +627,30 @@ export default function Empleados() {
                 onViewDocuments={handleViewDocuments}
                 onRehire={handleRehire}
                 onTransfer={handleTransfer}
+                onIssueCertificate={handleIssueCertificate}
               />
             </div>
           )}
 
           {/* Infinite Scroll Sentinel */}
-          <div ref={loadMoreRef} className="py-8 flex flex-col items-center justify-center gap-4">
+          <div ref={lastElementRef} className="py-8 flex flex-col items-center justify-center gap-4">
             {isFetchingNextPage ? (
               <>
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground italic">Cargando más empleados...</p>
               </>
             ) : hasNextPage ? (
-              <p className="text-xs text-muted-foreground/50">Desliza para cargar más</p>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => fetchNextPage()}
+                className="text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-colors"
+              >
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-xs">Desliza o haz clic para cargar más</span>
+                  <ChevronDown className="w-4 h-4 animate-bounce mt-1" />
+                </div>
+              </Button>
             ) : currentEmployees.length > 0 ? (
               <div className="flex flex-col items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-border" />
@@ -632,6 +670,17 @@ export default function Empleados() {
             if (!open) setTransferEmployee(null);
           }}
           employee={transferEmployee}
+        />
+      )}
+
+      {certEmployee && (
+        <IssueCertificateDialog
+          open={isCertOpen}
+          onOpenChange={(open) => {
+            setIsCertOpen(open);
+            if (!open) setCertEmployee(null);
+          }}
+          employee={certEmployee}
         />
       )}
     </div>

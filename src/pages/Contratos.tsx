@@ -159,7 +159,7 @@ export default function Contratos() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, canView } = useAuth();
   const isMobile = useIsMobile();
   const { data: contracts, isLoading } = useContracts();
   const { data: contractTypesConfig } = useContractTypes();
@@ -249,20 +249,17 @@ export default function Contratos() {
   return (
     <div className="space-y-6">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-3xl border border-border p-6 sm:p-8">
-        
-        
-
+      <div className="bg-card border-none shadow-sm rounded-2xl p-6 sm:p-8 relative overflow-hidden">
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 mb-1">
               <div className="h-1 w-10 bg-primary rounded-full" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Módulo de Talento</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
               Contratos Laborales
             </h1>
-            <p className="text-muted-foreground text-sm sm:text-base max-w-xl leading-relaxed">
+            <p className="text-muted-foreground text-sm sm:text-base max-w-xl leading-relaxed font-medium">
               Gestión centralizada de vinculaciones, prórrogas y estados contractuales.
             </p>
           </div>
@@ -277,7 +274,7 @@ export default function Contratos() {
         </div>
       </div>
 
-      {/* KPI Cards Compact */}
+      {/* KPI Cards - Clean Sky Flat Design */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Vigentes', value: stats.active, desc: 'Contratos activos', icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
@@ -285,17 +282,16 @@ export default function Contratos() {
           { label: 'Vencidos', value: stats.expired, desc: 'Requieren acción', icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10' },
           { label: 'Con Prórrogas', value: stats.withExtensions, desc: 'Historial de cambios', icon: RotateCw, color: 'text-blue-500', bg: 'bg-blue-500/10' },
         ].map((kpi, i) => (
-          <Card key={i} className="relative overflow-hidden border-none shadow-sm bg-background hover:shadow-md transition-all duration-300 group">
-            <div className={`absolute top-0 left-0 w-1 h-full ${kpi.color.replace('text', 'bg')}`} />
-            <CardContent className="p-3">
-              <div className="flex items-center gap-3">
-                <div className={`p-1.5 rounded-lg ${kpi.bg} group-hover:scale-110 transition-transform shrink-0`}>
-                  <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+          <Card key={i} className="border-none shadow-sm bg-card hover:shadow-md transition-all duration-300 group rounded-2xl overflow-hidden">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className={`p-2.5 rounded-xl ${kpi.bg} group-hover:scale-110 transition-transform shrink-0`}>
+                  <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-lg font-bold tracking-tight truncate leading-tight">{kpi.value}</p>
-                  <p className="text-[11px] font-semibold text-foreground/80 leading-tight">{kpi.label}</p>
-                  <p className="text-[10px] text-muted-foreground leading-tight">{kpi.desc}</p>
+                  <p className="text-2xl font-black tracking-tight truncate leading-none mb-1">{kpi.value}</p>
+                  <p className="text-[11px] font-bold text-foreground/80 leading-tight uppercase tracking-widest">{kpi.label}</p>
+                  <p className="text-[10px] text-muted-foreground font-medium leading-tight mt-0.5">{kpi.desc}</p>
                 </div>
               </div>
             </CardContent>
@@ -303,9 +299,8 @@ export default function Contratos() {
         ))}
       </div>
 
-      {/* Filters Glassmorphism Bar */}
-      <div className="sticky top-0 z-10 bg-background pb-2">
-        <div className="flex flex-col lg:flex-row gap-2 p-3 rounded-2xl border border-border bg-background shadow-inner">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md pb-2">
+        <div className="flex flex-col lg:flex-row gap-2 p-2 rounded-xl border border-border bg-card shadow-sm">
           <div className="relative flex-1 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
@@ -470,7 +465,9 @@ export default function Contratos() {
                             </div>
                             <div>
                               <p className="text-xs text-muted-foreground">Salario</p>
-                              <p className="mt-0.5 font-medium text-foreground">{formatCurrency(Number(contract.salary))}</p>
+                              <p className="mt-0.5 font-medium text-foreground">
+                                {canView('salarios') ? formatCurrency(Number(contract.salary)) : '••••••'}
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs text-muted-foreground">Prórrogas</p>
@@ -571,7 +568,9 @@ export default function Contratos() {
                       </td>
                       <td className="p-4 hidden md:table-cell">
                         <div className="space-y-0.5">
-                          <span className="text-sm font-bold text-foreground">{formatCurrency(Number(contract.salary))}</span>
+                          <span className="text-sm font-bold text-foreground">
+                            {canView('salarios') ? formatCurrency(Number(contract.salary)) : '••••••'}
+                          </span>
                           {extensionsCount > 0 && (
                             <p className="text-[10px] font-bold text-accent uppercase flex items-center gap-1">
                               <RotateCw className="w-2.5 h-2.5" /> {extensionsCount} prórrogas
@@ -616,6 +615,19 @@ export default function Contratos() {
           </div>
         )}
       </motion.div>
+
+      <ContractFormDialog 
+        open={isFormOpen} 
+        onOpenChange={setIsFormOpen} 
+      />
+
+      {selectedContractId && (
+        <ContractDetailDialog
+          open={isDetailOpen}
+          onOpenChange={setIsDetailOpen}
+          contractId={selectedContractId}
+        />
+      )}
     </div>
   );
 }

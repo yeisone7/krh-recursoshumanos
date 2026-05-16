@@ -107,7 +107,7 @@ export function useHRAnalytics() {
           operation_centers(name),
           areas(name)
         `)
-        .in('employee_id', allEmployeeIds.length > 0 ? allEmployeeIds : ['00000000-0000-0000-0000-000000000000'])
+        .eq('company_id', currentCompanyId!)
         .eq('is_current', true);
 
       // 3. Get terminations for turnover
@@ -141,7 +141,7 @@ export function useHRAnalytics() {
       const { data: trainingAttendance } = await supabase
         .from('training_attendance')
         .select('id, session_id, employee_id, attendance_status, score')
-        .in('session_id', sessionIds.length > 0 ? sessionIds : ['00000000-0000-0000-0000-000000000000']);
+        .eq('company_id', currentCompanyId!);
 
       // 6. Get evaluation cycles
       const { data: evaluationCycles } = await supabase
@@ -153,7 +153,7 @@ export function useHRAnalytics() {
       const { data: certifications } = await supabase
         .from('employee_certifications')
         .select('id, employee_id, expiry_date')
-        .in('employee_id', activeEmployeeIds.length > 0 ? activeEmployeeIds : ['00000000-0000-0000-0000-000000000000'])
+        .eq('company_id', currentCompanyId!)
         .eq('is_valid', true)
         .not('expiry_date', 'is', null);
 

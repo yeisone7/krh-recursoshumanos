@@ -8,6 +8,7 @@ import {
   Phone,
   Briefcase,
   MapPin,
+  FileBadge,
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ interface EmployeeTableProps {
   onViewDocuments: (id: string) => void;
   onRehire?: (employee: any) => void;
   onTransfer?: (employee: any) => void;
+  onIssueCertificate?: (employee: any) => void;
 }
 
 export function EmployeeTable({
@@ -49,6 +51,7 @@ export function EmployeeTable({
   onViewDocuments,
   onRehire,
   onTransfer,
+  onIssueCertificate,
 }: EmployeeTableProps) {
   const navigate = useNavigate();
 
@@ -56,7 +59,7 @@ export function EmployeeTable({
     <div className="card-elevated overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-background hover:bg-background">
+          <TableRow className="bg-card hover:bg-card border-b border-border/50">
             <TableHead className="w-[300px]">Empleado</TableHead>
             <TableHead>Cargo y Área</TableHead>
             <TableHead>Centro de Operación</TableHead>
@@ -75,7 +78,7 @@ export function EmployeeTable({
             return (
               <TableRow 
                 key={employee.id} 
-                className="group cursor-pointer hover:bg-background"
+                className="group cursor-pointer hover:bg-slate-50/50 transition-colors"
                 onClick={() => onOpenDetail(employee.id)}
               >
                 <TableCell>
@@ -125,7 +128,7 @@ export function EmployeeTable({
                       isRetired
                         ? isEnRetiro
                           ? 'bg-warning-light text-warning border-warning/20'
-                          : 'bg-background text-muted-foreground border-muted-foreground/20'
+                          : 'bg-card text-muted-foreground border-muted-foreground/20'
                         : employee.is_active 
                           ? 'bg-success-light text-success border-success/20'
                           : 'bg-rose-light text-rose border-rose/20'
@@ -184,6 +187,12 @@ export function EmployeeTable({
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDocuments(employee.id); }}>
                           Documentos
                         </DropdownMenuItem>
+                        {onIssueCertificate && (
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onIssueCertificate(employee); }}>
+                            <FileBadge className="w-4 h-4 mr-2 text-primary" />
+                            Expedir Certificación
+                          </DropdownMenuItem>
+                        )}
                         {!isRetired && onTransfer && (
                           <DropdownMenuItem 
                             onClick={(e) => { e.stopPropagation(); onTransfer(employee); }}
