@@ -176,12 +176,12 @@ export function DotationItemTypeFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] max-w-xl flex-col gap-0 overflow-hidden p-0 border-none bg-transparent shadow-none">
-        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-border bg-background -2xl shadow-2xl">
+        <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-border bg-background">
           
           {/* Premium Header */}
-          <DialogHeader className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-8 border-b border-border shrink-0">
+          <DialogHeader className="relative overflow-hidden bg-slate-50/50 p-8 border-b border-border shrink-0">
             <div className="relative z-10 flex items-center gap-5">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
                 <Shirt className="h-7 w-7 text-primary-foreground" />
               </div>
               <div className="min-w-0">
@@ -206,12 +206,12 @@ export function DotationItemTypeFormDialog({
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Imagen del Artículo</FormLabel>
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                     {imagePreview ? (
-                      <div className="relative group w-32 h-32 rounded-[2rem] border-2 border-primary/20 overflow-hidden bg-background shadow-inner p-2">
+                      <div className="relative group w-32 h-32 rounded-[2rem] border-2 border-primary/20 overflow-hidden bg-background p-2">
                         <img src={imagePreview} alt="Preview" className="w-full h-full object-contain rounded-[1.5rem]" />
                         <button
                           type="button"
                           onClick={removeImage}
-                          className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-destructive-foreground shadow-lg hover:scale-110 transition-transform"
+                          className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-transform"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -374,7 +374,7 @@ export function DotationItemTypeFormDialog({
                                 }}
                                 className={cn(
                                   "h-10 min-w-[3rem] rounded-xl font-black transition-all",
-                                  isSelected ? "shadow-md shadow-primary/20 scale-105" : "bg-background border-2"
+                                  isSelected ? "bg-primary text-primary-foreground" : "bg-background border-2"
                                 )}
                               >
                                 {size}
@@ -420,7 +420,7 @@ export function DotationItemTypeFormDialog({
                 <Button 
                   type="submit" 
                   disabled={isPending}
-                  className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                  className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
                 >
                   {isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

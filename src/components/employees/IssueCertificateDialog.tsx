@@ -152,16 +152,17 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0 overflow-hidden bg-white border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] focus:outline-none flex flex-col">
+      <DialogContent className="max-w-xl p-0 overflow-hidden bg-white border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] focus:outline-none flex flex-col [&>button:last-child]:hidden">
         <DialogHeader className="px-8 pt-8 pb-6 border-b border-slate-100 bg-background relative">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => onOpenChange(false)}
-            className="absolute right-6 top-6 h-8 w-8 rounded-full bg-slate-100/50 hover:bg-slate-200/50"
+            className="absolute right-6 top-6 h-8 w-8 rounded-full bg-slate-100/50 hover:bg-slate-200/50 z-10"
           >
             <X className="w-4 h-4 text-slate-500" />
           </Button>
+
           <div className="flex items-center gap-4">
             <div className="h-14 w-14 flex items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
               <FileBadge className="w-7 h-7 text-primary" />

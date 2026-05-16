@@ -44,6 +44,8 @@ interface AuthContextType {
   canApprove: (moduleCode: string) => boolean;
   canExport: (moduleCode: string) => boolean;
   hasAnyRole: boolean;
+  assignedCenterIds: string[];
+  profile: { full_name: string | null; avatar_url: string | null } | null;
   refreshPermissions: () => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<{ error: Error | null }>;
@@ -62,7 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<PermissionEntry[]>([]);
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [hasAnyRole, setHasAnyRole] = useState(true); // default true to avoid flash
+  const [assignedCenterIds, setAssignedCenterIds] = useState<string[]>([]);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const userRef = React.useRef<User | null>(null);
 
   const fetchPermissions = async (userId: string) => {
@@ -142,6 +146,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
     setIsSuperAdmin(!!saData);
 
+    // Fetch profile data
+    const { data: profileData } = await supabase
+      .from('user_profiles')
+      .select('full_name, avatar_url')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (profileData) {
+      setProfile(profileData);
+    }
+
     // If super admin, fetch ALL companies
     if (saData) {
       const { data: allCompanies, error: allErr } = await supabase
@@ -167,6 +182,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       }
+    }
+
+    // Fetch center assignments
+    const { data: centerData } = await supabase
+      .from('user_center_assignments')
+      .select('operation_center_id')
+      .eq('user_id', userId);
+    
+    if (centerData) {
+      setAssignedCenterIds(centerData.map(c => c.operation_center_id));
+    } else {
+      setAssignedCenterIds([]);
     }
   };
 
@@ -200,6 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPermissions([]);
           setPermissionsLoaded(false);
           setHasAnyRole(true);
+          setAssignedCenterIds([]);
           setIsSuperAdmin(false);
           setIsLoading(false);
         }
@@ -319,6 +347,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPermissions([]);
     setPermissionsLoaded(false);
     setHasAnyRole(true);
+    setAssignedCenterIds([]);
     setIsSuperAdmin(false);
   };
 
@@ -332,12 +361,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         currentCompanyId,
         setCurrentCompanyId,
         isLoading,
-        isAdmin,
-        isRRHH,
-        isAuditor,
-        isPsicologo,
+        isAdmin: roles.includes('admin') || isSuperAdmin,
+        isRRHH: roles.includes('rrhh') || isSuperAdmin,
+        isAuditor: roles.includes('auditor') || isSuperAdmin,
+        isPsicologo: roles.includes('psicologo') || isSuperAdmin,
         isSuperAdmin,
-        hasRole: hasRoleFn,
+        hasRole: (role: AppRole) => roles.includes(role) || isSuperAdmin,
         permissions,
         permissionsLoaded,
         hasPermission,
@@ -348,6 +377,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         canApprove,
         canExport,
         hasAnyRole,
+        assignedCenterIds,
+        profile,
         refreshPermissions,
         signIn,
         signUp,

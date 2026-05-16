@@ -9,6 +9,12 @@ import {
   ShieldCheck,
   Shield,
   Bot,
+  Lock,
+  LayoutGrid,
+  Zap,
+  CheckCircle2,
+  Activity,
+  MoreHorizontal
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
@@ -22,256 +28,241 @@ export default function Seguridad() {
 
   if (!isAdmin) {
     return (
-      <div className="p-6">
+      <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-2xl mx-auto"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md space-y-6"
         >
-          <Card className="border-destructive/50">
-            <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
-                <AlertTriangle className="w-8 h-8 text-destructive" />
-              </div>
-              <CardTitle>Acceso Restringido</CardTitle>
-              <CardDescription>
-                No tienes permisos para acceder a esta sección. Solo los administradores pueden gestionar la seguridad.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-sm text-muted-foreground mb-4">
-                Tus roles actuales:
-              </p>
-              <div className="flex justify-center gap-2">
-                {roles.length === 0 ? (
-                  <Badge variant="outline">Sin roles asignados</Badge>
-                ) : (
-                  roles.map(role => (
-                    <Badge key={role} variant="secondary">{role}</Badge>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mx-auto w-20 h-20 rounded-[2rem] bg-red-50 flex items-center justify-center text-red-500 shadow-xl shadow-red-100">
+            <AlertTriangle className="w-10 h-10" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Acceso Restringido</h2>
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
+              No dispones de los privilegios administrativos requeridos para acceder al Centro de Control de Seguridad.
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2 pt-4">
+            {roles.length === 0 ? (
+              <Badge className="bg-slate-100 text-slate-400 border-none font-black text-[9px] uppercase px-3 py-1 rounded-lg">Identidad Sin Atributos</Badge>
+            ) : (
+              roles.map(role => (
+                 <Badge key={role} className="bg-primary text-white border-none font-black text-[9px] uppercase px-3 py-1 rounded-lg tracking-widest shadow-sm">{role}</Badge>
+              ))
+            )}
+          </div>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto px-4 sm:px-6">
+    <div className="space-y-8 max-w-7xl mx-auto px-2">
+      {/* Header Premium Flat */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] bg-white border border-slate-100"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-6"
       >
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-primary transition-all duration-300">
-              <Shield className="w-10 h-10 text-primary-foreground" />
+        <div className="flex items-center gap-5">
+           <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm shrink-0">
+             <Shield className="w-8 h-8 stroke-[2.5]" />
+           </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+               <h1 className="text-3xl font-black text-foreground uppercase tracking-tight">Seguridad</h1>
+              <Badge className="bg-primary/10 text-primary border-none font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">GATEKEEPER</Badge>
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest">
-                  Centro de Seguridad
-                </Badge>
-              </div>
-              <h1 className="text-3xl font-black tracking-tight text-foreground uppercase sm:text-4xl">
-                Seguridad
-              </h1>
-              <p className="text-muted-foreground font-medium mt-1 tracking-wide">
-                Gestión avanzada de identidades y protocolos de acceso
-              </p>
-            </div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Gestión de identidades, privilegios y auditoría transaccional</p>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="h-10 px-4 rounded-xl border border-border flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-[10px] font-black text-primary uppercase tracking-widest">Protocolo Activo</span>
-            </div>
-          </div>
+        </div>
+        
+        <div className="h-12 px-6 rounded-2xl bg-white border border-slate-100 flex items-center gap-3 w-full md:w-auto shadow-sm">
+          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="text-[9px] font-black text-primary uppercase tracking-widest">Protocolo de Control Activo</span>
         </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <Tabs defaultValue="roles" className="space-y-8 min-w-0">
-          <div className="flex justify-center">
-          <TabsList>
+      <Tabs defaultValue="roles" className="space-y-8">
+        <div className="flex justify-center px-1 overflow-x-auto no-scrollbar">
+          <TabsList className="flex h-auto p-1.5 gap-1.5 bg-white border border-slate-100 rounded-2xl w-max md:w-full max-w-3xl shadow-sm">
             {[
-              { value: 'roles', label: 'Roles y permisos', icon: ShieldCheck },
-              { value: 'quick-permissions', label: 'Permisos rápidos', icon: ShieldCheck },
-              { value: 'audit', label: 'Auditoría', icon: History },
-              { value: 'ai-access', label: 'Acceso IA', icon: Bot },
-              { value: 'info', label: 'Información', icon: Info },
+              { value: 'roles', label: 'Matriz Roles', icon: ShieldCheck },
+              { value: 'quick-permissions', label: 'Privilegios', icon: Zap },
+              { value: 'audit', label: 'Bitácora', icon: History },
+              { value: 'ai-access', label: 'Inteligencia', icon: Bot },
+              { value: 'info', label: 'Arquitectura', icon: Info },
             ].map((tab) => (
               <TabsTrigger 
                 key={tab.value}
                 value={tab.value} 
+                className="text-[9px] font-black uppercase tracking-widest py-3 px-6 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white transition-all shrink-0 shadow-sm"
               >
-                <tab.icon className="w-3.5 h-3.5 mr-2" />
+                <tab.icon className="w-3.5 h-3.5 mr-2.5 shrink-0" />
                 {tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
+        </div>
+
+        <TabsContent value="roles" className="mt-0 outline-none px-1">
+          <RolesManager />
+        </TabsContent>
+
+        <TabsContent value="quick-permissions" className="mt-0 outline-none px-1">
+           <div className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden p-1">
+            <QuickRolePermissions />
           </div>
+        </TabsContent>
 
-          <TabsContent value="roles" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
-              <RolesManager />
-            </div>
-          </TabsContent>
+        <TabsContent value="audit" className="mt-0 outline-none px-1">
+           <div className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden p-2">
+            <AuditLogViewer />
+          </div>
+        </TabsContent>
 
-          <TabsContent value="quick-permissions" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
-              <QuickRolePermissions />
-            </div>
-          </TabsContent>
+        <TabsContent value="ai-access" className="mt-0 outline-none px-1">
+           <div className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden p-1">
+            <AiAccessManager />
+          </div>
+        </TabsContent>
 
-          <TabsContent value="audit" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
-              <AuditLogViewer />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="ai-access" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="overflow-hidden rounded-[2.5rem] border border-border/40 bg-background p-2">
-              <AiAccessManager />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="info" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="space-y-8">
-              <Card className="rounded-[2.5rem] bg-white border border-slate-100 overflow-hidden">
-                <CardHeader className="p-10 border-b border-slate-100">
-                  <div className="flex items-center gap-4 mb-2">
-                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <ShieldCheck className="w-5 h-5 text-primary" />
-                    </div>
-                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest">
-                      Arquitectura de Seguridad
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-3xl font-black tracking-tight uppercase">Protocolos de Control de Acceso</CardTitle>
-                  <CardDescription className="text-base font-medium max-w-2xl mt-2">
-                    Nuestra plataforma utiliza un sistema híbrido de Control de Acceso Basado en Roles (RBAC) y Seguridad a Nivel de Fila (RLS) para garantizar la integridad absoluta de sus datos.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-10">
-                  <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                    {[
-                      { 
-                        title: 'Aislamiento Multi-Tenant', 
-                        desc: 'Cada empresa opera en una cápsula lógica independiente. Los datos nunca se mezclan y el acceso se valida en cada transacción a nivel de base de datos.',
-                        icon: Shield,
-                        color: 'text-primary'
-                      },
-                      { 
-                        title: 'Segregación por Centro', 
-                        desc: 'Defina perímetros de acceso específicos por sede o centro de operación. Los usuarios solo visualizan lo que ocurre dentro de su radio de acción asignado.',
-                        icon: AlertTriangle,
-                        color: 'text-amber-500'
-                      },
-                      { 
-                        title: 'Jerarquías Dinámicas', 
-                        desc: 'Los permisos son aditivos. Un usuario con múltiples roles hereda la suma de todas las facultades, permitiendo una gestión de permisos granular y flexible.',
-                        icon: Bot,
-                        color: 'text-violet-500'
-                      },
-                      { 
-                        title: 'Trazabilidad Inmutable', 
-                        desc: 'Cada inserción, edición o eliminación es registrada en nuestra red de auditoría, incluyendo metadatos del autor, IP y cambios detallados en los valores.',
-                        icon: History,
-                        color: 'text-blue-500'
-                      },
-                      { 
-                        title: 'Validación en Tiempo Real', 
-                        desc: 'El sistema verifica los tokens de sesión y permisos específicos en cada petición al servidor, previniendo cualquier intento de escalamiento de privilegios.',
-                        icon: Info,
-                        color: 'text-cyan-500'
-                      },
-                      { 
-                        title: 'Encriptación de Datos', 
-                        desc: 'Toda la comunicación entre el cliente y el servidor viaja cifrada bajo protocolos TLS de última generación, protegiendo la información sensible.',
-                        icon: ShieldCheck,
-                        color: 'text-emerald-500'
-                      }
-                    ].map((item) => (
-                      <div key={item.title} className="p-6 rounded-[2rem] bg-slate-50/50 border border-slate-100 hover:bg-white transition-all group">
-                        <div className={cn("h-12 w-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center mb-6 transition-transform group-hover:scale-110 group-hover:-rotate-3 shadow-none", item.color)}>
-                          <item.icon className="w-6 h-6" />
-                        </div>
-                        <h4 className="font-black text-xs uppercase tracking-widest text-slate-900 mb-3">{item.title}</h4>
-                        <p className="text-slate-500 text-sm leading-relaxed font-medium">{item.desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="grid gap-8 md:grid-cols-2">
-                <Card className="rounded-[2rem] bg-primary text-primary-foreground border-none overflow-hidden relative group">
-                  <div className="absolute top-0 right-0 p-8 opacity-10 transition-transform group-hover:scale-110 group-hover:rotate-12">
-                    <ShieldCheck className="w-32 h-32" />
-                  </div>
-                  <CardHeader className="p-8">
-                    <CardTitle className="text-xl font-black uppercase tracking-tight">Mejores Prácticas para Administradores</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8 pt-0 space-y-4">
-                    {[
-                      'Aplique el Principio del Menor Privilegio (PoLP).',
-                      'Revise mensualmente el registro de auditoría.',
-                      'Desactive roles que no estén en uso activo.',
-                      'No comparta cuentas administrativas.',
-                      'Utilice roles de sistema para procesos críticos.'
-                    ].map((tip, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-black">{i + 1}</div>
-                        <p className="text-sm font-bold opacity-90">{tip}</p>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                <Card className="rounded-[2rem] bg-white border border-slate-100 overflow-hidden">
-                  <CardHeader className="p-8">
-                    <CardTitle className="text-xl font-black uppercase tracking-tight text-slate-900">Estado de la Red de Seguridad</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-8 pt-0">
-                    <div className="space-y-6">
-                      {[
-                        { label: 'Encriptación de Base de Datos', status: 'Activo', value: 100 },
-                        { label: 'Integridad de Auditoría', status: 'Sincronizado', value: 100 },
-                        { label: 'Control Multi-Tenant', status: 'Verificado', value: 100 },
-                      ].map((item) => (
-                        <div key={item.label} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{item.label}</span>
-                            <span className="text-[10px] font-black uppercase text-primary">{item.status}</span>
-                          </div>
-                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-primary rounded-full" style={{ width: `${item.value}%` }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-8 p-4 rounded-xl bg-blue-50 border border-blue-100 flex items-start gap-3">
-                      <Info className="w-4 h-4 text-primary mt-0.5" />
-                      <p className="text-[11px] font-medium text-primary leading-tight">
-                        Todos los sistemas de protección perimetral y lógica se encuentran operando bajo parámetros normales.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+        <TabsContent value="info" className="mt-0 outline-none px-1 space-y-8">
+           <Card className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+             <CardHeader className="p-10 border-b border-slate-50">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <Badge className="bg-primary/5 text-primary border-none font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">
+                  INFRASTRUCTURE DESIGN
+                </Badge>
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </motion.div>
+               <CardTitle className="text-2xl font-black uppercase tracking-tight text-foreground">Protocolos de Control y Resiliencia</CardTitle>
+              <CardDescription className="text-[11px] font-black uppercase tracking-widest text-slate-400 max-w-2xl mt-2 leading-relaxed">
+                Nuestra arquitectura implementa un sistema híbrido de RBAC (Role-Based Access Control) y RLS (Row Level Security) para garantizar la integridad absoluta de los datos.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-10">
+              <div className="grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { 
+                    title: 'Aislamiento Multi-Tenant', 
+                    desc: 'Cápsulas lógicas independientes para cada empresa, garantizando que el flujo de información sea estrictamente privado.',
+                    icon: Shield,
+                    color: 'text-slate-900',
+                    bg: 'bg-slate-50'
+                  },
+                  { 
+                    title: 'Segregación Perimetral', 
+                    desc: 'Control granular por centros de operación, limitando la visibilidad del talento según la ubicación geográfica asignada.',
+                    icon: LayoutGrid,
+                    color: 'text-primary',
+                    bg: 'bg-primary/5'
+                  },
+                  { 
+                    title: 'Herencia de Atributos', 
+                    desc: 'Los permisos son aditivos y dinámicos. La suma de roles define el perímetro total de acción de cada operador.',
+                    icon: Zap,
+                    color: 'text-amber-500',
+                    bg: 'bg-amber-50'
+                  },
+                  { 
+                    title: 'Trazabilidad Forense', 
+                    desc: 'Cada mutación en la base de datos genera una estampa de tiempo e identidad inmutable en nuestra red de auditoría.',
+                    icon: History,
+                    color: 'text-emerald-500',
+                    bg: 'bg-emerald-50'
+                  },
+                  { 
+                    title: 'Validación en Tiempo Real', 
+                    desc: 'Verificación constante de tokens JWT y privilegios locales en cada petición HTTP al motor de base de datos.',
+                    icon: Lock,
+                    color: 'text-blue-500',
+                    bg: 'bg-blue-50'
+                  },
+                  { 
+                    title: 'Cifrado de Alto Nivel', 
+                    desc: 'Protocolos de encriptación TLS 1.3 en tránsito y cifrado AES-256 en reposo para toda la capa de persistencia.',
+                    icon: ShieldCheck,
+                    color: 'text-indigo-500',
+                    bg: 'bg-indigo-50'
+                  }
+                ].map((item) => (
+                  <div key={item.title} className="p-8 rounded-[2rem] bg-white border border-slate-100 hover:border-primary/20 transition-all group shadow-sm">
+                    <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 shadow-sm", item.bg, item.color)}>
+                      <item.icon className="w-6 h-6 stroke-[2.5]" />
+                    </div>
+                     <h4 className="font-black text-[11px] uppercase tracking-widest text-foreground mb-4">{item.title}</h4>
+                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-tight leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-8 md:grid-cols-2">
+             <Card className="rounded-3xl bg-primary text-white border-none overflow-hidden relative group shadow-xl shadow-primary/20">
+              <div className="absolute top-0 right-0 p-10 opacity-5 transition-transform group-hover:scale-110 group-hover:rotate-12 pointer-events-none">
+                <ShieldCheck className="w-48 h-48" />
+              </div>
+              <CardHeader className="p-10">
+                <CardTitle className="text-xl font-black uppercase tracking-tight">Directivas de Operación</CardTitle>
+                <CardDescription className="text-[10px] font-black uppercase tracking-widest text-primary-foreground/60">Mejores prácticas administrativas</CardDescription>
+              </CardHeader>
+              <CardContent className="p-10 pt-0 space-y-6">
+                {[
+                  'Implementar el Principio de Privilegio Mínimo (PoLP).',
+                  'Auditar mensualmente los flujos de eventos críticos.',
+                  'Desactivar identidades sin actividad superior a 30 días.',
+                  'Restringir el uso de cuentas maestras compartidas.',
+                  'Validar perímetros de acceso tras cambios estructurales.'
+                ].map((tip, i) => (
+                  <div key={i} className="flex items-center gap-4 group/tip">
+                    <div className="h-6 w-6 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-black text-white transition-colors group-hover/tip:bg-white group-hover/tip:text-primary">{i + 1}</div>
+                    <p className="text-[11px] font-black uppercase tracking-widest opacity-80 group-hover/tip:opacity-100 transition-opacity">{tip}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+             <Card className="rounded-3xl bg-white border border-slate-100 overflow-hidden shadow-sm">
+              <CardHeader className="p-10 border-b border-slate-50">
+                <CardTitle className="text-xl font-black uppercase tracking-tight text-slate-900">Estado de los Nodos</CardTitle>
+                <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Integridad de la red de seguridad</CardDescription>
+              </CardHeader>
+              <CardContent className="p-10 space-y-8">
+                {[
+                  { label: 'Cifrado de Persistencia', status: 'Blindado', value: 100, color: 'bg-primary' },
+                  { label: 'Red de Auditoría', status: 'Sincronizada', value: 100, color: 'bg-emerald-500' },
+                  { label: 'Aislamiento Lógico', status: 'Verificado', value: 100, color: 'bg-blue-500' },
+                ].map((item) => (
+                  <div key={item.label} className="space-y-3">
+                    <div className="flex justify-between items-center px-1">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.label}</span>
+                       <Badge className="bg-white/20 text-white border-none font-black text-[8px] uppercase">{item.status}</Badge>
+                     </div>
+                     <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden shadow-inner">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${item.value}%` }}
+                        className={cn("h-full rounded-full shadow-sm", item.color)} 
+                      />
+                    </div>
+                  </div>
+                ))}
+                <div className="mt-10 p-5 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-4">
+                  <Activity className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                  <p className="text-[10px] font-black uppercase text-slate-400 leading-relaxed tracking-widest">
+                    Todos los protocolos de vigilancia lógica operan bajo umbrales de integridad óptima.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

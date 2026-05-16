@@ -1019,6 +1019,34 @@ export function useDuplicateCourse() {
   });
 }
 
+export function useShareCourse() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ courseId, targetCompanyId }: { courseId: string; targetCompanyId: string }) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase.rpc('duplicate_training_course', {
+        p_course_id: courseId,
+        p_target_company_id: targetCompanyId,
+        p_created_by: user.id,
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['training_courses'] });
+      toast.success('Capacitación compartida con éxito');
+    },
+    onError: (error) => {
+      console.error('Error sharing course:', error);
+      toast.error('Error al compartir la capacitación');
+    },
+  });
+}
+
 export function useTrainingCourse(id: string | undefined) {
   return useQuery({
     queryKey: ['training_course', id],

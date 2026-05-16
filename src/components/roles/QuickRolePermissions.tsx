@@ -167,7 +167,7 @@ export function QuickRolePermissions() {
   const isLoading = rolesLoading || modulesLoading || permissionsLoading || rolePermissionsLoading;
 
   return (
-    <Card className="rounded-[2.5rem] bg-background border border-border/40 shadow-none overflow-hidden">
+    <Card className="rounded-3xl bg-background border border-border/40 shadow-none overflow-hidden">
       <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" />
@@ -258,10 +258,11 @@ export function QuickRolePermissions() {
                       })
                     )}
                     <TableCell className="text-right sticky right-0 bg-background z-10">
-                      <Button
+                       <Button
                         size="sm"
                         disabled={!hasChanges(role.id) || role.is_system || savePermissions.isPending}
                         onClick={() => savePermissions.mutate({ role, permissionIds: Array.from(selectedByRole[role.id] || []) })}
+                        className="bg-primary text-white hover:bg-primary/90"
                       >
                         <Save className="mr-2 h-4 w-4" />
                         Guardar

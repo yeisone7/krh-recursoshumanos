@@ -17,7 +17,10 @@ export function usePayrollNovelties(filters?: {
         .from('payroll_novelties')
         .select(`
           *,
-          employees_v2(id, first_name, last_name, document_number),
+          employees_v2(
+            id, first_name, last_name, document_number,
+            employee_work_info(operation_centers(name))
+          ),
           novelty_reasons(id, item_number, name)
         `)
         .eq('company_id', currentCompanyId!)
@@ -122,3 +125,30 @@ export function useDeletePayrollNovelty() {
     },
   });
 }
+
+export function useApprovePayrollNovelty() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: 'aprobada' | 'rechazada' }) => {
+      const { data, error } = await supabase
+        .from('payroll_novelties')
+        .update({
+          status,
+          approved_by: status === 'aprobada' ? user?.id : null,
+          approved_at: status === 'aprobada' ? new Date().toISOString() : null,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payroll_novelties'] });
+    },
+  });
+}
+

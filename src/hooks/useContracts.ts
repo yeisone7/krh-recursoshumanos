@@ -157,7 +157,9 @@ export function useContract(id: string | undefined) {
           middle_name: employee.middle_name,
           last_name: employee.last_name,
           second_last_name: employee.second_last_name,
-          document_number: employee.document_number
+          document_number: employee.document_number,
+          operation_centers: employee.employee_work_info?.[0]?.operation_centers || null,
+          employee_work_info: employee.employee_work_info || []
         } : null
       };
     },
@@ -193,7 +195,7 @@ export function useCreateContract() {
         const { data: numberResult, error: numberError } = await supabase
           .rpc('get_next_contract_number', {
             _company_id: currentCompanyId,
-            _prefix: 'PC'
+            _prefix: null // Let the DB function decide based on company config
           });
         
         if (!numberError && numberResult) {

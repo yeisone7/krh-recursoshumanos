@@ -58,6 +58,8 @@ export interface PayrollLaborConfig {
   created_by?: string;
 }
 
+export type NoveltyStatus = 'pendiente' | 'aprobada' | 'rechazada';
+
 // =============================================
 // PAYROLL NOVELTIES
 // =============================================
@@ -70,6 +72,12 @@ export interface PayrollNovelty {
   hours: number;
   notes?: string;
   source: NoveltySource;
+  status: NoveltyStatus;
+  approved_by?: string;
+  approved_at?: string;
+  start_time?: string;
+  end_time?: string;
+  reason_id?: string;
   created_by?: string;
   created_at: string;
   updated_at: string;
@@ -79,6 +87,11 @@ export interface PayrollNovelty {
     first_name: string;
     last_name: string;
     document_number: string;
+  };
+  novelty_reasons?: {
+    id: string;
+    item_number: string;
+    name: string;
   };
 }
 

@@ -71,7 +71,7 @@ export function NoveltyReasonFormDialog({ open, onOpenChange, reason, nextItemNu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90dvh] p-0 overflow-hidden bg-white border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] focus:outline-none flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[90dvh] p-0 overflow-hidden bg-white border border-slate-200 rounded-[2.5rem] focus:outline-none flex flex-col">
         <div className="relative flex-1 flex flex-col min-h-0">
           {/* Header Decorativo */}
           
@@ -79,8 +79,7 @@ export function NoveltyReasonFormDialog({ open, onOpenChange, reason, nextItemNu
           <DialogHeader className="relative px-8 pt-10 pb-8 border-b border-slate-100 bg-background">
             <div className="flex items-center gap-6">
               <div className="relative">
-                <div className="absolute -inset-2 rounded-3xl blur-xl" />
-                <div className="relative h-20 w-20 flex items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-xl overflow-hidden group">
+                <div className="relative h-20 w-20 flex items-center justify-center rounded-2xl bg-white border border-slate-100 overflow-hidden group">
                   <div className="absolute inset-0 bg-background group-hover:transition-colors" />
                   <FileText className="relative w-8 h-8 text-primary" />
                 </div>
@@ -119,7 +118,7 @@ export function NoveltyReasonFormDialog({ open, onOpenChange, reason, nextItemNu
                       <Input
                         disabled
                         value={form.item_number}
-                        className="h-14 pl-12 rounded-2xl bg-background border border-slate-200 shadow-sm font-black text-slate-400"
+                        className="h-14 pl-12 rounded-2xl bg-background border border-slate-200 font-black text-slate-400"
                       />
                     </div>
                   </div>
@@ -129,7 +128,7 @@ export function NoveltyReasonFormDialog({ open, onOpenChange, reason, nextItemNu
                       value={form.name}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                       placeholder="Ej: Incapacidad Médica, Licencia..."
-                      className="h-14 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-bold text-slate-700 placeholder:text-slate-400"
+                      className="h-14 rounded-2xl bg-white border border-slate-200 transition-all font-bold text-slate-700 placeholder:text-slate-400"
                     />
                   </div>
                 </div>
@@ -142,12 +141,12 @@ export function NoveltyReasonFormDialog({ open, onOpenChange, reason, nextItemNu
                       value={form.description}
                       onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                       placeholder="Explica brevemente cuándo aplicar este motivo..."
-                      className="min-h-[120px] pl-12 pt-4 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-medium text-slate-600 leading-relaxed"
+                      className="min-h-[120px] pl-12 pt-4 rounded-2xl bg-white border border-slate-200 transition-all font-medium text-slate-600 leading-relaxed"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-6 rounded-3xl bg-white border border-slate-200 shadow-sm group hover:border-primary/30 transition-all">
+                <div className="flex items-center justify-between p-6 rounded-3xl bg-white border border-slate-200 group hover:border-primary/30 transition-all">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <Info className="w-4 h-4 text-primary" />
@@ -176,7 +175,7 @@ export function NoveltyReasonFormDialog({ open, onOpenChange, reason, nextItemNu
               <Button 
                 onClick={handleSave} 
                 disabled={create.isPending || update.isPending || !form.name.trim()} 
-                className="h-14 px-12 rounded-2xl font-black uppercase tracking-widest text-xs bg-[#004a7c] hover:bg-[#003a61] text-white shadow-xl shadow-blue-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="h-14 px-12 rounded-2xl font-black uppercase tracking-widest text-xs bg-[#004a7c] hover:bg-[#003a61] text-white transition-all"
               >
                 {create.isPending || update.isPending ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

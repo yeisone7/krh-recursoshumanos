@@ -100,58 +100,62 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
     {
       id: 'openai',
       name: 'OpenAI',
-      icon: <Bot className="h-6 w-6 text-foreground/70" />,
+      icon: <Bot className="h-6 w-6" />,
       models: [
-        'GPT-4o Mini — Rápido y económico', 
-        'GPT-4o — Mayor capacidad de análisis', 
-        'GPT-4 Turbo — Contexto extendido', 
-        'GPT-3.5 Turbo — Más económico'
+        'GPT-4o Mini', 
+        'GPT-4o', 
+        'GPT-4 Turbo', 
+        'GPT-3.5 Turbo'
       ],
-      suggested: 'GPT-4o Mini — Rápido y económico',
+      suggested: 'GPT-4o Mini',
       docs: 'https://platform.openai.com/api-keys',
       description: 'Alta precisión y razonamiento avanzado para contenido detallado.',
-      color: 'bg-emerald-500',
+      color: 'text-emerald-500',
+      bg: 'bg-emerald-50'
     },
     {
       id: 'anthropic',
-      name: 'Anthropic (Claude)',
-      icon: <Brain className="h-6 w-6 text-foreground/70" />,
+      name: 'Anthropic',
+      icon: <Brain className="h-6 w-6" />,
       models: [
-        'Claude Sonnet 4 — Equilibrio ideal', 
-        'Claude 3.5 Haiku — Ultra rápido', 
-        'Claude Opus 4 — Máxima inteligencia'
+        'Claude Sonnet 4', 
+        'Claude 3.5 Haiku', 
+        'Claude Opus 4'
       ],
-      suggested: 'Claude Sonnet 4 — Equilibrio ideal',
+      suggested: 'Claude Sonnet 4',
       docs: 'https://console.anthropic.com/settings/keys',
       description: 'Líder en seguridad y redacción natural.',
-      color: 'bg-orange-500',
+      color: 'text-orange-500',
+      bg: 'bg-orange-50'
     },
     {
       id: 'gemini',
-      name: 'Google (Gemini)',
-      icon: <Sparkles className="h-6 w-6 text-primary" />,
+      name: 'Google',
+      icon: <Sparkles className="h-6 w-6" />,
       models: [
-        'Gemini 2.0 Flash — Rápido y versátil', 
-        'Gemini 2.5 Pro — Máxima capacidad', 
-        'Gemini 2.0 Flash Lite — Ultra económico'
+        'Gemini 2.0 Flash', 
+        'Gemini 2.5 Pro', 
+        'Gemini 2.0 Flash Lite'
       ],
-      suggested: 'Gemini 2.0 Flash — Rápido y versátil',
+      suggested: 'Gemini 2.0 Flash',
       docs: 'https://aistudio.google.com/app/apikey',
       description: 'Rápido y eficiente con ventana de contexto masiva.',
-      color: 'bg-blue-500',
+      color: 'text-primary',
+      bg: 'bg-primary/5'
     },
     {
       id: 'heygen',
-      name: 'HeyGen (Avatar)',
-      icon: <Video className="h-6 w-6 text-foreground/70" />,
+      name: 'HeyGen',
+      icon: <Video className="h-6 w-6" />,
       models: [
-        'Avatar Video API — Generación asíncrona', 
-        'Streaming Avatar — Interacción real'
+        'Avatar Video API', 
+        'Streaming Avatar'
       ],
-      suggested: 'Avatar Video API — Generación asíncrona',
+      suggested: 'Avatar Video API',
       docs: 'https://app.heygen.com/settings/api',
       description: 'Genera videos con un avatar virtual que presenta las capacitaciones.',
-      color: 'bg-purple-500',
+      color: 'text-purple-500',
+      bg: 'bg-purple-50'
     },
   ];
 
@@ -164,247 +168,80 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      {/* Header section */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-1">
-        <div className="space-y-0.5">
-          <h2 className="text-2xl font-black tracking-tighter text-foreground sm:text-3xl">
-            IA <span className="text-primary">&</span> Automatización
-          </h2>
-          <p className="text-muted-foreground text-xs max-w-xl font-medium">
-            Configura el motor inteligente que impulsa el análisis de datos y la generación de capacitaciones.
-          </p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingProvider(null);
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button className="rounded-xl transition-all hover:scale-105 active:scale-95 gap-2 px-6 py-4 h-auto font-bold text-sm">
-              <Plus className="h-4 w-4" /> Agregar Proveedor
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[450px] rounded-[2rem] border-border bg-card/95 p-0 overflow-hidden">
-            <div className="p-6 pt-8">
-              <DialogHeader className="mb-6">
-                <DialogTitle className="text-xl font-black tracking-tight">Configurar Motor IA</DialogTitle>
-                <DialogDescription className="text-sm font-medium">
-                  Selecciona y activa un proveedor para el sistema.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="grid gap-6">
-                <div className="grid gap-2.5">
-                  <Label htmlFor="provider" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Proveedor</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {providers.map((p) => (
-                      <button
-                        key={p.id}
-                        onClick={() => setAiConfig({ ...aiConfig, model: p.id })}
-                        className={cn(
-                          "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all relative group",
-                          aiConfig.model === p.id 
-                            ? "border-primary" 
-                            : "border-muted bg-background /10 hover:border-border hover:bg-background"
-                        )}
-                      >
-                        <div className={cn(
-                          "p-1.5 rounded-lg transition-all duration-300",
-                          aiConfig.model === p.id ? "bg-primary/20 scale-110" : "bg-background group-hover:scale-110"
-                        )}>
-                          {p.icon}
-                        </div>
-                        <span className="text-[9px] font-black text-center uppercase tracking-tight leading-none truncate w-full">
-                          {p.name.split(' ')[0]}
-                        </span>
-                        {aiConfig.model === p.id && (
-                          <motion.div 
-                            layoutId="active-provider-dot"
-                            className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary border-2 border-card" 
-                          />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid gap-2.5">
-                  <Label htmlFor="apiKey" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">API Key</Label>
-                  <div className="relative group">
-                    <Input
-                      id="apiKey"
-                      type={showKeys[aiConfig.model as keyof typeof showKeys] ? 'text' : 'password'}
-                      value={
-                        aiConfig.model === 'openai' ? aiConfig.openai_api_key :
-                        aiConfig.model === 'gemini' ? aiConfig.gemini_api_key :
-                        aiConfig.model === 'heygen' ? aiConfig.heygen_api_key :
-                        aiConfig.anthropic_api_key
-                      }
-                      onChange={(e) => {
-                        const key = aiConfig.model === 'openai' ? 'openai_api_key' :
-                                    aiConfig.model === 'gemini' ? 'gemini_api_key' :
-                                    aiConfig.model === 'heygen' ? 'heygen_api_key' :
-                                    'anthropic_api_key';
-                        setAiConfig({ ...aiConfig, [key]: e.target.value });
-                      }}
-                      placeholder={`sk-... (Key de ${currentProviderData.name})`}
-                      className="h-11 px-4 rounded-xl bg-background border-border focus:ring-2 focus:ring-primary/20 transition-all font-mono text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowKeys({ ...showKeys, [aiConfig.model]: !showKeys[aiConfig.model as keyof typeof showKeys] })}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-background transition-colors"
-                    >
-                      {showKeys[aiConfig.model as keyof typeof showKeys] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="grid gap-2">
-                    <div className="flex items-center justify-between ml-1">
-                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tokens</Label>
-                      <Badge variant="outline" className="font-mono text-[9px] rounded-md px-1.5 h-4">{aiConfig.tokens}</Badge>
-                    </div>
-                    <Slider
-                      value={[aiConfig.tokens]}
-                      onValueChange={(v) => setAiConfig({ ...aiConfig, tokens: v[0] })}
-                      max={4096}
-                      step={128}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <div className="flex items-center justify-between ml-1">
-                      <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Creatividad</Label>
-                      <Badge variant="outline" className="font-mono text-[9px] rounded-md px-1.5 h-4">{aiConfig.temperature}</Badge>
-                    </div>
-                    <Slider
-                      value={[aiConfig.temperature]}
-                      onValueChange={(v) => setAiConfig({ ...aiConfig, temperature: v[0] })}
-                      max={1}
-                      step={0.1}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 pt-0 mt-2">
-              <Button 
-                onClick={() => handleSave()} 
-                disabled={saving}
-                className="w-full rounded-xl h-12 font-black text-sm"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sincronizando...
-                  </>
-                ) : (
-                  <>Activar Configuración</>
-                )}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Main Highlight Banner */}
+    <div className="space-y-8">
+      {/* Banner de Estado Premium */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.99 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
+        className="rounded-[2.5rem] bg-slate-900 text-white p-8 sm:p-12 relative overflow-hidden shadow-2xl border border-slate-800"
       >
-        <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-card via-card to-primary/5 rounded-[1.5rem] relative group border-2">
-          {/* Decorative elements */}
-          
-          
-          <CardContent className="p-5 sm:p-6 flex flex-col md:flex-row items-center gap-6 relative z-10">
-            <div className="relative">
-              <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-background flex items-center justify-center border border-primary/20 relative z-10 overflow-hidden transition-transform duration-500 group-hover:scale-105">
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent opacity-50" />
-                {currentProviderData.icon && (
-                  <div className="scale-[1.5] transition-transform duration-500">
-                    {currentProviderData.icon}
-                  </div>
-                )}
-              </div>
-              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-lg bg-primary flex items-center justify-center z-20 border-2 border-card">
-                <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />
-              </div>
-            </div>
-
-            <div className="flex-1 text-center md:text-left space-y-3">
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
-                <Badge className="bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 px-3 py-0.5 rounded-full text-[10px] font-black gap-1.5 uppercase tracking-wider">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  Sincronizado
-                </Badge>
-                <div className="h-1 w-1 rounded-full bg-background -foreground/30 hidden sm:block" />
-                <span className="text-muted-foreground text-[9px] font-black uppercase tracking-[0.15em] opacity-70">Cerebro de la Plataforma</span>
-              </div>
-              
-              <div className="space-y-0.5">
-                <h3 className="text-3xl font-black text-foreground tracking-tight">
-                  {currentProviderData.name}
-                </h3>
-                <p className="text-sm text-muted-foreground font-medium max-w-lg leading-snug">
-                  {currentProviderData.description}
-                </p>
-              </div>
-              
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                <div className="flex items-center gap-2.5 bg-background /40 px-3 py-1.5 rounded-xl border border-border/50">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Database className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-tighter leading-none mb-0.5">Modelo Activo</span>
-                    <span className="text-sm font-black text-foreground truncate">
-                      {currentProviderData.id === 'openai' ? 'GPT-4o Mini' : 
-                       currentProviderData.id === 'gemini' ? 'Gemini 2.0 Flash' : 'Claude Sonnet 4'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter leading-none mb-0.5">Tokens</span>
-                    <span className="text-base font-black text-primary font-mono leading-none">{aiConfig.tokens}</span>
-                  </div>
-                  <div className="w-px h-6 bg-border" />
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter leading-none mb-0.5">Temp</span>
-                    <span className="text-base font-black text-primary font-mono leading-none">{aiConfig.temperature}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDialogOpen(true)}
-              className="h-auto rounded-2xl border-border bg-background px-6 py-3 hover:bg-background transition-all gap-2 font-black text-xs group/btn"
-            >
-              <Settings2 className="h-4 w-4 transition-transform group-hover/btn:rotate-45" /> 
-              Personalizar
-            </Button>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Configured Providers Section */}
-      <div className="space-y-4 pt-1">
-        <div className="flex items-center justify-between px-2">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/80 flex items-center gap-2.5">
-            <div className="h-0.5 w-6 bg-primary rounded-full" />
-            Ecosistema de Motores
-          </h4>
+        <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none scale-150">
+          {currentProviderData.icon}
         </div>
         
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="relative flex flex-col lg:flex-row items-center gap-10">
+          <div className="shrink-0">
+            <div className="h-24 w-24 rounded-[2rem] bg-white/5 border border-white/10 flex items-center justify-center text-primary backdrop-blur-xl shadow-2xl">
+              <div className="scale-[1.8]">
+                {currentProviderData.icon}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 text-center lg:text-left space-y-4">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+              <Badge className="bg-primary text-white border-none font-black text-[9px] px-3 py-1 rounded-full uppercase tracking-widest animate-pulse">
+                SISTEMA OPERATIVO
+              </Badge>
+              <div className="h-1 w-1 rounded-full bg-white/20" />
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Núcleo {currentProviderData.name}</span>
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter">Motor Cognitivo Activo</h2>
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-wide leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                {currentProviderData.description}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-2">
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Capacidad</span>
+                  <span className="text-xl font-black text-white tracking-tighter">{aiConfig.tokens} <span className="text-[10px] text-primary">TOKENS</span></span>
+                </div>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Creatividad</span>
+                  <span className="text-xl font-black text-white tracking-tighter">{aiConfig.temperature} <span className="text-[10px] text-primary">SCALE</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="shrink-0 w-full lg:w-auto">
+            <Button 
+              onClick={() => setIsDialogOpen(true)}
+              className="w-full lg:w-auto h-16 px-10 rounded-2xl bg-white text-slate-900 hover:bg-slate-100 font-black uppercase tracking-widest text-[10px] shadow-xl transition-all active:scale-95"
+            >
+              <Settings2 className="w-4 h-4 mr-3 stroke-[2.5]" />
+              MODIFICAR CEREBRO
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Grid de Proveedores */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 px-2">
+          <div className="h-px flex-1 bg-slate-100" />
+          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Ecosistema de Inteligencia</h4>
+          <div className="h-px flex-1 bg-slate-100" />
+        </div>
+
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {providers.map((p, idx) => {
             const hasKey = p.id === 'openai' ? aiConfig.openai_api_key :
                           p.id === 'gemini' ? aiConfig.gemini_api_key :
@@ -416,82 +253,70 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
             return (
               <motion.div
                 key={p.id}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 + (idx * 0.05) }}
+                transition={{ delay: idx * 0.1 }}
+                className="group"
               >
                 <Card className={cn(
-                  "border-border/60 bg-card/40 hover:bg-card transition-all rounded-2xl overflow-hidden group border-2 h-full flex flex-col",
-                  isActive ? "border-primary/40 ring-2 ring-primary/5" : "hover:border-primary/20"
+                  "rounded-[2.5rem] border border-slate-100 bg-white transition-all duration-500 h-full flex flex-col shadow-sm overflow-hidden",
+                  isActive ? "ring-2 ring-primary border-transparent scale-[1.02] shadow-xl shadow-primary/5" : "hover:border-primary/20 hover:shadow-md"
                 )}>
-                  <CardContent className="p-4 flex flex-col h-full space-y-3">
+                  <CardContent className="p-8 flex flex-col h-full space-y-6">
                     <div className="flex items-center justify-between">
                       <div className={cn(
-                        "h-10 w-10 rounded-xl flex items-center justify-center border transition-all",
-                        isActive ? "bg-primary/10 border-primary/20" : "bg-background border-border/50"
+                        "h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-500",
+                        isActive ? "bg-primary text-white" : "bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
                       )}>
-                        <div className={cn("scale-110", isActive ? "text-primary" : "text-muted-foreground")}>
+                        <div className="scale-110">
                           {p.icon}
                         </div>
                       </div>
                       
-                      {isActive ? (
-                        <Badge className="bg-primary text-primary-foreground border-none rounded-full px-2 py-0.5 text-[8px] font-black uppercase">
-                          Activo
-                        </Badge>
-                      ) : hasKey ? (
-                        <Badge variant="outline" className="text-muted-foreground border-muted-foreground/20 rounded-full px-2 py-0.5 text-[8px] font-black uppercase">
-                          OK
-                        </Badge>
-                      ) : null}
+                      {isActive && (
+                        <div className="h-3 w-3 rounded-full bg-primary animate-ping" />
+                      )}
                     </div>
 
-                    <div className="space-y-2 flex-1">
-                      <div className="space-y-0.5">
-                        <h5 className="font-black text-foreground text-sm tracking-tight">{p.name}</h5>
-                        <p className="text-[10px] text-muted-foreground font-medium leading-tight line-clamp-1">
+                    <div className="space-y-4 flex-1">
+                      <div className="space-y-1">
+                        <h5 className="font-black text-slate-900 text-lg uppercase tracking-tight">{p.name}</h5>
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">
                           {p.description}
                         </p>
                       </div>
                       
-                      {/* Detailed models list restored */}
-                      <div className="space-y-1.5 py-1">
+                      <div className="space-y-2 py-2 border-y border-slate-50">
                         {p.models.map((model, mIdx) => (
-                          <div key={mIdx} className="flex items-start gap-1.5 group/model">
-                            <div className="h-1 w-1 rounded-full bg-primary/40 mt-1.5 shrink-0 group-hover/model:bg-primary" />
-                            <span className="text-[10px] font-medium text-muted-foreground group-hover/model:text-foreground transition-colors leading-tight">
-                              {model}
-                            </span>
+                          <div key={mIdx} className="flex items-center gap-3">
+                            <div className="h-1.5 w-1.5 rounded-full bg-slate-200" />
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{model}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="pt-1 flex flex-col gap-2 mt-auto">
-                      <div className="flex items-center justify-between border-t border-border/40 pt-2">
-                        <a
-                          href={p.docs}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[9px] font-black text-primary hover:underline flex items-center gap-1"
-                        >
-                          DOCS <ExternalLink className="h-2 w-2" />
-                        </a>
-                        <div className="flex gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-7 w-7 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
-                            onClick={() => {
-                              setEditingProvider(p.id);
-                              setAiConfig({ ...aiConfig, model: p.id });
-                              setIsDialogOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
+                    <div className="flex items-center justify-between pt-4">
+                      <a
+                        href={p.docs}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[9px] font-black text-primary hover:underline flex items-center gap-1.5 tracking-widest"
+                      >
+                        API DOCS <ExternalLink className="h-3 w-3" />
+                      </a>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-10 w-10 rounded-xl hover:bg-slate-900 hover:text-white transition-all"
+                        onClick={() => {
+                          setEditingProvider(p.id);
+                          setAiConfig({ ...aiConfig, model: p.id });
+                          setIsDialogOpen(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -501,28 +326,156 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
         </div>
       </div>
 
-      {/* Security & Info Grid */}
-      <div className="grid gap-4 md:grid-cols-2 pt-2">
-        <Alert className="border-border rounded-2xl p-4 flex items-start group hover:bg-primary/[0.07] transition-all">
-          <Shield className="h-5 w-5 text-primary mt-0.5 mr-3 shrink-0" />
-          <div className="space-y-0.5">
-            <AlertTitle className="text-foreground font-black text-sm tracking-tight">Privacidad Corporativa</AlertTitle>
-            <AlertDescription className="text-muted-foreground text-[11px] leading-snug font-medium">
-              Credenciales cifradas con AES-256. Los datos procesados están aislados y no entrenan modelos públicos.
-            </AlertDescription>
+      {/* Info Boxes */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="p-8 rounded-[2.5rem] bg-emerald-50 border border-emerald-100 flex items-start gap-6 group hover:bg-emerald-100/50 transition-all shadow-sm">
+          <div className="h-12 w-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-200">
+            <Shield className="h-6 w-6 stroke-[2.5]" />
           </div>
-        </Alert>
+          <div className="space-y-1">
+            <h5 className="text-sm font-black text-emerald-900 uppercase tracking-widest">Privacidad de Datos</h5>
+            <p className="text-[10px] font-bold text-emerald-700/70 uppercase tracking-wide leading-relaxed">
+              Toda la información es procesada bajo túneles cifrados. No compartimos datos con modelos de entrenamiento públicos.
+            </p>
+          </div>
+        </div>
 
-        <Alert className="bg-background border-border/40 rounded-2xl p-4 flex items-start group hover:bg-background transition-all">
-          <Cpu className="h-5 w-5 text-foreground mt-0.5 mr-3 shrink-0" />
-          <div className="space-y-0.5">
-            <AlertTitle className="text-foreground font-black text-sm tracking-tight">Cómputo & SLA</AlertTitle>
-            <AlertDescription className="text-muted-foreground text-[11px] leading-snug font-medium">
-              Auto-scaling activo. Respuesta menor a 2s. SLA del 99.9% de disponibilidad garantizada.
-            </AlertDescription>
+        <div className="p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 flex items-start gap-6 group hover:bg-slate-100 transition-all shadow-sm">
+          <div className="h-12 w-12 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-lg shadow-slate-200">
+            <Cpu className="h-6 w-6 stroke-[2.5]" />
           </div>
-        </Alert>
+          <div className="space-y-1">
+            <h5 className="text-sm font-black text-slate-900 uppercase tracking-widest">Alta Disponibilidad</h5>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide leading-relaxed">
+              Infraestructura redundante con escalamiento automático para garantizar tiempos de respuesta menores a 2 segundos.
+            </p>
+          </div>
+        </div>
       </div>
+
+      {/* Dialogo de Configuración */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] rounded-[3rem] border-none bg-white p-0 overflow-hidden shadow-2xl">
+          <div className="p-10 space-y-10">
+            <DialogHeader>
+              <div className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6">
+                <Brain className="w-8 h-8 stroke-[2.5]" />
+              </div>
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900">Sincronizar Proveedor IA</DialogTitle>
+              <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Configura los parámetros técnicos para el motor seleccionado.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Seleccionar Arquitectura</Label>
+                <div className="grid grid-cols-4 gap-3">
+                  {providers.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setAiConfig({ ...aiConfig, model: p.id })}
+                      className={cn(
+                        "flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all group relative",
+                        aiConfig.model === p.id 
+                          ? "border-primary bg-primary/5 shadow-lg shadow-primary/5" 
+                          : "border-slate-50 bg-slate-50/50 hover:border-slate-200 hover:bg-white"
+                      )}
+                    >
+                      <div className={cn(
+                        "p-1 transition-transform duration-500",
+                        aiConfig.model === p.id ? "text-primary scale-110" : "text-slate-300 group-hover:scale-110"
+                      )}>
+                        {p.icon}
+                      </div>
+                      <span className="text-[8px] font-black text-center uppercase tracking-tighter truncate w-full">
+                        {p.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">API Access Key</Label>
+                <div className="relative group">
+                  <Input
+                    type={showKeys[aiConfig.model as keyof typeof showKeys] ? 'text' : 'password'}
+                    value={
+                      aiConfig.model === 'openai' ? aiConfig.openai_api_key :
+                      aiConfig.model === 'gemini' ? aiConfig.gemini_api_key :
+                      aiConfig.model === 'heygen' ? aiConfig.heygen_api_key :
+                      aiConfig.anthropic_api_key
+                    }
+                    onChange={(e) => {
+                      const key = aiConfig.model === 'openai' ? 'openai_api_key' :
+                                  aiConfig.model === 'gemini' ? 'gemini_api_key' :
+                                  aiConfig.model === 'heygen' ? 'heygen_api_key' :
+                                  'anthropic_api_key';
+                      setAiConfig({ ...aiConfig, [key]: e.target.value });
+                    }}
+                    placeholder={`sk-****************`}
+                    className="h-14 px-6 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-primary/20 transition-all font-mono text-xs shadow-inner"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKeys({ ...showKeys, [aiConfig.model]: !showKeys[aiConfig.model as keyof typeof showKeys] })}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 transition-colors p-2"
+                  >
+                    {showKeys[aiConfig.model as keyof typeof showKeys] ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid gap-8 sm:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ventana Contexto</Label>
+                    <Badge variant="outline" className="font-black text-[9px] rounded-lg border-slate-100 text-primary">{aiConfig.tokens}</Badge>
+                  </div>
+                  <Slider
+                    value={[aiConfig.tokens]}
+                    onValueChange={(v) => setAiConfig({ ...aiConfig, tokens: v[0] })}
+                    max={4096}
+                    step={128}
+                    className="py-2"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nivel Creativo</Label>
+                    <Badge variant="outline" className="font-black text-[9px] rounded-lg border-slate-100 text-primary">{aiConfig.temperature}</Badge>
+                  </div>
+                  <Slider
+                    value={[aiConfig.temperature]}
+                    onValueChange={(v) => setAiConfig({ ...aiConfig, temperature: v[0] })}
+                    max={1}
+                    step={0.1}
+                    className="py-2"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-6">
+              <Button 
+                onClick={() => handleSave()} 
+                disabled={saving}
+                className="w-full h-16 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-slate-200 active:scale-95 transition-all"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                    ACTUALIZANDO...
+                  </>
+                ) : (
+                  <>SINCRONIZAR CONFIGURACIÓN</>
+                )}
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

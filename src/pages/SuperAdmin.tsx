@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Building2, Plus, Users, Loader2, Search, UserPlus, Shield, Edit, Image as ImageIcon } from 'lucide-react';
+import { Building2, Plus, Users, Loader2, Search, UserPlus, Shield, Edit, Image as ImageIcon, Briefcase, Mail, Phone, MapPin, Calendar, ExternalLink, Save, ArrowRight, LayoutGrid, CheckCircle2, MoreHorizontal, Upload } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,12 +29,12 @@ export default function SuperAdmin() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
-  const [newCompany, setNewCompany] = useState({ name: '', nit: '', email: '', phone: '', address: '' });
+  const [newCompany, setNewCompany] = useState({ name: '', nit: '', email: '', phone: '', address: '', contract_prefix: 'CT' });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [horizontalLogoFile, setHorizontalLogoFile] = useState<File | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [editingCompany, setEditingCompany] = useState<{ id: string; name: string; nit: string; email: string; phone: string; address: string; logo_url: string | null; horizontal_logo_url: string | null } | null>(null);
+  const [editingCompany, setEditingCompany] = useState<{ id: string; name: string; nit: string; email: string; phone: string; address: string; logo_url: string | null; horizontal_logo_url: string | null; contract_prefix: string } | null>(null);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
   const { data: users = [], isLoading: usersLoading } = useAdminUsers();
@@ -66,6 +66,24 @@ export default function SuperAdmin() {
 
   const userCountMap = assignments.reduce((acc, a) => {
     acc[a.company_id] = (acc[a.company_id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Fetch active employee counts per company
+  const { data: activeEmployeeAssignments = [] } = useQuery({
+    queryKey: ['superadmin-active-employees'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employees_v2')
+        .select('company_id')
+        .eq('is_active', true);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const employeeCountMap = activeEmployeeAssignments.reduce((acc, emp) => {
+    acc[emp.company_id] = (acc[emp.company_id] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
@@ -118,6 +136,7 @@ export default function SuperAdmin() {
         address: newCompany.address || null,
         logo_url: logoUrl,
         horizontal_logo_url: horizontalLogoUrl,
+        contract_prefix: newCompany.contract_prefix || 'CT',
         created_by: user?.id,
       });
       if (error) throw error;
@@ -125,7 +144,7 @@ export default function SuperAdmin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['superadmin-companies'] });
       toast({ title: 'Empresa creada exitosamente' });
-      setNewCompany({ name: '', nit: '', email: '', phone: '', address: '' });
+      setNewCompany({ name: '', nit: '', email: '', phone: '', address: '', contract_prefix: 'CT' });
       setLogoFile(null);
       setHorizontalLogoFile(null);
       setCreateOpen(false);
@@ -185,6 +204,7 @@ export default function SuperAdmin() {
         address: editingCompany.address || null,
         logo_url: logoUrl,
         horizontal_logo_url: horizontalLogoUrl,
+        contract_prefix: editingCompany.contract_prefix || 'CT',
       }).eq('id', editingCompany.id);
       
       if (error) throw error;
@@ -212,6 +232,7 @@ export default function SuperAdmin() {
       address: company.address || '',
       logo_url: company.logo_url,
       horizontal_logo_url: company.horizontal_logo_url,
+      contract_prefix: company.contract_prefix || 'CT',
     });
     setLogoFile(null);
     setHorizontalLogoFile(null);
@@ -224,61 +245,51 @@ export default function SuperAdmin() {
   );
 
   return (
-    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto px-4 sm:px-6">
+    <div className="space-y-8 max-w-7xl mx-auto px-2">
       {/* Header Premium Flat */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] bg-white border border-slate-100"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-6"
       >
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className="relative shrink-0 group">
-              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-primary transition-all duration-300">
-                <Shield className="w-10 h-10 text-primary-foreground" />
-              </div>
+        <div className="flex items-center gap-5">
+          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-sm shrink-0">
+            <Shield className="w-8 h-8 stroke-[2.5] text-primary" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-black text-foreground uppercase tracking-tight">Maestro Admin</h1>
+              <Badge className="bg-primary text-white border-none font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">MASTER CONTROL</Badge>
             </div>
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <Badge className="bg-primary/10 text-primary border-primary/20 font-black text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest">
-                  Panel de Control Maestro
-                </Badge>
-                <div className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Protocolo de Alta Seguridad</span>
-              </div>
-              <h1 className="text-3xl font-black tracking-tight text-foreground uppercase sm:text-4xl">
-                Super Administrador
-              </h1>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Gestión global de infraestructura multisectorial</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Consola de gestión estratégica de infraestructura</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3 w-full md:w-auto">
+          <div className="p-4 rounded-2xl bg-white border border-slate-100 flex items-center gap-4 shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Entidades</p>
+              <p className="text-lg font-black text-foreground leading-none">{companies.length}</p>
             </div>
           </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="px-4 py-2 rounded-2xl bg-background border border-slate-100 flex items-center gap-3">
-              <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Building2 className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Empresas</p>
-                <p className="text-sm font-black text-slate-900">{companies.length}</p>
-              </div>
+          <div className="p-4 rounded-2xl bg-white border border-slate-100 flex items-center gap-4 shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <Users className="w-5 h-5" />
             </div>
-            <div className="px-4 py-2 rounded-2xl bg-background border border-slate-100 flex items-center gap-3">
-              <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Users className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Total Usuarios</p>
-                <p className="text-sm font-black text-slate-900">{users.length}</p>
-              </div>
+            <div className="min-w-0">
+              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Usuarios</p>
+              <p className="text-lg font-black text-foreground leading-none">{users.length}</p>
             </div>
           </div>
         </div>
       </motion.div>
 
       <Tabs defaultValue="companies" className="space-y-8">
-        <div className="flex justify-center">
-          <TabsList className="max-w-2xl w-full sm:grid sm:grid-cols-3">
+        <div className="flex justify-center px-1">
+          <TabsList className="flex h-auto p-1.5 gap-1.5 bg-white border border-slate-100 rounded-2xl w-full max-w-2xl shadow-sm">
             {[
               { value: 'companies', label: 'Empresas', icon: Building2 },
               { value: 'users', label: 'Usuarios', icon: Users },
@@ -287,8 +298,9 @@ export default function SuperAdmin() {
               <TabsTrigger 
                 key={tab.value}
                 value={tab.value} 
+                className="flex-1 text-[9px] font-black uppercase tracking-widest py-3 px-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white transition-all shrink-0 shadow-sm"
               >
-                <tab.icon className="w-3.5 h-3.5 mr-2" />
+                <tab.icon className="w-3.5 h-3.5 mr-2.5 shrink-0" />
                 {tab.label}
               </TabsTrigger>
             ))}
@@ -296,231 +308,99 @@ export default function SuperAdmin() {
         </div>
 
         {/* Companies Tab */}
-        <TabsContent value="companies" className="space-y-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-2">
-            <div className="relative w-full sm:max-w-md group">
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                <Search className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+        <TabsContent value="companies" className="space-y-8 outline-none px-1">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="relative flex-1 max-w-md group">
+              <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+                <Search className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors stroke-[2.5]" />
               </div>
               <Input
-                placeholder="BUSCAR EMPRESA O NIT..."
+                placeholder="FILTRAR POR NOMBRE O NIT..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="h-12 pl-12 rounded-2xl bg-white/50 border-slate-200 focus:bg-white focus:border-primary focus:ring-primary/10 transition-all font-bold text-[10px] uppercase tracking-widest"
+                className="h-14 pl-14 rounded-2xl bg-white border-slate-100 focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
               />
             </div>
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <Button className="h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]">
-                  <Plus className="w-4 h-4 mr-2 stroke-[3]" />
-                  REGISTRAR EMPRESA
+                <Button className="h-14 px-10 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 transition-all active:scale-95 group w-full md:w-auto">
+                  <Plus className="w-4 h-4 mr-3 stroke-[3] group-hover:rotate-90 transition-transform" />
+                  REGISTRAR ENTIDAD
                 </Button>
               </DialogTrigger>
-              <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
-                <DialogHeader className="shrink-0">
-                  <DialogTitle>Crear Nueva Empresa</DialogTitle>
-                  <DialogDescription>Ingresa los datos de la nueva empresa</DialogDescription>
+              <DialogContent className="rounded-3xl border-slate-100 p-0 shadow-2xl overflow-hidden sm:max-w-2xl bg-white">
+                <DialogHeader className="p-8 border-b border-slate-50">
+                  <div className="flex items-center gap-5">
+                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                      <Building2 className="w-7 h-7 stroke-[2.5]" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-xl font-black uppercase tracking-tight text-foreground">Configuración Maestra</DialogTitle>
+                      <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Instalación de nueva infraestructura corporativa</DialogDescription>
+                    </div>
+                  </div>
                 </DialogHeader>
-                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-                  <div>
-                    <Label>Nombre *</Label>
-                    <Input value={newCompany.name} onChange={e => setNewCompany(p => ({ ...p, name: e.target.value }))} placeholder="Mi Empresa S.A.S" />
+                <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2 col-span-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Razón Social Jurídica</Label>
+                      <Input value={newCompany.name} onChange={e => setNewCompany(p => ({ ...p, name: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">NIT / Tax ID</Label>
+                      <Input value={newCompany.nit} onChange={e => setNewCompany(p => ({ ...p, nit: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Línea Telefónica</Label>
+                      <Input value={newCompany.phone} onChange={e => setNewCompany(p => ({ ...p, phone: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Correo Institucional</Label>
+                      <Input value={newCompany.email} onChange={e => setNewCompany(p => ({ ...p, email: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs lowercase" />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Dirección Principal</Label>
+                      <Input value={newCompany.address} onChange={e => setNewCompany(p => ({ ...p, address: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Prefijo de Contratos</Label>
+                      <Input 
+                        value={newCompany.contract_prefix} 
+                        onChange={e => setNewCompany(p => ({ ...p, contract_prefix: e.target.value.toUpperCase() }))} 
+                        className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase"
+                        placeholder="CT"
+                        maxLength={5}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-4">
-                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                      <ImageIcon className="h-3 w-3" /> Identidad Visual
-                    </Label>
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                      {/* Avatar */}
-                      <div className="space-y-2 flex-shrink-0">
-                        <Label className="text-[10px] text-muted-foreground">Avatar (Cuadrado)</Label>
-                        <div 
-                          onClick={() => document.getElementById('new-logo-avatar')?.click()}
-                          className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-background transition-all hover:border-border 0 hover:group"
-                        >
-                          {logoFile ? (
-                            <img src={URL.createObjectURL(logoFile)} alt="Preview" className="h-full w-full object-contain p-2" />
-                          ) : (
-                            <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
-                              <Plus className="h-5 w-5" />
-                              <span className="text-[8px]">1:1</span>
-                            </div>
-                          )}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 group-hover:bg-black/5 group-hover:opacity-100 transition-all">
-                            <Plus className="h-4 w-4 text-primary" />
-                          </div>
-                        </div>
-                        <Input id="new-logo-avatar" type="file" accept="image/*" onChange={e => setLogoFile(e.target.files?.[0] || null)} className="hidden" />
-                      </div>
 
-                      {/* Horizontal */}
-                      <div className="space-y-2 flex-1">
-                        <Label className="text-[10px] text-muted-foreground">Branding (Reportes/Contratos)</Label>
-                        <div 
-                          onClick={() => document.getElementById('new-logo-horizontal')?.click()}
-                          className="relative h-24 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-background transition-all hover:border-border 0 hover:group"
-                        >
-                          {horizontalLogoFile ? (
-                            <img src={URL.createObjectURL(horizontalLogoFile)} alt="Preview" className="h-full w-full object-contain p-3" />
-                          ) : (
-                            <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
-                              <Plus className="h-5 w-5" />
-                              <span className="text-[8px]">Horizontal</span>
-                            </div>
-                          )}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 group-hover:bg-black/5 group-hover:opacity-100 transition-all">
-                            <Plus className="h-4 w-4 text-primary" />
-                          </div>
+                  <div className="grid grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Avatar de Marca</Label>
+                      <div onClick={() => document.getElementById('new-logo-avatar')?.click()} className="group/logo relative h-32 w-32 rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50 flex items-center justify-center cursor-pointer transition-all hover:bg-white hover:border-primary/40 overflow-hidden mx-auto md:mx-0">
+                        {logoFile ? <img src={URL.createObjectURL(logoFile)} className="w-full h-full object-contain p-4 transition-transform group-hover/logo:scale-110" /> : <ImageIcon className="w-8 h-8 text-slate-200" />}
+                        <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center">
+                          <Upload className="w-8 h-8 text-white stroke-[3]" />
                         </div>
-                        <Input id="new-logo-horizontal" type="file" accept="image/*" onChange={e => setHorizontalLogoFile(e.target.files?.[0] || null)} className="hidden" />
                       </div>
+                      <Input id="new-logo-avatar" type="file" className="hidden" onChange={e => setLogoFile(e.target.files?.[0] || null)} />
                     </div>
-                  </div>
-                  <div>
-                    <Label>NIT *</Label>
-                    <Input value={newCompany.nit} onChange={e => setNewCompany(p => ({ ...p, nit: e.target.value }))} placeholder="900123456-7" />
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <Label>Correo</Label>
-                      <Input value={newCompany.email} onChange={e => setNewCompany(p => ({ ...p, email: e.target.value }))} placeholder="empresa@ejemplo.com" />
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Logo Institucional</Label>
+                      <div onClick={() => document.getElementById('new-logo-horizontal')?.click()} className="group/logo relative h-32 w-full rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50 flex items-center justify-center cursor-pointer transition-all hover:bg-white hover:border-primary/40 overflow-hidden">
+                        {horizontalLogoFile ? <img src={URL.createObjectURL(horizontalLogoFile)} className="w-full h-full object-contain p-6 transition-transform group-hover/logo:scale-105" /> : <ImageIcon className="w-8 h-8 text-slate-200" />}
+                        <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center">
+                          <Upload className="w-8 h-8 text-white stroke-[3]" />
+                        </div>
+                      </div>
+                      <Input id="new-logo-horizontal" type="file" className="hidden" onChange={e => setHorizontalLogoFile(e.target.files?.[0] || null)} />
                     </div>
-                    <div>
-                      <Label>Teléfono</Label>
-                      <Input value={newCompany.phone} onChange={e => setNewCompany(p => ({ ...p, phone: e.target.value }))} placeholder="+57 300 123 4567" />
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Dirección</Label>
-                    <Input value={newCompany.address} onChange={e => setNewCompany(p => ({ ...p, address: e.target.value }))} placeholder="Calle 123 #45-67" />
                   </div>
                 </div>
-                <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
-                  <Button
-                    onClick={() => createCompanyMutation.mutate()}
-                    disabled={!newCompany.name || !newCompany.nit || createCompanyMutation.isPending}
-                    className="w-full sm:w-auto"
-                  >
-                    {createCompanyMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Crear Empresa
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-            {/* Edit Company Dialog */}
-            <Dialog open={editOpen} onOpenChange={setEditOpen}>
-              <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
-                <DialogHeader className="shrink-0">
-                  <DialogTitle>Editar Empresa</DialogTitle>
-                  <DialogDescription>Actualiza los datos de la empresa seleccionada</DialogDescription>
-                </DialogHeader>
-                {editingCompany && (
-                  <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
-                    <div>
-                      <Label>Nombre *</Label>
-                      <Input value={editingCompany.name} onChange={e => setEditingCompany(p => ({ ...p!, name: e.target.value }))} placeholder="Mi Empresa S.A.S" />
-                    </div>
-                    <div className="space-y-4">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        <ImageIcon className="h-3 w-3" /> Identidad Visual
-                      </Label>
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                        {/* Avatar */}
-                        <div className="space-y-2 flex-shrink-0">
-                          <Label className="text-[10px] text-muted-foreground">Avatar (Cuadrado)</Label>
-                          <div 
-                            onClick={() => document.getElementById('edit-logo-avatar')?.click()}
-                            className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-background transition-all hover:border-border 0 hover:group"
-                          >
-                            {(logoFile || editingCompany.logo_url) ? (
-                              <img 
-                                src={logoFile ? URL.createObjectURL(logoFile) : editingCompany.logo_url!} 
-                                alt="Avatar" 
-                                className="h-full w-full object-contain p-2 transition-transform group-hover:scale-105" 
-                              />
-                            ) : (
-                              <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
-                                <Plus className="h-5 w-5" />
-                                <span className="text-[8px]">1:1</span>
-                              </div>
-                            )}
-                            
-                            {editingCompany.logo_url && !logoFile && (
-                              <div className="absolute top-1.5 right-1.5">
-                                <Badge className="bg-success hover:bg-success/90 text-[8px] h-3.5 px-1 border-none">Actual</Badge>
-                              </div>
-                            )}
-
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 group-hover:bg-black/10 group-hover:opacity-100 transition-all text-primary">
-                              <Edit className="h-4 w-4" />
-                            </div>
-                          </div>
-                          <Input id="edit-logo-avatar" type="file" accept="image/*" onChange={e => setLogoFile(e.target.files?.[0] || null)} className="hidden" />
-                        </div>
-
-                        {/* Horizontal branding */}
-                        <div className="space-y-2 flex-1">
-                          <Label className="text-[10px] text-muted-foreground">Branding (Reportes/Contratos)</Label>
-                          <div 
-                            onClick={() => document.getElementById('edit-logo-horizontal')?.click()}
-                            className="relative h-24 w-full cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-background transition-all hover:border-border 0 hover:group"
-                          >
-                            {(horizontalLogoFile || editingCompany.horizontal_logo_url) ? (
-                              <img 
-                                src={horizontalLogoFile ? URL.createObjectURL(horizontalLogoFile) : editingCompany.horizontal_logo_url!} 
-                                alt="Horizontal" 
-                                className="h-full w-full object-contain p-4 transition-transform group-hover:scale-105" 
-                              />
-                            ) : (
-                              <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
-                                <Plus className="h-5 w-5" />
-                                <span className="text-[8px]">Horizontal</span>
-                              </div>
-                            )}
-
-                            {editingCompany.horizontal_logo_url && !horizontalLogoFile && (
-                              <div className="absolute top-1.5 right-1.5">
-                                <Badge className="bg-success hover:bg-success/90 text-[8px] h-3.5 px-1 border-none">Actual</Badge>
-                              </div>
-                            )}
-
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 group-hover:bg-black/10 group-hover:opacity-100 transition-all text-primary">
-                              <Edit className="h-4 w-4" />
-                            </div>
-                          </div>
-                          <Input id="edit-logo-horizontal" type="file" accept="image/*" onChange={e => setHorizontalLogoFile(e.target.files?.[0] || null)} className="hidden" />
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <Label>NIT *</Label>
-                      <Input value={editingCompany.nit} onChange={e => setEditingCompany(p => ({ ...p!, nit: e.target.value }))} placeholder="900123456-7" />
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div>
-                        <Label>Correo</Label>
-                        <Input value={editingCompany.email} onChange={e => setEditingCompany(p => ({ ...p!, email: e.target.value }))} placeholder="empresa@ejemplo.com" />
-                      </div>
-                      <div>
-                        <Label>Teléfono</Label>
-                        <Input value={editingCompany.phone} onChange={e => setEditingCompany(p => ({ ...p!, phone: e.target.value }))} placeholder="+57 300 123 4567" />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Dirección</Label>
-                      <Input value={editingCompany.address} onChange={e => setEditingCompany(p => ({ ...p!, address: e.target.value }))} placeholder="Calle 123 #45-67" />
-                    </div>
-                  </div>
-                )}
-                <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
-                  <Button
-                    onClick={() => updateCompanyMutation.mutate()}
-                    disabled={!editingCompany?.name || !editingCompany?.nit || updateCompanyMutation.isPending}
-                    className="w-full sm:w-auto"
-                  >
-                    {updateCompanyMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Guardar Cambios
+                <DialogFooter className="p-8 border-t border-slate-50">
+                  <Button onClick={() => createCompanyMutation.mutate()} disabled={!newCompany.name || !newCompany.nit || createCompanyMutation.isPending} className="h-14 w-full rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20">
+                    {createCompanyMutation.isPending ? <Loader2 className="w-4 h-4 mr-3 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-3" />}
+                    INSTALAR ENTIDAD
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -528,169 +408,232 @@ export default function SuperAdmin() {
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="flex flex-col items-center justify-center py-32 gap-6">
+              <div className="h-16 w-16 rounded-[1.5rem] bg-slate-50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Escaneando red corporativa...</p>
             </div>
           ) : (
             <>
-            <MobileCardList
-              className="md:hidden"
-              emptyMessage="No se encontraron empresas"
-              items={filteredCompanies.map(company => ({
-                id: company.id,
-                title: company.name,
-                subtitle: company.address || 'Sin dirección registrada',
-                badge: <Badge variant="outline">{company.nit}</Badge>,
-                fields: [
-                  {
-                    label: 'Contacto',
-                    value: (
-                      <div className="space-y-0.5">
-                        <p>{company.email || '—'}</p>
-                        <p className="text-muted-foreground">{company.phone || '—'}</p>
-                      </div>
-                    ),
-                    className: 'col-span-2',
-                  },
-                  {
-                    label: 'Usuarios',
-                    value: (
-                      <span className="inline-flex items-center gap-1">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        {userCountMap[company.id] || 0}
-                      </span>
-                    ),
-                  },
-                  {
-                    label: 'Creada',
-                    value: new Date(company.created_at).toLocaleDateString('es-CO'),
-                  },
-                ],
-                actions: (
-                  <Button variant="outline" size="sm" onClick={() => handleEditCompany(company)}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Editar
-                  </Button>
-                ),
-              }))}
-            />
-            <Card className="hidden md:block rounded-[2.5rem] bg-white border border-slate-100">
-              <CardContent className="p-0 overflow-x-auto">
-                <Table className="min-w-[760px]">
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="px-8 py-5">Entidad Corporativa</TableHead>
-                      <TableHead className="px-8 py-5">Identificación</TableHead>
-                      <TableHead className="px-8 py-5">Contacto & Canales</TableHead>
-                      <TableHead className="px-8 py-5 text-center">Talento Humano</TableHead>
-                      <TableHead className="px-8 py-5">Fecha Alta</TableHead>
-                      <TableHead className="w-[100px] px-8"></TableHead>
+              <MobileCardList
+                className="md:hidden"
+                items={filteredCompanies.map(company => ({
+                  id: company.id,
+                  title: <span className="font-black text-foreground uppercase tracking-tight">{company.name}</span>,
+                  subtitle: `NIT: ${company.nit}`,
+                  badge: (
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge className="bg-slate-100 text-slate-600 border-none font-black text-[8px] uppercase px-1.5 py-0.5 rounded-lg">{userCountMap[company.id] || 0} USUARIOS</Badge>
+                      <Badge className="bg-primary text-white border-none font-black text-[8px] uppercase px-1.5 py-0.5 rounded-lg">{employeeCountMap[company.id] || 0} EMPLEADOS</Badge>
+                    </div>
+                  ),
+                  fields: [
+                    { label: 'Ubicación', value: <span className="text-[9px] font-black uppercase text-slate-500">{company.address || 'NO DECLARADA'}</span> },
+                    { label: 'Alta', value: <span className="text-[9px] font-black uppercase text-slate-500">{new Date(company.created_at).toLocaleDateString()}</span> }
+                  ],
+                  actions: (
+                    <Button onClick={() => handleEditCompany(company)} className="w-full h-12 rounded-xl bg-primary text-white font-black uppercase tracking-widest text-[9px] gap-2">
+                      <Edit className="w-3.5 h-3.5" />
+                      GESTIONAR ENTIDAD
+                    </Button>
+                  )
+                }))}
+              />
+
+              <div className="hidden md:block rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+                <Table>
+                  <TableHeader className="bg-slate-50/50">
+                    <TableRow className="hover:bg-slate-50/50 border-slate-100">
+                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Entidad Estratégica</TableHead>
+                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Identidad Fiscal</TableHead>
+                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Población</TableHead>
+                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Nómina Activa</TableHead>
+                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocolo de Alta</TableHead>
+                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Control</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCompanies.map(company => (
-                      <TableRow key={company.id} className="group hover:bg-primary/[0.02] transition-colors border-slate-50">
+                    {filteredCompanies.map((company, idx) => (
+                      <motion.tr 
+                        key={company.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.02 }}
+                        className="group border-slate-50 hover:bg-primary/[0.02] transition-colors"
+                      >
                         <TableCell className="px-8 py-6">
-                          <div className="flex items-center gap-4">
-                            <div className="relative h-12 w-12 shrink-0 group/avatar">
-                              <div className="absolute -inset-0.5 bg-primary/20 rounded-2xl opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
-                              <div className="relative h-full w-full rounded-2xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden">
-                                {company.logo_url ? (
-                                  <img src={company.logo_url} alt={company.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <Building2 className="w-5 h-5 text-slate-300" />
-                                )}
+                          <div className="flex items-center gap-5">
+                            <div className="h-14 w-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm overflow-hidden group-hover:scale-110 transition-transform">
+                              {company.logo_url ? <img src={company.logo_url} className="w-full h-full object-contain p-2" /> : <Building2 className="w-6 h-6 text-slate-200" />}
+                            </div>
+                            <div className="space-y-1 min-w-0">
+                              <p className="font-black text-foreground uppercase tracking-tight truncate leading-none">{company.name}</p>
+                              <div className="flex items-center gap-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                <MapPin className="w-3 h-3 text-primary/50" />
+                                <span className="truncate max-w-[180px]">{company.address || '—'}</span>
                               </div>
                             </div>
-                            <div>
-                              <p className="font-black text-slate-900 uppercase tracking-tight leading-none mb-1">{company.name}</p>
-                              {company.address && <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{company.address}</p>}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-8 py-6">
-                          <Badge variant="outline" className="bg-background border-slate-200 text-slate-600 font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">
-                            NIT {company.nit}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-8 py-6">
-                          <div className="space-y-1">
-                            {company.email && <p className="text-xs font-bold text-slate-600 lowercase tracking-tight">{company.email}</p>}
-                            {company.phone && <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{company.phone}</p>}
                           </div>
                         </TableCell>
                         <TableCell className="px-8 py-6 text-center">
-                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border text-[10px] font-black text-primary tracking-widest">
-                            <Users className="w-3.5 h-3.5" />
-                            {userCountMap[company.id] || 0} ACTIVOS
+                          <Badge className="bg-primary text-white border-none font-black text-[9px] px-3 py-1 rounded-lg uppercase tracking-widest shadow-lg shadow-primary/10">
+                            NIT: {company.nit}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-8 py-6 text-center">
+                          <div className="inline-flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl transition-transform group-hover:scale-105">
+                            <Users className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-black text-foreground">{userCountMap[company.id] || 0}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-8 py-6 text-center">
+                          <div className="inline-flex items-center gap-3 bg-primary/5 px-4 py-2 rounded-xl transition-transform group-hover:scale-105">
+                            <Building2 className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-black text-primary">{employeeCountMap[company.id] || 0}</span>
                           </div>
                         </TableCell>
                         <TableCell className="px-8 py-6">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            {new Date(company.created_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          </p>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 text-[10px] font-black text-foreground uppercase">
+                              <Calendar className="w-3.5 h-3.5 text-slate-300" />
+                              {new Date(company.created_at).toLocaleDateString()}
+                            </div>
+                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-5">REGISTRO LEGACY</span>
+                          </div>
                         </TableCell>
                         <TableCell className="px-8 py-6 text-right">
                           <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleEditCompany(company)}
-                            className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all opacity-0 group-hover:opacity-100"
+                            className="h-11 w-11 rounded-xl hover:bg-primary hover:text-white transition-all shadow-sm border border-transparent hover:border-primary"
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-4.5 h-4.5 stroke-[2.5]" />
                           </Button>
                         </TableCell>
-                      </TableRow>
+                      </motion.tr>
                     ))}
-                    {filteredCompanies.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-20">
-                          <div className="flex flex-col items-center gap-4 opacity-40">
-                            <Building2 className="w-12 h-12 text-slate-300" />
-                            <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">No se encontraron entidades registradas</p>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
+              </div>
             </>
           )}
         </TabsContent>
 
         {/* Users Tab */}
-        <TabsContent value="users" className="space-y-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-2">
-            <div>
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                Directorio Global
+        <TabsContent value="users" className="space-y-8 outline-none px-1">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <h3 className="text-2xl font-black text-foreground uppercase tracking-tighter flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                  <Users className="w-7 h-7 stroke-[2.5]" />
+                </div>
+                Operadores del Sistema
               </h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Gestión de identidades y accesos multisectoriales</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Directorio centralizado de privilegios y accesos</p>
             </div>
             <Button 
               onClick={() => setInviteDialogOpen(true)} 
-              className="h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary-hover font-black uppercase tracking-widest text-[10px]"
+              className="h-14 px-10 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] w-full md:w-auto transition-all active:scale-95 group"
             >
-              <UserPlus className="w-4 h-4 mr-2 stroke-[3]" />
+              <UserPlus className="w-4 h-4 mr-3 stroke-[3] group-hover:scale-110 transition-transform" />
               INVITAR OPERADOR
             </Button>
           </div>
-          <UsersTable users={users} isLoading={usersLoading} />
+          <div className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden p-1">
+            <UsersTable users={users} isLoading={usersLoading} />
+          </div>
         </TabsContent>
 
         {/* Roles Tab */}
-        <TabsContent value="roles" className="space-y-4">
+        <TabsContent value="roles" className="space-y-4 outline-none px-1">
           <RolesManager />
         </TabsContent>
       </Tabs>
 
-      <InviteUserDialog
-        open={inviteDialogOpen}
-        onOpenChange={setInviteDialogOpen}
-      />
+      <InviteUserDialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen} />
+
+      {/* Edit Company Dialog - Modernized */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="rounded-[2.5rem] border-slate-100 p-0 shadow-2xl overflow-hidden sm:max-w-2xl bg-white">
+          <DialogHeader className="p-8 border-b border-slate-50 bg-slate-50/30">
+            <div className="flex items-center gap-5">
+              <div className="h-14 w-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-primary shadow-sm">
+                <Edit className="w-7 h-7 stroke-[2.5]" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-900">Gestión de Entidad</DialogTitle>
+                <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Actualización de parámetros operativos</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          {editingCompany && (
+            <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2 col-span-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Razón Social Jurídica</Label>
+                  <Input value={editingCompany.name} onChange={e => setEditingCompany(p => ({ ...p!, name: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">NIT / Tax ID</Label>
+                  <Input value={editingCompany.nit} onChange={e => setEditingCompany(p => ({ ...p!, nit: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Línea Telefónica</Label>
+                  <Input value={editingCompany.phone} onChange={e => setEditingCompany(p => ({ ...p!, phone: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Correo Institucional</Label>
+                  <Input value={editingCompany.email} onChange={e => setEditingCompany(p => ({ ...p!, email: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs lowercase" />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Dirección Principal</Label>
+                  <Input value={editingCompany.address} onChange={e => setEditingCompany(p => ({ ...p!, address: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Prefijo de Contratos</Label>
+                  <Input 
+                    value={editingCompany.contract_prefix} 
+                    onChange={e => setEditingCompany(p => ({ ...p!, contract_prefix: e.target.value.toUpperCase() }))} 
+                    className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase"
+                    maxLength={5}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Sustituir Avatar</Label>
+                  <div onClick={() => document.getElementById('edit-logo-avatar')?.click()} className="group/logo relative h-32 w-32 rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50 flex items-center justify-center cursor-pointer transition-all hover:bg-white hover:border-primary/40 overflow-hidden mx-auto md:mx-0">
+                    {(logoFile || editingCompany.logo_url) ? <img src={logoFile ? URL.createObjectURL(logoFile) : editingCompany.logo_url!} className="w-full h-full object-contain p-4 transition-transform group-hover/logo:scale-110" /> : <ImageIcon className="w-8 h-8 text-slate-200" />}
+                    <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center">
+                      <Upload className="w-8 h-8 text-white stroke-[3]" />
+                    </div>
+                  </div>
+                  <Input id="edit-logo-avatar" type="file" className="hidden" onChange={e => setLogoFile(e.target.files?.[0] || null)} />
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Sustituir Logo</Label>
+                  <div onClick={() => document.getElementById('edit-logo-horizontal')?.click()} className="group/logo relative h-32 w-full rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50 flex items-center justify-center cursor-pointer transition-all hover:bg-white hover:border-primary/40 overflow-hidden">
+                    {(horizontalLogoFile || editingCompany.horizontal_logo_url) ? <img src={horizontalLogoFile ? URL.createObjectURL(horizontalLogoFile) : editingCompany.horizontal_logo_url!} className="w-full h-full object-contain p-6 transition-transform group-hover/logo:scale-105" /> : <ImageIcon className="w-8 h-8 text-slate-200" />}
+                    <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center">
+                      <Upload className="w-8 h-8 text-white stroke-[3]" />
+                    </div>
+                  </div>
+                  <Input id="edit-logo-horizontal" type="file" className="hidden" onChange={e => setHorizontalLogoFile(e.target.files?.[0] || null)} />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="p-8 border-t border-slate-50">
+            <Button onClick={() => updateCompanyMutation.mutate()} disabled={!editingCompany?.name || !editingCompany?.nit || updateCompanyMutation.isPending} className="h-14 w-full rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
+              {updateCompanyMutation.isPending ? <Loader2 className="w-4 h-4 mr-3 animate-spin" /> : <Save className="w-4 h-4 mr-3 stroke-[2.5]" />}
+              CONFIRMAR ACTUALIZACIÓN
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

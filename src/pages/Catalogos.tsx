@@ -137,41 +137,74 @@ export default function Catalogos() {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4 bg-white p-6 border rounded-xl">
-        <div className="p-3 bg-blue-50 rounded-lg">
-          <FolderOpen className="w-8 h-8 text-blue-600" />
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto">
+      {/* Header Premium Flat */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }}
+        className="relative p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-white border border-slate-100"
+      >
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
+            <div className="relative shrink-0 group">
+              <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex items-center justify-center rounded-[1.25rem] sm:rounded-[1.75rem] bg-primary transition-all duration-300">
+                <FolderOpen className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black text-[8px] sm:text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest">
+                  Gestión Maestros
+                </Badge>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground uppercase lg:text-4xl">
+                Catálogos
+              </h1>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest sm:tracking-[0.2em] mt-1">
+                Parámetros globales del sistema
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-center sm:justify-start gap-3">
+            <div className="h-10 px-4 rounded-xl border border-border flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-[10px] font-black text-primary uppercase tracking-widest">Sincronizado</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Catálogos del Sistema</h1>
-          <p className="text-muted-foreground text-sm">Configura los parámetros globales de la plataforma</p>
-        </div>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {catalogos.map((catalogo) => (
-          <div
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-2">
+        {catalogos.map((catalogo, idx) => (
+          <motion.div
             key={catalogo.href}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05 }}
             className="group"
           >
             <Card 
-              className="cursor-pointer hover:bg-slate-50 transition-colors border shadow-none rounded-xl overflow-hidden"
+              className="cursor-pointer hover:bg-slate-50 transition-all border border-slate-100 shadow-none rounded-[1.5rem] overflow-hidden hover:scale-[1.02] active:scale-95"
               onClick={() => navigate(catalogo.href)}
             >
-              <CardHeader className="pb-3">
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-3 transition-colors ${catalogo.color.replace('/10', '')} bg-slate-50 border border-slate-100`}>
+              <CardHeader className="pb-4">
+                <div className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:rotate-3",
+                  catalogo.color
+                )}>
                   {catalogo.icon}
                 </div>
-                <CardTitle className="text-base font-bold text-foreground group-hover:text-blue-600 transition-colors">{catalogo.title}</CardTitle>
-                <CardDescription className="line-clamp-2 text-xs font-medium">{catalogo.description}</CardDescription>
+                <CardTitle className="text-sm font-black text-slate-900 uppercase tracking-tight group-hover:text-primary transition-colors">{catalogo.title}</CardTitle>
+                <CardDescription className="line-clamp-2 text-[11px] font-bold text-slate-400 uppercase tracking-tight leading-tight mt-1">{catalogo.description}</CardDescription>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-center text-[10px] font-bold uppercase tracking-widest text-blue-600 opacity-70 group-hover:opacity-100 transition-opacity">
-                  GESTIONAR →
+              <CardContent className="pt-0 flex items-center justify-between">
+                <div className="flex items-center text-[9px] font-black uppercase tracking-widest text-primary opacity-70 group-hover:opacity-100 transition-opacity">
+                  GESTIONAR <span className="ml-2">→</span>
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
