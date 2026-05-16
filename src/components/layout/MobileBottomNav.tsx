@@ -64,9 +64,9 @@ export function MobileBottomNav() {
         ref={containerRef}
         className="relative border-t"
         style={{
-          backgroundColor: 'hsl(var(--primary))',
-          borderColor: 'hsl(var(--primary-hover))',
-          boxShadow: '0 -4px 12px -2px hsl(var(--primary) / 0.22)',
+          backgroundColor: '#5e656e',
+          borderColor: '#4d535a',
+          boxShadow: '0 -4px 12px -2px rgba(94, 101, 110, 0.22)',
         }}
       >
         {/* Floating active indicator */}
@@ -76,7 +76,7 @@ export function MobileBottomNav() {
             style={{
               left: `${indicatorX}px`,
               backgroundColor: 'hsl(var(--card))',
-              borderColor: 'hsl(var(--primary))',
+              borderColor: '#5e656e',
               borderWidth: '4px',
               borderStyle: 'solid',
               boxShadow: '0 6px 16px -3px rgba(0, 0, 0, 0.35)',
@@ -91,7 +91,7 @@ export function MobileBottomNav() {
                 <ActiveIcon
                   className="w-5 h-5"
                   strokeWidth={2.2}
-                  style={{ color: 'hsl(var(--primary))' }}
+                  style={{ color: '#5e656e' }}
                 />
               ) : null;
             })()}
